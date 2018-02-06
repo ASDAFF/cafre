@@ -1,0 +1,16 @@
+<Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre152</UID><Date xmlns="MC">2017-12-20T14:48:05</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">etwew</Name><Phone xmlns="MC">99999999999999</Phone><Address xmlns="MC">Московская область, Москва, </Address><eMail xmlns="MC"></eMail><Gds xmlns="MC"><ID>00000011253</ID><Qty>1</Qty><Cost>1839</Cost></Gds></Zakaz>
+res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre152</UID><Date xmlns="MC">2017-12-20T14:48:05</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">etwew</Name><Phone xmlns="MC">99999999999999</Phone><Address xmlns="MC">Московская область, Москва, </Address><eMail xmlns="MC"></eMail><Gds xmlns="MC"><ID>00000011253</ID><Qty>1</Qty><Cost>1839</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+        )
+
+)
+double:152
+--

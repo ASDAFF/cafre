@@ -1,0 +1,6 @@
+<?
+$sSectionName = "import";
+$arDirProperties = Array(
+
+);
+?>

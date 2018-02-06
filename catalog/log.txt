@@ -1,0 +1,16 @@
+13.11.2017 12:12:45 GetAllProductOffers
+0 prices updated
+0 quantities updated
+1510549967.256
+-------------------------
+05.12.2017 08:45:01 GetAllCategories
+21.298
+-------------------------
+0 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated
