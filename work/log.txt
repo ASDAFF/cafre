@@ -7451,3 +7451,767 @@ Exception rethrown at [0]:
         )
 
 )
+
+Array
+(
+    [NAME] => Анастасия
+    [EMAIL] => nologinpls@yandex.ru
+    [PHONE] => 8(908) 694-0501
+    [LOCATION] => Московская область, Москва
+    [ADDRESS] => Москва, ул. Васильевская, д.6
+    [add] => false
+    [FULLADRES] => Москва, ул. Васильевская, д.6
+)
+res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                )
+
+            [IsSuccessfully] => 
+            [LastException] => System.ServiceModel.EndpointNotFoundException: There was no endpoint listening at http://109.195.245.151:11246/r2/ws/MC.1cws that could accept the message. This is often caused by an incorrect address or SOAP action. See InnerException, if present, for more details. ---> System.Net.WebException: Unable to connect to the remote server ---> System.Net.Sockets.SocketException: No connection could be made because the target machine actively refused it 109.195.245.151:11246
+   at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Exception& exception)
+   --- End of inner exception stack trace ---
+   at System.Net.HttpWebRequest.GetRequestStream(TransportContext& context)
+   at System.Net.HttpWebRequest.GetRequestStream()
+   at System.ServiceModel.Channels.HttpOutput.WebRequestHttpOutput.GetOutputStream()
+   --- End of inner exception stack trace ---
+
+Server stack trace: 
+   at System.ServiceModel.Channels.HttpOutput.WebRequestHttpOutput.GetOutputStream()
+   at System.ServiceModel.Channels.HttpOutput.Send(TimeSpan timeout)
+   at System.ServiceModel.Channels.HttpChannelFactory`1.HttpRequestChannel.HttpChannelRequest.SendRequest(Message message, TimeSpan timeout)
+   at System.ServiceModel.Channels.RequestChannel.Request(Message message, TimeSpan timeout)
+   at System.ServiceModel.Dispatcher.RequestChannelBinder.Request(Message message, TimeSpan timeout)
+   at System.ServiceModel.Channels.ServiceChannel.Call(String action, Boolean oneway, ProxyOperationRuntime operation, Object[] ins, Object[] outs, TimeSpan timeout)
+   at System.ServiceModel.Channels.ServiceChannelProxy.InvokeService(IMethodCallMessage methodCall, ProxyOperationRuntime operation)
+   at System.ServiceModel.Channels.ServiceChannelProxy.Invoke(IMessage message)
+
+Exception rethrown at [0]: 
+   at InfosystemsVR.Export.OrderExporter.ExportExternalOrder(Zakaz externalOrder)
+   at InfosystemsVR.WebServices.GraniteGatewayExportServiceOld.TransferExternalOrder(String sourceData)
+        )
+
+)
+
+Array
+(
+    [NAME] => ксения тест
+    [EMAIL] => tes33t@test.ru
+    [PHONE] => 8(999) 999-9999
+    [LOCATION] => Московская область, Москва
+    [add] => false
+    [FULLADRES] => Московская область, Москва, 
+)
+res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre467</UID><Date xmlns="MC">2018-02-06T14:40:50</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">РєСЃРµРЅРёСЏ С‚РµСЃС‚</Name><Phone xmlns="MC">8(999) 999-9999</Phone><Address xmlns="MC">РњРѕСЃРєРѕРІСЃРєР°СЏ РѕР±Р»Р°СЃС‚СЊ, РњРѕСЃРєРІР°, </Address><eMail xmlns="MC">tes33t@test.ru</eMail><Gds xmlns="MC"><ID>00000024615</ID><Qty>1</Qty><Cost>750</Cost></Gds><Gds xmlns="MC"><ID>00000015862</ID><Qty>2</Qty><Cost>410</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+        )
+
+)
+
+Array
+(
+    [NAME] => рррр
+    [EMAIL] => user_151791756915@cafre.ru
+    [PHONE] => 8(965) 683-0859
+    [LOCATION] => Московская область, Москва
+    [add] => false
+    [FULLADRES] => Московская область, Москва, 
+)
+res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre468</UID><Date xmlns="MC">2018-02-06T14:46:09</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">СЂСЂСЂСЂ</Name><Phone xmlns="MC">8(965) 683-0859</Phone><Address xmlns="MC">РњРѕСЃРєРѕРІСЃРєР°СЏ РѕР±Р»Р°СЃС‚СЊ, РњРѕСЃРєРІР°, </Address><eMail xmlns="MC">user_151791756915@cafre.ru</eMail><Gds xmlns="MC"><ID>00000011253</ID><Qty>1</Qty><Cost>1655</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+        )
+
+)
+
+Array
+(
+    [NAME] => ррр
+    [EMAIL] => re_gisha@mail.ru
+    [PHONE] => 8(965) 683-0859
+    [LOCATION] => Московская область, Москва
+    [add] => false
+    [FULLADRES] => Московская область, Москва, 
+)
+res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre469</UID><Date xmlns="MC">2018-02-06T15:10:28</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">СЂСЂСЂ</Name><Phone xmlns="MC">8(965) 683-0859</Phone><Address xmlns="MC">РњРѕСЃРєРѕРІСЃРєР°СЏ РѕР±Р»Р°СЃС‚СЊ, РњРѕСЃРєРІР°, </Address><eMail xmlns="MC">re_gisha@mail.ru</eMail><Gds xmlns="MC"><ID>00000021780</ID><Qty>1</Qty><Cost>575</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+        )
+
+)
+
+Array
+(
+    [NAME] => Тестовый заказ
+    [EMAIL] => test2222222@test.ru
+    [PHONE] => 8(999) 999-9999
+    [LOCATION] => Московская область, Москва
+    [add] => false
+    [FULLADRES] => Московская область, Москва, 
+)
+res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre470</UID><Date xmlns="MC">2018-02-06T18:41:02</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">РўРµСЃС‚РѕРІС‹Р№ Р·Р°РєР°Р·</Name><Phone xmlns="MC">8(999) 999-9999</Phone><Address xmlns="MC">РњРѕСЃРєРѕРІСЃРєР°СЏ РѕР±Р»Р°СЃС‚СЊ, РњРѕСЃРєРІР°, </Address><eMail xmlns="MC">test2222222@test.ru</eMail><Gds xmlns="MC"><ID>00000015862</ID><Qty>1</Qty><Cost>410</Cost></Gds><Gds xmlns="MC"><ID>00000019264</ID><Qty>1</Qty><Cost>223</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+        )
+
+)
+
+Array
+(
+    [NAME] => Тестовый заказ
+    [EMAIL] => test2222222@test.ru
+    [PHONE] => 8(999) 999-9999
+    [LOCATION] => Московская область, Москва
+    [add] => false
+    [FULLADRES] => Московская область, Москва, 
+)
+res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre471</UID><Date xmlns="MC">2018-02-06T18:49:03</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">РўРµСЃС‚РѕРІС‹Р№ Р·Р°РєР°Р·</Name><Phone xmlns="MC">8(999) 999-9999</Phone><Address xmlns="MC">РњРѕСЃРєРѕРІСЃРєР°СЏ РѕР±Р»Р°СЃС‚СЊ, РњРѕСЃРєРІР°, </Address><eMail xmlns="MC">test2222222@test.ru</eMail><Gds xmlns="MC"><ID>00000018185</ID><Qty>1</Qty><Cost>337</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+        )
+
+)
+
+Array
+(
+    [NAME] => Виктория
+    [EMAIL] => www200594@mail.ru
+    [PHONE] => 8(905) 712-6432
+    [LOCATION] => Московская область, Москва
+    [ADDRESS] => г.Москва,ул.Лобачевского,д.100,корп.2.Кв.403
+индекс 119607
+    [add] => false
+    [FULLADRES] => г.Москва,ул.Лобачевского,д.100,корп.2.Кв.403
+индекс 119607
+)
+res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre472</UID><Date xmlns="MC">2018-02-06T19:09:39</Date><PrCode xmlns="MC" /><Comm xmlns="MC">РћС‚РїСЂР°РІРєР° РџРѕС‡С‚РѕР№ Р Р¤</Comm><Name xmlns="MC">Р’РёРєС‚РѕСЂРёСЏ</Name><Phone xmlns="MC">8(905) 712-6432</Phone><Address xmlns="MC">Рі.РњРѕСЃРєРІР°,СѓР».Р›РѕР±Р°С‡РµРІСЃРєРѕРіРѕ,Рґ.100,РєРѕСЂРї.2.РљРІ.403
+РёРЅРґРµРєСЃ 119607</Address><eMail xmlns="MC">www200594@mail.ru</eMail><Gds xmlns="MC"><ID>00000022881</ID><Qty>1</Qty><Cost>1157</Cost></Gds><Gds xmlns="MC"><ID>00000009074</ID><Qty>1</Qty><Cost>350</Cost></Gds><Gds xmlns="MC"><ID>00000024417</ID><Qty>1</Qty><Cost>248</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+        )
+
+)
+
+Array
+(
+    [NAME] => Максим
+    [EMAIL] => testttttt@test.ru
+    [PHONE] => 8(999) 999-9999
+    [LOCATION] => Московская область, Москва
+    [add] => false
+    [FULLADRES] => Московская область, Москва, 
+)
+res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre473</UID><Date xmlns="MC">2018-02-06T19:42:32</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">РњР°РєСЃРёРј</Name><Phone xmlns="MC">8(999) 999-9999</Phone><Address xmlns="MC">РњРѕСЃРєРѕРІСЃРєР°СЏ РѕР±Р»Р°СЃС‚СЊ, РњРѕСЃРєРІР°, </Address><eMail xmlns="MC">testttttt@test.ru</eMail><Gds xmlns="MC"><ID>00000010007</ID><Qty>1</Qty><Cost>400</Cost></Gds><Gds xmlns="MC"><ID>00000010003</ID><Qty>1</Qty><Cost>400</Cost></Gds><Gds xmlns="MC"><ID>00000009954</ID><Qty>1</Qty><Cost>450</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+        )
+
+)
+
+Array
+(
+    [NAME] => Жанна
+    [EMAIL] => user_151793869815@cafre.ru
+    [PHONE] => 8(928) 429-5428
+    [LOCATION] => Московская область, Москва
+    [add] => false
+    [FULLADRES] => Московская область, Москва, 
+)
+res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre474</UID><Date xmlns="MC">2018-02-06T20:38:18</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">Р–Р°РЅРЅР°</Name><Phone xmlns="MC">8(928) 429-5428</Phone><Address xmlns="MC">РњРѕСЃРєРѕРІСЃРєР°СЏ РѕР±Р»Р°СЃС‚СЊ, РњРѕСЃРєРІР°, </Address><eMail xmlns="MC">user_151793869815@cafre.ru</eMail><Gds xmlns="MC"><ID>00000009828</ID><Qty>1</Qty><Cost>1079</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+        )
+
+)
+
+Array
+(
+    [NAME] => Аида Заббарова
+    [EMAIL] => tribeca424@mail.ru
+    [PHONE] => 89033422481
+    [LOCATION] => Московская область, Москва
+    [add] => false
+    [FULLADRES] => Московская область, Москва, 
+)
+res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre475</UID><Date xmlns="MC">2018-02-06T21:41:19</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">РђРёРґР° Р—Р°Р±Р±Р°СЂРѕРІР°</Name><Phone xmlns="MC">89033422481</Phone><Address xmlns="MC">РњРѕСЃРєРѕРІСЃРєР°СЏ РѕР±Р»Р°СЃС‚СЊ, РњРѕСЃРєРІР°, </Address><eMail xmlns="MC">tribeca424@mail.ru</eMail><Gds xmlns="MC"><ID>00000003886</ID><Qty>3</Qty><Cost>251</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+        )
+
+)
+
+Array
+(
+    [NAME] => Тест
+    [EMAIL] => user_151798162895@cafre.ru
+    [PHONE] => 8(999) 999-9999
+    [LOCATION] => Московская область, Москва
+    [add] => false
+    [FULLADRES] => Московская область, Москва, 
+)
+res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre476</UID><Date xmlns="MC">2018-02-07T08:33:49</Date><PrCode xmlns="MC" /><Comm xmlns="MC">С‚РµСЃС‚РѕРІС‹Р№ Р·Р°РєР°Р·</Comm><Name xmlns="MC">РўРµСЃС‚</Name><Phone xmlns="MC">8(999) 999-9999</Phone><Address xmlns="MC">РњРѕСЃРєРѕРІСЃРєР°СЏ РѕР±Р»Р°СЃС‚СЊ, РњРѕСЃРєРІР°, </Address><eMail xmlns="MC">user_151798162895@cafre.ru</eMail><Gds xmlns="MC"><ID>00000015863</ID><Qty>1</Qty><Cost>375</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)
+
+Array
+(
+    [NAME] => Тест
+    [EMAIL] => test33@test.ru
+    [PHONE] => 8(999) 999-9999
+    [LOCATION] => Московская область, Москва
+    [ADDRESS] => тест
+    [add] => false
+    [FULLADRES] => тест
+)
+res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre477</UID><Date xmlns="MC">2018-02-07T08:35:04</Date><PrCode xmlns="MC" /><Comm xmlns="MC">С‚РµСЃС‚РѕРІС‹Р№ Р·Р°РєР°Р·</Comm><Name xmlns="MC">РўРµСЃС‚</Name><Phone xmlns="MC">8(999) 999-9999</Phone><Address xmlns="MC">С‚РµСЃС‚</Address><eMail xmlns="MC">test33@test.ru</eMail><Gds xmlns="MC"><ID>00000015862</ID><Qty>1</Qty><Cost>410</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)
+
+Array
+(
+    [NAME] => Тест
+    [EMAIL] => test33@test.ru
+    [PHONE] => 8(999) 999-9999
+    [LOCATION] => Московская область, Москва
+    [add] => false
+    [FULLADRES] => Московская область, Москва, 
+)
+res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre478</UID><Date xmlns="MC">2018-02-07T08:35:44</Date><PrCode xmlns="MC" /><Comm xmlns="MC">С‚РµСЃС‚РѕРІС‹Р№</Comm><Name xmlns="MC">РўРµСЃС‚</Name><Phone xmlns="MC">8(999) 999-9999</Phone><Address xmlns="MC">РњРѕСЃРєРѕРІСЃРєР°СЏ РѕР±Р»Р°СЃС‚СЊ, РњРѕСЃРєРІР°, </Address><eMail xmlns="MC">test33@test.ru</eMail><Gds xmlns="MC"><ID>00000015863</ID><Qty>1</Qty><Cost>375</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)
+
+Array
+(
+    [NAME] => Анна
+    [EMAIL] => ane4ka9292@inbox.ru
+    [PHONE] => 8(916) 711-9269
+    [LOCATION] => Московская область, Москва
+    [ADDRESS] => москва, ул. Обручева, 30/1, стр 2, БЦ Кругозор
+    [add] => false
+    [FULLADRES] => москва, ул. Обручева, 30/1, стр 2, БЦ Кругозор
+)
+res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre479</UID><Date xmlns="MC">2018-02-07T10:23:14</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">РђРЅРЅР°</Name><Phone xmlns="MC">8(916) 711-9269</Phone><Address xmlns="MC">РјРѕСЃРєРІР°, СѓР». РћР±СЂСѓС‡РµРІР°, 30/1, СЃС‚СЂ 2, Р‘Р¦ РљСЂСѓРіРѕР·РѕСЂ</Address><eMail xmlns="MC">ane4ka9292@inbox.ru</eMail><Gds xmlns="MC"><ID>00000019925</ID><Qty>1</Qty><Cost>378</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)
+
+Array
+(
+    [NAME] => Дарья
+    [EMAIL] => firsova.daria2015@yandex.ru
+    [PHONE] => 8(915) 333-1577
+    [LOCATION] => Московская область, Москва
+    [ADDRESS] => Московская область, г.Электросталь, пункт выдачи заказов СДЭК ул.Горького 15.С наложенным платежом, отправить по тарифу посылка склад-склад
+    [add] => false
+    [FULLADRES] => Московская область, г.Электросталь, пункт выдачи заказов СДЭК ул.Горького 15.С наложенным платежом, отправить по тарифу посылка склад-склад
+)
+res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre480</UID><Date xmlns="MC">2018-02-07T10:55:12</Date><PrCode xmlns="MC" /><Comm xmlns="MC">РњРѕСЃРєРѕРІСЃРєР°СЏ РѕР±Р»Р°СЃС‚СЊ, Рі.Р­Р»РµРєС‚СЂРѕСЃС‚Р°Р»СЊ, РїСѓРЅРєС‚ РІС‹РґР°С‡Рё Р·Р°РєР°Р·РѕРІ РЎР”Р­Рљ СѓР».Р“РѕСЂСЊРєРѕРіРѕ 15.РЎ РЅР°Р»РѕР¶РµРЅРЅС‹Рј РїР»Р°С‚РµР¶РѕРј, РѕС‚РїСЂР°РІРёС‚СЊ РїРѕ С‚Р°СЂРёС„Сѓ РїРѕСЃС‹Р»РєР° СЃРєР»Р°Рґ-СЃРєР»Р°Рґ</Comm><Name xmlns="MC">Р”Р°СЂСЊСЏ</Name><Phone xmlns="MC">8(915) 333-1577</Phone><Address xmlns="MC">РњРѕСЃРєРѕРІСЃРєР°СЏ РѕР±Р»Р°СЃС‚СЊ, Рі.Р­Р»РµРєС‚СЂРѕСЃС‚Р°Р»СЊ, РїСѓРЅРєС‚ РІС‹РґР°С‡Рё Р·Р°РєР°Р·РѕРІ РЎР”Р­Рљ СѓР».Р“РѕСЂСЊРєРѕРіРѕ 15.РЎ РЅР°Р»РѕР¶РµРЅРЅС‹Рј РїР»Р°С‚РµР¶РѕРј, РѕС‚РїСЂР°РІРёС‚СЊ РїРѕ С‚Р°СЂРёС„Сѓ РїРѕСЃС‹Р»РєР° СЃРєР»Р°Рґ-СЃРєР»Р°Рґ</Address><eMail xmlns="MC">firsova.daria2015@yandex.ru</eMail><Gds xmlns="MC"><ID>00000009802</ID><Qty>1</Qty><Cost>1124</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)
+
+Array
+(
+    [NAME] => Елена
+    [EMAIL] => e.buriakova@mail.ru
+    [PHONE] => 8(919) 996-2476
+    [LOCATION] => Московская область, Москва
+    [ADDRESS] => Волгоградский пр-т, д. 32, к. 45
+    [add] => false
+    [FULLADRES] => Волгоградский пр-т, д. 32, к. 45
+)
+res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre481</UID><Date xmlns="MC">2018-02-07T11:42:37</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">Р•Р»РµРЅР°</Name><Phone xmlns="MC">8(919) 996-2476</Phone><Address xmlns="MC">Р’РѕР»РіРѕРіСЂР°РґСЃРєРёР№ РїСЂ-С‚, Рґ. 32, Рє. 45</Address><eMail xmlns="MC">e.buriakova@mail.ru</eMail><Gds xmlns="MC"><ID>00000019528</ID><Qty>3</Qty><Cost>150</Cost></Gds><Gds xmlns="MC"><ID>00000019463</ID><Qty>2</Qty><Cost>150</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)
+
+Array
+(
+    [NAME] => Валерий Беспомощнов
+    [EMAIL] => user@host.com
+    [PHONE] => 8(999) 999-9999
+    [LOCATION] => Московская область, Москва
+    [ADDRESS] => Мытищи
+    [add] => false
+    [FULLADRES] => Мытищи
+)
+res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre482</UID><Date xmlns="MC">2018-02-07T12:06:01</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">Р’Р°Р»РµСЂРёР№ Р‘РµСЃРїРѕРјРѕС‰РЅРѕРІ</Name><Phone xmlns="MC">8(999) 999-9999</Phone><Address xmlns="MC">РњС‹С‚РёС‰Рё</Address><eMail xmlns="MC">user@host.com</eMail><Gds xmlns="MC"><ID>00000015862</ID><Qty>1</Qty><Cost>410</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)
+
+Array
+(
+    [NAME] => Сергей
+    [EMAIL] => GzarkV@gmail.com
+    [PHONE] => 8(988) 539-8002
+    [LOCATION] => Московская область, Москва
+    [add] => false
+    [FULLADRES] => Московская область, Москва, 
+)
+res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre483</UID><Date xmlns="MC">2018-02-07T12:12:21</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">РЎРµСЂРіРµР№</Name><Phone xmlns="MC">8(988) 539-8002</Phone><Address xmlns="MC">РњРѕСЃРєРѕРІСЃРєР°СЏ РѕР±Р»Р°СЃС‚СЊ, РњРѕСЃРєРІР°, </Address><eMail xmlns="MC">GzarkV@gmail.com</eMail><Gds xmlns="MC"><ID>00000024615</ID><Qty>3</Qty><Cost>750</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)
+
+Array
+(
+    [NAME] => Валерий Беспомощнов
+    [EMAIL] => user@host.com
+    [PHONE] => 8(999) 999-9999
+    [LOCATION] => Московская область, Москва
+    [ADDRESS] => Мытищи
+    [add] => false
+    [FULLADRES] => Мытищи
+)
+res=
+Array
+(
+    [NAME] => Валерий Беспомощнов
+    [EMAIL] => user@host.com
+    [PHONE] => 8(999) 999-9999
+    [LOCATION] => Московская область, Москва
+    [ADDRESS] => Мытищи
+    [add] => false
+    [FULLADRES] => Мытищи
+)
+res=
+Array
+(
+    [NAME] => Беспомощнов Валерий
+    [EMAIL] => web47@yandex.ru
+    [PHONE] => 89093009900
+    [LOCATION] => Московская область, Москва
+    [add] => false
+    [FULLADRES] => Московская область, Москва, 
+)
+res=
+Array
+(
+    [NAME] => Иван Дулин
+    [EMAIL] => dulin@chelyabinks.ru
+    [PHONE] => 8(909) 300-9900
+    [LOCATION] => Московская область, Москва
+    [add] => false
+    [FULLADRES] => Московская область, Москва, 
+)
+ 487res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre487</UID><Date xmlns="MC">2018-02-07T12:45:39</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">РРІР°РЅ Р”СѓР»РёРЅ</Name><Phone xmlns="MC">8(909) 300-9900</Phone><Address xmlns="MC">РњРѕСЃРєРѕРІСЃРєР°СЏ РѕР±Р»Р°СЃС‚СЊ, РњРѕСЃРєРІР°, </Address><eMail xmlns="MC">dulin@chelyabinks.ru</eMail><Gds xmlns="MC"><ID>00000013065</ID><Qty>1</Qty><Cost>550</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)
+
+Array
+(
+    [NAME] => Иван Дулин
+    [EMAIL] => dulin@chelyabinks.ru
+    [PHONE] => 8(909) 300-9900
+    [LOCATION] => Московская область, Москва
+    [add] => false
+    [FULLADRES] => Московская область, Москва, 
+)
+ 490res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre490</UID><Date xmlns="MC">2018-02-07T12:57:31</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">РРІР°РЅ Р”СѓР»РёРЅ</Name><Phone xmlns="MC">8(909) 300-9900</Phone><Address xmlns="MC">РњРѕСЃРєРѕРІСЃРєР°СЏ РѕР±Р»Р°СЃС‚СЊ, РњРѕСЃРєРІР°, </Address><eMail xmlns="MC">dulin@chelyabinks.ru</eMail><Gds xmlns="MC"><ID>00000024615</ID><Qty>1</Qty><Cost>750</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)
+
+Array
+(
+    [NAME] => Светлана
+    [EMAIL] => mail_mail_mail_mail91@mail.ru
+    [PHONE] => 8(928) 406-3810
+    [LOCATION] => Московская область, Москва
+    [ADDRESS] => Краснодарский край, 
+ст.Старощербиовская, 
+ул.Чкалова, 135
+353620
+    [add] => false
+    [FULLADRES] => Краснодарский край, 
+ст.Старощербиовская, 
+ул.Чкалова, 135
+353620
+)
+ 491res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre491</UID><Date xmlns="MC">2018-02-07T13:35:03</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">РЎРІРµС‚Р»Р°РЅР°</Name><Phone xmlns="MC">8(928) 406-3810</Phone><Address xmlns="MC">РљСЂР°СЃРЅРѕРґР°СЂСЃРєРёР№ РєСЂР°Р№, 
+СЃС‚.РЎС‚Р°СЂРѕС‰РµСЂР±РёРѕРІСЃРєР°СЏ, 
+СѓР».Р§РєР°Р»РѕРІР°, 135
+353620</Address><eMail xmlns="MC">mail_mail_mail_mail91@mail.ru</eMail><Gds xmlns="MC"><ID>00000008904</ID><Qty>10</Qty><Cost>44</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)
+
+Array
+(
+    [NAME] => Аида
+    [EMAIL] => akaewa@mail.ru
+    [PHONE] => 8(928) 519-7969
+    [LOCATION] => Московская область, Москва
+    [ADDRESS] => Дагестан город Хасавюрт. Улица воробьева 33 кв83
+    [add] => false
+    [FULLADRES] => Дагестан город Хасавюрт. Улица воробьева 33 кв83
+)
+ 492res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre492</UID><Date xmlns="MC">2018-02-07T14:43:42</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">РђРёРґР°</Name><Phone xmlns="MC">8(928) 519-7969</Phone><Address xmlns="MC">Р”Р°РіРµСЃС‚Р°РЅ РіРѕСЂРѕРґ РҐР°СЃР°РІСЋСЂС‚. РЈР»РёС†Р° РІРѕСЂРѕР±СЊРµРІР° 33 РєРІ83</Address><eMail xmlns="MC">akaewa@mail.ru</eMail><Gds xmlns="MC"><ID>00000021891</ID><Qty>3</Qty><Cost>557</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)
+
+Array
+(
+    [NAME] => Полина
+    [EMAIL] => haypolina@gmail.com
+    [PHONE] => 8(902) 818-6838
+    [LOCATION] => Московская область, Москва
+    [ADDRESS] => г. Тюмень
+    [add] => false
+    [FULLADRES] => г. Тюмень
+)
+ 493res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre493</UID><Date xmlns="MC">2018-02-07T19:52:51</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">РџРѕР»РёРЅР°</Name><Phone xmlns="MC">8(902) 818-6838</Phone><Address xmlns="MC">Рі. РўСЋРјРµРЅСЊ</Address><eMail xmlns="MC">haypolina@gmail.com</eMail><Gds xmlns="MC"><ID>00000003921</ID><Qty>6</Qty><Cost>251</Cost></Gds><Gds xmlns="MC"><ID>00000018121</ID><Qty>1</Qty><Cost>854</Cost></Gds><Gds xmlns="MC"><ID>00000003920</ID><Qty>6</Qty><Cost>251</Cost></Gds><Gds xmlns="MC"><ID>00000008674</ID><Qty>1</Qty><Cost>512</Cost></Gds><Gds xmlns="MC"><ID>00000010118</ID><Qty>1</Qty><Cost>385</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)
+
+Array
+(
+    [NAME] => Андрей
+    [EMAIL] => asogolaev@gmail.com
+    [PHONE] => 8(926) 205-5510
+    [LOCATION] => Московская область, Москва
+    [ADDRESS] => Москва, Рублевское шоссе, 99к4, кв. 93
+    [add] => false
+    [FULLADRES] => Москва, Рублевское шоссе, 99к4, кв. 93
+)
+ 494res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre494</UID><Date xmlns="MC">2018-02-07T20:28:51</Date><PrCode xmlns="MC" /><Comm xmlns="MC">РџСЂРѕС€Сѓ РІС‹СЃР»Р°С‚СЊ С‚СЂРµРє -РЅРѕРјРµСЂ РґР»СЏ РѕС‚СЃР»РµР¶РёРІР°РЅРёСЏ РїРѕСЃС‹Р»РєРё, РїРѕС‚РѕРјСѓ С‡С‚Рѕ РїРѕС‡С‚Р° РЅРµ РІСЃРµРіРґР° РїСЂРёРЅРѕСЃРёС‚ РёР·РІРµС‰РµРЅРёСЏ РІРѕРІСЂРµРјСЏ. </Comm><Name xmlns="MC">РђРЅРґСЂРµР№</Name><Phone xmlns="MC">8(926) 205-5510</Phone><Address xmlns="MC">РњРѕСЃРєРІР°, Р СѓР±Р»РµРІСЃРєРѕРµ С€РѕСЃСЃРµ, 99Рє4, РєРІ. 93</Address><eMail xmlns="MC">asogolaev@gmail.com</eMail><Gds xmlns="MC"><ID>00000020123</ID><Qty>5</Qty><Cost>234</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)
+
+Array
+(
+    [NAME] => Рушания
+    [EMAIL] => user_151802490099@cafre.ru
+    [PHONE] => 8(917) 254-1633
+    [LOCATION] => Московская область, Москва
+    [add] => false
+    [FULLADRES] => Московская область, Москва, 
+)
+ 495res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre495</UID><Date xmlns="MC">2018-02-07T20:35:01</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">Р СѓС€Р°РЅРёСЏ</Name><Phone xmlns="MC">8(917) 254-1633</Phone><Address xmlns="MC">РњРѕСЃРєРѕРІСЃРєР°СЏ РѕР±Р»Р°СЃС‚СЊ, РњРѕСЃРєРІР°, </Address><eMail xmlns="MC">user_151802490099@cafre.ru</eMail><Gds xmlns="MC"><ID>00000017727</ID><Qty>1</Qty><Cost>890</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)
+
+Array
+(
+    [NAME] => Андрей
+    [EMAIL] => asogolaev@gmail.com
+    [PHONE] => 8(926) 205-5510
+    [LOCATION] => Московская область, Москва
+    [ADDRESS] => Москва, Рублевское шоссе, 99к4, кв. 93
+    [add] => false
+    [FULLADRES] => Москва, Рублевское шоссе, 99к4, кв. 93
+)
+ 496res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre496</UID><Date xmlns="MC">2018-02-07T20:49:45</Date><PrCode xmlns="MC" /><Comm xmlns="MC">РќСѓР¶РЅРѕ РѕС‚С‚РµРЅРѕРє 3. Р С‚СЂРµРє РЅРѕРјРµСЂ РґР»СЏ РѕС‚СЃР»РµР¶РёРІР°РЅРёСЏ РїРѕСЃС‹Р»РєРё</Comm><Name xmlns="MC">РђРЅРґСЂРµР№</Name><Phone xmlns="MC">8(926) 205-5510</Phone><Address xmlns="MC">РњРѕСЃРєРІР°, Р СѓР±Р»РµРІСЃРєРѕРµ С€РѕСЃСЃРµ, 99Рє4, РєРІ. 93</Address><eMail xmlns="MC">asogolaev@gmail.com</eMail><Gds xmlns="MC"><ID>00000020123</ID><Qty>5</Qty><Cost>234</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)
+
+Array
+(
+    [NAME] => Наталья
+    [EMAIL] => user_151802784207@cafre.ru
+    [PHONE] => 8(912) 104-2230
+    [LOCATION] => Московская область, Москва
+    [add] => false
+    [FULLADRES] => Московская область, Москва, 
+)
+ 497res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre497</UID><Date xmlns="MC">2018-02-07T21:24:02</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">РќР°С‚Р°Р»СЊСЏ</Name><Phone xmlns="MC">8(912) 104-2230</Phone><Address xmlns="MC">РњРѕСЃРєРѕРІСЃРєР°СЏ РѕР±Р»Р°СЃС‚СЊ, РњРѕСЃРєРІР°, </Address><eMail xmlns="MC">user_151802784207@cafre.ru</eMail><Gds xmlns="MC"><ID>00000009828</ID><Qty>1</Qty><Cost>1016</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)
+
+Array
+(
+    [NAME] => Наталья
+    [EMAIL] => user_151802844708@cafre.ru
+    [PHONE] => 8(987) 995-5486
+    [LOCATION] => Московская область, Москва
+    [add] => false
+    [FULLADRES] => Московская область, Москва, 
+)
+ 498res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre498</UID><Date xmlns="MC">2018-02-07T21:34:07</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">РќР°С‚Р°Р»СЊСЏ</Name><Phone xmlns="MC">8(987) 995-5486</Phone><Address xmlns="MC">РњРѕСЃРєРѕРІСЃРєР°СЏ РѕР±Р»Р°СЃС‚СЊ, РњРѕСЃРєРІР°, </Address><eMail xmlns="MC">user_151802844708@cafre.ru</eMail><Gds xmlns="MC"><ID>00000003894</ID><Qty>4</Qty><Cost>251</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)
+
+Array
+(
+    [NAME] => Валентина
+    [EMAIL] => zanoza_80@mail.ru
+    [PHONE] => 8(914) 271-4697
+    [LOCATION] => Московская область, Москва
+    [ADDRESS] => Республика Саха (Якутия), г. Якутск, 202 микрорайон, 11 корпус, 42 кв. 
+    [add] => false
+    [FULLADRES] => Республика Саха (Якутия), г. Якутск, 202 микрорайон, 11 корпус, 42 кв. 
+)
+ 499res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre499</UID><Date xmlns="MC">2018-02-08T01:28:54</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">Р’Р°Р»РµРЅС‚РёРЅР°</Name><Phone xmlns="MC">8(914) 271-4697</Phone><Address xmlns="MC">Р РµСЃРїСѓР±Р»РёРєР° РЎР°С…Р° (РЇРєСѓС‚РёСЏ), Рі. РЇРєСѓС‚СЃРє, 202 РјРёРєСЂРѕСЂР°Р№РѕРЅ, 11 РєРѕСЂРїСѓСЃ, 42 РєРІ. </Address><eMail xmlns="MC">zanoza_80@mail.ru</eMail><Gds xmlns="MC"><ID>00000024563</ID><Qty>1</Qty><Cost>575</Cost></Gds><Gds xmlns="MC"><ID>00000024615</ID><Qty>1</Qty><Cost>750</Cost></Gds><Gds xmlns="MC"><ID>00000024616</ID><Qty>1</Qty><Cost>750</Cost></Gds><Gds xmlns="MC"><ID>00000001953</ID><Qty>2</Qty><Cost>133</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)

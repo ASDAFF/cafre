@@ -15,18 +15,11 @@ $aMenuLinks = Array(
 		"" 
 	),
 	Array(
-		"Производители", 
-		"/info/brands/", 
+		"Карта сайта", 
+		"/sitemap/", 
 		Array(), 
 		Array(), 
 		"" 
-	),
-    Array(
-        "Карта сайта", 
-        "/sitemap/", 
-        Array(), 
-        Array(), 
-        "" 
-    )
+	)
 );
 ?>

@@ -98,7 +98,7 @@ function sendOrder2WSDL($order_id, $arFields, $arOrder, $isnew){
 		//file_put_contents($_SERVER["DOCUMENT_ROOT"].'/work/zakaz.xml', $qF.$qO.'is_new='.$qN."\n--\n", FILE_APPEND);
 		file_put_contents($_SERVER["DOCUMENT_ROOT"].'/work/zakaz.xml', $s."\n", FILE_APPEND); //, FILE_APPEND
 		file_put_contents($_SERVER["DOCUMENT_ROOT"].'/work/zakaz.xml', 'res='.$result, FILE_APPEND);
-		file_put_contents($_SERVER["DOCUMENT_ROOT"].'/work/log.txt', "\n".$checkProps.'res='.$result, FILE_APPEND);
+		file_put_contents($_SERVER["DOCUMENT_ROOT"].'/work/log.txt', "\n".$checkProps.' '.$arOrder['ORDER']['ID'].'res='.$result, FILE_APPEND);
 	else:
 		file_put_contents($_SERVER["DOCUMENT_ROOT"].'/work/zakaz.xml', 'double:'.$arOrder['ID']."\n--\n", FILE_APPEND);
 	endif;
@@ -130,7 +130,9 @@ function get_product($code1c) {
 }
 
 function wsdl($name, $arParams=array()) {
-	$server = '37.18.74.47:8002/WebServices/Granite.Gateway.ExportService.asmx';
+	//$server = '37.18.74.47:8002/WebServices/Granite.Gateway.ExportService.asmx';
+	//$server = '37.18.74.47:8002/WebServices/Granite.Gateway.Export.Service.svc';
+	$server = 'estel.m-cosmetica.ru/webservices/Granite.Gateway.Export.Service.svc';
 	$wsdl_status = 0;
 	$port = 80;
 	$timeout = 10;
@@ -141,8 +143,11 @@ function wsdl($name, $arParams=array()) {
 		if (strlen(@fread($fp,1024))>0) $wsdl_status = 1;
 		fclose ($fp);
 	}
-	if($wsdl_status>0) {
-		$client = new SoapClient('http://37.18.74.47:8002/WebServices/Granite.Gateway.ExportService.asmx?WSDL');
+	//if($wsdl_status>0)
+	if(true) {
+		//$client = new SoapClient('http://37.18.74.47:8002/WebServices/Granite.Gateway.ExportService.asmx?WSDL');
+		//$client = new SoapClient('http://37.18.74.47:8002/WebServices/Granite.Gateway.Export.Service.svc?WSDL', array('cache_wsdl' => WSDL_CACHE_NONE));
+		$client = new SoapClient('http://estel.m-cosmetica.ru/webservices/Granite.Gateway.Export.Service.svc?WSDL', array('cache_wsdl' => WSDL_CACHE_NONE));
 		if(sizeof($arParams>0))
 			return  $client->$name($arParams);
 		else

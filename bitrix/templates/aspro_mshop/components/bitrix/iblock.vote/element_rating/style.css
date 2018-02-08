@@ -1,0 +1,6 @@
+div.star-active { cursor: pointer; }
+div.star-voted, div.star-over { }
+div.star-empty { background: url(images/stars.png) 0px -19px no-repeat; width:20px; height:20px; overflow:hidden; }
+div.star-voted { background: url(images/stars.png) 0px 0px   no-repeat; width:20px; height:20px; overflow:hidden; }
+div.star-over { background: url(images/stars.png) 0px 0px   no-repeat; width:20px; height:20px; overflow:hidden; }
+

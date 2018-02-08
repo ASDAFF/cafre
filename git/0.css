@@ -1,0 +1,43 @@
+body	{
+		padding: 15px 175px 20px 80px;
+		font-family: monospace;
+		font-size: 1.05em;
+	}
+	a {
+		color: #000000;
+		font-weight: bold;
+	}
+	.i {
+		color: #7cb992;
+	}
+	.bb {
+		font-weight: bold;
+		margin-top: 25px;
+		display: inline-block;
+	}
+	.files_in_commit {
+		display: none;
+		line-height: 2em;
+	}
+	.code {
+		font-size: 13px;
+    line-height: 1.5em;
+    font-family: monospace;
+	}
+	.red {
+		color: red;
+		font-weight: bold;
+	}
+	.green {
+	color: green;	
+	font-weight: bold;
+	}
+	.send_file {
+		outline: none;
+		border: none;
+		cursor: pointer;
+    padding: 5px 20px;
+    margin: 10px 0;
+    font-size: 1em;
+    border-radius: 4px;
+	}

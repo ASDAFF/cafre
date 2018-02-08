@@ -3,6 +3,11 @@ require($_SERVER["DOCUMENT_ROOT"]."/bitrix/header.php");
 $APPLICATION->SetTitle("Условия доставки");
 ?><div class="row">
 	<div class="col-xs-12">
+	<p>
+	Бесплатная доставка ваших заказов: <br />
+	* По Москве и Московской области - при сумме заказа от 3000 р.<br />
+	* По всей России - от 5000 р.<br />
+	</p>
 		<p>
  <img src="http://estel.m-cosmetica.ru/images/sdek.jpg" style="height: 55px;">
 		</p>

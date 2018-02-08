@@ -1,0 +1,1 @@
+<?$arResult = CMShop::getChilds($arResult);?>

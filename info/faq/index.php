@@ -28,7 +28,7 @@ $APPLICATION->SetTitle("Вопрос-ответ");
 	);?>
 	<?Bitrix\Main\Page\Frame::getInstance()->finishDynamicWithID("form-faq-block", "");?>
 </div>
-<?$APPLICATION->IncludeComponent("bitrix:news.list", "faq", array(
+<?/*$APPLICATION->IncludeComponent("bitrix:news.list", "faq", array(
 	"IBLOCK_TYPE" => "aspro_mshop_content",
 	"IBLOCK_ID" => "6",
 	"NEWS_COUNT" => "1000",
@@ -79,5 +79,5 @@ $APPLICATION->SetTitle("Вопрос-ответ");
 	"AJAX_OPTION_ADDITIONAL" => ""
 	),
 	false
-);?>
+);*/?>
 <?require($_SERVER["DOCUMENT_ROOT"]."/bitrix/footer.php");?>

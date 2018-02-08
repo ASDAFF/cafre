@@ -1,7 +1,7 @@
 <?
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/header.php");
-$APPLICATION->SetPageProperty("title", "Профессиональная косметика по низким ценам. Купить косметику Estel, Londa, Wella, Schwarzkopf, Teana, Next - в интернет-магазине Lakosa.ru");
-$APPLICATION->SetTitle("Профессиональная косметика по низким ценам. Купить косметику Estel, Londa, Wella, Schwarzkopf, Teana, Next - в интернет-магазине Mokeev.ru");
+$APPLICATION->SetPageProperty("title", "Интернет-магазин профессиональной косметики Cafre.ru");
+$APPLICATION->SetTitle("Интернет-магазин профессиональной косметики Cafre.ru");
 ?><?global $SITE_THEME, $TEMPLATE_OPTIONS;?> <?$APPLICATION->IncludeComponent(
 	"aspro:com.banners.mshop",
 	"top_slider_banners",
