@@ -28,11 +28,7 @@ elseif($_REQUEST['clean']=='true') {
 }
 else {
 	$echo='';
-	/*	
-	$ftp_server="iitovcf5.beget.tech";
-	$ftp_user_name="iitovcf5_10";
-	$ftp_user_pass="q6b4*p&Q";
-	*/	
+
 	$ftp_server="95.213.222.48";
 	$ftp_user_name="git";
 	$ftp_user_pass="5U3h1D6x";	
@@ -69,45 +65,4 @@ else {
 		}
 	}
 	echo $echo;
-
-
-
-
-	
-	/*
-	$conn_id = ftp_connect($ftp_server);
-	
-	$login_result = ftp_login($conn_id, $ftp_user_name, $ftp_user_pass);
-	ftp_pasv($conn_id, true);
-	ftp_chdir($conn_id, 'home/bitrix/www');
-	$commit=$_REQUEST['commit'];
-	$name_commit=$_REQUEST['name_commit'];
-	foreach ($_REQUEST as $key => $value) {
-		if(intval($key)>0) {
-			$file = substr($value, 1);
-			$dir=explode('/', $file);
-			$dir[count($dir)-1]='';
-			$str='';
-			foreach ($dir as $k => $value2) {
-				if($value2=='') continue;
-				if(!in_array($str==''?$value2:$str.$value2, (array)ftp_nlist($conn_id,$str))) {
-					ftp_mkdir($conn_id, $str.$value2.'/');
-				}
-				$str.=$value2.'/';	
-			}
-			if(ftp_put($conn_id, '/home/bitrix/www'.$file, $_SERVER['DOCUMENT_ROOT'].$file, FTP_ASCII)) {
-	 			$echo.= "$file загружен на сервер\n";
-	 			file_put_contents($_SERVER['DOCUMENT_ROOT'].'/git/0.txt', PHP_EOL.date('d.m.Y h:i').' '.$file.' ('.$name_commit.')', FILE_APPEND);
-			} else {
-	 			$echo.= "Не удалось загрузить $file на сервер\n";
-			}
-			if (ftp_chmod($conn_id, 0644, '/home/bitrix/www'.$file) !== false) {
- 				//echo "Права доступа к файлу $file изменены на 644\n";
-			} else {
-	 			$echo.= "Не удалось изменить права доступа к файлу $file\n";
-			}
-		}
-	}
-	echo $echo;
-	*/
 } ?>

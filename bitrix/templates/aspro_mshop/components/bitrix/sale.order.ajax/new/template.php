@@ -119,23 +119,11 @@ function InitOrderJS(){
 	<?
 	unset($_COOKIE["checked"]);
 	echo $_SESSION["checked"];
-	if(!$USER->IsAuthorized() && $arParams["ALLOW_AUTO_REGISTER"] == "N")
+	if(!$USER->IsAuthorized() )
 	{
-		if(!empty($arResult["ERROR"]))
-		{
-			foreach($arResult["ERROR"] as $v)
-				echo ShowError($v);
-		}
-		elseif(!empty($arResult["OK_MESSAGE"]))
-		{
-			foreach($arResult["OK_MESSAGE"] as $v)
-				echo ShowNote($v);
-		}
-
 		include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/auth.php");
 	}
-	else
-	{
+
 		if($arResult["USER_VALS"]["CONFIRM_ORDER"] == "Y" || $arResult["NEED_REDIRECT"] == "Y")
 		{
 			if(strlen($arResult["REDIRECT_URL"]) == 0)
@@ -176,20 +164,46 @@ function InitOrderJS(){
 			{
 				if (BXFormPosting === true)
 					return true;
-
-				BXFormPosting = true;
-				if(val != 'Y')
-					BX('confirmorder').value = 'N';
-
-				var orderForm = BX('ORDER_FORM');
-				BX.showWait();
-
-				<?if(CSaleLocation::isLocationProEnabled()):?>
-					BX.saleOrderAjax.cleanUp();
-				<?endif?>
-
-				BX.ajax.submit(orderForm, ajaxResult);
-
+				if($(document).find("form[name=order_auth_form]").length>0) {
+					$(document).find("form[name=order_auth_form]").next("#error").remove();
+					$.ajax({
+						data: {label: 'findEmail', email: $(document).find('[code=EMAIL]').val()},
+						type: "POST",
+						url: "/ajax/auth_order.php",
+						success: function(e) {
+							if(e!='no') {
+								$(document).find("form[name=order_auth_form]").after('<p id="error">Авторизуйтесь, такой email уже существует</p>');								
+								$(document).find("form[name=order_auth_form] [name=MY_LOGIN]").val($(document).find('[code=EMAIL]').val());
+								var scrollTop = $(document).find('form[name=order_auth_form]').offset().top;
+								$('html, body').stop().animate({
+									scrollTop: scrollTop
+								}, 500); 
+							}
+							else {
+								BXFormPosting = true;
+								if(val != 'Y')
+									BX('confirmorder').value = 'N';
+								var orderForm = BX('ORDER_FORM');
+								BX.showWait();
+								<?if(CSaleLocation::isLocationProEnabled()):?>
+									BX.saleOrderAjax.cleanUp();
+								<?endif?>
+								BX.ajax.submit(orderForm, ajaxResult);
+							}
+						}
+					});
+				}
+				else {
+					BXFormPosting = true;
+						if(val != 'Y')
+							BX('confirmorder').value = 'N';
+						var orderForm = BX('ORDER_FORM');
+						BX.showWait();
+						<?if(CSaleLocation::isLocationProEnabled()):?>
+							BX.saleOrderAjax.cleanUp();
+						<?endif?>
+						BX.ajax.submit(orderForm, ajaxResult);
+				}
 				return true;
 			}
 
@@ -462,7 +476,7 @@ jQuery(function($){
 				die();
 			}
 		}
-	}
+	
 	?>
 	</div>
 </div>

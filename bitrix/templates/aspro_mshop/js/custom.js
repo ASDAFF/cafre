@@ -88,7 +88,7 @@ $(function() {
     var brandBlock = $('.bottom_brand_block').get(0);
 
     if (brandBlock) {
-        var levels = $(this).find('h2,h3,h4');
+        var levels = $(brandBlock).find('h2,h3,h4');
         
         $(levels).each(function(i, l) {
             $(l).attr('id', 't'+i);

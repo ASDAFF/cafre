@@ -1,7 +1,7 @@
 <?
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/header.php");
 $APPLICATION->SetTitle("Корзина");
-?>
+/*?>
 <div style="display:none;">
 <?$APPLICATION->IncludeComponent(
 	"bitrix:sale.basket.basket", 
@@ -118,6 +118,7 @@ $APPLICATION->SetTitle("Корзина");
 ?>
 </div>
 <?
+*/
 // Выведем актуальную корзину для текущего пользователя
 CModule::IncludeModule("sale");
 $arBasketItems = array();

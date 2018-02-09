@@ -97,7 +97,7 @@ $MShopSectionID = $arSection["ID"];
 	<?$file = CFile::ResizeImageGet($res2["UF_IMG_BRAND"], array('width'=>266, 'height'=>160), BX_RESIZE_IMAGE_PROPORTIONAL, true);?>
 		<div class="top_brand_block" style="min-height: 70px;margin-top:0;">
 		<div class="img_brand_sec"><img src="<?=$file["src"];?>"/></div>
-		<div class="text_brand_sec"><p><?echo $res2["UF_TOP_TEXT"];?></p></div>
+		<div class="text_brand_sec"><p><?echo $res2["~UF_TOP_TEXT"];?></p></div>
 		</div>
 	<?}?>
 	<?endif;
