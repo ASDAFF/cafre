@@ -87,5 +87,5 @@ $(function () {
     });
 });
 </script>
-<?exec('git status', $all);
-print_r($all);?>
+<?/*exec('git status', $all);
+print_r($all);*/?>
