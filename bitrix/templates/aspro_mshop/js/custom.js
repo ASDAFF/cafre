@@ -106,4 +106,16 @@ $(function() {
     });
 
     $('.flex-direction-nav a').removeAttr('href');
+	
+	$('.mobile-nav__item .menu_title').on('click', function(e) {
+		e.preventDefault();
+		
+		if ($(window).width < 600) return;
+		
+		$('.mobile-nav__item-lvl2').hide();
+		
+		$(this).next().show();
+		
+		console.log(this, e.target);
+	});
 })

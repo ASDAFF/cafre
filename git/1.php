@@ -1,6 +1,6 @@
 <?
 header('Content-Type: text/html; charset= utf-8');
-if($_REQUEST['getcommit']=='true') {
+if(isset($_REQUEST['getcommit'])&&$_REQUEST['getcommit']=='true') {
 	$all=array();
 	$files=array();
 	$tmp=file('0.txt'); 
@@ -21,7 +21,7 @@ if($_REQUEST['getcommit']=='true') {
 	}
 	echo implode(',<br>', $files)."<br>";
 }
-elseif($_REQUEST['clean']=='true') {
+elseif(isset($_REQUEST['clean'])&&$_REQUEST['clean']=='true') {
 	$f = fopen('0.txt', 'w');
 	fclose($f);
 	echo "Готово";
@@ -35,10 +35,10 @@ else {
 	$conn_id = ftp_connect($ftp_server);	
 	$login_result = ftp_login($conn_id, $ftp_user_name, $ftp_user_pass);
 	ftp_pasv($conn_id, true);
-	ftp_chdir($conn_id, 'home/bitrix/www');
+	ftp_chdir($conn_id, '../');
 
-	$connection = ssh2_connect('188.120.232.110', 22);
-	ssh2_auth_password($connection, 'root', 'xvn6k3jvkxov');
+	$connection = ssh2_connect('95.213.222.48', 22);
+	ssh2_auth_password($connection, 'root', '6CNC094PcO40');
 	$sftp = ssh2_sftp($connection);
 	$commit=$_REQUEST['commit'];
 	$name_commit=$_REQUEST['name_commit'];
@@ -51,12 +51,11 @@ else {
 			foreach ($dir as $k => $value2) {
 				if($value2=='') continue;
 				if(!in_array($str==''?$value2:$str.$value2, (array)ftp_nlist($conn_id,$str))) {
-					ssh2_sftp_mkdir($sftp, '/home/bitrix/www/'.$str.$value2.'/');
+					ssh2_sftp_mkdir($sftp, '/var/www/www-root/data/www/cafre.ru/'.$str.$value2.'/');
 				}
 				$str.=$value2.'/';	
 			}
-			ssh2_scp_recv($connection,  '/home/bitrix/www/index.php',$_SERVER['DOCUMENT_ROOT'].'/101.txt');
-			if(ssh2_scp_send($connection,  $_SERVER['DOCUMENT_ROOT'].$file, '/home/bitrix/www'.$file,0644)) {
+			if(ssh2_scp_send($connection,  $_SERVER['DOCUMENT_ROOT'].$file, '/var/www/www-root/data/www/cafre.ru'.$file,0644)) {
 	 			$echo.= "$file загружен на сервер\n";
 	 			file_put_contents($_SERVER['DOCUMENT_ROOT'].'/git/0.txt', PHP_EOL.date('d.m.Y h:i').' '.$file.' ('.$name_commit.')', FILE_APPEND);
 			} else {
