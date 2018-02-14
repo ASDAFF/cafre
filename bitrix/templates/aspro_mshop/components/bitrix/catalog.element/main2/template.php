@@ -590,6 +590,7 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 				<div class="buy_block iblock">
 					<?if($arResult["OFFERS"] && $showCustomOffer){?>
 						<div class="sku_props">
+						<span>В наличии</span>
 							<?if (!empty($arResult['OFFERS_PROP'])){?>
 								<div class="bx_catalog_item_scu wrapper_sku" id="<? echo $arItemIDs["ALL_ITEM_IDS"]['PROP_DIV']; ?>">
 									<?foreach ($arSkuTemplate as $code => $strTemplate){

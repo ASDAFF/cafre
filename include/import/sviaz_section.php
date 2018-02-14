@@ -2,10 +2,12 @@
  require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");
  CModule::IncludeModule("iblock");
  CModule::IncludeModule("catalog");
+ CModule::IncludeModule("sale");
  include($_SERVER["DOCUMENT_ROOT"]."/include/import/class.php"); //Класс для открытия файа csv
 
-$fileurl = $_SERVER["DOCUMENT_ROOT"].'/include/import/SecListNew2.csv'; //Сам файл csv
+$fileurl = $_SERVER["DOCUMENT_ROOT"].'/include/import/dewal.csv'; //Сам файл csv
 try {
+	
 /*
 Функция записи в файл, делал чтобы посмотреть что выводит, так как вылазила ошибка 504, потому что очень много товаров, а по 1 не нужно выводить, так как связь работает
 	function object2file($value, $filename)
@@ -20,8 +22,78 @@ try {
     $csv = new CSV($fileurl); //Открываем наш csv
     $get_csv = $csv->getCSV();
  $result = array();
+ $result2 = array();
     foreach ($get_csv as $value2) {//получаем csv по столбцам, все уже настроенно, выбор идет по коду 1с
-	if($value2[3] == "SECTION_ID" || $value2[3] == "#Н/Д"){continue;} //исключал товары у которых нет id разделов
+	$array1[]=$value2[1];
+	$arf=array('ACTIVE'=>'Y','IBLOCK_ID'=>26);
+	$res = CIBlockElement::GetList(Array("SORT"=>"ASC"), $arf, false, false, array('ID', 'NAME','IBLOCK_ID','ACTIVE', 'PROPERTY_CODE1C', 'XML_ID'));
+
+	if($ob2 = $res->GetNextElement()){
+	$arFields2 = $ob2->GetFields();
+	
+	$array2[]=$arFields2["PROPERTY_CODE1C"];
+	$prob = str_replace(' ', '', $value2[2]);
+	$nomcen = str_replace(',', '.', $prob);
+	$val2["P"] = $nomcen;
+	//$offersExist = CCatalogSKU::getExistOffers($arFields2["ID"]);
+/*$obElement = new CIBlockElement();
+
+$SKUPropertyId = 230; 
+ $arOfferProps = array(
+  $SKUPropertyId => $arFields2["ID"],
+ );
+ $arOfferFields = array(
+  'NAME' => $arFields2["NAME"],
+  'IBLOCK_ID' => 27,
+  'ACTIVE' => 'Y',
+  'XML_ID' => $arFields2["XML_ID"],
+  'PROPERTY_VALUES' => $arOfferProps
+ );
+
+ $offerId = $obElement->Add($arOfferFields); // ID торгового предложения
+$arFields = Array(
+    "PRODUCT_ID" => $offerId,
+    "CATALOG_GROUP_ID" => 1,
+    "PRICE" => $val2["P"],
+    "CURRENCY" => "RUB"
+);
+
+$res = CPrice::GetList(
+        array(),
+        array(
+                "PRODUCT_ID" => $offerId,
+                "CATALOG_GROUP_ID" => 1
+            )
+    );
+
+if ($arr = $res->Fetch())
+{
+    CPrice::Update($arr["ID"], $arFields);
+}
+else
+{
+    CPrice::Add($arFields);
+}
+$arFields = array(
+                  "ID" => $offerId, 
+                  "QUANTITY " => 999
+                  );
+if(CCatalogProduct::Add($arFields))
+    echo "Добавили параметры товара к элементу каталога ".$offerId.'<br>';
+else
+    echo 'Ошибка добавления параметров<br>';
+
+$db_res = CCatalogProduct::GetByID($offerId);
+CCatalogProduct::Update($offerId, Array("QUANTITY"=>"999"));
+	
+	
+	
+	
+	
+	*/
+ 
+	}
+/*	if($value2[3] == "SECTION_ID" || $value2[3] == "#Н/Д"){continue;} //исключал товары у которых нет id разделов
 	$arf=array('ACTIVE'=>'Y','IBLOCK_ID'=>26, 'PROPERTY_CODE1C'=>$value2[0]);
 	$res = CIBlockElement::GetList(Array("SORT"=>"ASC"), $arf, false, false, array('ID','IBLOCK_ID','ACTIVE', 'PROPERTY_CODE1C'));
 
@@ -32,7 +104,7 @@ try {
 		$result[$arFields2["ID"]][] = $value2[3];
 		
 	}
-/*	
+	
 Старый вариант связи
 	$arr[] = Array("ID"=>$value2[3]);
 $arSelect2 = Array("ID", "NAME", "DATE_ACTIVE_FROM", "PROPERTY_CODE1C", "SECTION_ID");
@@ -54,14 +126,85 @@ object2file($result, 'array.txt');
 echo '<pre>';
 print_r($result);
 echo '</pre>';
-*/
+
 
 //Здесь связываем товары с разделами, даже если у товара много разделов, закоментировал, чтобы при открытии ничего сразу не стало привязыватся
 	foreach($result as $key => $val){
 //CIBlockElement::SetElementSection($key, $val);
 	}
+*/
 
+	//$offersExist = CCatalogSKU::getExistOffers($result);
+
+ 
+ //$res["price"] = $result2;
+
+
+/*foreach($res33 as $val){
+		$i++;
+	//$val["PRICE"] = $result2[$i];
+	foreach($val as $key => $val2){
+	echo '<pre>';
+print_r($val2["ID"]);
+echo '</pre>';
+CIBlockElement::Delete($val2["ID"]);
+//CCatalogProduct::Delete($val2["ID"]);
+	}
 	
+}
+
+$obElement = new CIBlockElement();
+
+$SKUPropertyId = 230; 
+ $arOfferProps = array(
+  $SKUPropertyId => 85151,
+ );
+ $arOfferFields = array(
+  'NAME' => "тест",
+  'IBLOCK_ID' => 27,
+  'ACTIVE' => 'Y',
+  'PROPERTY_VALUES' => $arOfferProps
+ );
+
+ $offerId = $obElement->Add($arOfferFields); // ID торгового предложения
+$arFields = Array(
+    "PRODUCT_ID" => $offerId,
+    "CATALOG_GROUP_ID" => 1,
+    "PRICE" => 222,
+    "CURRENCY" => "RUB"
+);
+
+$res = CPrice::GetList(
+        array(),
+        array(
+                "PRODUCT_ID" => $offerId,
+                "CATALOG_GROUP_ID" => 1
+            )
+    );
+
+if ($arr = $res->Fetch())
+{
+    CPrice::Update($arr["ID"], $arFields);
+}
+else
+{
+    CPrice::Add($arFields);
+}
+$arFields = array(
+                  "ID" => $offerId, 
+                  "QUANTITY " => 999
+                  );
+if(CCatalogProduct::Add($arFields))
+    echo "Добавили параметры товара к элементу каталога ".$PRODUCT_ID.'<br>';
+else
+    echo 'Ошибка добавления параметров<br>';
+
+$db_res = CCatalogProduct::GetByID($offerId);
+CCatalogProduct::Update($offerId, Array("QUANTITY"=>"999"));*/
+$result = array_diff($array1, $array2);
+echo '<pre>';
+print_r($result);
+echo '</pre>';
 }
 catch (Exception $e) { //Если csv файл не существует, выводим сообщение
     echo "Ошибка: " . $e->getMessage();

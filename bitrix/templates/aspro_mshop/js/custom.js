@@ -115,7 +115,14 @@ $(function() {
 		$('.mobile-nav__item-lvl2').hide();
 		
 		$(this).next().show();
-		
-		console.log(this, e.target);
 	});
+
+	$('.mobile-nav__item-lvl2 > .menu_item').on('click', function(e) {
+		if ($(this).next().hasClass('child_wrapp')) {
+			e.preventDefault();
+			$('.mobile-nav__item-lvl2 .child_wrapp').hide();
+
+			$(this).next().show();
+		}
+	})
 })

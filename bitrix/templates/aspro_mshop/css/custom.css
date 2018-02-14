@@ -876,6 +876,10 @@ ul.menu li:last-child .child.cat_menu {
 }
 
 @media (max-width: 768px) {
+	.breadcrumbs {
+		display: block;
+	}
+
 	#header .middle-h-row td {
 		display: block;
 	}
@@ -1364,11 +1368,8 @@ div.item-title {
 	display: table-cell;
 	vertical-align: middle;
 	width: 20%;
-	/*height: 80px;*/
-	/*border-radius: 5px;*/
-	/*background: white;*/
+	min-width: 100px;
 	text-align: center;
-	/*box-shadow: 0 0 2px 1px rgba(0,0,0,.3);*/
 }
 .img_brand_sec img {
 	position: absolute;
@@ -1453,6 +1454,15 @@ margin: 0 0 10px;
 	font-size: 17px;
 	font-weight: 800;
 	line-height: 1.41;
+}
+
+.container p,
+.fourlevel {
+	line-height: 20px;
+	margin: 0 0 10px;
+	font-size: 14px;
+	color: black;
+	font-family: 'Merriweather', sans-serif;
 }
 
 .sort_header.view_block {

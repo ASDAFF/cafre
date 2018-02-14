@@ -87,6 +87,7 @@ gtag('event', 'purchase', {
   "shipping": 0,
   "items": tarifs
 });
+window.dataLayer = window.dataLayer || [];
 /*
 dataLayer = [{
     'transactionId': '<?=$arResult["ORDER"]['ID']?>',
@@ -101,7 +102,6 @@ dataLayer = [{
                 price: '<?=$value['PRICE']?>',
                 quantity: '<?=$value['QUANTITY']?>'
 }];*/
-console.log(gtag);
  });
 </script>
 <?

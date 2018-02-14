@@ -334,7 +334,6 @@ if(!funcDefined('onLoadjqm')){
 			});
 
 			$('#one_click_buy_form').on("submit", function(){
-				console.log(222);
 				if($('.'+name+'_frame form input.error').length || $('.'+name+'_frame form textarea.error').length) {
 					return false
 				}
@@ -346,8 +345,6 @@ if(!funcDefined('onLoadjqm')){
 						dataType: "json", 
 						data:{"price": 0},
 						success: function(dataB){
-							console.log(dataB);
-							console.log(dataB.transaction_id);
 							$.ajax({
 								url: $this.attr('action'),
 								data: $this.serialize(),
@@ -359,8 +356,18 @@ if(!funcDefined('onLoadjqm')){
 								success: function(data) {
 									if(data.result == 'Y') {										
 										dataB.transaction_id=data.message;
-										console.log(dataB.transaction_id);
+										/*console.log(data);*/
 										gtag('event', 'purchase', dataB);
+										 
+										/*window.dataLayer = window.dataLayer || [];
+										dataLayer.push({
+											'transactionId': dataB.transaction_id,
+											'transactionAffiliation': dataB.affiliation,
+											'transactionTotal': dataB.value,
+											'transactionShipping':  dataB.shipping,
+											'transactionProducts': dataB.items
+										}); */
+										
 										$('.one_click_buy_result').show();
 										$('.one_click_buy_result_success').show();
 										purchaseCounter(data.message, arMShopOptions["COUNTERS"]["TYPE"]["QUICK_ORDER"]);

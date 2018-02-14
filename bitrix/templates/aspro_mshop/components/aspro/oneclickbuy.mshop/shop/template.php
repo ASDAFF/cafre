@@ -227,30 +227,6 @@ gtag('event', 'purchase', {
 </script>
 <?else:/*?>
 
-<script type="text/javascript">
-window.dataLayer = window.dataLayer || [];
-
-$('#one_click_buy_form').on('action_ga', function(e){
-	$this=$(this);
-e.preventDefault();
-
-var price = $(".wrap_prices > .price").text();
-$(price).serialize();
-				$.ajax({
-					url: "/ajax/action_flybas.php", 
-					type: "post", 
-					dataType: "json", 
-					data:{"price": price},
-					success: function(data){
-						console.log(price);
-						console.log(data);
-						console.log(data.transaction_id);
-						
-						gtag('event', 'purchase', data);
-					}
-				});
-});
-</script>
 <?*/endif;?>
 	</div>
 <script type="text/javascript">

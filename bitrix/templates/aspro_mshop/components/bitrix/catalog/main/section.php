@@ -9,17 +9,18 @@ CModule::IncludeModule("iblock");
 global $TEMPLATE_OPTIONS, $MShopSectionID;
 $arPageParams = $arSection = $section = array();
 if($arResult["VARIABLES"]["SECTION_ID"] > 0){
-	$db_list = CIBlockSection::GetList(array(), array('GLOBAL_ACTIVE' => 'Y', "ID" => $arResult["VARIABLES"]["SECTION_ID"], "IBLOCK_ID" => $arParams["IBLOCK_ID"]), true, array("ID", "IBLOCK_ID", "NAME", "DESCRIPTION", "UF_SECTION_DESCR", $arParams["LIST_BROWSER_TITLE"], $arParams["LIST_META_KEYWORDS"], $arParams["LIST_META_DESCRIPTION"], "IBLOCK_SECTION_ID"));
+	$db_list = CIBlockSection::GetList(array(), array('GLOBAL_ACTIVE' => 'Y', "ID" => $arResult["VARIABLES"]["SECTION_ID"], "IBLOCK_ID" => $arParams["IBLOCK_ID"]), true, array("ID", "IBLOCK_ID", "NAME", "DESCRIPTION", "UF_RUSNAME","UF_SECTION_DESCR", $arParams["LIST_BROWSER_TITLE"], $arParams["LIST_META_KEYWORDS"], $arParams["LIST_META_DESCRIPTION"], "IBLOCK_SECTION_ID"));
 	$section = $db_list->GetNext();
 }
 elseif(strlen(trim($arResult["VARIABLES"]["SECTION_CODE"])) > 0){
-	$db_list = CIBlockSection::GetList(array(), array('GLOBAL_ACTIVE' => 'Y', "=CODE" => $arResult["VARIABLES"]["SECTION_CODE"], "IBLOCK_ID" => $arParams["IBLOCK_ID"]), true, array("ID", "IBLOCK_ID", "NAME", "DESCRIPTION", "UF_SECTION_DESCR", $arParams["SECTION_DISPLAY_PROPERTY"], $arParams["LIST_BROWSER_TITLE"], $arParams["LIST_META_KEYWORDS"], $arParams["LIST_META_DESCRIPTION"], "IBLOCK_SECTION_ID"));
+	$db_list = CIBlockSection::GetList(array(), array('GLOBAL_ACTIVE' => 'Y', "=CODE" => $arResult["VARIABLES"]["SECTION_CODE"], "IBLOCK_ID" => $arParams["IBLOCK_ID"]), true, array("ID", "IBLOCK_ID", "NAME", "DESCRIPTION", "UF_RUSNAME","UF_SECTION_DESCR", $arParams["SECTION_DISPLAY_PROPERTY"], $arParams["LIST_BROWSER_TITLE"], $arParams["LIST_META_KEYWORDS"], $arParams["LIST_META_DESCRIPTION"], "IBLOCK_SECTION_ID"));
 	$section = $db_list->GetNext();
 }
 
 if($section){
 	$arSection["ID"] = $section["ID"];
 	$arSection["NAME"] = $section["NAME"];
+	$arSection["RUSNAME"] = $section["UF_RUSNAME"];
 	$arSection["IBLOCK_SECTION_ID"] = $section["IBLOCK_SECTION_ID"];
 	if($section[$arParams["SECTION_DISPLAY_PROPERTY"]]){
 		$arDisplayRes = CUserFieldEnum::GetList(array(), array("ID" => $section[$arParams["SECTION_DISPLAY_PROPERTY"]]));
@@ -682,7 +683,7 @@ global $MSHOP_SMART_FILTER, $filter_h1, $catalog_section_name, $catalog_seo;
 			}
         }
 		
-$page_seo_params["title"] = $APPLICATION->GetTitle();
+$page_seo_params["title"] = $APPLICATION->GetTitle().($arSection['RUSNAME']!=''?' ('.$arSection['RUSNAME'].')':'');
 if( !(strpos($arResult['VARIABLES']['SECTION_CODE_PATH'], 'vse_brendy/')===false) && substr_count($arResult['VARIABLES']['SECTION_CODE_PATH'], '/')==1 ) {
 	$this->SetViewTarget('h1');echo $page_seo_params["title"].$filter_h1;$this->EndViewTarget();
 	$APPLICATION->SetPageProperty("title", " аталог товаров ".$page_seo_params["title"].$filter_h1." - самый широкий ассортимент в интернет-магазине CAFRE".(isset($page_num)&&$page_num!='1'?" (—траница ".$page_num.")":''));
@@ -712,4 +713,5 @@ else {
 		$APPLICATION->SetPageProperty("title", $page_seo_params["title"].$filter_h1." - купить в интернет-магазине косметики Cafre.ru".(isset($page_num)&&$page_num!='1'?" (—траница ".$page_num.")":''));
 	}
 }
+
 ?>

@@ -13,7 +13,9 @@ $brend_list=array();
 		<li class="menu_opener"><a><?=GetMessage('MENU_NAME')?></a><i class="icon"></i></li>
 	</ul>
 	<ul class="menu_level">
-		<?foreach($arResult as $key => $arItem):?> 
+		<?
+		$brn = 0;
+		foreach($arResult as $key => $arItem):?> 
 			<?if($arItem["DEPTH_LEVEL"]==1):?>
 				<?if($prevLevel>1){
 					if($brend) {
@@ -106,14 +108,19 @@ $brend_list=array();
 				</li>
 			<?endif;?>
 			<?if($arItem["DEPTH_LEVEL"]==2&&$brend):
+			$brn++;
 				if(ereg('[^A-Za-z]', substr($arItem["TEXT"], 0, 1))) {
 					if(!in_array(substr($arItem["TEXT"], 0, 1), $ru_alphabet)) $ru_alphabet[]=substr($arItem["TEXT"], 0, 1);
 				}
 				else {
 					if(!in_array(substr($arItem["TEXT"], 0, 1), $en_alphabet)) $en_alphabet[]=substr($arItem["TEXT"], 0, 1);
 				}
-				$file = CFile::ResizeImageGet($brend_pic[$arItem["TEXT"]], array('width'=>180, 'height'=>60), BX_RESIZE_IMAGE_PROPORTIONAL, true);                
-				$brend_list[$arItem["TEXT"]]='<li class="brnd"><a href="'.$arItem["LINK"].'"><img src="'.$file['src'].'" alt=""><span>'.$arItem["TEXT"].'</span></a></li>';
+				$file = CFile::ResizeImageGet($brend_pic[$arItem["TEXT"]], array('width'=>180, 'height'=>60), BX_RESIZE_IMAGE_PROPORTIONAL, true);  
+				if($brn == 1 || $brn == 2 || $brn == 3 || $brn == 4 || $brn == 5 || $brn == 6 || $brn == 7){				
+				$brend_list[$arItem["TEXT"]]='<li class="brnd"><a href="'.$arItem["LINK"].'"><img src="'.$file['src'].'" alt=""><span><b>'.$arItem["TEXT"].'</b></span></a></li>';
+				}else{
+					$brend_list[$arItem["TEXT"]]='<li class="brnd"><a href="'.$arItem["LINK"].'"><img src="'.$file['src'].'" alt=""><span>'.$arItem["TEXT"].'</span></a></li>';
+				}
 			endif;?>
 			<?if($arItem["DEPTH_LEVEL"]==3&&!$brend):
 				$subSubArray[$numSubLevel][]='<li><a href="'.$arItem["LINK"].'" class="'.($arItem["SELECTED"] ? ' current' : '').'">'.$arItem["TEXT"].'</a></li>';
