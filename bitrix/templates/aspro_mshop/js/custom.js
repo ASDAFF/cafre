@@ -118,7 +118,9 @@ $(function() {
 	});
 
 	$('.mobile-nav__item-lvl2 > .menu_item').on('click', function(e) {
-		if ($(this).next().hasClass('child_wrapp')) {
+		var brands = Number($(this).closest('.mobile-nav__item').find('.menu_title.active a').get(0).href.indexOf('vse_brendy')) > 0;
+		console.log(brands);
+		if ($(this).next().hasClass('child_wrapp') && !brands) {
 			e.preventDefault();
 			$('.mobile-nav__item-lvl2 .child_wrapp').hide();
 

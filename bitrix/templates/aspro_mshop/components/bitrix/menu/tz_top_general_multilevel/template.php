@@ -132,7 +132,7 @@ $brend_list=array();
         <?endforeach;?>
 		<?if($prevLevel>1){?>
 					<?if($brend) {
-						ksort($brend_list);
+						//ksort($brend_list);
 						$brend=false;
 						sort($en_alphabet);
 						sort($ru_alphabet);?>

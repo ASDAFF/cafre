@@ -745,7 +745,9 @@ h4, .fourlevel {
 
 .descript {
 	margin: 10px 0;   
-	min-height: 90px;
+	/*min-height: 90px;*/
+	height: 80px;
+	overflow: hidden;
 }
 
 .buttons_block {
@@ -757,9 +759,15 @@ h4, .fourlevel {
 }
 
 .descript p {
-	font-size: 12px;
+	font-size: 14px !important;
+}
+
+.container .descript p {
+	font-family: 'Futura', sans-serif;
+	font-size: 14px;
 	line-height: 1.4;
 	margin: 0;
+	color: #888888;
 }
 
 .basket_wrapp .basket_block .text .value {
@@ -876,6 +884,7 @@ ul.menu li:last-child .child.cat_menu {
 }
 
 @media (max-width: 768px) {
+
 	.breadcrumbs {
 		display: block;
 	}
@@ -1820,6 +1829,9 @@ margin: 0 0 10px;
 }
 
 @media (max-width: 768px) {
+	.container h1 {
+		font-size: 26px;
+	}
 	.brand__content {
 		display: block;
 		width: 100%;
@@ -1884,5 +1896,15 @@ margin: 0 0 10px;
 		display: block;
 		width: 100%;
 		margin: 0;
+		padding: 0;
+	}
+
+	.img_brand_sec img {
+		position: static;
+		transform: translate3d(0,0,0);
+	}
+
+	.top_brand_block {
+		margin-bottom: 20px;
 	}
 }

@@ -766,7 +766,6 @@ ul.tabs li.stretch { display: none; }
 	body .show_number	{text-align: center;}
 	body .authorization-cols .auth-title	{text-align: center;}
 	body .search-page form { width: 100%; box-sizing: border-box; -moz-box-sizing: border-box; -webkit-box-sizing: border-box; text-align: center; }
-	body .breadcrumbs { text-align: center; }
 	body #content .left_block .left_menu { text-align: center; }
 	body .display_list .list_item td.information_wrapp, body .display_list .list_item td.image { width: 50%; }
 	body .display_list .list_item .ribbons { top: 0; }
