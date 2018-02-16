@@ -769,9 +769,9 @@ elseif(!(strpos($arResult['VARIABLES']['SECTION_CODE_PATH'], 'vse_brendy/')===fa
 	} 
 	$page_seo_params["title"] = ($dop_h1_1?$dop_h1_1:$dop_h1.$filter_h1).' '.$dop_h1_brend.$dop_h1_a.($dop_h1_1?' '.$dop_h1.$filter_h1:'');
 	$this->SetViewTarget('h1');echo $page_seo_params["title"];$this->EndViewTarget();
-	$APPLICATION->SetPageProperty("title", $page_seo_params["title"]." - купить в интернет-магазине косметики Cafre.ru".(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));
+	$APPLICATION->SetPageProperty("title", $page_seo_params["title"]." - Купить по низким ценам в интернет-магазине Cafre".(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));
 	$APPLICATION->SetPageProperty("keywords", $page_seo_params["title"].", купить ".$page_seo_params["title"].(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));
-	$APPLICATION->SetPageProperty("description", "Если вы искали ".$page_seo_params["title"].", то вы их нашли! Огромный выбор качественной продукции от официального дилера по доступным ценам!".(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));   
+	$APPLICATION->SetPageProperty("description", "".$page_seo_params["title"].", огромный ассортимент. Гарантия качества от производителя и лучшие цены на рынке - в наличии!".(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));   
 }
 else {
 	$this->SetViewTarget('h1');echo $page_seo_params["title"].$filter_h1;$this->EndViewTarget();

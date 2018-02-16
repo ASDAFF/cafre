@@ -1043,6 +1043,7 @@ if (empty($arRunErrors))
 			$boolCurrentSections = false;
 			$bNoActiveGroup = true;
 			$strTmpOff_tmp = "";
+			$categNum=0;
 			$db_res1 = CIBlockElement::GetElementGroups($arAcc["ID"], false, array('ID', 'ADDITIONAL_PROPERTY_ID'));
 			while ($ar_res1 = $db_res1->Fetch())
 			{
@@ -1052,6 +1053,7 @@ if (empty($arRunErrors))
 				if (in_array((int)$ar_res1["ID"], $arSectionIDs))
 				{
 					$strTmpOff_tmp.= "<categoryId>".$ar_res1["ID"]."</categoryId>\n";
+					$categNum=$ar_res1["ID"];
 					$bNoActiveGroup = false;
 
 				}
@@ -1060,6 +1062,7 @@ if (empty($arRunErrors))
 			{
 				$boolNeedRootSection = true;
 				$strTmpOff_tmp.= "<categoryId>".$intMaxSectionID."</categoryId>\n";
+				$categNum=$intMaxSectionID;
 			}
 			else
 			{
@@ -1078,7 +1081,7 @@ if (empty($arRunErrors))
 				$str_TYPE = '';
 
 			$strTmpOff.= '<offer id="'.$arAcc["ID"].'"'.$str_TYPE.$str_AVAILABLE.">\n";
-			$strTmpOff.= "<url>".$usedProtocol.$ar_iblock['SERVER_NAME'].htmlspecialcharsbx($arAcc["~DETAIL_PAGE_URL"]).(strstr($arAcc['DETAIL_PAGE_URL'], '?') === false ? '?' : '&amp;')."r1=<?echo \$strReferer1; ?>&amp;r2=<?echo \$strReferer2; ?></url>\n";
+			$strTmpOff.= "<url>".$usedProtocol.$ar_iblock['SERVER_NAME'].htmlspecialcharsbx($arAcc["~DETAIL_PAGE_URL"]).(strstr($arAcc['DETAIL_PAGE_URL'], '?') === false ? '?' : '&amp;')."utm_source=ya_market&amp;utm_medium=click&amp;utm_campaign=itemfeed-all-pag-st-products-conv&amp;".($categNum>0?"utm_content=".$categNum."&amp;":'')."utm_term=".$arAcc["ID"]."</url>\n";
 
 			$strTmpOff.= "<price>".$minPrice."</price>\n";
 			if ($minPrice < $fullPrice)
@@ -1486,7 +1489,7 @@ if (empty($arRunErrors))
 
 					$strOfferYandex = '';
 					$strOfferYandex .= '<offer id="'.$arOfferItem["ID"].'"'.$str_TYPE.' available="'.$arOfferItem['YANDEX_AVAILABLE'].'">'."\n";
-					$strOfferYandex .= "<url>".$usedProtocol.$ar_iblock['SERVER_NAME'].htmlspecialcharsbx($arOfferItem["~DETAIL_PAGE_URL"]).(strstr($arOfferItem['DETAIL_PAGE_URL'], '?') === false ? '?' : '&amp;')."r1=<?echo \$strReferer1; ?>&amp;r2=<?echo \$strReferer2; ?></url>\n";
+					$strOfferYandex .= "<url>".$usedProtocol.$ar_iblock['SERVER_NAME'].htmlspecialcharsbx($arOfferItem["~DETAIL_PAGE_URL"]).(strstr($arOfferItem['DETAIL_PAGE_URL'], '?') === false ? '?' : '&amp;')."utm_source=ya_market&amp;utm_medium=click&amp;utm_campaign=itemfeed-all-pag-st-products-conv&amp;utm_term=".$arOfferItem["ID"]."</url>\n";
 
 					$strOfferYandex .= "<price>".$minPrice."</price>\n";
 					if ($minPrice < $fullPrice)
@@ -1704,7 +1707,7 @@ if (empty($arRunErrors))
 
 					$strOfferYandex = '';
 					$strOfferYandex .= '<offer id="'.$arOfferItem["ID"].'"'.$str_TYPE.' available="'.$arOfferItem['YANDEX_AVAILABLE'].'">'."\n";
-					$strOfferYandex .= "<url>".$usedProtocol.$ar_iblock['SERVER_NAME'].htmlspecialcharsbx($arOfferItem["~DETAIL_PAGE_URL"]).(strstr($arOfferItem['DETAIL_PAGE_URL'], '?') === false ? '?' : '&amp;')."r1=<?echo \$strReferer1; ?>&amp;r2=<?echo \$strReferer2; ?></url>\n";
+					$strOfferYandex .= "<url>".$usedProtocol.$ar_iblock['SERVER_NAME'].htmlspecialcharsbx($arOfferItem["~DETAIL_PAGE_URL"]).(strstr($arOfferItem['DETAIL_PAGE_URL'], '?') === false ? '?' : '&amp;')."utm_source=ya_market&amp;utm_medium=click&amp;utm_campaign=itemfeed-all-pag-st-products-conv&amp;utm_term=".$arOfferItem["ID"]."</url>\n";
 
 					$strOfferYandex .= "<price>".$minPrice."</price>\n";
 					if ($minPrice < $fullPrice)
@@ -1969,7 +1972,7 @@ if (empty($arRunErrors))
 
 				$strOfferYandex = '';
 				$strOfferYandex.= "<offer id=\"".$arItem["ID"]."\"".$str_TYPE.$str_AVAILABLE.">\n";
-				$strOfferYandex.= "<url>".$usedProtocol.$ar_iblock['SERVER_NAME'].htmlspecialcharsbx($arItem["~DETAIL_PAGE_URL"]).(strstr($arItem['DETAIL_PAGE_URL'], '?') === false ? '?' : '&amp;')."r1=<?echo \$strReferer1; ?>&amp;r2=<?echo \$strReferer2; ?></url>\n";
+				$strOfferYandex.= "<url>".$usedProtocol.$ar_iblock['SERVER_NAME'].htmlspecialcharsbx($arItem["~DETAIL_PAGE_URL"]).(strstr($arItem['DETAIL_PAGE_URL'], '?') === false ? '?' : '&amp;')."utm_source=ya_market&amp;utm_medium=click&amp;utm_campaign=itemfeed-all-pag-st-products-conv&amp;utm_term=".$arItem["ID"]."</url>\n";
 
 				$strOfferYandex.= "<price>".$minPrice."</price>\n";
 				if ($minPrice < $fullPrice)
