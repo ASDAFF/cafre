@@ -77,31 +77,26 @@ $nav = CIBlockSection::GetNavChain(false,$search_raz[2]);
 				"quantity": <?=$value['QUANTITY']?>,
 				"price": '<?=round($value['PRICE'], 0)?>'
                 }<?if($counter != $total){echo ',';}?>  
-            <?}?>]
-gtag('event', 'purchase', {
-  "transaction_id": "<?=$arResult["ORDER"]['ID']?>",
-  "affiliation": "cafre.ru",
-  "value": <?=round($arResult["ORDER"]["PRICE"])?>,
-  "currency": "RUB",
-  "tax": 0,
-  "shipping": 0,
-  "items": tarifs
-});
+            <?}?>];
 window.dataLayer = window.dataLayer || [];
-/*
-dataLayer = [{
-    'transactionId': '<?=$arResult["ORDER"]['ID']?>',
-    'transactionAffiliation': 'test.cafre.ru',
-    'transactionTotal': '<?=$arResult["ORDER"]["PRICE"]?>',
-    'transactionTax': '0',
-    'transactionShipping': '0',
-    'transactionProducts': tarifs
-	                sku: '<?=$value['PRODUCT_ID']?>',
-                name: '<?=$value['NAME']?>',
-                category: '<?=$value['MODULE']?>',
-                price: '<?=$value['PRICE']?>',
-                quantity: '<?=$value['QUANTITY']?>'
-}];*/
+dataLayer.push({
+      'ecommerce': {
+        'currencyCode': 'RUB',
+        'purchase': {
+          'actionField': {
+            'id': "<?=$arResult["ORDER"]['ID']?>",
+			'affiliation': 'cafre.ru',
+            'revenue':  <?=round($arResult["ORDER"]["PRICE"])?>,
+            'shipping': 0
+          },
+          'products': tarifs
+        }
+      },
+      'event': 'gtm-ee-event',
+      'gtm-ee-event-category': 'Enhanced Ecommerce',
+      'gtm-ee-event-action': 'Purchase',
+      'gtm-ee-event-non-interaction': 'False',
+    }); 
  });
 </script>
 <?

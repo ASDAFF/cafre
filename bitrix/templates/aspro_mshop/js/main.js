@@ -356,8 +356,29 @@ if(!funcDefined('onLoadjqm')){
 								success: function(data) {
 									if(data.result == 'Y') {										
 										dataB.transaction_id=data.message;
-										/*console.log(data);*/
-										gtag('event', 'purchase', dataB);
+										//gtag('event', 'purchase', dataB);
+										
+										window.dataLayer = window.dataLayer || [];
+										dataLayer.push({
+											'ecommerce': {	
+												'currencyCode': 'RUB',
+												'purchase': {
+													'actionField': {	
+														'id': dataB.transaction_id,
+														'affiliation': 'cafre.ru',
+														'revenue':  dataB.value,
+														'shipping': 0
+													},
+													'products': dataB.items
+												}
+											},
+											'event': 'gtm-ee-event',						
+											'gtm-ee-event-category': 'Enhanced Ecommerce',
+											'gtm-ee-event-action': 'Purchase',
+											'gtm-ee-event-non-interaction': 'False',
+										}); 
+										console.log(dataB);
+										console.log(dataLayer);
 										 
 										/*window.dataLayer = window.dataLayer || [];
 										dataLayer.push({
@@ -386,6 +407,7 @@ if(!funcDefined('onLoadjqm')){
 									$('#one_click_buy_form_result').show();
 								}
 							});
+							
 						}
 					});					
 				}

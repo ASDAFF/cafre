@@ -1810,8 +1810,17 @@ margin: 0 0 10px;
 	margin-left: 6%;
 }
 
+.bigdata_recommended_products_container {
+	height: 600px;
+	overflow: hidden;
+}
+
 #carrotquest-messenger-collapsed.carrotquest-messenger-right_bottom {
 	z-index: 100 !important;
+}
+
+.tabs_content .flex-viewport {
+	margin-top: 100px;
 }
 
 @media (max-width: 1200px) {

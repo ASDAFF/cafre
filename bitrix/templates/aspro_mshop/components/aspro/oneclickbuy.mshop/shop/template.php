@@ -212,16 +212,27 @@ $nav = CIBlockSection::GetNavChain(false,$search_raz[2]);
                 }
             ];
 			
-
-gtag('event', 'purchase', {
-  "transaction_id": $(this).data('order'),
-  "affiliation": "cafre.ru",
-  "value": t,
-  "currency": "RUB",
-  "tax": 0,
-  "shipping": 0,
-  "items": tarifs
-});
+window.dataLayer = window.dataLayer || [];
+dataLayer.push({
+      'ecommerce': {
+        'currencyCode': 'RUB',
+        'purchase': {
+          'actionField': {
+            'id': $(this).data('order'),
+			'affiliation': 'cafre.ru',
+            'revenue':  t,
+            'shipping': 0
+          },
+          'products': tarifs
+        }
+      },
+      'event': 'gtm-ee-event',
+      'gtm-ee-event-category': 'Enhanced Ecommerce',
+      'gtm-ee-event-action': 'Purchase',
+      'gtm-ee-event-non-interaction': 'False',
+    }); 
+	
+	
  
 });
 </script>

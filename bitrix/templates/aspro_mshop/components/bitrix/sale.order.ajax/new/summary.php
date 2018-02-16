@@ -354,8 +354,8 @@ $bShowNameWithPicture = ($bDefaultColumns) ? true : false; // flat to show name 
 			<table class="bx_ordercart_order_sum">
 				<tbody>
 					<tr>
-						<td class="custom_t1" colspan="<?=$colspan?>" class="itog"><?=GetMessage("SOA_TEMPL_SUM_WEIGHT_SUM")?></td>
-						<td class="custom_t2" class="price"><?=$arResult["ORDER_WEIGHT_FORMATED"]?></td>
+						<!--<td class="custom_t1" colspan="<?=$colspan?>" class="itog"><?//=GetMessage("SOA_TEMPL_SUM_WEIGHT_SUM")?></td>
+						<td class="custom_t2" class="price"><?=$arResult["ORDER_WEIGHT_FORMATED"]?></td>-->
 					</tr>
 					<tr>
 						<td class="custom_t1" colspan="<?=$colspan?>" class="itog"><?=GetMessage("SOA_TEMPL_SUM_SUMMARY")?></td>

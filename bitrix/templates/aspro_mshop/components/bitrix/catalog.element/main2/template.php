@@ -677,7 +677,7 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 						<span class="big_btn slide_offer button type_block"><i></i><span><?=GetMessage("BUY_BTN");?></span></span>
 					<?endif;?>
 				</div>
-				<?if(strlen($arResult["PREVIEW_TEXT"])):?>
+				<?if(strlen($arResult["PREVIEW_TEXT"]) != false && strlen($arResult["PREVIEW_TEXT"]) != "NULL"):?>
 					<div class="preview_text"><?=$arResult["PREVIEW_TEXT"]?></div>
 				<?endif;?>
 			</div>
@@ -1202,7 +1202,7 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 		<?endif;?>
 		<?if($arResult["DETAIL_TEXT"] || count($arResult["STOCK"]) || count($arResult["SERVICES"]) || ((count($arResult["PROPERTIES"]["INSTRUCTIONS"]["VALUE"]) && is_array($arResult["PROPERTIES"]["INSTRUCTIONS"]["VALUE"])) || count($arResult["SECTION_FULL"]["UF_FILES"])) || ($showProps && $arParams["PROPERTIES_DISPLAY_LOCATION"] != "TAB")):?>
 			<li class="<?=(!($iTab++) ? ' current' : '')?>">
-				<?if(strlen($arResult["DETAIL_TEXT"])):?>
+				<?if(strlen($arResult["DETAIL_TEXT"]) != false && strlen($arResult["DETAIL_TEXT"]) != "NULL"):?>
 					<div class="detail_text"><?=$arResult["DETAIL_TEXT"]?></div>
 				<?endif;?>
 				<?if($arResult["SERVICES"] && $showProps){?>
