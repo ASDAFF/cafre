@@ -11,8 +11,9 @@ if($arResult["ITEMS"]){?>
 				$isFilter=false;
 				//prices
 				foreach($arResult["ITEMS"] as $key=>$arItem)
-				{
+				{					
 					$key = $arItem["ENCODED_ID"];
+					
 					if(isset($arItem["PRICE"])):
 						if ($arItem["VALUES"]["MAX"]["VALUE"] - $arItem["VALUES"]["MIN"]["VALUE"] <= 0)
 							continue;
@@ -130,7 +131,7 @@ if($arResult["ITEMS"]){?>
 				}
 				//not prices
 				foreach($arResult["ITEMS"] as $key=>$arItem)
-				{
+				{if($key==250) continue;
 					if(
 						empty($arItem["VALUES"])
 						|| isset($arItem["PRICE"])
@@ -776,4 +777,28 @@ if($arResult["ITEMS"]){?>
 			//$('label.sku').equalizeWidths();
 		})
 	</script>
+<?}
+?>
+<?$this->SetViewTarget('filter_dop');?>
+
+<?
+foreach($arResult["ITEMS"][250]['VALUES'] as $arItem) {	
+	$brends[]=str_replace('.', '', $arItem['VALUE']);
+}
+if(!empty($brends) && count($brends)>1) {?>
+	<div class="top_brand_block" style="display:flex;    flex-wrap: wrap;">
+	<?
+	$ar_result=CIBlockSection::GetList(Array("SORT"=>"ASC"), Array("IBLOCK_ID"=>"26", "NAME"=>$brends),false, Array("UF_IMG_BRAND", "NAME", 'CODE'));
+	while($res2=$ar_result->GetNext()) {?>
+		<a href="<?=$APPLICATION->GetCurPage().$res2['CODE'].'/'?>" style="display:block;margin:0 15px 20px 0;"><?if($res2["UF_IMG_BRAND"]){?>
+			<?$file = CFile::ResizeImageGet($res2["UF_IMG_BRAND"], array('width'=>266, 'height'=>160), BX_RESIZE_IMAGE_PROPORTIONAL, true);?>
+			<img width="100" src="<?=$file["src"];?>"/>
+		<?}else {?>
+			<?=$res2["NAME"]?>
+		<?}?>
+		</a>
+	<?}?>
+	</div>
 <?}?>
+
+<?$this->EndViewTarget();?>

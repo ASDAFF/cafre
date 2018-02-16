@@ -9,6 +9,7 @@ $bPriceType = false;
 $bDiscountColumn = false;
 $bShowNameWithPicture = ($bDefaultColumns) ? true : false; // flat to show name and picture column in one column
 ?>
+
 <div class="bx_ordercart basket_wrapp">
 	<h4><?=GetMessage("SALE_PRODUCTS_SUMMARY");?></h4>
 	<div class="bx_ordercart_order_table_container module-cart">
@@ -86,7 +87,7 @@ $bShowNameWithPicture = ($bDefaultColumns) ? true : false; // flat to show name 
 					if ($bShowNameWithPicture):
 					?>
 						<td class="itemphoto thumb-cell">
-							<?//print_r($arItem)?>
+							
 							<?if( strlen($arItem["PREVIEW_PICTURE_SRC"])>0 ){?>
 								<?if (strlen($arItem["DETAIL_PAGE_URL"]) > 0):?><a href="<?=$arItem["DETAIL_PAGE_URL"]?>" class="thumb"><?endif;?>
 									<img src="<?=$arItem["PREVIEW_PICTURE_SRC"]?>" alt="<?=$arItem["NAME"];?>" title="<?=$arItem["NAME"];?>" />
@@ -298,7 +299,12 @@ $bShowNameWithPicture = ($bDefaultColumns) ? true : false; // flat to show name 
 								<?if($arColumn["id"]=="SUM"){?>
 									<div class="cost prices"><div class="price"><?=$arItem[$arColumn["id"]]?></div></div>
 								<?}else{?>
+									<div class="block_q">
+									<a data-but="minus" class="minus">-</a>
 									<?=$arItem[$arColumn["id"]]?>
+									<a data-but="plus" class="plus">+</a>
+									<input type="hidden" class="idtov" value="<?=$arItem["ID"]?>"/>
+									</div>
 								<?}?>
 							</td>
 						<?else: // some property value

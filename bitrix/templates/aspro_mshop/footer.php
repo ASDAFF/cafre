@@ -314,6 +314,6 @@
 		</script>
 		<?Bitrix\Main\Page\Frame::getInstance()->finishDynamicWithID("basketitems-block", "");?>
 		<div id="content_new"></div>
-		<script src="<?=SITE_TEMPLATE_PATH?>/js/letsrock.js"></script>
+		<script src="<?=SITE_TEMPLATE_PATH?>/js/letsrock2.js"></script>
 	</body>
 </html>
