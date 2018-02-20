@@ -3,7 +3,7 @@ include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/props_format.php");
 ?>
 <div class="section info">
 <h3>»нформаци€ дл€ обработки и доставки заказа <?//GetMessage("SOA_TEMPL_PROP_INFO")?></h3>
-	
+<p>«аполните форму ниже, после этого вам позвонит менеджер, чтобы уточнит детали и подтвердить заказ</p>
 </div>
 <div class="info_block">
 		<?$bHideProps = true;

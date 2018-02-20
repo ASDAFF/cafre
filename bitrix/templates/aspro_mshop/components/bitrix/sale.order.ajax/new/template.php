@@ -328,7 +328,9 @@ function InitOrderJS(){
 			
 			
 			<?include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/related_props.php");
-		
+		?>
+		<div class="bx_ordercart_order_pay_center top_btn_order"><a href="javascript:;" id="ORDER_CONFIRM_BUTTON" onclick="submitForm('Y'); return false;" class="checkout button big_btn"><span><?=GetMessage("SOA_TEMPL_BUTTON")?></span></a></div>
+		<?
 			include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/summary.php");
 			if(strlen($arResult["PREPAY_ADIT_FIELDS"]) > 0)
 				echo $arResult["PREPAY_ADIT_FIELDS"];

@@ -353,14 +353,14 @@ $bShowNameWithPicture = ($bDefaultColumns) ? true : false; // flat to show name 
 		<div class="bx_ordercart_order_pay_right">
 			<table class="bx_ordercart_order_sum">
 				<tbody>
-					<tr>
-						<!--<td class="custom_t1" colspan="<?=$colspan?>" class="itog"><?//=GetMessage("SOA_TEMPL_SUM_WEIGHT_SUM")?></td>
-						<td class="custom_t2" class="price"><?=$arResult["ORDER_WEIGHT_FORMATED"]?></td>-->
+					<!--<tr>
+						<td class="custom_t1" colspan="<?//=$colspan?>" class="itog"><?//=GetMessage("SOA_TEMPL_SUM_WEIGHT_SUM")?></td>
+						<td class="custom_t2" class="price"><?=$arResult["ORDER_WEIGHT_FORMATED"]?></td>
 					</tr>
 					<tr>
-						<td class="custom_t1" colspan="<?=$colspan?>" class="itog"><?=GetMessage("SOA_TEMPL_SUM_SUMMARY")?></td>
-						<td class="custom_t2" class="price"><?=$arResult["ORDER_PRICE_FORMATED"]?></td>
-					</tr>
+						<td class="custom_t1" colspan="<?//=$colspan?>" class="itog"><?//=GetMessage("SOA_TEMPL_SUM_SUMMARY")?></td>
+						<td class="custom_t2" class="price"><?//=$arResult["ORDER_PRICE_FORMATED"]?></td>
+					</tr>-->
 					<?
 					if (doubleval($arResult["DISCOUNT_PRICE"]) > 0)
 					{

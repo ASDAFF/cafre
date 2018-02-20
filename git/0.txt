@@ -76,3 +76,5 @@
 16.02.2018 11:28 /bitrix/modules/carrotquest.marketing/lib/carroteventsorder.php (16.02.2018 11:27:46     module carrotquest.marketing)
 16.02.2018 11:28 /bitrix/modules/carrotquest.marketing/options.php (16.02.2018 11:27:46     module carrotquest.marketing)
 16.02.2018 12:25 /bitrix/php_interface/include/catalog_export/yanme_run.php (16.02.2018 12:24:03     utm in YML && edit section in catalog)
+16.02.2018 02:36 /bitrix/templates/aspro_mshop/css/custom.css (16.02.2018 14:35:41     fix slider&in brend bugs)
+16.02.2018 02:36 /bitrix/templates/aspro_mshop/js/main.js (16.02.2018 14:35:41     fix slider&in brend bugs)

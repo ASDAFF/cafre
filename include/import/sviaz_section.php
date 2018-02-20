@@ -3,12 +3,62 @@
  CModule::IncludeModule("iblock");
  CModule::IncludeModule("catalog");
  CModule::IncludeModule("sale");
+ /*
+echo "<pre>";
+print_r();
+echo "</pre>";	
+*/
+ $fileurl = $_SERVER["DOCUMENT_ROOT"].'/include/import/ya_market_mcm.xml';
+ $xml = simplexml_load_file($fileurl);
+ /*Перебор xml*/
+    foreach($xml->shop->offers->offer as $key => $items)
+    {
+		$c1 = $items->attributes()->id;
+		$str1c = (string)$c1;
+		$text = $items->description;
+		$textstr = (string)$text;
+		$ar[] = array("ID"=>$str1c, "DESC"=>$textstr);
+	}
+	
+	foreach($ar as $val){	
+		$arf=array('ACTIVE'=>'Y','IBLOCK_ID'=>26, 'PROPERTY_CODE1C'=>$val["ID"]);
+		$res = CIBlockElement::GetList(Array("SORT"=>"ASC"), $arf, false, false, array('ID', 'NAME','IBLOCK_ID','ACTIVE', 'PROPERTY_CODE1C', 'XML_ID', 'DETAIL_TEXT'));
+		if($ob2 = $res->GetNextElement()){
+	$arFields2 = $ob2->GetFields();
+$el = new CIBlockElement;
+$arLoadProductArray = Array(
+  "MODIFIED_BY"    => $USER->GetID(),
+  "DETAIL_TEXT"    => iconv("UTF-8", "Windows-1251", $val["DESC"])
+  );
+$res2 = $el->Update($arFields2["ID"], $arLoadProductArray);
+echo "<pre>";
+		print_r($arFields2["ID"]);
+echo "</pre>";
+		}
+	}
+	/*$arf=array('ACTIVE'=>'Y','IBLOCK_ID'=>26, 'PROPERTY_CODE1C'=>"00000019810");
+		$res = CIBlockElement::GetList(Array("SORT"=>"ASC"), $arf, false, false, array('ID', 'NAME','IBLOCK_ID','ACTIVE', 'PROPERTY_CODE1C', 'XML_ID', 'DETAIL_TEXT'));
+		if($ob2 = $res->GetNextElement()){
+	$arFields2 = $ob2->GetFields();
+echo "<pre>";
+		print_r($arFields2);
+		echo "</pre>";
+		$el = new CIBlockElement;
+$arLoadProductArray = Array(
+  "MODIFIED_BY"    => $USER->GetID(),
+  "DETAIL_TEXT"    => iconv("UTF-8", "Windows-1251", $textstr)
+  );
+$res2 = $el->Update($arFields2["ID"], $arLoadProductArray);
+		}*/
+
+	
+/* 
  include($_SERVER["DOCUMENT_ROOT"]."/include/import/class.php"); //Класс для открытия файа csv
 
 $fileurl = $_SERVER["DOCUMENT_ROOT"].'/include/import/dewal.csv'; //Сам файл csv
 try {
 	
-/*
+
 Функция записи в файл, делал чтобы посмотреть что выводит, так как вылазила ошибка 504, потому что очень много товаров, а по 1 не нужно выводить, так как связь работает
 	function object2file($value, $filename)
 {
@@ -18,7 +68,7 @@ try {
     fwrite($f, $str_value);
     fclose($f);
 }
-*/
+
     $csv = new CSV($fileurl); //Открываем наш csv
     $get_csv = $csv->getCSV();
  $result = array();
@@ -90,7 +140,7 @@ CCatalogProduct::Update($offerId, Array("QUANTITY"=>"999"));
 	
 	
 	
-	*/
+
  
 	}
 /*	if($value2[3] == "SECTION_ID" || $value2[3] == "#Н/Д"){continue;} //исключал товары у которых нет id разделов
@@ -118,7 +168,7 @@ if($arItem = $itemsSection->GetNext()) {
 $result[$arFields2["ID"]][] = $arItem["ID"];
 }
 
-}*/
+}
 	}
 /*Здесь обращение к функции для записи txt
 object2file($result, 'array.txt');
@@ -200,7 +250,7 @@ else
     echo 'Ошибка добавления параметров<br>';
 
 $db_res = CCatalogProduct::GetByID($offerId);
-CCatalogProduct::Update($offerId, Array("QUANTITY"=>"999"));*/
+CCatalogProduct::Update($offerId, Array("QUANTITY"=>"999"));
 $result = array_diff($array1, $array2);
 echo '<pre>';
 print_r($result);
@@ -208,6 +258,6 @@ echo '</pre>';
 }
 catch (Exception $e) { //Если csv файл не существует, выводим сообщение
     echo "Ошибка: " . $e->getMessage();
-}
+}*/
 
 ?>

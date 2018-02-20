@@ -1199,6 +1199,7 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 			<li class="<?=(!($iTab++) ? ' current' : '')?>">
 				<?if(strlen($arResult["DETAIL_TEXT"])):?>
 					<div class="detail_text"><?=$arResult["DETAIL_TEXT"]?></div>
+					<span>Код 1с: <?=$arResult["PROPERTIES"]["CODE1C"]["VALUE"];?></span>
 				<?endif;?>
 				<?if($arResult["SERVICES"] && $showProps){?>
 					<div class="wrap_md descr_div">

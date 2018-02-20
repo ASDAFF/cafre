@@ -790,7 +790,7 @@ if(!empty($brends) && count($brends)>1) {?>
 	<?
 	$ar_result=CIBlockSection::GetList(Array("SORT"=>"ASC"), Array("IBLOCK_ID"=>"26", "NAME"=>$brends),false, Array("UF_IMG_BRAND", "NAME", 'CODE'));
 	while($res2=$ar_result->GetNext()) {?>
-		<a href="<?=$APPLICATION->GetCurPage().$res2['CODE'].'/'?>" style="display:block;margin:0 15px 20px 0;"><?if($res2["UF_IMG_BRAND"]){?>
+		<a href="<?=$APPLICATION->GetCurPage().$res2['CODE'].'/'?>"><?if($res2["UF_IMG_BRAND"]){?>
 			<?$file = CFile::ResizeImageGet($res2["UF_IMG_BRAND"], array('width'=>266, 'height'=>160), BX_RESIZE_IMAGE_PROPORTIONAL, true);?>
 			<img width="100" src="<?=$file["src"];?>"/>
 		<?}else {?>
