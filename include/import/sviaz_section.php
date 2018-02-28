@@ -7,12 +7,13 @@
 echo "<pre>";
 print_r();
 echo "</pre>";	
-*/
- $fileurl = $_SERVER["DOCUMENT_ROOT"].'/include/import/ya_market_mcm.xml';
+
+ $fileurl = $_SERVER["DOCUMENT_ROOT"].'/include/import/cafre_new_sviaz.xls';
  $xml = simplexml_load_file($fileurl);
  /*Перебор xml*/
-    foreach($xml->shop->offers->offer as $key => $items)
+    /*foreach($xml->shop->offers->offer as $key => $items)
     {
+		print_r($items);
 		$c1 = $items->attributes()->id;
 		$str1c = (string)$c1;
 		$text = $items->description;
@@ -36,7 +37,7 @@ echo "<pre>";
 echo "</pre>";
 		}
 	}
-	/*$arf=array('ACTIVE'=>'Y','IBLOCK_ID'=>26, 'PROPERTY_CODE1C'=>"00000019810");
+	$arf=array('ACTIVE'=>'Y','IBLOCK_ID'=>26, 'PROPERTY_CODE1C'=>"00000019810");
 		$res = CIBlockElement::GetList(Array("SORT"=>"ASC"), $arf, false, false, array('ID', 'NAME','IBLOCK_ID','ACTIVE', 'PROPERTY_CODE1C', 'XML_ID', 'DETAIL_TEXT'));
 		if($ob2 = $res->GetNextElement()){
 	$arFields2 = $ob2->GetFields();
@@ -52,14 +53,14 @@ $res2 = $el->Update($arFields2["ID"], $arLoadProductArray);
 		}*/
 
 	
-/* 
+
  include($_SERVER["DOCUMENT_ROOT"]."/include/import/class.php"); //Класс для открытия файа csv
 
-$fileurl = $_SERVER["DOCUMENT_ROOT"].'/include/import/dewal.csv'; //Сам файл csv
+$fileurl = $_SERVER["DOCUMENT_ROOT"].'/include/import/new_sviaz_raz.csv'; //Сам файл csv
 try {
 	
 
-Функция записи в файл, делал чтобы посмотреть что выводит, так как вылазила ошибка 504, потому что очень много товаров, а по 1 не нужно выводить, так как связь работает
+//Функция записи в файл, делал чтобы посмотреть что выводит, так как вылазила ошибка 504, потому что очень много товаров, а по 1 не нужно выводить, так как связь работает
 	function object2file($value, $filename)
 {
     $str_value = serialize($value);
@@ -74,7 +75,67 @@ try {
  $result = array();
  $result2 = array();
     foreach ($get_csv as $value2) {//получаем csv по столбцам, все уже настроенно, выбор идет по коду 1с
-	$array1[]=$value2[1];
+	$arex = explode('/',$value2[3]);
+	if($arex[9] != NULL){
+	$code=$arex[9];
+	}elseif($arex[8] != NULL){
+	$code=$arex[8];
+	}elseif($arex[7] != NULL){
+	$code=$arex[7];
+	}
+	echo '<pre>';
+	echo $code;
+	echo '</pre>';
+	//if($value2[3] == "SECTION_ID" || $value2[3] == "#Н/Д"){continue;} //исключал товары у которых нет id разделов
+	$arf=array('ACTIVE'=>'Y','IBLOCK_ID'=>26, 'CODE'=>$code);
+	$res = CIBlockElement::GetList(Array("SORT"=>"ASC"), $arf, false, false, array('ID','IBLOCK_ID','ACTIVE', 'PROPERTY_CODE1C', 'CODE', 'IBLOCK_SECTION_ID'));
+
+	if($ob2 = $res->GetNextElement()){
+		
+	$arFields2 = $ob2->GetFields(); 
+	//$pos = strpos($arFields2["PROPERTY_CODE1C_VALUE"], $value2[0]);
+
+	
+	$db_old_groups = CIBlockElement::GetElementGroups($arFields2["ID"], true);
+	while($ar_group = $db_old_groups->Fetch())
+    $result[$arFields2["ID"]][] = $ar_group["ID"];
+$result[$arFields2["ID"]][] = $value2[1];
+	echo '<pre>';
+	print_r($arFields2);
+	echo '</pre>';
+		//echo $value2[3];
+		//записываем в массив , данные об id товара и его связь со столбцом id разделов, в csv они уже такие как на сайте
+		//$result[$arFields2["ID"]][] = $ar_new_groups;
+		
+	}
+	}
+	$arf=array('ACTIVE'=>'Y','IBLOCK_ID'=>26, 'CODE'=>"smyvaemyy_ukhod_rektifay_pro_fayber_pro_fiber_l_oreal_professionnel_200_ml");
+	$res = CIBlockElement::GetList(Array("SORT"=>"ASC"), $arf, false, false, array('ID','IBLOCK_ID','ACTIVE', 'PROPERTY_CODE1C', 'CODE', 'IBLOCK_SECTION_ID'));
+
+	if($ob2 = $res->GetNextElement()){
+		
+	$arFields2 = $ob2->GetFields(); 
+	//$pos = strpos($arFields2["PROPERTY_CODE1C_VALUE"], $value2[0]);
+
+	
+	$db_old_groups = CIBlockElement::GetElementGroups($arFields2["ID"], true);
+	while($ar_group = $db_old_groups->Fetch())
+    $result[$arFields2["ID"]][] = $ar_group["ID"];
+$result[$arFields2["ID"]][] = 6526;
+	echo '<pre>';
+	print_r($arFields2);
+	echo '</pre>';
+		//echo $value2[3];
+		//записываем в массив , данные об id товара и его связь со столбцом id разделов, в csv они уже такие как на сайте
+		//$result[$arFields2["ID"]][] = $ar_new_groups;
+		
+	}
+	
+	foreach($result as $key => $val){
+		print_r($val);
+//CIBlockElement::SetElementSection($key, $val);
+	}
+	/*$array1[]=$value2[1];
 	$arf=array('ACTIVE'=>'Y','IBLOCK_ID'=>26);
 	$res = CIBlockElement::GetList(Array("SORT"=>"ASC"), $arf, false, false, array('ID', 'NAME','IBLOCK_ID','ACTIVE', 'PROPERTY_CODE1C', 'XML_ID'));
 
@@ -143,7 +204,7 @@ CCatalogProduct::Update($offerId, Array("QUANTITY"=>"999"));
 
  
 	}
-/*	if($value2[3] == "SECTION_ID" || $value2[3] == "#Н/Д"){continue;} //исключал товары у которых нет id разделов
+	if($value2[3] == "SECTION_ID" || $value2[3] == "#Н/Д"){continue;} //исключал товары у которых нет id разделов
 	$arf=array('ACTIVE'=>'Y','IBLOCK_ID'=>26, 'PROPERTY_CODE1C'=>$value2[0]);
 	$res = CIBlockElement::GetList(Array("SORT"=>"ASC"), $arf, false, false, array('ID','IBLOCK_ID','ACTIVE', 'PROPERTY_CODE1C'));
 
@@ -182,7 +243,7 @@ echo '</pre>';
 	foreach($result as $key => $val){
 //CIBlockElement::SetElementSection($key, $val);
 	}
-*/
+
 
 	//$offersExist = CCatalogSKU::getExistOffers($result);
 
@@ -190,7 +251,7 @@ echo '</pre>';
  //$res["price"] = $result2;
 
 
-/*foreach($res33 as $val){
+foreach($res33 as $val){
 		$i++;
 	//$val["PRICE"] = $result2[$i];
 	foreach($val as $key => $val2){
@@ -254,10 +315,10 @@ CCatalogProduct::Update($offerId, Array("QUANTITY"=>"999"));
 $result = array_diff($array1, $array2);
 echo '<pre>';
 print_r($result);
-echo '</pre>';
+echo '</pre>';*/
 }
 catch (Exception $e) { //Если csv файл не существует, выводим сообщение
     echo "Ошибка: " . $e->getMessage();
-}*/
+}
 
 ?>

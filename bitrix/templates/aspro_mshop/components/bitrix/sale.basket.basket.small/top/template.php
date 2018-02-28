@@ -185,7 +185,8 @@ usort($arBasketIDs, 'CMShop::cmpByID');
 							</table>
 						</div>
 						<div class="total_wrapp clearfix">
-							<div class="total"><span><?=GetMessage("TOTAL_SUMM_TITLE")?>:</span><span class="price"><?=$summ_formated?></span><div class="clearfix"></div></div>
+						<?$sum = explode(' ', $summ_formated);?>
+							<div class="total"><span><?=GetMessage("TOTAL_SUMM_TITLE")?>:</span><span class="price"><span class="full_price_bas"><?if($sum[1] != "руб."){echo $sum[0].$sum[1];}else{echo $sum[0];}?></span> руб.</span><div class="clearfix"></div></div>
 							<input type="hidden" name="total_price" value="<?=$summ?>" />
 							<input type="hidden" name="total_count" value="<?=$count;?>" />
 							<input type="hidden" name="delay_count" value="<?=$delayCount;?>" />

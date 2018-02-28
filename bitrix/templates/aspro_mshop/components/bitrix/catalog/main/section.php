@@ -8,10 +8,11 @@ $brends=true;
 // get current section ID
 global $TEMPLATE_OPTIONS, $MShopSectionID;
 $arPageParams = $arSection = $section = array();
+
 if($arResult["VARIABLES"]["SECTION_ID"] > 0){
-	$db_list = CIBlockSection::GetList(array(), array('GLOBAL_ACTIVE' => 'Y', "ID" => $arResult["VARIABLES"]["SECTION_ID"], "IBLOCK_ID" => $arParams["IBLOCK_ID"]), true, array("ID", "IBLOCK_ID", "NAME", "DESCRIPTION","IBLOCK_SECTION_ID", "UF_RUSNAME","UF_SECTION_DESCR", $arParams["LIST_BROWSER_TITLE"], $arParams["LIST_META_KEYWORDS"], $arParams["LIST_META_DESCRIPTION"], "IBLOCK_SECTION_ID"));
+	$db_list = CIBlockSection::GetList(array(), array('GLOBAL_ACTIVE' => 'Y', "ID" => $arResult["VARIABLES"]["SECTION_ID"], "IBLOCK_ID" => $arParams["IBLOCK_ID"]), true, array("ID", "IBLOCK_ID", "NAME", "DESCRIPTION","IBLOCK_SECTION_ID", "UF_RUSNAME","UF_SECTION_DESCR", $arParams["LIST_BROWSER_TITLE"], $arParams["LIST_META_KEYWORDS"], $arParams["LIST_META_DESCRIPTION"], "IBLOCK_SECTION_ID", "UF_RATINGVALUE", "UF_RATINGCOUNT"));
 	$section = $db_list->GetNext();
-	if($section['IBLOCK_SECTION_ID']==5538&&strpos($APPLICATION->GetCurPage(), 'vse_brendy/')===false) {
+	/*if($section['IBLOCK_SECTION_ID']==5538&&strpos($APPLICATION->GetCurPage(), 'vse_brendy/')===false) {
 		$brends=false;
 		$sections=explode('/', $arResult['VARIABLES']['SECTION_CODE_PATH']);
 		$db_list = CIBlockSection::GetList(array(), array('GLOBAL_ACTIVE' => 'Y', "=CODE" => $sections[count($sections)-2], "IBLOCK_ID" => $arParams["IBLOCK_ID"]), true, array("ID", "IBLOCK_ID", "NAME", "DESCRIPTION","IBLOCK_SECTION_ID","SECTION_PAGE_URL", "UF_RUSNAME","UF_SECTION_DESCR", $arParams["SECTION_DISPLAY_PROPERTY"], $arParams["LIST_BROWSER_TITLE"], $arParams["LIST_META_KEYWORDS"], $arParams["LIST_META_DESCRIPTION"], "IBLOCK_SECTION_ID"));
@@ -22,19 +23,19 @@ if($arResult["VARIABLES"]["SECTION_ID"] > 0){
 				$rsSect = CIBlockSection::GetList(array('left_margin' => 'asc'),array("IBLOCK_ID" => $arParams["IBLOCK_ID"], 'ACTIVE'=>'Y','SECTION_ID'=>5538, 'CODE'=>$sections[count($sections)-1]));
 				if ($arSect = $rsSect->GetNext())
 				{
-					${$arParams['FILTER_NAME']}['=PROPERTY_250_VALUE'][]=$arSect['ID'];
+					${$arParams['FILTER_NAME']}['=PROPERTY_250'][]=$arSect['ID'];
 				}
 				unset($sections[count($sections)-1]);
 				$arResult["VARIABLES"]["SECTION_CODE_PATH"]=implode('/', $sections);
 			}
 			else $section=false;			
 		}
-	}
+	}*/
 }
 elseif(strlen(trim($arResult["VARIABLES"]["SECTION_CODE"])) > 0){
-	$db_list = CIBlockSection::GetList(array(), array('GLOBAL_ACTIVE' => 'Y', "=CODE" => $arResult["VARIABLES"]["SECTION_CODE"], "IBLOCK_ID" => $arParams["IBLOCK_ID"]), true, array("ID", "IBLOCK_ID", "NAME", "DESCRIPTION","IBLOCK_SECTION_ID", "UF_RUSNAME","UF_SECTION_DESCR", $arParams["SECTION_DISPLAY_PROPERTY"], $arParams["LIST_BROWSER_TITLE"], $arParams["LIST_META_KEYWORDS"], $arParams["LIST_META_DESCRIPTION"], "IBLOCK_SECTION_ID"));
+	$db_list = CIBlockSection::GetList(array(), array('GLOBAL_ACTIVE' => 'Y', "=CODE" => $arResult["VARIABLES"]["SECTION_CODE"], "IBLOCK_ID" => $arParams["IBLOCK_ID"]), true, array("ID", "IBLOCK_ID", "NAME", "DESCRIPTION","IBLOCK_SECTION_ID", "UF_RUSNAME", $arParams["SECTION_DISPLAY_PROPERTY"], $arParams["LIST_BROWSER_TITLE"], $arParams["LIST_META_KEYWORDS"], $arParams["LIST_META_DESCRIPTION"], "IBLOCK_SECTION_ID"));
 	$section = $db_list->GetNext();
-	if($section['IBLOCK_SECTION_ID']==5538&&strpos($APPLICATION->GetCurPage(), 'vse_brendy/')===false) {
+	/*if($section['IBLOCK_SECTION_ID']==5538&&strpos($APPLICATION->GetCurPage(), 'vse_brendy/')===false) {
 		$brends=false;
 		$sections=explode('/', $arResult['VARIABLES']['SECTION_CODE_PATH']);
 		$db_list = CIBlockSection::GetList(array(), array('GLOBAL_ACTIVE' => 'Y', "=CODE" => $sections[count($sections)-2], "IBLOCK_ID" => $arParams["IBLOCK_ID"]), true, array("ID", "IBLOCK_ID", "NAME", "DESCRIPTION","IBLOCK_SECTION_ID","SECTION_PAGE_URL", "UF_RUSNAME","UF_SECTION_DESCR", $arParams["SECTION_DISPLAY_PROPERTY"], $arParams["LIST_BROWSER_TITLE"], $arParams["LIST_META_KEYWORDS"], $arParams["LIST_META_DESCRIPTION"], "IBLOCK_SECTION_ID"));
@@ -45,22 +46,25 @@ elseif(strlen(trim($arResult["VARIABLES"]["SECTION_CODE"])) > 0){
 				$rsSect = CIBlockSection::GetList(array('left_margin' => 'asc'),array("IBLOCK_ID" => $arParams["IBLOCK_ID"],'ACTIVE'=>'Y', 'CODE'=>$sections[count($sections)-1]));
 				if ($arSect = $rsSect->GetNext())
 				{
-					${$arParams['FILTER_NAME']}['=PROPERTY_250_VALUE'][]=$arSect['ID'];
+					${$arParams['FILTER_NAME']}['=PROPERTY_250'][]=$arSect['ID'];
 				}
 				unset($sections[count($sections)-1]);
 				$arResult["VARIABLES"]["SECTION_CODE_PATH"]=implode('/', $sections);
 			}	
 			else $section=false;			
 		}
-	}
+	}*/
 }
 else {
 	$sections=explode('/', $arResult['VARIABLES']['SECTION_CODE_PATH']);	
+	foreach($sections as $i=>$path) {		
+		if(strpos($path, 'f-')===0) unset($sections[$i]);
+	}
 	$db_list = CIBlockSection::GetList(array(), array('GLOBAL_ACTIVE' => 'Y', "=CODE" => $sections[count($sections)-2], 
 		"IBLOCK_ID" => $arParams["IBLOCK_ID"]), true, array("ID", "IBLOCK_ID", "NAME", "DESCRIPTION","IBLOCK_SECTION_ID","SECTION_PAGE_URL", "UF_RUSNAME","UF_SECTION_DESCR", 
 		$arParams["SECTION_DISPLAY_PROPERTY"], $arParams["LIST_BROWSER_TITLE"], $arParams["LIST_META_KEYWORDS"], $arParams["LIST_META_DESCRIPTION"], "IBLOCK_SECTION_ID"));
 	while($section2 = $db_list->GetNext()) {
-		if($section2['SECTION_PAGE_URL'].$sections[count($sections)-1].'/'==$APPLICATION->GetCurPage()) {
+		if($section2['SECTION_PAGE_URL'].$sections[count($sections)-1].'/'=='/catalog/'.implode('/', $sections).'/') {
 			$rsSect = CIBlockSection::GetList(array('left_margin' => 'asc'),array("IBLOCK_ID" => $arParams["IBLOCK_ID"], 'ACTIVE'=>'Y','CODE'=>$sections[count($sections)-1]));
 			if ($section = $rsSect->GetNext())
 			{
@@ -68,14 +72,19 @@ else {
 					$brends=false;
 					$arResult["VARIABLES"]["SECTION_ID"]=$section2['ID'];
 					$arResult["VARIABLES"]["SECTION_CODE"]=$section2['CODE'];
-					${$arParams['FILTER_NAME']}['=PROPERTY_250_VALUE'][]=$section['ID'];
-					unset($sections[count($sections)-1]);
-					$arResult["VARIABLES"]["SECTION_CODE_PATH"]=implode('/', $sections);
+					${$arParams['FILTER_NAME']}['=PROPERTY_250'][]=$section['ID'];	
+					$arResult["VARIABLES"]["SMART_FILTER_PATH"]=
+						str_replace(implode('/', $sections), '', $arResult["VARIABLES"]['SECTION_CODE_PATH']). '/catalog_brend-is-'.$section['CODE'] ;
+					if(strpos($arResult["VARIABLES"]["SMART_FILTER_PATH"], '/f-')===0) $arResult["VARIABLES"]["SMART_FILTER_PATH"]=substr($arResult["VARIABLES"]["SMART_FILTER_PATH"], 3);
+					//$arResult["VARIABLES"]["SMART_FILTER_PATH"]=str_replace('catalog_brend-is-', '', $arResult["VARIABLES"]["SMART_FILTER_PATH"]);
+					echo $arResult["VARIABLES"]["SMART_FILTER_PATH"];
+					/*unset($sections[count($sections)-1]);
+					$arResult["VARIABLES"]["SECTION_CODE_PATH"]=implode('/', $sections);*/
 				}
 				else $section=false;
 			}				
 		}		
-	}	
+	}
 }
 
 if($section){
@@ -202,14 +211,18 @@ $MShopSectionID = $arSection["ID"];
 				</script>
 				<?
 			}
-		}			
+		}	
 		if($TEMPLATE_OPTIONS["TYPE_VIEW_FILTER"]["CURRENT_VALUE"]=="VERTICAL"){?>
 			<?include_once("filter.php")?>
 		<?}?>
+		
 	</div>
 	<div class="right_block clearfix catalog" id="right_block_ajax">
 	<?
-	if($brends && $APPLICATION->GetCurPage()!='/catalog/vse_brendy/') $APPLICATION->ShowViewContent('filter_dop');
+	if($brends && strpos($APPLICATION->GetCurPage(), '/catalog/vse_brendy/')===false)  {
+		$APPLICATION->ShowViewContent('filter_dop');
+		
+	}
 		
 	if(empty(${$arParams['FILTER_NAME']})) {
 			//$res = CIBlockSection::GetByID($arResult["VARIABLES"]["SECTION_ID"]);
@@ -234,7 +247,7 @@ $MShopSectionID = $arSection["ID"];
 		<?if(isset($_SERVER["HTTP_X_REQUESTED_WITH"]) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == "xmlhttprequest" && isset($_GET["ajax_get_filter"]) && $_GET["ajax_get_filter"] == "Y" ){
 			$isAjaxFilter="Y";
 		}?>
-		<?if($TEMPLATE_OPTIONS["TYPE_VIEW_FILTER"]["CURRENT_VALUE"]=="HORIZONTAL"){?>
+		<?if($TEMPLATE_OPTIONS["TYPE_VIEW_FILTER"]["CURRENT_VALUE"]=="HORIZONTAL"){			?>
 			<div class="filter_horizontal">
 				<?include_once("filter.php")?>
 			</div>
@@ -437,8 +450,7 @@ if($arFields["PREVIEW_PICTURE"]){
 			?>
 			</div>
 			<?*/
-											global $USER;
-											if (false && $USER->IsAdmin()) { echo "<pre>";print_r($arResult);echo "</pre>";}
+			
 											
 										?>
 				<?
@@ -778,9 +790,81 @@ $(".number_list a:not(.current)").on("click", function() {
 	$(this).addClass("current").siblings().removeClass("current");
 });
 </script>
+<div  style="display:none;">
+<span itemtype="https://schema.org/Product" itemscope="">
+	<meta content="<?$APPLICATION->ShowTitle()?>" itemprop="name">
+	<meta itemprop="description" content="<?=$APPLICATION->GetProperty("description")?>" />
+	<span itemtype="https://schema.org/AggregateRating" itemscope="" itemprop="aggregateRating" class="mc-star-count">
+		<span itemprop="ratingValue"><?=$section["UF_RATINGVALUE"]?></span> / <span itemprop="ratingCount"><?=$section["UF_RATINGCOUNT"]?></span>
+		<meta itemprop="worstRating" content="1" />
+		<meta itemprop="bestRating" content="5" />
+	</span>
+	<span itemtype="https://schema.org/AggregateOffer"; itemscope="" itemprop="offers"> 
+	<?
+
+//"CATALOG_PRICE_1" => "ASC" "nPageSize"=>1
+$arFilter=Array('IBLOCK_ID'=>26, 'GLOBAL_ACTIVE'=>'Y', 'SECTION_ID'=>$arResult["VARIABLES"]["SECTION_ID"]);
+$db_list = CIBlockSection::GetList(Array(), $arFilter, true);
+while($ar_result = $db_list->GetNext())
+{
+    $arrayID[] = $ar_result['ID'];
+}
+
+
+$db_price_min = CIBlockElement::GetList(
+        array("SORT"=>"ASC"), 
+        array("IBLOCK_ID" => 26, "SECTION_ID"=> $arrayID, "ACTIVE"=>"Y"), 
+        false, 
+        false,
+        array("ID")
+    );
+$i=0;
+while($ar_fields = $db_price_min->GetNext())
+{
+ $i++;
+ $secid[] = $ar_fields["ID"];
+}
+
+$db_price_max2 = CIBlockElement::GetList(
+        array("CATALOG_PRICE_1" => "DESC"), 
+        array("IBLOCK_ID" => 27, "ACTIVE"=>"Y", "PROPERTY_CML2_LINK" => $secid), 
+        false, 
+        array("nPageSize"=>1),
+        array("ID")
+    );
+	$db_price_min2 = CIBlockElement::GetList(
+        array("CATALOG_PRICE_1" => "ASC"), 
+        array("IBLOCK_ID" => 27, "ACTIVE"=>"Y", "PROPERTY_CML2_LINK" => $secid), 
+        false, 
+        array("nPageSize"=>1),
+        array("ID")
+    );
+	?>
+	<meta content="<?=$i?>" itemprop="offerCount">
+	<?
+while($ar_fields = $db_price_max2->GetNext())
+{
+?>
+	<meta content="<?=$ar_fields["CATALOG_PRICE_1"]?>" itemprop="highPrice">
 <?
-global $MSHOP_SMART_FILTER, $filter_h1, $catalog_section_name, $catalog_seo;
-if(!$brends) $filter_h1='';
+}
+while($ar_fields2 = $db_price_min2->GetNext())
+{
+?>
+	<meta content="<?=$ar_fields2["CATALOG_PRICE_1"]?>" itemprop="lowPrice">
+<?
+}	
+	/*echo $arParams["IBLOCK_ID"];
+	echo $arResult["VARIABLES"]["SECTION_ID"];*/
+	?>
+		<meta content="RUB" itemprop="priceCurrency">
+		<link itemprop="availability" href="https://schema.org/InStock">  
+	</span>
+</span>
+</div>
+<?
+global $MSHOP_SMART_FILTER, $filter_h1, $catalog_section_name, $catalog_seo, $brend_in_catalog;
+if(!$brends) $filter_h1=' '.$brend_in_catalog.' '.$filter_h1;
 		$catalog_seo='Y';	
 		if(strpos($_SERVER['REQUEST_URI'], 'PAGEN_')) {
 			foreach ($_GET as $key => $value) {

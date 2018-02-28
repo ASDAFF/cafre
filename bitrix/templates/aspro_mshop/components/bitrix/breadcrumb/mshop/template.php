@@ -23,7 +23,7 @@ if($arResult){
           if($arItem["LINK"] <> "" && $index<(count($arResult)-1)){
             if($arSubSections){
                 $strReturn .= '<span class="drop">';
-                    $strReturn .= '<a class="number" href="'.$arItem["LINK"].'">'.($arSubSections ? '<span>'.$title.'</span><b class="space"></b><span class="separator'.($bLast ? ' cat_last' : '').'"></span>' : '<span>'.$title.'</span>').'</a>';
+                    $strReturn .= '<a class="number" href="'.$arItem["LINK"].'">'.($arSubSections ? '<span>'.$title.'</span><b class="space"></b><span class="separator'.($bLast ? ' cat_last' : '').'"></span>' : '<span itemprop="item">'.$title.'</span>').'</a>';
                     $strReturn .= '<div class="dropdown_wrapp"><div class="dropdown">';
                         foreach($arSubSections as $arSubSection){
                             $strReturn .= '<a href="'.$arSubSection["LINK"].'">'.$arSubSection["NAME"].'</a>';
@@ -32,15 +32,19 @@ if($arResult){
                 $strReturn .= '</span>';
             }
             else{
-                $strReturn .= '<a href="'.$arItem["LINK"].'" title="'.$title.'"><span>'.$title.'</span></a>';
+                $strReturn .= '<a href="'.$arItem["LINK"].'" title="'.$title.'"><span>'.$title.'</span></a><div itemprop="itemListElement" itemscope
+itemtype="http://schema.org/ListItem" style="display:none;"><a href="'.$arItem["LINK"].'" title="'.$title.'" itemprop="item"><span itemprop="name">'.$title.'</span></a></div>';
             }
         }
         else{
-            $strReturn .= '<span>'.$title.'</span>';
+            $strReturn .= '<span>'.$title.'</span>
+			<div itemprop="itemListElement" itemscope
+itemtype="http://schema.org/ListItem" style="display:none;"><a href="'.$arItem["LINK"].'" title="'.$title.'" itemprop="item"><span itemprop="name">'.$title.'</span></a></div>
+			';
         }
     }
     
-    return '<div class="breadcrumbs">'.$strReturn.'</div>';
+    return '<div class="breadcrumbs" itemscope itemtype="http://schema.org/BreadcrumbList">'.$strReturn.'</div>';
 }
 else{
     return $strReturn;

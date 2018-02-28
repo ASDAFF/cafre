@@ -32,7 +32,8 @@
 		}
 	}
 	?>
-	<?$APPLICATION->IncludeComponent(
+	<?
+	$APPLICATION->IncludeComponent(
 		"bitrix:catalog.smart.filter",
 		($arParams["AJAX_FILTER_CATALOG"]=="Y" ? "main_ajax" : "main"),
 		Array(

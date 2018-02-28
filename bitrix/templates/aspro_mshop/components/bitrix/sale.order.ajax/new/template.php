@@ -60,8 +60,9 @@ CJSCore::Init(array('fx', 'popup', 'window', 'ajax'));
 ?>
 
 <a name="order_form"></a>
-
-<div id="order_form_div" class="order-checkout">
+<div class="order">
+<!--order-checkout-->
+<div id="order_form_div">
 <NOSCRIPT>
 	<div class="errortext"><?=GetMessage("SOA_NO_JS")?></div>
 </NOSCRIPT>
@@ -115,14 +116,12 @@ function InitOrderJS(){
 	catch(e){}
 }
 </script>
-<div class="bx_order_make">
+<!--<div class="bx_order_make">-->
 	<?
 	unset($_COOKIE["checked"]);
 	echo $_SESSION["checked"];
-	if(!$USER->IsAuthorized() )
-	{
-		include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/auth.php");
-	}
+	
+	
 
 		if($arResult["USER_VALS"]["CONFIRM_ORDER"] == "Y" || $arResult["NEED_REDIRECT"] == "Y")
 		{
@@ -254,6 +253,43 @@ function InitOrderJS(){
 			});
 
 			</script>
+	<?		if(!$USER->IsAuthorized() )
+	{
+	?>
+	<div class="order__row">
+<div class="order__cell">
+							<div class="order__block order__reg">
+								<div class="order__message order__message_reg">
+									<div class="pinkgirl">
+										<img src="<?=SITE_TEMPLATE_PATH?>/pinkgirl/pinkgirl1.png" alt="">
+									</div>
+									<p>Заполни эту простую форму, чтобы оформить заказ</p>
+								</div>
+								<label class="order__lbl">
+									<span>Имя</span>
+									<input id="name1" class="order__inp" type="text">
+								</label>
+								<label class="order__lbl">
+									<span>E-Mail</span>
+									<input id="mail1" class="order__inp required" type="text">
+								</label>
+								<label class="order__lbl">
+									<span>Телефон</span>
+									<input id="phone1" class="order__inp" type="text">
+								</label>
+								<label class="order__lbl">
+									<span>Адрес доставки</span>
+									<textarea id="text1" class="order__inp"></textarea>
+								</label>
+							</div>
+
+</div>
+	
+			<?
+			include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/auth.php");
+	?>
+</div>
+<?}?>
 			<?if($_POST["is_ajax_post"] != "Y")
 			{
 				?><form action="<?=$APPLICATION->GetCurPage();?>" method="POST" name="ORDER_FORM" id="ORDER_FORM" enctype="multipart/form-data">
@@ -285,8 +321,12 @@ function InitOrderJS(){
 			}
 
 			include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/person_type.php");
-			include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/props.php");?>
-
+			?>
+			<div style="display:none;">
+			<?
+			include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/props.php");
+	?>
+</div>
 			
 			<div class="wrap_md">
 				<?if ($arParams["DELIVERY_TO_PAYSYSTEM"] == "p2d"){?>
@@ -329,22 +369,35 @@ function InitOrderJS(){
 			
 			<?include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/related_props.php");
 		?>
-		<div class="bx_ordercart_order_pay_center top_btn_order"><a href="javascript:;" id="ORDER_CONFIRM_BUTTON" onclick="submitForm('Y'); return false;" class="checkout button big_btn"><span><?=GetMessage("SOA_TEMPL_BUTTON")?></span></a></div>
+		<div class="order__next">
+		<a href="javascript:;" id="ORDER_CONFIRM_BUTTON" onclick="submitForm('Y'); return false;" class="checkout button big_btn"><span><?=GetMessage("SOA_TEMPL_BUTTON")?></span>
+
+						<div class="order__message order__message_next">
+							<div class="pinkgirl">
+								<img src="<?=SITE_TEMPLATE_PATH?>/pinkgirl/pinkgirl3.png" alt="">
+							</div>
+							<p>А теперь скорее жми на эту кнопку</p>
+						</div>
+						</a>
+					</div>
+		
 		<?
-			include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/summary.php");
+			
 			if(strlen($arResult["PREPAY_ADIT_FIELDS"]) > 0)
 				echo $arResult["PREPAY_ADIT_FIELDS"];
 			?>
 
 			<?if($_POST["is_ajax_post"] != "Y")
 			{
+				include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/summary.php");
 				?>
 					</div>
+					
 					<input type="hidden" name="confirmorder" id="confirmorder" value="Y">
 					<input type="hidden" name="profile_change" id="profile_change" value="N">
 					<input type="hidden" name="is_ajax_post" id="is_ajax_post" value="Y">
 					<input type="hidden" name="json" value="Y">
-					<div class="bx_ordercart_order_pay_center"><a href="javascript:;" id="ORDER_CONFIRM_BUTTON" onclick="submitForm('Y'); return false;" class="checkout button big_btn"><span><?=GetMessage("SOA_TEMPL_BUTTON")?></span></a></div>
+
 <div class="chek_politik">
 			<input type="checkbox" checked/>
 <div class="tex_check_politik2">
@@ -447,7 +500,58 @@ function InitOrderJS(){
 В случае не достижения согласия в ходе переговоров, споры будут разрешаться в судебном порядке в соответствии с действующим законодательством Российской Федерации.
 	</p>
 	</div>
+
+			</div> 
+					
+					<div class="order__next order__next_fin">
+						<a href="javascript:;" id="ORDER_CONFIRM_BUTTON" onclick="submitForm('Y'); return false;" class="checkout button big_btn"><span><?=GetMessage("SOA_TEMPL_BUTTON")?></span>
+						<div class="order__message order__message_next">
+							<div class="pinkgirl">
+								<img src="<?=SITE_TEMPLATE_PATH?>/pinkgirl/pinkgirl5.png" alt="">
+							</div>
+							<p>Теперь точно пора нажимать эту кнопку</p>
+						</div>
+						</a>
+					</div>
 	<script>
+	var a,b,c, name1=$("#name1"), mail1=$("#mail1"), phone1=$("#phone1"), text1=$("#text1");
+var $textareaOf = $("#text1"), $textareaIn = $("#ORDER_PROP_7");
+
+$textareaOf.on('keyup', function(e) {
+    $textareaIn.text(e.target.value);
+});
+
+
+function epl3(){
+    a = name1.val();
+    $("#ORDER_PROP_1").val(a);
+	b = mail1.val();
+    $("#ORDER_PROP_2").val(b);
+	c = phone1.val();
+    $("#ORDER_PROP_3").val(c);
+};
+epl3();
+
+$("#name1").click(function(){
+    setTimeout('epl3()',100)
+});
+$("#mail1").click(function(){
+    setTimeout('epl3()',100)
+});
+$("#phone1").click(function(){
+    setTimeout('epl3()',100)
+});
+
+name1.bind('input',function(e){
+    epl3();
+});
+mail1.bind('input',function(e){
+    epl3();
+});
+phone1.bind('input',function(e){
+    epl3();
+});
+
 jQuery(function($){
     $(".phone").mask("8(999) 999-9999");
 	$(".agreement-drop").click(function(e){
@@ -457,7 +561,6 @@ jQuery(function($){
 	});
 });
 </script>
-			</div> 
 				</form>
 				<?
 				if($arParams["DELIVERY_NO_AJAX"] == "N")
@@ -480,7 +583,7 @@ jQuery(function($){
 		}
 	
 	?>
-	</div>
+
 </div>
 <script>
 	$('body').addClass('order_page');
@@ -506,3 +609,53 @@ jQuery(function($){
 	</div>
 
 <?endif?>
+<?if(!$_GET["ORDER_ID"]):?>
+<div class="order__block">
+	 <?$APPLICATION->IncludeComponent(
+	"bitrix:news.list",
+	"mshop2",
+	Array(
+		"ACTIVE_DATE_FORMAT" => "j F Y",
+		"ADD_SECTIONS_CHAIN" => "N",
+		"AJAX_MODE" => "N",
+		"AJAX_OPTION_ADDITIONAL" => "",
+		"AJAX_OPTION_HISTORY" => "N",
+		"AJAX_OPTION_JUMP" => "N",
+		"AJAX_OPTION_STYLE" => "Y",
+		"CACHE_FILTER" => "Y",
+		"CACHE_GROUPS" => "N",
+		"CACHE_TIME" => "36000000",
+		"CACHE_TYPE" => "A",
+		"CHECK_DATES" => "Y",
+		"DETAIL_URL" => "",
+		"DISPLAY_BOTTOM_PAGER" => "N",
+		"DISPLAY_TOP_PAGER" => "N",
+		"FIELD_CODE" => array(0=>"",1=>"",),
+		"FILTER_NAME" => "",
+		"HIDE_LINK_WHEN_NO_DETAIL" => "N",
+		"IBLOCK_ID" => "3",
+		"IBLOCK_TYPE" => "aspro_mshop_content",
+		"INCLUDE_IBLOCK_INTO_CHAIN" => "N",
+		"INCLUDE_SUBSECTIONS" => "Y",
+		"NEWS_COUNT" => "5",
+		"PAGER_DESC_NUMBERING" => "N",
+		"PAGER_DESC_NUMBERING_CACHE_TIME" => "36000",
+		"PAGER_SHOW_ALL" => "N",
+		"PAGER_SHOW_ALWAYS" => "N",
+		"PAGER_TEMPLATE" => "",
+		"PAGER_TITLE" => "",
+		"PARENT_SECTION" => "",
+		"PARENT_SECTION_CODE" => "",
+		"PREVIEW_TRUNCATE_LEN" => "",
+		"PROPERTY_CODE" => array(0=>"LINK",1=>"",),
+		"SET_STATUS_404" => "N",
+		"SET_TITLE" => "N",
+		"SORT_BY1" => "SORT",
+		"SORT_BY2" => "ID",
+		"SORT_ORDER1" => "ASC",
+		"SORT_ORDER2" => "DESC"
+	)
+);?>
+</div>
+<?endif;?>
+</div>

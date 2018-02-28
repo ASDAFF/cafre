@@ -43,11 +43,13 @@ foreach($arResult["ITEMS"] as $key => $arItem)
 	}
 }
 
-global $MSHOP_SMART_FILTER, $filter_h1;
+global $MSHOP_SMART_FILTER, $filter_h1, $brends, $brend_in_catalog;
 $n=0;
-
 foreach($MSHOP_SMART_FILTER as $num => $value) {
-	if(!strpos($num, 'PROPERTY')===false) {
+	if($num=='=PROPERTY_250_VALUE' || $num=='=PROPERTY_250') {
+		$brend_in_catalog=str_replace('..', '', $arResult['ITEMS'][250]['VALUES'][$value[0]]['VALUE']);
+	}
+	elseif(!strpos($num, 'PROPERTY')===false) {
 		$n++;
 		if($n==1) $filter_h1 ='. ';
 		$property_id=intval( explode('_', $num)[1]  );

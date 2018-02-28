@@ -42,7 +42,8 @@ if($arResult["OFFERS"]){
 }
 $arOfferProps = implode(';', $arParams['OFFERS_CART_PROPERTIES']);
 ?>
-<div dtaa-rel="<?=$arResult['DETAIL_PAGE_URL']?>" class="item_main_info <?=(!$showCustomOffer ? "noffer" : "");?>" id="<?=$arItemIDs["strMainID"];?>">
+<div dtaa-rel="<?=$arResult['DETAIL_PAGE_URL']?>" class="item_main_info <?=(!$showCustomOffer ? "noffer" : "");?>" id="<?=$arItemIDs["strMainID"];?>" itemscope="" itemtype="https://schema.org/Product">
+<meta itemprop="name" content="<?=$arResult["NAME"]?>"/>
 	<div class="img_wrapper">
 		<div class="stickers">
 			<?if (is_array($arResult["PROPERTIES"]["HIT"]["VALUE_XML_ID"])):?>
@@ -97,10 +98,10 @@ $alt = $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"];
 								<?if(!$isEmpty){?>
 								
                                     <a href="<?=$file2["src"];?>" <?=($bIsOneImage ? '' : 'rel="item_slider"')?> class="fancy" title="<?=$title;?>">
-                                <img border="0" src="<?=$file1["src"];?>" alt="<?=$alt;?>" title="<?=$title;?>" />
+                                <img border="0" src="<?=$file1["src"];?>" alt="Фото <?=$arResult["NAME"];//$alt;?>"  itemprop="image"/>
                                     </a>
                                 <?}else{?>
-		                        <img border="0" src="<?=$file1["src"];?>" alt="<?=$alt;?>" title="<?=$title;?>" />
+		                        <img border="0" src="<?=$file1["src"];?>" alt="Фото <?=$arResult["NAME"];//$alt;?>"  itemprop="image"/>
 								<?}?>
                         
 </li>
@@ -120,10 +121,10 @@ if($arImage["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 							<li id="photo-<?=$i?>" <?if($arResult["PROPERTIES"]["ON_PHOT"]["VALUE"]){if(!$i){echo 'class="current"style="display: none;"';}else{echo 'style="display: none;"';}}else{if(!$i) {echo 'class="current"';}else{echo 'style="display: none;"';}}?>>
 								<?if(!$isEmpty){?>
 									<a href="<?=$imgbig2["src"]?>" <?=($bIsOneImage ? '' : 'rel="item_slider"')?> class="fancy" title="<?=$title;?>">
-								<img border="0" src="<?=$imgbig["src"]?>" alt="<?=$alt;?>" title="<?=$title;?>" />
+								<img border="0" src="<?=$imgbig["src"]?>" alt="<?=$alt;?>" title="<?=$title;?>"/>
                                     </a>
 								<?}else{?>
-						<img border="0" src="<?=$arImage["SRC"]?>" alt="<?=$alt;?>" title="<?=$title;?>" />
+						<img border="0" src="<?=$arImage["SRC"]?>" alt="<?=$alt;?>" title="<?=$title;?>"/>
                  
 								<?}?>
 							</li>
@@ -404,7 +405,7 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 									$prefix=GetMessage("CATALOG_FROM");
 								}
 								if($arParams["SHOW_OLD_PRICE"]=="Y"){?>
-									<div class="price" id="<? echo $arItemIDs["ALL_ITEM_IDS"]['PRICE']; ?>">
+									<div class="price price_on" id="<? echo $arItemIDs["ALL_ITEM_IDS"]['PRICE']; ?>">
 										<?if(strlen($minPrice["PRINT_DISCOUNT_VALUE"])):?>
 											<?=$prefix;?> <?=$minPrice["PRINT_DISCOUNT_VALUE"];?>
 											<?if (($arParams["SHOW_MEASURE"]=="Y") && $strMeasure){?>
@@ -424,7 +425,7 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 										</div>
 									<?}?>
 								<?}else{?>
-									<div class="price" id="<? echo $arItemIDs["ALL_ITEM_IDS"]['PRICE']; ?>">
+									<div class="price price_on" id="<? echo $arItemIDs["ALL_ITEM_IDS"]['PRICE']; ?>">
 										<?if(strlen($minPrice["PRINT_DISCOUNT_VALUE"])):?>
 											<?=$prefix;?> <?=$minPrice['PRINT_DISCOUNT_VALUE'];?>
 											<?if (($arParams["SHOW_MEASURE"]=="Y") && $strMeasure){?>
@@ -433,6 +434,11 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 										<?endif;?>
 									</div>
 								<?}?>
+								<div itemprop="offers" itemscope="" itemtype="https://schema.org/Offer" style="display:none;">
+									<span class="price-val" itemprop="price" content="<?=$arResult["MIN_PRICE"]["DISCOUNT_VALUE"]?>"><?=$arResult["MIN_PRICE"]["DISCOUNT_VALUE"]?></span> 
+									<span class="currency" itemprop="priceCurrency" content="RUB">руб.</span>
+									<link itemprop="availability" href="https://schema.org/InStock">
+								</div>
 							<?}else{?>
 								<?
 								$arCountPricesCanAccess = 0;
@@ -646,11 +652,12 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 									<?if(($arAddToBasketData["OPTIONS"]["USE_PRODUCT_QUANTITY_DETAIL"] && $arAddToBasketData["ACTION"] == "ADD") && $arOffer["CAN_BUY"]):?>
 										<div class="counter_block big_basket" data-item="<?=$arOffer["ID"];?>" <?=($arParams["TYPE_SKU"]=="N" ? "style='display: none;'" : "");?>>
 											<span class="minus">-</span>
-											<input type="text" class="text" name="<? echo $arParams["PRODUCT_QUANTITY_VARIABLE"]; ?>" value="<?=$arAddToBasketData["MIN_QUANTITY_BUY"]?>" />
+											<input type="text" class="text amouttov" name="<? echo $arParams["PRODUCT_QUANTITY_VARIABLE"]; ?>" value="<?=$arAddToBasketData["MIN_QUANTITY_BUY"]?>" />
 											<span class="plus" <?=($arAddToBasketData["MAX_QUANTITY_BUY"] ? "data-max='".$arAddToBasketData["MAX_QUANTITY_BUY"]."'" : "")?>>+</span>
 										</div>
 									<?endif;?>
-									<div class="button_block <?=(($arAddToBasketData["ACTION"] == "ORDER" /*&& !$arOffer["CAN_BUY"]*/) || !$arOffer["CAN_BUY"] || !$arAddToBasketData["OPTIONS"]["USE_PRODUCT_QUANTITY_DETAIL"] || ($arAddToBasketData["ACTION"] == "SUBSCRIBE" && $arResult["CATALOG_SUBSCRIBE"] == "Y")  ? "wide" : "");?>" 
+									<?//print_r($imgbig2);?>
+									<div data-nametov="<?=$arOffer["NAME"]?>" data-urltov="https://cafre.ru<?=$arOffer["DETAIL_PAGE_URL"]?>" data-imgtov="https://cafre.ru<?=$imgbig2["src"];?>" data-pricetov="<?=$arOffer["PRICES"]["BASE"]["DISCOUNT_VALUE"]?>" class="button_block <?=(($arAddToBasketData["ACTION"] == "ORDER" /*&& !$arOffer["CAN_BUY"]*/) || !$arOffer["CAN_BUY"] || !$arAddToBasketData["OPTIONS"]["USE_PRODUCT_QUANTITY_DETAIL"] || ($arAddToBasketData["ACTION"] == "SUBSCRIBE" && $arResult["CATALOG_SUBSCRIBE"] == "Y")  ? "wide" : "");?>" 
                                     <?=($arAddToBasketData["ACTION"] != "ORDER" && $arOffer["CAN_BUY"])?"onclick=\"yaCounter37955450.reachGoal('cart'); ga('send', 'event', 'cart', 'submit'); return true;\"":"";?>>
 										<!--noindex-->
 											<?=$arAddToBasketData["HTML"]?>
@@ -673,7 +680,7 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 					<?endif;?>
 				</div>
 				<?if(strlen($arResult["PREVIEW_TEXT"])):?>
-					<div class="preview_text"><?=$arResult["PREVIEW_TEXT"]?></div>
+					<div class="preview_text" itemprop="description"><?=$arResult["PREVIEW_TEXT"]?></div>
 				<?endif;?>
 			</div>
 			<?if(is_array($arResult["STOCK"]) && $arResult["STOCK"]):?>
@@ -686,7 +693,7 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 				<?endforeach;?>
 			<?endif;?>
 			<div class="element_detail_text wrap_md">
-				<p class="element_detail_text_strong">Закажите товар без предоплаты и уже через 3 дня забирайте его на почте</p>
+				<p class="element_detail_text_strong">Закажите товар без предоплаты и уже через 5 дней забирайте его в пункте выдачи или у курьера</p>
 				<div class="iblock sh">
 					<?$APPLICATION->IncludeFile(SITE_DIR."include/share_buttons.php", Array(), Array("MODE" => "html", "NAME" => GetMessage('CT_BCE_CATALOG_SOC_BUTTON')));?>
 				</div>
@@ -815,6 +822,7 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 		);?>
 	<?endif;?>
 </div>
+<span>Код 1с: <?=$arResult["PROPERTIES"]["CODE1C"]["VALUE"];?></span>
 <div class="preim">
 	<ul class="preim__list">
 		<li class="preim__item">
@@ -867,7 +875,7 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 				<span><?=GetMessage("OFFER_PRICES")?></span>
 			</li>
 		<?endif;?>
-		<?if($arResult["DETAIL_TEXT"] || count($arResult["STOCK"]) || count($arResult["SERVICES"]) || ((count($arResult["PROPERTIES"]["INSTRUCTIONS"]["VALUE"]) && is_array($arResult["PROPERTIES"]["INSTRUCTIONS"]["VALUE"])) || count($arResult["SECTION_FULL"]["UF_FILES"])) || ($showProps && $arParams["PROPERTIES_DISPLAY_LOCATION"] != "TAB")):?>
+		<?if($arResult["DETAIL_TEXT"] || $arResult["PREVIEW_TEXT"] || count($arResult["STOCK"]) || count($arResult["SERVICES"]) || ((count($arResult["PROPERTIES"]["INSTRUCTIONS"]["VALUE"]) && is_array($arResult["PROPERTIES"]["INSTRUCTIONS"]["VALUE"])) || count($arResult["SECTION_FULL"]["UF_FILES"])) || ($showProps && $arParams["PROPERTIES_DISPLAY_LOCATION"] != "TAB")):?>
 			<li class="<?=(!($iTab++) ? ' current' : '')?>">
 				<span><?=GetMessage("DESCRIPTION_TAB")?></span>
 			</li>
@@ -1195,11 +1203,12 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 				</table>
 			</li>
 		<?endif;?>
-		<?if($arResult["DETAIL_TEXT"] || count($arResult["STOCK"]) || count($arResult["SERVICES"]) || ((count($arResult["PROPERTIES"]["INSTRUCTIONS"]["VALUE"]) && is_array($arResult["PROPERTIES"]["INSTRUCTIONS"]["VALUE"])) || count($arResult["SECTION_FULL"]["UF_FILES"])) || ($showProps && $arParams["PROPERTIES_DISPLAY_LOCATION"] != "TAB")):?>
+		<?if($arResult["DETAIL_TEXT"] || $arResult["PREVIEW_TEXT"] || count($arResult["STOCK"]) || count($arResult["SERVICES"]) || ((count($arResult["PROPERTIES"]["INSTRUCTIONS"]["VALUE"]) && is_array($arResult["PROPERTIES"]["INSTRUCTIONS"]["VALUE"])) || count($arResult["SECTION_FULL"]["UF_FILES"])) || ($showProps && $arParams["PROPERTIES_DISPLAY_LOCATION"] != "TAB")):?>
 			<li class="<?=(!($iTab++) ? ' current' : '')?>">
-				<?if(strlen($arResult["DETAIL_TEXT"])):?>
-					<div class="detail_text"><?=$arResult["DETAIL_TEXT"]?></div>
-					<span>Код 1с: <?=$arResult["PROPERTIES"]["CODE1C"]["VALUE"];?></span>
+				<?if(strlen($arResult["PREVIEW_TEXT"]) != false && strlen($arResult["PREVIEW_TEXT"]) != "NULL"):?>
+					<div class="detail_text"><?=$arResult["PREVIEW_TEXT"];?></div>
+				<?elseif(strlen($arResult["DETAIL_TEXT"]) != false && strlen($arResult["DETAIL_TEXT"]) != "NULL"):?>
+<div class="detail_text"><?=$arResult["DETAIL_TEXT"];?></div>
 				<?endif;?>
 				<?if($arResult["SERVICES"] && $showProps){?>
 					<div class="wrap_md descr_div">
@@ -1474,6 +1483,23 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 		scroll_block($('.tabs_section'));
 	});
 
+	var name_tov = $("h1").text();
+		var url_tov = location.href;
+		var amout_tov = $(".price_on").text();
+		var img_tov = $(".button_block").attr("data-imgtov");;
+	//console.log(location.href);
+	carrotquest.track('$product_viewed', {
+
+            "$name": name_tov,
+
+           "$url": url_tov,
+
+           "$amount": amout_tov,
+
+          "$img": img_tov,
+
+});
+	
 	$(".opener").click(function(){
 		$(this).find(".opener_icon").toggleClass("opened");
 		var showBlock = $(this).parents("tr").toggleClass("nb").next(".offer_stores").find(".stores_block_wrap");

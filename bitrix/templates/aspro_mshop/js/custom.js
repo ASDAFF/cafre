@@ -47,7 +47,7 @@ $(function() {
     letters = letters.sort();
 
     $(letters).each(function(i, l) {
-		if (l.search(/[À-ÿ¨¸]/) === -1) {
+		if (l.search(/[Ã€-Ã¿Â¨Â¸]/) === -1) {
 			$(alphabet).find('.brands__lang_eng').append($(link).text(l))
 		} else {
 			$(alphabet).find('.brands__lang_rus').append($(link).text(l))
@@ -158,4 +158,24 @@ $(function() {
 
 	$(window).on('resize', fixToBrand);
 	fixToBrand();
+
+	if ($('.top_brand_block').get(0)) {
+		var items = $('.top_brand_block > a').length,
+			more = false;
+		
+		more = (items > 10) ? true : false;
+		
+		if (more === false && $(window).width() <= 500 && items > 2) more = true;
+
+		if (more === true) {
+			$('.top_brand_block').addClass('more');
+			$('.top_brand_block').append('<button class="more-btn"></button>')
+		}
+	}
+	
+	$('.top_brand_block .more-btn').on('click', function(e) {
+		e.preventDefault();
+		$(this).hide();
+		$('.top_brand_block').removeClass('more');
+	});
 })

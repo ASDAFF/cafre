@@ -1260,10 +1260,14 @@ display:none;
 	display:none;
 	padding:10px;
 	overflow-y:auto;
-	max-height:160px;
+	max-height: 120px;
+    max-width: 570px;
 	text-align:left;
 	margin:0 20px;
 	border:1px solid #24284f;
+	    position: absolute;
+	right: 340px;
+    bottom: 220px;
 }
 .chek_politik .agreement-info p {
 	font-size:12px;
@@ -1823,9 +1827,14 @@ margin: 0 0 10px;
 	margin-top: 100px;
 }
 
+.top_brand_block {
+	position: relative;
+	padding: 50px 30px 20px;
+}
+
 .top_brand_block a {
 	position: relative;
-    height: 120px;
+    height: 100px;
     margin-bottom: 26px;
     background: white;
     border: 1px solid #dcdcdc;
@@ -1833,14 +1842,15 @@ margin: 0 0 10px;
     display: inline-block;
     vertical-align: top;
     font-size: 14px;
-    width: 30%;
-    margin-right: 4.5%;
+    width: 18%;
+    margin-right: 2.2%;
     margin-bottom: 20px;
     text-align: center;
-    line-height: 120px;
+    line-height: 100px;
+    overflow: hidden;
 }
 
-.top_brand_block a:nth-child(3n) {
+.top_brand_block a:nth-child(5n) {
 	margin-right: 0;
 }
 
@@ -1853,19 +1863,76 @@ margin: 0 0 10px;
 	max-height: 90%;
 }
 
+.img_brand_sec {
+	width: 140px;
+	height: 100px;
+}
+
+.top_brand_block.more {
+	height: 320px;
+	overflow: hidden;
+}
+
+.top_brand_block .more-btn {
+	position: absolute;
+	left: 50%;
+	transform: translateX(-50%);
+	bottom: 0;
+	width: 100%;
+	background: #ecf5ff;
+	display: block;
+	border: none;
+	padding: 10px 0;
+	cursor: pointer;
+}
+
+.top_brand_block .more-btn:hover {
+	font-weight: bold;
+}
+
+.top_brand_block .more-btn::before {
+	content: 'Показать все бренды';
+}
+
+.top_brand_block::before {
+	position: absolute;
+	top: 0;
+	left: 50%;
+	transform: translateX(-50%);
+	display: block;
+	width: 100%;
+	text-align: center;
+	padding: 10px 0;
+	content: 'Выберите бренд';
+}
+
 @media (max-width: 1200px) {
 	.brand__description {
 		margin-left: 5%;
 		width: 72%;
 	}
+
+	.top_brand_block a {
+		margin-right: 2.1%;
+	}
 }
 
 @media (max-width: 1000px) {
+	.chek_politik .agreement-info {
+	right: 230px;
+    bottom: 200px;
+	    max-height: 100px;
+    max-width: 500px;
+	}
 	.top_brand_block a {
-		height: 100px;
-		line-height: 100px;
-		width: 31%;
-		margin-right: 2.8%;
+		height: 70px;
+		line-height: 70px;
+		width: 18%;
+		margin-right: 1.9%;
+	}
+	
+	.top_brand_block.more {
+		height: 260px;
 	}
 
 	.brand__description {
@@ -1901,6 +1968,16 @@ margin: 0 0 10px;
 }
 
 @media (max-width: 768px) {
+	.chek_politik .agreement-info {
+	position:relative;
+	right:0;
+	bottom:0;
+	left:0;
+	}
+	.top_brand_block a {
+		margin-right: 2%;
+	}
+
 	.container h1 {
 		font-size: 26px;
 	}
@@ -2011,5 +2088,57 @@ position: absolute;
 @media (max-width: 768px) {
 	.top_btn_order{
 		display:none;
+	}
+}
+.sum_new_bas{
+	position:absolute;
+	right:0;
+}
+.detail_text ul{
+	    margin: 20px 0 24px 10px;
+}
+.detail_text ul > li {
+    font-family: 'Merriweather', sans-serif;
+    font-size: 14px;
+    color: black;
+    line-height: 24px;
+}
+.detail_text ul > li{
+    margin-bottom: 20px;
+}
+.detail_text ul > li:before {
+    font-size: 6px;
+    position: relative;
+    top: -3px;
+    margin-right: 15px;
+    color: black;
+}
+
+@media (max-width: 550px) {
+	.footer_top .sblock .wrap_bg, .footer_bottom .copy_block {
+		width: 100%;
+	}
+
+	#footer .copyright {
+		margin-bottom: 0;
+	}
+
+	.footer_bottom .all_menu_block .submenu_block {
+		display: block;
+		width: 100%;
+		margin-bottom: 10px;
+	}
+
+	.wrapper_inner .footer_bottom .menu_block, .wrapper_inner .footer_bottom .social_block {
+		margin-bottom: 10px;
+	}
+
+	.footer_bottom .all_menu_block {
+		padding: 0;
+		width: 100%;
+	}
+
+	.footer_bottom .submenu_top {
+		display: none;
 	}
 }

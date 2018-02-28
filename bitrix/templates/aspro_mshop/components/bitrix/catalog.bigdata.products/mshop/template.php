@@ -217,7 +217,7 @@ if($arResult['ITEMS']){?>
 									if($ar_res = $res->GetNext()):
 									?>
 									<div class="descript">
-				<p><?if(($ar_res['PREVIEW_TEXT'] !== "NULL")&&($ar_res['PREVIEW_TEXT'] != NULL)):?><?echo substr(strip_tags($ar_res['PREVIEW_TEXT']), 0, 100).'...';?><?else:?><?echo substr(strip_tags($ar_res["DETAIL_TEXT"]), 0, 100).'...';?><?endif;?></p></div>
+				<p><?if(($ar_res['PREVIEW_TEXT'] !== "NULL")&&($ar_res['PREVIEW_TEXT'] != NULL)):?><?echo substr(strip_tags($ar_res['PREVIEW_TEXT']), 0, 100).'...';?><?elseif(($ar_res['DETAIL_TEXT'] !== "NULL")&&($ar_res['DETAIL_TEXT'] != NULL)):?><?echo substr(strip_tags($ar_res["DETAIL_TEXT"]), 0, 100).'...';?><?endif;?></p></div>
 				<?endif;?>
 				<div class="buttons_block clearfix">
 				<?foreach($arItem["OFFERS"] as $val):
@@ -235,11 +235,12 @@ if($arResult['ITEMS']){?>
 									<?if(($arAddToBasketData["OPTIONS"]["USE_PRODUCT_QUANTITY_DETAIL"] && $arAddToBasketData["ACTION"] == "ADD") && $val["CAN_BUY"]):?>
 										<div class="counter_block" data-item="<?=$val["ID"];?>">
 											<span class="minus">-</span>
-											<input type="text" class="text" name="<? echo $arParams["PRODUCT_QUANTITY_VARIABLE"]; ?>" value="<?=$arAddToBasketData["MIN_QUANTITY_BUY"]?>" />
+											<input type="text" class="text amouttov" name="<? echo $arParams["PRODUCT_QUANTITY_VARIABLE"]; ?>" value="<?=$arAddToBasketData["MIN_QUANTITY_BUY"]?>" />
 											<span class="plus" <?=($arAddToBasketData["MAX_QUANTITY_BUY"] ? "data-max='".$arAddToBasketData["MAX_QUANTITY_BUY"]."'" : "")?>>+</span>
 										</div>
 									<?endif;?>
-									<div class="button_block <?=(($arAddToBasketData["ACTION"] == "ORDER" /*&& !$arOffer["CAN_BUY"]*/) || !$val["CAN_BUY"] || !$arAddToBasketData["OPTIONS"]["USE_PRODUCT_QUANTITY_DETAIL"] || ($arAddToBasketData["ACTION"] == "SUBSCRIBE" && $arResult["CATALOG_SUBSCRIBE"] == "Y")  ? "wide" : "");?>" 
+									<?//print_r($arItem['MIN_PRICE']);?>
+									<div data-nametov="<?=$arItem["NAME"]?>" data-urltov="https://cafre.ru<?=$arItem["DETAIL_PAGE_URL"]?>" data-imgtov="https://cafre.ru<?=$img["src"];?>" data-pricetov="<?=$arItem['MIN_PRICE']['DISCOUNT_VALUE']?>" data-idoffer="<?=$arItem["ID"]?>" class="button_block button_block_big <?=(($arAddToBasketData["ACTION"] == "ORDER" /*&& !$arOffer["CAN_BUY"]*/) || !$val["CAN_BUY"] || !$arAddToBasketData["OPTIONS"]["USE_PRODUCT_QUANTITY_DETAIL"] || ($arAddToBasketData["ACTION"] == "SUBSCRIBE" && $arResult["CATALOG_SUBSCRIBE"] == "Y")  ? "wide" : "");?>" 
                                     <?=($arAddToBasketData["ACTION"] != "ORDER" && $val["CAN_BUY"])?"onclick=\"yaCounter37955450.reachGoal('cart'); ga('send', 'event', 'cart', 'submit'); return true;\"":"";?>>
 										<!--noindex-->
 											<?=$arAddToBasketData["HTML"]?>
@@ -266,6 +267,42 @@ if($arResult['ITEMS']){?>
 	
 	<script type="text/javascript">
 		$(document).ready(function(){
+			$('.button_block_big').on('click', function(e) {
+        var name = $(this).attr("data-nametov");
+		var url = $(this).attr("data-urltov");
+		var img = $(this).attr("data-imgtov");
+		var price = parseInt($(this).attr("data-pricetov"));
+		var quant = parseInt($(this).siblings(".counter_block").find(".amouttov").val()); 
+		var amout = price*quant;
+		carrotquest.track('$cart_added', {
+
+            "$name": name,
+
+           "$url": url,
+
+           "$amount": amout,
+
+          "$img": img,
+
+});
+		/*$.ajax({
+					url: "/ajax/btn_onbasket.php", 
+					type: "post",
+					dataType: "json",
+					data: { 
+						"name": name,
+						"url": url,
+						"img": img,
+						"amout": amout
+					},
+				
+					success: function(data){
+						if(data.result){
+						console.log(data.result);
+						}
+					}
+				});*/
+    });
 			var flexsliderItemWidth = 210;
 			var flexsliderItemMargin = 20;
 			var sliderWidth = $('.specials_slider_wrapp').outerWidth();

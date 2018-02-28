@@ -187,3 +187,4 @@ include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/props_format.php");
 
 	</div>
 <?endif?>
+</div>

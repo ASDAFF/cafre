@@ -1,5 +1,30 @@
 <?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();?>
-<div class="module-authorization">
+<div class="order__cell">
+							<form method="post" action="" name="order_auth_form" class="order__block order__log">
+							<?=bitrix_sessid_post()?>
+						<?foreach ($arResult["POST"] as $key => $value){?>
+							<input type="hidden" name="<?=$key?>" value="<?=$value?>" />
+						<?}?>
+								<div class="order__message order__message_log">
+									<div class="pinkgirl">
+										<img src="<?=SITE_TEMPLATE_PATH?>/pinkgirl/pinkgirl2.png" alt="">
+									</div>
+									<p>Или введи свой логин и пароль (если уже есть)</p>
+								</div>
+								<label class="order__lbl">
+									<span>E-Mail</span>
+									<input class="order__inp" name="MY_LOGIN" type="text" value="<?=$arResult["AUTH"]["USER_LOGIN"]?>">
+									<a href="<?=$arParams["PATH_TO_AUTH"]?>forgot-password/?back_url=<?= urlencode($APPLICATION->GetCurPageParam()); ?>"><?echo GetMessage("STOF_FORGET_PASSWORD")?></a>
+								</label>
+								<label class="order__lbl">
+									<span><?echo GetMessage("STOF_PASSWORD")?></span>
+									<input class="order__inp" class="required" type="password" name="MY_PASS">
+								</label>
+								<input type="submit" class="button vbig_btn wides" id="do_authorize" value="<?echo GetMessage("STOF_NEXT_STEP")?>">
+								<input type="hidden" value="auth_basket" name="label">
+							</form>
+</div>
+<!--<div class="module-authorization">
 	<div class="authorization-cols">
 
 			<div class="auth-title">
@@ -7,26 +32,23 @@
 			</div>
 			<div class="form-block">
 					<form method="post" action="" name="order_auth_form">
-						<?=bitrix_sessid_post()?>
-						<?foreach ($arResult["POST"] as $key => $value){?>
-							<input type="hidden" name="<?=$key?>" value="<?=$value?>" />
-						<?}?>
+						
 						<div class="col-3 registration">
 						<div class="r form-control">
 							<label>E-mail <span class="star">*</span></label>
-							<input type="text" name="MY_LOGIN" maxlength="30" size="30" value="<?=$arResult["AUTH"]["USER_LOGIN"]?>">
-							<a href="<?=$arParams["PATH_TO_AUTH"]?>forgot-password/?back_url=<?= urlencode($APPLICATION->GetCurPageParam()); ?>"><?echo GetMessage("STOF_FORGET_PASSWORD")?></a>
+							<input id="name2" type="text" name="MY_LOGIN" maxlength="30" size="30" value="<?=$arResult["AUTH"]["USER_LOGIN"]?>">
+							
 						</div>
 						</div>
 						<div class="col-3 registration">
 						<div class="r form-control">
-							<label><?echo GetMessage("STOF_PASSWORD")?> <span class="star">*</span></label>
+							<label><?//echo GetMessage("STOF_PASSWORD")?> <span class="star">*</span></label>
 							<input type="password" class="required" name="MY_PASS" maxlength="30" size="30">
 						</div>
 						</div>
 						<div class="col-3 registration but-r">							
 							<div class="buttons">
-								<input type="submit" class="button vbig_btn wides" id="do_authorize" value="<?echo GetMessage("STOF_NEXT_STEP")?>">
+								<input type="submit" class="button vbig_btn wides" id="do_authorize" value="<?//echo GetMessage("STOF_NEXT_STEP")?>">
 							</div>
 						</div>
 						<input type="hidden" value="auth_basket" name="label">
@@ -35,7 +57,7 @@
 			</div>
 	</div>
 	<div class="filter block"></div>
-</div>
+</div>-->
 <script type="text/javascript">
 	
 	$(document).ready(function(){
@@ -56,7 +78,7 @@
 				success: function(e) {					
 					if(e=='yes') {
 						$(document).find('[code=EMAIL]').val($("form[name=order_auth_form]").find('[name="MY_LOGIN"]').val());
-						$("form[name=order_auth_form]").closest('.form-block').prev().text('Вы успешно авторизованы').next().remove();						
+						$("form[name=order_auth_form]").closest('.order__cell').prev().html('<h3>Вы успешно авторизованы</h3>').next().remove();						
 					}
 					else {
 						$("form[name=order_auth_form]").after('<p id="error">Логин или пароль указаны неверно</p>');
@@ -68,4 +90,5 @@
 		});
 		
 	});
+
 	</script>

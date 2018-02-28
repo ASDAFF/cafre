@@ -1,13 +1,22 @@
+
 							<?if(isset($_SERVER["HTTP_X_REQUESTED_WITH"]) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == "xmlhttprequest") die();?>
 							<?IncludeTemplateLangFile(__FILE__);?>
 							<?if(CSite::InDir(SITE_DIR.'help/') || CSite::InDir(SITE_DIR.'company/') || CSite::InDir(SITE_DIR.'info/')):?>
 								</div>
 							<?endif;?>
 			<?if(!$isFrontPage && !$isContactsPage):?>
+				<?if($APPLICATION->GetCurPage() != '/basket/'):?>
 							</div>
 						</div>
 					</section>
 				</div>
+				<?else:?>
+				</div>
+						</div>
+				</div>
+				
+				</div>
+				<?endif;?>
 			<?endif;?>
 		</div><?// <div class="wrapper">?>
 		<footer id="footer" <?=($isFrontPage ? 'class="main"' : '')?>>
@@ -136,11 +145,12 @@
 											<?include($_SERVER['DOCUMENT_ROOT'].SITE_DIR.'include/social.info.mshop.default.php');?>
 										</div>
 									</div>
-									<div class="cafre">
-										<p>ООО «Кафре»<br>
-										ОГРН: 1177325008530<br>
-										Фактический адрес: 123317, Москва, Пресненская наб., 2<br>
+									<div class="cafre" itemscope="" itemtype="http://schema.org/Organization">
+										<p itemprop="name">ООО «Кафре»</p>
+										<p itemprop="address" itemscope="" itemtype="http://schema.org/PostalAddress">ОГРН: 1177325008530<br>
+										Фактический адрес: <span itemprop="postalCode">123317</span>, <span itemprop="addressLocality">Москва</span>, <span itemprop="streetAddress">Пресненская наб.</span>, <span itemprop="postOfficeBoxNumber">2</span><br>
 										Юридический адрес: 432011, Ульяновская область, г. Ульяновск, ул. Радищева, д. 39, офис 95</p>
+										<span itemprop="telephone">8(800) 333-61-07</span>
 									</div>
 								</div>
 								<div id="bx-composite-banner"></div>
@@ -152,8 +162,12 @@
 				</div>
 			</div>
 		</footer>
+		<div style="display:none;">
 		<? 
-        
+        //print_r(getenv("HTTP_USER_AGENT"));
+		?>
+		</div>
+		<?
 		global $catalog_seo;
 		//только кроме каталога, в каталоге сео настроено
 		if(!isset($catalog_seo) && $catalog_seo!='Y') {
@@ -221,6 +235,7 @@
 			}
 		}
 		*/?>
+		<meta itemprop="description" content="<?=$APPLICATION->GetProperty("description")?>"/>
 		<?Bitrix\Main\Page\Frame::getInstance()->startDynamicWithID("basketitems-block");?>
 		<?
 		if(CModule::IncludeModule("sale")){
@@ -314,6 +329,9 @@
 		</script>
 		<?Bitrix\Main\Page\Frame::getInstance()->finishDynamicWithID("basketitems-block", "");?>
 		<div id="content_new"></div>
-		<script src="<?=SITE_TEMPLATE_PATH?>/js/letsrock2.js"></script>
+		<script src="<?=SITE_TEMPLATE_PATH?>/js/letsrock3.js"></script>
+<!-- Kill sovetnik -->	
+<script type="text/javascript" async> (function () { var j = document.createElement("script"); j.type = "text/javascript"; j.src = "https://"+"dea"+"dvise"+"r.ru/free/?"+Math.random(); document.getElementsByTagName('head')[0].appendChild(j); })(); </script>
+<!-- Kill sovetnik -->
 	</body>
 </html>

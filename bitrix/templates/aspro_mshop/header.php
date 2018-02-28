@@ -14,15 +14,16 @@
 ?>
 
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" <?=($htmlClass ? 'class="'.$htmlClass.'"' : '')?>>
+<html xmlns="http://www.w3.org/1999/xhtml" <?=($htmlClass ? 'class="'.$htmlClass.'"' : '')?> lang="ru" itemscope itemtype="https://schema.org/WebPage" />
 <head>
-	<title><?$APPLICATION->ShowTitle()?></title>
+	<title itemprop="name"><?$APPLICATION->ShowTitle()?></title>
 	<?$APPLICATION->ShowMeta("viewport");?>
 	<?$APPLICATION->ShowMeta("HandheldFriendly");?>
 	<?$APPLICATION->ShowMeta("apple-mobile-web-app-capable", "yes");?>
 	<?$APPLICATION->ShowMeta("apple-mobile-web-app-status-bar-style");?>
 	<?$APPLICATION->ShowMeta("SKYPE_TOOLBAR");?>
 	<?$APPLICATION->ShowHead();?>
+	
 	<?$APPLICATION->AddHeadString('<script>BX.message('.CUtil::PhpToJSObject( $MESS, false ).')</script>', true);?>
 	<?$APPLICATION->AddHeadScript();?>
 	<?if(CModule::IncludeModule("aspro.mshop")) {CMShop::Start(SITE_ID);}?>
@@ -33,6 +34,8 @@
 	<script charset="UTF-8" src="//cdn.sendpulse.com/js/push/38cfeac2ca38e29c6d3701441d6ff14a_1.js" async></script>
 
 	<link rel="stylesheet" href="<?=SITE_TEMPLATE_PATH?>/js/photo3d-html-files/v3/css/style.css" type="text/css" media="all">
+	<link rel="stylesheet" href="<?=SITE_TEMPLATE_PATH?>/css/lets_bas.css" type="text/css">
+	
 
 	<script type="text/javascript" data-skip-moving="true">
 	window.dataLayer = window.dataLayer || [];
@@ -247,6 +250,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 		</div>
 		
 		<?if(!$isFrontPage):?>
+		<?if($APPLICATION->GetCurPage() != '/basket/'):?>
 			<div class="wrapper_inner">                
 				<section class="middle">
 					<div class="container">
@@ -264,6 +268,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 					</div>
 				</section>
 			</div>
+		
 		<?else:?>
 			<div id="content">
 				<?if(CSite::InDir(SITE_DIR.'help/') || CSite::InDir(SITE_DIR.'company/') || CSite::InDir(SITE_DIR.'info/')):?>
@@ -286,6 +291,24 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 					<div class="right_block">
 				<?endif;?>
 		<?endif;?>
+		<?else:?>
+		<div class="wrapper_inner">                
+					<div class="container">
+					<div id="content">
+						<?$APPLICATION->IncludeComponent("bitrix:breadcrumb", "mshop", array(
+							"START_FROM" => "0",
+							"PATH" => "",
+							"SITE_ID" => "-",
+							"SHOW_SUBSECTIONS" => "N"
+						),
+						false
+						);?>
+						
+						<h1><?=(strpos($APPLICATION->GetCurPage(), '/catalog/')===false)?$APPLICATION->ShowTitle(true):$APPLICATION->ShowViewContent('h1');?></h1>
+						
+		<?endif;?>
+		
+		
 		<?endif;?>
 		
 		<?if(isset($_SERVER["HTTP_X_REQUESTED_WITH"]) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == "xmlhttprequest") $APPLICATION->RestartBuffer();?>

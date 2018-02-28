@@ -131,7 +131,23 @@ if($arResult["ITEMS"]){?>
 				}
 				//not prices
 				foreach($arResult["ITEMS"] as $key=>$arItem)
-				{if($key==250) continue;
+				{
+					if($key==250) {
+						foreach($arItem["VALUES"] as $val => $ar):
+						if($ar["CHECKED"]) { ?>
+										<input
+											type="hidden"
+											value="<? echo $ar["HTML_VALUE"] ?>"
+											name="<? echo $ar["CONTROL_NAME"] ?>"
+											id="<? echo $ar["CONTROL_ID"] ?>"
+											<? echo $ar["CHECKED"]? 'checked="checked"': '' ?>
+										/>
+						<?break;
+						}?>
+						<?endforeach;
+						continue;
+					}						
+					
 					if(
 						empty($arItem["VALUES"])
 						|| isset($arItem["PRICE"])
@@ -782,15 +798,23 @@ if($arResult["ITEMS"]){?>
 <?$this->SetViewTarget('filter_dop');?>
 
 <?
+global $brend_in_catalog, $est_brend;
 foreach($arResult["ITEMS"][250]['VALUES'] as $arItem) {	
+	if($arItem['CHECKED']) {
+		$brends=array();
+		$brend_in_catalog=str_replace('..', '', $arItem['VALUE']);
+		$est_brend=true;
+		break;
+	}
 	$brends[]=str_replace('.', '', $arItem['VALUE']);
 }
-if(!empty($brends) && count($brends)>1) {?>
+if(!empty($brends) && count($brends)>0) {?>
 	<div class="top_brand_block" style="display:flex;    flex-wrap: wrap;">
 	<?
-	$ar_result=CIBlockSection::GetList(Array("SORT"=>"ASC"), Array("IBLOCK_ID"=>"26", "NAME"=>$brends),false, Array("UF_IMG_BRAND", "NAME", 'CODE'));
+	$ar_result=CIBlockSection::GetList(Array("SORT"=>"ASC"), Array("IBLOCK_ID"=>"26", "NAME"=>$brends, 'DEPTH_LEVEL'=>2),false, Array("UF_IMG_BRAND", "NAME", 'CODE', 'ID'));
 	while($res2=$ar_result->GetNext()) {?>
-		<a href="<?=$APPLICATION->GetCurPage().$res2['CODE'].'/'?>"><?if($res2["UF_IMG_BRAND"]){?>
+		<a href="<?=$APPLICATION->GetCurPage().$res2['CODE'].'/'?>" s="<?print_r($res2)?>">
+		<?if($res2["UF_IMG_BRAND"]){?>
 			<?$file = CFile::ResizeImageGet($res2["UF_IMG_BRAND"], array('width'=>266, 'height'=>160), BX_RESIZE_IMAGE_PROPORTIONAL, true);?>
 			<img width="100" src="<?=$file["src"];?>"/>
 		<?}else {?>

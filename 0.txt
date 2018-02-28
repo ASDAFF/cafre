@@ -1,10 +1,1 @@
-sd
-ok
-sd
-5
-Y5
-32500
-s1777
-s1444
-1333USER_PASS_REQUEST
-1333USER_PASS_REQUEST
+/catalog/volosy/okrashivanie/f-catalog_brend-is-londa/ - /catalog/volosy/okrashivanie/londa/
