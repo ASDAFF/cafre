@@ -4,7 +4,15 @@
 /bitrix/backup
 /bitrix/cache
 /bitrix/catalog_export
-/bitrix/components
+
+/bitrix/components/aspro
+/bitrix/components/bitrix
+/bitrix/components/coderoid
+/bitrix/components/web-slon.ru
+/bitrix/components/yenisite
+
+
+
 /bitrix/css
 /bitrix/fonts
 /bitrix/gadgets
