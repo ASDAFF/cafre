@@ -1,4 +1,13 @@
 <?php
+require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");
+		use Bitrix\Main,
+			Bitrix\Main\Loader,
+			Bitrix\Main\Config\Option,
+			Bitrix\Sale,
+			Bitrix\Sale\Order,
+			Bitrix\Sale\Basket,
+			Bitrix\Main\Application,
+			Bitrix\Sale\DiscountCouponsManager;
 function translit($str) {
     $rus = array('А', 'Б', 'В', 'Г', 'Д', 'Е', 'Ё', 'Ж', 'З', 'И', 'Й', 'К', 'Л', 'М', 'Н', 'О', 'П', 'Р', 'С', 'Т', 'У', 'Ф', 'Х', 'Ц', 'Ч', 'Ш', 'Щ', 'Ъ', 'Ы', 'Ь', 'Э', 'Ю', 'Я', 'а', 'б', 'в', 'г', 'д', 'е', 'ё', 'ж', 'з', 'и', 'й', 'к', 'л', 'м', 'н', 'о', 'п', 'р', 'с', 'т', 'у', 'ф', 'х', 'ц', 'ч', 'ш', 'щ', 'ъ', 'ы', 'ь', 'э', 'ю', 'я');
     $lat = array('A', 'B', 'V', 'G', 'D', 'E', 'E', 'Gh', 'Z', 'I', 'Y', 'K', 'L', 'M', 'N', 'O', 'P', 'R', 'S', 'T', 'U', 'F', 'H', 'C', 'Ch', 'Sh', 'Sch', 'Y', 'Y', 'Y', 'E', 'Yu', 'Ya', 'a', 'b', 'v', 'g', 'd', 'e', 'e', 'gh', 'z', 'i', 'y', 'k', 'l', 'm', 'n', 'o', 'p', 'r', 's', 't', 'u', 'f', 'h', 'c', 'ch', 'sh', 'sch', 'y', 'y', 'y', 'e', 'yu', 'ya');
@@ -174,6 +183,9 @@ foreach ($xml->Request as $info) {
 	//добавление картинки
 	if((string)$info->Operation=='AddProduct') {
 		require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");
+		global $USER;
+		$USER->Authorize(1);
+
 		CModule::IncludeModule('iblock');
 		CModule::IncludeModule('catalog');
 		CModule::IncludeModule('sale');
@@ -191,6 +203,7 @@ foreach ($xml->Request as $info) {
 		$PROP['artIk']=(string)$info->ArtNo;
 
 		$brend=iconv("utf-8","windows-1251",(string)$info->Brand);
+		$brend=array($brend, $brend.' %');
 		if($brend!=''&&$brend) {
 			$arSelect = Array("ID");
 			$arFilter = Array("IBLOCK_ID"=>8, "NAME"=>$brend);
@@ -201,7 +214,7 @@ foreach ($xml->Request as $info) {
  				$PROP['BRAND']=$arFields['ID'];
 			}
 		}
-		$hit=(string)$info->IsHit;
+		/*$hit=(string)$info->IsHit;
 		$recommend=(string)$info->IsRecommend;
 		$new=(string)$info->IsNew;
 		$sale=(string)$info->IsSale;
@@ -209,7 +222,7 @@ foreach ($xml->Request as $info) {
 		if($hit=='true') $PROP['HIT'][]=311;
 		if($recommend=='true') $PROP['HIT'][]=312;
 		if($new=='true') $PROP['HIT'][]=313;
-		if($sale=='true') $PROP['HIT'][]=314;
+		if($sale=='true') $PROP['HIT'][]=314;*/
 		
 
 		$arLoadProductArray = Array(
@@ -218,6 +231,8 @@ foreach ($xml->Request as $info) {
   			"NAME"           => iconv("utf-8","windows-1251",(string)$info->Name),
   			"CODE"           => CUtil::translit(iconv("utf-8","windows-1251",(string)$info->Name), "ru", $arTransParams),
   			"ACTIVE"         => "N", 
+			"PREVIEW_TEXT_TYPE"=>'html',
+			"DETAIL_TEXT_TYPE"=>'html',
   			"PREVIEW_TEXT"   => iconv("utf-8","windows-1251",(string)$info->Anons),
   			"DETAIL_TEXT"    => iconv("utf-8","windows-1251",(string)$info->Description),
   			"DETAIL_PICTURE" => CFile::MakeFileArray($_SERVER["DOCUMENT_ROOT"]."/image.gif")
@@ -225,8 +240,6 @@ foreach ($xml->Request as $info) {
 
 		if($PRODUCT_ID = $el->Add($arLoadProductArray))
   			{
-  				//зададим разделы
-
   				//создадим торговое предложение
 
   				$el2 = new CIBlockElement;
@@ -276,67 +289,77 @@ foreach ($xml->Request as $info) {
 						
 					$arFields = array(
 						"ID" => $TP_ID, 
-						"QUANTITY" => 1
+						"QUANTITY" => (int)$info->Count
 					);
 					CCatalogProduct::Add($arFields);
 				}
+				
+				//добавим картинки
+				foreach ($info->Pictures->Image as  $pic) {
+					$IsMainImage=(string)$pic->IsMainImage;	
+					$OriginName=(string)$pic->OriginName;	
+					$OriginName=$_SERVER['DOCUMENT_ROOT'].$OriginName;	
+					$SortOrder=(int)$pic->SortOrder;	
+					$SortOrder--;
+					
+					$el = new CIBlockElement;
+					if($IsMainImage==='true') {
+						$arLoadProductArray = Array(
+							"PREVIEW_PICTURE" => CFile::MakeFileArray($OriginName)
+						);
+						print_r($arLoadProductArray);
+						echo "<br>".$PRODUCT_ID;
+						$res=$el->Update($PRODUCT_ID, $arLoadProductArray);
+					
+						if($res)  {}			
+						else echo $el->LAST_ERROR;
+						//unlink($OriginName);
+					}	
+					else {
+						$resPic = CIBlockElement::GetList(Array(), array("IBLOCK_ID"=>26,'ID'=>$PRODUCT_ID), false, Array("nPageSize"=>1), array('ID', 'IBLOCK_ID'));
+						if($obPic = $resPic->GetNextElement()){ 
+							$pics = $obPic->GetProperties(); 
+							$num=-1;
+							foreach ($pics['MORE_PHOTO']['VALUE'] as $key => $value) {
+								$num++;
+								if($num==$SortOrder) $num++;
+								$file=CFile::GetFileArray($value);
+								$newmassive[$num]=Array("VALUE"=>CFile::MakeFileArray($file['SRC']));                		
+							}
+							$newmassive[$SortOrder]=Array("VALUE"=>CFile::MakeFileArray($OriginName));      				
+							ksort($newmassive);
+							CIBlockElement::SetPropertyValuesEx($PRODUCT_ID, 26, array("MORE_PHOTO"=>$newmassive));
+							//unlink($OriginName);
+						}        		
+					}
+				}
+		
   			}
 		else {
 			
   			echo "Error: ".translit($el->LAST_ERROR);
   			die();
 		}
-  		//добавим картинки
-
-		foreach ($info->Pictures->Image as  $pic) {
-			$IsMainImage=(string)$pic->IsMainImage;	
-			$OriginName=(string)$pic->OriginName;	
-			$OriginName=$_SERVER['DOCUMENT_ROOT'].$OriginName;	
-			$SortOrder=(int)$pic->SortOrder;	
-			$SortOrder--;
-			for ($i=0; $i < strlen($code); $i++) { 		
-				if(!$code[$i]=='0') break;
-			}	
-			$code= substr($code, $i);
-			$arSelect = Array("ID");
-			$arFilter = Array("IBLOCK_ID"=>26, "PROPERTY_CODE1C"=>array(str_repeat("0", 11-strlen($code)).$code, $code));
-			$res = CIBlockElement::GetList(Array(), $arFilter, false, Array("nPageSize"=>1), $arSelect);
-			
-			if($ob = $res->GetNextElement()) {
-				$arFields = $ob->GetFields();
-				$el = new CIBlockElement;
-				if($IsMainImage==='true') {
-					$arLoadProductArray = Array(
-	    				"PREVIEW_PICTURE" => CFile::MakeFileArray($OriginName)
-					);
-					$res=$el->Update($arFields['ID'], $arLoadProductArray);
-					
-					if($res)  {}			
-					else echo $el->LAST_ERROR;
-					unlink($OriginName);
-				}
-				else {
-					$resPic = CIBlockElement::GetList(Array(), array("IBLOCK_ID"=>26,'ID'=>$arFields['ID']), false, Array("nPageSize"=>1), array('ID', 'IBLOCK_ID'));
-        			if($obPic = $resPic->GetNextElement()){ 
-            			$pics = $obPic->GetProperties(); 
-            			$num=-1;
-            			foreach ($pics['MORE_PHOTO']['VALUE'] as $key => $value) {
-            				$num++;
-            				if($num==$SortOrder) $num++;
-            				$file=CFile::GetFileArray($value);
-                			$newmassive[$num]=Array("VALUE"=>CFile::MakeFileArray($file['SRC']));                		
-            			}
-            			$newmassive[$SortOrder]=Array("VALUE"=>CFile::MakeFileArray($OriginName));            		
-            			ksort($newmassive);
-            			CIBlockElement::SetPropertyValuesEx($arFields['ID'], 26, array("MORE_PHOTO"=>$newmassive));
-						unlink($OriginName);
-        			}        		
-				}
-			}
-
-		}
+  		
+		$USER->Logout();
+		
 		echo 'true';
-
+	}
+	
+	if((string)$info->Operation=='UpdateOrder') {		
+		if (!Loader::IncludeModule('sale'))
+			die();
+		$order = Sale\Order::load((int)$info->OrderNumber);
+		$basketO = $order->getBasket();
+		//echo $order->getPrice();
+		
+		$shipmentCollection = $order->getShipmentCollection();
+		foreach ($shipmentCollection as $shipment) { 
+            //echo $shipment->getDeliveryId();
+//$arResult['customPriceDelivery'] = $shipment->getField('CUSTOM_PRICE_DELIVERY');
+//$arResult['basePrice'] = $shipment->getField('BASE_PRICE_DELIVERY');
+//$arResult['store_id'] = $shipment->getStoreId();			
+        }
 	}
 }
 

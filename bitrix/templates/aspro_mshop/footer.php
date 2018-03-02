@@ -287,6 +287,7 @@
 		jQuery(function($){
     $("#ORDER_PROP_3").mask("8(999) 999-9999");
 	$(".phone").mask("8(999) 999-9999");
+	$("#phone1").mask("8(999) 999-9999");
 });
 		$(document).ready(function(){
 			<?if(is_array($basket_items) && !empty($basket_items)):?>

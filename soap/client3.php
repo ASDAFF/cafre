@@ -1,4 +1,125 @@
 <?
+require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");
+use Bitrix\Main,
+    Bitrix\Main\Loader,
+    Bitrix\Main\Config\Option,
+    Bitrix\Sale,
+    Bitrix\Sale\Order,
+    Bitrix\Sale\Basket,
+    Bitrix\Main\Application,
+    Bitrix\Sale\DiscountCouponsManager;
+if (!Loader::IncludeModule('sale'))
+    die();
+
+
+
+$order = Sale\Order::load(601);
+$basketO = $order->getBasket();
+echo $order->getPrice();
+echo "<br>";
+echo $order->getDeliveryPrice();
+echo "<br>";
+echo $order->isPaid();
+echo "<br>";
+echo $order->getField('STATUS_ID');
+echo "<br>";
+$basket = $order->getBasket();
+
+foreach ($basket as $basketItem) {
+	echo $basketItem->getField('PRODUCT_ID') . ' - ' . $basketItem->getQuantity() . '<br />';
+	/*$item = $basketO->createItem('catalog', $basketItem->getField('PRODUCT_ID'));
+	$item->setFields(array(
+        'QUANTITY' => $basketItem->getQuantity(),
+        'NAME' =>$basketItem->getField('NAME'),
+        'PRICE' =>$basketItem->getPrice(),
+        'CURRENCY' => \Bitrix\Currency\CurrencyManager::getBaseCurrency(),
+        'LID' => \Bitrix\Main\Context::getCurrent()->getSite(),
+        'PRODUCT_PROVIDER_CLASS' => 'CCatalogProductProvider',
+	));
+	$basketO->save();*/
+}
+/*
+$shipments = $order->getShipmentCollection(); 
+                foreach ($shipments as $shipment) { 
+                    $flds = $shipment->getFieldValues(); 
+                    if (!$shipment->isSystem()){ 
+                        $shipment->delete();
+                    }                   
+                }
+
+
+
+foreach ($basket as $basketItem) {
+ echo $basketItem->getField('PRODUCT_ID') . ' - ' . $basketItem->getQuantity() . '<br />';
+
+$item = $basketO->createItem('catalog', $basketItem->getField('PRODUCT_ID'));
+$item->setFields(array(
+        'QUANTITY' => $basketItem->getQuantity(),
+        'NAME' =>$basketItem->getField('NAME'),
+        'PRICE' =>$basketItem->getPrice(),
+        'CURRENCY' => \Bitrix\Currency\CurrencyManager::getBaseCurrency(),
+        'LID' => \Bitrix\Main\Context::getCurrent()->getSite(),
+        'PRODUCT_PROVIDER_CLASS' => 'CCatalogProductProvider',
+));
+}
+$basketO->save();
+
+
+foreach ($basketO as $basketItem) {
+    echo $basketItem->getField('NAME') . ' - ' . $basketItem->getQuantity() . '<br />';
+}
+*/
+/*
+$shipmentCollection = $order->getShipmentCollection();
+ $shipment = $shipmentCollection->createItem();
+ $shipmentItemCollection = $shipment->getShipmentItemCollection();
+ foreach ($order->getBasket() as $item)
+ {
+    $shipmentItem = $shipmentItemCollection->createItem($item);
+    $shipmentItem->setQuantity(1);
+ }
+ $emptyDeliveryServiceId = Sale\Delivery\Services\EmptyDeliveryService::getEmptyDeliveryServiceId();
+ $shipment->setField('DELIVERY_ID', $emptyDeliveryServiceId);
+
+*/
+/*
+$result = $order->save();
+if (!$result->isSuccess())
+    print_r($result->getErrors());
+
+
+*/
+/*
+ $result = $order->setBasket($basket);
+ if (!$result->isSuccess())
+    print_r($result->getErrors());*/
+ /*$order->setPersonTypeId($personType);
+ $shipmentCollection = $order->getShipmentCollection();
+ $shipment = $shipmentCollection->createItem();
+ $shipmentItemCollection = $shipment->getShipmentItemCollection();
+ foreach ($order->getBasket() as $item)
+ {
+    $shipmentItem = $shipmentItemCollection->createItem($item);
+    $shipmentItem->setQuantity(1);
+ }
+ $emptyDeliveryServiceId = Sale\Delivery\Services\EmptyDeliveryService::getEmptyDeliveryServiceId();
+ $shipment->setField('DELIVERY_ID', $emptyDeliveryServiceId);
+ $order->setField('STATUS_ID', 'P'); */
+ /*$result = $order->save();
+ if (!$result->isSuccess())
+    print_r($result->getErrors()); */
+
+
+
+
+
+
+
+
+
+
+
+
 /*
 //file_put_contents('0.txt', print_r($REQUEST, true), FILE_APPEND);
 class MyServer
@@ -37,6 +158,7 @@ echo "<pre>";
 print_r($data);
 echo "</pre>";
 */
+/*
 if(isset($_POST['id'])) {
 	$_POST['id']="000998899";
 	require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");
@@ -89,5 +211,5 @@ if(isset($_POST['id'])) {
 	}
 	
 
-}
+}*/
 ?>

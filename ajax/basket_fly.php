@@ -30,7 +30,7 @@ $APPLICATION->IncludeComponent("bitrix:sale.basket.basket", "fly", array(
 	"PICTURE_HEIGHT" => "70",
 	"PATH_TO_BASKET" => SITE_DIR."basket/",
 	"SHOW_FULL_ORDER_BUTTON" => "N",
-	"SHOW_FAST_ORDER_BUTTON" => "Y"
+	"SHOW_FAST_ORDER_BUTTON" => "N"
 	),
 	false
 );

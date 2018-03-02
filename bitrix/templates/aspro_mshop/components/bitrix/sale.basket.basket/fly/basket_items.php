@@ -281,14 +281,14 @@
 					<td>
 						<div class="basket_close">
 							<span class="button transparent grey_br sbold close"><span><?=GetMessage("SALE_BACK")?></span></span>
-							<div class="description"><?=GetMessage("SALE_BACK_DESCRIPTION");?></div>
+							<!-- <div class="description"> <?/*=GetMessage("SALE_BACK_DESCRIPTION");*/?></div> -->
 						</div>
 					</td>
 					<?if ($arParams["AJAX_MODE_CUSTOM"]!="Y"):?>
 						<td>
 							<div class="basket_update clearfix">
 								<button type="submit"  name="BasketRefresh" class="button grey sbold refresh"><span><?=GetMessage("SALE_REFRESH")?></span></button>
-								<div class="description"><?=GetMessage("SALE_REFRESH_DESCRIPTION");?></div>
+								<!-- <div class="description"><?/*=GetMessage("SALE_REFRESH_DESCRIPTION");*/?></div> -->
 							</div>
 						</td>
 					<?endif;?>
@@ -298,7 +298,7 @@
 								<div class="wrap_button">
 									<a href="<?=$arParams["PATH_TO_BASKET"]?>" class="button transparent sbold"><span><?=GetMessage("GO_TO_BASKET")?></span></a>
 								</div>
-								<div class="description"><?=GetMessage("SALE_TO_BASKET_DESCRIPTION");?></div>
+								<!-- <div class="description"><?/*=GetMessage("SALE_TO_BASKET_DESCRIPTION");*/?></div> -->
 							</div>
 						<?}?>
 					</td>
