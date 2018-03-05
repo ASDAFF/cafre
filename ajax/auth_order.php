@@ -12,7 +12,7 @@ if($_REQUEST['label']=='findEmail') {
     }
 	else echo "no";
 }
-
+/********сделал отправку данных в форму оформления********/
 if($_REQUEST['label']=='auth_basket') {
 
     $UserLogin = $_REQUEST['MY_LOGIN'];
@@ -23,14 +23,22 @@ if($_REQUEST['label']=='auth_basket') {
         $password = md5($salt.$_REQUEST['MY_PASS']);
 
         if($password == $realPassword) {
-			echo 'yes';//$arUser['PASSWORD'];
+			//echo 'yes';//$arUser['PASSWORD'];
+			echo json_encode(array(
+        'result' => 'yes',
+        'name' => $arUser["LAST_NAME"],
+		'phone' => $arUser["PERSONAL_PHONE"],
+		'all_pops' => $arUser
+			)); 
             global $USER;
             $USER->Authorize($arUser['ID']);
         }
-        else echo 'no';
+        else echo json_encode(array(
+        'result' => 'no'));
     }
     else {
-        echo 'no';
+        echo json_encode(array(
+        'result' => 'no'));
     }
 }
 ?>

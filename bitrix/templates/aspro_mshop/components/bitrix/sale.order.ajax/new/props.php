@@ -91,11 +91,14 @@ include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/props_format.php");
 			?>
 			<input type="hidden" name="showProps" id="showProps" value="<?=($_POST["showProps"] == 'Y' ? 'Y' : 'N')?>" />
 		</h4>
-		<div id="sale_order_props" <?=($bHideProps && $_POST["showProps"] != "Y")?"style='display:none;'":''?>>
-			<?
+		
+		<?
+		/********вытащил из скрытого div-a********/
 			PrintPropsForm($arResult["ORDER_PROP"]["USER_PROPS_N"], $arParams["TEMPLATE_LOCATION"]);
 			PrintPropsForm($arResult["ORDER_PROP"]["USER_PROPS_Y"], $arParams["TEMPLATE_LOCATION"]);
-			?>
+		?>
+		<div id="sale_order_props" <?=($bHideProps && $_POST["showProps"] != "Y")?"style='display:none;'":''?>>
+			
 		</div>
 	</div>
 <script type="text/javascript">

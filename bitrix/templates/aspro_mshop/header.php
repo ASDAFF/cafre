@@ -276,7 +276,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 						<?$APPLICATION->IncludeComponent("bitrix:menu", "left_menu", array(
 							"ROOT_MENU_TYPE" => "left",
 							"MENU_CACHE_TYPE" => "A",
-							"MENU_CACHE_TIME" => "3600000",
+							"MENU_CACHE_TIME" => "172800",
 							"MENU_CACHE_USE_GROUPS" => "N",
 							"MENU_CACHE_GET_VARS" => "",
 							"MAX_LEVEL" => "1",

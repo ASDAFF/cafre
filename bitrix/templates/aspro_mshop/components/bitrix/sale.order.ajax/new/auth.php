@@ -59,7 +59,7 @@
 	<div class="filter block"></div>
 </div>-->
 <script type="text/javascript">
-	
+/********принимал новую отправку с ajax********/
 	$(document).ready(function(){
 		
 		$("form[name=order_auth_form]").validate({
@@ -72,12 +72,16 @@
 			submitHandler: function(form) {
 				$("form[name=order_auth_form]").next("#error").remove();
 				$.ajax({
-				data: $('form[name=order_auth_form]').serialize(),
-				type: "POST",
-				url: "/ajax/auth_order.php",
-				success: function(e) {					
-					if(e=='yes') {
+				url: "/ajax/auth_order.php", 
+					type: "post",
+					dataType: "json",
+					data: $('form[name=order_auth_form]').serialize(),
+				success: function(e) {			
+					
+					if(e.result=='yes') { 
 						$(document).find('[code=EMAIL]').val($("form[name=order_auth_form]").find('[name="MY_LOGIN"]').val());
+						$(document).find('[code=NAME]').val(e.name);
+						$(document).find('[code=PHONE]').val(e.phone);
 						$("form[name=order_auth_form]").closest('.order__cell').prev().html('<h3>Вы успешно авторизованы</h3>').next().remove();						
 					}
 					else {

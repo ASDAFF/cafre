@@ -307,13 +307,11 @@ foreach ($xml->Request as $info) {
 						$arLoadProductArray = Array(
 							"PREVIEW_PICTURE" => CFile::MakeFileArray($OriginName)
 						);
-						print_r($arLoadProductArray);
-						echo "<br>".$PRODUCT_ID;
 						$res=$el->Update($PRODUCT_ID, $arLoadProductArray);
 					
 						if($res)  {}			
 						else echo $el->LAST_ERROR;
-						//unlink($OriginName);
+						unlink($OriginName);
 					}	
 					else {
 						$resPic = CIBlockElement::GetList(Array(), array("IBLOCK_ID"=>26,'ID'=>$PRODUCT_ID), false, Array("nPageSize"=>1), array('ID', 'IBLOCK_ID'));
@@ -326,10 +324,10 @@ foreach ($xml->Request as $info) {
 								$file=CFile::GetFileArray($value);
 								$newmassive[$num]=Array("VALUE"=>CFile::MakeFileArray($file['SRC']));                		
 							}
-							$newmassive[$SortOrder]=Array("VALUE"=>CFile::MakeFileArray($OriginName));      				
+							$newmassive[$SortOrder]=Array("VALUE"=>CFile::MakeFileArray($OriginName));    
 							ksort($newmassive);
 							CIBlockElement::SetPropertyValuesEx($PRODUCT_ID, 26, array("MORE_PHOTO"=>$newmassive));
-							//unlink($OriginName);
+							unlink($OriginName);
 						}        		
 					}
 				}
@@ -350,17 +348,18 @@ foreach ($xml->Request as $info) {
 		if (!Loader::IncludeModule('sale'))
 			die();
 		$order = Sale\Order::load((int)$info->OrderNumber);
-		$basketO = $order->getBasket();
-		//echo $order->getPrice();
+		$basket = $order->getBasket();
 		
-		$shipmentCollection = $order->getShipmentCollection();
-		foreach ($shipmentCollection as $shipment) { 
-            //echo $shipment->getDeliveryId();
-//$arResult['customPriceDelivery'] = $shipment->getField('CUSTOM_PRICE_DELIVERY');
-//$arResult['basePrice'] = $shipment->getField('BASE_PRICE_DELIVERY');
-//$arResult['store_id'] = $shipment->getStoreId();			
+		//echo $order->getPrice();
+		//if($order->getDeliveryPrice()!=$info->DeliveryCost) {
+		if(true) {
+        	$shipmentCollection = $order->getShipmentCollection();
+			foreach ($shipmentCollection as $shipment) { 
+	            $shipment->setField('TRACKING_NUMBER', (string)$info->DeliveryTrackNumber);  		
+        	}	
         }
+		
+        $order->setField("PRICE_DELIVERY", (int)$info->DeliveryCost);
+        if($order->save()) echo "true";		
 	}
 }
-
-

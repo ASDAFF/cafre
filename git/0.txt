@@ -259,3 +259,5 @@
 28.02.2018 02:11 /bitrix/components/lets/catalog.viewed.products/templates/vertical/themes/yellow/images/x2border_active.png (28.02.2018 14:10:07     git && lets.component)
 28.02.2018 02:11 /bitrix/components/lets/catalog.viewed.products/templates/vertical/themes/yellow/style.css (28.02.2018 14:10:07     git && lets.component)
 28.02.2018 02:13 /index.php (28.02.2018 12:08:16     card basket microseo mobile menu personalrecomm)
+02.03.2018 01:30 /bitrix/templates/aspro_mshop/footer.php (02.03.2018 13:28:40     git && baskets)
+02.03.2018 01:32 /bitrix/templates/aspro_mshop/css/custom.css (02.03.2018 13:28:40     git && baskets)

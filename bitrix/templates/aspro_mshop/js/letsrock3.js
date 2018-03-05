@@ -38,7 +38,8 @@ $(function() {
 		items_tov.push(id_offer);
 		//set_cookie("addBasId", items_tov);
 		document.cookie = "addBasId=" + items_tov + "; path=/;";
-		console.log(getCookie('addBasId'));
+		/********убрал console********/
+		//console.log(getCookie('addBasId'));
 		carrotquest.track('$cart_added', {
 
             "$name": name,

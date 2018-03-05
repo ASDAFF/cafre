@@ -1493,6 +1493,10 @@ margin: 0 0 10px;
 	font-family: 'Merriweather', sans-serif;
 }
 
+.container .catalog_detail * {
+	font-family: 'Futura', sans-serif;
+}
+
 .sort_header.view_block {
 	border: none;
 }

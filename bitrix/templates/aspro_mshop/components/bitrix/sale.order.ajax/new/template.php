@@ -514,21 +514,23 @@ function InitOrderJS(){
 						</a>
 					</div>
 	<script>
-	var a,b,c, name1=$("#name1"), mail1=$("#mail1"), phone1=$("#phone1"), text1=$("#text1");
+	/********поменял скрипты и исправил маску********/
+	$("#ORDER_PROP_1").val($("#ORDER_PROP_1").val());
+	var a,b,c, name1=$("#name1"), mail1=$("#mail1"), $phone1=$("#phone1"), text1=$("#text1");
 var $textareaOf = $("#text1"), $textareaIn = $("#ORDER_PROP_7");
 
 $textareaOf.on('keyup', function(e) {
     $textareaIn.text(e.target.value);
 });
-
+$phone1.on('keyup', function(e) {
+    $("#ORDER_PROP_3").val(e.target.value);
+});
 
 function epl3(){
     a = name1.val();
     $("#ORDER_PROP_1").val(a);
 	b = mail1.val();
     $("#ORDER_PROP_2").val(b);
-	c = phone1.val();
-    $("#ORDER_PROP_3").val(c);
 };
 epl3();
 
@@ -538,9 +540,6 @@ $("#name1").click(function(){
 $("#mail1").click(function(){
     setTimeout('epl3()',100)
 });
-$("#phone1").click(function(){
-    setTimeout('epl3()',100)
-});
 
 name1.bind('input',function(e){
     epl3();
@@ -548,12 +547,9 @@ name1.bind('input',function(e){
 mail1.bind('input',function(e){
     epl3();
 });
-phone1.bind('input',function(e){
-    epl3();
-});
 
 jQuery(function($){
-    $(".phone").mask("8(999) 999-9999");
+    
 	$(".agreement-drop").click(function(e){
 		e.preventDefault();
         var t = $(this).parents('.chek_politik').find('.agreement-info');

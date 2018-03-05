@@ -60,34 +60,74 @@ $request  = '<?xml version="1.0" encoding="UTF-8"?>
 $request  ='<?xml version="1.0" encoding="UTF-8"?><SERVICE>
 	<Request>
 		<Operation>UpdateOrder</Operation>		
-		<OrderNumber>601</OrderNumber>
-		<DeliveryCost>150</DeliveryCost>
-		<DeliveryTrackNumber></DeliveryTrackNumber>
-		<DeliveryMethodName></DeliveryMethodName>
-		<OrderStateId>2</OrderStateId>
-		<OrderTotalSum>1954</OrderTotalSum>
+		<OrderNumber>597</OrderNumber>
+		<DeliveryCost>100</DeliveryCost>
+		<DeliveryTrackNumber>157</DeliveryTrackNumber>
+		<DeliveryMethodName>SPSR</DeliveryMethodName>
+		<OrderStateId>PG</OrderStateId>
+		<OrderTotalSum>2351</OrderTotalSum>
 		<Cart>
 			<Item>
 				<Amount>1</Amount>
-				<Price>410</Price>
-				<Code>15862</Code>
+				<Price>476</Price>
+				<Code>89292</Code>
 			</Item>
 			<Item>
 				<Amount>2</Amount>
-				<Price>1160</Price>
-				<Code>18085</Code>
-			</Item>
-			<Item>
-				<Amount>1</Amount>
-				<Price>234</Price>
-				<Code>20073</Code>
+				<Price>959</Price>
+				<Code>85959</Code>
 			</Item>
 		</Cart>		
 	</Request>
 </SERVICE>';
 
 
-$request='<?xml version="1.0" encoding="UTF-8"?>
+
+
+$request1  ='<?xml version="1.0" encoding="UTF-8"?><SERVICE>
+	<Request>
+		<Operation>AddProduct</Operation>		
+		<Code>998898</Code>
+  		<Name>Название</Name>
+  		<Brand>Nexxt</Brand>
+  		<Anons>Текст</Anons>
+  		<Description>Текст</Description>
+  		<ArtNo>123456</ArtNo>
+		<Count>105</Count>
+  		<Currency>
+  			<Price>
+	  			<PriceType>Base</PriceType>
+  				<Value>115</Value>
+  			</Price>  			
+  		</Currency>
+  		<Pictures>
+  			<Image>
+				<IsMainImage>false</IsMainImage>
+  				<OriginName>/tmp/76112.jpg</OriginName>
+  				<SortOrder>1</SortOrder>
+  			</Image>
+  			<Image>
+				<IsMainImage>true</IsMainImage>
+  				<OriginName>/tmp/7611.jpg</OriginName>
+  				<SortOrder>1</SortOrder>
+  			</Image>
+  			<Image>
+				<IsMainImage>false</IsMainImage>
+  				<OriginName>/tmp/01.png</OriginName>
+  				<SortOrder>2</SortOrder>
+  			</Image>
+  			
+  			<Image>
+				<IsMainImage>false</IsMainImage>
+  				<OriginName>/tmp/76113.jpg</OriginName>
+  				<SortOrder>3</SortOrder>
+  			</Image>
+  		</Pictures>
+  </Request>
+</SERVICE>';
+
+
+$request0='<?xml version="1.0" encoding="UTF-8"?>
 <SERVICE>
 	<Request>
 		<Operation>AddProduct</Operation>
@@ -119,41 +159,8 @@ $request='<?xml version="1.0" encoding="UTF-8"?>
 	</Request>
 </SERVICE>';
 
-$request1  ='<?xml version="1.0" encoding="UTF-8"?><SERVICE>
-	<Request>
-		<Operation>AddProduct</Operation>		
-		<Code>998898</Code>
-  		<Name>Название</Name>
-  		<Brand>Nexxt</Brand>
-  		<Anons>Текст</Anons>
-  		<Description>Текст</Description>
-  		<ArtNo>123456</ArtNo>
-		<Count>105</Count>
-  		<Currency>
-  			<Price>
-	  			<PriceType>Base</PriceType>
-  				<Value>115</Value>
-  			</Price>  			
-  		</Currency>
-  		<Pictures>
-  			<Image>
-				<IsMainImage>true</IsMainImage>
-  				<OriginName>/tmp/7611.jpg</OriginName>
-  				<SortOrder>1</SortOrder>
-  			</Image>
-  			<Image>
-				<IsMainImage>false</IsMainImage>
-  				<OriginName>/tmp/01.png</OriginName>
-  				<SortOrder>1</SortOrder>
-  			</Image>
-  			<Image>
-				<IsMainImage>false</IsMainImage>
-  				<OriginName>/tmp/02.png</OriginName>
-  				<SortOrder>2</SortOrder>
-  			</Image>
-  		</Pictures>
-  </Request>
-</SERVICE>';
+
+
 $c_url = "https://test.cafre.ru/soap/client2.php";
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $c_url);
