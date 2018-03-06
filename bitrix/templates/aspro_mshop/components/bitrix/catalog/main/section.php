@@ -77,7 +77,7 @@ else {
 						str_replace(implode('/', $sections), '', $arResult["VARIABLES"]['SECTION_CODE_PATH']). '/catalog_brend-is-'.$section['CODE'] ;
 					if(strpos($arResult["VARIABLES"]["SMART_FILTER_PATH"], '/f-')===0) $arResult["VARIABLES"]["SMART_FILTER_PATH"]=substr($arResult["VARIABLES"]["SMART_FILTER_PATH"], 3);
 					//$arResult["VARIABLES"]["SMART_FILTER_PATH"]=str_replace('catalog_brend-is-', '', $arResult["VARIABLES"]["SMART_FILTER_PATH"]);
-					echo $arResult["VARIABLES"]["SMART_FILTER_PATH"];
+					//echo $arResult["VARIABLES"]["SMART_FILTER_PATH"];
 					/*unset($sections[count($sections)-1]);
 					$arResult["VARIABLES"]["SECTION_CODE_PATH"]=implode('/', $sections);*/
 				}
