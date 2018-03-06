@@ -219,7 +219,7 @@ $MShopSectionID = $arSection["ID"];
 	</div>
 	<div class="right_block clearfix catalog" id="right_block_ajax">
 	<?
-	if($brends && strpos($APPLICATION->GetCurPage(), '/catalog/vse_brendy/')===false)  {
+	if($brends && strpos($APPLICATION->GetCurPage(), '/catalog/vse_brendy/')===false && empty($MSHOP_SMART_FILTER))  {
 		$APPLICATION->ShowViewContent('filter_dop');
 		
 	}
@@ -864,7 +864,8 @@ while($ar_fields2 = $db_price_min2->GetNext())
 </div>
 <?
 global $MSHOP_SMART_FILTER, $filter_h1, $catalog_section_name, $catalog_seo, $brend_in_catalog;
-if(!$brends) $filter_h1=' '.$brend_in_catalog.' '.$filter_h1;
+//if(!$brends) $filter_h1=' '.$brend_in_catalog.' '.$filter_h1;
+if($brend_in_catalog) $filter_h1=' '.$brend_in_catalog.$filter_h1;
 		$catalog_seo='Y';	
 		if(strpos($_SERVER['REQUEST_URI'], 'PAGEN_')) {
 			foreach ($_GET as $key => $value) {

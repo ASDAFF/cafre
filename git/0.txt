@@ -269,3 +269,4 @@
 05.03.2018 02:15 /bitrix/templates/aspro_mshop/components/bitrix/sale.order.ajax/new/props.php (05.03.2018 14:11:39     fixes)
 05.03.2018 02:15 /bitrix/templates/aspro_mshop/components/bitrix/sale.order.ajax/new/props_format.php (05.03.2018 14:11:39     fixes)
 05.03.2018 02:15 /bitrix/templates/aspro_mshop/components/bitrix/sale.order.ajax/new/template.php (05.03.2018 14:11:39     fixes)
+06.03.2018 06:01 /bitrix/templates/aspro_mshop/components/bitrix/catalog/main/section.php (06.03.2018 06:01:35     fixes2)
