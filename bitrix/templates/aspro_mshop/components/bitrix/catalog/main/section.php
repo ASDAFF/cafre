@@ -10,7 +10,7 @@ global $TEMPLATE_OPTIONS, $MShopSectionID;
 $arPageParams = $arSection = $section = array();
 
 if($arResult["VARIABLES"]["SECTION_ID"] > 0){
-	$db_list = CIBlockSection::GetList(array(), array('GLOBAL_ACTIVE' => 'Y', "ID" => $arResult["VARIABLES"]["SECTION_ID"], "IBLOCK_ID" => $arParams["IBLOCK_ID"]), true, array("ID", "IBLOCK_ID", "NAME", "DESCRIPTION","IBLOCK_SECTION_ID", "UF_RUSNAME","UF_SECTION_DESCR", $arParams["LIST_BROWSER_TITLE"], $arParams["LIST_META_KEYWORDS"], $arParams["LIST_META_DESCRIPTION"], "IBLOCK_SECTION_ID", "UF_RATINGVALUE", "UF_RATINGCOUNT"));
+	$db_list = CIBlockSection::GetList(array(), array('GLOBAL_ACTIVE' => 'Y', "ID" => $arResult["VARIABLES"]["SECTION_ID"], "IBLOCK_ID" => $arParams["IBLOCK_ID"]), true, array("CODE", "ID", "IBLOCK_ID", "NAME", "DESCRIPTION","IBLOCK_SECTION_ID", "UF_RUSNAME","UF_SECTION_DESCR", $arParams["LIST_BROWSER_TITLE"], $arParams["LIST_META_KEYWORDS"], $arParams["LIST_META_DESCRIPTION"], "IBLOCK_SECTION_ID", "UF_RATINGVALUE", "UF_RATINGCOUNT"));
 	$section = $db_list->GetNext();
 	/*if($section['IBLOCK_SECTION_ID']==5538&&strpos($APPLICATION->GetCurPage(), 'vse_brendy/')===false) {
 		$brends=false;
@@ -33,7 +33,7 @@ if($arResult["VARIABLES"]["SECTION_ID"] > 0){
 	}*/
 }
 elseif(strlen(trim($arResult["VARIABLES"]["SECTION_CODE"])) > 0){
-	$db_list = CIBlockSection::GetList(array(), array('GLOBAL_ACTIVE' => 'Y', "=CODE" => $arResult["VARIABLES"]["SECTION_CODE"], "IBLOCK_ID" => $arParams["IBLOCK_ID"]), true, array("ID", "IBLOCK_ID", "NAME", "DESCRIPTION","IBLOCK_SECTION_ID", "UF_RUSNAME", $arParams["SECTION_DISPLAY_PROPERTY"], $arParams["LIST_BROWSER_TITLE"], $arParams["LIST_META_KEYWORDS"], $arParams["LIST_META_DESCRIPTION"], "IBLOCK_SECTION_ID"));
+	$db_list = CIBlockSection::GetList(array(), array('GLOBAL_ACTIVE' => 'Y', "=CODE" => $arResult["VARIABLES"]["SECTION_CODE"], "IBLOCK_ID" => $arParams["IBLOCK_ID"]), true, array("CODE", "ID", "IBLOCK_ID", "NAME", "DESCRIPTION","IBLOCK_SECTION_ID", "UF_RUSNAME", $arParams["SECTION_DISPLAY_PROPERTY"], $arParams["LIST_BROWSER_TITLE"], $arParams["LIST_META_KEYWORDS"], $arParams["LIST_META_DESCRIPTION"], "IBLOCK_SECTION_ID"));
 	$section = $db_list->GetNext();
 	/*if($section['IBLOCK_SECTION_ID']==5538&&strpos($APPLICATION->GetCurPage(), 'vse_brendy/')===false) {
 		$brends=false;
@@ -61,7 +61,7 @@ else {
 		if(strpos($path, 'f-')===0) unset($sections[$i]);
 	}
 	$db_list = CIBlockSection::GetList(array(), array('GLOBAL_ACTIVE' => 'Y', "=CODE" => $sections[count($sections)-2], 
-		"IBLOCK_ID" => $arParams["IBLOCK_ID"]), true, array("ID", "IBLOCK_ID", "NAME", "DESCRIPTION","IBLOCK_SECTION_ID","SECTION_PAGE_URL", "UF_RUSNAME","UF_SECTION_DESCR", 
+		"IBLOCK_ID" => $arParams["IBLOCK_ID"]), true, array("CODE", "ID", "IBLOCK_ID", "NAME", "DESCRIPTION","IBLOCK_SECTION_ID","SECTION_PAGE_URL", "UF_RUSNAME","UF_SECTION_DESCR", 
 		$arParams["SECTION_DISPLAY_PROPERTY"], $arParams["LIST_BROWSER_TITLE"], $arParams["LIST_META_KEYWORDS"], $arParams["LIST_META_DESCRIPTION"], "IBLOCK_SECTION_ID"));
 	while($section2 = $db_list->GetNext()) {
 		if($section2['SECTION_PAGE_URL'].$sections[count($sections)-1].'/'=='/catalog/'.implode('/', $sections).'/') {
@@ -90,8 +90,16 @@ else {
 if($section){
 	$arSection["ID"] = $section["ID"];
 	$arSection["NAME"] = $section["NAME"];
+	$arSection["CODE"] = $section["CODE"];
 	$arSection["RUSNAME"] = $section["UF_RUSNAME"];
 	$arSection["IBLOCK_SECTION_ID"] = $section["IBLOCK_SECTION_ID"];
+	
+	if($arSection["IBLOCK_SECTION_ID"]==5338) {
+		${$arParams['FILTER_NAME']}['=PROPERTY_250']=$arSection['ID'];
+		$arResult["VARIABLES"]["SECTION_ID"]=0;
+		$arResult["VARIABLES"]["SECTION_CODE"]='';	
+	}
+	
 	if($section[$arParams["SECTION_DISPLAY_PROPERTY"]]){
 		$arDisplayRes = CUserFieldEnum::GetList(array(), array("ID" => $section[$arParams["SECTION_DISPLAY_PROPERTY"]]));
 		if($arDisplay = $arDisplayRes->GetNext()){
@@ -155,7 +163,7 @@ $MShopSectionID = $arSection["ID"];
 		}
 		else {
 			CModule::IncludeModule('iblock');
-			$arFilter = Array("IBLOCK_ID"=>29, 'NAME'=>$arResult["VARIABLES"]["SECTION_ID"]);
+			$arFilter = Array("IBLOCK_ID"=>29, 'NAME'=>$arSection["ID"]);
 			$res = CIBlockElement::GetList(Array("ID"=>"ASC"), $arFilter, false, false, array('ID', 'DETAIL_TEXT'));
 			$allgroup=array();
 			if($ob = $res->GetNextElement())
@@ -165,20 +173,20 @@ $MShopSectionID = $arSection["ID"];
 				?>
 				<div class="internal_sections_list">
 					<?foreach($menu['PARENT'] as $razdel):?>
-						<h4><a href="/catalog/<?=$razdel['CODE']?>/<?=$arResult['VARIABLES']['SECTION_CODE']?>/"><?=$razdel['NAME']?></a></h4>
+						<h4><a href="/catalog/<?=$razdel['CODE']?>/<?=$arSection['CODE']?>/"><?=$razdel['NAME']?></a></h4>
 						<ul class="sections_list_wrapp">
 						<?
 						$prev=0;
 						foreach($menu['CHILD'][$razdel['ID']]['ITEMS'] as $item) {
 							$bParent=count($menu['CHILD'][$item['ID']]['ITEMS']);			?>
 							<li class="item <?=(false ? "cur" : "")?>" >
-								<a href="/catalog/<?=$razdel['CODE']?>/<?=$item['CODE']?>/<?=$arResult['VARIABLES']['SECTION_CODE']?>/" class="<?=($bParent ? 'parent' : '')?>"><span><?=$item["NAME"]?></span></a>
+								<a href="/catalog/<?=$razdel['CODE']?>/<?=$item['CODE']?>/<?=$arSection['CODE']?>/" class="<?=($bParent ? 'parent' : '')?>"><span><?=$item["NAME"]?></span></a>
 								<?if($bParent):?>
 								<div class="child_container">
 									<div class="child_wrapp">
 										<ul class="child">
-											<?foreach($menu['CHILD'][$item['ID']]['ITEMS'] as $arSection):?>
-												<li class="menu_item <?=(false ? "cur" : "")?>" ><a href="/catalog/<?=$razdel['CODE']?>/<?=$item['CODE']?>/<?=$arSection['CODE']?>/<?=$arResult['VARIABLES']['SECTION_CODE']?>/"><?=$arSection["NAME"]?></a></li>
+											<?foreach($menu['CHILD'][$item['ID']]['ITEMS'] as $SubArSection):?>
+												<li class="menu_item <?=(false ? "cur" : "")?>" ><a href="/catalog/<?=$razdel['CODE']?>/<?=$item['CODE']?>/<?=$SubArSection['CODE']?>/<?=$arSection['CODE']?>/"><?=$SubArSection["NAME"]?></a></li>
 											<?endforeach;?>
 										</ul>
 									</div>
@@ -458,7 +466,7 @@ if($arFields["PREVIEW_PICTURE"]){
 					"bitrix:catalog.section",
 					$template,
 					Array(
-					"SHOW_ALL_WO_SECTION"=>$arResult["VARIABLES"]["SECTION_ID"]?"Y":"N",
+					"SHOW_ALL_WO_SECTION"=>$arResult["VARIABLES"]["SECTION_ID"]||$arSection["IBLOCK_SECTION_ID"]==5338?"Y":"N",
 						"SEF_URL_TEMPLATES" => $arParams["SEF_URL_TEMPLATES"],
 						"IBLOCK_TYPE" => $arParams["IBLOCK_TYPE"],
 						"IBLOCK_ID" => $arParams["IBLOCK_ID"],

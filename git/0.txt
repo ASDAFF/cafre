@@ -271,3 +271,5 @@
 05.03.2018 02:15 /bitrix/templates/aspro_mshop/components/bitrix/sale.order.ajax/new/template.php (05.03.2018 14:11:39     fixes)
 06.03.2018 06:01 /bitrix/templates/aspro_mshop/components/bitrix/catalog/main/section.php (06.03.2018 06:01:35     fixes2)
 06.03.2018 06:59 /bitrix/templates/aspro_mshop/components/bitrix/catalog/main/section.php (06.03.2018 06:58:50     h1 in section)
+07.03.2018 11:41 /.top_catalog.menu_ext.php (07.03.2018 11:40:28     fix structure menu)
+07.03.2018 11:41 /catalog/.top_catalog.menu_ext.php (07.03.2018 11:40:28     fix structure menu)
