@@ -17,11 +17,10 @@ function translit($str) {
 }
 
 $xml=@file_get_contents('php://input');
-file_put_contents('0.txt', print_r($xml, true), FILE_APPEND);
-$xml = simplexml_load_string($xml);
 
+$xml = simplexml_load_string($xml);
 foreach ($xml->Request as $info) {
-	
+file_put_contents('0.txt', (string)$info->Operation, FILE_APPEND);
 	//обновление цены
 	if((string)$info->Operation=='SetWholesalePriceBy1cCode') {
 		$code=(string)$info->Code;		
@@ -180,7 +179,7 @@ foreach ($xml->Request as $info) {
 
 
 
-	//добавление картинки
+	//добавление товара
 	if((string)$info->Operation=='AddProduct') {
 		require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");
 		global $USER;
@@ -214,15 +213,15 @@ foreach ($xml->Request as $info) {
  				$PROP['BRAND']=$arFields['ID'];
 			}
 		}
-		/*$hit=(string)$info->IsHit;
-		$recommend=(string)$info->IsRecommend;
-		$new=(string)$info->IsNew;
-		$sale=(string)$info->IsSale;
+		//$hit=(string)$info->IsHit;
+		//$recommend=(string)$info->IsRecommend;
+		//$new=(string)$info->IsNew;
+		//$sale=(string)$info->IsSale;
 		
-		if($hit=='true') $PROP['HIT'][]=311;
-		if($recommend=='true') $PROP['HIT'][]=312;
-		if($new=='true') $PROP['HIT'][]=313;
-		if($sale=='true') $PROP['HIT'][]=314;*/
+		//if($hit=='true') $PROP['HIT'][]=311;
+		//if($recommend=='true') $PROP['HIT'][]=312;
+		//if($new=='true') $PROP['HIT'][]=313;
+		//if($sale=='true') $PROP['HIT'][]=314;
 		
 
 		$arLoadProductArray = Array(
@@ -347,19 +346,84 @@ foreach ($xml->Request as $info) {
 	if((string)$info->Operation=='UpdateOrder') {		
 		if (!Loader::IncludeModule('sale'))
 			die();
+		if (!Loader::IncludeModule('iblock'))
+			die();
+		
 		$order = Sale\Order::load((int)$info->OrderNumber);
 		$basket = $order->getBasket();
 		
-		//echo $order->getPrice();
-		//if($order->getDeliveryPrice()!=$info->DeliveryCost) {
-		if(true) {
-        	$shipmentCollection = $order->getShipmentCollection();
-			foreach ($shipmentCollection as $shipment) { 
-	            $shipment->setField('TRACKING_NUMBER', (string)$info->DeliveryTrackNumber);  		
-        	}	
-        }
+		foreach($info->Cart->Item as $item) {
+			$code=(string)$item->Code;
+			for ($i=0; $i < strlen($code); $i++) { 		
+				if(!$code[$i]=='0') break;
+			}	
+			$code= substr($code, $i);
+			$resTov = CIBlockElement::GetList(Array(), Array("IBLOCK_ID"=>26, "PROPERTY_CODE1C"=>array(str_repeat("0", 11-strlen($code)).$code, $code)), false, Array("nPageSize"=>1), Array("ID", "NAME"));
+			if($obTov = $resTov->GetNextElement()) {
+				$arFieldsTov = $obTov->GetFields();
+				$resTP = CIBlockElement::GetList(Array(), Array("IBLOCK_ID"=>27, "PROPERTY_CML2_LINK"=>$arFieldsTov['ID']), false, Array("nPageSize"=>1), Array("ID"));		
+				if($obTP = $resTP->GetNextElement()) {
+					$arFieldsTP = $obTP->GetFields();				
+					$basket_1c[$arFieldsTP['ID']]=array('summ'=>(int)$item->Price,'amount'=>(int)$item->Amount, 'name'=>$arFieldsTov['NAME']);
+				}
+			}
+		}
+		foreach ($basket as $basketItem) {
+			if(in_array($basketItem->getField('PRODUCT_ID'), array_keys($basket_1c))) {
+				if($basketItem->getQuantity()!=$basket_1c[$basketItem->getField('PRODUCT_ID')]['amount'])
+					$basketItem->setField('QUANTITY',  $basket_1c[$basketItem->getField('PRODUCT_ID')]['amount']);
+				$basketItem->setFields(array(
+				'PRICE' => $basket_1c[$basketItem->getField('PRODUCT_ID')]['summ'],
+				'CUSTOM_PRICE' => 'Y',
+				"IGNORE_CALLBACK_FUNC"  => "Y"));
+				unset($basket_1c[$basketItem->getField('PRODUCT_ID')]);
+			}
+			else {				
+				$basketItem->delete();
+			}
+		}
+		foreach($basket_1c as $newProduct=>$tovar) {
+			$item = $basket->createItem('catalog', $newProduct);
+			$item->setFields(array(
+				'PRICE' => $tovar['summ'],
+				'CUSTOM_PRICE' => 'Y',
+				"IGNORE_CALLBACK_FUNC"  => "Y",
+				'NAME' => $tovar['name'],
+				'QUANTITY' => $tovar['amount'],
+				'CURRENCY' => Bitrix\Currency\CurrencyManager::getBaseCurrency(),
+				'LID' => Bitrix\Main\Context::getCurrent()->getSite(),
+				'PRODUCT_PROVIDER_CLASS' => 'CCatalogProductProvider',
+			));
+		}
 		
-        $order->setField("PRICE_DELIVERY", (int)$info->DeliveryCost);
-        if($order->save()) echo "true";		
+		$basket->save();
+		
+		$shipmentCollection = $order->getShipmentCollection();
+		        	
+			foreach ($shipmentCollection as $shipment) { 
+	            if (!$shipment->isSystem()){ 
+					$shipment->setField('TRACKING_NUMBER', (string)$info->DeliveryTrackNumber);  		
+					if($order->getDeliveryPrice()!=$info->DeliveryCost) $shipment->setField('BASE_PRICE_DELIVERY', (int)$info->DeliveryCost);  
+					
+					$shipmentItemCollection = $shipment->getShipmentItemCollection();
+					foreach ($basket as $item)
+					{
+						$shipmentItem = $shipmentItemCollection->createItem($item);
+						$shipmentItem->setQuantity(1);
+					} 
+				}
+        	}	
+        
+		
+		$order->setField('STATUS_ID', (string)$info->OrderStateId);
+		if($info->DeliveryMethodName) {
+			$method=iconv("utf-8","windows-1251",(string)$info->DeliveryMethodName);
+			if(strpos($order->getField('USER_DESCRIPTION'), $method)===false) 
+				$order->setField('USER_DESCRIPTION', $order->getField('USER_DESCRIPTION').'<br>'.iconv("utf-8","windows-1251",'Способ доставки: ').$method);
+		}
+		
+		$order->setField('PRICE', (int)$info->OrderTotalSum);
+		
+        if($order->save()) echo "true";			
 	}
 }

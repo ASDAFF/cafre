@@ -57,32 +57,40 @@ $request  = '<?xml version="1.0" encoding="UTF-8"?>
 		*/
 
 
-$request  ='<?xml version="1.0" encoding="UTF-8"?><SERVICE>
+$request  ='<?xml version="1.0" encoding="UTF-8"?>
+<SERVICE>
 	<Request>
-		<Operation>UpdateOrder</Operation>		
-		<OrderNumber>597</OrderNumber>
-		<DeliveryCost>100</DeliveryCost>
-		<DeliveryTrackNumber>157</DeliveryTrackNumber>
-		<DeliveryMethodName>SPSR</DeliveryMethodName>
-		<OrderStateId>PG</OrderStateId>
-		<OrderTotalSum>2351</OrderTotalSum>
+		<Operation>UpdateOrder</Operation>
+		<OrderNumber>621</OrderNumber>
+		<DeliveryCost>250</DeliveryCost>
+		<DeliveryTrackNumber>1597532846RU</DeliveryTrackNumber>
+		<DeliveryMethodName>Почта Росии</DeliveryMethodName>
+		<OrderStateId>D</OrderStateId>
+		<OrderTotalSum>4050</OrderTotalSum>
 		<Cart>
 			<Item>
-				<Amount>1</Amount>
-				<Price>476</Price>
-				<Code>89292</Code>
+				<Amount>4</Amount>
+				<Price>180</Price>
+				<Code>12463</Code>
 			</Item>
 			<Item>
-				<Amount>2</Amount>
-				<Price>959</Price>
-				<Code>85959</Code>
+				<Amount>3</Amount>
+				<Price>234</Price>
+				<Code>10007</Code>
 			</Item>
-		</Cart>		
+			<Item>
+				<Amount>1</Amount>
+				<Price>455</Price>
+				<Code>24646</Code>
+			</Item>
+			<Item>
+				<Amount>3</Amount>
+				<Price>654</Price>
+				<Code>3643</Code>
+			</Item>
+		</Cart>
 	</Request>
 </SERVICE>';
-
-
-
 
 $request1  ='<?xml version="1.0" encoding="UTF-8"?><SERVICE>
 	<Request>
@@ -170,3 +178,4 @@ curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 curl_setopt($ch, CURLOPT_TIMEOUT, 100); 
 $data = curl_exec($ch); 
 print_r($data);
+
