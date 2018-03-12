@@ -1873,6 +1873,11 @@ margin: 0 0 10px;
 	margin-right: 0;
 }
 
+.top_brand_block > div {
+	display: flex;
+	flex-wrap: wrap;
+}
+
 .top_brand_block img {
 	position: absolute;
 	left: 50%;
@@ -1912,7 +1917,7 @@ margin: 0 0 10px;
 .top_brand_block .more-btn::before {
 	content: 'Показать все бренды';
 }
-
+/*
 .top_brand_block::before {
 	position: absolute;
 	top: 0;
@@ -1923,6 +1928,18 @@ margin: 0 0 10px;
 	text-align: center;
 	padding: 10px 0;
 	content: 'Выберите бренд';
+}
+*/
+
+.select_brand {
+	position: absolute;
+	top: 0;
+	left: 50%;
+	transform: translateX(-50%);
+	display: block;
+	width: 100%;
+	text-align: center;
+	padding: 10px 0;
 }
 
 @media (max-width: 1200px) {

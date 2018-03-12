@@ -273,3 +273,4 @@
 06.03.2018 06:59 /bitrix/templates/aspro_mshop/components/bitrix/catalog/main/section.php (06.03.2018 06:58:50     h1 in section)
 07.03.2018 11:41 /.top_catalog.menu_ext.php (07.03.2018 11:40:28     fix structure menu)
 07.03.2018 11:41 /catalog/.top_catalog.menu_ext.php (07.03.2018 11:40:28     fix structure menu)
+07.03.2018 12:23 /bitrix/templates/aspro_mshop/components/bitrix/catalog/main/section.php (07.03.2018 12:22:50     fix structure menu)

@@ -809,11 +809,13 @@ foreach($arResult["ITEMS"][250]['VALUES'] as $arItem) {
 	$brends[]=str_replace('.', '', $arItem['VALUE']);
 }
 if(!empty($brends) && count($brends)>0) {?>
-	<div class="top_brand_block" style="display:flex;    flex-wrap: wrap;">
+	<div class="top_brand_block" >
+	<span class="select_brand">Выберите бренд</span>
+	<div>
 	<?
 	$ar_result=CIBlockSection::GetList(Array("SORT"=>"ASC"), Array("IBLOCK_ID"=>"26", "NAME"=>$brends, 'DEPTH_LEVEL'=>2),false, Array("UF_IMG_BRAND", "NAME", 'CODE', 'ID'));
 	while($res2=$ar_result->GetNext()) {?>
-		<a href="<?=$APPLICATION->GetCurPage().$res2['CODE'].'/'?>" s="<?print_r($res2)?>">
+		<a href="<?=$APPLICATION->GetCurPage().$res2['CODE'].'/'?>" >
 		<?if($res2["UF_IMG_BRAND"]){?>
 			<?$file = CFile::ResizeImageGet($res2["UF_IMG_BRAND"], array('width'=>266, 'height'=>160), BX_RESIZE_IMAGE_PROPORTIONAL, true);?>
 			<img width="100" src="<?=$file["src"];?>"/>
@@ -822,6 +824,7 @@ if(!empty($brends) && count($brends)>0) {?>
 		<?}?>
 		</a>
 	<?}?>
+	</div>
 	</div>
 <?}?>
 

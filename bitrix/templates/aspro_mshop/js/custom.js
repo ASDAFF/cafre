@@ -160,7 +160,7 @@ $(function() {
 	fixToBrand();
 
 	if ($('.top_brand_block').get(0)) {
-		var items = $('.top_brand_block > a').length,
+		var items = $('.top_brand_block > div > a').length,
 			more = false;
 		
 		more = (items > 10) ? true : false;

@@ -80,6 +80,7 @@ else {
 					//echo $arResult["VARIABLES"]["SMART_FILTER_PATH"];
 					/*unset($sections[count($sections)-1]);
 					$arResult["VARIABLES"]["SECTION_CODE_PATH"]=implode('/', $sections);*/
+					$section=$section2;
 				}
 				else $section=false;
 			}				
@@ -231,11 +232,11 @@ $MShopSectionID = $arSection["ID"];
 		$APPLICATION->ShowViewContent('filter_dop');
 		
 	}
-		
-	if(empty(${$arParams['FILTER_NAME']})) {
+	
+	if(empty(${$arParams['FILTER_NAME']}) || $arSection["IBLOCK_SECTION_ID"]==5338) {
 			//$res = CIBlockSection::GetByID($arResult["VARIABLES"]["SECTION_ID"]);
 			//$ar_res = $res->GetNext();
-			$ar_result=CIBlockSection::GetList(Array("SORT"=>"ASC"), Array("IBLOCK_ID"=>"26", "ID"=>$arResult["VARIABLES"]["SECTION_ID"]),false, Array("UF_IMG_BRAND", "UF_TOP_TEXT"));
+			$ar_result=CIBlockSection::GetList(Array("SORT"=>"ASC"), Array("IBLOCK_ID"=>"26", "ID"=>$arSection["ID"]),false, Array("UF_IMG_BRAND", "UF_TOP_TEXT"));
 	?>	
 	<?if($res2=$ar_result->GetNext()):?>
 	<?if($res2["UF_IMG_BRAND"]){?>
@@ -900,8 +901,10 @@ if($brend_in_catalog) $filter_h1=' '.$brend_in_catalog.$filter_h1;
 				$APPLICATION->SetPageProperty("title",  str_replace_once($catalog_section_name, $catalog_section_name.$filter_h1, $page_seo_params["title"])." (Страница ".$page_num.")");  
 			}
         }
-		
-$page_seo_params["title"] = $APPLICATION->GetTitle().($arSection['RUSNAME']!=''?' ('.$arSection['RUSNAME'].')':'');
+if($arSection["IBLOCK_SECTION_ID"]==5338&&$arResult["VARIABLES"]["SECTION_ID"]==0&&$arResult["VARIABLES"]["SECTION_CODE"]=='') {
+	$page_seo_params["title"] = $arSection['NAME'].($arSection['RUSNAME']!=''?' ('.$arSection['RUSNAME'].')':'');
+}		
+else $page_seo_params["title"] = $APPLICATION->GetTitle().($arSection['RUSNAME']!=''?' ('.$arSection['RUSNAME'].')':'');
 if( !(strpos($arResult['VARIABLES']['SECTION_CODE_PATH'], 'vse_brendy/')===false) && substr_count($arResult['VARIABLES']['SECTION_CODE_PATH'], '/')==1 ) {
 	$this->SetViewTarget('h1');echo $page_seo_params["title"].$filter_h1;$this->EndViewTarget();
 	$APPLICATION->SetPageProperty("title", "Каталог товаров бренда ".$page_seo_params["title"].$filter_h1."".(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));
