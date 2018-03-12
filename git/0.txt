@@ -274,3 +274,7 @@
 07.03.2018 11:41 /.top_catalog.menu_ext.php (07.03.2018 11:40:28     fix structure menu)
 07.03.2018 11:41 /catalog/.top_catalog.menu_ext.php (07.03.2018 11:40:28     fix structure menu)
 07.03.2018 12:23 /bitrix/templates/aspro_mshop/components/bitrix/catalog/main/section.php (07.03.2018 12:22:50     fix structure menu)
+12.03.2018 07:11 /bitrix/templates/aspro_mshop/components/bitrix/catalog.smart.filter/main/template.php (12.03.2018 07:11:11     fix section)
+12.03.2018 07:11 /bitrix/templates/aspro_mshop/components/bitrix/catalog/main/section.php (12.03.2018 07:11:11     fix section)
+12.03.2018 07:11 /bitrix/templates/aspro_mshop/css/custom.css (12.03.2018 07:11:11     fix section)
+12.03.2018 07:11 /bitrix/templates/aspro_mshop/js/custom.js (12.03.2018 07:11:11     fix section)

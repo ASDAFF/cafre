@@ -811,7 +811,7 @@ foreach($arResult["ITEMS"][250]['VALUES'] as $arItem) {
 if(!empty($brends) && count($brends)>0) {?>
 	<div class="top_brand_block" >
 	<span class="select_brand">Выберите бренд</span>
-	<div>
+	<div class="list_brands"> 
 	<?
 	$ar_result=CIBlockSection::GetList(Array("SORT"=>"ASC"), Array("IBLOCK_ID"=>"26", "NAME"=>$brends, 'DEPTH_LEVEL'=>2),false, Array("UF_IMG_BRAND", "NAME", 'CODE', 'ID'));
 	while($res2=$ar_result->GetNext()) {?>

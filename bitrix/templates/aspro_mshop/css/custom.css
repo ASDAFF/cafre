@@ -1873,7 +1873,7 @@ margin: 0 0 10px;
 	margin-right: 0;
 }
 
-.top_brand_block > div {
+.top_brand_block .list_brands {
 	display: flex;
 	flex-wrap: wrap;
 }
@@ -1895,6 +1895,7 @@ margin: 0 0 10px;
 .top_brand_block.more {
 	height: 320px;
 	overflow: hidden;
+	display: block;
 }
 
 .top_brand_block .more-btn {
