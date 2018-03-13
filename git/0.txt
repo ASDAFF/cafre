@@ -278,3 +278,5 @@
 12.03.2018 07:11 /bitrix/templates/aspro_mshop/components/bitrix/catalog/main/section.php (12.03.2018 07:11:11     fix section)
 12.03.2018 07:11 /bitrix/templates/aspro_mshop/css/custom.css (12.03.2018 07:11:11     fix section)
 12.03.2018 07:11 /bitrix/templates/aspro_mshop/js/custom.js (12.03.2018 07:11:11     fix section)
+12.03.2018 07:50 /bitrix/templates/aspro_mshop/components/bitrix/catalog.smart.filter/main/template.php (12.03.2018 07:50:16     fix section)
+12.03.2018 07:50 /bitrix/templates/aspro_mshop/css/custom.css (12.03.2018 07:50:16     fix section)
