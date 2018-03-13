@@ -350,7 +350,7 @@ if (!empty($arResult['ITEMS'])){
 						'STEP_QUANTITY' => $arOffer['CATALOG_MEASURE_RATIO'],
 						'QUANTITY_FLOAT' => is_double($arOffer['CATALOG_MEASURE_RATIO']),
 						'MEASURE' => $arOffer['~CATALOG_MEASURE_NAME'],
-						'CAN_BUY' => $arOffer['CAN_BUY'],
+						'CAN_BUY' => 'Y',//$arOffer['CAN_BUY'],
 						'CATALOG_SUBSCRIBE' => $arOffer['CATALOG_SUBSCRIBE'],
 						'AVAILIABLE' => CMShop::GetQuantityArray($arOffer['CATALOG_QUANTITY']),
 						'URL' => $arOffer['DETAIL_PAGE_URL'],

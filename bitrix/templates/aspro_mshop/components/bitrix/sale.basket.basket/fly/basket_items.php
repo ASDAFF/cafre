@@ -292,16 +292,11 @@
 							</div>
 						</td>
 					<?endif;?>
+					
 					<td class="back_btn">
-						<?if(!$arError["ERROR"]){?>
-							<div class="basket_back">
-								<div class="wrap_button">
-									<a href="<?=$arParams["PATH_TO_BASKET"]?>" class="button transparent sbold"><span><?=GetMessage("GO_TO_BASKET")?></span></a>
-								</div>
-								<!-- <div class="description"><?/*=GetMessage("SALE_TO_BASKET_DESCRIPTION");*/?></div> -->
-							</div>
-						<?}?>
+	
 					</td>
+
 					<?if ($arParams["SHOW_FULL_ORDER_BUTTON"]=="Y" && !$arError["ERROR"]):?>
 						<td>
 							<div class="basket_checkout clearfix">
@@ -324,6 +319,14 @@
 									<a href="<?=$arParams["PATH_TO_BASKET"]?>" class="button transparent sbold"><span><?=GetMessage("GO_TO_BASKET")?></span></a>
 								</div>
 								<div class="description"><?=GetMessage("SALE_TO_BASKET_DESCRIPTION");?></div>
+							</div>
+						<?}?>
+						<?if(!$arError["ERROR"]){?>
+							<div class="basket_back">
+								<div class="wrap_button">
+									<a href="<?=$arParams["PATH_TO_BASKET"]?>" class="button transparent sbold"><span><?=GetMessage("GO_TO_BASKET")?></span></a>
+								</div>
+								<!-- <div class="description"><?/*=GetMessage("SALE_TO_BASKET_DESCRIPTION");*/?></div> -->
 							</div>
 						<?}?>
 					</td>

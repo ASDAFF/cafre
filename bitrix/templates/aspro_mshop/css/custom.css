@@ -326,6 +326,10 @@ a.scroll-to-top.ROUND_COLOR:hover, a.scroll-to-top.RECT_COLOR:hover {
 	border-radius: 50px;
 }
 
+a.scroll-to-top {
+	z-index: 200;
+}
+
 .left_menu > li.current, .left_menu > li:not(.exit):hover {
 	background: #EB5470;
 }
@@ -852,7 +856,8 @@ ul.menu li:last-child .child.cat_menu {
 @media (max-width: 1050px) {
 	.wrapper.banner_narrow.has_menu .top_slider_wrapp .flexslider .slides > li {
 		background-position: left;
-		background-size: cover !important;
+		background-size: contain !important;
+		background-repeat: no-repeat;
 	}
 }
 
@@ -1044,9 +1049,8 @@ ul.menu li:last-child .child.cat_menu {
 @media (max-width: 570px) {
 	
 	.wrapper.banner_narrow.has_menu .top_slider_wrapp .flexslider .slides > li {
-		background-size: 570px auto !important;
-		background-repeat: no-repeat;
-		background-position-x: -20px;
+		background-size: contain !important;
+		background-repeat: no-repeat;	
 	}   
 }
 
@@ -2165,6 +2169,18 @@ position: absolute;
 	font-size: 10px;
 	font-family: "Ubuntu",Arial,Helvetica,sans-serif;
 	line-height: 16px;
+}
+
+#header .module-cart .colored td .basket_back {
+	padding: 0;
+}
+
+.specials_slider > li, .tabs_slider li, .wrapper_block .wr li {
+	opacity: 1;
+}
+
+.specials_slider_wrapp ul.tabs_content > li, .tab_slider_wrapp ul.tabs_content > li {
+	position: relative;
 }
 
 @media (max-width: 550px) {

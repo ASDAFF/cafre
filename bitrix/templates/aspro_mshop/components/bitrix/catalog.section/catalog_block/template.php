@@ -35,6 +35,7 @@ $catalog_section_name=$arResult['NAME'];?>
 			$arItemIDs=CMShop::GetItemsIDs($arItem);
 
 			$totalCount = CMShop::GetTotalCount($arItem);
+			if($totalCount==0) $totalCount=10;
 			$arQuantityData = CMShop::GetQuantityArray($totalCount, $arItemIDs["ALL_ITEM_IDS"]);
 
 			$item_id = $arItem["ID"];
@@ -49,6 +50,8 @@ $catalog_section_name=$arResult['NAME'];?>
 			elseif($arItem["OFFERS"]){
 				$strMeasure = $arItem["MIN_PRICE"]["CATALOG_MEASURE_NAME"];
 			}
+			$arAddToBasketData["ACTION"]='ADD';
+			$arItem['CAN_BUY']='Y';
 			?>
 			<div class="catalog_item_wrapp">
 				<div class="catalog_item item_wrap <?=(($_GET['q'])) ? 's' : ''?>" id="<?=$arItemIDs["strMainID"];?>">

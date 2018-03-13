@@ -514,6 +514,28 @@ function InitOrderJS(){
 						</a>
 					</div>
 	<script>
+	/********»з за данных, которые не добавл€лись, пришлось отправл€ть запрос чтобы получить данные пользовател€ через ajax********/
+var MY_LOGIN = $(document).find('[code=EMAIL]').val();
+if(MY_LOGIN != ''){
+   $.ajax({
+				url: "/ajax/info_order.php", 
+					type: "post",
+					dataType: "json",
+					data: { 
+						"MY_LOGIN": MY_LOGIN
+					},
+				success: function(e) {			
+					if(e.result=='yes') { 
+						$(document).find('[code=EMAIL]').val(MY_LOGIN);
+						$(document).find('[code=NAME]').val(e.name);
+						$(document).find('[code=PHONE]').val(e.phone);
+						$("form[name=order_auth_form]").closest('.order__cell').prev().html('<h3>¬ы успешно авторизованы</h3>').next().remove();	
+						
+					}
+				}
+	});	
+	}		
+
 	/********помен€л скрипты и исправил маску********/
 	$("#ORDER_PROP_1").val($("#ORDER_PROP_1").val());
 	var a,b,c, name1=$("#name1"), mail1=$("#mail1"), $phone1=$("#phone1"), text1=$("#text1");
@@ -556,6 +578,9 @@ jQuery(function($){
         t.stop().slideToggle(200);
 	});
 });
+
+
+			
 </script>
 				</form>
 				<?

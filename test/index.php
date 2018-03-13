@@ -2,6 +2,10 @@
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/header.php");
 $APPLICATION->SetTitle("test");
 
+//$cup = CCatalogDiscountCoupon::SetCoupon("SL-LOG7R-8Q7L4NL"); 
+//print_r($cup);
+
+
 global $APPLICATION;
 // устновим cookie на 2 года, действительного только для каталога /ru/
 $arr.= '111,';

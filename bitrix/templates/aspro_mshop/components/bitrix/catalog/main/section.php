@@ -600,7 +600,8 @@ if($arParams["SHOW_TOP_ELEMENTS"]!="N"){
 <?
 			//$res = CIBlockSection::GetByID($arResult["VARIABLES"]["SECTION_ID"]);
 			//$ar_res = $res->GetNext();
-			$ar_result=CIBlockSection::GetList(Array("SORT"=>"ASC"), Array("IBLOCK_ID"=>"26", "ID"=>$arResult["VARIABLES"]["SECTION_ID"]),false, Array("UF_BOTTOM_TEXT"));
+			//описания у брендов перетсали выводиться
+			$ar_result=CIBlockSection::GetList(Array("SORT"=>"ASC"), Array("IBLOCK_ID"=>"26", "ID"=>$arResult["VARIABLES"]["SECTION_ID"]>0?$arResult["VARIABLES"]["SECTION_ID"]:$arSection["ID"]),false, Array("UF_BOTTOM_TEXT"));
 	?>
 	<?if($res2=$ar_result->GetNext()):?>
 	<?if($res2["UF_BOTTOM_TEXT"]){?>

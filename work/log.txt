@@ -8215,3 +8215,101 @@ Array
         )
 
 )
+
+Array
+(
+    [NAME] => Dee
+    [EMAIL] => dee@mail.ru
+    [PHONE] => 891245124
+    [LOCATION] => Московская область, Москва
+    [add] => false
+    [FULLADRES] => Московская область, Москва, 
+)
+ 705res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre705</UID><Date xmlns="MC">2018-03-13T12:57:37</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">Dee</Name><Phone xmlns="MC">891245124</Phone><Address xmlns="MC">РњРѕСЃРєРѕРІСЃРєР°СЏ РѕР±Р»Р°СЃС‚СЊ, РњРѕСЃРєРІР°, </Address><eMail xmlns="MC">dee@mail.ru</eMail><Gds xmlns="MC"><ID>00000025013</ID><Qty>1</Qty><Cost>755</Cost></Gds><Gds xmlns="MC"><ID>00000018693</ID><Qty>1</Qty><Cost>179</Cost></Gds><Gds xmlns="MC"><ID>00000018727</ID><Qty>1</Qty><Cost>71</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)
+
+Array
+(
+    [NAME] => test_alex3
+    [EMAIL] => test_alex3@mail.ru
+    [PHONE] => 8(999) 999-9999
+    [LOCATION] => Московская область, Москва
+    [ADDRESS] => test
+    [add] => false
+    [FULLADRES] => test
+)
+ 706res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre706</UID><Date xmlns="MC">2018-03-13T13:00:01</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">test_alex3</Name><Phone xmlns="MC">8(999) 999-9999</Phone><Address xmlns="MC">test</Address><eMail xmlns="MC">test_alex3@mail.ru</eMail><Gds xmlns="MC"><ID>00000024615</ID><Qty>1</Qty><Cost>675</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)
+
+Array
+(
+    [NAME] => test_alex3
+    [EMAIL] => test_alex3@mail.ru
+    [PHONE] => 8(999) 999-9999
+    [LOCATION] => Московская область, Москва
+    [ADDRESS] => test
+    [add] => false
+    [FULLADRES] => test
+)
+ 707res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre707</UID><Date xmlns="MC">2018-03-13T13:00:44</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">test_alex3</Name><Phone xmlns="MC">8(999) 999-9999</Phone><Address xmlns="MC">test</Address><eMail xmlns="MC">test_alex3@mail.ru</eMail><Gds xmlns="MC"><ID>00000024615</ID><Qty>1</Qty><Cost>675</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)
+
+Array
+(
+    [NAME] => test_alex
+    [EMAIL] => test_alex@mail.ru
+    [PHONE] => 8(999) 999-9999
+    [LOCATION] => Московская область, Москва
+    [add] => false
+    [FULLADRES] => Московская область, Москва, 
+)
+ 708res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre708</UID><Date xmlns="MC">2018-03-13T13:03:01</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">test_alex</Name><Phone xmlns="MC">8(999) 999-9999</Phone><Address xmlns="MC">РњРѕСЃРєРѕРІСЃРєР°СЏ РѕР±Р»Р°СЃС‚СЊ, РњРѕСЃРєРІР°, </Address><eMail xmlns="MC">test_alex@mail.ru</eMail><Gds xmlns="MC"><ID>00000024615</ID><Qty>1</Qty><Cost>675</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)

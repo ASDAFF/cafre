@@ -5673,3 +5673,71 @@ res=stdClass Object
 )
 double:499
 --
+<Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre705</UID><Date xmlns="MC">2018-03-13T12:57:37</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">Dee</Name><Phone xmlns="MC">891245124</Phone><Address xmlns="MC">Московская область, Москва, </Address><eMail xmlns="MC">dee@mail.ru</eMail><Gds xmlns="MC"><ID>00000025013</ID><Qty>1</Qty><Cost>755</Cost></Gds><Gds xmlns="MC"><ID>00000018693</ID><Qty>1</Qty><Cost>179</Cost></Gds><Gds xmlns="MC"><ID>00000018727</ID><Qty>1</Qty><Cost>71</Cost></Gds></Zakaz>
+res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre705</UID><Date xmlns="MC">2018-03-13T12:57:37</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">Dee</Name><Phone xmlns="MC">891245124</Phone><Address xmlns="MC">Московская область, Москва, </Address><eMail xmlns="MC">dee@mail.ru</eMail><Gds xmlns="MC"><ID>00000025013</ID><Qty>1</Qty><Cost>755</Cost></Gds><Gds xmlns="MC"><ID>00000018693</ID><Qty>1</Qty><Cost>179</Cost></Gds><Gds xmlns="MC"><ID>00000018727</ID><Qty>1</Qty><Cost>71</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)
+double:705
+--
+<Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre706</UID><Date xmlns="MC">2018-03-13T13:00:01</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">test_alex3</Name><Phone xmlns="MC">8(999) 999-9999</Phone><Address xmlns="MC">test</Address><eMail xmlns="MC">test_alex3@mail.ru</eMail><Gds xmlns="MC"><ID>00000024615</ID><Qty>1</Qty><Cost>675</Cost></Gds></Zakaz>
+res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre706</UID><Date xmlns="MC">2018-03-13T13:00:01</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">test_alex3</Name><Phone xmlns="MC">8(999) 999-9999</Phone><Address xmlns="MC">test</Address><eMail xmlns="MC">test_alex3@mail.ru</eMail><Gds xmlns="MC"><ID>00000024615</ID><Qty>1</Qty><Cost>675</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)
+double:706
+--
+<Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre707</UID><Date xmlns="MC">2018-03-13T13:00:44</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">test_alex3</Name><Phone xmlns="MC">8(999) 999-9999</Phone><Address xmlns="MC">test</Address><eMail xmlns="MC">test_alex3@mail.ru</eMail><Gds xmlns="MC"><ID>00000024615</ID><Qty>1</Qty><Cost>675</Cost></Gds></Zakaz>
+res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre707</UID><Date xmlns="MC">2018-03-13T13:00:44</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">test_alex3</Name><Phone xmlns="MC">8(999) 999-9999</Phone><Address xmlns="MC">test</Address><eMail xmlns="MC">test_alex3@mail.ru</eMail><Gds xmlns="MC"><ID>00000024615</ID><Qty>1</Qty><Cost>675</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)
+double:707
+--
+<Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre708</UID><Date xmlns="MC">2018-03-13T13:03:01</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">test_alex</Name><Phone xmlns="MC">8(999) 999-9999</Phone><Address xmlns="MC">Московская область, Москва, </Address><eMail xmlns="MC">test_alex@mail.ru</eMail><Gds xmlns="MC"><ID>00000024615</ID><Qty>1</Qty><Cost>675</Cost></Gds></Zakaz>
+res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre708</UID><Date xmlns="MC">2018-03-13T13:03:01</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">test_alex</Name><Phone xmlns="MC">8(999) 999-9999</Phone><Address xmlns="MC">Московская область, Москва, </Address><eMail xmlns="MC">test_alex@mail.ru</eMail><Gds xmlns="MC"><ID>00000024615</ID><Qty>1</Qty><Cost>675</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)
+double:708
+--
