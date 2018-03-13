@@ -1,7 +1,7 @@
 <?
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");?>
 <link href="0.css" type="text/css"  rel="stylesheet" />
-<?/*
+<?
 if(isset($_GET['commit'])&&isset($_GET['filename'])) {
 	exec('git show '.$_GET['commit'], $all);
 	$start=0;
@@ -87,5 +87,5 @@ $(function () {
     });
 });
 </script>
-<?*//*exec('git status', $all);
+<?/*exec('git status', $all);
 print_r($all);*/?>

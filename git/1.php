@@ -30,7 +30,7 @@ elseif(isset($_REQUEST['clean'])&&$_REQUEST['clean']=='true') {
 else {
 	$echo='';
 
-	$ftp_server="95.213.222.48";
+	$ftp_server="77.244.210.154";
 	$ftp_user_name="git";
 	$ftp_user_pass="5U3h1D6x";	
 	$conn_id = ftp_connect($ftp_server);	
@@ -38,8 +38,8 @@ else {
 	ftp_pasv($conn_id, true);
 	ftp_chdir($conn_id, '../');
 
-	$connection = ssh2_connect('95.213.222.48', 22);
-	ssh2_auth_password($connection, 'root', '6CNC094PcO40');
+	$connection = ssh2_connect('77.244.210.154', 22);
+	ssh2_auth_password($connection, 'root', 'SW0LS9bM3QL7');
 	$sftp = ssh2_sftp($connection);
 	$commit=$_REQUEST['commit'];
 	$name_commit=$_REQUEST['name_commit'];
