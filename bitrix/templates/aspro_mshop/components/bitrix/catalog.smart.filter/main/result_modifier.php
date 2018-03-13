@@ -47,12 +47,18 @@ global $MSHOP_SMART_FILTER, $filter_h1, $brends, $brend_in_catalog;
 $n=0;
 foreach($MSHOP_SMART_FILTER as $num => $value) {
 	if($num=='=PROPERTY_250_VALUE' || $num=='=PROPERTY_250') {
+		if($arResult['ITEMS'][$property_id]['NAME']=='') {
+			$res = CIBlockSection::GetByID($value[0]);
+			if($ar_res = $res->GetNext())
+				$arResult['ITEMS'][250]['VALUES'][$value[0]]['VALUE']=$ar_res['NAME'];
+		}
 		$brend_in_catalog=str_replace('..', '', $arResult['ITEMS'][250]['VALUES'][$value[0]]['VALUE']);
 	}
 	elseif(!strpos($num, 'PROPERTY')===false) {
 		$n++;
 		if($n==1) $filter_h1 ='. ';
 		$property_id=intval( explode('_', $num)[1]  );
+		
 		$filter_h1 .= ($n==1?$arResult['ITEMS'][$property_id]['NAME']:', '.mb_strtolower($arResult['ITEMS'][$property_id]['NAME'], 'cp-1251') ).': '.mb_strtolower($arResult['ITEMS'][$property_id]['VALUES'][$value[0]]['VALUE'], 'cp-1251');
 	}
 }

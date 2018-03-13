@@ -1,14 +1,44 @@
 <?
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/header.php");
 $APPLICATION->SetTitle("test");
+?>
+<input type="text" name="coupon" width="300" height="50"/>
+<p class="err_cup"></p>
+<script>
+$('[name=coupon]').on('keyup', function(e) {
+	var coup = e.target.value;
+	
+	$.ajax({
+				url: "/ajax/validate_order_coup.php", 
+					type: "post",
+					dataType: "json",
+					data: { 
+						"coup": coup
+					},
+				success: function(d) {			
+					if(d.result=='yes') { 
+						$('[name=coupon]').css("color","green");
+					}else{
+						$(".err_cup").text(d.result);
+					}
+					console.log(d);
+				}
+				
+	});	
+	
+	
+});
+</script>
+<?
 
+//$cup = CCatalogDiscountCoupon::IsExistCoupon("SL-LOG7R-8Q7L4NL");
 //$cup = CCatalogDiscountCoupon::SetCoupon("SL-LOG7R-8Q7L4NL"); 
 //print_r($cup);
-$cup = \Bitrix\Sale\DiscountCouponsManager::getData(
+/*$cup = \Bitrix\Sale\DiscountCouponsManager::getData(
 "SL-LOG7R-8Q7L4NL",
 TRUE
-);
-print_r($cup);
+);*/
+//print_r($cup);
 
 global $APPLICATION;
 // устновим cookie на 2 года, действительного только для каталога /ru/
