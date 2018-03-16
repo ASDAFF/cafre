@@ -194,6 +194,9 @@ JCSmartFilter.prototype.postHandler = function (result, fromCache)
 			modef_num_mobile.innerHTML = result.ELEMENT_COUNT;
 			hrefFILTER = BX.findChildren(modef, {tag: 'A'}, true);
 			hrefFILTER_mobile = BX.findChildren(modef_mobile, {tag: 'A'}, true);
+			
+
+result.FILTER_URL=result.FILTER_URL.replace("/f-clear","");
 
 			if (result.FILTER_URL && hrefFILTER)
 			{

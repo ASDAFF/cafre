@@ -221,7 +221,7 @@ $MShopSectionID = $arSection["ID"];
 				<?
 			}
 		}	
-		if($TEMPLATE_OPTIONS["TYPE_VIEW_FILTER"]["CURRENT_VALUE"]=="VERTICAL"){?>
+		if($TEMPLATE_OPTIONS["TYPE_VIEW_FILTER"]["CURRENT_VALUE"]=="VERTICAL"&& $section['IBLOCK_SECTION_ID']!=5338){?>
 			<?include_once("filter.php")?>
 		<?}?>
 		

@@ -2,7 +2,7 @@
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/header.php");
 $APPLICATION->SetTitle("test");
 ?>
-<input type="text" name="coupon" width="300" height="50"/>
+<input type="text" name="coupon" class="coup_inp"/>
 <p class="err_cup"></p>
 <script>
 $('[name=coupon]').on('keyup', function(e) {
@@ -17,9 +17,11 @@ $('[name=coupon]').on('keyup', function(e) {
 					},
 				success: function(d) {			
 					if(d.result=='yes') { 
-						$('[name=coupon]').css("color","green");
+						$('[name=coupon]').css("border-color","green");
+						$(".err_cup").css("display","none");
 					}else{
-						$(".err_cup").text(d.result);
+						$('[name=coupon]').css("border-color","red");
+						$(".err_cup").css("display","block");
 					}
 					console.log(d);
 				}
@@ -34,11 +36,13 @@ $('[name=coupon]').on('keyup', function(e) {
 //$cup = CCatalogDiscountCoupon::IsExistCoupon("SL-LOG7R-8Q7L4NL");
 //$cup = CCatalogDiscountCoupon::SetCoupon("SL-LOG7R-8Q7L4NL"); 
 //print_r($cup);
-/*$cup = \Bitrix\Sale\DiscountCouponsManager::getData(
-"SL-LOG7R-8Q7L4NL",
+$cup = \Bitrix\Sale\DiscountCouponsManager::getData(
+"SL-A9RSB-RFMNNCE",
 TRUE
-);*/
-//print_r($cup);
+);
+echo "<pre>";
+var_dump($cup);
+echo "</pre>";
 
 global $APPLICATION;
 // устновим cookie на 2 года, действительного только для каталога /ru/

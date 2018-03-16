@@ -40,10 +40,33 @@
 			</thead>
 
 			<tbody>
-				<?foreach ($arResult["GRID"]["ROWS"] as $k => $arItem):
+			<tr class="flyitem">
+					<td class="thumb-cell">
+					<a class="thumb">
+					<img src="/bitrix/templates/aspro_mshop/images/podarok.jpg" alt="Ваш подарок уже в корзине" title="Ваш подарок уже в корзине" width="80" height="80">
+					</a>
+					</td>
+					<td class="name-cell">
+					<a>Ваш подарок уже в корзине</a>
+					</td>
+					<td class="cost-cell">
+					<div class="cost prices clearfix">
+					<div class="price">0 руб.</div>
+					</div>
+					</td>
+					<td class="custom quantity "></td>
+					<td class="custom sum "></td>
+					</tr>
+				<?
+				$i = 0;
+				foreach ($arResult["GRID"]["ROWS"] as $k => $arItem):
 					$currency = $arItem["CURRENCY"];
 					if ($arItem["DELAY"] == "N" && $arItem["CAN_BUY"] == "Y"):
-					$arBasketItems[]=$arItem["PRODUCT_ID"];?>
+					$arBasketItems[]=$arItem["PRODUCT_ID"];
+					if($i == 0){
+					?>
+					
+					<?}?>
 					<tr class="flyitem" data-id="<?=$arItem["ID"]?>" product-id="<?=$arItem["PRODUCT_ID"]?>"  <?if($arItem["QUANTITY"]>$arItem["AVAILABLE_QUANTITY"]):?>data-error="no_amounth"<?endif;?>>
 						<?foreach ($arResult["GRID"]["HEADERS"] as $id => $arHeader):
 							if (in_array($arHeader["id"], array("PROPS", "DELAY", "DELETE", "TYPE", "DISCOUNT"))) continue; // some values are not shown in columns in this template
@@ -336,7 +359,8 @@
 	</div>
 </div>
 <?else:?>
-	<div class="cart_empty">
+	<!--<div class="cart_empty">
+	
 		<table cellspacing="0" cellpadding="0" width="100%" border="0"><tr><td class="img_wrapp">
 			<div class="img">
 				<img src="<?=SITE_TEMPLATE_PATH?>/images/empty_cart.png" alt="<?=GetMessage("BASKET_EMPTY")?>" />
@@ -346,7 +370,119 @@
 				<?$APPLICATION->IncludeFile(SITE_DIR."include/empty_fly_cart.php", Array(), Array("MODE"      => "html", "NAME"      => GetMessage("SALE_BASKET_EMPTY"),));?>
 			</div>
 		</td></tr></table>
-		<div class="clearboth"></div>
-	</div>
+		<div class="clearboth"></div></div>-->
+		<div class="module-cart">
+		<div class="goods" style="overflow-x: hidden !important;">
+		<table class="colored" height="100%" width="100%">
+			<thead>
+				<tr>
+					<?
+						foreach ($arResult["GRID"]["HEADERS"] as $id => $arHeader)
+						{
+							if ($arHeader["id"] == "DELETE"){$bDeleteColumn = true;}	
+							if ($arHeader["id"] == "TYPE"){$bTypeColumn = true;}
+							if ($arHeader["id"] == "QUANTITY"){$bQuantityColumn = true;}
+							if ($arHeader["id"] == "DISCOUNT"){$bDiscountColumn = true;}
+						}
+					?>
+					<?foreach ($arResult["GRID"]["HEADERS"] as $id => $arHeader):
+						if (in_array($arHeader["id"], array("TYPE", "DISCOUNT"))) {continue;} // some header columns are shown differently
+						elseif ($arHeader["id"] == "PROPS"){$bPropsColumn = true; continue;}
+						elseif ($arHeader["id"] == "DELAY"){$bDelayColumn = true; continue;}
+						elseif ($arHeader["id"] == "WEIGHT"){ $bWeightColumn = true;}
+						elseif ($arHeader["id"] == "DELETE"){ continue;}
+						if ($arHeader["id"] == "NAME"):?>
+							<td class="thumb-cell"></td><td class="name-th">
+						<?else:?><td class="<?=strToLower($arHeader["id"])?>-th"><?endif;?><?=getColumnName($arHeader)?></td>
+					<?endforeach;?>
+					<?if ($bDelayColumn):?><td class="delay-cell"></td><?endif;?>
+					<?if ($bDeleteColumn):?><td class="remove-cell"></td><?endif;?>
+				</tr>
+			</thead>
+
+			<tbody>
+			<tr class="flyitem">
+					<td class="thumb-cell">
+					<a class="thumb">
+					<img src="/bitrix/templates/aspro_mshop/images/podarok.jpg" alt="Ваш подарок уже в корзине" title="Ваш подарок уже в корзине" width="80" height="80">
+					</a>
+					</td>
+					<td class="name-cell">
+					<a>Ваш подарок уже в корзине</a>
+					</td>
+					<td class="cost-cell">
+					<div class="cost prices clearfix">
+					<div class="price">0 руб.</div>
+					</div>
+					</td>
+					<td class="custom quantity "></td>
+					<td class="custom sum "></td>
+					</tr>
+			</tbody>
+		</table>
+		</div>
+		<div class="itog">
+		<table class="colored fixed" height="100%" width="100%">
+			<?$totalCols = 3 + ($arParams["AJAX_MODE_CUSTOM"] != "Y" ? 1 : 0) + ($arParams["SHOW_FULL_ORDER_BUTTON"] == "Y" && !$arError["ERROR"] ? 1 : 0)?>
+			<tfoot>				
+				<tr data-id="total_buttons" class="bottom_btn">
+					<td>
+						<div class="basket_close">
+							<span class="button transparent grey_br sbold close"><span><?=GetMessage("SALE_BACK")?></span></span>
+							<!-- <div class="description"> <?/*=GetMessage("SALE_BACK_DESCRIPTION");*/?></div> -->
+						</div>
+					</td>
+					<?if ($arParams["AJAX_MODE_CUSTOM"]!="Y"):?>
+						<td>
+							<div class="basket_update clearfix">
+								<button type="submit"  name="BasketRefresh" class="button grey sbold refresh"><span><?=GetMessage("SALE_REFRESH")?></span></button>
+								<!-- <div class="description"><?/*=GetMessage("SALE_REFRESH_DESCRIPTION");*/?></div> -->
+							</div>
+						</td>
+					<?endif;?>
+					
+					<td class="back_btn">
+	
+					</td>
+
+					<?if ($arParams["SHOW_FULL_ORDER_BUTTON"]=="Y" && !$arError["ERROR"]):?>
+						<td>
+							<div class="basket_checkout clearfix">
+								<button type="submit" value="<?=GetMessage("SALE_ORDER")?>" onclick="checkOut(event);" name="BasketOrder" class="button transparent sbold checkout"><span><?=GetMessage("SALE_ORDER")?></span></button>
+								<div class="description"><?=GetMessage("SALE_ORDER_DESCRIPTION");?></div>
+							</div>
+						</td>
+					<?endif;?>
+					<td width="40%">
+						<?if(!$arError["ERROR"]){?>
+							<?if ($arParams["SHOW_FAST_ORDER_BUTTON"]=="Y"):?>
+								<div class="basket_fast_order clearfix">
+									<a onclick="oneClickBuyBasket();gtag('event', 'click', {'event_category': 'zakazpopup'});" class="button short sbold fast_order"><span><?=GetMessage("SALE_FAST_ORDER")?></span></a>
+									<div class="description"><?=GetMessage("SALE_FAST_ORDER_DESCRIPTION");?></div>
+								</div>
+							<?endif;?>
+						<?}else{?>
+							<div class="basket_back">
+								<div class="wrap_button">
+									<a href="<?=$arParams["PATH_TO_BASKET"]?>" class="button transparent sbold"><span><?=GetMessage("GO_TO_BASKET")?></span></a>
+								</div>
+								<div class="description"><?=GetMessage("SALE_TO_BASKET_DESCRIPTION");?></div>
+							</div>
+						<?}?>
+						<?if(!$arError["ERROR"]){?>
+							<div class="basket_back">
+								<div class="wrap_button">
+									<a href="<?=$arParams["PATH_TO_BASKET"]?>" class="button transparent sbold"><span><?=GetMessage("GO_TO_BASKET")?></span></a>
+								</div>
+								<!-- <div class="description"><?/*=GetMessage("SALE_TO_BASKET_DESCRIPTION");*/?></div> -->
+							</div>
+						<?}?>
+					</td>
+				</tr>
+			</tfoot>
+		</table>
+</div>
+</div>
+	
 <?endif;?>
 <div class="one_click_buy_basket_frame"></div>

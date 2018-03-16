@@ -2211,3 +2211,9 @@ position: absolute;
 		display: none;
 	}
 }
+.coup_inp{
+width: 530px !important;
+}
+.title_coup{
+	    font-size: 18px;
+}

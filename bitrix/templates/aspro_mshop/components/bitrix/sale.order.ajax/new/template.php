@@ -58,9 +58,16 @@ $APPLICATION->SetAdditionalCSS($templateFolder."/style.css");
 
 CJSCore::Init(array('fx', 'popup', 'window', 'ajax'));
 ?>
-
+<label class="block_coup">
+			<span class="title_coup">” мен€ есть промокод:</span>
+			<br />
+			<input type="text" name="coupon" class="coup_inp"/>
+			<br />
+			<span class="name_coup"></span>
+			</label>
 <a name="order_form"></a>
 <div class="order">
+
 <!--order-checkout-->
 <div id="order_form_div">
 <NOSCRIPT>
@@ -380,6 +387,7 @@ function InitOrderJS(){
 						</div>
 						</a>
 					</div>
+					
 		
 		<?
 			
@@ -514,6 +522,30 @@ function InitOrderJS(){
 						</a>
 					</div>
 	<script>
+	$('[name=coupon]').on('keyup', function(e) {
+	var coup = e.target.value;
+	var orderForm = BX('ORDER_FORM');
+	$.ajax({
+				url: "/ajax/validate_order_coup.php", 
+					type: "post",
+					dataType: "json",
+					data: { 
+						"coup": coup
+					},
+				success: function(d) {			
+					if(d.result=='yes') { 
+						$('[name=coupon]').css("border-color","green");
+						$('.name_coup').text(d.CoupName);
+					}else{
+						$('[name=coupon]').css("border-color","red");
+					}
+					console.log(d);
+				}
+				
+	});	
+	
+	
+});
 	/********»з за данных, которые не добавл€лись, пришлось отправл€ть запрос чтобы получить данные пользовател€ через ajax********/
 var MY_LOGIN = $(document).find('[code=EMAIL]').val();
 if(MY_LOGIN != ''){

@@ -1,4 +1,5 @@
 <?php
+set_time_limit(0);
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");
 		use Bitrix\Main,
 			Bitrix\Main\Loader,
@@ -14,6 +15,143 @@ function translit($str) {
     $str=str_replace($rus, $lat, $str);
     $str= str_replace(' ', '_', $str);
     return strtolower($str);
+}
+function addOneProduct($info) {
+	$arTransParams = array(
+		"max_len" => 100,
+		"change_case" => 'L',
+		"replace_space" => '_',
+		"replace_other" => '_',
+		"delete_repeat_replace" => true
+	);
+//создадим товар
+	
+		$el = new CIBlockElement;
+		$PROP = array();
+		$PROP['CODE1C']=(string)$info->Code;
+		$PROP['artIk']=(string)$info->ArtNo;
+
+		$brend=iconv("utf-8","windows-1251",(string)$info->Brand);
+		$brend=array($brend, $brend.' %');
+		if($brend!=''&&$brend) {
+			$arSelect = Array("ID");
+			$arFilter = Array("IBLOCK_ID"=>8, "NAME"=>$brend);
+			$res = CIBlockElement::GetList(Array(), $arFilter, false, Array("nPageSize"=>1), $arSelect);
+			if($ob = $res->GetNextElement())
+			{
+				$arFields = $ob->GetFields();
+ 				$PROP['BRAND']=$arFields['ID'];
+			}
+		}
+		
+		$arLoadProductArray = Array(
+  			"IBLOCK_ID"      => 26,
+  			"PROPERTY_VALUES"=> $PROP,
+  			"NAME"           => iconv("utf-8","windows-1251",(string)$info->Name),
+  			"CODE"           => CUtil::translit(iconv("utf-8","windows-1251",(string)$info->Name), "ru", $arTransParams),
+  			"ACTIVE"         => "N", 
+			"PREVIEW_TEXT_TYPE"=>'html',
+			"DETAIL_TEXT_TYPE"=>'html',
+  			"PREVIEW_TEXT"   => iconv("utf-8","windows-1251",(string)$info->Anons),
+  			"DETAIL_TEXT"    => iconv("utf-8","windows-1251",(string)$info->Description),
+  			"DETAIL_PICTURE" => CFile::MakeFileArray($_SERVER["DOCUMENT_ROOT"]."/image.gif")
+  		);
+  		
+
+		if($PRODUCT_ID = $el->Add($arLoadProductArray))
+  			{
+  				//создадим торговое предложение
+
+  				$el2 = new CIBlockElement;
+				$PROP = array();
+				$PROP['CML2_LINK']=$PRODUCT_ID;
+		
+				$arLoadProductArray = Array(
+  					"IBLOCK_SECTION_ID" => false,  
+  					"IBLOCK_ID"      => 27,
+  					"PROPERTY_VALUES"=> $PROP,
+  					"NAME"           => iconv("utf-8","windows-1251",(string)$info->Name),
+  					"ACTIVE"         => "Y"           
+  				);
+		
+				if($TP_ID = $el2->Add($arLoadProductArray)) {
+					//создадим цену и остатки для него	
+					$Count=(int)$info->Count;
+					
+					foreach ($info->Currency->Price as $pricetype) { 
+					
+						if($pricetype->PriceType=='Base') {
+							$price=(string)$pricetype->Value;
+							$PRICE_TYPE_ID = 1;
+							$arFields = Array(
+								"PRODUCT_ID" => $TP_ID,
+								"CATALOG_GROUP_ID" => $PRICE_TYPE_ID,
+								"PRICE" => $price,
+								"CURRENCY" => "RUB"
+							);
+							$res = CPrice::GetList(
+								array(),
+								array(
+									"PRODUCT_ID" => $TP_ID,
+									"CATALOG_GROUP_ID" => $PRICE_TYPE_ID
+								)
+							);
+							if ($arr = $res->Fetch())
+							{
+								if(CPrice::Update($arr["ID"], $arFields)) {}
+							}
+							else
+							{
+								if(CPrice::Add($arFields)) {}					
+							}
+						}
+					}
+						
+					$arFields = array(
+						"ID" => $TP_ID, 
+						"QUANTITY" => (int)$info->Count
+					);
+					CCatalogProduct::Add($arFields);
+				}
+				
+				//добавим картинки
+				foreach ($info->Pictures->Image as  $pic) {
+					$IsMainImage=(string)$pic->IsMainImage;	
+					$OriginName=(string)$pic->OriginName;	
+					$OriginName=$_SERVER['DOCUMENT_ROOT'].$OriginName;	
+					$SortOrder=(int)$pic->SortOrder;	
+					$SortOrder--;
+					
+					$el = new CIBlockElement;
+					if($IsMainImage==='true') {
+						$arLoadProductArray = Array(
+							"PREVIEW_PICTURE" => CFile::MakeFileArray($OriginName)
+						);
+						$res=$el->Update($PRODUCT_ID, $arLoadProductArray);
+					
+						if($res)  {}			
+						else echo $el->LAST_ERROR;
+						unlink($OriginName);
+					}	
+					else {
+						$resPic = CIBlockElement::GetList(Array(), array("IBLOCK_ID"=>26,'ID'=>$PRODUCT_ID), false, Array("nPageSize"=>1), array('ID', 'IBLOCK_ID'));
+						if($obPic = $resPic->GetNextElement()){ 
+							$pics = $obPic->GetProperties(); 
+							$num=-1;
+							foreach ($pics['MORE_PHOTO']['VALUE'] as $key => $value) {
+								$num++;
+								if($num==$SortOrder) $num++;
+								$file=CFile::GetFileArray($value);
+								$newmassive[$num]=Array("VALUE"=>CFile::MakeFileArray($file['SRC']));                		
+							}
+							$newmassive[$SortOrder]=Array("VALUE"=>CFile::MakeFileArray($OriginName));    
+							ksort($newmassive);
+							CIBlockElement::SetPropertyValuesEx($PRODUCT_ID, 26, array("MORE_PHOTO"=>$newmassive));
+							unlink($OriginName);
+						}        		
+					}
+				}		
+  			}
 }
 
 $xml=@file_get_contents('php://input');
@@ -182,9 +320,7 @@ file_put_contents('0.txt', (string)$info->Operation, FILE_APPEND);
 	//добавление товара
 	if((string)$info->Operation=='AddProduct') {
 		require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");
-		global $USER;
-		$USER->Authorize(1);
-
+		
 		CModule::IncludeModule('iblock');
 		CModule::IncludeModule('catalog');
 		CModule::IncludeModule('sale');
@@ -338,9 +474,22 @@ file_put_contents('0.txt', (string)$info->Operation, FILE_APPEND);
   			die();
 		}
   		
-		$USER->Logout();
 		
 		echo 'true';
+	}
+
+	if((string)$info->Operation=='AddProducts') {
+		require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");
+		
+		CModule::IncludeModule('iblock');
+		CModule::IncludeModule('catalog');
+		CModule::IncludeModule('sale');
+		
+		foreach ($info->Products->Product as $element) {
+			addOneProduct($element);
+		}
+		echo 'true';  		
+		
 	}
 	
 	if((string)$info->Operation=='UpdateOrder') {		

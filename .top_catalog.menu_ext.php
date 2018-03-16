@@ -13,7 +13,7 @@
 			"CACHE_TIME" => "3600",
 		)
 	);
-	$db_sec = CIBlockSection::GetList(Array(), Array('IBLOCK_ID'=>26, 'CNT_ACTIVE'=>'Y', 'GLOBAL_ACTIVE'=>'Y'), true, array('SECTION_PAGE_URL', 'IBLOCK_SECTION_ID'));																
+	$db_sec = CIBlockSection::GetList(Array(), Array('IBLOCK_ID'=>26, array("LOGIC"=>"OR", 'CNT_ACTIVE'=>'Y','SECTION_ID'=>5338 ), 'GLOBAL_ACTIVE'=>'Y'), true, array('SECTION_PAGE_URL', 'IBLOCK_SECTION_ID'));																
 	while($sec_result = $db_sec->GetNext()){
 		if($sec_result['ELEMENT_CNT']>0 || $sec_result['IBLOCK_SECTION_ID']==5338) 	
 			$no_epmty[]=$sec_result['SECTION_PAGE_URL'];
