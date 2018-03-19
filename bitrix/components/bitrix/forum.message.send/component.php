@@ -208,10 +208,10 @@ elseif ($arParams["SEND_".strToUpper($arParams["TYPE"])] < "Y" && !$USER->IsAuth
 }
 if ($bVarsFromForm)
 {
-	$arResult["AuthorName"] = htmlspecialcharsEx($_REQUEST["NAME"]);
-	$arResult["AuthorMail"] = htmlspecialcharsEx($_REQUEST["EMAIL"]);
-	$arResult["MailSubject"] = htmlspecialcharsEx($_REQUEST["SUBJECT"]);
-	$arResult["MailMessage"] = htmlspecialcharsEx($_REQUEST["MESSAGE"]);
+	$arResult["AuthorName"] = htmlspecialcharsbx($_REQUEST["NAME"]);
+	$arResult["AuthorMail"] = htmlspecialcharsbx($_REQUEST["EMAIL"]);
+	$arResult["MailSubject"] = htmlspecialcharsbx($_REQUEST["SUBJECT"]);
+	$arResult["MailMessage"] = htmlspecialcharsbx($_REQUEST["MESSAGE"]);
 	if(!empty($arError))
 	{
 		$e = new CAdminException(array_reverse($arError));

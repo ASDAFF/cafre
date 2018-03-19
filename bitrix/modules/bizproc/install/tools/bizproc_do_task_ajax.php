@@ -2,6 +2,9 @@
 define("STOP_STATISTICS", true);
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");
 
+use Bitrix\Main\Localization\Loc;
+Loc::loadLanguageFile($_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/bizproc/install/tools/bizproc_do_task_ajax.php');
+
 $result = array('SUCCESS' => true);
 $user = $GLOBALS["USER"];
 
@@ -23,10 +26,10 @@ if ($result['SUCCESS'])
 	{
 		$dbTask = CBPTaskService::GetList(
 			array(),
-			array("ID" => $taskId, "USER_ID" => $user->getId(), 'USER_STATUS' => CBPTaskUserStatus::Waiting),
+			array("ID" => $taskId, "USER_ID" => $user->getId()),
 			false,
 			false,
-			array("ID", "WORKFLOW_ID", "ACTIVITY", "ACTIVITY_NAME", "MODIFIED", "OVERDUE_DATE", "NAME", "DESCRIPTION", "PARAMETERS")
+			array("ID", "WORKFLOW_ID", "ACTIVITY", "ACTIVITY_NAME", "MODIFIED", "OVERDUE_DATE", "NAME", "DESCRIPTION", "PARAMETERS", "USER_STATUS")
 		);
 		$task = $dbTask->fetch();
 	}
@@ -34,7 +37,12 @@ if ($result['SUCCESS'])
 	if (!$task)
 	{
 		$result['SUCCESS'] = false;
-		$result['ERROR'] = 'Task not found.';
+		$result['ERROR'] = Loc::getMessage('BIZPROC_DO_TASK_AJAX_ERROR_NOT_FOUND');
+	}
+	elseif ((int)$task['USER_STATUS'] !== CBPTaskUserStatus::Waiting)
+	{
+		$result['SUCCESS'] = false;
+		$result['ERROR'] = Loc::getMessage('BIZPROC_DO_TASK_AJAX_ERROR_ALREADY_DONE');
 	}
 	else
 	{
@@ -66,4 +74,5 @@ if ($result['SUCCESS'])
 	}
 }
 
+$result['SUCCESS'] = (empty($result['ERROR']));
 echo CUtil::PhpToJSObject($result);

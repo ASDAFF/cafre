@@ -36,6 +36,7 @@ $MESS["CAL_PATH_TO_GROUP"] = "Workgroup view page";
 $MESS["CAL_PATH_TO_USER_CALENDAR"] = "User calendar view page";
 $MESS["CAL_PATH_TO_GROUP_CALENDAR"] = "Workgroup calendar view page";
 $MESS["CAL_USER_NAME_TEMPLATE"] = "User name template";
+$MESS["CAL_SYNC_BY_PUSH"] = "Synchronize calendar using Webhook instead of agent if possible";
 $MESS["CAL_USER_SHOW_LOGIN"] = "Show user login";
 $MESS["CAL_RESERVE_MEETING"] = "Meeting Room Parameters";
 $MESS["CAL_TYPE_XML_ID_WARN"] = "The symbolic code is invalid or not unique.";
@@ -54,4 +55,5 @@ $MESS["CAL_MAX_UPLOAD_FILES_IN_COMMENTS"] = "Maximum files in one comment";
 $MESS["CAL_COMMENTS_FORUM"] = "Forum for comments";
 $MESS["CAL_COMMENTS_ALLOW_EDIT"] = "Users can edit comments";
 $MESS["CAL_COMMENTS_ALLOW_REMOVE"] = "Users can delete comments";
+$MESS["CAL_PATH_TO_CAL_TYPE"] = "\"#CALENDAR_TYPE#\" calendar link template";
 ?>

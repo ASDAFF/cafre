@@ -2,9 +2,10 @@
 
 namespace Bitrix\Iblock\BizprocType;
 
-use Bitrix\Bizproc\BaseType;
-use Bitrix\Bizproc\FieldType;
-use Bitrix\Main\Localization\Loc;
+use Bitrix\Main,
+	Bitrix\Bizproc\BaseType,
+	Bitrix\Bizproc\FieldType,
+	Bitrix\Main\Localization\Loc;
 
 class UserTypePropertyHtml extends UserTypeProperty
 {
@@ -23,21 +24,6 @@ class UserTypePropertyHtml extends UserTypeProperty
 			$value = $value['TEXT'];
 
 		return parent::convertTo($fieldType, $value, $toTypeClass);
-	}
-
-	/**
-	 * @param FieldType $fieldType
-	 * @param $value
-	 * @return string
-	 */
-	protected static function formatValuePrintable(FieldType $fieldType, $value)
-	{
-		if (is_array($value) && isset($value['VALUE']))
-			$value = $value['VALUE'];
-		if (is_array($value) && isset($value['TEXT']))
-			$value = $value['TEXT'];
-
-		return HTMLToTxt(htmlspecialcharsback((string)$value));
 	}
 
 	/**
@@ -72,6 +58,45 @@ class UserTypePropertyHtml extends UserTypeProperty
 		}
 
 		return $value;
+	}
+
+	/**
+	 * Return conversion map for current type.
+	 * @return array Map.
+	 */
+	public static function getConversionMap()
+	{
+		$parentMap = parent::getConversionMap();
+		return array(
+			$parentMap[0],
+			array(
+				FieldType::BOOL,
+				FieldType::DATE,
+				FieldType::DATETIME,
+				FieldType::DOUBLE,
+				FieldType::INT,
+				FieldType::INTERNALSELECT,
+				FieldType::SELECT,
+				FieldType::STRING,
+				FieldType::TEXT,
+				FieldType::USER
+			)
+		);
+	}
+
+	/**
+	 * @param FieldType $fieldType
+	 * @param $value
+	 * @return string
+	 */
+	protected static function formatValuePrintable(FieldType $fieldType, $value)
+	{
+		if (is_array($value) && isset($value['VALUE']))
+			$value = $value['VALUE'];
+		if (is_array($value) && isset($value['TEXT']))
+			$value = $value['TEXT'];
+
+		return HTMLToTxt(htmlspecialcharsback((string)$value));
 	}
 
 	/**
@@ -117,7 +142,7 @@ class UserTypePropertyHtml extends UserTypeProperty
 
 		if ($allowSelection)
 		{
-			$renderResult .= static::renderControlSelector($field, $selectorValue, true);
+			$renderResult .= static::renderControlSelector($field, $selectorValue, true, '', $fieldType);
 		}
 
 		return $renderResult;
@@ -168,7 +193,7 @@ class UserTypePropertyHtml extends UserTypeProperty
 
 		if ($allowSelection)
 		{
-			$renderResult .= static::renderControlSelector($field, $selectorValue, true);
+			$renderResult .= static::renderControlSelector($field, $selectorValue, true, '', $fieldType);
 		}
 
 		return $renderResult;
@@ -181,9 +206,9 @@ class UserTypePropertyHtml extends UserTypeProperty
 	 */
 	protected static function wrapCloneableControls(array $controls, $wrapperId)
 	{
-		$wrapperId = (string) $wrapperId;
+		$wrapperId = Main\Text\HtmlFilter::encode((string)$wrapperId);
 		$renderResult = '<table width="100%" border="0" cellpadding="2" cellspacing="2" id="BizprocCloneable_'
-			.htmlspecialcharsbx($wrapperId).'">';
+			.$wrapperId.'">';
 
 		foreach ($controls as $control)
 		{
@@ -192,7 +217,7 @@ class UserTypePropertyHtml extends UserTypeProperty
 		$renderResult .= '</table>';
 		$renderResult .= '<input type="button" value="'.Loc::getMessage('BPDT_BASE_ADD')
 			.'" onclick="BX.Bizproc.cloneTypeControlHtml(\'BizprocCloneable_'
-			.htmlspecialcharsbx($wrapperId).'\', \''.htmlspecialcharsbx($wrapperId).'\')"/><br />';
+			.$wrapperId.'\', \''.$wrapperId.'\')"/><br />';
 
 		return $renderResult;
 	}

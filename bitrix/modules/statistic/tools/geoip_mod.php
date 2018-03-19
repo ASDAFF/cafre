@@ -19,7 +19,7 @@ class CCityLookup_geoip_mod extends CCityLookup
 	var $latitude = false;
 	var $longitude = false;
 
-	function OnCityLookup($arDBRecord = false)
+	public static function OnCityLookup($arDBRecord = false)
 	{
 		return new CCityLookup_geoip_mod($arDBRecord);
 	}

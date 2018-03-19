@@ -9,14 +9,28 @@ namespace Bitrix\Socialnetwork;
 
 use Bitrix\Main\Entity;
 use Bitrix\Main\Localization\Loc;
+use Bitrix\Main\NotImplementedException;
 
 Loc::loadMessages(__FILE__);
 
 class WorkgroupTable extends Entity\DataManager
 {
+	const AUTO_MEMBERSHIP_YES = 'Y';
+	const AUTO_MEMBERSHIP_NO = 'N';
+
+	public static function getAutoMembershipValuesAll()
+	{
+		return array(self::AUTO_MEMBERSHIP_NO, self::AUTO_MEMBERSHIP_YES);
+	}
+
 	public static function getTableName()
 	{
 		return 'b_sonet_group';
+	}
+
+	public static function getUfId()
+	{
+		return 'SONET_GROUP';
 	}
 
 	public static function getMap()
@@ -40,12 +54,15 @@ class WorkgroupTable extends Entity\DataManager
 			'WORKGROUP_SUBJECT' => array(
 				'data_type' => '\Bitrix\Socialnetwork\WorkgroupSubject',
 				'reference' => array('=this.SUBJECT_ID' => 'ref.ID')
-			),			
+			),
 			'NAME' => array(
 				'data_type' => 'string'
 			),
 			'DESCRIPTION' => array(
 				'data_type' => 'text'
+			),
+			'KEYWORDS' => array(
+				'data_type' => 'string'
 			),
 			'CLOSED' => array(
 				'data_type' => 'boolean',
@@ -58,6 +75,12 @@ class WorkgroupTable extends Entity\DataManager
 			'OPENED' => array(
 				'data_type' => 'boolean',
 				'values' => array('N','Y')
+			),
+			'DATE_CREATE' => array(
+				'data_type' => 'datetime'
+			),
+			'DATE_UPDATE' => array(
+				'data_type' => 'datetime'
 			),
 			'DATE_ACTIVITY' => array(
 				'data_type' => 'datetime'
@@ -75,8 +98,39 @@ class WorkgroupTable extends Entity\DataManager
 			'INITIATE_PERMS' => array(
 				'data_type' => 'string'
 			),
+			'NUMBER_OF_MEMBERS' => array(
+				'data_type' => 'integer',
+			),
+			'PROJECT' => array(
+				'data_type' => 'boolean',
+				'values' => array('N','Y')
+			),
+			'PROJECT_DATE_START' => array(
+				'data_type' => 'datetime'
+			),
+			'PROJECT_DATE_FINISH' => array(
+				'data_type' => 'datetime'
+			),
+			'SEARCH_INDEX' => array(
+				'data_type' => 'text',
+			),
 		);
 
 		return $fieldsMap;
+	}
+
+	public static function add(array $data)
+	{
+		throw new NotImplementedException("Use CSocNetGroup class.");
+	}
+
+	public static function update($primary, array $data)
+	{
+		throw new NotImplementedException("Use CSocNetGroup class.");
+	}
+
+	public static function delete($primary)
+	{
+		throw new NotImplementedException("Use CSocNetGroup class.");
 	}
 }

@@ -169,6 +169,11 @@
 						<td><?php echo $arResult["ATTEMPT"]["CORRECT_COUNT"]?></td>
 					</tr>
 				<?php endif?>
+
+				<?
+				$percent = round($arResult["ATTEMPT"]["SCORE"] / $arResult["ATTEMPT"]["MAX_SCORE"] * 100, 2);
+				?>
+
 				<?php if ($arResult["TEST"]["FINAL_INDICATION_SCORE"] == "Y"):?>
 				<tr>
 					<th><?php echo GetMessage("LEARNING_RESULT_MAX_SCORE")?></th>
@@ -176,10 +181,19 @@
 				</tr>
 				<tr>
 					<th><?php echo GetMessage("LEARNING_RESULT_SCORE")?></th>
-					<td><?php echo $arResult["ATTEMPT"]["SCORE"]?> (<?php echo round($arResult["ATTEMPT"]["SCORE"] / $arResult["ATTEMPT"]["MAX_SCORE"] * 100, 2)?>%)</td>
+					<td><?php echo $arResult["ATTEMPT"]["SCORE"]?> (<?=$percent?>%)</td>
 				</tr>
 				<?php endif?>
-				<?php if ($arResult["ATTEMPT"]["MARK"]):?>
+				<?php if (
+					$arResult["ATTEMPT"]["MARK"] &&
+					(
+						$arResult["ATTEMPT"]["COMPLETED"] === "Y" ||
+						(
+							$arResult["ATTEMPT"]["COMPLETED"] === "N" &&
+							$percent < $arResult["TEST"]["COMPLETED_SCORE"]
+						)
+					)
+				):?>
 					<?php if ($arResult["TEST"]["FINAL_INDICATION_MARK"] == "Y"):?>
 						<tr>
 							<th><?php echo GetMessage("LEARNING_RESULT_MARK")?></th>

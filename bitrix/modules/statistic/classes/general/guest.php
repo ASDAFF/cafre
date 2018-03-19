@@ -1,12 +1,11 @@
-<?
+<?php
 class CAllGuest
 {
-	function GetList(&$by, &$order, $arFilter=Array(), &$is_filtered)
+	public static function GetList(&$by, &$order, $arFilter=Array(), &$is_filtered)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
 		$arSqlSearch = Array();
-		$strSqlSearch = "";
 
 		$bGroup = false;
 		$arrGroup = array(
@@ -45,6 +44,8 @@ class CAllGuest
 			"CITY.REGION" => true,
 			"CITY.NAME" => true,
 		);
+		$from0 = $from1 = $from2 = "";
+		$select0 = $select1 = "";
 
 		if (is_array($arFilter))
 		{
@@ -264,6 +265,7 @@ class CAllGuest
 				}
 			}
 		}
+
 		if ($by == "s_id")					$strSqlOrder = "ORDER BY G.ID";
 		elseif ($by == "s_first_site_id")	$strSqlOrder = "ORDER BY G.FIRST_SITE_ID";
 		elseif ($by == "s_last_site_id")	$strSqlOrder = "ORDER BY G.LAST_SITE_ID";
@@ -294,10 +296,7 @@ class CAllGuest
 			$order="desc";
 		}
 
-		if($bGroup)
-		{
-			$strSqlGroup = "GROUP BY ".implode(", ", array_keys($arrGroup));
-		}
+		$strSqlGroup = $bGroup? "GROUP BY ".implode(", ", array_keys($arrGroup)): "";
 
 		$strSqlSearch = GetFilterSqlSearch($arSqlSearch);
 		$strSql = "
@@ -333,7 +332,7 @@ class CAllGuest
 		return $res;
 	}
 
-	function GetByID($ID)
+	public static function GetByID($ID)
 	{
 		$DB = CDatabase::GetModuleConnection('statistic');
 		$ID = intval($ID);
@@ -365,4 +364,3 @@ class CAllGuest
 		return $res;
 	}
 }
-?>

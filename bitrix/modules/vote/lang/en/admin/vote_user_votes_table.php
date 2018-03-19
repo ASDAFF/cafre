@@ -2,7 +2,7 @@
 $MESS["VOTE_WRONG_DATE_FROM"] = "Please enter the correct \"from\" date in the filter for the \"Date\" field";
 $MESS["VOTE_WRONG_DATE_TILL"] = "Please enter the correct \"till\" date in the filter for the \"Date\" field";
 $MESS["VOTE_WRONG_FROM_TILL"] = "The \"till\" date must be greater than the \"from\" date in the filter";
-$MESS["VOTE_PAGE_TITLE"] = "Visitor votings";
+$MESS["VOTE_PAGE_TITLE"] = "Visitor votings  ##ID#";
 $MESS["VOTE_F_VALID_TITLE"] = "Valid:";
 $MESS["VOTE_F_VALID"] = "valid";
 $MESS["VOTE_F_DATE"] = "Date:";
@@ -12,7 +12,7 @@ $MESS["VOTE_PAGES"] = "Results";
 $MESS["VOTE_DATE"] = "Date";
 $MESS["VOTE_VALID"] = "Valid";
 $MESS["VOTE_SESSION"] = "Session";
-$MESS["VOTE_USER"] = "Visitor";
+$MESS["VOTE_VISITOR"] = "Visitor";
 $MESS["VOTE_RESULT"] = "view";
 $MESS["VOTE_DELETE_CONFIRMATION"] = "Are you sure you want to delete selected votes?";
 $MESS["VOTE_FL_USER_ID"] = "Visitor ID";
@@ -35,4 +35,8 @@ $MESS["VOTE_NOT_FOUND"] = "The poll was not found.";
 $MESS["VOTE_LIST"] = "Polls";
 $MESS["MAIN_ADMIN_LIST_SELECTED"] = "Selected:";
 $MESS["MAIN_ADMIN_LIST_CHECKED"] = "Checked:";
+$MESS["VOTE_USER"] = "User";
+$MESS["VOTE_BACK_TO_VOTE"] = "Go to poll";
+$MESS["VOTE_NONAUTHORIZED"] = "Not logged in";
+$MESS["VOTE_VIEW_RESULTS"] = "Results";
 ?>

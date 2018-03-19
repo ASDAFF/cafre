@@ -13,14 +13,30 @@
 /** @var CBitrixComponent $component */
 
 use Bitrix\Main\Localization\Loc;
+
+CJSCore::Init(array('lists'));
 ?>
 
 <div id="bx-lists-lcp-total-div">
-	<div class="bx-lists-lcp-button-block">
+	<?
+		$isBitrix24Template = (SITE_TEMPLATE_ID == "bitrix24");
+		$pagetitleAlignRightContainer = "lists-align-right-container";
+		if($isBitrix24Template)
+		{
+			$this->SetViewTarget("pagetitle", 100);
+			$pagetitleAlignRightContainer = "";
+		}
+		elseif(!IsModuleInstalled("intranet"))
+		{
+			$APPLICATION->SetAdditionalCSS("/bitrix/js/lists/css/intranet-common.css");
+		}
+	?>
+	<div class="pagetitle-container pagetitle-align-right-container <?=$pagetitleAlignRightContainer?>">
 		<? if(!$arResult['ALL_PROCESSES_INSTALL']): ?>
 			<p
 				id="bx-lists-lcp-install-processes"
-				onclick="javascript:BX['CatalogProcessesClass_<?= $arResult['RAND_STRING']?>'].installProcesses(this);"
+				onclick="javascript:BX.Lists['CatalogProcessesClass_<?= $arResult['RAND_STRING']?>']
+					.installProcesses(this);"
 				class="webform-small-button webform-small-button-accept"
 				title="<?= GetMessage("LISTS_LCP_TEMPLATE_BUTTON_INSTALL") ?>"
 				>
@@ -36,6 +52,12 @@ use Bitrix\Main\Localization\Loc;
 			<?= GetMessage("LISTS_LCP_TEMPLATE_TRANSITION_PROCESSES") ?>
 		</a>
 	</div>
+	<?
+		if($isBitrix24Template)
+		{
+			$this->EndViewTarget();
+		}
+	?>
 
 	<div class="bx-lists-lcp-description-page">
 		<? if($arResult['ALL_PROCESSES_INSTALL']): ?>
@@ -54,14 +76,16 @@ use Bitrix\Main\Localization\Loc;
 					id="<?= $pickOut ?>"
 					data-pick-out="<?= $pickOut ?>"
 					data-file="<?= htmlspecialcharsbx($process['FILE_PATH']) ?>"
-					onmousedown="BX['CatalogProcessesClass_<?= $arResult['RAND_STRING']?>'].mousedown(this);"
-					onmouseover="BX['CatalogProcessesClass_<?= $arResult['RAND_STRING']?>'].mouseover(this);"
-					onmouseout="BX['CatalogProcessesClass_<?= $arResult['RAND_STRING']?>'].mouseout(this);"
+					onmousedown="BX.Lists['CatalogProcessesClass_<?= $arResult['RAND_STRING']?>'].mousedown(this);"
+					onmouseover="BX.Lists['CatalogProcessesClass_<?= $arResult['RAND_STRING']?>'].mouseover(this);"
+					onmouseout="BX.Lists['CatalogProcessesClass_<?= $arResult['RAND_STRING']?>'].mouseout(this);"
 				>
 					<td>
 						<div class="bx-lists-lcp-table-td-div">
 							<p class="bx-lists-lcp-table-td-name"><?= htmlspecialcharsbx($process['NAME']) ?></p>
-							<p class="bx-lists-lcp-table-td-description"><?= htmlspecialcharsbx($process['DESCRIPTION']) ?></p>
+							<p class="bx-lists-lcp-table-td-description">
+								<?= htmlspecialcharsbx($process['DESCRIPTION']) ?>
+							</p>
 						</div>
 					</td>
 				</tr>
@@ -77,14 +101,16 @@ use Bitrix\Main\Localization\Loc;
 					id="<?= $pickOut ?>"
 					data-pick-out="<?= $pickOut ?>"
 					data-file="<?= htmlspecialcharsbx($process['FILE_PATH']) ?>"
-					onmousedown="BX['CatalogProcessesClass_<?= $arResult['RAND_STRING']?>'].mousedown(this);"
-					onmouseover="BX['CatalogProcessesClass_<?= $arResult['RAND_STRING']?>'].mouseover(this);"
-					onmouseout="BX['CatalogProcessesClass_<?= $arResult['RAND_STRING']?>'].mouseout(this);"
+					onmousedown="BX.Lists['CatalogProcessesClass_<?= $arResult['RAND_STRING']?>'].mousedown(this);"
+					onmouseover="BX.Lists['CatalogProcessesClass_<?= $arResult['RAND_STRING']?>'].mouseover(this);"
+					onmouseout="BX.Lists['CatalogProcessesClass_<?= $arResult['RAND_STRING']?>'].mouseout(this);"
 					>
 					<td>
 						<div class="bx-lists-lcp-table-td-div">
 							<p class="bx-lists-lcp-table-td-name"><?= htmlspecialcharsbx($process['NAME']) ?></p>
-							<p class="bx-lists-lcp-table-td-description"><?= htmlspecialcharsbx($process['DESCRIPTION']) ?></p>
+							<p class="bx-lists-lcp-table-td-description">
+								<?= htmlspecialcharsbx($process['DESCRIPTION']) ?>
+							</p>
 						</div>
 					</td>
 				</tr>
@@ -96,7 +122,8 @@ use Bitrix\Main\Localization\Loc;
 		<div class="bx-lists-lcp-button-block">
 			<p
 				id="bx-lists-lcp-install-processes"
-				onclick="javascript:BX['CatalogProcessesClass_<?= $arResult['RAND_STRING']?>'].installProcesses(this);"
+				onclick="javascript:BX.Lists['CatalogProcessesClass_<?= $arResult['RAND_STRING']?>']
+					.installProcesses(this);"
 				class="webform-small-button webform-small-button-accept"
 				title="<?= GetMessage("LISTS_LCP_TEMPLATE_BUTTON_INSTALL") ?>"
 			>
@@ -111,7 +138,7 @@ use Bitrix\Main\Localization\Loc;
 
 <script type="text/javascript">
 	BX(function () {
-		BX['CatalogProcessesClass_<?= $arResult['RAND_STRING']?>'] = new BX.CatalogProcessesClass({
+		BX.Lists['CatalogProcessesClass_<?= $arResult['RAND_STRING']?>'] = new BX.Lists.CatalogProcessesClass({
 			randomString: '<?= $arResult['RAND_STRING'] ?>'
 		});
 	});

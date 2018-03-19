@@ -54,7 +54,8 @@ $MESS["FILEMAN_EDIT_TAB1"] = "File create";
 $MESS["FILEMAN_EDIT_TAB_ALT"] = "File edit";
 $MESS["FILEMAN_EDIT_TAB_ALT1"] = "Create a new file";
 $MESS["FILEMAN_UNALLOWED_COMPONENTS"] = "The page contains an unallowed component #BAD_COMPONENT# and cannot be saved.";
-$MESS["FILEMAN_NAME_ERROR"] = "A file name can contain only Latin letters, digits, spaces and the following characters: !\$()[]{}-.;=@^_~";
+$MESS["FILEMAN_NAME_ERR"] = "The file or folder name must not include these characters: &gt;&lt;|?*\\/";
+$MESS["FILEMAN_NAME_EMPTY"] = "No file or folder name specified";
 $MESS["FILEMAN_OPTION_PROPS_DESCR"] = "Description";
 $MESS["FILEMAN_OPTION_PROPS_KEYW"] = "Keywords";
 $MESS["fileman_panel_new_page"] = "New Page";
@@ -80,6 +81,4 @@ $MESS["FMST_PANEL_ALL_STICKER_LIST"] = "View All Web-It Notes";
 $MESS["FMST_PANEL_ALL_STICKER_LIST_TITLE"] = "View Web-It Notes available on the website";
 $MESS["FMST_PANEL_STICKERS_TOOLTIP_TITLE"] = "Web-It Notes";
 $MESS["FMST_PANEL_STICKERS_TOOLTIP"] = "Add a new web-it note to the page";
-$MESS["FILEMAN_NAME_ERR"] = "The file or folder name must not include these characters: &gt;&lt;|?*\\/";
-$MESS["FILEMAN_NAME_EMPTY"] = "No file or folder name specified";
 ?>

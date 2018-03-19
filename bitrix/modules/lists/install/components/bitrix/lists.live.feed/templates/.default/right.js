@@ -89,6 +89,7 @@
 		{
 			BX.style(BX('feed-add-post-lists-input-box'), 'display', 'none');
 			BX.style(BX('bx-lists-tag'), 'display', 'inline-block');
+			BX.SocNetLogDestination.BXfpDisableBackspace();
 		}
 	};
 
@@ -99,8 +100,8 @@
 			BX.style(BX('feed-add-post-lists-input-box'), 'display', 'none');
 			BX.style(BX('bx-lists-tag'), 'display', 'inline-block');
 			BX('feed-add-post-lists-input').value = '';
+			BX.SocNetLogDestination.BXfpDisableBackspace();
 		}
-
 	};
 
 	/**

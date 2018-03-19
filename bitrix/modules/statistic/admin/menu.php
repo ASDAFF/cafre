@@ -1,4 +1,5 @@
-<?
+<?php
+/** @var CMain $APPLICATION */
 IncludeModuleLangFile(__FILE__);
 if(
 	CModule::IncludeModule('statistic')
@@ -417,4 +418,3 @@ if(
 	return $aMenu;
 }
 return false;
-?>

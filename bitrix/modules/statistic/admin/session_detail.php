@@ -1,7 +1,7 @@
-<?
+<?php
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/statistic/prolog.php");
-
+/** @var CMain $APPLICATION */
 $STAT_RIGHT = $APPLICATION->GetGroupRight("statistic");
 if($STAT_RIGHT=="D")
 	$APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
@@ -48,12 +48,12 @@ require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_popup_adm
 	<tr>
 		<td nowrap><?echo GetMessage("STAT_TIME")?></td>
 		<td nowrap>&nbsp;<?
-			$hours = IntVal($f_SESSION_TIME/3600);
+			$hours = intval($f_SESSION_TIME/3600);
 			if ($hours>0) :
 				echo $hours."&nbsp;".GetMessage("STAT_HOUR")."&nbsp;";
 				$f_SESSION_TIME = $f_SESSION_TIME - $hours*3600;
 			endif;
-			echo IntVal($f_SESSION_TIME/60)."&nbsp;".GetMessage("STAT_MIN");
+			echo intval($f_SESSION_TIME/60)."&nbsp;".GetMessage("STAT_MIN");
 			echo ($f_SESSION_TIME%60)."&nbsp;".GetMessage("STAT_SEC");
 			?></td>
 	</tr>
@@ -149,4 +149,4 @@ require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_popup_adm
 	<? endif; ?>
 </table></td></tr></table>
 <input type="button" onClick="window.close()" value="<?echo GetMessage("STAT_CLOSE")?>">
-<?require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_popup_admin.php")?>
+<?require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_popup_admin.php");

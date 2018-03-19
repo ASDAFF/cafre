@@ -23,6 +23,7 @@ if($arUser = $USER->GetByID($AuthorId)->Fetch())
 			"INDEX"			=> $arResult["PATH_TO_INDEX"],
 			"RSS_CNT" => 10,
 			"CUSTOM_TITLE" => GetMessage("RSS_TITLE", array("#USER_NAME#" => $UName)),
+			"ALLOW_POST_CODE" => $arParams["ALLOW_POST_CODE"],
 		),
 		$component
 );

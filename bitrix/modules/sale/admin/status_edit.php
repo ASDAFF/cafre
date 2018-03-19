@@ -53,10 +53,15 @@ while ($row = $result->fetch())
 
 // get groups
 $saleGroupIds = array();
-$result = $APPLICATION->GetGroupRightList(array('MODULE_ID' => 'sale', 'G_ACCESS' => 'U'));
+$result = $APPLICATION->GetGroupRightList(array('MODULE_ID' => 'sale'));
 while ($row = $result->Fetch())
-	if ($row['GROUP_ID'] > 2)
+{
+	if (in_array($row['G_ACCESS'], array('P', 'U')) && $row['GROUP_ID'] > 2)
+	{
 		$saleGroupIds[] = $row['GROUP_ID'];
+	}
+}
+
 if ($saleGroupIds)
 {
 	$result = GroupTable::getList(array(
@@ -71,12 +76,93 @@ if ($saleGroupIds)
 // A D D / U P D A T E /////////////////////////////////////////////////////////////////////////////////////////////////
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && !$readOnly && check_bitrix_sessid() && ($_POST['save'] || $_POST['apply']))
 {
+	$errors = array();
+	$statusType = $_REQUEST['TYPE'] == \Bitrix\Sale\OrderStatus::TYPE ? \Bitrix\Sale\OrderStatus::TYPE : \Bitrix\Sale\DeliveryStatus::TYPE;
+	$lockedStatusList = array(
+		\Bitrix\Sale\OrderStatus::TYPE => array(
+			\Bitrix\Sale\OrderStatus::getInitialStatus(),
+			\Bitrix\Sale\OrderStatus::getFinalStatus(),
+		),
+		\Bitrix\Sale\DeliveryStatus::TYPE => array(
+			\Bitrix\Sale\DeliveryStatus::getInitialStatus(),
+			\Bitrix\Sale\DeliveryStatus::getFinalStatus(),
+		),
+	);
+
+	if ($statusId)
+	{
+		foreach ($lockedStatusList as $lockStatusType => $lockStatusIdList)
+		{
+			foreach ($lockStatusIdList as $lockStatusId)
+			{
+				if ($lockStatusId == $statusId && $statusType != $lockStatusType)
+				{
+					$errors[] = Loc::getMessage('SALE_STATUS_WRONG_TYPE', array(
+						'#STATUS_ID#' => htmlspecialcharsEx($statusId),
+						'#STATUS_TYPE#' => Loc::getMessage('SSEN_TYPE_'.$statusType))
+					);
+					break;
+				}
+			}
+		}
+	}
+
+
 	// prepare & check status
 	$status = array(
-		'TYPE'   => $_POST['TYPE'] == 'O' ? 'O' : 'D',
+		'TYPE'   => $statusType,
 		'SORT'   => ($statusSort = intval($_POST['SORT'])) ? $statusSort : 100,
 		'NOTIFY' => $_POST['NOTIFY'] ? 'Y' : 'N',
+		'COLOR' => strlen($_POST['NEW_COLOR']) ? $_POST['NEW_COLOR'] : "",
 	);
+
+	$isNew = true;
+
+
+	if ($statusId)
+	{
+		$isNew = false;
+		if ($statusData = StatusTable::getList(array(
+											'select' => array('ID', 'TYPE', 'COLOR'),
+											'filter' => array('=ID' => $statusId),
+											'limit'  => 1,
+										))->fetch())
+		{
+			if ($statusData['TYPE'] != $statusType)
+			{
+				$checkFilter = array(
+					'select' => array('ID'),
+					'filter' => array('=STATUS_ID' => $statusId),
+					'limit' => 1
+				);
+
+				if ($statusData['TYPE'] == \Bitrix\Sale\OrderStatus::TYPE)
+				{
+					$checkStatus = \Bitrix\Sale\Internals\OrderTable::getList($checkFilter)->fetch();
+					$errorMessageCheck = Loc::getMessage('SALE_STATUS_TYPE_ORDER_EXISTS', array(
+																			'#STATUS_ID#' => htmlspecialcharsEx($statusId),
+																			'#STATUS_TYPE#' => Loc::getMessage('SSEN_TYPE_'.$statusType),
+																			'#CURRENT_STATUS_ID#' => $statusId
+																			));
+				}
+				else
+				{
+					$checkStatus = \Bitrix\Sale\Internals\ShipmentTable::getList($checkFilter)->fetch();
+					$errorMessageCheck = Loc::getMessage('SALE_STATUS_TYPE_SHIPMENT_EXISTS', array(
+																			'#STATUS_ID#' => htmlspecialcharsEx($statusId),
+																			'#STATUS_TYPE#' => Loc::getMessage('SSEN_TYPE_'.$statusType),
+																			'#CURRENT_STATUS_ID#' => $statusId,
+																		   ));
+				}
+
+				if (!empty($checkStatus))
+				{
+					$errors[] = $errorMessageCheck;
+				}
+			}
+		}
+	}
+
 	$result = new \Bitrix\Main\Entity\Result;
 	if ($statusId)
 	{
@@ -88,7 +174,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !$readOnly && check_bitrix_sessid() 
 		$sid = $status['ID'] = trim($_POST['NEW_ID']);
 		StatusTable::checkFields($result, null, $status);
 	}
-	$errors = $result->getErrorMessages();
+
+	$errors = array_merge($errors, $result->getErrorMessages());
 
 	// prepare & check translations
 	foreach ($languages as $languageId => $languageName)
@@ -121,7 +208,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !$readOnly && check_bitrix_sessid() 
 	if (! $errors)
 	{
 		// update status, delete translations and group tasks
-		if ($statusId)
+		if (!$isNew)
 		{
 			$result = StatusTable::update($statusId, $status);
 			if ($result->isSuccess())
@@ -139,10 +226,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !$readOnly && check_bitrix_sessid() 
 			if ($result->isSuccess())
 			{
 				$statusId = $status['ID'];
-				CSaleStatus::CreateMailTemplate($statusId);
 			}
 			else
+			{
 				$errors = $result->getErrorMessages();
+			}
+
 		}
 	}
 
@@ -150,11 +239,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !$readOnly && check_bitrix_sessid() 
 	if (! $errors)
 	{
 		foreach ($translations as $data)
+		{
 			StatusLangTable::add($data);
+		}
+		
 		foreach ($groupTasks as $data)
+		{
 			StatusGroupTaskTable::add($data);
+		}
+
+		if ($result->isSuccess())
+		{
+			if ($isNew)
+			{
+				CSaleStatus::CreateMailTemplate($statusId);
+			}
+		}
+
+
 		if ($_POST['save'])
 			LocalRedirect('sale_status.php?lang='.LANGUAGE_ID.GetFilterParams('filter_', false));
+		else
+			LocalRedirect("sale_status_edit.php?ID=".$statusId."&lang=".LANGUAGE_ID.GetFilterParams("filter_", false));
 	}
 }
 // L O A D  O R  N E W /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -224,14 +330,21 @@ $context = new CAdminContextMenu($aMenu);
 $context->Show();
 
 if ($errors)
-	CAdminMessage::ShowMessage(implode('<br>', $errors));
+{
+	$errorMessage = new CAdminMessage(
+		array(
+			"MESSAGE" => implode('<br>', $errors),
+			"TYPE"=>"ERROR",
+			"HTML" => true
+		)
+	);
+	echo $errorMessage->Show();
+}
 
 ?>
-<form method="POST" action="<?echo $APPLICATION->GetCurPage()?>?" name="fform">
+<form method="POST" action="<?echo $APPLICATION->GetCurPage()?>?ID=<?=htmlspecialcharsbx($statusId)?>&lang=<?=LANGUAGE_ID?>" name="fform">
 	<?=GetFilterHiddens('filter_')?>
 	<input type="hidden" name="Update" value="Y">
-	<input type="hidden" name="lang" value="<?=LANGUAGE_ID?>">
-	<input type="hidden" name="ID" value="<?=$statusId?>">
 	<?=bitrix_sessid_post()?>
 
 	<?
@@ -296,6 +409,51 @@ if ($errors)
 					style="display:none"
 				<?endif?>
 			><?=Loc::getMessage('SSEN_NOTIFY_LINK')?></a>
+		</td>
+	</tr>
+	<tr>
+		<td><?=$statusFields['COLOR']->getTitle()?>:</td>
+		<td>
+			<style>
+				#new_color_label{
+					width: 23px;
+					height: 23px;
+					margin: 1px 0 0px 5px;
+					padding: 0;
+					position: relative;
+					display: inline;
+					float: left;
+					border: 1px solid;
+					border-color: #87919c #959ea9 #9ea7b1 #959ea9;
+					border-radius: 4px;
+					-webkit-box-shadow: 0 1px 0 0 rgba(255,255,255,0.3), inset 0 2px 2px -1px rgba(180,188,191,0.7);
+					box-shadow: 0 1px 0 0 rgba(255,255,255,0.3), inset 0 2px 2px -1px rgba(180,188,191,0.7);
+				}
+			</style>
+			<input type="text" name="NEW_COLOR" id="new_color" value="<?=htmlspecialcharsbx($status['COLOR'])?>" size="4" maxlength="7" style="float:left; margin-right: 5px">
+			<script>
+			function SetStatusColorInput(color)
+			{
+				if (!color)
+					color = "";
+				document.getElementById("new_color").value = color;
+				document.getElementById("new_color_label").style.background = color;
+			}
+			</script>
+			<?
+			$APPLICATION->IncludeComponent(
+				"bitrix:main.colorpicker",
+				"",
+				array(
+					"SHOW_BUTTON" => "Y",
+					"ID" => "123",
+					"NAME" => Loc::getMessage('SSEN_COLOR'),
+					"ONSELECT" => "SetStatusColorInput"
+				),
+				false
+			);
+			?>
+			<div id="new_color_label" style="background: <?=htmlspecialcharsbx($status['COLOR'])?>"></div>
 		</td>
 	</tr>
 	<?foreach ($languages as $languageId => $languageName):?>

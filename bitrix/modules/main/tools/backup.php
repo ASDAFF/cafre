@@ -2,7 +2,7 @@
 if (ini_get('short_open_tag') == 0 && strtoupper(ini_get('short_open_tag')) != 'ON')
 	die("Error: short_open_tag parameter must be turned on in php.ini\n");
 ?><?
-error_reporting(E_ALL & ~E_NOTICE & ~E_STRICT);
+error_reporting(E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED);
 define('START_TIME', microtime(1));
 define('CLI', php_sapi_name() == 'cli');
 @define('LANGUAGE_ID', 'en');
@@ -48,6 +48,10 @@ if (CLI && defined('BX_CRONTAB')) // start from cron_events.php
 				"ITEM_ID" => LOCK_FILE,
 				"DESCRIPTION" => GetMessage('AUTO_LOCK_EXISTS_ERR', array('#DATETIME#' => ConvertTimeStamp($time))),
 			));
+
+			foreach(GetModuleEvents("main", "OnAutoBackupUnknownError", true) as $arEvent)
+				ExecuteModuleEventEx($arEvent, array(array('TIME' => $time)));
+
 			unlink(LOCK_FILE) || RaiseErrorAndDie('Can\'t delete file: '.LOCK_FILE, 2);
 		}
 	}
@@ -61,7 +65,8 @@ else
 {
 	define('NO_AGENT_CHECK', true);
 	define("STATISTIC_SKIP_ACTIVITY_CHECK", true);
-	$DOCUMENT_ROOT = $_SERVER['DOCUMENT_ROOT'] = realpath(dirname(__FILE__).'/../../../../');
+	if (!$_SERVER['DOCUMENT_ROOT'])
+		$DOCUMENT_ROOT = $_SERVER['DOCUMENT_ROOT'] = realpath(dirname(__FILE__).'/../../../../');
 	require($_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/main/include/prolog_before.php');
 	IncludeModuleLangFile($_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/main/admin/dump.php');
 }
@@ -69,11 +74,18 @@ if (!defined('DOCUMENT_ROOT'))
 	define('DOCUMENT_ROOT', rtrim(str_replace('\\','/',$_SERVER['DOCUMENT_ROOT']),'/'));
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/classes/general/backup.php");
 
-if (!CLI) // hit from bitrixcloud service
+$public = $USER->IsAdmin();
+if ($public) // backup from public
+{
+	$NS =& $_SESSION['BX_DUMP_STATE'];
+	if ($_REQUEST['start'] == 'Y')
+		$NS = array();
+}
+elseif (!CLI) // hit from bitrixcloud service
 {
 	if ((!$backup_secret_key =  CPasswordStorage::Get('backup_secret_key')) || $backup_secret_key != $_REQUEST['secret_key'])
 	{
-#	echo $backup_secret_key."\n"; # debug
+#		echo $backup_secret_key."\n"; COption::SetOptionInt('main', 'dump_auto_enable'.'_auto', 2); # debug
 		RaiseErrorAndDie('Secret key is incorrect', 10);
 	}
 	elseif ($_REQUEST['check_auth'])
@@ -81,7 +93,6 @@ if (!CLI) // hit from bitrixcloud service
 		echo 'SUCCESS';
 		exit(0);
 	}
-#	COption::SetOptionInt('main', 'dump_auto_enable'.'_auto', 2); # debug
 	if (IntOption('dump_auto_enable') != 2)
 		RaiseErrorAndDie('Backup is disabled', 4);
 
@@ -89,6 +100,17 @@ if (!CLI) // hit from bitrixcloud service
 	session_id(md5($backup_secret_key));
 	session_start();
 	$NS =& $_SESSION['BX_DUMP_STATE'];
+
+	if ($NS['TIMESTAMP'] && ($i = IntOption('dump_max_exec_time_sleep')) > 0)
+	{
+		if (time() - $NS['TIMESTAMP'] < $i)
+		{
+			sleep(3);
+			echo "NEXT\n".
+			GetProgressPercent($NS);
+			exit(0);
+		}
+	}
 }
 
 if (!file_exists(DOCUMENT_ROOT.'/bitrix/backup'))
@@ -109,43 +131,72 @@ if (function_exists('mb_internal_encoding'))
 	mb_internal_encoding('ISO-8859-1');
 
 $bGzip = function_exists('gzcompress');
-$bMcrypt = function_exists('mcrypt_encrypt');
+$bMcrypt = function_exists('mcrypt_encrypt') || function_exists('openssl_encrypt');
 $bBitrixCloud = $bMcrypt && CModule::IncludeModule('bitrixcloud') && CModule::IncludeModule('clouds');
 
-$arParams = array(
-	'disk_space' => COption::GetOptionInt('main','disk_space', 0),
+if ($public)
+{
+	$arParams = array(
+		'disk_space' => COption::GetOptionInt('main','disk_space', 0),
 
-	'dump_archive_size_limit' => IntOption('dump_archive_size_limit'),
-	'dump_use_compression' => $bGzip && IntOption('dump_use_compression'),
-	'dump_integrity_check' => IntOption('dump_integrity_check'),
-	
-	'dump_delete_old' => IntOption('dump_delete_old'),
-	'dump_old_time' => IntOption('dump_old_time'),
-	'dump_old_cnt' => IntOption('dump_old_cnt'),
-	'dump_old_size' => IntOption('dump_old_size'),
+		'dump_archive_size_limit' => 100 * 1024 * 1024,
+		'dump_use_compression' => $bGzip,
+		'dump_integrity_check' => 1,
+		'dump_delete_old' => 0,
+		'dump_site_id' => array(),
 
-	'dump_site_id' => is_array($ar = unserialize(COption::GetOptionString("main","dump_site_id"."_auto"))) ? $ar : array(),
-);
+		'dump_base' => 1,
+		'dump_base_skip_stat' => 0,
+		'dump_base_skip_search' => 0,
+		'dump_base_skip_log' => 0,
 
-$arExpertBackupDefaultParams = array(
-	'dump_base' => IntOption('dump_base', 1),
-	'dump_base_skip_stat' => IntOption('dump_base_skip_stat', 0),
-	'dump_base_skip_search' => IntOption('dump_base_skip_search', 0),
-	'dump_base_skip_log' => IntOption('dump_base_skip_log', 0),
+		'dump_file_public' => 1,
+		'dump_file_kernel' => 1,
+		'dump_do_clouds' => 0,
+		'skip_mask' => 0,
+		'skip_mask_array' => array(),
+		'dump_max_file_size' => 0,
+		'skip_symlinks' => 0,
+	);
+}
+else
+{
+	$arParams = array(
+		'disk_space' => COption::GetOptionInt('main','disk_space', 0),
 
-	'dump_file_public' => IntOption('dump_file_public', 1),
-	'dump_file_kernel' => IntOption('dump_file_kernel', 1),
-	'dump_do_clouds' => IntOption('dump_do_clouds', 1),
-	'skip_mask' => IntOption('skip_mask', 0),
-	'skip_mask_array' => is_array($ar = unserialize(COption::GetOptionString("main","skip_mask_array_auto"))) ? $ar : array(),
-	'dump_max_file_size' => IntOption('dump_max_file_size', 0),
-	'skip_symlinks' => IntOption('skip_symlinks', 0),
-);
+		'dump_archive_size_limit' => IntOption('dump_archive_size_limit'),
+		'dump_use_compression' => $bGzip && IntOption('dump_use_compression'),
+		'dump_integrity_check' => IntOption('dump_integrity_check'),
+		
+		'dump_delete_old' => IntOption('dump_delete_old'),
+		'dump_old_time' => IntOption('dump_old_time'),
+		'dump_old_cnt' => IntOption('dump_old_cnt'),
+		'dump_old_size' => IntOption('dump_old_size'),
 
-if (!is_array($arExpertBackupParams))
-	$arExpertBackupParams = array();
-	
-$arParams = array_merge($arExpertBackupDefaultParams, $arExpertBackupParams, $arParams);
+		'dump_site_id' => is_array($ar = unserialize(COption::GetOptionString("main","dump_site_id"."_auto"))) ? $ar : array(),
+	);
+
+	$arExpertBackupDefaultParams = array(
+		'dump_base' => IntOption('dump_base', 1),
+		'dump_base_skip_stat' => IntOption('dump_base_skip_stat', 0),
+		'dump_base_skip_search' => IntOption('dump_base_skip_search', 0),
+		'dump_base_skip_log' => IntOption('dump_base_skip_log', 0),
+
+		'dump_file_public' => IntOption('dump_file_public', 1),
+		'dump_file_kernel' => IntOption('dump_file_kernel', 1),
+		'dump_do_clouds' => IntOption('dump_do_clouds', 1),
+		'skip_mask' => IntOption('skip_mask', 0),
+		'skip_mask_array' => is_array($ar = unserialize(COption::GetOptionString("main","skip_mask_array_auto"))) ? $ar : array(),
+		'dump_max_file_size' => IntOption('dump_max_file_size', 0),
+		'skip_symlinks' => IntOption('skip_symlinks', 0),
+	);
+
+	if (!is_array($arExpertBackupParams))
+		$arExpertBackupParams = array();
+		
+	$arParams = array_merge($arExpertBackupDefaultParams, $arExpertBackupParams, $arParams);
+}
+
 $skip_mask_array = $arParams['skip_mask_array'];
 
 if (strtolower($DB->type) != 'mysql')
@@ -153,10 +204,18 @@ if (strtolower($DB->type) != 'mysql')
 
 if (!$NS['step'])
 {
-	$NS = array('step' => 1);
+	$NS = array('step' => 1, 'step_cnt' => 0);
 	$NS['START_TIME'] = START_TIME;
-	$NS['dump_encrypt_key'] = CPasswordStorage::Get('dump_temporary_cache');
-	$dump_bucket_id = IntOption('dump_bucket_id');
+	if ($public)
+	{
+		$dump_bucket_id = 0;
+	}
+	else
+	{
+		$NS['dump_encrypt_key'] = CPasswordStorage::Get('dump_temporary_cache');
+		$dump_bucket_id = IntOption('dump_bucket_id');
+	}
+
 	if ($dump_bucket_id == -1)
 	{
 		if (!$bBitrixCloud || !$NS['dump_encrypt_key'])
@@ -194,9 +253,29 @@ if (!$NS['step'])
 	else
 		$NS['site_path_list'] = array('s1' => DOCUMENT_ROOT);
 
+	if (!$public)
+	{
+		foreach(GetModuleEvents("main", "OnAutoBackupStart", true) as $arEvent)
+			ExecuteModuleEventEx($arEvent, array($NS));
+	}
+
 	ShowBackupStatus('Backup started to file: '.$NS['arc_name']);
+	if ($arParams['dump_base'])
+		$NS['step_cnt'] = 2;
+	if ($arParams['dump_do_clouds'] && ($arDumpClouds = CBackup::GetBucketList()))
+		$NS['step_cnt']++;
+	if (($arParams['dump_file_public'] || $arParams['dump_file_kernel']))
+		$NS['step_cnt']++;
+	if ($arParams['dump_integrity_check'])
+		$NS['step_cnt']++;
+	if ($NS['BUCKET_ID'])
+		$NS['step_cnt']++;
+	if ($arParams['dump_delete_old'] > 1)
+		$NS['step_cnt']++;
+	$NS['step_finished'] = 0;
 }
 
+$NS['step_done'] = 0;
 $after_file = str_replace('.sql','_after_connect.sql',preg_replace('#\.[0-9]+$#', '', $NS['dump_name']));
 
 if ($NS['step'] <= 2)
@@ -210,6 +289,10 @@ if ($NS['step'] <= 2)
 			if (!CBackup::MakeDump($NS['dump_name'], $NS['dump_state']))
 				RaiseErrorAndDie(GetMessage('DUMP_NO_PERMS'), 100, $NS['dump_name']);
 
+			$TotalTables = $NS['dump_state']['TableCount'];
+			$FinishedTables = $TotalTables - count($NS['dump_state']['TABLES']);
+			$NS['step_done'] = $FinishedTables / $TotalTables;
+
 			if (!$NS['dump_state']['end'])
 				CheckPoint();
 
@@ -222,7 +305,13 @@ if ($NS['step'] <= 2)
 				file_put_contents($after_file, "ALTER DATABASE `<DATABASE>` COLLATE ".$f['Value'].";\n",8);
 			
 			$NS['step'] = 2;
+			$NS['step_finished']++;
 			clearstatcache();
+
+			$next_part = $NS['dump_name'];
+			$NS['dump_size'] = filesize($next_part);
+			while(file_exists($next_part = CBackup::getNextName($next_part)))
+				$NS['dump_size'] += filesize($next_part);
 		}
 
 		ShowBackupStatus('Archiving database dump');
@@ -259,6 +348,8 @@ if ($NS['step'] <= 2)
 		$NS["ReadBlockCurrent"] = $tar->ReadBlockCurrent;
 		$NS["ReadFileSize"] = $tar->ReadFileSize;
 		
+		$NS['step_done'] = $NS['data_size'] / $NS['dump_size'];
+		
 		if (!haveTime())
 		{
 			$tar->close();
@@ -282,12 +373,14 @@ if ($NS['step'] <= 2)
 			$name = CTar::getNextName($name);
 		}
 		$tar->close();
+		$NS['step_finished']++;
 	}
 	$NS['step'] = 3;
 }
 
 if ($NS['step'] == 3)
 {
+	$NS['step_done'] = 0;
 	// Download cloud files
 	if ($arParams['dump_do_clouds'] && ($arDumpClouds = CBackup::GetBucketList()))
 	{
@@ -312,6 +405,7 @@ if ($NS['step'] == 3)
 		}
 
 		CheckPoint();
+		$NS['step_finished']++;
 	}
 	$NS['step'] = 4;
 }
@@ -321,6 +415,7 @@ $DB->Disconnect();
 if ($NS['step'] == 4)
 {
 	// Tar files
+	$NS['step_done'] = 0;
 	if ($arParams['dump_file_public'] || $arParams['dump_file_kernel'])
 	{
 		ShowBackupStatus('Archiving files');
@@ -367,6 +462,13 @@ if ($NS['step'] == 4)
 			$NS["startPath"] = $DirScan->nextPath;
 			$NS["cnt"] += $DirScan->FileCount;
 
+			$last_files_count = IntOption('last_files_count');
+			if (!$last_files_count)
+				$last_files_count = 200000;
+			$NS['step_done'] = $NS['cnt'] / $last_files_count;
+			if ($NS['step_done'] > 1)
+				$NS['step_done'] = 1;
+
 			if ($r !== 'BREAK') // finish scan
 			{
 				array_shift($NS['site_path_list']);
@@ -388,6 +490,9 @@ if ($NS['step'] == 4)
 			$name = CTar::getNextName($name);
 		}
 		DeleteDirFilesEx(BX_ROOT.'/backup/clouds');
+		if ($arParams['dump_file_public'] && $arParams['dump_file_kernel'])
+			COption::SetOptionInt("main", "last_files_count", $NS['cnt']);
+		$NS['step_finished']++;
 	}
 	$NS['step'] = 5;
 }
@@ -395,6 +500,7 @@ if ($NS['step'] == 4)
 if ($NS['step'] == 5)
 {
 	// Integrity check
+	$NS['step_done'] = 0;
 	if ($arParams['dump_integrity_check'])
 	{
 		ShowBackupStatus('Checking archive integrity');
@@ -409,12 +515,14 @@ if ($NS['step'] == 5)
 				RaiseErrorAndDie(implode('<br>',$tar->err), 520);
 			while(($r = $tar->extractFile()) && haveTime());
 			$NS["Block"] = $tar->Block;
+			$NS['step_done'] = $NS['Block'] * 512 / $NS['data_size'];
 			if ($r === false)
 				RaiseErrorAndDie(implode('<br>',$tar->err), 530, $NS['arc_name']);
 		}
 		$tar->close();
 
 		CheckPoint();
+		$NS['step_finished']++;
 	}
 	$NS['step'] = 6;
 }
@@ -424,6 +532,7 @@ $DB->DoConnect();
 if ($NS['step'] == 6)
 {
 	// Send to the cloud
+	$NS['step_done'] = 0;
 	if ($NS['BUCKET_ID'])
 	{
 		ShowBackupStatus('Sending backup to the cloud');
@@ -448,7 +557,7 @@ if ($NS['step'] == 6)
 					{
 						$backup = CBitrixCloudBackup::getInstance();
 						$q = $backup->getQuota();
-						if ($NS['arc_size'] > $q)
+						if ($q && $NS['arc_size'] > $q)
 							RaiseErrorAndDie(GetMessage('DUMP_ERR_BIG_BACKUP', array('#ARC_SIZE#' => $NS['arc_size'], '#QUOTA#' => $q)), 620);
 
 						$obBucket = $backup->getBucketToWriteFile(CTar::getCheckword($NS['dump_encrypt_key']), basename($NS['arc_name']));
@@ -508,6 +617,7 @@ if ($NS['step'] == 6)
 					elseif (++$fails >= 10)
 						RaiseErrorAndDie('Internal Error: could not init upload for '.$fails.' times', 660, $NS['arc_name']);
 				}
+				$NS['step_done'] = $obUpload->getPos() / $NS['arc_size'];
 
 				if (!$res)
 				{
@@ -534,7 +644,8 @@ if ($NS['step'] == 6)
 				}
 				else
 				{
-					CBitrixCloudBackup::clearOptions();
+					$ob = new CBitrixCloudBackup;
+					$ob->clearOptions();
 					
 					if ($arParams['dump_delete_old'] == 1)
 					{
@@ -557,6 +668,7 @@ if ($NS['step'] == 6)
 			}
 		}
 		CheckPoint();
+		$NS['step_finished']++;
 	}
 	$NS['step'] = 7;
 }
@@ -564,10 +676,12 @@ if ($NS['step'] == 6)
 if ($NS['step'] == 7)
 {
 	// Delete old backups
+	$NS['step_done'] = 0;
 	if ($arParams['dump_delete_old'] > 1)
 	{
 		ShowBackupStatus('Deleting old backups');
 		$arFiles = array();
+		$arParts = array();
 
 		$TotalSize = $NS['arc_size'];
 
@@ -593,6 +707,7 @@ if ($NS['step'] == 7)
 					$m = filemtime($f);
 
 					$arFiles[$name] = $m;
+					$arParts[$name][] = $item;
 					$TotalSize += $s;
 				}
 				closedir($dir);
@@ -622,21 +737,18 @@ if ($NS['step'] == 7)
 			}
 
 			$cnt--;
-			$f = $p.'/'.$name;
-	//		echo "delete ".$f."\n";
-
-			$bDel = false;
-			while(file_exists($f))
+			foreach($arParts[$name] as $item)
 			{
+				$f = $p.'/'.$item;
 				$size = filesize($f);
 				$TotalSize -= $size;
-				if (($bDel = unlink($f)) && $arParams["disk_space"] > 0)
+				if (!unlink($f))
+					RaiseErrorAndDie('Could not delete file: '.$f, 700, $NS['arc_name']);
+				if ($arParams["disk_space"] > 0)
 					CDiskQuota::updateDiskQuota("file", $size , "del");
-				$f = CTar::getNextName($f);
 			}
-			if (!$bDel)
-				RaiseErrorAndDie('Could not delete file: '.$f, 700, $NS['arc_name']);
 		}
+		$NS['step_finished']++;
 	}
 	$NS['step'] = 8;
 }
@@ -651,6 +763,10 @@ CEventLog::Add(array(
 	"ITEM_ID" => $NS['arc_name'],
 	"DESCRIPTION" => $info,
 ));
+
+foreach(GetModuleEvents("main", "OnAutoBackupSuccess", true) as $arEvent)
+	ExecuteModuleEventEx($arEvent, array($NS));
+
 $NS = array();
 if (defined('LOCK_FILE'))
 	unlink(LOCK_FILE) || RaiseErrorAndDie('Can\'t delete file: '.LOCK_FILE, 1000);
@@ -683,14 +799,25 @@ function ShowBackupStatus($str)
 
 function haveTime()
 {
-	if (!CLI && time() - START_TIME > 30)
+	static $timeout;
+	if (!$timeout)
+	{
+		$timeout = IntOption('dump_max_exec_time', 30);
+		if ($timeout < 5)
+			$timeout = 5;
+	}
+	if (!CLI && time() - START_TIME > $timeout)
 		return false;
 	return true;
 }
 
 function RaiseErrorAndDie($strError, $errCode = 0, $ITEM_ID = '')
 {
-	global $DB;
+	global $DB, $NS;
+	$NS0 = $NS;
+	$NS = array(); 
+	session_write_close();
+
 	if (CLI)
 		echo 'Error ['.$errCode.']: '.str_replace('<br>',"\n",$strError)."\n";
 	else
@@ -709,6 +836,24 @@ function RaiseErrorAndDie($strError, $errCode = 0, $ITEM_ID = '')
 			"ITEM_ID" => $ITEM_ID,
 			"DESCRIPTION" => "[".$errCode."] ".$strError,
 		));
+
+		foreach(GetModuleEvents("main", "OnAutoBackupError", true) as $arEvent)
+			ExecuteModuleEventEx($arEvent, array(array_merge($NS0, array('ERROR' => $strError, 'ERROR_CODE' => $errCode, 'ITEM_ID' => $ITEM_ID))));
+
+		$link = '/bitrix/admin/event_log.php?set_filter=Y&find_type=audit_type_id&find_audit_type[]=BACKUP_ERROR';
+		$ar = Array(
+			"MESSAGE" => 'The last automatic backup has failed. Please check your <a href="'.$link.'">system log<a>',
+			"TAG" => "BACKUP",
+			"MODULE_ID" => "MAIN",
+			'NOTIFY_TYPE' => CAdminNotify::TYPE_ERROR,
+			'ENABLE_CLOSE' => 'Y'
+		);
+		foreach(array('ru', 'ua', 'en', 'de') as $lang)
+		{
+			\Bitrix\Main\Localization\Loc::loadLanguageFile($_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/main/admin/dump.php', $lang);
+			$ar["LANG"][$lang] = \Bitrix\Main\Localization\Loc::getMessage('DUMP_ERR_AUTO', array('#MESSAGE#' => $strError, '#LINK#' => $link), $lang);
+		}
+		CAdminNotify::Add($ar);
 	}
 	die();
 }
@@ -720,7 +865,20 @@ function CheckPoint()
 	
 	global $NS;
 	$NS['WORK_TIME'] = microtime(1) - START_TIME;
+	$NS['TIMESTAMP'] = time();
+
 	session_write_close();
-	echo "NEXT";
+	echo "NEXT\n".
+	GetProgressPercent($NS);
 	exit(0);
+}
+
+function GetProgressPercent($NS)
+{
+	if ($NS['step_done'] > 1)
+		$NS['step_done'] = 1;
+	$res = round(100*($NS['step_finished']+$NS['step_done'])/$NS['step_cnt']);
+	if ($res > 99)
+		$res = 99;
+	return $res;
 }

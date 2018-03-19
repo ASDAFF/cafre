@@ -155,7 +155,7 @@ if(!empty($arResult["Smiles"]))
 		{
 				$arSmiles[] = array(
 						'name' => $arSmile["~LANG_NAME"],
-						'path' => "/bitrix/images/blog/smile/".$arSmile["IMAGE"],
+						'path' => $arSmile["IMAGE"],
 						'code' => str_replace("\\\\","\\",$arSmile["TYPE"])
 				);
 		}

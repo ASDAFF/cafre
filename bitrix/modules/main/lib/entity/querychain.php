@@ -48,6 +48,31 @@ class QueryChain
 		$this->size++;
 	}
 
+	/**
+	 * @param QueryChainElement $element
+	 */
+	public function prependElement(QueryChainElement $element)
+	{
+		$this->chain = array_merge(array($element), $this->chain);
+		$this->definition = null;
+		$this->alias = null;
+
+		$this->size++;
+	}
+
+	/**
+	 * @param QueryChain $chain
+	 */
+	public function prepend(QueryChain $chain)
+	{
+		$elements = $chain->getAllElements();
+
+		for ($i=count($elements)-1; $i>=0; $i--)
+		{
+			$this->prependElement($elements[$i]);
+		}
+	}
+
 	public function getFirstElement()
 	{
 		return $this->chain[0];
@@ -76,6 +101,15 @@ class QueryChain
 		$this->alias = null;
 
 		$this->last_element = end($this->chain);
+		$this->size--;
+	}
+
+	public function removeFirstElement()
+	{
+		$this->chain = array_slice($this->chain, 1);
+		$this->definition = null;
+		$this->alias = null;
+
 		$this->size--;
 	}
 
@@ -129,6 +163,11 @@ class QueryChain
 
 	public static function getChainByDefinition(Base $init_entity, $definition)
 	{
+		if (!is_string($definition))
+		{
+			throw new Main\ArgumentException('String expected, but `'.gettype($definition).'` is given.');
+		}
+
 		$chain = new QueryChain;
 		$chain->addElement(new QueryChainElement($init_entity));
 
@@ -262,7 +301,13 @@ class QueryChain
 					/** @var ReferenceField $reference */
 					$reference = Base::getInstance($ref_entity_name)->getField($ref_field_name);
 
-					if ($reference->getRefEntity()->getFullName() == $prev_entity->getFullName())
+					if (
+						$reference->getRefEntity()->getFullName() == $prev_entity->getFullName() ||
+						is_subclass_of(
+							$prev_entity->getDataClass(),
+							$reference->getRefEntity()->getDataClass()
+						)
+					)
 					{
 						// chain element is another entity with >1 references to current entity
 						// def like NewsArticle:AUTHOR, NewsArticle:LAST_COMMENTER

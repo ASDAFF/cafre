@@ -91,9 +91,7 @@ $GLOBALS['arFilemanPredifinedFileTypes'] = array(
 
 class CFileMan
 {
-	var $arFILE_TYPES;
-
-	function OnPanelCreate()
+	public static function OnPanelCreate()
 	{
 		global $APPLICATION, $REQUEST_URI;
 		if($APPLICATION->GetGroupRight("fileman")<="D")
@@ -188,7 +186,7 @@ class CFileMan
 			if (CSticker::CanDoOperation('sticker_new'))
 			{
 				$arMenu[] = array(
-					"TEXT" => '<div style="float: left; margin: 0 50px 0 0;">'.GetMessage("FMST_PANEL_STICKER_ADD").'</div>'.($useHotKeys ? '<div style="float: right;"><nobr>Ctrl+Shift+S</nobr></div>' : ''),
+					"TEXT" => GetMessage("FMST_PANEL_STICKER_ADD").($useHotKeys ? ' (Ctrl+Shift+S)' : ''),
 					"TITLE" => GetMessage("FMST_PANEL_STICKER_ADD_TITLE"),
 					"ICON" => "",
 					"ACTION" => CSticker::GetScriptStr('add'),
@@ -201,15 +199,14 @@ class CFileMan
 			$curPageCount = CSticker::GetCurPageCount();
 			$arMenu[] = array(
 				"ID" => "bxst-show-sticker-icon",
-				"TEXT" => '<div style="float: left; margin: 0 50px 0 0;">'.GetMessage("FMST_PANEL_STICKERS_SHOW", array("#COUNT#" => $curPageCount)).'</div>'.($useHotKeys ? '<div style="float:right;"><nobr>Ctrl+Shift+X</nobr></div>' : ''),
+				"TEXT" => GetMessage("FMST_PANEL_STICKERS_SHOW", array("#COUNT#" => $curPageCount)).($useHotKeys ? ' (Ctrl+Shift+X)' : ''),
 				"TITLE" => GetMessage("FMST_PANEL_STICKERS_SHOW_TITLE"),
 				"ICON" => CSticker::GetBShowStickers() ? " checked" : "",
 				"ACTION" => CSticker::GetScriptStr('show'),
 				"HK_ID"=>"FMST_PANEL_STICKERS_SHOW",
 			);
 			$arMenu[] = array(
-				//"TEXT" => GetMessage("FMST_PANEL_CUR_STICKER_LIST"),
-				"TEXT" => '<div style="float: left; margin: 0 50px 0 0;">'.GetMessage("FMST_PANEL_CUR_STICKER_LIST").'</div>'.($useHotKeys ? '<div style="float: right;"><nobr>Ctrl+Shift+L</nobr></div>' : ''),
+				"TEXT" => GetMessage("FMST_PANEL_CUR_STICKER_LIST").($useHotKeys ? ' (Ctrl+Shift+L)' : ''),
 				"TITLE" => GetMessage("FMST_PANEL_CUR_STICKER_LIST_TITLE"),
 				"ICON" => "",
 				"ACTION" => CSticker::GetScriptStr('list_cur'),
@@ -241,17 +238,12 @@ class CFileMan
 		}
 	}
 
-	function CFileMan()
-	{
-		$this->arFILE_TYPES = Array("SOURCE"=>GetMessage("FILEMAN_FILEMAN_SCRIPT_TEXT"), "IMAGE"=>GetMessage("FILEMAN_FILEMAN_PIC"), "UNKNOWN"=>GetMessage("FILEMAN_FILEMAN_UNK"));
-	}
-
-	function OnGroupDelete($group_id)
+	public static function OnGroupDelete($group_id)
 	{
 		return "";
 	}
 
-	function GetVersion()
+	public static function GetVersion()
 	{
 		@include($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/fileman/install/version.php");
 		if (!isset($arModuleVersion['VERSION']))
@@ -259,7 +251,7 @@ class CFileMan
 		return $arModuleVersion['VERSION'];
 	}
 
-	function SaveMenu($path, $aMenuLinksTmp, $sMenuTemplateTmp)
+	public static function SaveMenu($path, $aMenuLinksTmp, $sMenuTemplateTmp = "")
 	{
 		global $APPLICATION;
 		CMain::InitPathVars($site, $path);
@@ -320,7 +312,7 @@ class CFileMan
 		CBitrixComponent::clearComponentCache("bitrix:menu");
 	}
 
-	function GetMenuArray($abs_path)
+	public static function GetMenuArray($abs_path)
 	{
 		$aMenuLinks = Array();
 		$sMenuTemplate = '';
@@ -332,12 +324,12 @@ class CFileMan
 		return Array("aMenuLinks"=>$aMenuLinks, "sMenuTemplate" => $sMenuTemplate);
 	}
 
-	function GetFileName($path)
+	public static function GetFileName($path)
 	{
 		return GetFileName($path);
 	}
 
-	function CreateDir($path)
+	public static function CreateDir($path)
 	{
 		CMain::InitPathVars($site, $path);
 		$DOC_ROOT = CSite::GetSiteDocRoot($site);
@@ -381,7 +373,7 @@ class CFileMan
 	}
 
 	//Function check if there are anything exept .access.php and if folder is empty - delete it
-	function DeleteDir($path)
+	public static function DeleteDir($path)
 	{
 		if(DEBUG_FILE_MAN)echo "DeleteDir(".$path.");<br>";
 
@@ -424,7 +416,7 @@ class CFileMan
 		$APPLICATION->RemoveFileAccessPermission(Array($site, $path));
 	}
 
-	function DeleteFile($path)
+	public static function DeleteFile($path)
 	{
 		global $APPLICATION, $USER;
 		CMain::InitPathVars($site, $path);
@@ -464,7 +456,7 @@ class CFileMan
 		}
 	}
 
-	function DeleteEx($path)
+	public static function DeleteEx($path)
 	{
 		global $APPLICATION, $USER;
 
@@ -527,13 +519,13 @@ class CFileMan
 	}
 
 
-	function NormalizePath($path)
+	public static function NormalizePath($path)
 	{
 		$io = CBXVirtualIo::GetInstance();
 		return $io->CombinePath("/", $path);
 	}
 
-	function CopyEx($path_from, $path_to, $bDeleteAfterCopy = false, $bOverride = false)
+	public static function CopyEx($path_from, $path_to, $bDeleteAfterCopy = false, $bOverride = false)
 	{
 		global $APPLICATION, $USER;
 		CMain::InitPathVars($site_from, $path_from);
@@ -727,13 +719,13 @@ class CFileMan
 		return $strWarning;
 	}
 
-	function GetAllDirList(&$arDirs, $arFilter=Array(), $site=false)
+	public static function GetAllDirList(&$arDirs, $arFilter=Array(), $site=false)
 	{
 		$arFiles = array();
 		CFileMan::DirsRecursive(Array($site, ""), $arDirs, $arFilter, 0);
 	}
 
-	function DirsRecursive($path, &$arDirs, $arFilter=Array(), $depth=0)
+	public static function DirsRecursive($path, &$arDirs, $arFilter=Array(), $depth=0)
 	{
 		$depth++;
 		CFileMan::GetDirList($path, $arDirsTmp, $arFiles, $arFilter, Array("name"=>"asc"), "D");
@@ -746,17 +738,17 @@ class CFileMan
 		}
 	}
 
-	function CompareFiles($f1, $f2, $sort=Array())
+	public static function CompareFiles($f1, $f2, $sort=Array())
 	{
 		return CompareFiles($f1, $f2, $sort);
 	}
 
-	function GetDirList($path, &$arDirs, &$arFiles, $arFilter=Array(), $sort=Array(), $type="DF", $bLogical=false, $task_mode=false)
+	public static function GetDirList($path, &$arDirs, &$arFiles, $arFilter=Array(), $sort=Array(), $type="DF", $bLogical=false, $task_mode=false)
 	{
 		return GetDirList($path, $arDirs, $arFiles, $arFilter, $sort, $type, $bLogical,$task_mode);
 	}
 
-	function __CheckSite($site)
+	public static function __CheckSite($site)
 	{
 		if($site !== false)
 		{
@@ -774,27 +766,27 @@ class CFileMan
 		return $site;
 	}
 
-	function ParsePath($path, $bLast=false,  $url=false, $param="", $bLogical = false)
+	public static function ParsePath($path, $bLast=false,  $url=false, $param="", $bLogical = false)
 	{
 		return ParsePath($path, $bLast, $url, $param, $bLogical);
 	}
 
-	function GetFileExtension($path)
+	public static function GetFileExtension($path)
 	{
 		return GetFileExtension($path);
 	}
 
-	function GetFileType($path)
+	public static function GetFileType($path)
 	{
 		return GetFileType($path);
 	}
 
-	function GetStrFileSize($size)
+	public static function GetStrFileSize($size)
 	{
 		return CFile::FormatSize($size);
 	}
 
-	function GetFileTypeEx($fileName)
+	public static function GetFileTypeEx($fileName)
 	{
 		global $arFilemanPredifinedFileTypesR;
 		$fileExt = GetFileExtension(strtolower($fileName));
@@ -809,17 +801,17 @@ class CFileMan
 		return "file";
 	}
 
-	function EscapePHPString($str)
+	public static function EscapePHPString($str)
 	{
 		return EscapePHPString($str);
 	}
 
-	function UnEscapePHPString($str)
+	public static function UnEscapePHPString($str)
 	{
 		return UnEscapePHPString($str);
 	}
 
-	function UndoFileDelete($Params, $type)
+	public static function UndoFileDelete($Params, $type)
 	{
 		global $APPLICATION;
 
@@ -894,7 +886,7 @@ class CFileMan
 		$GLOBALS["CACHE_MANAGER"]->CleanDir("menu");
 	}
 
-	function UndoNewFile($Params, $type)
+	public static function UndoNewFile($Params, $type)
 	{
 		global $APPLICATION;
 
@@ -957,7 +949,7 @@ class CFileMan
 		$GLOBALS["CACHE_MANAGER"]->CleanDir("menu");
 	}
 
-	function UndoEditFile($Params, $type)
+	public static function UndoEditFile($Params, $type)
 	{
 		global $APPLICATION;
 
@@ -968,7 +960,7 @@ class CFileMan
 		$GLOBALS["CACHE_MANAGER"]->CleanDir("menu");
 	}
 
-	function UndoNewSection($Params, $type)
+	public static function UndoNewSection($Params, $type)
 	{
 		$io = CBXVirtualIo::GetInstance();
 
@@ -999,7 +991,7 @@ class CFileMan
 		}
 	}
 
-	function FetchFileAccessPerm($path)
+	public static function FetchFileAccessPerm($path)
 	{
 		CMain::InitPathVars($site, $path);
 		$DOC_ROOT = CSite::GetSiteDocRoot($site);
@@ -1035,7 +1027,7 @@ class CFileMan
 		return $result;
 	}
 
-	function ShowTypeSelector($params)
+	public static function ShowTypeSelector($params)
 	{
 		global $USER;
 		$useEditor3 = COption::GetOptionString('fileman', "use_editor_3", "Y") == "Y";
@@ -1305,7 +1297,7 @@ class CFileMan
 		return $textType;
 	}
 
-	function AddHTMLEditorFrame(
+	public static function AddHTMLEditorFrame(
 		$strTextFieldName,
 		$strTextValue,
 		$strTextTypeFieldName,
@@ -1397,7 +1389,7 @@ class CFileMan
 		CFileman::ShowHTMLEditControl($strTextFieldName, $strTextValue, $arParams);
 	}
 
-	function ShowHTMLEditControl($name, $content, $arParams = Array())
+	public static function ShowHTMLEditControl($name, $content, $arParams = Array())
 	{
 		global $USER;
 		// We have to avoid of showing HTML-editor with probably unsecure content when loosing the session [mantis:#0007986]
@@ -1677,22 +1669,22 @@ class CFileMan
 		}
 	}
 
-	function GetFileTemplates($lang = LANG, $arTemplates=Array())
+	public static function GetFileTemplates($lang = LANG, $arTemplates=Array())
 	{
 		return GetFileTemplates($lang, $arTemplates);
 	}
 
-	function GetTemplateContent($filename, $lang=LANG, $arTemplates=Array())
+	public static function GetTemplateContent($filename, $lang=LANG, $arTemplates=Array())
 	{
 		return GetTemplateContent($filename, $lang, $arTemplates);
 	}
 
-	function GetScriptFileExt()
+	public static function GetScriptFileExt()
 	{
 		return GetScriptFileExt();
 	}
 
-	function ParseFileContent($filesrc, $bCheckProlog = false)
+	public static function ParseFileContent($filesrc, $bCheckProlog = false)
 	{
 		$res = ParseFileContent($filesrc);
 		if ($bCheckProlog)
@@ -1720,22 +1712,22 @@ class CFileMan
 		return $res;
 	}
 
-	function SetTitle($prolog, $title)
+	public static function SetTitle($prolog, $title)
 	{
 		return SetPrologTitle($prolog, $title);
 	}
 
-	function SetProperty($prolog, $property_key, $property_val)
+	public static function SetProperty($prolog, $property_key, $property_val)
 	{
 		return SetPrologProperty($prolog, $property_key, $property_val);
 	}
 
-	function IsPHP($src)
+	public static function IsPHP($src)
 	{
 		return IsPHP($src);
 	}
 
-	function GetAllTemplateParams($templateID, $site, $findcomponent = true, $arAdditionalParams = Array())
+	public static function GetAllTemplateParams($templateID, $site, $findcomponent = true, $arAdditionalParams = Array())
 	{
 		global $APPLICATION;
 
@@ -1805,17 +1797,24 @@ class CFileMan
 			$templateID = "";
 		}
 
-		if(!is_set($arResult, "STYLES") || $arResult["STYLES"]==false)
+		$io = CBXVirtualIo::GetInstance();
+
+		if(!is_set($arResult, "STYLES") || $arResult["STYLES"] == false)
 		{
-			if(file_exists($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/php_interface/".(strlen($site)<=0?LANGUAGE_ID:$site)."/styles.css"))
+			if($io->FileExists($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/php_interface/".(strlen($site)<=0?LANGUAGE_ID:$site)."/styles.css"))
 			{
 				$arResult["STYLES"] = $APPLICATION->GetFileContent($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/php_interface/".(strlen($site) <= 0?LANGUAGE_ID : $site)."/styles.css");
 				$arResult["STYLES_TITLE"] = CSiteTemplate::__GetByStylesTitle($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/php_interface/".(strlen($site)<=0?LANGUAGE_ID : $site)."/.styles.php");
 			}
-			elseif(file_exists($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/php_interface/styles.css"))
+			elseif($io->FileExists($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/php_interface/styles.css"))
 			{
 				$arResult["STYLES"] = $APPLICATION->GetFileContent($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/php_interface/styles.css");
 				$arResult["STYLES_TITLE"] = CSiteTemplate::__GetByStylesTitle($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/php_interface/.styles.php");
+			}
+			elseif($io->FileExists($_SERVER["DOCUMENT_ROOT"]."local/templates/.default/styles.css"))
+			{
+				$arResult["STYLES"] = $APPLICATION->GetFileContent($_SERVER["DOCUMENT_ROOT"]."local/templates/.default/styles.css");
+				$arResult["STYLES_TITLE"] = CSiteTemplate::__GetByStylesTitle($_SERVER["DOCUMENT_ROOT"]."local/templates/.default/.styles.php");
 			}
 			else
 			{
@@ -1834,24 +1833,39 @@ class CFileMan
 			}
 		}
 
-		if(strlen($templateID)>0 && file_exists($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/templates/".$templateID."/editor.css"))
+		if(strlen($templateID) > 0 && $io->FileExists($_SERVER["DOCUMENT_ROOT"]."local/templates/".$templateID."/editor.css"))
+		{
+			$arResult["STYLES"] .= "\r\n".$APPLICATION->GetFileContent($_SERVER["DOCUMENT_ROOT"]."local/templates/".$templateID."/editor.css");
+		}
+		elseif(strlen($templateID)>0 && $io->FileExists($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/templates/".$templateID."/editor.css"))
+		{
 			$arResult["STYLES"] .= "\r\n".$APPLICATION->GetFileContent($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/templates/".$templateID."/editor.css");
-		elseif(file_exists($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/templates/.default/editor.css"))
+		}
+		elseif($io->FileExists($_SERVER["DOCUMENT_ROOT"]."local/templates/.default/editor.css"))
+		{
+			$arResult["STYLES"] .= "\r\n".$APPLICATION->GetFileContent($_SERVER["DOCUMENT_ROOT"]."local/templates/.default/editor.css");
+		}
+		elseif($io->FileExists($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/templates/.default/editor.css"))
+		{
 			$arResult["STYLES"] .= "\r\n".$APPLICATION->GetFileContent($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/templates/.default/editor.css");
-		elseif(file_exists($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/php_interface/".$site."/editor.css"))
-			$arResult["STYLES"] .= "\r\n".$APPLICATION->GetFileContent($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/php_interface/".(strlen($site)<=0?LANGUAGE_ID:$site)."/editor.css");
-		elseif(file_exists($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/php_interface/editor.css"))
+		}
+		elseif($io->FileExists($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/php_interface/".$site."/editor.css"))
+		{
+			$arResult["STYLES"] .= "\r\n".$APPLICATION->GetFileContent($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/php_interface/".(strlen($site) <= 0 ? LANGUAGE_ID : $site)."/editor.css");
+		}
+		elseif($io->FileExists($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/php_interface/editor.css"))
+		{
 			$arResult["STYLES"] .= "\r\n".$APPLICATION->GetFileContent($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/php_interface/editor.css");
+		}
 
 		$arResult["STYLES"] = preg_replace("/\r\n/", " ", $arResult["STYLES"]);
 		$arResult["STYLES"] = preg_replace("/\n/", " ", $arResult["STYLES"]);
-
 		$arResult["SITE_TEMPLATE_PATH"] =  getLocalPath('templates/'.$templateID, BX_PERSONAL_ROOT);
 
 		return $arResult;
 	}
 
-	function __CheckOnAllowedComponents($str)
+	public static function __CheckOnAllowedComponents($str)
 	{
 		$allowed_components = trim(COption::GetOptionString('fileman', "~allowed_components", ''));
 		if ($allowed_components == '')
@@ -1894,7 +1908,7 @@ class CFileMan
 		return true;
 	}
 
-	function CheckOnAllowedComponents($str)
+	public static function CheckOnAllowedComponents($str)
 	{
 		if (($r = CFileMan::__CheckOnAllowedComponents($str)) !== true)
 		{
@@ -1904,7 +1918,7 @@ class CFileMan
 		return true;
 	}
 
-	function GetHTMLEditorSettings($edname, $lightMode, $arTaskbars, &$loadParams)
+	public static function GetHTMLEditorSettings($edname, $lightMode, $arTaskbars, &$loadParams)
 	{
 		?>
 		<script>
@@ -2023,7 +2037,7 @@ class CFileMan
 		//return $str_res;
 	}
 
-	function CheckFileName($str)
+	public static function CheckFileName($str)
 	{
 		$io = CBXVirtualIo::GetInstance();
 		if (!$io->ValidateFilenameString($str))
@@ -2031,7 +2045,7 @@ class CFileMan
 		return true;
 	}
 
-	function GetPropstypes($site="")
+	public static function GetPropstypes($site="")
 	{
 		$defRes = Array(
 			'description' => GetMessage("FILEMAN_OPTION_PROPS_DESCR"),
@@ -2045,7 +2059,7 @@ class CFileMan
 		return $res;
 	}
 
-	function SetPropstypes($arPT = Array(), $desc = false, $site = "")
+	public static function SetPropstypes($arPT = Array(), $desc = false, $site = "")
 	{
 		$str = addslashes(serialize($arPT));
 		if (strlen($str) > 2000)
@@ -2054,24 +2068,24 @@ class CFileMan
 
 	}
 
-	function OnModuleUpdate($arParams)
+	public static function OnModuleUpdate($arParams)
 	{
 		if (isset($arParams['successModules']) && count($arParams['successModules']) > 0)
 			CFileMan::ClearComponentsListCache();
 	}
 
-	function ClearComponentsListCache($id = '')
+	public static function ClearComponentsListCache($id = '')
 	{
 		$GLOBALS["CACHE_MANAGER"]->CleanDir("fileman_component_tree_array");
 	}
 
-	function SecurePathVar($str)
+	public static function SecurePathVar($str)
 	{
 		$str = preg_replace("/\.\.+[\/\\\]+/i", "", $str);
 		return $str;
 	}
 
-	function GetUnixFilePermissions($file)
+	public static function GetUnixFilePermissions($file)
 	{
 		$io = CBXVirtualIo::GetInstance();
 		$f = $io->GetFile($file);
@@ -2112,12 +2126,12 @@ class CFileMan
 		return array(sprintf("%o", $perms & 0xfff), $info);
 	}
 
-	function IsWindows()
+	public static function IsWindows()
 	{
 		return PATH_SEPARATOR === ';';
 	}
 
-	function SaveLastPath($path)
+	public static function SaveLastPath($path)
 	{
 		$path = CFileMan::NormalizePath($path);
 		if ($path == "" || $path == "/")
@@ -2134,7 +2148,7 @@ class CFileMan
 		CFileMan::SetLastPathes($arPathes);
 	}
 
-	function GetLastPathes()
+	public static function GetLastPathes()
 	{
 		$arPathes = CUserOptions::GetOption("fileman", "last_pathes", false);
 		$arPathes = ($arPathes === false || !CheckSerializedData($arPathes)) ? CFileMan::GetLastPathesDefault() : unserialize($arPathes);
@@ -2143,7 +2157,7 @@ class CFileMan
 		return $arPathes;
 	}
 
-	function SetLastPathes($arPathes = array())
+	public static function SetLastPathes($arPathes = array())
 	{
 		if (count($arPathes) == 0)
 			$arPathes = CFileMan::GetLastPathesDefault();
@@ -2151,12 +2165,12 @@ class CFileMan
 		CUserOptions::SetOption("fileman", "last_pathes", serialize($arPathes));
 	}
 
-	function GetLastPathesDefault()
+	public static function GetLastPathesDefault()
 	{
 		return array("/bitrix");
 	}
 
-	function GetEditorToolbarConfig($editorType)
+	public static function GetEditorToolbarConfig($editorType)
 	{
 		$res = COption::GetOptionString('fileman', "toolbar_config_".$editorType, false);
 		if ($res && CheckSerializedData($res))
@@ -2215,4 +2229,3 @@ function _replace_br_($str)
 	}
 	return $str;
 }
-?>

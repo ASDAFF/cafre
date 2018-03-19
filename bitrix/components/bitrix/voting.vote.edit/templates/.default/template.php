@@ -8,7 +8,6 @@ $arVote["DATE_END"] = (!$arVote["ID"] && !$arParams["bVarsFromForm"] ? GetTime((
 
 $uid = $this->randString(6);
 
-?><input type="hidden" name="VOTE_ID" value="<?=$arVote["ID"]?>" /><?
 ?><input type="hidden" name="<?=$controlName?>" value="<?=$arVote["ID"]?>" /><?
 ?><input type="hidden" name="<?=$controlName?>_DATA[ID]" value="<?=$arVote["ID"]?>" /><?
 ?><input type="hidden" name="<?=$controlName?>_DATA[URL]" value="<?=$arVote["URL"]?>" /><?
@@ -28,7 +27,7 @@ $sQuestion = <<<HTML
 	</div>
 	<ol class="vote-answers">#ANSWERS#</ol>
 	<div class="vote-checkbox-wrap">
-		<input type="checkbox" value="Y" name="{$pr}[QUESTIONS][#Q#][MULTI]" id="multi_#Q#" #Q_MULTY# class="vote-checkbox" />
+		<input type="checkbox" value="Y" name="{$pr}[QUESTIONS][#Q#][MULTI]" id="multi_#Q#" #Q_MULTY# class="vote-checkbox" onclick="BX.onCustomEvent('onClickMulti', [this])" />
 		<label class="vote-checkbox-label" for="multi_#Q#">{$m['VVE_QUESTION_MULTIPLE']}</label>
 	</div>
 </li>
@@ -44,6 +43,7 @@ $sAnswer = <<<HTML
 	<input class="vote-block-inp adda" type="text" placeholder="{$m["VVE_ANS"]} #A_PH#" name="{$pr}[QUESTIONS][#Q#][ANSWERS][#A#][MESSAGE]" id="answer_#Q#__#A#_" value="#A_VALUE#" />
 	<label class="vote-block-close dela" for="answer_#Q#__#A#_" title="{$m["VVE_ANS_DEL"]}"></label>
 	<input type="hidden" name="{$pr}[QUESTIONS][#Q#][ANSWERS][#A#][MESSAGE_TYPE]" value="{$arParams["MESSAGE_TYPE"]}" />
+	<input type="hidden" name="{$pr}[QUESTIONS][#Q#][ANSWERS][#A#][FIELD_TYPE]" data-bx-answer-field="field-type" value="#A_FIELD_TYPE#" />
 	<!--A_ID--><input type="hidden" name="{$pr}[QUESTIONS][#Q#][ANSWERS][#A#][ID]" id="answer_#Q#__#A#_" value="#A_ID#" /><!--/A_ID-->
 </li>
 HTML;
@@ -78,12 +78,12 @@ $sAnswerEmpty = preg_replace(array("/\<\!\-\-A\_ID\-\-\>(.+?)\<\!\-\-\/A\_ID\-\-
 			array("#Q_VALUE#", "#Q_MULTY#", "#ANSWERS#", "#Q#"),
 			array("", "",
 				str_replace(
-					array("#A#", "#A_VALUE#", "#A_PH#"),
-					array(0, "", 1),
+					array("#A#", "#A_VALUE#", "#A_PH#", "#A_FIELD_TYPE#"),
+					array(0, "", 1, "0"),
 					$sAnswerEmpty).
 				str_replace(
-					array("#A#", "#A_VALUE#", "#A_PH#"),
-					array(1, "", 2),
+					array("#A#", "#A_VALUE#", "#A_PH#", "#A_FIELD_TYPE#"),
+					array(1, "", 2, "0"),
 					$sAnswerEmpty),
 				0),
 			$sQuestionEmpty);?><?
@@ -97,8 +97,8 @@ $sAnswerEmpty = preg_replace(array("/\<\!\-\-A\_ID\-\-\>(.+?)\<\!\-\-\/A\_ID\-\-
 			foreach ($arQuestion["ANSWERS"] as $aa => $arAnswer)
 			{
 				$arAnswers[] = str_replace(
-					array("#A#", "#A_ID#", "#A_VALUE#", "#A_PH#"),
-					array($aa, $arAnswer["ID"], $arAnswer["MESSAGE"], ($aa + 1)),
+					array("#A#", "#A_ID#", "#A_VALUE#", "#A_PH#", "#A_FIELD_TYPE#"),
+					array($aa, $arAnswer["ID"], $arAnswer["MESSAGE"], ($aa + 1), $arAnswer["FIELD_TYPE"]),
 					$sAnswer);
 			}
 			?><?=str_replace(

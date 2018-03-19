@@ -9,7 +9,6 @@ function addElement(Name, thisButton)
 			parentElement.appendChild(element[element.length-1].cloneNode(true));
 		}
 	}
-	return;
 }
 
 function addElementFile(Name, thisButton)
@@ -23,6 +22,21 @@ function addElementFile(Name, thisButton)
 		clone.style.display = '';
 		parentElement.appendChild(clone);
 	}
-	return;
 }
 
+function addElementDate(elements, index)
+{
+	var container = document.getElementById('date_container_'+index);
+	var text = document.getElementById('hidden_'+index).innerHTML;
+	if (container && text)
+	{
+		var replaceText = elements[index].fieldName;
+		var curIndex = elements[index].index;
+
+		text = text.replace(/[#]FIELD_NAME[#]/g, replaceText+'['+curIndex+']');
+		text = text.replace(/[\%]23FIELD_NAME[\%]23/g, escape(replaceText+'['+curIndex+']'));
+		var div = container.appendChild(document.createElement('DIV'));
+		div.innerHTML += text;
+		elements[index].index++;
+	}
+}

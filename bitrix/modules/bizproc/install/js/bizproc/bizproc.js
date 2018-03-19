@@ -292,7 +292,7 @@ BizProcActivity = function()
 			activity.parentActivity = this;
 			this.childActivities[this.childActivities.length] = activity;
 		}
-	}
+	};
 
 
 	ob.SerializeToXML = function (e)
@@ -306,8 +306,7 @@ BizProcActivity = function()
 		}
 		else
 			return '<activity class="'+XMLEncode(ob.Type)+'" name="'+XMLEncode(ob['Properties'].Title)+'" id="'+XMLEncode(ob.Name)+'" params="" />';
-	}
-
+	};
 
 	ob.Serialize = function ()
 	{
@@ -319,17 +318,17 @@ BizProcActivity = function()
 				s['Children'].push(ob.childActivities[i].Serialize());
 		}
 		return s;
-	}
+	};
 
 	ob.OnRemoveClick = function (e)
 	{
 		ob.parentActivity.RemoveChild(ob);
-	}
+	};
 
 	ob.OnSettingsClick = function (e)
 	{
 		ob.Settings();
-	}
+	};
 
 	ob.Settings = function (e)
 	{
@@ -343,11 +342,11 @@ BizProcActivity = function()
 				JSToPHP(arWorkflowVariables, 'arWorkflowVariables')  + '&' +
 				JSToPHP(Array(rootActivity.Serialize()), 'arWorkflowTemplate') + '&' +
 				'current_site_id=' + encodeURIComponent(CURRENT_SITE_ID) + '&' +
-				'sessid=' + phpVars.bitrix_sessid,
+				'sessid=' + BX.bitrix_sessid(),
 			'height': 500,
 			'width': 800
 			})).Show();
-	}
+	};
 
 	ob.RemoveResources = function (self)
 	{
@@ -356,7 +355,7 @@ BizProcActivity = function()
 			ob.div.parentNode.removeChild(ob.div);
 			ob.div = null;
 		}
-	}
+	};
 
 	ob.RemoveChild = function (ch)
 	{
@@ -389,15 +388,25 @@ BizProcActivity = function()
 			}
 		}
 		BPTemplateIsModified = true;
-	}
+	};
 
-	ob.SetError = function (s)
+	ob.SetError = function (s, setFocus)
 	{
+		if (!ob.div)
+		{
+			return false;
+		}
+
 		if(s===false)
 			ob.div.className = 'activity';
 		else
 			ob.div.className = 'activityerr';
-	}
+
+		if (setFocus === true && s !== false)
+		{
+			BX.scrollToNode(ob.div);
+		}
+	};
 
 	ob.Draw = function (divC)
 	{
@@ -496,8 +505,31 @@ BizProcActivity = function()
 	this.SetHeight = function (iHeight)
 	{
 		this.height = iHeight;
+	};
+
+	ob.findChildById = function (id)
+	{
+		if(ob.childActivities)
+		{
+			for(var i = 0; i < ob.childActivities.length; i++)
+			{
+				if (id === ob.childActivities[i]['Name'])
+				{
+					return ob.childActivities[i];
+				}
+				else
+				{
+					var found = ob.childActivities[i].findChildById(id);
+					if (found)
+					{
+						return found;
+					}
+				}
+			}
+		}
+		return null;
 	}
-}
+};
 
 function _DragNDrop()
 {

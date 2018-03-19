@@ -3,24 +3,30 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/catalog/general/product_
 
 class CCatalogProductGroups extends CAllCatalogProductGroups
 {
-	function Add($arFields)
+	public static function Add($arFields)
 	{
 		global $DB;
 
-		if (!CCatalogProductGroups::CheckFields("ADD", $arFields, 0))
-			return False;
+		if (!self::CheckFields("ADD", $arFields, 0))
+			return false;
 
 		$arInsert = $DB->PrepareInsert("b_catalog_product2group", $arFields);
 
 		$strSql = "INSERT INTO b_catalog_product2group(".$arInsert[0].") VALUES(".$arInsert[1].")";
 		$DB->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
 
-		$ID = intval($DB->LastID());
-
-		return $ID;
+		return (int)$DB->LastID();
 	}
 
-	function GetList($arOrder = array(), $arFilter = array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array())
+	/**
+	 * @param array $arOrder
+	 * @param array $arFilter
+	 * @param bool|array $arGroupBy
+	 * @param bool|array $arNavStartParams
+	 * @param array $arSelectFields
+	 * @return bool|CDBResult
+	 */
+	public static function GetList($arOrder = array(), $arFilter = array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array())
 	{
 		global $DB;
 
@@ -103,4 +109,3 @@ class CCatalogProductGroups extends CAllCatalogProductGroups
 		return $dbRes;
 	}
 }
-?>

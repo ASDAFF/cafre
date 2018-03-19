@@ -1,6 +1,11 @@
-<?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();?>
+<?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
+/** @var CBitrixComponentTemplate $this */
+/** @var array $arParams */
+/** @var array $arResult */
+/** @global CDatabase $DB */
+/** @global CUser $USER */
+/** @global CMain $APPLICATION */
 
-<?
 $pageId = "group_blog";
 include("util_group_menu.php");
 include("util_group_profile.php");
@@ -27,7 +32,7 @@ $APPLICATION->IncludeComponent(
 		'HIDE_OWNER_IN_TITLE' => $arParams['HIDE_OWNER_IN_TITLE'],
 		"PATH_TO_BLOG" => $arResult["PATH_TO_GROUP_BLOG"],
 	),
-	$component
+	$this->getComponent()
 );
 
 
@@ -67,7 +72,9 @@ $APPLICATION->IncludeComponent(
 		"IMAGE_MAX_WIDTH" => $arParams["BLOG_IMAGE_MAX_WIDTH"],
 		"IMAGE_MAX_HEIGHT" => $arParams["BLOG_IMAGE_MAX_HEIGHT"],
 		"ALLOW_POST_CODE" => $arParams["BLOG_ALLOW_POST_CODE"],
+		"BLOG_NO_URL_IN_COMMENTS" => $arParams["BLOG_NO_URL_IN_COMMENTS"],
+		"BLOG_NO_URL_IN_COMMENTS_AUTHORITY" => $arParams["BLOG_NO_URL_IN_COMMENTS_AUTHORITY"],
 	),
-	$component
+	$this->getComponent()
 );
 ?>

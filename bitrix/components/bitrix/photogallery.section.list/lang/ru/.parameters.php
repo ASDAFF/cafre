@@ -39,4 +39,5 @@ $MESS["IBLOCK_SORT_SHOWS"] = "количество просмотров в среднем";
 $MESS["IBLOCK_SORT_RATING"] = "популярность";
 $MESS["IBLOCK_SORT_COMMENTS_BLOG"] = "комментарии блогов";
 $MESS["IBLOCK_SORT_COMMENTS_FORUM"] = "комментарии форумов";
+$MESS["P_SECTION_LIST_THUMBS_SIZE"] = "Размер картинки в предпросмотре в списке альбомов (px)";
 ?>

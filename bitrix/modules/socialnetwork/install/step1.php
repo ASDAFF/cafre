@@ -51,24 +51,26 @@
 
 	foreach ($arSites as $arSite)
 	{
+		$siteIdValue = htmlspecialcharsbx($arSite["SITE_ID"]);
+
 		$arSiteTabControl->BeginNextTab();
 		?>
 		<table class="list-table">
 			<tr>
 				<td width="50%" align="right"><?=GetMessage("SONETP_COPY_PUBLIC_FILES") ?>:</td>
-				<td><input type="checkbox" name="install_site_id_<?=$arSite["SITE_ID"]?>" id="install_site_id_<?=$arSite["SITE_ID"]?>" value="<?= $arSite["SITE_ID"] ?>" onclick="ChangeInstallPublic(this.checked, '<?=CUtil::JSEscape($arSite["SITE_ID"])?>')"></td>
+				<td><input type="checkbox" name="install_site_id_<?=$siteIdValue?>" id="install_site_id_<?=$siteIdValue?>" value="<?=$siteIdValue?>" onclick="ChangeInstallPublic(this.checked, '<?=CUtil::JSEscape($arSite["SITE_ID"])?>')"></td>
 			</tr>
 			<tr>
 				<td width="50%" align="right"><?=GetMessage("SONETP_INSTALL_404") ?>:</td>
-				<td><input type="checkbox" name="is404_<?=$arSite["SITE_ID"]?>" id="is404_<?=$arSite["SITE_ID"]?>" value="Y" checked></td>
+				<td><input type="checkbox" name="is404_<?=$siteIdValue?>" id="is404_<?=$siteIdValue?>" value="Y" checked></td>
 			</tr>
 			<tr>
 				<td width="50%" align="right"><?=GetMessage("SONETP_COPY_FOLDER") ?>:</td>
-				<td><input type="text" name="public_path_<?=$arSite["SITE_ID"]?>" id="public_path_<?=$arSite["SITE_ID"]?>" value="club"></td>
+				<td><input type="text" name="public_path_<?=$siteIdValue?>" id="public_path_<?=$siteIdValue?>" value="club"></td>
 			</tr>
 			<tr>
 				<td width="50%" align="right"><?= GetMessage("SONET_INSTALL_PUBLIC_REW") ?>:</td>
-				<td><input type="checkbox" name="public_rewrite_<?=$arSite["SITE_ID"]?>" id="public_rewrite_<?=$arSite["SITE_ID"]?>" value="Y"></td>
+				<td><input type="checkbox" name="public_rewrite_<?=$siteIdValue?>" id="public_rewrite_<?=$siteIdValue?>" value="Y"></td>
 			</tr>
 		</table>
 		<?

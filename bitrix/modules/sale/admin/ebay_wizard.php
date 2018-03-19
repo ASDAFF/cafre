@@ -10,6 +10,7 @@ namespace
 	Loc::loadMessages(__FILE__);
 	global $APPLICATION;
 	$APPLICATION->SetTitle(Loc::getMessage("SALE_EBAY_W_TITLE"));
+	$cleanCache = isset($_REQUEST['CLEAN_CACHE']) && $_REQUEST['CLEAN_CACHE'] == 'Y'? true : false;
 
 	if (!CModule::IncludeModule('sale'))
 	{
@@ -31,7 +32,7 @@ namespace
 	$ebay = Ebay::getInstance();
 
 	if(!$ebay->isActive())
-		LocalRedirect("/bitrix/admin/sale_ebay.php?lang=".LANG."&back_url=".urlencode($APPLICATION->GetCurPageParam()));
+		LocalRedirect("/bitrix/admin/sale_ebay_general.php?lang=".LANG."&back_url=".urlencode($APPLICATION->GetCurPageParam()));
 
 	$step = !empty($_REQUEST['STEP']) ? intval($_REQUEST['STEP']) : 0;
 
@@ -119,7 +120,7 @@ namespace
 
 	/** @var Wizard\Step  $wizardStep */
 	$wizardStepClassName = '\Bitrix\Sale\TradingPlatform\Ebay\Wizard\\'.$stepClassesList[$step];
-	$wizardStep = new $wizardStepClassName($siteId, $settings);
+	$wizardStep = new $wizardStepClassName($siteId, $settings, $cleanCache);
 	\Bitrix\Main\Page\Asset::getInstance()->addJs("/bitrix/js/sale/ebay_admin.js", true);
 
 	require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_after.php");
@@ -156,15 +157,16 @@ namespace
 
 
 		</style>
+		<span id="adm-sale-ebay-wiazard-admin-msg"></span>
 		<table>
 			<tr><td style="vertical-align: top;">
-				<form method="POST" action="<?echo $APPLICATION->GetCurPageParam('', array('STEP', 'SITE_ID'))?>" name="form">
+				<form method="POST" action="<?echo $APPLICATION->GetCurPageParam('', array('STEP', 'SITE_ID', 'CLEAN_CACHE'))?>" name="form">
 				<?=bitrix_sessid_post();?>
 				<div id="result">
 					<table width="100%">
 						<tr>
 							<td width="120px">
-								<img alt="eBay logo" src="/bitrix/images/sale/ebay-logo.png" style="width: 100px; height: 67px;">
+								<img alt="eBay logo" src="/bitrix/images/sale/ebay/logo.png" style="width: 100px; height: 67px;">
 							</td><td style="vertical-align: middle; text-align: left;">
 								<span style="font-weight: bold; font-size: 16px;"><?=$wizardStep->getName();?></span>
 							</td>
@@ -213,7 +215,7 @@ namespace
 								<?if($prevStepCompleted):?>
 									<a href="<?=$APPLICATION->GetCurPageParam(
 										'lang='.LANGUAGE_ID.'&STEP='.$classStep.'&SITE_ID='.$siteId,
-										array('STEP', 'lang', 'SITE_ID'))
+										array('STEP', 'lang', 'SITE_ID', 'CLEAN_CACHE'))
 										?>">
 										<?=htmlspecialcharsbx($fullClassName::getName())?>
 									</a>
@@ -225,13 +227,24 @@ namespace
 						<?endforeach;?>
 					</div>
 				</div>
+				<br><input type="button" value="<?=Loc::getMessage('SALE_EBAY_W_CLEAN_CACHE')?>" class="adm-btn-save" name="CLEAN_CACHE_BUTT" onclick="window.location.href='<?=$APPLICATION->GetCurPageParam('lang='.LANGUAGE_ID.'&STEP='.$step.'&SITE_ID='.$siteId.'&CLEAN_CACHE=Y', array('SITE_ID', 'STEP', 'lang', 'CLEAN_CACHE'))?>';">
 			</td></tr>
 		</table>
+
+		<?if($adminMessage = $wizardStep->getAdminMessage()):?>
+			<script type="text/javascript">
+				BX.ready( function(){
+					BX("adm-sale-ebay-wiazard-admin-msg").innerHTML = "<?=CUtil::JSEscape($adminMessage->Show())?>";
+				});
+			</script>
+		<?endif;?>
 	<?
 	require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");
 }
 namespace Bitrix\Sale\TradingPlatform\Ebay\Wizard
 {
+
+	use Bitrix\Main\Config\Option;
 	use Bitrix\Sale\TradingPlatform\Ebay\Api\Caller;
 	use Bitrix\Sale\TradingPlatform\Ebay\Ebay;
 	use Bitrix\Sale\TradingPlatform\Helper;
@@ -246,6 +259,7 @@ namespace Bitrix\Sale\TradingPlatform\Ebay\Wizard
 		protected $siteId = "";
 		protected $ebaySettings = array();
 		public static $useCache = true;
+		protected static $errors = array();
 
 		abstract public function getHtml();
 		public static function hasState() { return false; }
@@ -253,10 +267,32 @@ namespace Bitrix\Sale\TradingPlatform\Ebay\Wizard
 		public static function mustBeCompletedBeforeNext() { return false; }
 		public static function getName() { return ""; }
 
-		public function __construct($siteId, array $ebaySettings)
+
+		public function __construct($siteId, array $ebaySettings, $cleanCache = false)
 		{
 			$this->siteId = $siteId;
 			$this->ebaySettings = $ebaySettings;
+
+			if($cleanCache)
+			{
+				Step::$useCache = false;
+				self::cleanCache();
+			}
+		}
+
+		/**
+		 * @return \CAdminMessage|null
+		 */
+		public function getAdminMessage()
+		{
+			if(empty(self::$errors))
+				return null;
+
+			return new \CAdminMessage(array(
+				"TYPE" => "ERROR",
+				"MESSAGE" => implode("<br>\n", self::$errors),
+				"HTML" => true
+			));
 		}
 
 		public function save()
@@ -307,13 +343,13 @@ namespace Bitrix\Sale\TradingPlatform\Ebay\Wizard
 			$ttl = 86400;
 			$cacheId = __FILE__.":USER_INFO";
 
-			if(self::$useCache && $cacheManager->read($ttl, $cacheId))
+			if(Step::$useCache && $cacheManager->read($ttl, $cacheId))
 			{
 				$result = $cacheManager->get($cacheId);
 			}
 			else
 			{
-				if(!self::$useCache)
+				if(!Step::$useCache)
 					$cacheManager->clean($cacheId);
 
 				$ebay = \Bitrix\Sale\TradingPlatform\Ebay\Ebay::getInstance();
@@ -339,6 +375,24 @@ namespace Bitrix\Sale\TradingPlatform\Ebay\Wizard
 				$cacheManager->set($cacheId, $result);
 			}
 
+			if(!empty($result['Errors']) && empty(self::$errors[__METHOD__]))
+			{
+				$errorMessage = '';
+
+				if(!empty($result['Errors']['LongMessage']))
+					$errorMessage .= htmlspecialcharsbx($result['Errors']['LongMessage']);
+				elseif(!empty($result['Errors']['ShortMessage']))
+					$errorMessage .= htmlspecialcharsbx($result['Errors']['ShortMessage']);
+
+				if(!empty($result['Errors']['ErrorCode']))
+					$errorMessage .= ' (ErrorCode: '.htmlspecialcharsbx($result['Errors']['ErrorCode']).')';
+
+				if(!empty($errorMessage))
+					self::$errors[__METHOD__] = $errorMessage;
+				else
+					self::$errors[__METHOD__] = Loc::getMessage('SALE_EBAY_W_USER_INFO_ERROR');
+			}
+
 			return $result;
 		}
 
@@ -351,13 +405,13 @@ namespace Bitrix\Sale\TradingPlatform\Ebay\Wizard
 			$ttl = 86400;
 			$cacheId = __FILE__.":POLICY_INFO";
 
-			if(self::$useCache && $cacheManager->read($ttl, $cacheId))
+			if(Step::$useCache && $cacheManager->read($ttl, $cacheId))
 			{
 				$result = $cacheManager->get($cacheId);
 			}
 			else
 			{
-				if(!self::$useCache)
+				if(!Step::$useCache)
 					$cacheManager->clean($cacheId);
 
 				$policy = new \Bitrix\Sale\TradingPlatform\Ebay\Policy($ebaySettings[$siteId]["API"]["AUTH_TOKEN"], $siteId);
@@ -366,6 +420,13 @@ namespace Bitrix\Sale\TradingPlatform\Ebay\Wizard
 			}
 
 			return $result;
+		}
+
+		protected static function cleanCache()
+		{
+			$cacheManager = \Bitrix\Main\Application::getInstance()->getManagedCache();
+			$cacheManager->clean(__FILE__.":POLICY_INFO");
+			$cacheManager->clean(__FILE__.":USER_INFO");
 		}
 	}
 
@@ -394,7 +455,13 @@ namespace Bitrix\Sale\TradingPlatform\Ebay\Wizard
 		public function getHtml()
 		{
 			$logLevel = !empty($this->ebaySettings[$this->siteId]["LOG_LEVEL"]) ? htmlspecialcharsbx($this->ebaySettings[$this->siteId]["LOG_LEVEL"]) : Logger::LOG_LEVEL_ERROR;
-			$notificationEmail = !empty($this->ebaySettings[$this->siteId]["EMAIL_ERRORS"]) ? htmlspecialcharsbx($this->ebaySettings[$this->siteId]["EMAIL_ERRORS"]) : "";
+
+
+			if(!empty($this->ebaySettings[$this->siteId]["EMAIL_ERRORS"]))
+				$notificationEmail = htmlspecialcharsbx($this->ebaySettings[$this->siteId]["EMAIL_ERRORS"]);
+			else
+				$notificationEmail = Option::get("sale", "order_email", "");
+
 			$domainName = "";
 
 			if(!empty($this->ebaySettings[$this->siteId]["DOMAIN_NAME"]))
@@ -424,6 +491,7 @@ namespace Bitrix\Sale\TradingPlatform\Ebay\Wizard
 					'<tr><td>'.Loc::getMessage('SALE_EBAY_W_STEP_SITE_CHOOSE').':</td><td>'.\CLang::SelectBox("SITE_ID_SELECTED", $this->siteId).
 					'<input type="hidden" name="EBAY_SETTINGS[LOG_LEVEL]" value="'.$logLevel.'">'.
 					'<input type="hidden" name="EBAY_SETTINGS[DOMAIN_NAME]" value="'.$domainName.'">'.
+					'<input type="hidden" name="EBAY_SETTINGS[API][SITE_ID]" value="215">'.
 					'</td></tr>'.
 					'<tr><td>'.Loc::getMessage('SALE_EBAY_W_STEP_EMAIL').': '.'</td><td>'.
 					'<input type="text" name="EBAY_SETTINGS[EMAIL_ERRORS]" size="45" maxlength="255" value="'.$notificationEmail.'">'.
@@ -557,7 +625,7 @@ namespace Bitrix\Sale\TradingPlatform\Ebay\Wizard
 				Loc::getMessage('SALE_EBAY_W_STEP_ACCOUNT_REGISTER', array(
 					'#R1#' => '<a href="https://reg.ebay.com/reg/FullReg?firstname=&lastname=&userid=&email=&countryId=168&ru=http%3A%2F%2Fwww.ebay.com" target="blank">',
 					'#R2#' => '</a>',
-					'#I1#' => '<a href="http://pages.ebay.com/ru/ru-ru/kak-prodavat-na-ebay-spravka/registratsiya-prodavtsa.html">',
+					'#I1#' => '<a href="http://pages.ebay.com/ru/ru-ru/kak-prodavat-na-ebay-spravka/registratsiya-prodavtsa.html" target="blank">',
 					'#I2#' => '</a>'
 				));
 		}
@@ -593,7 +661,6 @@ namespace Bitrix\Sale\TradingPlatform\Ebay\Wizard
 				<br><br><textarea id="SALE_EBAY_SETTINGS_API_TOKEN" name="EBAY_SETTINGS[API][AUTH_TOKEN]" cols="70" rows="15" readonly>'.
 				$token.
 				'</textarea>
-				<input type="hidden" name="EBAY_SETTINGS[API][SITE_ID]" value="215">
 				<script>BX.Sale.EbayAdmin.addApiTokenListener({
 							messageOk: \''.Loc::getMessage('SALE_EBAY_W_STEP_TOKEN_GET_OK').'\',
 							messageError: \''.Loc::getMessage('SALE_EBAY_W_STEP_TOKEN_ERROR').'\'
@@ -613,6 +680,12 @@ namespace Bitrix\Sale\TradingPlatform\Ebay\Wizard
 
 	class StepPayPalAccount extends Step
 	{
+		public function __construct($siteId, array $ebaySettings, $cleanCache = false)
+		{
+			Step::$useCache = false;
+			parent::__construct($siteId, $ebaySettings, true);
+		}
+
 		public static function getName()
 		{
 			return Loc::getMessage('SALE_EBAY_W_STEP_ACCOUNT_PP');
@@ -633,8 +706,10 @@ namespace Bitrix\Sale\TradingPlatform\Ebay\Wizard
 				Loc::getMessage('SALE_EBAY_W_STEP_REGISTER_PP', array(
 					'#R1#' => '<a href="https://www.paypal.com/ru/signup/account" target="blank">',
 					'#R2#' => '</a>',
-					'#I1#' => '<a href="http://p.ebaystatic.com/aw/ru/pdf/PP-signup_flow-v7-(no-CC).pdf">',
-					'#I2#' => '</a>'
+					'#I1#' => '<a href="http://p.ebaystatic.com/aw/ru/pdf/PP-signup_flow-v7-(no-CC).pdf" target="blank">',
+					'#I2#' => '</a>',
+					'#S1#' => '<a href="https://www.paypal.com/selfhelp/contact/call" target="blank">',
+					'#S2#' => '</a>'
 				));
 
 			return $result;
@@ -661,6 +736,13 @@ namespace Bitrix\Sale\TradingPlatform\Ebay\Wizard
 
 	class StepConfirmContacts extends Step
 	{
+
+		public function __construct($siteId, array $ebaySettings, $cleanCache = false)
+		{
+			Step::$useCache = false;
+			parent::__construct($siteId, $ebaySettings, true);
+		}
+
 		public static function getName()
 		{
 			return Loc::getMessage('SALE_EBAY_W_STEP_CONTACTS_CONFIRM');
@@ -674,9 +756,9 @@ namespace Bitrix\Sale\TradingPlatform\Ebay\Wizard
 				self::getLampHtml($isConfirmed).' '.Loc::getMessage('SALE_EBAY_W_STEP_CONTACTS_DETAILS').' '.($isConfirmed ? Loc::getMessage('SALE_EBAY_W_STEP_CONFIRMED') : Loc::getMessage('SALE_EBAY_W_STEP_CONFIRMED')).'.'.
 				'<br><br><hr><br>'.
 				Loc::getMessage('SALE_EBAY_W_STEP_CONFIRMED_DETAIL',array(
-					'#C1#' => '<a href="http://scgi.ebay.com/ws/eBayISAPI.dll?SellerSignin2&clientapptype=7">',
+					'#C1#' => '<a href="http://scgi.ebay.com/ws/eBayISAPI.dll?SellerSignin2&clientapptype=7" target="blank">',
 					'#C2#' => '</a>',
-					'#I1#' => '<a href="http://pages.ebay.com/ru/ru-ru/kak-prodavat-na-ebay-spravka/podtverjdeniye-dannih.html">',
+					'#I1#' => '<a href="http://pages.ebay.com/ru/ru-ru/kak-prodavat-na-ebay-spravka/podtverjdeniye-dannih.html" target="blank">',
 					'#I2#' => '</a>'
 				)).'.';
 		}
@@ -705,7 +787,7 @@ namespace Bitrix\Sale\TradingPlatform\Ebay\Wizard
 				self::getLampHtml($succeed).'&nbsp;'.Loc::getMessage('SALE_EBAY_W_STEP_PP_ACCOUNT').' '.($succeed ? Loc::getMessage('SALE_EBAY_W_STEP_LINKED') : Loc::getMessage('SALE_EBAY_W_STEP_NOT_LINKED')).".".
 				'<br><br><hr><br>'.
 				Loc::getMessage('SALE_EBAY_W_STEP_EBAY_PP_LINK_DESCR',array(
-					'#I1#' => '<a href="http://pages.ebay.com/ru/ru-ru/kak-prodavat-na-ebay-spravka/privyazka-akkaunt-paypal-ebay.html">',
+					'#I1#' => '<a href="http://pages.ebay.com/ru/ru-ru/kak-prodavat-na-ebay-spravka/privyazka-akkaunt-paypal-ebay.html" target="blank">',
 					'#I2#' => '</a>'
 				)).'.';
 		}
@@ -715,7 +797,17 @@ namespace Bitrix\Sale\TradingPlatform\Ebay\Wizard
 		public static function isSucceed($siteId, array $ebaySettings)
 		{
 			$data = self::getUserInfo($siteId, $ebaySettings);
-			return !empty($data["User"]["SellerInfo"]["PaymentMethod"]) &&  $data["User"]["SellerInfo"]["PaymentMethod"] == "PayPal";
+			$result = !empty($data["User"]["SellerInfo"]["PaymentMethod"]) &&  $data["User"]["SellerInfo"]["PaymentMethod"] == "PayPal";
+
+			if(!$result && empty(self::$errors['PaymentMethod']))
+			{
+				self::$errors['PaymentMethod'] = Loc::getMessage(
+					'SALE_EBAY_W_PAYMENT_METHOD_ERROR',
+					array('#PAYMENT_METHOD#' => $data["User"]["SellerInfo"]["PaymentMethod"])
+				);
+			}
+
+			return $result;
 		}
 	}
 
@@ -734,9 +826,9 @@ namespace Bitrix\Sale\TradingPlatform\Ebay\Wizard
 				self::getLampHtml($succeed).' '.Loc::getMessage('SALE_EBAY_W_STEP_EBAY_ACCOUNT').' '.($succeed ? Loc::getMessage('SALE_EBAY_W_STEP_EBAY_ACCOUNT_CONFIRMED') : Loc::getMessage('SALE_EBAY_W_STEP_EBAY_ACCOUNT_NOT_CONFIRMED')).'.'.
 				'<br><br><hr><br>'.
 				Loc::getMessage('SALE_EBAY_W_STEP_EBAY_ACCOUNT_DESCR', array(
-					'#C1#' => '<a href="https://ocsnext.ebay.com/ocs/reghome">',
+					'#C1#' => '<a href="https://ocsnext.ebay.com/ocs/reghome" target="blank">',
 					'#C2#' => '</a>',
-					'#I1#' => '<a href="http://pages.ebay.com/ru/ru-ru/kak-prodavat-na-ebay-spravka/podtverjdenie-uchetnoy-zapisi.html">',
+					'#I1#' => '<a href="http://pages.ebay.com/ru/ru-ru/kak-prodavat-na-ebay-spravka/podtverjdenie-uchetnoy-zapisi.html" target="blank">',
 					'#I2#' => '</a>'
 				)).'.';
 		}
@@ -746,7 +838,18 @@ namespace Bitrix\Sale\TradingPlatform\Ebay\Wizard
 		public static function isSucceed($siteId, array $ebaySettings)
 		{
 			$data = self::getUserInfo($siteId, $ebaySettings);
-			return !empty($data["User"]["Site"]) && $data["User"]["Site"] == "Russia";
+			$result = !empty($data["User"]["Site"]) && $data["User"]["Site"] == "Russia";
+
+			if(!$result && empty(self::$errors['Site']))
+			{
+				self::$errors['Site'] = Loc::getMessage(
+					'SALE_EBAY_W_SITE_ERROR',
+					array('#SITE#' => $data["User"]["Site"])
+				);
+			}
+
+			return $result;
+
 		}
 	}
 
@@ -770,9 +873,9 @@ namespace Bitrix\Sale\TradingPlatform\Ebay\Wizard
 				self::getLampHtml($isShipments).' '.Loc::getMessage('SALE_EBAY_W_STEP_POLICY_SHIPMENT').' '.($isShipments ? Loc::getMessage('SALE_EBAY_W_STEP_POLICY_CREATED') : Loc::getMessage('SALE_EBAY_W_STEP_POLICY_NOT_CREATED')).'.<br>'.
 				'<br><br><hr><br>'.
 				Loc::getMessage('SALE_EBAY_W_STEP_POLICY_DESCR', array(
-					'#P1#' => '<a href="http://www.bizpolicy.ebay.ru/businesspolicy/manage?totalPages=1">',
+					'#P1#' => '<a href="http://www.bizpolicy.ebay.ru/businesspolicy/manage?totalPages=1" target="blank">',
 					'#P2#' => '</a>',
-					'#I1#' => '<a href="http://pages.ebay.com/ru/ru-ru/kak-prodavat-na-ebay-spravka/politiki.html">',
+					'#I1#' => '<a href="http://pages.ebay.com/ru/ru-ru/kak-prodavat-na-ebay-spravka/politiki.html" target="blank">',
 					'#I2#' => '</a>'
 				)).'.';
 		}
@@ -1149,7 +1252,7 @@ namespace Bitrix\Sale\TradingPlatform\Ebay\Wizard
 				self::getLampHtml($succeed).Loc::getMessage('SALE_EBAY_W_STEP_CATEGORIES_COUNT').': '.self::getMappedCount($this->siteId, $this->ebaySettings).'.'.
 				'<br><br><hr><br>'.
 				Loc::getMessage('SALE_EBAY_W_STEP_CATEGORIES_DESCR', array(
-					'#M1#' => '<a href="sale_ebay.php?lang='.LANGUAGE_ID.'&SITE_ID='.$this->siteId.'">',
+					'#M1#' => '<a href="sale_ebay_general.php?lang='.LANGUAGE_ID.'&SITE_ID='.$this->siteId.'">',
 					'#M2#' => '</a>'
 				));
 		}

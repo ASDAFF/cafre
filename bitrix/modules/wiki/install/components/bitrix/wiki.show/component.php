@@ -218,9 +218,9 @@ if($this->StartResultCache(false, array($USER->GetGroups(), $arCache)))
 			{
 				LocalRedirect(CHTTP::urlAddParams(CComponentEngine::MakePathFromTemplate($arParams['PATH_TO_POST'],
 					array(
-						'wiki_name' => urlencode($matches[2]),
+						'wiki_name' => rawurlencode($matches[2]),
 						'group_id' => CWikiSocnet::$iSocNetId,
-					)), array('redirect'=> urlencode($arParams['ELEMENT_NAME'])))
+					)), array('redirect'=> rawurlencode($arParams['ELEMENT_NAME'])))
 				);
 			}
 		}
@@ -361,7 +361,7 @@ if($this->StartResultCache(false, array($USER->GetGroups(), $arCache)))
 				$arResult['VERSION']['CUR_LINK'] = CHTTP::urlAddParams(
 					CComponentEngine::MakePathFromTemplate($arParams['PATH_TO_POST'],
 						array(
-							'wiki_name' => urlencode($arParams['ELEMENT_NAME']),
+							'wiki_name' => rawurlencode($arParams['ELEMENT_NAME']),
 							'group_id' => CWikiSocnet::$iSocNetId
 						)
 					),
@@ -373,7 +373,7 @@ if($this->StartResultCache(false, array($USER->GetGroups(), $arCache)))
 				$arResult['VERSION']['PREV_LINK'] = CHTTP::urlAddParams(
 					CComponentEngine::MakePathFromTemplate($arParams['PATH_TO_POST'],
 						array(
-							'wiki_name' => urlencode($arParams['ELEMENT_NAME']),
+							'wiki_name' => rawurlencode($arParams['ELEMENT_NAME']),
 							'group_id' => CWikiSocnet::$iSocNetId
 							)
 						),
@@ -386,7 +386,7 @@ if($this->StartResultCache(false, array($USER->GetGroups(), $arCache)))
 				$arResult['VERSION']['NEXT_LINK'] = CHTTP::urlAddParams(
 					CComponentEngine::MakePathFromTemplate($arParams['PATH_TO_POST'],
 						array(
-							'wiki_name' => urlencode($arParams['ELEMENT_NAME']),
+							'wiki_name' => rawurlencode($arParams['ELEMENT_NAME']),
 							'group_id' => CWikiSocnet::$iSocNetId
 						)
 					),
@@ -400,7 +400,7 @@ if($this->StartResultCache(false, array($USER->GetGroups(), $arCache)))
 			$arResult['VERSION']['CANCEL_LINK'] = CHTTP::urlAddParams(
 				CComponentEngine::MakePathFromTemplate($arParams['PATH_TO_HISTORY'],
 					array(
-						'wiki_name' => urlencode($arParams['ELEMENT_NAME']),
+						'wiki_name' => rawurlencode($arParams['ELEMENT_NAME']),
 						'group_id' => CWikiSocnet::$iSocNetId
 					)
 				),
@@ -426,7 +426,7 @@ if($this->StartResultCache(false, array($USER->GetGroups(), $arCache)))
 		$redirUrl = CHTTP::urlAddParams(
 				CComponentEngine::MakePathFromTemplate($arParams['PATH_TO_POST_EDIT'],
 					array(
-						'wiki_name' => urlencode($arResult['REDIRECTED_FROM']),
+						'wiki_name' => rawurlencode($arResult['REDIRECTED_FROM']),
 						'group_id' => CWikiSocnet::$iSocNetId
 					)
 				),

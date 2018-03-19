@@ -1,4 +1,4 @@
-<?
+<?php
 IncludeModuleLangFile(__FILE__);
 
 class CClusterDBNodeCheck extends CAllClusterDBNodeCheck
@@ -350,6 +350,7 @@ class CClusterDBNodeCheck extends CAllClusterDBNodeCheck
 		if(is_object($nodeDB))
 		{
 			//Test if this connection is not the same as master
+			$bSkipSecondTest = false;
 			//1. Make sure that no replication is runnung
 			$rs = $nodeDB->Query("show slave status");
 			if($ar = $rs->Fetch())
@@ -358,10 +359,12 @@ class CClusterDBNodeCheck extends CAllClusterDBNodeCheck
 				{
 					if($ar["Master_Host"] != $master_host || $ar["Master_Port"] != $master_port)
 						return GetMessage("CLU_RUNNING_SLAVE");
+					else
+						$bSkipSecondTest = true; //The replication is OK
 				}
 			}
 			//2. Check if b_cluster_dbnode exists on node
-			if($nodeDB->TableExists("b_cluster_dbnode"))
+			if($nodeDB->TableExists("b_cluster_dbnode") && !$bSkipSecondTest)
 			{
 				//2.1 Generate uniq id
 				$uniqid = md5(mt_rand());
@@ -793,7 +796,7 @@ class CClusterDBNodeCheck extends CAllClusterDBNodeCheck
 		return $result;
 	}
 
-	function GetServerVariables($DB, $arVariables, $db_mask)
+	public static function GetServerVariables($DB, $arVariables, $db_mask)
 	{
 		if($db_mask)
 			$where = " like '".$DB->ForSQL($db_mask)."'";
@@ -817,4 +820,3 @@ class CClusterDBNodeCheck extends CAllClusterDBNodeCheck
 	}
 
 }
-?>

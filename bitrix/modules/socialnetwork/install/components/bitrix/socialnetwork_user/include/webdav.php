@@ -100,7 +100,7 @@ $arParams["IBLOCK_TYPE"] = intVal($object == "user" ? $arParams["FILES_USER_IBLO
 $arParams["IBLOCK_ID"] = intVal($object == "user" ? $arParams["FILES_USER_IBLOCK_ID"] : $arParams["FILES_GROUP_IBLOCK_ID"]);
 $arParams['USE_AUTH'] = ($arParams['FILES_USE_AUTH'] == "Y" ? "Y" : "N");
 $arParams["NAME_FILE_PROPERTY"] = strToupper(trim(empty($arParams["FILE_NAME_FILE_PROPERTY"]) ? "FILE" : $arParams["FILE_NAME_FILE_PROPERTY"]));
-$arParams["FILES_PATH_TO_SMILE"] = (!empty($arParams["PATH_TO_FORUM_SMILE"]) ? $arParams["PATH_TO_FORUM_SMILE"] : "/bitrix/images/forum/smile/");
+$arParams["FILES_PATH_TO_SMILE"] = "/bitrix/images/forum/smile/";
 $arResult['BASE_URL'] = ($object == "user" ? $arParams["FILES_USER_BASE_URL"] : $arParams["FILES_GROUP_BASE_URL"]);
 if ($arParams["SEF_MODE"] == "Y"):
 	$arResult['BASE_URL'] = ($object == "user" ? $arResult["PATH_TO_USER_FILES"] : $arResult["PATH_TO_GROUP_FILES"]);
@@ -508,6 +508,11 @@ if (($_SERVER['REQUEST_METHOD'] == 'POST' || $_SERVER['REQUEST_METHOD'] == 'GET'
 		{
 			if(\Bitrix\Main\Config\Option::get('disk', 'successfully_converted', false) && CModule::includeModule('disk'))
 			{
+				if(empty($ob->arParams['element_array']['ID']) && !empty($arResult["VARIABLES"]["element_id"]))
+				{
+					$ob->IsDir(array("element_id" => $arResult["VARIABLES"]["element_id"]));
+				}
+
 				/** @var \Bitrix\Disk\File $diskFile */
 				$diskFile = \Bitrix\Disk\File::load(array('XML_ID' => $ob->arParams['element_array']['ID']), array('STORAGE'));
 				if($diskFile)
@@ -547,7 +552,12 @@ if (($_SERVER['REQUEST_METHOD'] == 'POST' || $_SERVER['REQUEST_METHOD'] == 'GET'
 	{
 		if(\Bitrix\Main\Config\Option::get('disk', 'successfully_converted', false) && CModule::includeModule('disk'))
 		{
-				/** @var \Bitrix\Disk\File $diskFile */
+			if(empty($ob->arParams['element_array']['ID']) && !empty($arResult["VARIABLES"]["element_id"]))
+			{
+				$ob->IsDir(array("element_id" => $arResult["VARIABLES"]["element_id"]));
+			}
+
+			/** @var \Bitrix\Disk\File $diskFile */
 			$diskFile = \Bitrix\Disk\File::load(array('XML_ID' => $ob->arParams['element_array']['ID']), array('STORAGE'));
 			if($diskFile)
 			{

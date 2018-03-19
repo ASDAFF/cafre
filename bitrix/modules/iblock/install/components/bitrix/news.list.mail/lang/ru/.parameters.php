@@ -33,4 +33,6 @@ $MESS["CP_BNL_INCLUDE_SUBSECTIONS"] = "Показывать элементы подразделов раздела";
 $MESS["CP_BNL_SET_BROWSER_TITLE"] = "Устанавливать заголовок окна браузера";
 $MESS["CP_BNL_SET_META_KEYWORDS"] = "Устанавливать ключевые слова страницы";
 $MESS["CP_BNL_SET_META_DESCRIPTION"] = "Устанавливать описание страницы";
+$MESS["T_IBLOCK_DESC_PREVENT_SEND_IF_NO_NEWS"] = "Не отправлять выпуск если недостаточно указанного количества новых элементов.";
+$MESS["T_IBLOCK_DESC_SENDER_CHAIN_ID"] = "Код периодического выпуска рассылки.";
 ?>

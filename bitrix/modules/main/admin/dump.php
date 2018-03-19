@@ -29,7 +29,7 @@ IncludeModuleLangFile(__FILE__);
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/classes/general/backup.php");
 $strBXError = '';
 $bGzip = function_exists('gzcompress');
-$bMcrypt = function_exists('mcrypt_encrypt');
+$bMcrypt = function_exists('mcrypt_encrypt') || function_exists('openssl_encrypt');
 $bHash = function_exists('hash');
 $bBitrixCloud = $bMcrypt && $bHash;
 if (!CModule::IncludeModule('bitrixcloud'))
@@ -217,7 +217,7 @@ if($_REQUEST['process'] == "Y")
 			$prefix = '';
 			if (count($NS['dump_site_id']) == 1)
 			{
-				$rs = CSite::GetList($by='sort', $order='asc', array('ID' => $NS['dump_site_id'][0]));
+				$rs = CSite::GetList($by='sort', $order='asc', array('ID' => $NS['dump_site_id'][0], 'ACTIVE' => 'Y'));
 				if ($f = $rs->Fetch())
 					$prefix = str_replace('/', '', $f['SERVER_NAME']);
 			}
@@ -446,7 +446,7 @@ if($_REQUEST['process'] == "Y")
 				if (is_array($NS['dump_site_id']))
 				{
 					$SITE_ID = reset($NS['dump_site_id']);
-					$rs = CSite::GetList($by='sort', $order='asc', array('ID' => $SITE_ID));
+					$rs = CSite::GetList($by='sort', $order='asc', array('ID' => $SITE_ID, 'ACTIVE' => 'Y'));
 					if ($f = $rs->Fetch())
 					{
 						$DOCUMENT_ROOT_SITE = rtrim(str_replace('\\','/',$f['ABS_DOC_ROOT']),'/');
@@ -498,7 +498,7 @@ if($_REQUEST['process'] == "Y")
 				$status_details = GetMessage("MAIN_DUMP_FILE_CNT")." <b>".intval($NS["cnt"])."</b>";
 				$last_files_count = IntOption('last_files_count');
 				if (!$last_files_count)
-					$last_files_count = 100000;
+					$last_files_count = 200000;
 				$step_done = $NS['cnt'] / $last_files_count;
 				if ($step_done > 1)
 					$step_done = 1;
@@ -693,7 +693,8 @@ if($_REQUEST['process'] == "Y")
 								}
 								else
 								{
-									CBitrixCloudBackup::clearOptions();
+									$ob = new CBitrixCloudBackup;
+									$ob->clearOptions();
 									$name = CTar::getFirstName($NS['arc_name']);
 									while(file_exists($name))
 									{

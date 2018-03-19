@@ -1,8 +1,11 @@
-<?
+<?php
 class CAllSearcher
 {
-	function DynamicDays($SEARCHER_ID, $date1="", $date2="")
+	public static function DynamicDays($SEARCHER_ID, $date1="", $date2="")
 	{
+		$by = "";
+		$order = "";
+		$arMaxMin = array();
 		$arFilter = array("DATE1"=>$date1, "DATE2"=>$date2);
 		$z = CSearcher::GetDynamicList($SEARCHER_ID, $by, $order, $arMaxMin, $arFilter);
 		$d = 0;
@@ -13,12 +16,12 @@ class CAllSearcher
 	}
 
 	// returns arrays needed to plot site indexing graph
-	function GetGraphArray($arFilter, &$arrLegend)
+	public static function GetGraphArray($arFilter, &$arrLegend)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
 		$arSqlSearch = Array("D.SEARCHER_ID <> 1");
-		$strSqlSearch = "";
+
 		if (is_array($arFilter))
 		{
 			foreach ($arFilter as $key => $val)
@@ -33,7 +36,7 @@ class CAllSearcher
 					if( (strlen($val) <= 0) || ($val === "NOT_REF") )
 						continue;
 				}
-				$match_value_set = array_key_exists($key."_EXACT_MATCH", $arFilter);
+
 				$key = strtoupper($key);
 				switch($key)
 				{
@@ -75,26 +78,24 @@ class CAllSearcher
 				$arrLegend[0]["COUNTER_TYPE"] = "TOTAL";
 			}
 		}
-		reset($arrLegend);
+
+		$color = "";
 		$total = sizeof($arrLegend);
-		while (list($key, $arr) = each($arrLegend))
+		foreach ($arrLegend as $key => $arr)
 		{
 			$color = GetNextRGB($color, $total);
-			$arr["COLOR"] = $color;
-			$arrLegend[$key] = $arr;
+			$arrLegend[$key]["COLOR"] = $color;
 		}
 
-		reset($arrDays);
-		reset($arrLegend);
 		return $arrDays;
 	}
 
-	function GetDomainList(&$by, &$order, $arFilter=Array(), &$is_filtered)
+	public static function GetDomainList(&$by, &$order, $arFilter=Array(), &$is_filtered)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
 		$arSqlSearch = Array("P.SEARCHER_ID <> 1");
-		$strSqlSearch = "";
+
 		if (is_array($arFilter))
 		{
 			foreach ($arFilter as $key => $val)
@@ -126,10 +127,10 @@ class CAllSearcher
 				}
 			}
 		}
-		$strSqlOrder = "";
-		if ($by == "s_id")				$strSqlOrder = "ORDER BY P.ID";
-		elseif ($by == "s_domain")		$strSqlOrder = "ORDER BY P.DOMAIN";
-		elseif ($by == "s_variable")	$strSqlOrder = "ORDER BY P.VARIABLE";
+
+		if ($by == "s_id") $strSqlOrder = "ORDER BY P.ID";
+		elseif ($by == "s_domain") $strSqlOrder = "ORDER BY P.DOMAIN";
+		elseif ($by == "s_variable") $strSqlOrder = "ORDER BY P.VARIABLE";
 		else
 		{
 			$by = "s_id";
@@ -159,7 +160,7 @@ class CAllSearcher
 		return $rs;
 	}
 
-	function GetByID($ID)
+	public static function GetByID($ID)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -169,4 +170,3 @@ class CAllSearcher
 		return $res;
 	}
 }
-?>

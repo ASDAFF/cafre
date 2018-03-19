@@ -120,14 +120,14 @@ $tabControl->BeginNextTab();
 			<?= GetMessage("FORUM_PPE_MIN_MES") ?>:
 		</td>
 		<td width="60%">
-			<input type="text" name="MIN_NUM_POSTS" value="<?=htmlspecialcharsEx($str_MIN_NUM_POSTS)?>" size="20" maxlength="18">
+			<input type="text" name="MIN_NUM_POSTS" value="<?=htmlspecialcharsbx($str_MIN_NUM_POSTS)?>" size="20" maxlength="18">
 		</td>
 	</tr>
 
 	<tr>
 		<td><?= GetMessage("FORUM_PPE_PPM") ?>:</td>
 		<td>
-			<input type="text" name="POINTS_PER_POST" value="<?=htmlspecialcharsEx($str_POINTS_PER_POST)?>" size="20" maxlength="19">
+			<input type="text" name="POINTS_PER_POST" value="<?=htmlspecialcharsbx($str_POINTS_PER_POST)?>" size="20" maxlength="19">
 		</td>
 	</tr>
 <?

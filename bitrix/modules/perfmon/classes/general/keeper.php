@@ -41,7 +41,7 @@ function perfmonErrorHandler($errno, $errstr, $errfile, $errline)
 
 class CPerfomanceKeeper
 {
-	function OnPageStart()
+	public static function OnPageStart()
 	{
 		if (!defined("PERFMON_STOP"))
 		{
@@ -92,13 +92,13 @@ class CPerfomanceKeeper
 		$APPLICATION->ShowIncludeStat = $toRestore[2];
 	}
 
-	function OnEpilog()
+	public static function OnEpilog()
 	{
 		if (defined("PERFMON_STARTED"))
 			self::restoreDebugMode();
 	}
 
-	function OnBeforeAfterEpilog()
+	public static function OnBeforeAfterEpilog()
 	{
 		if (defined("PERFMON_STARTED"))
 		{
@@ -107,7 +107,7 @@ class CPerfomanceKeeper
 		}
 	}
 
-	function OnAfterAfterEpilog()
+	public static function OnAfterAfterEpilog()
 	{
 		if (defined("PERFMON_STARTED"))
 		{
@@ -269,7 +269,7 @@ class CPerfomanceKeeper
 		}
 	}
 
-	function SetPageTimes($START_EXEC_CURRENT_TIME, &$arFields)
+	public static function SetPageTimes($START_EXEC_CURRENT_TIME, &$arFields)
 	{
 		list($usec, $sec) = explode(" ", $START_EXEC_CURRENT_TIME);
 		$CURRENT_TIME = $sec + $usec;

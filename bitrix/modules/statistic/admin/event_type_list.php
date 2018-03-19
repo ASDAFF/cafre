@@ -1,7 +1,7 @@
-<?
+<?php
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/statistic/prolog.php");
-
+/** @var CMain $APPLICATION */
 IncludeModuleLangFile(__FILE__);
 
 $STAT_RIGHT = $APPLICATION->GetGroupRight("statistic");
@@ -190,7 +190,7 @@ if(($arID = $lAdmin->GroupAction()) && $STAT_RIGHT>="W")
 	{
 		if(strlen($ID)<=0)
 			continue;
-		$ID = IntVal($ID);
+		$ID = intval($ID);
 		switch($_REQUEST['action'])
 		{
 		case "delete":
@@ -684,5 +684,4 @@ $lAdmin->DisplayList();
 ?>
 
 <?
-require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");?>
-?>
+require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");

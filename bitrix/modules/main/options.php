@@ -3,7 +3,7 @@
  * Bitrix Framework
  * @package bitrix
  * @subpackage main
- * @copyright 2001-2013 Bitrix
+ * @copyright 2001-2016 Bitrix
  */
 
 /**
@@ -110,6 +110,11 @@ $arAllOptions = array(
 		Array("bx_fast_download", GetMessage("MAIN_OPT_BX_FAST_DOWNLOAD"), "N", Array("checkbox", "N")),
 		Array("note" => GetMessage("MAIN_OPT_BX_FAST_DOWNLOAD_HINT")),
 
+		GetMessage("MAIN_OPTIONS_IMAGES"),
+		Array("profile_image_width", GetMessage("MAIN_OPTIONS_IMAGES_WIDTH"), "", Array("text", "10")),
+		Array("profile_image_height", GetMessage("MAIN_OPTIONS_IMAGES_HEIGHT"), "", Array("text", "10")),
+		Array("profile_image_size", GetMessage("MAIN_OPTIONS_IMAGES_SIZE"), "", Array("text", "10")),
+
 		GetMessage("MAIN_OPTIMIZE_CSS_SETTINGS"),
 		Array("optimize_css_files", GetMessage("MAIN_OPTIMIZE_CSS"), "N", Array("checkbox", "Y")),
 		Array("optimize_js_files", GetMessage("MAIN_OPTIMIZE_JS"), "N", Array("checkbox", "Y")),
@@ -125,6 +130,7 @@ $arAllOptions = array(
 		array("curr_time", GetMessage("MAIN_OPT_TIME_ZONES_LOCAL"), GetMessage("MAIN_OPT_TIME_ZONES_DIFF")." ".date('O')." (".date('Z').")<br>".GetMessage("MAIN_OPT_TIME_ZONES_DIFF_STD")." ".(date('I')? GetMessage("MAIN_OPT_TIME_ZONES_DIFF_STD_S") : GetMessage("MAIN_OPT_TIME_ZONES_DIFF_STD_ST"))."<br>".GetMessage("MAIN_OPT_TIME_ZONES_DIFF_DATE")." ".date('r'), array("statichtml")),
 	),
 	"update" => Array(
+		Array("update_devsrv", GetMessage("MAIN_OPTIONS_UPDATE_DEVSRV"), "N", Array("checkbox", "Y")),
 		Array("update_site", GetMessage("MAIN_UPDATE_SERVER"), "www.bitrixsoft.com", Array("text", 30)),
 		Array("update_site_proxy_addr", GetMessage("MAIN_UPDATE_SERVER_PR_AD"), "", Array("text", 30)),
 		Array("update_site_proxy_port", GetMessage("MAIN_UPDATE_SERVER_PR_PR"), "", Array("text", 30)),
@@ -146,6 +152,7 @@ $arAllOptions = array(
 		Array("note"=>GetMessage("MAIN_OPT_DIGEST_NOTE")),
 		Array("custom_register_page", GetMessage("MAIN_OPT_REGISTER_PAGE"), "", Array("text", 40)),
 		Array("auth_components_template", GetMessage("MAIN_OPTIONS_AUTH_TEMPLATE") , "", Array("text", 40)),
+		Array("captcha_restoring_password", GetMessage("MAIN_OPTIONS_USE_CAPTCHA"), "N", Array("checkbox", "Y")),
 
 		GetMessage("MAIN_OPT_SECURE_AUTH"),
 		Array("use_encrypted_auth", GetMessage("MAIN_OPT_SECURE_PASS"), "N", Array("checkbox", "Y"), (CRsaSecurity::Possible()? "N":"Y")),
@@ -176,23 +183,22 @@ $arAllOptions = array(
 	),
 );
 
-if(CTimeZone::Possible())
-{
-	$aZones = CTimeZone::GetZones();
-	$arAllOptions["main"][] = array("use_time_zones", GetMessage("MAIN_OPT_USE_TIMEZONES"), "N", array("checkbox", "Y", 'onclick="this.form.default_time_zone.disabled = this.form.auto_time_zone.disabled = !this.checked;"'));
-	$arAllOptions["main"][] = array("default_time_zone", GetMessage("MAIN_OPT_TIME_ZONE_DEF"), "", array("selectbox", $aZones));
-	$arAllOptions["main"][] = array("auto_time_zone", GetMessage("MAIN_OPT_TIME_ZONE_AUTO"), "N", array("checkbox", "Y"));
-}
-else
-{
-	$arAllOptions["main"][] = array('note'=>GetMessage("MAIN_OPT_TIME_ZONE_NOTE"));
-}
+$aZones = CTimeZone::GetZones();
+$arAllOptions["main"][] = array("use_time_zones", GetMessage("MAIN_OPT_USE_TIMEZONES"), "N", array("checkbox", "Y", 'onclick="this.form.default_time_zone.disabled = this.form.auto_time_zone.disabled = !this.checked;"'));
+$arAllOptions["main"][] = array("default_time_zone", GetMessage("MAIN_OPT_TIME_ZONE_DEF"), "", array("selectbox", $aZones));
+$arAllOptions["main"][] = array("auto_time_zone", GetMessage("MAIN_OPT_TIME_ZONE_AUTO"), "N", array("checkbox", "Y"));
 
-if (\Bitrix\Main\Analytics\SiteSpeed::isLicenseAccepted())
+$countriesReference = GetCountryArray();
+$countriesArray = array();
+foreach ($countriesReference['reference_id'] as $k => $v)
 {
-	$arAllOptions["main"][] = GetMessage("MAIN_SITE_SPEED_SETTINGS");
-	$arAllOptions["main"][] = array("gather_user_stat", GetMessage("MAIN_GATHER_USER_STAT"), "Y", Array("checkbox", "Y"));
+	$countriesArray[$v] = $countriesReference['reference'][$k];
+}
+$arAllOptions["main"][] = GetMessage("MAIN_OPTIONS_PHONE_NUMBER_FORMAT");
+$arAllOptions["main"][] = array("phone_number_default_country", GetMessage("MAIN_OPTIONS_PHONE_NUMBER_DEFAULT_COUNTRY"), "", array("selectbox", $countriesArray));
 
+if (\Bitrix\Main\Analytics\SiteSpeed::isRussianSiteManager())
+{
 	$arAllOptions["main"][] = GetMessage("MAIN_CATALOG_STAT_SETTINGS");
 	$arAllOptions["main"][] = array("gather_catalog_stat", GetMessage("MAIN_GATHER_CATALOG_STAT"), "Y", Array("checkbox", "Y"));
 }
@@ -201,32 +207,31 @@ $arAllOptions["main"][] = GetMessage("main_options_map");
 $arAllOptions["main"][] = Array("map_top_menu_type", GetMessage("MAIN_TOP_MENU_TYPE"), "top", Array("text", 30));
 $arAllOptions["main"][] = Array("map_left_menu_type", GetMessage("MAIN_LEFT_MENU_TYPE"), "left", Array("text", 30));
 
-//show public panel for users
+$arAllOptions["main"][] = GetMessage("MAIN_OPTIONS_URL_PREVIEW");
+$arAllOptions["main"][] = Array("url_preview_enable", GetMessage("MAIN_OPTION_URL_PREVIEW_ENABLE"), "N", array("checkbox", "Y"));
+$arAllOptions["main"][] = Array("url_preview_save_images", GetMessage("MAIN_OPTION_URL_PREVIEW_SAVE_IMAGES"), "N", array("checkbox", "Y"));
+
 CJSCore::Init(array('access'));
 
+//show the public panel for users
 $arCodes = unserialize(COption::GetOptionString("main", "show_panel_for_users"));
 if(!is_array($arCodes))
 	$arCodes = array();
 
-$access = new CAccess();
-$arNames = $access->GetNames($arCodes);
+//hide the public panel for users
+$arHideCodes = unserialize(COption::GetOptionString("main", "hide_panel_for_users"));
+if(!is_array($arHideCodes))
+	$arHideCodes = array();
 
-$arSel = array();
-foreach($arCodes as $code)
-	$arSel[$code] = true;
+$access = new CAccess();
+$arNames = $access->GetNames(array_merge($arCodes, $arHideCodes));
 
 $panel = "
 <script type=\"text/javascript\">
 
-BX.Access.Init({
-	other: {disabled:true}
-});
-
-BX.Access.SetSelected(".CUtil::PhpToJSObject($arSel).");
-
-function InsertAccess(arRights)
+function InsertAccess(arRights, divId, hiddenName)
 {
-	var div = BX('bx_access_div');
+	var div = BX(divId);
 	for(var provider in arRights)
 	{
 		for(var id in arRights[provider])
@@ -234,7 +239,7 @@ function InsertAccess(arRights)
 			var pr = BX.Access.GetProviderPrefix(provider, id);
 			var newDiv = document.createElement('DIV');
 			newDiv.style.marginBottom = '4px';
-			newDiv.innerHTML = '<input type=\"hidden\" name=\"show_panel_for_users[]\" value=\"'+id+'\">' + (pr? pr+': ':'') + arRights[provider][id].name + '&nbsp;<a href=\"javascript:void(0);\" onclick=\"DeleteAccess(this, \\''+id+'\\')\" class=\"access-delete\"></a>';
+			newDiv.innerHTML = '<input type=\"hidden\" name=\"'+hiddenName+'\" value=\"'+id+'\">' + (pr? pr+': ':'') + arRights[provider][id].name + '&nbsp;<a href=\"javascript:void(0);\" onclick=\"DeleteAccess(this, \\''+id+'\\')\" class=\"access-delete\"></a>';
 			div.appendChild(newDiv);
 		}
 	}
@@ -244,7 +249,32 @@ function DeleteAccess(ob, id)
 {
 	var div = BX.findParent(ob, {'tag':'div'});
 	div.parentNode.removeChild(div);
-	BX.Access.DeleteSelected(id);
+}
+
+function ShowPanelFor()
+{
+	BX.Access.Init({
+		other: {disabled:true}
+	});
+	BX.Access.SetSelected({});
+	BX.Access.ShowForm({
+		callback: function(obSelected)
+		{
+			InsertAccess(obSelected, 'bx_access_div', 'show_panel_for_users[]');
+		}
+	});
+}
+
+function HidePanelFor()
+{
+	BX.Access.Init();
+	BX.Access.SetSelected({});
+	BX.Access.ShowForm({
+		callback: function(obSelected)
+		{
+			InsertAccess(obSelected, 'bx_access_hide_div', 'hide_panel_for_users[]');
+		}
+	});
 }
 </script>
 
@@ -252,12 +282,22 @@ function DeleteAccess(ob, id)
 ";
 
 foreach($arCodes as $code)
-	$panel .= '<div style="margin-bottom:4px"><input type="hidden" name="show_panel_for_users[]" value="'.$code.'">'.($arNames[$code]["provider"] <> ''? $arNames[$code]["provider"].': ':'').$arNames[$code]["name"].'&nbsp;<a href="javascript:void(0);" onclick="DeleteAccess(this, \''.$code.'\')" class="access-delete"></a></div>';
+	$panel .= '<div style="margin-bottom:4px"><input type="hidden" name="show_panel_for_users[]" value="'.$code.'">'.($arNames[$code]["provider"] <> ''? $arNames[$code]["provider"].': ':'').htmlspecialcharsbx($arNames[$code]["name"]).'&nbsp;<a href="javascript:void(0);" onclick="DeleteAccess(this, \''.$code.'\')" class="access-delete"></a></div>';
 
-$panel .= '</div><a href="javascript:void(0)" class="bx-action-href" onclick="BX.Access.ShowForm({callback:function(obSelected){InsertAccess(obSelected)}})">'.GetMessage("main_sett_add_users").'</a>';
+$panel .= '</div><a href="javascript:void(0)" class="bx-action-href" onclick="ShowPanelFor()">'.GetMessage("main_sett_add_users").'</a>';
+
+$panelHide = "
+<div id=\"bx_access_hide_div\">
+";
+
+foreach($arHideCodes as $code)
+	$panelHide .= '<div style="margin-bottom:4px"><input type="hidden" name="hide_panel_for_users[]" value="'.$code.'">'.($arNames[$code]["provider"] <> ''? $arNames[$code]["provider"].': ':'').htmlspecialcharsbx($arNames[$code]["name"]).'&nbsp;<a href="javascript:void(0);" onclick="DeleteAccess(this, \''.$code.'\')" class="access-delete"></a></div>';
+
+$panelHide .= '</div><a href="javascript:void(0)" class="bx-action-href" onclick="HidePanelFor()">'.GetMessage("main_sett_add_users").'</a>';
 
 $arAllOptions["main"][] = GetMessage("main_sett_public_panel");
 $arAllOptions["main"][] = Array("", GetMessage("main_sett_public_panel_show"), $panel, Array("statichtml"));
+$arAllOptions["main"][] = Array("", GetMessage("main_sett_public_panel_hide"), $panelHide, Array("statichtml"));
 
 if(CRsaSecurity::Possible())
 {
@@ -277,6 +317,17 @@ else
 	$arAllOptions["auth"][] = array("note"=>GetMessage("MAIN_OPT_EXT_NOTE"));
 }
 
+$intl = new \Bitrix\Main\UserConsent\Intl(LANGUAGE_ID);
+$listAgreement = array("" => GetMessage("MAIN_REGISTER_AGREEMENT_DEFAUTL_VALUE"));
+$listAgreementObject = \Bitrix\Main\UserConsent\Internals\AgreementTable::getList(array(
+	"select" => array("ID", "NAME"),
+	"filter" => array("=ACTIVE" => "Y"),
+	"order" => array("ID" => "ASC")
+));
+foreach ($listAgreementObject as $agreement)
+{
+	$listAgreement[$agreement["ID"]] = $agreement["NAME"];
+}
 $arAllOptions["auth"][] = GetMessage("MAIN_REGISTRATION_OPTIONS");
 $arAllOptions["auth"][] = Array("new_user_registration", GetMessage("MAIN_REGISTER"), "Y", Array("checkbox", "Y"));
 $arAllOptions["auth"][] = Array("captcha_registration", GetMessage("MAIN_OPTION_FNAME_CAPTCHA"), "N", Array("checkbox", "Y"));
@@ -285,6 +336,8 @@ $arAllOptions["auth"][] = Array("new_user_email_required", GetMessage("MAIN_OPTI
 $arAllOptions["auth"][] = Array("new_user_registration_email_confirmation", GetMessage("MAIN_REGISTER_EMAIL_CONFIRMATION", array("#EMAIL_TEMPLATES_URL#" => "/bitrix/admin/message_admin.php?lang=".LANGUAGE_ID."&set_filter=Y&find_type_id=NEW_USER_CONFIRM")), "N", Array("checkbox", "Y"));
 $arAllOptions["auth"][] = Array("new_user_registration_cleanup_days", GetMessage("MAIN_REGISTER_CLEANUP_DAYS"), "7", Array("text", 5));
 $arAllOptions["auth"][] = Array("new_user_email_uniq_check", GetMessage("MAIN_REGISTER_EMAIL_UNIQ_CHECK").($bEmailIndex? "<br>".GetMessage("MAIN_REGISTER_EMAIL_INDEX_WARNING"): ""), "N", Array("checkbox", "Y"));
+$arAllOptions["auth"][] = array("note" => $intl->getDataValue('DESCRIPTION'));
+$arAllOptions["auth"][] = array("new_user_agreement", GetMessage("MAIN_REGISTER_AGREEMENT_TITLE", array("#AGGREMENT_CREATE_URL#" => BX_ROOT.'/admin/agreement_edit.php?ID=0&lang='.LANGUAGE_ID)), "", array("selectbox", $listAgreement), "", "", "Y");
 
 $arAllOptions["auth"][] = GetMessage("MAIN_OPTION_SESS");
 $arAllOptions["auth"][] = Array("session_expand", GetMessage("MAIN_OPTION_SESS_EXPAND"), "Y", Array("checkbox", "Y"));
@@ -323,6 +376,7 @@ if($_SERVER["REQUEST_METHOD"]=="POST" && strlen($_POST["Update"])>0 && ($USER->C
 	}
 	COption::SetOptionString("main", "admin_lid", $_POST["admin_lid"]);
 	COption::SetOptionString("main", "show_panel_for_users", serialize($_POST["show_panel_for_users"]));
+	COption::SetOptionString("main", "hide_panel_for_users", serialize($_POST["hide_panel_for_users"]));
 
 	$cleanup_days = COption::GetOptionInt("main", "new_user_registration_cleanup_days", 7);
 	if($cleanup_days > 0 && COption::GetOptionString("main", "new_user_registration_email_confirmation", "N") === "Y")

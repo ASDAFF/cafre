@@ -260,7 +260,11 @@ class CUserAuthProvider extends CAuthProvider implements IProviderInterface
 
 		$nameFormat = CSite::GetNameFormat(false);
 
-		$arFilter = array('ACTIVE' => 'Y', 'NAME_SEARCH' => $search);
+		$arFilter = array(
+			'ACTIVE' => 'Y', 
+			'NAME_SEARCH' => $search,
+			'!EXTERNAL_AUTH_ID' => array('replica', 'email', 'bot', 'imconnector')
+		);
 
 		if (
 			IsModuleInstalled('intranet')

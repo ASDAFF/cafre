@@ -16,4 +16,5 @@ $MESS["MYMS_PARAM_CONTROLS_SCALELINE"] = "Zoom Scale";
 $MESS["MYMS_PARAM_MAP_HEIGHT"] = "Map Height";
 $MESS["MYMS_PARAM_MAP_WIDTH"] = "Map Width";
 $MESS["MYMS_PARAM_MAP_ID"] = "Map ID";
+$MESS["MYMS_PARAM_API_KEY"] = "JavaScript API key";
 ?>

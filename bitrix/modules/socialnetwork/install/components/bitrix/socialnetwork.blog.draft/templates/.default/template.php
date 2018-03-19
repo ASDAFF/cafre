@@ -1,7 +1,14 @@
-<?if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();?>
-<?$GLOBALS['APPLICATION']->SetAdditionalCSS('/bitrix/components/bitrix/socialnetwork.log.ex/templates/.default/style.css');?>
-<div id="blog-posts-content">
-<?
+<?if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
+/** @var CBitrixComponentTemplate $this */
+/** @var array $arParams */
+/** @var array $arResult */
+/** @global CDatabase $DB */
+/** @global CUser $USER */
+/** @global CMain $APPLICATION */
+
+$APPLICATION->SetAdditionalCSS('/bitrix/components/bitrix/socialnetwork.log.ex/templates/.default/style.css');
+
+?><div id="blog-posts-content"><?
 if(!empty($arResult["OK_MESSAGE"]))
 {
 	?>
@@ -87,14 +94,17 @@ if(count($arResult["POST"])>0)
 						"POST_DATA"				=> $CurPost,
 						"TYPE"					=> "DRAFT",
 						"ADIT_MENU"				=> $CurPost["ADIT_MENU"],
+						"BLOG_NO_URL_IN_COMMENTS" => $arParams["BLOG_NO_URL_IN_COMMENTS"],
+						"BLOG_NO_URL_IN_COMMENTS_AUTHORITY" => $arParams["BLOG_NO_URL_IN_COMMENTS_AUTHORITY"]
 					),
-				$component 
+					$this->getComponent()
 			);
 		?>
 		<?
 	}
 	if(strlen($arResult["NAV_STRING"])>0)
+	{
 		echo $arResult["NAV_STRING"];
+	}
 }
-?>	
-</div>
+?></div>

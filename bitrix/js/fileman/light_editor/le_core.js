@@ -12,6 +12,7 @@ Init: function(arConfig)
 	this.arConfig = arConfig;
 	this.bxTags = {};
 	this.bFocused = false;
+	arConfig.timeoutCount = arConfig.timeoutCount || 0;
 
 	this.bPopup = false;
 	this.buttonsIndex = {};
@@ -65,7 +66,17 @@ Init: function(arConfig)
 	// Sceleton
 	this.pFrame = BX('bxlhe_frame_' + this.id);
 	if (!this.pFrame)
+	{
+		if (arConfig.timeoutCount < 100)
+		{
+			setTimeout(function()
+			{
+				arConfig.timeoutCount++;
+				_this.Init(arConfig);
+			}, 1);
+		}
 		return;
+	}
 
 	this.pFrame.style.display = "block";
 

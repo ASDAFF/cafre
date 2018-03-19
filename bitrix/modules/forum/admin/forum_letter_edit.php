@@ -103,13 +103,13 @@
 	<tr class="adm-detail-required-field">
 		<td width="40%"><?=GetMessage("FLTR_LETTER")?>:</td>
 		<td width="60%">
-			<input type="text" name="LETTER" size="40" maxlength="145" value="<?=htmlspecialcharsEx($str_LETTER)?>">
+			<input type="text" name="LETTER" size="40" maxlength="145" value="<?=htmlspecialcharsbx($str_LETTER)?>">
 		</td>
 	</tr>
 	<tr class="adm-detail-required-field">
 		<td width="40%"><?=GetMessage("FLTR_REPLACEMENT")?>:</td>
 		<td width="60%">
-			<input type="text" name="REPLACEMENT" size="40" maxlength="255" value="<?=htmlspecialcharsEx($str_REPLACEMENT)?>">
+			<input type="text" name="REPLACEMENT" size="40" maxlength="255" value="<?=htmlspecialcharsbx($str_REPLACEMENT)?>">
 		</td>
 	</tr>
 <?$tabControl->EndTab();?>

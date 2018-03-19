@@ -18,4 +18,5 @@ $MESS["IBSEL_A_CLEAR_COUNTER_TITLE"] = "Обнулить счетчик и дату начала просмотро
 $MESS["IBEL_CATALOG_TYPE_MESS_OFFER"] = "предложение";
 $MESS["IBSEL_A_CLEAR_COUNTER_CONFIRM"] = "Вы уверены, что хотите обнулить счетчик и дату начала просмотров элемента?";
 $MESS["IBEL_CATALOG_QUANTITY_RESERVED"] = "Зарезервировано";
+$MESS["IBSEL_CATALOG_EXTRA_DESCRIPTION"] = "Наценка #VALUE# к базовой цене";
 ?>

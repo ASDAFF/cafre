@@ -2,9 +2,7 @@
 use Bitrix\Main,
 	Bitrix\Iblock,
 	Bitrix\Catalog,
-	Bitrix\Main\Text\String as String,
-	Bitrix\Main\Localization\Loc,
-	Bitrix\Main\SystemException as SystemException;
+	Bitrix\Main\Localization\Loc;
 
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) die();
 

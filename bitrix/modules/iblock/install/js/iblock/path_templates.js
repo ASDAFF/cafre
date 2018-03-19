@@ -3,7 +3,7 @@ if(!window.IBlockComponentProperties)
 	window.IBlockComponentProperties = function(arParams)
 	{
 		window.IBlockComponentPropertiesObj.ShowMenu(arParams);
-	}
+	};
 
 	window.IBlockComponentPropertiesObj =
 	{
@@ -17,11 +17,6 @@ if(!window.IBlockComponentProperties)
 			oButton.setAttribute('type', 'button');
 			oButton.value = '...';
 			arParams.oCont.insertBefore(oButton, arParams.oCont.firstChild);
-			oButton.onclick = function()
-			{
-				var pos = window.IBlockComponentPropertiesObj.GetRealPos(oButton);
-				setTimeout(function(){window.IBlockComponentPropertiesObj[menu[0]].PopupShow(pos)}, 10);
-			}
 
 			var oInput = document.createElement("INPUT");
 			oInput.setAttribute('type', 'text');
@@ -34,56 +29,44 @@ if(!window.IBlockComponentProperties)
 				arParams.oInput.value = oInput.value;
 				if(arParams.oInput.onchange)
 					arParams.oInput.onchange();
-			}
+			};
+
 			oInput.onblur = function()
 			{
 				arParams.oInput.value = oInput.value;
 				if(arParams.oInput.onchange)
 					arParams.oInput.onchange();
-			}
+			};
 
-			window.IBlockComponentPropertiesObj[menu[0]] = new PopupMenu(menu[0], menu[1]);
-			window.IBlockComponentPropertiesObj[menu[0]].SetItems(menu[2]);
+			window.IBlockComponentPropertiesObj[menu[0]] = new BX.COpener({
+				DIV: oButton,
+				MENU: menu[2],
+				TYPE: 'click',
+				ACTIVE_CLASS: 'adm-btn-active',
+				CLOSE_ON_CLICK: true
+			});
 		},
 
 		Action: function(id, menu_id)
 		{
-			var mnu_list = window.IBlockComponentPropertiesObj[menu_id];
-			var obj_ta = document.getElementById(menu_id + '_input');
-			obj_ta.focus();
-			obj_ta.value += id;
-			mnu_list.PopupHide();
-			obj_ta.focus();
-		},
+			var el = BX(menu_id + '_input');
+			el.focus();
 
-		GetRealPos: function(el)
-		{
-			if(!el || !el.offsetParent)
-				return false;
-
-			var res = Array();
-			res["left"] = el.offsetLeft;
-			res["top"] = el.offsetTop;
-			var objParent = el.offsetParent;
-
-			while(objParent && objParent.tagName != "BODY")
-			{
-				res["left"] += objParent.offsetLeft;
-				res["top"] += objParent.offsetTop;
-				objParent = objParent.offsetParent;
+			var val = el.value, endIndex, range;
+			if (typeof el.selectionStart != "undefined" && typeof el.selectionEnd != "undefined") {
+				endIndex = el.selectionEnd;
+				el.value = val.slice(0, el.selectionStart) + id + val.slice(endIndex);
+				el.selectionStart = el.selectionEnd = endIndex + id.length;
+			} else if (typeof document.selection != "undefined" && typeof document.selection.createRange != "undefined") {
+				el.focus();
+				range = document.selection.createRange();
+				range.collapse(false);
+				range.text = id;
+				range.select();
 			}
 
-			objParent = el.parentNode;
-			while(objParent && objParent.tagName != "BODY")
-			{
-				res["top"] -= objParent.scrollTop;
-				objParent = objParent.parentNode;
-			}
-
-			res["right"] = res["left"] + el.offsetWidth;
-			res["bottom"] = res["top"] + el.offsetHeight;
-
-			return res;
+			BX.fireEvent(el, 'change');
+			el.focus();
 		}
 	}
 }

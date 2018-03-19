@@ -30,6 +30,17 @@ class PersonType
 	}
 
 	/**
+	 * @return PersonType
+	 */
+	protected static function createPersonTypeObject()
+	{
+		$registry = Registry::getInstance(Registry::REGISTRY_TYPE_ORDER);
+		$personTypeClassName = $registry->getPersonTypeClassName();
+
+		return new $personTypeClassName();
+	}
+
+	/**
 	 * @param null $siteId
 	 * @param null $id
 	 * @return mixed
@@ -42,14 +53,14 @@ class PersonType
 			throw new ArgumentException();
 		}
 
-		$personType = new static();
+		$personType = static::createPersonTypeObject();
 		$personType->siteId = $siteId;
 
-		$filter = array("ACTIVE" => "Y");
+		$filter = array("=ACTIVE" => "Y");
 
 		if (strval($siteId) != "")
 		{
-			$filter['LID'] = $siteId;
+			$filter['=PERSON_TYPE_SITE.SITE_ID'] = $siteId;
 		}
 
 		if ($id > 0)

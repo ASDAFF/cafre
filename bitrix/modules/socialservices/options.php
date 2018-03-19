@@ -2,6 +2,8 @@
 if(!$USER->CanDoOperation('edit_other_settings'))
 	$APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
 
+use Bitrix\Main\Text\Converter;
+
 IncludeModuleLangFile($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/options.php");
 IncludeModuleLangFile(__FILE__);
 
@@ -59,7 +61,13 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && $_POST["Update"].$_POST["Apply"].$_PO
 			foreach($arOptions as $option)
 			{
 				if(is_array($option))
+				{
 					$option[0] .= $suffix;
+					if($option[3][0] == 'statictext')
+					{
+						$option[3][0] = 'text';
+					}
+				}
 				__AdmSettingsSaveOption($module_id, $option);
 			}
 		}
@@ -120,12 +128,14 @@ function MoveRowDown(a)
 }
 
 window.networkRegister = (function(){
-	var p;
+	var p, domainUrl;
 
 	return function(s)
 	{
 		if(BX.type.isString(s))
 		{
+			domainUrl = s;
+
 			BX.ajax.loadJSON('/bitrix/tools/oauth/socserv.ajax.php', {
 				action: 'registernetwork',
 				url: s,
@@ -160,10 +170,26 @@ window.networkRegister = (function(){
 		}
 		else if(!!s && !!s.client_id)
 		{
-			var currentSite = document.forms['socserv_settings'].siteTabControl_active_tab.value.replace("opt_", "_bx_");
+			var currentSite = document.forms['socserv_settings'].siteTabControl_active_tab.value;
+
+			currentSite = currentSite == "opt_common" ? "" : currentSite.replace("opt_", "_bx_");
+
+			if(!document.forms.socserv_settings['bitrix24net_domain' + currentSite])
+			{
+				document.forms.socserv_settings.appendChild(BX.create('input', {attrs: {
+					'type': 'hidden',
+					'name': 'bitrix24net_domain' + currentSite
+				}}));
+
+				var el = document.forms.socserv_settings['bitrix24net_id' + currentSite];
+
+				BX.findPreviousSibling(el.parentNode.parentNode).cells[1].innerHTML = BX.util.htmlspecialchars(domainUrl);
+			}
 
 			document.forms.socserv_settings['bitrix24net_id' + currentSite].value = s.client_id;
 			document.forms.socserv_settings['bitrix24net_secret' + currentSite].value = s.client_secret;
+			document.forms.socserv_settings['bitrix24net_domain' + currentSite].value = domainUrl;
+
 			BX('AUTH_SERVICES'+currentSite+'Bitrix24Net').checked = true;
 
 			BX.focus(document.forms.socserv_settings['bitrix24net_id' + currentSite]);
@@ -308,9 +334,14 @@ foreach($arSiteList as $site):
 	foreach($arOptions as $option)
 	{
 		if(!is_array($option))
-			$option = GetMessage("soc_serv_opt_settings_of", array("#SERVICE#"=>$option));
+		{
+			$option = GetMessage("soc_serv_opt_settings_of", array("#SERVICE#" => $option));
+		}
 		else
+		{
 			$option[0] .= $suffix;
+		}
+
 		__AdmSettingsDrawRow($module_id, $option);
 	}
 ?>
@@ -364,7 +395,7 @@ foreach($groups as $groupId => $groupTitle)
 {
 ?>
 				<option value="<?=$groupId?>"<?=in_array($groupId,
-					$groupDenyAuth)?' selected="selected"' : ''?>><?=$groupTitle?></option>
+					$groupDenyAuth)?' selected="selected"' : ''?>><?=Converter::getHtmlConverter()->encode($groupTitle)?></option>
 <?
 }
 ?>
@@ -380,7 +411,7 @@ foreach($groups as $groupId => $groupTitle)
 {
 ?>
 				<option value="<?=$groupId?>"<?=in_array($groupId,
-					$groupDenySplit)?' selected="selected"' : ''?>><?=$groupTitle?></option>
+					$groupDenySplit)?' selected="selected"' : ''?>><?=Converter::getHtmlConverter()->encode($groupTitle)?></option>
 <?
 }
 ?>

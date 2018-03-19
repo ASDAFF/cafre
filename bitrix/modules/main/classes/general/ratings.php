@@ -5,7 +5,7 @@ IncludeModuleLangFile($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/classes/g
 class CAllRatings
 {
 	// get specified rating record
-	function GetByID($ID)
+	public static function GetByID($ID)
 	{
 		global $DB;
 
@@ -28,7 +28,7 @@ class CAllRatings
 			false, $err_mess.__LINE__));
 	}
 
-	function GetArrayByID($ID)
+	public static function GetArrayByID($ID)
 	{
 		global $DB;
 
@@ -80,7 +80,7 @@ class CAllRatings
 	}
 
 	// get rating record list
-	function GetList($arSort=array(), $arFilter=Array())
+	public static function GetList($arSort=array(), $arFilter=Array())
 	{
 		global $DB;
 
@@ -168,7 +168,7 @@ class CAllRatings
 		return $res;
 	}
 
-	function GetRatingValueInfo($ratingId)
+	public static function GetRatingValueInfo($ratingId)
 	{
 		global $DB;
 		$err_mess = (CRatings::err_mess())."<br>Function: GetRatingValueInfo<br>Line: ";
@@ -186,7 +186,7 @@ class CAllRatings
 	}
 
 	//Addition rating
-	function Add($arFields)
+	public static function Add($arFields)
 	{
 		global $DB, $stackCacheManager;
 
@@ -231,7 +231,7 @@ class CAllRatings
 	}
 
 	//Update rating
-	function Update($ID, $arFields)
+	public static function Update($ID, $arFields)
 	{
 		global $DB, $stackCacheManager;
 
@@ -297,7 +297,7 @@ class CAllRatings
 	}
 
 	// delete rating
-	function Delete($ID)
+	public static function Delete($ID)
 	{
 		global $DB, $stackCacheManager;
 
@@ -321,7 +321,7 @@ class CAllRatings
 	}
 
 	// start calculation rating-component
-	function Calculate($ID, $bForceRecalc = false)
+	public static function Calculate($ID, $bForceRecalc = false)
 	{
 		global $DB;
 
@@ -373,7 +373,7 @@ class CAllRatings
 	}
 
 	// queries modules and get all the available objects
-	function GetRatingObjects()
+	public static function GetRatingObjects()
 	{
 		$arObjects = array();
 
@@ -388,7 +388,7 @@ class CAllRatings
 	}
 
 	// queries modules and get all the available entity types
-	function GetRatingEntityTypes($objectType = null)
+	public static function GetRatingEntityTypes($objectType = null)
 	{
 		$arEntityTypes = array();
 
@@ -419,7 +419,7 @@ class CAllRatings
 	}
 
 	// queries modules and assemble an array of settings
-	function GetRatingConfigs($objectType = null, $withRatingType = true)
+	public static function GetRatingConfigs($objectType = null, $withRatingType = true)
 	{
 		$arConfigs = array();
 
@@ -460,7 +460,7 @@ class CAllRatings
 		return $arConfigs;
 	}
 
-	function GetRatingVoteResult($entityTypeId, $entityId, $user_id = false)
+	public static function GetRatingVoteResult($entityTypeId, $entityId, $user_id = false)
 	{
 		global $DB, $CACHE_MANAGER;
 		$err_mess = (CRatings::err_mess())."<br>Function: GetRatingVoteResult<br>Line: ";
@@ -485,7 +485,7 @@ class CAllRatings
 		return $arResult;
 	}
 
-	function GetRatingVoteResultCache($entityTypeId, $entityId, $user_id = false)
+	public static function GetRatingVoteResultCache($entityTypeId, $entityId, $user_id = false)
 	{
 		global $DB, $CACHE_MANAGER;
 		$err_mess = (CRatings::err_mess())."<br>Function: GetRatingVoteResultCache<br>Line: ";
@@ -559,7 +559,7 @@ class CAllRatings
 		return isset($arResult[$entityId])? $arResult[$entityId]: Array();
 	}
 
-	function GetRatingResult($ID, $entityId)
+	public static function GetRatingResult($ID, $entityId)
 	{
 		global $DB;
 		$err_mess = (CRatings::err_mess())."<br>Function: GetRatingResult<br>Line: ";
@@ -641,7 +641,7 @@ class CAllRatings
 	}
 
 
-	function AddRatingVote($arParam)
+	public static function AddRatingVote($arParam)
 	{
 		global $DB, $CACHE_MANAGER;
 
@@ -775,7 +775,7 @@ class CAllRatings
 		return true;
 	}
 
-	function CancelRatingVote($arParam)
+	public static function CancelRatingVote($arParam)
 	{
 		global $DB, $CACHE_MANAGER;
 
@@ -843,7 +843,7 @@ class CAllRatings
 		return false;
 	}
 
-	function UpdateRatingUserBonus($arParam)
+	public static function UpdateRatingUserBonus($arParam)
 	{
 		global $DB;
 		$err_mess = (CRatings::err_mess())."<br>Function: AddRatingBonus<br>Line: ";
@@ -883,7 +883,7 @@ class CAllRatings
 		return true;
 	}
 
-	function GetRatingUserProp($ratingId, $entityId)
+	public static function GetRatingUserProp($ratingId, $entityId)
 	{
 		global $DB;
 		$err_mess = (CRatings::err_mess())."<br>Function: GetRatingUserProp<br>Line: ";
@@ -945,7 +945,7 @@ class CAllRatings
 		return $arResult;
 	}
 
-	function GetRatingUserPropEx($ratingId, $entityId)
+	public static function GetRatingUserPropEx($ratingId, $entityId)
 	{
 		global $DB, $CACHE_MANAGER;
 		$err_mess = (CRatings::err_mess())."<br>Function: GetRatingUserPropEx<br>Line: ";
@@ -991,7 +991,7 @@ class CAllRatings
 		return isset($arResult[$entityId])? $arResult[$entityId]: $arDefaultResult;
 	}
 
-	function GetAuthorityRating()
+	public static function GetAuthorityRating()
 	{
 		global $DB;
 
@@ -1008,7 +1008,7 @@ class CAllRatings
 		return $authorityRatingId;
 	}
 
-	function GetWeightList($arSort=array(), $arFilter=Array())
+	public static function GetWeightList($arSort=array(), $arFilter=Array())
 	{
 		global $DB;
 
@@ -1080,7 +1080,7 @@ class CAllRatings
 		return $res;
 	}
 
-	function SetWeight($arConfigs)
+	public static function SetWeight($arConfigs)
 	{
 		global $DB;
 		$err_mess = (CRatings::err_mess())."<br>Function: SetWeight<br>Line: ";
@@ -1115,7 +1115,7 @@ class CAllRatings
 		return true;
 	}
 
-	function SetVoteGroup($arGroupId, $type)
+	public static function SetVoteGroup($arGroupId, $type)
 	{
 		global $DB, $CACHE_MANAGER;
 		$err_mess = (CRatings::err_mess())."<br>Function: SetVoteGroup<br>Line: ";
@@ -1145,7 +1145,7 @@ class CAllRatings
 		return true;
 	}
 
-	function GetVoteGroup($type = '')
+	public static function GetVoteGroup($type = '')
 	{
 		global $DB;
 		$err_mess = (CRatings::err_mess())."<br>Function: GetVoteGroup<br>Line: ";
@@ -1162,7 +1162,7 @@ class CAllRatings
 		return $DB->Query($strSql, false, $err_mess.__LINE__);
 	}
 
-	function GetVoteGroupEx($type = '')
+	public static function GetVoteGroupEx($type = '')
 	{
 		global $DB, $CACHE_MANAGER;
 		$err_mess = (CRatings::err_mess())."<br>Function: GetVoteGroupEx<br>Line: ";
@@ -1193,7 +1193,7 @@ class CAllRatings
 		return $arResult;
 	}
 
-	function ClearData()
+	public static function ClearData()
 	{
 		global $DB, $CACHE_MANAGER;
 		$err_mess = (CRatings::err_mess())."<br>Function: ClearData<br>Line: ";
@@ -1215,13 +1215,13 @@ class CAllRatings
 		return true;
 	}
 
-	function OnUserDelete($ID)
+	public static function OnUserDelete($ID)
 	{
 		CRatings::DeleteByUser($ID);
 		return true;
 	}
 
-	function OnAfterUserRegister($arFields)
+	public static function OnAfterUserRegister($arFields)
 	{
 		global $DB;
 		$err_mess = (CRatings::err_mess())."<br>Function: OnAfterUserRegister<br>Line: ";
@@ -1257,16 +1257,13 @@ class CAllRatings
 					return false;
 
 				$arGroups = array();
-				$res = CUser::GetUserGroupList($userId);
-				while($res_arr = $res->Fetch())
-					$arGroups[] = array("GROUP_ID"=>$res_arr["GROUP_ID"], "DATE_ACTIVE_FROM"=>$res_arr["DATE_ACTIVE_FROM"], "DATE_ACTIVE_TO"=>$res_arr["DATE_ACTIVE_TO"]);
-
 				if ($assignRatingGroup > 0)
-					$arGroups[] = array("GROUP_ID"=>intval($assignRatingGroup));
+					$arGroups[] = intval($assignRatingGroup);
 				if ($assignAuthorityGroup > 0 && $assignRatingGroup != $assignAuthorityGroup)
-					$arGroups[] = array("GROUP_ID"=>intval($assignAuthorityGroup));
+					$arGroups[] = intval($assignAuthorityGroup);
 
-				CUser::SetUserGroup($userId, $arGroups);
+				if(!empty($arGroups))
+					CUser::AppendUserGroup($userId, $arGroups);
 			}
 			if (CACHED_b_rating_vote!==false)
 			{
@@ -1281,7 +1278,7 @@ class CAllRatings
 		}
 	}
 
-	function __SortWeight($a, $b)
+	public static function __SortWeight($a, $b)
 	{
 		if (isset($a['RATING_FROM']) || isset($b['RATING_FROM']))
 			return 1;
@@ -1290,7 +1287,7 @@ class CAllRatings
 	}
 
 	// check only general field
-	function __CheckFields($arFields)
+	public static function __CheckFields($arFields)
 	{
 		$aMsg = array();
 
@@ -1318,7 +1315,7 @@ class CAllRatings
 	}
 
 	// creates a configuration record for each item rating
-	function __AddComponents($ID, $arFields)
+	public static function __AddComponents($ID, $arFields)
 	{
 		global $DB;
 
@@ -1368,7 +1365,7 @@ class CAllRatings
 		return true;
 	}
 
-	function __UpdateComponents($ID, $arFields)
+	public static function __UpdateComponents($ID, $arFields)
 	{
 		global $DB;
 
@@ -1382,9 +1379,157 @@ class CAllRatings
 		return true;
 	}
 
-	function err_mess()
+	public static function err_mess()
 	{
 		return "<br>Class: CRatings<br>File: ".__FILE__;
 	}
+
+	public static function GetRatingVoteList($arParam)
+	{
+		global $DB, $USER;
+
+		$bplus = true;
+		if (strtoupper($arParam['LIST_TYPE']) == 'MINUS')
+			$bplus = false;
+
+		$sqlStr = "
+			SELECT
+				COUNT(RV.ID) as CNT
+			FROM
+				b_rating_vote RV
+			WHERE
+				RV.ENTITY_TYPE_ID = '".$DB->ForSql($arParam['ENTITY_TYPE_ID'])."'
+			and RV.ENTITY_ID = ".intval($arParam['ENTITY_ID'])."
+			".($bplus? " and RV.VALUE > 0 ": " and RV.VALUE < 0 ");
+		$res_cnt = $DB->Query($sqlStr);
+		$res_cnt = $res_cnt->Fetch();
+		$cnt = $res_cnt["CNT"];
+
+		$bIntranetInstalled = IsModuleInstalled("intranet");
+
+		$bExtended = false;
+		$arUserID = array();
+
+		if (
+			(
+				array_key_exists("USER_FIELDS", $arParam)
+				&& is_array($arParam["USER_FIELDS"])
+			)
+			|| (
+				array_key_exists("USER_SELECT", $arParam)
+				&& is_array($arParam["USER_SELECT"])
+			)
+		)
+		{
+			$bExtended = true;
+			$sqlStr = CRatings::GetRatingVoteListSQLExtended($arParam, $bplus, $bIntranetInstalled);
+		}
+		else
+		{
+			$sqlStr = CRatings::GetRatingVoteListSQL($arParam, $bplus, $bIntranetInstalled);
+		}
+
+		$arList = Array();
+		$arVoteList = Array();
+		if ($arParam['LIST_LIMIT'] != 0 && ceil($cnt/intval($arParam['LIST_LIMIT'])) >= intval($arParam['LIST_PAGE']))
+		{
+			$res = new CDBResult();
+			$res->NavQuery($sqlStr, $cnt, Array('iNumPage' => intval($arParam['LIST_PAGE']), 'nPageSize' => intval($arParam['LIST_LIMIT'])));
+
+			while ($row = $res->Fetch())
+			{
+				$ar = $row;
+
+				if (!$bExtended)
+				{
+					$ar["PHOTO"] = $ar["PHOTO_SRC"] = '';
+					if (!empty($ar["PERSONAL_PHOTO"]))
+					{
+						$arFileTmp = CFile::ResizeImageGet(
+							$row["PERSONAL_PHOTO"],
+							array('width' => 58, 'height' => 58),
+							BX_RESIZE_IMAGE_EXACT,
+							false
+						);
+						$ar['PHOTO'] = CFile::ShowImage($arFileTmp['src'], 21, 21, 'border=0');
+						$ar['PHOTO_SRC'] = $arFileTmp['src'];
+					}
+					$ar['FULL_NAME'] = CUser::FormatName(CSite::GetNameFormat(false), $row, $bIntranetInstalled);
+				}
+				else
+					$arUserID[] = $row["ID"];
+
+				if ($ar['ID'] != $USER->GetId())
+					$arList[$ar['ID']] = $ar;
+				else
+					$arVoteList[$ar['ID']] = $ar;
+			}
+			foreach ($arList as $ar)
+				$arVoteList[$ar['ID']] = $ar;
+
+			if (
+				$bExtended
+				&& count($arUserID) > 0
+			)
+			{
+				$arUserListParams = array();
+				$arUsers = array();
+
+				if (
+					array_key_exists("USER_FIELDS", $arParam)
+					&& is_array($arParam["USER_FIELDS"])
+				)
+					$arUserListParams["FIELDS"] = $arParam["USER_FIELDS"];
+				else
+					$arUserListParams["FIELDS"] = array("NAME", "LAST_NAME", "SECOND_NAME", "LOGIN", "PERSONAL_PHOTO");
+
+				$arUserListParams["FIELDS"] = array_unique(array_merge(array("ID"), $arUserListParams["FIELDS"]));
+
+				if (
+					array_key_exists("USER_SELECT", $arParam)
+					&& is_array($arParam["USER_SELECT"])
+				)
+				{
+					$arUserListParams["SELECT"] = $arParam["USER_SELECT"];
+				}
+
+				$rsUser = CUser::GetList(
+					($by = "ID"),
+					($order = "ASC"),
+					array("ID" => implode("|", $arUserID)),
+					$arUserListParams
+				);
+
+				while ($arUser = $rsUser->Fetch())
+				{
+					$arUser["PHOTO"] = $arUser["PHOTO_SRC"] = '';
+					if (array_key_exists("PERSONAL_PHOTO", $arUser))
+					{
+						$arFileTmp = CFile::ResizeImageGet(
+							$arUser["PERSONAL_PHOTO"],
+							array("width" => 58, "height" => 58),
+							BX_RESIZE_IMAGE_EXACT,
+							false
+						);
+						$arUser["PHOTO_SRC"] = $arFileTmp["src"];
+						$arUser["PHOTO"] = CFile::ShowImage($arFileTmp["src"], 21, 21, "border=0");
+					}
+					$arUser["FULL_NAME"] = CUser::FormatName(CSite::GetNameFormat(false), $arUser, $bIntranetInstalled);
+					$arUsers[$arUser["ID"]] = $arUser;
+				}
+
+				foreach($arVoteList as $i => $arVoteUser)
+					if (array_key_exists($arVoteUser["ID"], $arUsers))
+						foreach($arUsers[$arVoteUser["ID"]] as $key => $value)
+							$arVoteList[$i][$key] = $value;
+
+			}
+		}
+
+		return Array(
+			'items_all' => $cnt,
+			'items_page' => count($arVoteList),
+			'items' => $arVoteList
+		);
+	}
 }
-?>

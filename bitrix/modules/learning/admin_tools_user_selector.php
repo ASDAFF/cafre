@@ -196,18 +196,44 @@ class Learning_CIBlockPropertyUserID
 					<option value="CU"<?if($select=="CU")echo " selected"?>><?=GetMessage("LEARNING_USER_SELECTOR_CURRENT")?></option>
 					<option value="SU"<?if($select=="SU")echo " selected"?>><?=GetMessage("LEARNING_USER_SELECTOR_OTHER")?></option>
 				</select>&nbsp;
-				<?echo Learning_FindUserIDNew(htmlspecialcharsbx($strHTMLControlName["VALUE"]), $value["VALUE"], $res, htmlspecialcharsEx($strHTMLControlName["FORM_NAME"]), $select);
+				<?echo Learning_FindUserIDNew($strHTMLControlName["VALUE"], $value["VALUE"], $res, $strHTMLControlName["FORM_NAME"], $select);
 			$return = ob_get_contents();
 			ob_end_clean();
 		return  $return;
 	}
 }
 
-function Learning_FindUserIDNew($tag_name, $tag_value, $user_name="", $form_name = "form1", $select="none", $tag_size = "3", $tag_maxlength="", $button_value = "...", $tag_class="typeinput", $button_class="tablebodybutton", $search_page="/bitrix/admin/user_search.php")
+function Learning_FindUserIDNew(
+	$tag_name,
+	$tag_value,
+	$user_name = "",
+	$form_name = "form1",
+	$select = "none",
+	$tag_size = "3",
+	$tag_maxlength = "",
+	$button_value = "...",
+	$tag_class = "typeinput",
+	$button_class = "tablebodybutton",
+	$search_page = "/bitrix/admin/user_search.php"
+)
 {
 	global $APPLICATION, $USER;
+
 	$tag_name_x = preg_replace("/([^a-z0-9])/is", "x", $tag_name);
 	$tag_name_escaped = CUtil::JSEscape($tag_name);
+
+	$tag_value_escaped = CUtil::JSEscape($tag_value);
+	$form_name = preg_replace("/([^a-z0-9_])/is", "", $form_name);
+
+	$args = array(
+		"tag_name", "tag_value", "form_name", "select", "tag_size", "tag_maxlength",
+		"button_value", "tag_class", "button_class", "search_page"
+	);
+
+	foreach ($args as $varName)
+	{
+		${$varName} = htmlspecialcharsbx(${$varName});
+	}
 
 	if($APPLICATION->GetGroupRight("main") >= "R")
 	{
@@ -221,7 +247,7 @@ function Learning_FindUserIDNew($tag_name, $tag_value, $user_name="", $form_name
 		if($user_name=="")
 			$strReturn.= "var tv".$tag_name_x."='';\n";
 		else
-			$strReturn.= "var tv".$tag_name_x."='".CUtil::JSEscape($tag_value)."';\n";
+			$strReturn.= "var tv".$tag_name_x."='".$tag_value_escaped."';\n";
 
 		$strReturn.= "
 function Ch".$tag_name_x."()

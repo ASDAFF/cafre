@@ -8,6 +8,7 @@ $MESS ['STA_TCANCEL_SEMIORDER'] = "Отмена частично оплаченного заказа";
 $MESS ['STA_THAND'] = "Ручное изменение счета";
 $MESS ['STA_TDEL'] = "Удаление счета";
 $MESS ['STA_TTRANSF_EXCESS_SUM_PAID'] = "Перевод излишка оплаты заказа";
+$MESS ['STA_TRETURN'] = "Возврат средств оплаты заказа";
 $MESS ['STA_ERROR_DELETE'] = "Ошибка удаления записи с кодом #ID#";
 $MESS ['STA_TITLE'] = "Транзакции";
 $MESS ['STA_NAV'] = "Транзакции";

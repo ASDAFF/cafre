@@ -31,22 +31,24 @@ interface ICacheEngineStat
 class Cache
 {
 	/**
-	 * @var ICacheEngine | ICacheBackend
+	 * @var ICacheEngine | \ICacheBackend
 	 */
-	private $cacheEngine;
+	protected $cacheEngine;
 
-	private $content;
-	private $vars;
-	private $TTL;
-	private $uniqueString;
-	private $baseDir;
-	private $initDir;
-	private $filename;
-	private $isStarted = false;
+	protected $content;
+	protected $vars;
+	protected $TTL;
+	protected $uniqueString;
+	protected $baseDir;
+	protected $initDir;
+	protected $filename;
+	protected $isStarted = false;
 
-	private static $showCacheStat = false;
-	private static $clearCache = null;
-	private static $clearCacheSession = null;
+	protected static $showCacheStat = false;
+	protected static $clearCache = null;
+	protected static $clearCacheSession = null;
+
+	protected $forceRewriting = false;
 
 	public static function createCacheEngine()
 	{
@@ -88,10 +90,6 @@ class Cache
 					if (extension_loaded('memcache'))
 						$cacheEngine = new CacheEngineMemcache();
 					break;
-				case "eaccelerator":
-					if (extension_loaded('eaccelerator'))
-						$cacheEngine = new CacheEngineEAccelerator();
-					break;
 				case "apc":
 					if (extension_loaded('apc'))
 						$cacheEngine = new CacheEngineApc();
@@ -128,7 +126,7 @@ class Cache
 
 	public static function getCacheEngineType()
 	{
-		$obj = self::createCacheEngine();
+		$obj = static::createCacheEngine();
 		$class = get_class($obj);
 		if (($pos = strrpos($class, "\\")) !== false)
 			$class = substr($class, $pos + 1);
@@ -159,13 +157,19 @@ class Cache
 		return static::$showCacheStat;
 	}
 
+	/**
+	 * A privileged user wants to skip cache on this hit.
+	 * @param bool $clearCache
+	 */
 	public static function setClearCache($clearCache)
 	{
-		$prevValue = static::$clearCache;
 		static::$clearCache = $clearCache;
-		return $prevValue;
 	}
 
+	/**
+	 * A privileged user wants to skip cache on this session.
+	 * @param bool $clearCacheSession
+	 */
 	public static function setClearCacheSession($clearCacheSession)
 	{
 		static::$clearCacheSession = $clearCacheSession;
@@ -188,11 +192,17 @@ class Cache
 		return "/".substr(md5($scriptName), 0, 3);
 	}
 
+	/**
+	 * Returns true if a privileged user wants to skip reading from cache (on this hit or session).
+	 * @return bool
+	 */
 	public static function shouldClearCache()
 	{
+		global $USER;
+
 		if (isset(static::$clearCacheSession) || isset(static::$clearCache))
 		{
-			if (is_object($GLOBALS["USER"]) && $GLOBALS["USER"]->CanDoOperation('cache_control'))
+			if (is_object($USER) && $USER->CanDoOperation('cache_control'))
 			{
 				if (isset(static::$clearCacheSession))
 				{
@@ -263,6 +273,9 @@ class Cache
 		$this->vars = false;
 
 		if ($TTL <= 0)
+			return false;
+
+		if ($this->forceRewriting)
 			return false;
 
 		if (static::shouldClearCache())
@@ -346,7 +359,7 @@ class Cache
 		ob_end_flush();
 	}
 
-	function endDataCache($vars=false)
+	public function endDataCache($vars=false)
 	{
 		if (!$this->isStarted)
 			return;
@@ -460,5 +473,14 @@ class Cache
 		}
 
 		return $res;
+	}
+
+	/**
+	 * Sets the forced mode to ignore TTL and rewrite the cache.
+	 * @param bool $mode
+	 */
+	public function forceRewriting($mode)
+	{
+		$this->forceRewriting = (bool)$mode;
 	}
 }

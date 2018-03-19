@@ -4,24 +4,25 @@ function ForumPopupMenu()
 	this.oControl = false;
 	this.oControlPos = false;
 	this.bRemoveElement = true;
-	var _this = this;
 }
-
-ForumPopupMenu.prototype.InitFromArray = function(id, data)
-{
-	var ii = 0, _data = null;
+var oObjectForum = (oObjectForum || {});
+ForumPopupMenu.prototype.InitFromArray = function(id, data) {
 	if (oObjectForum[id] && typeof(oObjectForum[id]) == "object")
 		return oObjectForum[id];
 	oObjectForum[id] = {};
-	for (ii in data)
+	for (var ii in data)
 	{
-		if (!data[ii]["CONTENT"])
-			continue;
-		oObjectForum[id][ii] = {
-			"TITLE" : data[ii]["TITLE"], 
-			"CLASS" : data[ii]["CLASS"], 
-			"ONCLICK" : data[ii]["ONCLICK"], 
-			"CONTENT" : (typeof(data[ii]["CONTENT"]) != "object" ? [data[ii]["CONTENT"]] : data[ii]["CONTENT"])};
+		if (data.hasOwnProperty(ii))
+		{
+			if (data[ii]["CONTENT"])
+			{
+				oObjectForum[id][ii] = {
+					"TITLE" : data[ii]["TITLE"],
+					"CLASS" : data[ii]["CLASS"],
+					"ONCLICK" : data[ii]["ONCLICK"],
+					"CONTENT" : (typeof(data[ii]["CONTENT"]) != "object" ? [data[ii]["CONTENT"]] : data[ii]["CONTENT"])};
+			}
+		}
 	}
 	return oObjectForum[id];
 }
@@ -210,38 +211,12 @@ function initFJCFloatDiv()
 		left = (parseInt(left) < 0 ? 0 : parseInt(left));
 		top = (parseInt(top) < 0 ? 0 : parseInt(top));
 		dxShadow = parseInt(isNaN(dxShadow) ? 5 : dxShadow);
-		bSubstrate = (bSubstrate == false ? false : true);
+		bSubstrate = !!bSubstrate;
 
 		div.style.zIndex = zIndex;
 		div.style.left = left + "px";
 		div.style.top = top + "px";
 
-		if(dxShadow > 0)
-		{
-			var img = document.getElementById(div.id+'_shadow');
-			if(!img)
-			{
-				if(jsUtils.IsIE())
-				{
-					img = document.createElement("DIV");
-					img.style.filter = "progid:DXImageTransform.Microsoft.AlphaImageLoader(src='"+phpVars.templatePath+"images/shadow.png',sizingMethod='scale')";
-				}
-				else
-				{
-					img = document.createElement("IMG");
-					img.src = phpVars.templatePath + 'images/shadow.png';
-				}
-				img.id = div.id+'_shadow';
-				img.style.position = 'absolute';
-				img.style.zIndex = zIndex-2;
-				document.body.appendChild(img);
-			}
-			img.style.width = div.offsetWidth+'px';
-			img.style.height = div.offsetHeight+'px';
-			img.style.left = parseInt(div.style.left)+dxShadow+'px';
-			img.style.top = parseInt(div.style.top)+dxShadow+'px';
-			img.style.visibility = 'visible';
-		}
 		div.restrictDrag = restrictDrag || false;
 		if (bSubstrate == true)
 		{

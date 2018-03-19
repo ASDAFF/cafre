@@ -5,7 +5,7 @@ define ('BX_AJAX_PARAM_ID', 'bxajaxid');
 
 class CAjax
 {
-	function Init()
+	public static function Init()
 	{
 		// old version should be here because of compatibility
 		global $APPLICATION;
@@ -14,7 +14,7 @@ class CAjax
 		$APPLICATION->AddHeadScript('/bitrix/js/main/ajax.js');
 	}
 
-	function GetComponentID($componentName, $componentTemplate, $additionalID)
+	public static function GetComponentID($componentName, $componentTemplate, $additionalID)
 	{
 		$aTrace = Bitrix\Main\Diag\Helper::getBackTrace(0, DEBUG_BACKTRACE_IGNORE_ARGS);
 
@@ -78,6 +78,12 @@ class CAjax
 								$bSrcFound = true;
 							}
 						}
+						elseif (preg_match("#/bitrix/modules#", $sSrcFile))
+						{
+							$sRealDocRoot = substr($sSrcFile, 0, strpos($sSrcFile, "/bitrix/modules/"));
+							$sSrcFile = substr($sSrcFile, strlen($sRealDocRoot));
+							$bSrcFound = true;
+						}
 					}
 				}
 			}
@@ -98,7 +104,7 @@ class CAjax
 		return md5($session_string);
 	}
 
-	function GetSession()
+	public static function GetSession()
 	{
 		if (is_set($_REQUEST, BX_AJAX_PARAM_ID))
 			return $_REQUEST[BX_AJAX_PARAM_ID];
@@ -106,14 +112,14 @@ class CAjax
 			return false;
 	}
 
-	function GetSessionParam($ajax_id = false)
+	public static function GetSessionParam($ajax_id = false)
 	{
 		if (!$ajax_id) $ajax_id = CAjax::GetSession();
 		if (!$ajax_id) return '';
 		else return BX_AJAX_PARAM_ID.'='.$ajax_id;
 	}
 
-	function AddSessionParam($url, $ajax_id = false)
+	public static function AddSessionParam($url, $ajax_id = false)
 	{
 		$url_anchor = strstr($url, '#');
 		if ($url_anchor !== false)
@@ -130,29 +136,32 @@ class CAjax
 		return $url;
 	}
 
-	// $text = htmlspecialchar
-	function GetLinkEx($real_url, $public_url, $text, $container_id, $additional = '')
+	// $text = htmlspecialcharred
+	public static function GetLinkEx($real_url, $public_url, $text, $container_id, $additional = '')
 	{
-		if (!$public_url) $public_url = $real_url;
+		if (!$public_url)
+		{
+			$public_url = $real_url;
+		}
 
 		return sprintf(
 			'<a href="%s" onclick="BX.ajax.insertToNode(\'%s\', \'%s\'); return false;" %s>%s</a>',
 
-			$public_url,
-			$real_url,
-			$container_id,
+			htmlspecialcharsbx($public_url),
+			CUtil::JSEscape(htmlspecialcharsbx($real_url)),
+			CUtil::JSEscape(htmlspecialcharsbx($container_id)),
 			$additional,
 			$text
 		);
 	}
 
 	// $text - no htmlspecialchar
-	function GetLink($url, $text, $container_id, $additional = '')
+	public static function GetLink($url, $text, $container_id, $additional = '')
 	{
 		return CAjax::GetLinkEx($url, false, htmlspecialcharsbx($text), htmlspecialcharsbx($container_id), $additional);
 	}
 
-	function GetForm($form_params, $container_id, $ajax_id, $bReplace = true, $bShadow = true)
+	public static function GetForm($form_params, $container_id, $ajax_id, $bReplace = true, $bShadow = true)
 	{
 		static $rndGenerator = null;
 		if (!$rndGenerator)
@@ -172,32 +181,32 @@ else
 </script>';
 	}
 
-	function ClearForm($form_params, $ajax_id = false)
+	public static function ClearForm($form_params, $ajax_id = false)
 	{
 		$form_params = str_replace(CAjax::GetSessionParam($ajax_id), '', $form_params);
 
 		return '<form '.trim($form_params).'>';
 	}
 
-	function GetFormEvent($container_id)
+	public static function GetFormEvent($container_id)
 	{
 		return 'onsubmit="BX.ajax.submitComponentForm(this, \''.htmlspecialcharsbx(CUtil::JSEscape($container_id)).'\', true);"';
 	}
 
-	function GetFormEventValue($container_id, $bReplace = true, $bShadow = true, $event_delimiter = '\'')
+	public static function GetFormEventValue($container_id, $bReplace = true, $bShadow = true, $event_delimiter = '\'')
 	{
 		$delimiter = $event_delimiter == '\'' ? '"' : '\'';
 		return 'BX.ajax.submitComponentForm(this, '.$delimiter.CUtil::JSEscape($container_id).$delimiter.', true)';
 		//return 'jsAjaxUtil.'.($bReplace ? 'Insert' : 'Append').'FormDataToNode(this, '.$delimiter.$container_id.$delimiter.', '.($bShadow ? 'true' : 'false').')';
 	}
 
-	function encodeURI($str)
+	public static function encodeURI($str)
 	{
 		//$str = 'view'.$str;
 		return $str;
 	}
 
-	function decodeURI($str)
+	public static function decodeURI($str)
 	{
 		global $APPLICATION;
 

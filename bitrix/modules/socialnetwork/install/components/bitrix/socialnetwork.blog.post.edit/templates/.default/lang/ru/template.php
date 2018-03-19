@@ -12,6 +12,7 @@ $MESS["BLOG_GRAT_POPUP_TITLE"] = "Выбор благодарности";
 $MESS["BLOG_TAB_POST"] = "Сообщение";
 $MESS["BLOG_TAB_FILE"] = "Файл";
 $MESS["BLOG_TAB_LISTS"] = "Процессы";
+$MESS["BLOG_TAB_TASK"] = "Задача";
 $MESS["BLOG_TAB_VOTE"] = "Опрос";
 $MESS["BLOG_TAB_GRAT"] = "Благодарность";
 $MESS["BLOG_LINK_SHOW_NEW"] = "Написать сообщение &hellip;";
@@ -26,4 +27,8 @@ $MESS["SBPE_CALENDAR_EVENT"] = "Событие";
 $MESS["BLOG_POST_AUTOSAVE"] = "Данные сообщения не были сохранены. ";
 $MESS["BLOG_POST_AUTOSAVE2"] = "Восстановить автосохраненные значения?";
 $MESS["LISTS_CATALOG_PROCESSES_ACCESS_DENIED"] = "Нет доступа";
+$MESS["BLOG_POST_EDIT_T_CREATE_TASK_SUCCESS_TITLE"] = "Задача создана";
+$MESS["BLOG_POST_EDIT_T_CREATE_TASK_SUCCESS_DESCRIPTION"] = "Вы можете перейти к просмотру и редактированию задачи";
+$MESS["BLOG_POST_EDIT_T_CREATE_TASK_BUTTON_TITLE"] = "Перейти к задаче";
+$MESS["MPF_DRAG_ATTACHMENTS2"] = "Загрузить файлы?";
 ?>

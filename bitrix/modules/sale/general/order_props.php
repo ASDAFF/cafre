@@ -365,13 +365,50 @@ class CSaleOrderProps
 			$arSelectFields = array();
 		}
 
+		$defaultSelectFields = array(
+			"ID",
+			"PERSON_TYPE_ID",
+			"NAME",
+			"TYPE",
+			"REQUIED",
+			"DEFAULT_VALUE",
+			"DEFAULT_VALUE_ORIG",
+			"SORT",
+			"USER_PROPS",
+			"IS_LOCATION",
+			"PROPS_GROUP_ID",
+			"SIZE1",
+			"SIZE2",
+			"DESCRIPTION",
+			"IS_EMAIL",
+			"IS_PROFILE_NAME",
+			"IS_PAYER",
+			"IS_LOCATION4TAX",
+			"IS_ZIP",
+			"CODE",
+			"IS_FILTERED",
+			"ACTIVE",
+			"UTIL",
+			"INPUT_FIELD_LOCATION",
+			"MULTIPLE",
+			"PAYSYSTEM_ID",
+			"DELIVERY_ID"
+		);
+
 		if (! $arSelectFields)
-			$arSelectFields = array(
-				"ID", "PERSON_TYPE_ID", "NAME", "TYPE", "REQUIED", "DEFAULT_VALUE", "DEFAULT_VALUE_ORIG", "SORT", "USER_PROPS",
-				"IS_LOCATION", "PROPS_GROUP_ID", "SIZE1", "SIZE2", "DESCRIPTION", "IS_EMAIL", "IS_PROFILE_NAME",
-				"IS_PAYER", "IS_LOCATION4TAX", "IS_ZIP", "CODE", "IS_FILTERED", "ACTIVE", "UTIL",
-				"INPUT_FIELD_LOCATION", "MULTIPLE", "PAYSYSTEM_ID", "DELIVERY_ID"
-			);
+		{
+			$arSelectFields = $defaultSelectFields;
+		}
+
+		if (is_array($arSelectFields) && in_array("*", $arSelectFields))
+		{
+			$key = array_search('*', $arSelectFields);
+			unset($arSelectFields[$key]);
+
+			$arSelectFields = $arSelectFields + $defaultSelectFields;
+
+			$arSelectFields = array_unique($arSelectFields);
+		}
 
 		// add aliases
 
@@ -413,7 +450,7 @@ class CSaleOrderProps
 
 					$relationFilter []= array(
 						'=Bitrix\Sale\Internals\OrderPropsRelationTable:lPROPERTY.ENTITY_TYPE' => 'D',
-						'=Bitrix\Sale\Internals\OrderPropsRelationTable:lPROPERTY.ENTITY_ID' => $arFilter['RELATED']['DELIVERY_ID'],
+						'=Bitrix\Sale\Internals\OrderPropsRelationTable:lPROPERTY.ENTITY_ID' => \CSaleDelivery::getIdByCode($arFilter['RELATED']['DELIVERY_ID']),
 					);
 				}
 
@@ -584,7 +621,10 @@ class CSaleOrderProps
 		if (! self::CheckFields('UPDATE', $arFields, $ID))
 			return false;
 
-		$newProperty = CSaleOrderPropsAdapter::convertOldToNew($arFields + self::GetByID($ID));
+		$oldFields = self::GetList(array(), array('ID' => $ID), false, false, array('SETTINGS', '*' ))->Fetch();
+		$propertyFields = $arFields + $oldFields;
+
+		$newProperty = CSaleOrderPropsAdapter::convertOldToNew($propertyFields);
 		OrderPropsTable::update($ID, array_intersect_key($newProperty, CSaleOrderPropsAdapter::$allFields));
 
 		foreach(GetModuleEvents('sale', 'OnOrderPropsUpdate', true) as $arEvent)
@@ -792,6 +832,9 @@ class CSaleOrderProps
 
 		foreach ($arEntityIDs as $val)
 		{
+			if (strval(trim($val)) == '')
+				continue;
+
 			$arTmp = array("ENTITY_ID" => $val, "ENTITY_TYPE" => $entityType);
 			$arInsert = $DB->PrepareInsert("b_sale_order_props_relation", $arTmp);
 
@@ -859,7 +902,10 @@ final class CSaleOrderPropsAdapter implements FetchAdapter
 		}
 
 		$oldProperty = self::convertNewToOld($newProperty);
-		$oldProperty['VALUE'] = self::getOldValue($newProperty['VALUE'], $newProperty['TYPE']);
+		if (array_key_exists('VALUE', $newProperty))
+		{
+			$oldProperty['VALUE'] = self::getOldValue($newProperty['VALUE'], $newProperty['TYPE']);
+		}
 
 		return array_intersect_key($oldProperty, $this->select);
 	}
@@ -1043,7 +1089,13 @@ final class CSaleOrderPropsAdapter implements FetchAdapter
 				break;
 		}
 
-		$property['SETTINGS'] = $settings;
+		$propertySettings = array();
+		if (isset($property['SETTINGS']) && is_array($property['SETTINGS']))
+		{
+			$propertySettings = $property['SETTINGS'];
+		}
+
+		$property['SETTINGS'] = $propertySettings + $settings;
 
 		return $property;
 	}
@@ -1057,13 +1109,33 @@ final class CSaleOrderPropsAdapter implements FetchAdapter
 
 	static function migrate()
 	{
+		$correctFields = array(
+			'REQUIRED',
+			'USER_PROPS',
+			'ACTIVE',
+			'UTIL',
+			'MULTIPLE',
+		);
+
 		$errors = '';
-		$result = Application::getConnection()->query('SELECT * FROM b_sale_order_props');
+		$result = Application::getConnection()->query('SELECT * FROM b_sale_order_props ORDER BY ID ASC');
 
 		while ($oldProperty = $result->fetch())
 		{
 			$newProperty = self::convertOldToNew($oldProperty);
 			$newProperty['IS_ADDRESS'] = 'N'; // fix oracle's mb default
+
+			foreach ($newProperty as $key => $value)
+			{
+				if (strpos($key, 'IS_') === 0)
+				{
+					$newProperty[$key] = ToUpper($value);
+				}
+				elseif(in_array($key, $correctFields))
+				{
+					$newProperty[$key] = ToUpper($value);
+				}
+			}
 
 			$update = OrderPropsTable::update($newProperty['ID'], array_intersect_key($newProperty, self::$allFields));
 

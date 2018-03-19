@@ -725,7 +725,7 @@ class CSocNetTextParser
 
 		$dbSite = CSite::GetByID(SITE_ID);
 		$arSite = $dbSite->Fetch();
-		$serverName = $arSite["SERVER_NAME"];
+		$serverName = htmlspecialcharsEx($arSite["SERVER_NAME"]);
 		if (strlen($serverName) <=0)
 		{
 			if (defined("SITE_SERVER_NAME") && strlen(SITE_SERVER_NAME)>0)

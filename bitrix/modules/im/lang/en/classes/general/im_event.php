@@ -25,4 +25,5 @@ $MESS["IM_EVENT_RATING_BLOG_COMMENT_MENTION_DISLIKE"] = "I don't like the #A_STA
 $MESS["DESKTOP_APPLICATION_NAME"] = "Desktop application";
 $MESS["DESKTOP_APPLICATION_DESC"] = "Create here a special password for secure access to the desktop application.";
 $MESS["IM_EVENT_RATING_LISTS_NEW_ELEMENT_LIKE"] = "I like #A_START#your post about the running workflow \"#TITLE#\"#A_END#";
+$MESS["IM_EVENT_ERROR_CHANGE_PASSWORD_FOR_BOT"] = "You cannot recover password for chat bot user.";
 ?>

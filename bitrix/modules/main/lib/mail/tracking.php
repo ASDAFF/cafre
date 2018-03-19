@@ -8,52 +8,67 @@
 
 namespace Bitrix\Main\Mail;
 
-use Bitrix\Main\Config as Config;
-use Bitrix\Main\Event;
+use Bitrix\Main\Application;
+use Bitrix\Main\Context as MainContext;
 use Bitrix\Main\EventResult;
+use Bitrix\Main\Security\Sign\BadSignatureException;
 use Bitrix\Main\Security\Sign\Signer;
+use Bitrix\Main\SystemException;
 
+/**
+ * Class Tracking
+ * @package Bitrix\Main\Mail
+ */
 class Tracking
 {
 	const SIGN_SALT_ACTION = 'event_mail_tracking';
 
 	/**
-	 * @param $moduleId
-	 * @param $arFields
+	 * Get tag.
+	 *
+	 * @param string $moduleId Module ID.
+	 * @param array $fields Fields.
 	 * @return string
 	 */
-	public static function getTag($moduleId, $arFields)
+	public static function getTag($moduleId, $fields)
 	{
-		return $moduleId.".".base64_encode(json_encode($arFields));
+		return $moduleId . "." . base64_encode(json_encode($fields));
 	}
 
 	/**
-	 * @param $tag
+	 * Parse tag.
+	 *
+	 * @param string $tag Tag.
 	 * @return array
 	 */
 	public static function parseTag($tag)
 	{
-		$arTag = explode(".", $tag);
-		$moduleId = $arTag[0];
-		unset($arTag[0]);
-		return array('MODULE_ID' => $moduleId, 'FIELDS' => (array) json_decode(base64_decode(implode('.', $arTag))));
+		$data = explode(".", $tag);
+		$moduleId = $data[0];
+		unset($data[0]);
+
+		return array('MODULE_ID' => $moduleId, 'FIELDS' => (array) json_decode(base64_decode(implode('.', $data))));
 	}
 
 	/**
-	 * @param $moduleId
-	 * @param $arFields
+	 * Get signed tag.
+	 *
+	 * @param string $moduleId Module ID.
+	 * @param array $fields Fields.
 	 * @return string
 	 * @throws \Bitrix\Main\ArgumentTypeException
 	 */
-	public static function getSignedTag($moduleId, $arFields)
+	public static function getSignedTag($moduleId, $fields)
 	{
-		$tag = static::getTag($moduleId, $arFields);
+		$tag = static::getTag($moduleId, $fields);
 		$signer = new Signer;
 		return $signer->sign($tag, static::SIGN_SALT_ACTION);
 	}
 
 	/**
-	 * @param $signedTag
+	 * Parse signed tag.
+	 *
+	 * @param string $signedTag Signed tag.
 	 * @return array
 	 * @throws \Bitrix\Main\Security\Sign\BadSignatureException
 	 */
@@ -65,66 +80,137 @@ class Tracking
 	}
 
 	/**
-	 * @param $moduleId
-	 * @param $arFields
+	 * Get read page link
+	 *
+	 * @param string $moduleId Module ID.
+	 * @param array $fields Fields.
+	 * @param string|null $urlPage Url of custom click page.
 	 * @return string
 	 */
-	public static function getLinkRead($moduleId, $arFields)
+	public static function getLinkRead($moduleId, $fields, $urlPage = null)
 	{
-		$tag = static::getTag($moduleId, $arFields);
-		$bitrixDirectory = \Bitrix\Main\Application::getInstance()->getPersonalRoot();
-		return $bitrixDirectory.'/tools/track_mail_read.php?tag='.urlencode($tag);
+		return static::getTaggedLink(
+			static::getTag($moduleId, $fields),
+			'read',
+			$urlPage
+		);
 	}
 
 	/**
-	 * @param $moduleId
-	 * @param $arFields
+	 * Get click page link.
+	 *
+	 * @param string $moduleId Module ID.
+	 * @param array $fields Fields.
+	 * @param string|null $urlPage Url of custom click page.
 	 * @return string
 	 */
-	public static function getLinkClick($moduleId, $arFields)
+	public static function getLinkClick($moduleId, $fields, $urlPage = null)
 	{
-		$tag = static::getTag($moduleId, $arFields);
-		$bitrixDirectory = \Bitrix\Main\Application::getInstance()->getPersonalRoot();
-		return $bitrixDirectory.'/tools/track_mail_click.php?tag='.urlencode($tag);
+		return static::getTaggedLink(
+			static::getTag($moduleId, $fields),
+			'click',
+			$urlPage
+		);
 	}
 
 	/**
-	 * @param $moduleId
-	 * @param $arFields
+	 * Get link for unsubscribe.
+	 *
+	 * @param string $moduleId Module ID.
+	 * @param array $fields Fields.
+	 * @param string|null $urlPage Url of custom unsubscribe page.
 	 * @return string
 	 */
-	public static function getLinkUnsub($moduleId, $arFields, $urlPage = "")
+	public static function getLinkUnsub($moduleId, $fields, $urlPage = null)
 	{
-		$tag = static::getSignedTag($moduleId, $arFields);
-		if($urlPage == "")
+		return static::getTaggedLink(
+			static::getSignedTag($moduleId, $fields),
+			'unsub',
+			$urlPage
+		);
+	}
+
+	protected static function getTaggedLink($tag, $opCode, $uri = null)
+	{
+		if(!$uri)
 		{
-			$bitrixDirectory = \Bitrix\Main\Application::getInstance()->getPersonalRoot();
-			$resutl = $bitrixDirectory.'/tools/track_mail_unsub.php?tag='.urlencode($tag);
-		}
-		else
-		{
-			$resutl = $urlPage.(strpos($urlPage, "?")===false ? "?" : "&").'tag='.urlencode($tag);
+			$uri = Application::getInstance()->getPersonalRoot();
+			$uri .= "/tools/track_mail_$opCode.php";
 		}
 
-		return $resutl;
+		$uri = $uri . (strpos($uri, "?") === false ? "?" : "&");
+		$uri .= 'tag=' . urlencode($tag);
+
+		return $uri;
 	}
 
 	/**
-	 * @param $arData
+	 * Get sign.
+	 *
+	 * @param string $value Value.
+	 * @return string
+	 */
+	public static function getSign($value)
+	{
+		static $cached = array();
+		foreach ($cached as $cache)
+		{
+			if ($cache[0] == $value)
+			{
+				return $cache[1];
+			}
+		}
+
+		$signer = new Signer;
+		$sign = $signer->getSignature($value, static::SIGN_SALT_ACTION);
+
+		$cached[] = array($value, $sign);
+		if (count($cached) > 10)
+		{
+			array_shift($cached);
+		}
+
+		return $sign;
+	}
+
+	/**
+	 * Verify sign.
+	 *
+	 * @param string $value Value.
+	 * @param string $signature Signature.
+	 * @return bool
+	 */
+	public static function validateSign($value, $signature)
+	{
+		try
+		{
+			$signer = new Signer;
+			return $signer->validate($value, $signature, static::SIGN_SALT_ACTION);
+		}
+		catch (BadSignatureException $exception)
+		{
+			return false;
+		}
+	}
+
+	/**
+	 * Get subscription list.
+	 *
+	 * @param array $data Data.
 	 * @return array|bool
 	 */
-	public static function getSubscriptionList($arData)
+	public static function getSubscriptionList($data)
 	{
-		$arSubscription = array();
+		$subscription = array();
 
-		if(array_key_exists('MODULE_ID', $arData))
-			$filter = array($arData['MODULE_ID']);
+		if(array_key_exists('MODULE_ID', $data))
+			$filter = array($data['MODULE_ID']);
 		else
 			$filter = null;
 
-		if(!is_array($arData['FIELDS'])) return false;
+		if(!is_array($data['FIELDS'])) return false;
 
-		$event = new Event("main", "OnMailEventSubscriptionList", array($arData['FIELDS']), $filter);
+		$event = new \Bitrix\Main\Event("main", "OnMailEventSubscriptionList", array($data['FIELDS']), $filter);
 		$event->send();
 		foreach ($event->getResults() as $eventResult)
 		{
@@ -136,28 +222,30 @@ class Tracking
 			$subscriptionList = $eventResult->getParameters();
 			if($subscriptionList && is_array($subscriptionList['LIST']))
 			{
-				$arSubscription = array_merge(
-					$arSubscription,
+				$subscription = array_merge(
+					$subscription,
 					array($eventResult->getModuleId() => $subscriptionList['LIST'])
 				);
 			}
 		}
 
-		if(array_key_exists('MODULE_ID', $arData))
-			$arSubscription = $arSubscription[$arData['MODULE_ID']];
+		if(array_key_exists('MODULE_ID', $data))
+			$subscription = $subscription[$data['MODULE_ID']];
 
-		return $arSubscription;
+		return $subscription;
 	}
 
 	/**
-	 * @param $arData
+	 * Subscribe.
+	 *
+	 * @param array $data Data.
 	 * @return bool
 	 */
-	public static function subscribe($arData)
+	public static function subscribe($data)
 	{
-		if(!is_array($arData['FIELDS'])) return false;
+		if(!is_array($data['FIELDS'])) return false;
 
-		$event = new Event("main", "OnMailEventSubscriptionEnable", array($arData['FIELDS']), array($arData['MODULE_ID']));
+		$event = new \Bitrix\Main\Event("main", "OnMailEventSubscriptionEnable", array($data['FIELDS']), array($data['MODULE_ID']));
 		$event->send();
 		foreach ($event->getResults() as $eventResult)
 		{
@@ -171,14 +259,16 @@ class Tracking
 	}
 
 	/**
-	 * @param $arData
+	 * Unsubscribe.
+	 *
+	 * @param array $data Data.
 	 * @return bool
 	 */
-	public static function unsubscribe($arData)
+	public static function unsubscribe($data)
 	{
-		if(!is_array($arData['FIELDS'])) return false;
+		if(!is_array($data['FIELDS'])) return false;
 
-		$event = new Event("main", "OnMailEventSubscriptionDisable", array($arData['FIELDS']), array($arData['MODULE_ID']));
+		$event = new \Bitrix\Main\Event("main", "OnMailEventSubscriptionDisable", array($data['FIELDS']), array($data['MODULE_ID']));
 		$event->send();
 		foreach ($event->getResults() as $eventResult)
 		{
@@ -192,21 +282,23 @@ class Tracking
 	}
 
 	/**
-	 * @param array $arData
+	 * Click.
+	 *
+	 * @param array $data Data.
 	 * @return bool
 	 */
-	public static function click(array $arData)
+	public static function click(array $data)
 	{
-		if(array_key_exists('MODULE_ID', $arData))
-			$filter = array($arData['MODULE_ID']);
+		if(array_key_exists('MODULE_ID', $data))
+			$filter = array($data['MODULE_ID']);
 		else
 			$filter = null;
 
-		$event = new \Bitrix\Main\Event("main", "OnMailEventMailClick", array($arData['FIELDS']), $filter);
+		$event = new \Bitrix\Main\Event("main", "OnMailEventMailClick", array($data['FIELDS']), $filter);
 		$event->send();
 		foreach ($event->getResults() as $eventResult)
 		{
-			if ($eventResult->getType() == \Bitrix\Main\EventResult::ERROR)
+			if ($eventResult->getType() == EventResult::ERROR)
 			{
 				return false;
 			}
@@ -216,21 +308,81 @@ class Tracking
 	}
 
 	/**
-	 * @param array $arData
+	 * Track click from request.
+	 *
+	 * @return void
+	 */
+	public static function clickFromRequest()
+	{
+		$request = MainContext::getCurrent()->getRequest();
+		$url = $request->get('url');
+		$sign = $request->get('sign');
+		$tag = $request->get('tag');
+
+		if ($tag)
+		{
+			try
+			{
+				$tag = static::parseTag($tag);
+				$tag['FIELDS']['IP'] = $request->getRemoteAddress();
+				$tag['FIELDS']['URL'] = $url;
+				static::click($tag);
+			}
+			catch (SystemException $exception)
+			{
+
+			}
+		}
+
+		$skipSecCheck = ($sign && $url && static::validateSign($url, $sign));
+		$url = $url ?: '/';
+		LocalRedirect($url, $skipSecCheck);
+	}
+
+	/**
+	 * Track read from request.
+	 *
 	 * @return bool
 	 */
-	public static function read(array $arData)
+	public static function readFromRequest()
 	{
-		if(array_key_exists('MODULE_ID', $arData))
-			$filter = array($arData['MODULE_ID']);
+		$request = MainContext::getCurrent()->getRequest();
+		$tag = $request->get('tag');
+		if (!$tag)
+		{
+			return false;
+		}
+
+		try
+		{
+			$data = static::parseTag($tag);
+			$data['FIELDS']['IP'] = $request->getRemoteAddress();
+			return static::read($data);
+		}
+		catch (SystemException $exception)
+		{
+			return false;
+		}
+	}
+
+	/**
+	 * Read.
+	 *
+	 * @param array $data Data.
+	 * @return bool
+	 */
+	public static function read(array $data)
+	{
+		if(array_key_exists('MODULE_ID', $data))
+			$filter = array($data['MODULE_ID']);
 		else
 			$filter = null;
 
-		$event = new \Bitrix\Main\Event("main", "OnMailEventMailRead", array($arData['FIELDS']), $filter);
+		$event = new \Bitrix\Main\Event("main", "OnMailEventMailRead", array($data['FIELDS']), $filter);
 		$event->send();
 		foreach ($event->getResults() as $eventResult)
 		{
-			if ($eventResult->getType() == \Bitrix\Main\EventResult::ERROR)
+			if ($eventResult->getType() == EventResult::ERROR)
 			{
 				return false;
 			}

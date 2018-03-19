@@ -158,7 +158,10 @@ class CSeoKeywords
 			}
 		}
 		
-		$cnt = $DB->Update('b_seo_keywords', $arUpdate, $strUpdateBy == 'ID' ? 'WHERE ID=\''.$ID.'\'' : 'WHERE URL=\''.$URL.'\'');
+		$condition = $strUpdateBy == 'ID' ? 'WHERE ID=\''.$ID.'\'' : 'WHERE URL=\''.$URL.'\'';
+		if($siteId = $DB->ForSql($arFields['SITE_ID']))
+			$condition .= ' AND SITE_ID=\''.$siteId.'\'';
+		$cnt = $DB->Update('b_seo_keywords', $arUpdate, $condition);
 		
 		if ($cnt <= 0 && $strUpdateBy == 'URL')
 		{

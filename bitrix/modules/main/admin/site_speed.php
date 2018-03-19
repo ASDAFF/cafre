@@ -13,7 +13,7 @@ use Bitrix\Main\Analytics;
 
 Loc::loadMessages(__FILE__);
 
-if (!$USER->CanDoOperation("view_other_settings") || !Analytics\SiteSpeed::isLicenseAccepted())
+if (!$USER->CanDoOperation("view_other_settings") || !Analytics\SiteSpeed::isRussianSiteManager())
 {
 	$APPLICATION->AuthForm(Loc::getMessage("ACCESS_DENIED"));
 }
@@ -21,7 +21,35 @@ if (!$USER->CanDoOperation("view_other_settings") || !Analytics\SiteSpeed::isLic
 CJSCore::Init(array("site_speed", "date"));
 $APPLICATION->SetAdditionalCSS("/bitrix/panel/main/site_speed.css");
 $APPLICATION->SetTitle(Loc::getMessage("MAIN_SITE_SPEED_TITLE"));
-require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_after.php");?>
+require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_after.php");
+
+// lang for external map js inside iframe
+$mapIframeLangKeys = array(
+	"MAIN_SITE_SPEED_MAP_EXT_VALUE_1",
+	"MAIN_SITE_SPEED_MAP_EXT_VALUE_2",
+	"MAIN_SITE_SPEED_MAP_EXT_VDOTS_1",
+	"MAIN_SITE_SPEED_MAP_EXT_VDOTS_2",
+	"MAIN_SITE_SPEED_MAP_EXT_HITS_1",
+	"MAIN_SITE_SPEED_MAP_EXT_HITS_2",
+	"MAIN_SITE_SPEED_MAP_EXT_MARK_1",
+	"MAIN_SITE_SPEED_MAP_EXT_MARK_2",
+	"MAIN_SITE_SPEED_MAP_EXT_MARK_3",
+	"MAIN_SITE_SPEED_MAP_EXT_MARK_4",
+	"MAIN_SITE_SPEED_MAP_EXT_MARK_5",
+	"MAIN_SITE_SPEED_MAP_EXT_HINT_SPEED",
+	"MAIN_SITE_SPEED_MAP_EXT_HINT_COMPOSITE",
+	"MAIN_SITE_SPEED_MAP_EXT_HINT_HITS"
+);
+
+$mapIframeLang = array();
+
+foreach ($mapIframeLangKeys as $key)
+{
+	$mapIframeLang[$key] = Loc::getMessage($key);
+}
+
+
+?>
 
 <div class="site-speed-page">
 	<?
@@ -76,7 +104,7 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admi
 				<?endif?>
 
 				<?
-					$compositeStatus = \CHTMLPagesCache::IsCompositeEnabled() ? Loc::getMessage("MAIN_SITE_SPEED_ENABLED") : Loc::getMessage("MAIN_SITE_SPEED_DISABLED");
+					$compositeStatus = \Bitrix\Main\Composite\Helper::isCompositeEnabled() ? Loc::getMessage("MAIN_SITE_SPEED_ENABLED") : Loc::getMessage("MAIN_SITE_SPEED_DISABLED");
 				?>
 				<a href="/bitrix/admin/composite.php?lang=<?=LANGUAGE_ID?>" class="site-speed-perf-label"><?=Loc::getMessage("MAIN_SITE_SPEED_COMPOSITE_SITE")?></a>:<span class="site-speed-perf-value"><?=$compositeStatus?></span>
 				<?
@@ -87,6 +115,15 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admi
 				<a href="/bitrix/admin/bitrixcloud_cdn.php?lang=<?=LANGUAGE_ID?>" class="site-speed-perf-label"><?=Loc::getMessage("MAIN_SITE_SPEED_CDN")?></a>:<span class="site-speed-perf-value"><?=$cdnStatus?></span>
 				<?endif?>
 			</div>
+		</div>
+
+		<div class="site-speed-indicator-block">
+			<h1 class="adm-title"><?=Loc::getMessage("MAIN_SITE_SPEED_MAP_TITLE")?></h1>
+			<iframe id="site-speed-clients-map" scrolling="no" width="100%" height="400"
+				style="overflow: hidden; padding: 0; margin: 0; border: 0px"
+				marginheight="0" marginwidth="0" frameborder="0"
+				name="<?=htmlspecialcharsbx(\Bitrix\Main\Web\Json::encode($mapIframeLang))?>"
+			></iframe>
 		</div>
 
 		<div class="site-speed-histogram-block" id="site-speed-histogram-block">
@@ -180,6 +217,12 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admi
 
 			}
 		);
+
+		BX('site-speed-clients-map').src = "https://analytics.bitrix.info/cstats/v1_0/maps_client/index.php?"
+			+ "aid=<?=Analytics\Counter::getAccountId()?>"
+			+ "&aid_check=<?=Analytics\Counter::getPrivateKey()?>"
+			+ "&domain=" + host
+			+ "&hit_param=dom_int_time&mode=value";
 
 		function drawGraph()
 		{

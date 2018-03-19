@@ -42,6 +42,7 @@ Class CIdeaManagmentSonetNotify
 				'ADD_CALLBACK'  =>  array(__CLASS__, 'CallBack_AddComment'),
 				'UPDATE_CALLBACK'  =>  array(__CLASS__, 'CallBack_UpdateComment'),
 				'DELETE_CALLBACK'  =>  array(__CLASS__, 'CallBack_DeleteComment'),
+				'RATING_TYPE_ID'  =>  "BLOG_COMMENT"
 			)
 		);
 	}

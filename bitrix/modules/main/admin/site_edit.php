@@ -169,14 +169,14 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && ($_POST["save"] <> '' || $_POST["appl
 			$p = CSite::GetSiteDocRoot($LID).$siteDir;
 			CheckDirPath($p);
 
-			$indexContent = '<'.'?'.
-				'define("B_PROLOG_INCLUDED", true);'.
-				'define("WIZARD_DEFAULT_SITE_ID", "'.$LID.'");'.
-				'define("WIZARD_DEFAULT_TONLY", true);'.
-				'define("PRE_LANGUAGE_ID","'.$arSite["LANGUAGE_ID"].'");'.
-				'define("PRE_INSTALL_CHARSET","'.$arSite["CHARSET"].'");'.
-				'include_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/install/wizard/wizard.php");'.
-				'?'.'>';
+			$indexContent = '<'.'?
+				define("B_PROLOG_INCLUDED", true);
+				define("WIZARD_DEFAULT_SITE_ID", "'.$LID.'");
+				define("WIZARD_DEFAULT_TONLY", true);
+				define("PRE_LANGUAGE_ID","'.$arSite["LANGUAGE_ID"].'");
+				define("PRE_INSTALL_CHARSET","'.$arSite["CHARSET"].'");
+				include_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/install/wizard/wizard.php");
+				?'.'>';
 
 			$handler = fopen($p."index.php", "wb");
 			fwrite($handler, $indexContent);
@@ -341,6 +341,14 @@ $tabControl->BeginNextTab();
 		<td><?echo GetMessage('SORT')?></td>
 		<td><input type="text" name="SORT" size="10" value="<? echo $str_SORT?>"></td>
 	</tr>
+	<tr>
+		<td><?echo GetMessage("MAIN_DOC_ROOT")?><br />
+		<?echo GetMessage("MAIN_DOC_ROOT_TIPS")?>
+		</td>
+		<td><input type="text" name="DOC_ROOT" size="30" value="<?echo $str_DOC_ROOT?>">
+		<a title="<?=GetMessage('MAIN_DOC_ROOT_INS')?>" href="javascript:void(0)" onClick="document.bform.DOC_ROOT.value='<?=htmlspecialcharsbx(CUtil::addslashes($_SERVER["DOCUMENT_ROOT"]))?>'; BX.fireEvent(document.bform.DOC_ROOT, 'change')"><?echo GetMessage("MAIN_DOC_ROOT_SET")?></a>
+		</td>
+	</tr>
 
 	<tr class="heading">
 		<td colspan="2"><?echo GetMessage("MAIN_SITE_PARAMS")?></td>
@@ -356,14 +364,6 @@ $tabControl->BeginNextTab();
 	<tr>
 		<td><?echo GetMessage("MAIN_DEFAULT_EMAIL")?></td>
 		<td><input type="text" name="EMAIL" size="30" value="<?echo $str_EMAIL?>"></td>
-	</tr>
-	<tr>
-		<td><?echo GetMessage("MAIN_DOC_ROOT")?><br />
-		<?echo GetMessage("MAIN_DOC_ROOT_TIPS")?>
-		</td>
-		<td><input type="text" name="DOC_ROOT" size="30" value="<?echo $str_DOC_ROOT?>">
-		<a title="<?=GetMessage('MAIN_DOC_ROOT_INS')?>" href="javascript:void(0)" onClick="document.bform.DOC_ROOT.value='<?=htmlspecialcharsbx(CUtil::addslashes($_SERVER["DOCUMENT_ROOT"]))?>'; BX.fireEvent(document.bform.DOC_ROOT, 'change')"><?echo GetMessage("MAIN_DOC_ROOT_SET")?></a>
-		</td>
 	</tr>
 
 	<tr class="heading">

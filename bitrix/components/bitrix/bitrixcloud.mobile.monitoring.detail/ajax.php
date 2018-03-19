@@ -11,7 +11,7 @@ $arResult = array();
 if (!CModule::IncludeModule("bitrixcloud"))
 	$arResult["ERROR"] = GetMessage("BCLMMD_BC_NOT_INSTALLED");
 
-if(!$USER->IsAdmin() || !check_bitrix_sessid())
+if(!$USER->CanDoOperation("bitrixcloud_monitoring") || !check_bitrix_sessid())
 	$arResult["ERROR"] = GetMessage("BCLMMD_ACCESS_DENIED");
 
 if(!isset($arResult["ERROR"]))

@@ -200,6 +200,7 @@ abstract class CDatabaseMysql extends CAllDatabase
 			return false;
 		}
 
+
 		$res = new CDBResult($result);
 		$res->DB = $this;
 		if($DB->ShowSqlStat)
@@ -245,12 +246,12 @@ abstract class CDatabaseMysql extends CAllDatabase
 		}
 	}
 
-	function CurrentTimeFunction()
+	public static function CurrentTimeFunction()
 	{
 		return "now()";
 	}
 
-	function CurrentDateFunction()
+	public static function CurrentDateFunction()
 	{
 		return "CURRENT_DATE";
 	}
@@ -330,9 +331,7 @@ abstract class CDatabaseMysql extends CAllDatabase
 		//time zone
 		if($strType == "FULL" && CTimeZone::Enabled())
 		{
-			static $diff = false;
-			if($diff === false)
-				$diff = CTimeZone::GetOffset();
+			$diff = CTimeZone::GetOffset();
 
 			if($diff <> 0)
 				$sFieldExpr = "DATE_ADD(".$strFieldName.", INTERVAL ".$diff." SECOND)";
@@ -348,9 +347,7 @@ abstract class CDatabaseMysql extends CAllDatabase
 		//time zone
 		if($strType == "FULL" && CTimeZone::Enabled())
 		{
-			static $diff = false;
-			if($diff === false)
-				$diff = CTimeZone::GetOffset();
+			$diff = CTimeZone::GetOffset();
 
 			if($diff <> 0)
 				$sFieldExpr = "DATE_ADD(".$sFieldExpr.", INTERVAL -(".$diff.") SECOND)";
@@ -464,7 +461,12 @@ abstract class CDatabaseMysql extends CAllDatabase
 							$strInsert2 .= ", '".intval($value)."'";
 							break;
 						case "real":
-							$strInsert2 .= ", '".doubleval($value)."'";
+							$value = doubleval($value);
+							if(!is_finite($value))
+							{
+								$value = 0;
+							}
+							$strInsert2 .= ", '".$value."'";
 							break;
 						default:
 							$strInsert2 .= ", '".$this->ForSql($value)."'";
@@ -518,6 +520,10 @@ abstract class CDatabaseMysql extends CAllDatabase
 							break;
 						case "real":
 							$value = doubleval($value);
+							if(!is_finite($value))
+							{
+								$value = 0;
+							}
 							break;
 						case "datetime":
 						case "timestamp":
@@ -632,11 +638,11 @@ abstract class CDatabaseMysql extends CAllDatabase
 		return $rows;
 	}
 
-	function Add($tablename, $arFields, $arCLOBFields = Array(), $strFileDir="", $ignore_errors=false, $error_position="", $arOptions=array())
+	public function Add($tablename, $arFields, $arCLOBFields = Array(), $strFileDir="", $ignore_errors=false, $error_position="", $arOptions=array())
 	{
 		global $DB;
 
-		if(!is_object($this) || !isset($this->type))
+		if(!isset($this) || !is_object($this) || !isset($this->type))
 		{
 			return $DB->Add($tablename, $arFields, $arCLOBFields, $strFileDir, $ignore_errors, $error_position, $arOptions);
 		}
@@ -741,12 +747,7 @@ abstract class CDatabaseMysql extends CAllDatabase
 			return False;
 	}
 
-	function IndexExists($tableName, $arColumns)
-	{
-		return $this->GetIndexName($tableName, $arColumns) !== "";
-	}
-
-	function GetIndexName($tableName, $arColumns, $bStrict = false)
+	public function GetIndexName($tableName, $arColumns, $bStrict = false)
 	{
 		if(!is_array($arColumns) || count($arColumns) <= 0)
 			return "";
@@ -789,9 +790,15 @@ abstract class CDatabaseMysql extends CAllDatabase
 
 abstract class CDBResultMysql extends CAllDBResult
 {
-	function CDBResultMysql($res = null)
+	public function __construct($res = null)
 	{
-		parent::CAllDBResult($res);
+		parent::__construct($res);
+	}
+
+	/** @deprecated */
+	public function CDBResultMysql($res = null)
+	{
+		self::__construct($res);
 	}
 
 	/**
@@ -806,9 +813,13 @@ abstract class CDBResultMysql extends CAllDBResult
 		if($this->bNavStart || $this->bFromArray)
 		{
 			if(!is_array($this->arResult))
+			{
 				$res = false;
+			}
 			elseif($res = current($this->arResult))
+			{
 				next($this->arResult);
+			}
 		}
 		else
 		{

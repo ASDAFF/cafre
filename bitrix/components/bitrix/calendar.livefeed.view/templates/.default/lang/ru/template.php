@@ -13,4 +13,8 @@ $MESS ['ECLFV_INVITE_DECLINE2'] = "Отказаться от участия";
 $MESS ['ECLFV_EVENT_ACCEPTED'] = "Вы участвуете в этом событии";
 $MESS ['ECLFV_EVENT_DECLINED'] = "Вы не участвуете в этом событии";
 $MESS ['ECLFV_CRM'] = "CRM";
+$MESS ['ECLFV_REC_DECLINE'] = "Отказаться от участия в повторяющемся событии?";
+$MESS ['ECLFV_REC_DECLINE_THIS'] = "Только в этом";
+$MESS ['ECLFV_REC_DECLINE_NEXT'] = "В этом и следующих";
+$MESS ['ECLFV_REC_DECLINE_ALL'] = "Во всех";
 ?>

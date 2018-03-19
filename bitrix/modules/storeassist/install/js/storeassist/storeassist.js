@@ -13,8 +13,10 @@ BX.Storeassist.Admin = {
 			overlay : false,
 			draggable: {restrict:true},
 			closeByEsc: true,
+			contentColor : "white",
+			contentNoPaddings : true,
 			closeIcon: { right : "12px", top : "10px"},
-			titleBar: {content: BX.create("span", {html: '<a href="'+url+'" target=_blank style="color:grey;">' + BX.message("STOREAS_OPEN_NEW_TAB") + '</a>&nbsp;&nbsp;<a href="javascript:void(0)" onclick="BX.PopupWindowManager.getCurrentPopup().close();" style="color:grey;">' + BX.message("STOREAS_CLOSE") + '</a>', style:{"display": "block","padding": "3px 41px","text-align": "right", "font-size":"14px"}})},
+			titleBar: {content: BX.create("span", {html: '<a href="'+url+'" target=_blank style="color:grey;">' + BX.message("STOREAS_OPEN_NEW_TAB") + '</a>&nbsp;&nbsp;<a href="javascript:void(0)" onclick="BX.PopupWindowManager.getCurrentPopup().close();" style="color:grey;">' + BX.message("STOREAS_CLOSE") + '</a>', style:{"display": "block","padding": "14px 41px","text-align": "right", "font-size":"14px"}})},
 			content: "<div class='bx-storas-waiter'><iframe onload='BX.removeClass(this.parentNode, \"bx-storas-waiter\")' src='" + url + "?video=small' width='757px' height='700px' border='0' frameborder='0'></iframe></div>",
 			events: {
 				onPopupClose: function()

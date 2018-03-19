@@ -23,7 +23,6 @@ $arDefaultUrlTemplates404 = array(
 	"list_file" => "#list_id#/file/#section_id#/#element_id#/#field_id#/#file_id#/",
 	"bizproc_log" => "#list_id#/bp_log/#document_state_id#/",
 	"bizproc_workflow_start" => "#list_id#/bp_start/#element_id#/",
-	"bizproc_workflow_delete" => "#list_id#/bp_delete/#element_id#/",
 	"bizproc_task" => "#list_id#/bp_task/#section_id#/#element_id#/#task_id#/",
 	"bizproc_workflow_admin" => "#list_id#/bp_list/",
 	"bizproc_workflow_edit" => "#list_id#/bp_edit/#ID#/",
@@ -114,6 +113,19 @@ if($arParams["SEF_MODE"] == "Y")
 		"VARIABLES" => $arVariables,
 		"ALIASES" => $arVariableAliases
 	);
+
+	// Registering routes for building preview by url
+	Bitrix\Main\UrlPreview\Router::setRouteHandler(
+		$arParams["SEF_FOLDER"].$arUrlTemplates['list_element_edit'],
+		'lists',
+		'\Bitrix\Lists\Preview\Element',
+		array(
+			'listId' => '$list_id',
+			'sectionId' => '$section_id',
+			'elementId' => '$element_id',
+			'IBLOCK_TYPE_ID' => $arParams['IBLOCK_TYPE_ID']
+		)
+	);
 }
 else
 {
@@ -189,6 +201,9 @@ else
 				$componentPage = "list_file";
 			else
 				$componentPage = "list";
+			break;
+		case "excel":
+			$componentPage = "list_export_excel";
 			break;
 		}
 	}
@@ -287,8 +302,9 @@ else
 				."&".$arVariableAliases["list_id"]."=#list_id#"
 				."&".$arVariableAliases["section_id"]."=#section_id#"
 			,
-			"lists" => $APPLICATION->GetCurPage()
-			,
+			"lists" => $APPLICATION->GetCurPage(),
+			"list_export_excel" => $APPLICATION->GetCurPage()."?mode=excel"
+				."&".$arVariableAliases["list_id"]."=#list_id#",
 		),
 		"VARIABLES" => $arVariables,
 		"ALIASES" => $arVariableAliases
@@ -308,11 +324,19 @@ if(
 	isset($arVariables["document_state_id"])
 	&& !isset($arVariables["element_id"])
 	&& CModule::IncludeModule("bizproc")
+	&& CBPRuntime::isFeatureEnabled()
 )
 {
 	$arWorkflowState = CBPStateService::GetWorkflowState($arVariables["document_state_id"]);
 	if(is_array($arWorkflowState) && is_array($arWorkflowState["DOCUMENT_ID"]))
 		list(, , $arResult["VARIABLES"]["element_id"]) = CBPHelper::ParseDocumentId($arWorkflowState["DOCUMENT_ID"]);
 }
+
+if($processes && !CLists::isFeatureEnabled())
+{
+	ShowError(GetMessage("CC_BLL_ACCESS_DENIDED"));
+	return;
+}
+
 $this->IncludeComponentTemplate($componentPage);
 ?>

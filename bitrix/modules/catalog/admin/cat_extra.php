@@ -1,13 +1,17 @@
 <?
+/** @global CUser $USER */
+/** @global CMain $APPLICATION */
+/** @global CDatabase $DB */
+use Bitrix\Main\Loader;
+
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/catalog/prolog.php");
 if (!($USER->CanDoOperation('catalog_read') || $USER->CanDoOperation('catalog_price')))
 	$APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
-CModule::IncludeModule("catalog");
+Loader::includeModule('catalog');
 $bReadOnly = !$USER->CanDoOperation('catalog_extra');
 
 IncludeModuleLangFile(__FILE__);
-require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/catalog/prolog.php");
 
 if ($ex = $APPLICATION->GetException())
 {
@@ -79,7 +83,7 @@ if (($arID = $lAdmin->GroupAction()) && !$bReadOnly)
 {
 	if ($_REQUEST['action_target']=='selected')
 	{
-		$arID = Array();
+		$arID = array();
 		$dbResultList = CExtra::GetList(array($by => $order), $arFilter, false, false, array('ID'));
 		while ($arResult = $dbResultList->Fetch())
 			$arID[] = $arResult['ID'];
@@ -183,7 +187,7 @@ while ($arExtra = $dbResultList->NavNext(true, "f_"))
 		$row->AddViewField("RECALCULATE", '');
 	}
 
-	$arActions = Array();
+	$arActions = array();
 	$arActions[] = array("ICON"=>"edit", "TEXT"=>GetMessage("CEN_UPDATE_ALT"), "ACTION"=>$lAdmin->ActionRedirect("/bitrix/admin/cat_extra_edit.php?ID=".$f_ID."&lang=".LANGUAGE_ID), "DEFAULT"=>true);
 
 	if (!$bReadOnly)
@@ -249,21 +253,21 @@ $oFilter = new CAdminFilter(
 <tr>
 	<td><? echo "ID" ?>:</td>
 	<td>
-		<input type="text" name="find_id_start" size="10" value="<?echo htmlspecialcharsex($find_id_start)?>">
+		<input type="text" name="find_id_start" size="10" value="<?=htmlspecialcharsbx($find_id_start); ?>">
 			...
-		<input type="text" name="find_id_end" size="10" value="<?echo htmlspecialcharsex($find_id_end)?>">
+		<input type="text" name="find_id_end" size="10" value="<?=htmlspecialcharsbx($find_id_end); ?>">
 	</td>
 </tr>
 <tr>
 	<td><? echo GetMessage("EXTRA_NAME")?>:</td>
-	<td><input type="text" name="find_name" size="47" value="<?echo htmlspecialcharsbx($find_name)?>"></td>
+	<td><input type="text" name="find_name" size="47" value="<?=htmlspecialcharsbx($find_name); ?>"></td>
 </tr>
 <tr>
 	<td><? echo GetMessage("EXTRA_PERCENTAGE")?>:</td>
 	<td>
-		<input type="text" name="find_perc_start" value="<?echo htmlspecialcharsex($find_perc_start)?>" size="15">
+		<input type="text" name="find_perc_start" value="<?=htmlspecialcharsbx($find_perc_start); ?>" size="15">
 			...
-		<input type="text" name="find_perc_end" value="<?echo htmlspecialcharsex($find_perc_end)?>" size="15">
+		<input type="text" name="find_perc_end" value="<?=htmlspecialcharsbx($find_perc_end); ?>" size="15">
 	</td>
 </tr>
 <?
@@ -279,4 +283,3 @@ echo GetMessage("EXTRA_NOTES");
 echo EndNote();
 
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");
-?>

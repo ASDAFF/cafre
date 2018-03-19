@@ -21,21 +21,21 @@ class Ebay extends Platform
 	 */
 	public static function getInstance()
 	{
-		return parent::getInstance(self::TRADING_PLATFORM_CODE);
+		return parent::getInstanceByCode(self::TRADING_PLATFORM_CODE);
 	}
 
 	public static function getSftpTokenUrl($accountName)
 	{
-		return "http://www.1c-bitrix.ru/buy_tmp/ebay/".
+		return "http://".self::getServiceHost()."/buy_tmp/ebay/".
 			"?action=OAUTH_AUTH".
 			"&LICENCE_HASH=".self::getLicenseHash().
-			"&BACK_URL=".urlencode((\CMain::IsHTTPS() ? "https://" : "http://").$_SERVER['HTTP_HOST']).
-			"&ACCOUNT_NAME=".$accountName;
+			"&ACCOUNT_NAME=".htmlspecialcharsbx($accountName).
+			"&BACK_URL=".urlencode((\CMain::IsHTTPS() ? "https://" : "http://").$_SERVER['HTTP_HOST']);
 	}
 
 	public static function getApiTokenUrl()
 	{
-		return "http://www.1c-bitrix.ru/buy_tmp/ebay/".
+		return "http://".self::getServiceHost()."/buy_tmp/ebay/".
 			"?action=GET_AUTH_URL&LICENCE_HASH=".self::getLicenseHash().
 			"&BACK_URL=".urlencode((\CMain::IsHTTPS() ? "https://" : "http://").$_SERVER['HTTP_HOST']);
 	}
@@ -43,6 +43,11 @@ class Ebay extends Platform
 	protected static function getLicenseHash()
 	{
 		return md5(defined("LICENSE_KEY") ? LICENSE_KEY : "DEMO");
+	}
+
+	protected static function getServiceHost()
+	{
+		return defined('SALE_EBAY_SERVICE_HOST') ? SALE_EBAY_SERVICE_HOST : 'www.1c-bitrix.ru';
 	}
 
 	/**
@@ -91,9 +96,9 @@ class Ebay extends Platform
 
 		$ebay = Ebay::getInstance();
 		$catMapEntRes = \Bitrix\Sale\TradingPlatform\MapEntityTable::add(array(
-			"TRADING_PLATFORM_ID" => $ebay->getId(),
-			"CODE" => "CATEGORY"
-		));
+		"TRADING_PLATFORM_ID" => $ebay->getId(),
+		"CODE" => "CATEGORY"
+	));
 
 		$eventRes = Helper::installEvents();
 		$fsRes = Helper::createFeedFileStructure();

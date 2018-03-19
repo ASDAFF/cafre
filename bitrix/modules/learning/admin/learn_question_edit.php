@@ -775,7 +775,7 @@ function CustomizeEditor()
 			function module_learning_js_admin_function_change_attached_lesson(lesson_id, name)
 			{
 				BX('attached_lesson_id').value = lesson_id;
-				BX('attached_lesson_name').innerHTML = name;
+				BX('attached_lesson_name').textContent = name;
 			}
 			</script>
 			<div style="padding:0px;">

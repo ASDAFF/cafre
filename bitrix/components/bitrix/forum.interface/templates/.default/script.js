@@ -19,11 +19,7 @@ if (typeof(window.ShowWaitWindow) != "function")
 	
 		var div = document.body.appendChild(document.createElement("DIV"));
 		div.id = "wait_window_div";
-		if (typeof(phpVars) == "object" && phpVars != null && phpVars.messLoading)
-			div.innerHTML = phpVars.messLoading;
-		else
-			div.innerHTML = oText['wait_window'];
-			
+		div.innerHTML = BX.message('F_LOAD');
 		div.className = "waitwindow";
 		//div.style.left = obWndSize.scrollLeft + (obWndSize.innerWidth - div.offsetWidth) - (jsUtils.IsIE() ? 5 : 20) + "px";
 		div.style.right = (5 - obWndSize.scrollLeft) + 'px';
@@ -81,7 +77,7 @@ function FShowWaitWindow(container_id)
 	FCloseWaitWindow(container_id);
 	var div = document.body.appendChild(document.createElement("DIV"));
 	div.id = container_id;
-	div.innerHTML = (oText['wait_window'] ? oText['wait_window'] : '');
+	div.innerHTML = BX.message('F_LOAD');
 	div.className = "waitwindow";
 	div.style.left = document.body.scrollLeft + (document.body.clientWidth - div.offsetWidth) - 5 + "px";
 	div.style.top = document.body.scrollTop + 5 + "px";

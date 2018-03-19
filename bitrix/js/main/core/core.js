@@ -1,6 +1,87 @@
-/**********************************************************************/
-/*********** Bitrix JS Core library ver 0.9.0 beta ********************/
-/**********************************************************************/
+if (typeof WeakMap === "undefined")
+{
+	(function() {
+
+		var counter = Date.now() % 1e9;
+
+		var WeakMap = function(iterable)
+		{
+			this.name = "__bx" + (Math.random() * 1e9 >>> 0) + counter++;
+		};
+
+		WeakMap.prototype =
+		{
+			set: function(key, value)
+			{
+				if (!this.isValid(key))
+				{
+					throw new TypeError("Invalid value used as weak map key");
+				}
+
+				var entry = key[this.name];
+				if (entry && entry[0] === key)
+				{
+					entry[1] = value;
+				}
+				else
+				{
+					Object.defineProperty(key, this.name, { value: [key, value], writable: true });
+				}
+
+				return this;
+			},
+
+			get: function(key)
+			{
+				if (!this.isValid(key))
+				{
+					return undefined;
+				}
+
+				var entry = key[this.name];
+
+				return entry && entry[0] === key ? entry[1] : undefined;
+			},
+
+			"delete": function(key)
+			{
+				if (!this.isValid(key))
+				{
+					return false;
+				}
+
+				var entry = key[this.name];
+				if (!entry)
+				{
+					return false;
+				}
+				var hasValue = entry[0] === key;
+				entry[0] = entry[1] = undefined;
+
+				return hasValue;
+			},
+
+			has: function(key)
+			{
+				if (!this.isValid(key))
+				{
+					return false;
+				}
+
+				var entry = key[this.name];
+
+				return entry && entry[0] === key;
+			},
+
+			isValid: function(key)
+			{
+				return key && (typeof key === "object" || typeof key === "function");
+			}
+		};
+
+		window.WeakMap = WeakMap;
+	})();
+}
 
 ;(function(window){
 
@@ -34,6 +115,8 @@ window.BX = function(node, bCache)
 
 	return null;
 };
+
+BX.debugEnableFlag = true;
 
 // language utility
 BX.message = function(mess)
@@ -100,9 +183,8 @@ readyBound = false,
 readyList = [],
 
 /* list of registered proxy functions */
-proxySalt = Math.random(),
-proxyId = 1,
-proxyList = [],
+proxyList = new WeakMap(),
+deferList = new WeakMap(),
 
 /* getElementById cache */
 NODECACHE = {},
@@ -111,10 +193,11 @@ NODECACHE = {},
 deniedEvents = [],
 
 /* list of registered event handlers */
-eventsList = [],
+eventsList = new WeakMap(),
 
 /* list of registered custom events */
-customEvents = {},
+customEvents = new WeakMap(),
+customEventsCnt = 0,
 
 /* list of external garbage collectors */
 garbageCollectors = [],
@@ -172,6 +255,10 @@ BX.MSLEFT = 1;
 BX.MSMIDDLE = 2;
 BX.MSRIGHT = 4;
 
+BX.AM_PM_UPPER = 1;
+BX.AM_PM_LOWER = 2;
+BX.AM_PM_NONE = false;
+
 BX.ext = function(ob)
 {
 	for (var i in ob)
@@ -221,6 +308,31 @@ BX.namespace = function(namespace)
 	return parent;
 };
 
+BX.getClass = function(fullClassName)
+{
+	if (!BX.type.isNotEmptyString(fullClassName))
+	{
+		return null;
+	}
+
+	var classFn = null;
+	var currentNamespace = window;
+	var namespaces = fullClassName.split(".");
+	for (var i = 0; i < namespaces.length; i++)
+	{
+		var namespace = namespaces[i];
+		if (!currentNamespace[namespace])
+		{
+			return null;
+		}
+
+		currentNamespace = currentNamespace[namespace];
+		classFn = currentNamespace;
+	}
+
+	return classFn;
+};
+
 BX.debug = function()
 {
 	if (BX.debugStatus())
@@ -236,13 +348,11 @@ BX.debugEnable = function(flag)
 {
 	flag = typeof (flag) == 'boolean'? flag: true;
 	BX.debugEnableFlag = flag;
-
-	console.info('Debug mode is '+(BX.debugEnableFlag? 'ON': 'OFF'))
 };
 
 BX.debugStatus = function()
 {
-	return BX.debugEnableFlag || false;
+	return BX.debugEnableFlag;
 };
 
 BX.is_subclass_of = function(ob, parent_class)
@@ -265,6 +375,13 @@ BX.clearNodeCache = function()
 BX.bitrix_sessid = function() {return BX.message("bitrix_sessid"); };
 
 /* DOM manipulation */
+/**
+ * Creates the specified HTML element
+ * @param {String} tag
+ * @param {Object} [data]
+ * @param {Document} [context]
+ * @returns {Element}
+ */
 BX.create = function(tag, data, context)
 {
 	context = context || document;
@@ -348,6 +465,17 @@ BX.adjust = function(elem, data)
 		}
 	}
 
+	if (data.dataset)
+	{
+		for (j in data.dataset)
+		{
+			if(data.dataset.hasOwnProperty(j))
+			{
+				elem.dataset[j] = data.dataset[j]
+			}
+		}
+	}
+
 	if (data.children && data.children.length > 0)
 	{
 		for (j=0,len=data.children.length; j<len; j++)
@@ -363,7 +491,7 @@ BX.adjust = function(elem, data)
 		BX.cleanNode(elem);
 		elem.appendChild((elem.ownerDocument || document).createTextNode(data.text));
 	}
-	else if (data.html)
+	else if (typeof data.html !== 'undefined')
 	{
 		elem.innerHTML = data.html;
 	}
@@ -428,42 +556,58 @@ BX.html = function(node, html, parameters)
 		}
 	}
 
-	if(parameters.htmlFirst && typeof html.HTML != 'undefined')
+	if(parameters.htmlFirst && typeof html.HTML != 'undefined' && node)
+	{
 		node.innerHTML = html.HTML;
+	}
+
+	var p = new BX.Promise();
 
 	var afterAsstes = function(){
-		if(!parameters.htmlFirst && typeof html.HTML != 'undefined')
+		if(!parameters.htmlFirst && typeof html.HTML != 'undefined' && node)
+		{
 			node.innerHTML = html.HTML;
+		}
 
 		for(var k in inlineJS)
+		{
 			BX.evalGlobal(inlineJS[k]);
+		}
 
 		if(BX.type.isFunction(parameters.callback))
+		{
 			parameters.callback();
-	}
+		}
+
+		p.fulfill();
+	};
 
 	if(assets.length > 0)
 	{
 		BX.load(assets, afterAsstes);
 	}
 	else
+	{
 		afterAsstes();
-}
+	}
+
+	return p;
+};
 
 BX.insertAfter = function(node, dstNode)
 {
 	dstNode.parentNode.insertBefore(node, dstNode.nextSibling);
-}
+};
 
 BX.prepend = function(node, dstNode)
 {
 	dstNode.insertBefore(node, dstNode.firstChild);
-}
+};
 
 BX.append = function(node, dstNode)
 {
 	dstNode.appendChild(node);
-}
+};
 
 BX.addClass = function(ob, value)
 {
@@ -1012,7 +1156,7 @@ BX.isParentForNode = function(whichNode, forNode)
 	}
 
 	return false;
-}
+};
 
 BX.clone = function(obj, bCopyObj)
 {
@@ -1045,7 +1189,7 @@ BX.clone = function(obj, bCopyObj)
 			_obj =  {};
 			if (obj.constructor)
 			{
-				if (obj.constructor === Date)
+				if (BX.type.isDate(obj))
 					_obj = new Date(obj);
 				else
 					_obj = new obj.constructor();
@@ -1069,6 +1213,44 @@ BX.clone = function(obj, bCopyObj)
 	return _obj;
 };
 
+BX.getCaretPosition = function(node)
+{
+	var pos = 0;
+
+	if(node.selectionStart || node.selectionStart == 0)
+	{
+		pos = node.selectionStart;
+	}
+	else if(document.selection)
+	{
+		node.focus();
+		var selection = document.selection.createRange();
+		selection.moveStart('character', -node.value.length);
+		pos = selection.text.length;
+	}
+
+	return (pos);
+};
+
+BX.setCaretPosition = function(node, pos)
+{
+	if(node.setSelectionRange)
+	{
+		node.focus();
+		node.setSelectionRange(pos, pos);
+	}
+	else if(node.createTextRange)
+	{
+		var range = node.createTextRange();
+		range.collapse(true);
+		range.moveEnd('character', pos);
+		range.moveStart('character', pos);
+		range.select();
+	}
+};
+
+// access private. use BX.mergeEx instead.
+// todo: refactor BX.merge, make it work through BX.mergeEx
 BX.merge = function(){
 	var arg = Array.prototype.slice.call(arguments);
 
@@ -1112,11 +1294,44 @@ BX.merge = function(){
 	return result;
 };
 
+BX.mergeEx = function()
+{
+	var arg = Array.prototype.slice.call(arguments);
+	if(arg.length < 2)
+	{
+		return {};
+	}
+
+	var result = arg.shift();
+	for (var i = 0; i < arg.length; i++)
+	{
+		for (var k in arg[i])
+		{
+			if (typeof arg[i] == "undefined" || arg[i] == null || !arg[i].hasOwnProperty(k))
+			{
+				continue;
+			}
+
+			if (BX.type.isPlainObject(arg[i][k]) && BX.type.isPlainObject(result[k]))
+			{
+				BX.mergeEx(result[k], arg[i][k]);
+			}
+			else
+			{
+				result[k] = BX.type.isPlainObject(arg[i][k]) ? BX.clone(arg[i][k]) : arg[i][k];
+			}
+		}
+	}
+
+	return result;
+};
+
 /* events */
 BX.bind = function(el, evname, func)
 {
-	if (!el)
+	if (!el || typeof(el) !== "object")
 	{
+		//BX.debug("BX.bind: 'element' is not a DOM node.", el);
 		return;
 	}
 
@@ -1141,6 +1356,15 @@ BX.bind = function(el, evname, func)
 
 		return;
 	}
+	else if (evname === 'fullscreenchange')
+	{
+		if (document.cancelFullScreen)
+			BX.bind(el, "fullscreenchange", func);
+		else if (document.mozCancelFullScreen)
+			BX.bind(el, "mozfullscreenchange", func);
+		else if (document.webkitCancelFullScreen)
+			BX.bind(el, "webkitfullscreenchange", func);
+	}
 
 	if (el.addEventListener) // Gecko / W3C
 	{
@@ -1152,10 +1376,24 @@ BX.bind = function(el, evname, func)
 	}
 	else
 	{
-		el["on" + evname] = func;
+		try
+		{
+			el["on" + evname] = func;
+		}
+		catch(e)
+		{
+			BX.debug(e)
+		}
 	}
 
-	eventsList[eventsList.length] = {'element': el, 'event': evname, 'fn': func};
+	var events = eventsList.get(el) || {};
+	if (!BX.type.isArray(events[evname]))
+	{
+		events[evname] = [];
+	}
+
+	events[evname].push(func);
+	eventsList.set(el, events);
 };
 
 BX.unbind = function(el, evname, func)
@@ -1198,6 +1436,14 @@ BX.unbind = function(el, evname, func)
 	{
 		el["on" + evname] = null;
 	}
+
+	var events = eventsList.get(el);
+	if (events && BX.type.isArray(events[evname]))
+	{
+		events[evname] = events[evname].filter(function(item) {
+			return item !== func;
+		});
+	}
 };
 
 BX.getEventButton = function(e)
@@ -1225,25 +1471,19 @@ BX.getEventButton = function(e)
 
 BX.unbindAll = function(el)
 {
+	var events = eventsList.get(el);
 	if (!el)
-		return;
-
-	for (var i=0,len=eventsList.length; i<len; i++)
 	{
-		try
-		{
-			if (eventsList[i] && (null==el || el==eventsList[i].element))
-			{
-				BX.unbind(eventsList[i].element, eventsList[i].event, eventsList[i].fn);
-				eventsList[i] = null;
-			}
-		}
-		catch(e){}
+		return;
 	}
 
-	if (null==el)
+	eventsList.delete(el);
+
+	for (var eventName in events)
 	{
-		eventsList = [];
+		events[eventName].forEach(function(fn) {
+			BX.unbind(el, eventName, fn);
+		});
 	}
 };
 
@@ -1311,7 +1551,15 @@ BX.fireEvent = function(ob,ev)
 			{
 				case 'MouseEvent':
 					e = document.createEvent('MouseEvent');
-					e.initMouseEvent(ev, true, true, top, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, null);
+					try
+					{
+						e.initMouseEvent(ev, true, true, top, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, null);
+					}
+					catch (initException)
+					{
+						e.initMouseEvent(ev, true, true, window, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, null);
+					}
+
 				break;
 				default:
 					e = document.createEvent('Event');
@@ -1364,29 +1612,9 @@ BX.delegateLater = function (func_name, thisObject, contextObject)
 	}
 };
 
-BX._initObjectProxy = function(thisObject)
-{
-	if (typeof thisObject['__proxy_id_' + proxySalt] == 'undefined')
-	{
-		thisObject['__proxy_id_' + proxySalt] = proxyList.length;
-		proxyList[thisObject['__proxy_id_' + proxySalt]] = {};
-	}
-};
-
 BX.proxy = function(func, thisObject)
 {
-	if (!func || !thisObject)
-		return func;
-
-	BX._initObjectProxy(thisObject);
-
-	if (typeof func['__proxy_id_' + proxySalt] == 'undefined')
-		func['__proxy_id_' + proxySalt] = proxyId++;
-
-	if (!proxyList[thisObject['__proxy_id_' + proxySalt]][func['__proxy_id_' + proxySalt]])
-		proxyList[thisObject['__proxy_id_' + proxySalt]][func['__proxy_id_' + proxySalt]] = BX.delegate(func, thisObject);
-
-	return proxyList[thisObject['__proxy_id_' + proxySalt]][func['__proxy_id_' + proxySalt]];
+	return getObjectDelegate(func, thisObject, proxyList);
 };
 
 BX.defer = function(func, thisObject)
@@ -1402,45 +1630,51 @@ BX.defer = function(func, thisObject)
 
 BX.defer_proxy = function(func, thisObject)
 {
-	if (!func || !thisObject)
-		return func;
+	return getObjectDelegate(func, thisObject, deferList, BX.defer);
+};
 
-	BX.proxy(func, thisObject);
-
-	this._initObjectProxy(thisObject);
-
-	if (typeof func['__defer_id_' + proxySalt] == 'undefined')
-		func['__defer_id_' + proxySalt] = proxyId++;
-
-	if (!proxyList[thisObject['__proxy_id_' + proxySalt]][func['__defer_id_' + proxySalt]])
+/**
+ *
+ * @private
+ */
+function getObjectDelegate(func, thisObject, collection, decorator)
+{
+	if (!BX.type.isFunction(func) || !BX.type.isMapKey(thisObject))
 	{
-		proxyList[thisObject['__proxy_id_' + proxySalt]][func['__defer_id_' + proxySalt]] = BX.defer(BX.delegate(func, thisObject));
+		return func;
 	}
 
-	return proxyList[thisObject['__proxy_id_' + proxySalt]][func['__defer_id_' + proxySalt]];
+	var objectDelegates = collection.get(thisObject);
+	if (!objectDelegates)
+	{
+		objectDelegates = new WeakMap();
+		collection.set(thisObject, objectDelegates);
+	}
+
+	var delegate = objectDelegates.get(func);
+	if (!delegate)
+	{
+		delegate = decorator ? decorator(BX.delegate(func, thisObject)) : BX.delegate(func, thisObject);
+		objectDelegates.set(func, delegate);
+	}
+
+	return delegate;
+}
+
+BX.bindOnce = function(el, evname, func)
+{
+	return BX.bind(el, evname, BX.once(el, evname, func));
 };
 
 BX.once = function(el, evname, func)
 {
-	if (typeof func['__once_id_' + evname + '_' + proxySalt] == 'undefined')
+	var fn = function()
 	{
-		func['__once_id_' + evname + '_' + proxySalt] = proxyId++;
-	}
+		BX.unbind(el, evname, fn);
+		func.apply(this, arguments);
+	};
 
-	this._initObjectProxy(el);
-
-	if (!proxyList[el['__proxy_id_' + proxySalt]][func['__once_id_' + evname + '_' + proxySalt]])
-	{
-		var g = function()
-		{
-			BX.unbind(el, evname, g);
-			func.apply(this, arguments);
-		};
-
-		proxyList[el['__proxy_id_' + proxySalt]][func['__once_id_' + evname + '_' + proxySalt]] = g;
-	}
-
-	return proxyList[el['__proxy_id_' + proxySalt]][func['__once_id_' + evname + '_' + proxySalt]];
+	return fn;
 };
 
 BX.bindDelegate = function (elem, eventName, isTarget, handler)
@@ -1528,6 +1762,10 @@ BX.fixEventPageY = function(event)
 	return event;
 };
 
+/**
+ * @deprecated
+ * @see e.preventDefault()
+ */
 BX.PreventDefault = function(e)
 {
 	if(!e) e = window.event;
@@ -1566,6 +1804,7 @@ BX.eventCancelBubble = function(e)
 	BX.addCustomEvent(eventObject, eventName, eventHandler) - set custom event handler for particular object
 	BX.addCustomEvent(eventName, eventHandler) - set custom event handler for all objects
 */
+
 BX.addCustomEvent = function(eventObject, eventName, eventHandler)
 {
 	/* shift parameters for short version */
@@ -1576,17 +1815,19 @@ BX.addCustomEvent = function(eventObject, eventName, eventHandler)
 		eventObject = window;
 	}
 
-	eventName = eventName.toUpperCase();
+	if (!BX.type.isFunction(eventHandler) || !BX.type.isNotEmptyString(eventName) || !BX.type.isMapKey(eventObject))
+	{
+		return;
+	}
 
-	if (!customEvents[eventName])
-		customEvents[eventName] = [];
+	eventName = eventName.toLowerCase();
 
-	customEvents[eventName].push(
-		{
-			handler: eventHandler,
-			obj: eventObject
-		}
-	);
+	var events = customEvents.get(eventObject) || {};
+	events[eventName] = BX.type.isArray(events[eventName]) ? events[eventName] : [];
+	eventHandler["__bxSort"] = ++customEventsCnt;
+
+	events[eventName].push(eventHandler);
+	customEvents.set(eventObject, events);
 };
 
 BX.removeCustomEvent = function(eventObject, eventName, eventHandler)
@@ -1599,55 +1840,84 @@ BX.removeCustomEvent = function(eventObject, eventName, eventHandler)
 		eventObject = window;
 	}
 
-	eventName = eventName.toUpperCase();
+	eventName = eventName.toLowerCase();
 
-	if (!customEvents[eventName])
-		return;
-
-	for (var i = 0, l = customEvents[eventName].length; i < l; i++)
+	var events = customEvents.get(eventObject);
+	if (events && BX.type.isArray(events[eventName]))
 	{
-		if (!customEvents[eventName][i])
-			continue;
-		if (customEvents[eventName][i].handler == eventHandler && customEvents[eventName][i].obj == eventObject)
+		for (var i = events[eventName].length - 1; i >= 0; i--)
 		{
-			delete customEvents[eventName][i];
-			return;
+			if (events[eventName][i] === eventHandler)
+			{
+				events[eventName].splice(i, 1);
+			}
 		}
 	}
 };
 
-// Warning! Don't use secureParams with DOM nodes in arEventParams
-BX.onCustomEvent = function(eventObject, eventName, arEventParams, secureParams)
+BX.removeAllCustomEvents = function(eventObject, eventName)
 {
 	/* shift parameters for short version */
 	if (BX.type.isString(eventObject))
 	{
-		secureParams = arEventParams;
-		arEventParams = eventName;
 		eventName = eventObject;
 		eventObject = window;
 	}
 
-	eventName = eventName.toUpperCase();
+	eventName = eventName.toLowerCase();
 
-	if (!customEvents[eventName])
-		return;
-
-	if (!arEventParams)
-		arEventParams = [];
-
-	var h;
-	for (var i = 0, l = customEvents[eventName].length; i < l; i++)
+	var events = customEvents.get(eventObject);
+	if (events)
 	{
-		h = customEvents[eventName][i];
-		if (!h || !h.handler)
-			continue;
+		delete events[eventName];
+	}
+};
 
-		if (h.obj == window || /*eventObject == window || */h.obj == eventObject) //- only global event handlers will be called
+// Warning! Don't use secureParams with DOM nodes in eventParams
+BX.onCustomEvent = function(eventObject, eventName, eventParams, secureParams)
+{
+	/* shift parameters for short version */
+	if (BX.type.isString(eventObject))
+	{
+		secureParams = eventParams;
+		eventParams = eventName;
+		eventName = eventObject;
+		eventObject = window;
+	}
+
+	if (!eventParams)
+	{
+		eventParams = [];
+	}
+
+	eventName = eventName.toLowerCase();
+
+	var globalEvents = customEvents.get(window);
+	var globalHandlers = globalEvents && BX.type.isArray(globalEvents[eventName]) ? globalEvents[eventName] : [];
+	var objectHandlers = [];
+
+	if (eventObject !== window && BX.type.isMapKey(eventObject))
+	{
+		var objectEvents = customEvents.get(eventObject);
+		if (objectEvents && BX.type.isArray(objectEvents[eventName]))
 		{
-			h.handler.apply(eventObject, !!secureParams ? BX.clone(arEventParams) : arEventParams);
+			objectHandlers = objectEvents[eventName];
 		}
 	}
+
+	var handlers = globalHandlers.concat(objectHandlers);
+
+	handlers.sort(function(a, b) {
+		return a["__bxSort"] - b["__bxSort"];
+	});
+
+	handlers.forEach(function(handler) {
+		//A previous handler could remove a current handler.
+		if (globalHandlers.indexOf(handler) !== -1 || objectHandlers.indexOf(handler) !== -1)
+		{
+			handler.apply(eventObject, secureParams === true ? BX.clone(eventParams) : eventParams);
+		}
+	});
 };
 
 BX.bindDebouncedChange = function(node, fn, fnInstant, timeout, ctx)
@@ -1705,6 +1975,10 @@ BX.parseJSON = function(data, context)
 		} catch(e) {
 			BX.onCustomEvent(context, 'onParseJSONFailure', [data, context])
 		}
+	}
+	else if(BX.type.isPlainObject(data))
+	{
+		return data;
 	}
 
 	return result;
@@ -1929,6 +2203,15 @@ BX.browser = {
 		}
 
 		return rv;
+	},
+
+	DetectAndroidVersion: function ()
+	{
+		var re = new RegExp("Android ([0-9]+[\.0-9]*)");
+		if (re.exec(navigator.userAgent) != null)
+			return parseFloat( RegExp.$1 );
+		else
+			return 0;
 	},
 
 	IsDoctype: function(pDoc)
@@ -2191,6 +2474,41 @@ BX.util = {
 		return first;
 	},
 
+	array_flip: function ( object )
+	{
+	    var newObject = {};
+
+	    for (var key in object)
+		{
+	        newObject[object[key]] = key;
+	    }
+
+	    return newObject;
+	},
+
+	array_diff: function(ar1, ar2, hash)
+	{
+		hash = BX.type.isFunction(hash) ? hash : null;
+		var i, length, v, h, map = {}, result = [];
+		for(i = 0, length = ar2.length; i < length; i++)
+		{
+			v = ar2[i];
+			h = hash ? hash(v) : v;
+			map[h] = true;
+		}
+
+		for(i = 0, length = ar1.length; i < length; i++)
+		{
+			v = ar1[i];
+			h = hash ? hash(v) : v;
+			if(typeof(map[h]) === "undefined")
+			{
+				result.push(v);
+			}
+		}
+		return result;
+	},
+
 	array_unique: function(ar)
 	{
 		var i=0,j,len=ar.length;
@@ -2263,16 +2581,16 @@ BX.util = {
 
 	htmlspecialchars: function(str)
 	{
-		if(!str.replace) return str;
+		if(typeof str != 'string' || !str.replace) return str;
 
 		return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 	},
 
 	htmlspecialcharsback: function(str)
 	{
-		if(!str.replace) return str;
+		if(typeof str != 'string' || !str.replace) return str;
 
-		return str.replace(/\&quot;/g, '"').replace(/&#39;/g, "'").replace(/\&lt;/g, '<').replace(/\&gt;/g, '>').replace(/\&amp;/g, '&');
+		return str.replace(/\&quot;/g, '"').replace(/&#39;/g, "'").replace(/\&lt;/g, '<').replace(/\&gt;/g, '>').replace(/\&amp;/g, '&').replace(/\&nbsp;/g, ' ');
 	},
 
 	// Quote regular expression characters plus an optional character
@@ -2375,6 +2693,24 @@ BX.util = {
 		return window.open(url, '', 'status=no,scrollbars=yes,resizable=yes,width='+width+',height='+height+',top='+Math.floor((h - height)/2-14)+',left='+Math.floor((w - width)/2-5));
 	},
 
+	shuffle: function(array)
+	{
+		var temporaryValue, randomIndex;
+		var currentIndex = array.length;
+
+		while (0 !== currentIndex)
+		{
+			randomIndex = Math.floor(Math.random() * currentIndex);
+			currentIndex -= 1;
+
+			temporaryValue = array[currentIndex];
+			array[currentIndex] = array[randomIndex];
+			array[randomIndex] = temporaryValue;
+		}
+
+		return array;
+	},
+
 	// BX.util.objectSort(object, sortBy, sortDir) - Sort object by property
 	// function params: 1 - object for sort, 2 - sort by property, 3 - sort direction (asc/desc)
 	// return: sort array [[objectElement], [objectElement]] in sortDir direction
@@ -2398,14 +2734,29 @@ BX.util = {
 		{
 			arItems.sort(function(i, ii) {
 				var s1, s2;
-				if (!isNaN(i[1]) && !isNaN(ii[1]))
+				if (BX.type.isDate(i[1]))
+				{
+					s1 = i[1].getTime();
+				}
+				else if (!isNaN(i[1]))
 				{
 					s1 = parseInt(i[1]);
-					s2 = parseInt(ii[1]);
 				}
 				else
 				{
 					s1 = i[1].toString().toLowerCase();
+				}
+
+				if (BX.type.isDate(ii[1]))
+				{
+					s2 = ii[1].getTime();
+				}
+				else if (!isNaN(ii[1]))
+				{
+					s2 = parseInt(ii[1]);
+				}
+				else
+				{
 					s2 = ii[1].toString().toLowerCase();
 				}
 
@@ -2421,16 +2772,32 @@ BX.util = {
 		{
 			arItems.sort(function(i, ii) {
 				var s1, s2;
-				if (!isNaN(i[1]) && !isNaN(ii[1]))
+				if (BX.type.isDate(i[1]))
+				{
+					s1 = i[1].getTime();
+				}
+				else if (!isNaN(i[1]))
 				{
 					s1 = parseInt(i[1]);
-					s2 = parseInt(ii[1]);
 				}
 				else
 				{
 					s1 = i[1].toString().toLowerCase();
+				}
+
+				if (BX.type.isDate(ii[1]))
+				{
+					s2 = ii[1].getTime();
+				}
+				else if (!isNaN(ii[1]))
+				{
+					s2 = parseInt(ii[1]);
+				}
+				else
+				{
 					s2 = ii[1].toString().toLowerCase();
 				}
+
 				if (s1 < s2)
 					return 1;
 				else if (s1 > s2)
@@ -2447,6 +2814,16 @@ BX.util = {
 		}
 
 		return arReturnArray;
+	},
+
+	objectMerge: function()
+	{
+		return BX.mergeEx.apply(window, arguments);
+	},
+
+	objectClone : function(object)
+	{
+		return BX.clone(object, true);
 	},
 
 	// #fdf9e5 => {r=253, g=249, b=229}
@@ -2479,10 +2856,18 @@ BX.util = {
 
 				params = params.replace(new RegExp('(^|&)'+param+'=[^&#]*', 'i'), '');
 				params = params.replace(/^&/, '');
-				url = url + params;
+
+				if(BX.type.isNotEmptyString(params))
+				{
+					url = url + params;
+				}
+				else
+				{
+					//remove trailing question character
+					url = url.substr(0, url.length - 1);
+				}
 			}
 		}
-
 		return url;
 	},
 
@@ -2542,7 +2927,8 @@ BX.util = {
 		return hash;
 	},
 
-	getRandomString: function (length) {
+	getRandomString: function (length)
+	{
 		var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz";
 		var charQty = chars.length;
 
@@ -2613,10 +2999,13 @@ BX.util = {
 			var name = prefix !== "" ? (prefix + "[" + key + "]") : key;
 			if(BX.type.isArray(value))
 			{
+				var obj = {};
 				for(var i = 0; i < value.length; i++)
 				{
-					BX.util.addObjectToForm(value[i], form, (name + "[" + i.toString() + "]"));
+					obj[i] = value[i];
 				}
+
+				BX.util.addObjectToForm(obj, form, name);
 			}
 			else if(BX.type.isPlainObject(value))
 			{
@@ -2660,6 +3049,11 @@ BX.util = {
 		}
 
 		return enable;
+	},
+
+	escapeRegExp: function(str)
+	{
+		return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
 	}
 };
 
@@ -2702,7 +3096,7 @@ BX.type = {
 		var hasProp = Object.prototype.hasOwnProperty;
 		try
 		{
-			if ( item.constructor && !hasProp.call(item, "constructor") && !hasProp.call(item.constructor.prototype, "isPrototypeOf") )
+			if (item.constructor && !hasProp.call(item, "constructor") && !hasProp.call(item.constructor.prototype, "isPrototypeOf") )
 			{
 				return false;
 			}
@@ -2717,6 +3111,118 @@ BX.type = {
 		{
 		}
 		return typeof(key) === "undefined" || hasProp.call(item, key);
+	},
+	isNotEmptyObject: function (item)
+	{
+		for (var i in item)
+		{
+			if (item.hasOwnProperty(i))
+				return true;
+		}
+
+		return false;
+	},
+	stringToInt: function(s)
+	{
+		var i = parseInt(s);
+		return !isNaN(i) ? i : 0;
+	},
+	isMapKey: function(key)
+	{
+		return key && (typeof key === "object" || typeof key === "function");
+	}
+};
+
+BX.prop =
+{
+	get: function(object, key, defaultValue)
+	{
+		return object && object.hasOwnProperty(key) ? object[key] : defaultValue;
+	},
+	getObject: function(object, key, defaultValue)
+	{
+		return object && BX.type.isPlainObject(object[key]) ? object[key] : defaultValue;
+	},
+	getElementNode: function(object, key, defaultValue)
+	{
+		return object && BX.type.isElementNode(object[key]) ? object[key] : defaultValue;
+	},
+	getArray: function(object, key, defaultValue)
+	{
+		return object && BX.type.isArray(object[key]) ? object[key] : defaultValue;
+	},
+	getFunction: function(object, key, defaultValue)
+	{
+		return object && BX.type.isFunction(object[key]) ? object[key] : defaultValue;
+	},
+	getNumber: function(object, key, defaultValue)
+	{
+		if(!(object && object.hasOwnProperty(key)))
+		{
+			return defaultValue;
+		}
+
+		var value = object[key];
+		if(BX.type.isNumber(value))
+		{
+			return value;
+		}
+
+		value = parseFloat(value);
+		return !isNaN(value) ? value : defaultValue;
+	},
+	getInteger: function(object, key, defaultValue)
+	{
+		if(!(object && object.hasOwnProperty(key)))
+		{
+			return defaultValue;
+		}
+
+		var value = object[key];
+		if(BX.type.isNumber(value))
+		{
+			return value;
+		}
+
+		value = parseInt(value);
+		return !isNaN(value) ? value : defaultValue;
+	},
+	getBoolean: function(object, key, defaultValue)
+	{
+		if(!(object && object.hasOwnProperty(key)))
+		{
+			return defaultValue;
+		}
+
+		var value = object[key];
+		return (BX.type.isBoolean(value)
+			? value
+			: (BX.type.isString(value) ? (value.toLowerCase() === "true") : !!value)
+		);
+	},
+	getString: function(object, key, defaultValue)
+	{
+		if(!(object && object.hasOwnProperty(key)))
+		{
+			return defaultValue;
+		}
+
+		var value = object[key];
+		return BX.type.isString(value) ? value : (value ? value.toString() : '');
+	},
+	extractDate: function(datetime)
+	{
+		if(!BX.type.isDate(datetime))
+		{
+			datetime = new Date();
+		}
+
+		datetime.setHours(0);
+		datetime.setMinutes(0);
+		datetime.setSeconds(0);
+		datetime.setMilliseconds(0);
+
+		return datetime;
 	}
 };
 
@@ -3287,142 +3793,29 @@ BX.getCDNPath = function(path)
 
 BX.loadScript = function(script, callback, doc)
 {
-	if (!BX.isReady)
+	if (BX.type.isString(script))
 	{
-		var _args = arguments;
-		BX.ready(function() {
-			BX.loadScript.apply(this, _args);
-		});
-		return;
+		script = [script];
 	}
 
-	doc = doc || document;
-
-	if (BX.type.isString(script))
-		script = [script];
-	var _callback = function()
-	{
-		return (callback && BX.type.isFunction(callback)) ? callback() : null
-	};
-	var load_js = function(ind)
-	{
-		if(ind >= script.length)
-			return _callback();
-
-		if(!!script[ind])
-		{
-			var fileSrc = BX.getJSPath(script[ind]);
-			if(isScriptLoaded(fileSrc))
-			{
-				load_js(++ind);
-			}
-			else
-			{
-				var oHead = doc.getElementsByTagName("head")[0] || doc.documentElement;
-				var oScript = doc.createElement('script');
-				oScript.src = script[ind];
-
-				var bLoaded = false;
-				oScript.onload = oScript.onreadystatechange = function()
-				{
-					if (!bLoaded && (!oScript.readyState || oScript.readyState == "loaded" || oScript.readyState == "complete"))
-					{
-						bLoaded = true;
-						setTimeout(function (){load_js(++ind);}, 50);
-
-						oScript.onload = oScript.onreadystatechange = null;
-						if (oHead && oScript.parentNode)
-						{
-							oHead.removeChild(oScript);
-						}
-					}
-				};
-
-				jsList.push(fileSrc);
-				return oHead.insertBefore(oScript, oHead.firstChild);
-			}
-		}
-		else
-		{
-			load_js(++ind);
-		}
-		return null;
-	};
-
-	load_js(0);
+	return BX.load(script, callback, doc);
 };
 
-BX.loadCSS = function(arCSS, doc, win)
+BX.loadCSS = function(css, doc, win)
 {
-	if (!BX.isReady)
+	if (BX.type.isString(css))
 	{
-		var _args = arguments;
-		BX.ready(function() {
-			BX.loadCSS.apply(this, _args);
+		css = [css];
+	}
+
+	if (BX.type.isArray(css))
+	{
+		css = css.map(function(url) {
+			return { url: url, ext: "css" }
 		});
-		return null;
+
+		BX.load(css, null, doc);
 	}
-
-	var bSingle = false;
-	if (BX.type.isString(arCSS))
-	{
-		bSingle = true;
-		arCSS = [arCSS];
-	}
-
-	var i,
-		l = arCSS.length,
-		lnk = null,
-		pLnk = [];
-
-	if (l == 0)
-		return null;
-
-	doc = doc || document;
-	win = win || window;
-
-	if (!win.bxhead)
-	{
-		var heads = doc.getElementsByTagName('HEAD');
-		win.bxhead = heads[0];
-
-		if (!win.bxhead)
-		{
-			return null;
-		}
-	}
-
-	for (i = 0; i < l; i++)
-	{
-		var _check = BX.getCSSPath(arCSS[i]);
-		if (isCssLoaded(_check))
-		{
-			continue;
-		}
-
-		lnk = document.createElement('LINK');
-		lnk.href = arCSS[i];
-		lnk.rel = 'stylesheet';
-		lnk.type = 'text/css';
-
-		var templateLink = getTemplateLink(win.bxhead);
-		if (templateLink !== null)
-		{
-			templateLink.parentNode.insertBefore(lnk, templateLink);
-		}
-		else
-		{
-			win.bxhead.appendChild(lnk);
-		}
-
-		pLnk.push(lnk);
-		cssList.push(_check);
-	}
-
-	if (bSingle)
-		return lnk;
-
-	return pLnk;
 };
 
 BX.load = function(items, callback, doc)
@@ -3447,6 +3840,16 @@ BX.load = function(items, callback, doc)
 
 BX.convert =
 {
+	toNumber: function(value)
+	{
+		if(BX.type.isNumber(value))
+		{
+			return value;
+		}
+
+		value = Number(value);
+		return !isNaN(value) ? value : 0;
+	},
 	nodeListToArray: function(nodes)
 	{
 		try
@@ -3486,19 +3889,6 @@ function loadAsync(items, callback, doc)
 		return true;
 	}
 
-	function one(callback)
-	{
-		callback = callback || BX.DoNothing;
-
-		if (callback._done)
-		{
-			return;
-		}
-
-		callback();
-		callback._done = 1;
-	}
-
 	if (!BX.type.isFunction(callback))
 	{
 		callback = null;
@@ -3512,6 +3902,7 @@ function loadAsync(items, callback, doc)
 		itemSet[item.name] = item;
 	}
 
+	var callbackWasCalled = false;
 	for (i = 0; i < items.length; i++)
 	{
 		item = items[i];
@@ -3519,7 +3910,12 @@ function loadAsync(items, callback, doc)
 		load(item, function () {
 			if (allLoaded(itemSet))
 			{
-				one(callback);
+				if (!callbackWasCalled)
+				{
+					callback && callback();
+					callbackWasCalled = true;
+				}
+
 			}
 		}, doc);
 	}
@@ -3677,11 +4073,11 @@ function loadAsset(asset, callback, doc)
 
 	if (ext === "css")
 	{
-		cssList.push(BX.getCSSPath(asset.url));
+		cssList.push(normalizeMinUrl(normalizeUrl(asset.url)));
 	}
 	else
 	{
-		jsList.push(BX.getJSPath(asset.url));
+		jsList.push(normalizeMinUrl(normalizeUrl(asset.url)));
 	}
 
 	var templateLink = null;
@@ -3725,10 +4121,38 @@ function getAsset(item)
 	return asset;
 }
 
+function normalizeUrl(url)
+{
+	if (!BX.type.isNotEmptyString(url))
+	{
+		return "";
+	}
+
+	url = BX.getJSPath(url);
+	url = url.replace(/\?[0-9]*$/, "");
+
+	return url;
+}
+
+function normalizeMinUrl(url)
+{
+	if (!BX.type.isNotEmptyString(url))
+	{
+		return "";
+	}
+
+	var minPos = url.indexOf(".min");
+	return minPos >= 0 ? url.substr(0, minPos) + url.substr(minPos + 4) : url;
+}
+
 function isCssLoaded(fileSrc)
 {
 	initCssList();
-	return (BX.util.in_array(BX.getCSSPath(fileSrc), cssList));
+
+	fileSrc = normalizeUrl(fileSrc);
+	var fileSrcMin = normalizeMinUrl(fileSrc);
+
+	return (fileSrc !== fileSrcMin && BX.util.in_array(fileSrcMin, cssList)) || BX.util.in_array(fileSrc, cssList);
 }
 
 function initCssList()
@@ -3744,7 +4168,8 @@ function initCssList()
 				var href = linksCol[i].getAttribute('href');
 				if (BX.type.isNotEmptyString(href))
 				{
-					cssList.push(BX.getCSSPath(href));
+					href = normalizeMinUrl(normalizeUrl(href));
+					cssList.push(href);
 				}
 			}
 		}
@@ -3781,7 +4206,11 @@ function getTemplateLink(head)
 function isScriptLoaded(fileSrc)
 {
 	initJsList();
-	return BX.util.in_array(BX.getJSPath(fileSrc), jsList);
+
+	fileSrc = normalizeUrl(fileSrc);
+	var fileSrcMin = normalizeMinUrl(fileSrc);
+
+	return (fileSrc !== fileSrcMin && BX.util.in_array(fileSrcMin, jsList)) || BX.util.in_array(fileSrc, jsList);
 }
 
 function initJsList()
@@ -3798,7 +4227,8 @@ function initJsList()
 
 				if (BX.type.isNotEmptyString(src))
 				{
-					jsList.push(BX.getJSPath(src));
+					src = normalizeMinUrl(normalizeUrl(src));
+					jsList.push(src);
 				}
 			}
 		}
@@ -3853,9 +4283,13 @@ BX.template = function(tpl, callback, bKillTpl)
 	});
 };
 
-BX.isAmPmMode = function()
+BX.isAmPmMode = function(returnConst)
 {
-	return (BX.message('FORMAT_DATETIME').match('T') != null);
+	if (returnConst === true)
+	{
+		return BX.message.AMPM_MODE;
+	}
+	return BX.message.AMPM_MODE !== false;
 };
 
 BX.formatDate = function(date, format)
@@ -3926,10 +4360,15 @@ BX.getNumMonth = function(month)
 	return month;
 };
 
-BX.parseDate = function(str, bUTC)
+BX.parseDate = function(str, bUTC, formatDate, formatDatetime)
 {
 	if (BX.type.isNotEmptyString(str))
 	{
+		if (!formatDate)
+			formatDate = BX.message('FORMAT_DATE');
+		if (!formatDatetime)
+			formatDatetime = BX.message('FORMAT_DATETIME');
+
 		var regMonths = '';
 		for (i = 1; i <= 12; i++)
 		{
@@ -3938,7 +4377,7 @@ BX.parseDate = function(str, bUTC)
 
 		var expr = new RegExp('([0-9]+|[a-z]+' + regMonths + ')', 'ig');
 		var aDate = str.match(expr),
-			aFormat = BX.message('FORMAT_DATE').match(/(DD|MI|MMMM|MM|M|YYYY)/ig),
+			aFormat = formatDate.match(/(DD|MI|MMMM|MM|M|YYYY)/ig),
 			i, cnt,
 			aDateArgs=[], aFormatArgs=[],
 			aResult={};
@@ -3948,7 +4387,7 @@ BX.parseDate = function(str, bUTC)
 
 		if(aDate.length > aFormat.length)
 		{
-			aFormat = BX.message('FORMAT_DATETIME').match(/(DD|MI|MMMM|MM|M|YYYY|HH|H|SS|TT|T|GG|G)/ig);
+			aFormat = formatDatetime.match(/(DD|MI|MMMM|MM|M|YYYY|HH|H|SS|TT|T|GG|G)/ig);
 		}
 
 		for(i = 0, cnt = aDate.length; i < cnt; i++)
@@ -4730,7 +5169,6 @@ function runReady()
 
 		BX.isReady = true;
 
-
 		if (readyList && readyList.length > 0)
 		{
 			var fn, i = 0;
@@ -4746,6 +5184,7 @@ function runReady()
 
 			readyList = null;
 		}
+
 		// TODO: check ready handlers binded some other way;
 	}
 	return null;
@@ -4866,6 +5305,7 @@ function _checkNode(obj, params)
 				break;
 
 				case 'attr':
+				case 'attrs':
 				case 'attribute':
 					if (BX.type.isString(params[i]))
 					{
@@ -4907,6 +5347,7 @@ function _checkNode(obj, params)
 				break;
 
 				case 'property':
+				case 'props':
 					if (BX.type.isString(params[i]))
 					{
 						if (!obj[params[i]])
@@ -4960,17 +5401,6 @@ function Trash()
 			garbageCollectors[i] = null;
 		} catch (e) {}
 	}
-
-	try {BX.unbindAll();} catch(e) {}
-/*
-	for (i = 0, len = proxyList.length; i < len; i++)
-	{
-		try {
-			delete proxyList[i];
-			proxyList[i] = null;
-		} catch (e) {}
-	}
-*/
 }
 
 if(window.attachEvent) // IE
@@ -5002,7 +5432,7 @@ BX.data = function(node, key, value)
 	}
 	else
 	{
-		var data = undefined;
+		var data;
 
 		// from manager
 		if((data = dataStorage.get(node, key)) != undefined)
@@ -5012,8 +5442,15 @@ BX.data = function(node, key, value)
 		else
 		{
 			// from attribute data-*
-			if('getAttribute' in node && (data = node.getAttribute('data-'+key.toString())))
+			if('getAttribute' in node)
+			{
+				data = node.getAttribute('data-'+key.toString());
+				if(data === null)
+				{
+					return undefined;
+				}
 				return data;
+			}
 		}
 
 		return undefined;
@@ -5120,7 +5557,7 @@ BX.LazyLoad = {
 		var image = null;
 		var isImageVisible = false;
 
-		checkOwnVisibility = checkOwnVisibility === false ? false : true;
+		checkOwnVisibility = (checkOwnVisibility !== false);
 		for (var i = 0, length = this.images.length; i < length; i++)
 		{
 			image = this.images[i];
@@ -5258,20 +5695,71 @@ BX.getCookie = function (name)
 	return matches ? decodeURIComponent(matches[1]) : undefined;
 };
 
+BX.setCookie = function (name, value, options)
+{
+	options = options || {};
+
+	var expires = options.expires;
+	if (typeof(expires) == "number" && expires)
+	{
+		var currentDate = new Date();
+		currentDate.setTime(currentDate.getTime() + expires * 1000);
+		expires = options.expires = currentDate;
+	}
+
+	if (expires && expires.toUTCString)
+	{
+		options.expires = expires.toUTCString();
+	}
+
+	value = encodeURIComponent(value);
+
+	var updatedCookie = name + "=" + value;
+
+	for (var propertyName in options)
+	{
+		if (!options.hasOwnProperty(propertyName))
+		{
+			continue;
+		}
+		updatedCookie += "; " + propertyName;
+		var propertyValue = options[propertyName];
+		if (propertyValue !== true)
+		{
+			updatedCookie += "=" + propertyValue;
+		}
+	}
+
+	document.cookie = updatedCookie;
+
+	return true;
+};
+
 BX.FixFontSize = function(params)
 {
+	var widthNode, computedStyles, width;
+
 	this.node = null;
 	this.prevWindowSize = 0;
+	this.prevWrapperSize = 0;
 	this.mainWrapper = null;
 	this.textWrapper = null;
 	this.objList = params.objList;
 	this.minFontSizeList = [];
 	this.minFontSize = 0;
 
-	if(params.onresize)
+	if (params.onresize)
 	{
 		this.prevWindowSize = window.innerWidth || document.documentElement.clientWidth;
 		BX.bind(window, 'resize', BX.proxy(BX.throttle(this.onResize, 350),this));
+	}
+
+	if (params.onAdaptiveResize)
+	{
+		widthNode = this.objList[0].scaleBy || this.objList[0].node;
+		computedStyles = getComputedStyle(widthNode);
+		this.prevWrapperSize = parseInt(computedStyles["width"]) - parseInt(computedStyles["paddingLeft"]) - parseInt(computedStyles["paddingRight"]);
+		BX.bind(window, 'resize', BX.proxy(BX.throttle(this.onAdaptiveResize, 350),this));
 	}
 
 	this.createTestNodes();
@@ -5309,13 +5797,17 @@ BX.FixFontSize.prototype =
 	decrease: function()
 	{
 		var width,
-			fontSize;
+			fontSize,
+			widthNode,
+			computedStyles;
 
 		this.insertTestNodes();
 
 		for(var i=this.objList.length-1; i>=0; i--)
 		{
-			width  = parseInt(getComputedStyle(this.objList[i].node)["width"]);
+			widthNode = this.objList[i].scaleBy || this.objList[i].node;
+			computedStyles = getComputedStyle(widthNode);
+			width  = parseInt(computedStyles["width"]) - parseInt(computedStyles["paddingLeft"]) - parseInt(computedStyles["paddingRight"]);
 			fontSize = parseInt(getComputedStyle(this.objList[i].node)["font-size"]);
 
 			this.textWrapperSetStyle(this.objList[i].node);
@@ -5350,13 +5842,17 @@ BX.FixFontSize.prototype =
 	{
 		this.insertTestNodes();
 		var width,
-			fontSize;
+			fontSize,
+			widthNode,
+			computedStyles;
 
 		this.insertTestNodes();
 
 		for(var i=this.objList.length-1; i>=0; i--)
 		{
-			width  = parseInt(getComputedStyle(this.objList[i].node)["width"]);
+			widthNode = this.objList[i].scaleBy || this.objList[i].node;
+			computedStyles = getComputedStyle(widthNode);
+			width  = parseInt(computedStyles["width"]) - parseInt(computedStyles["paddingLeft"]) - parseInt(computedStyles["paddingRight"]);
 			fontSize = parseInt(getComputedStyle(this.objList[i].node)["font-size"]);
 
 			this.textWrapperSetStyle(this.objList[i].node);
@@ -5367,6 +5863,8 @@ BX.FixFontSize.prototype =
 				{
 					this.textWrapper.style.fontSize = ++fontSize + 'px';
 				}
+
+				fontSize--;
 
 				if(this.objList[i].smallestValue)
 				{
@@ -5406,6 +5904,19 @@ BX.FixFontSize.prototype =
 			this.increase();
 
 		this.prevWindowSize = width;
+	},
+	onAdaptiveResize : function()
+	{
+		var widthNode = this.objList[0].scaleBy || this.objList[0].node,
+			computedStyles = getComputedStyle(widthNode),
+			width = parseInt(computedStyles["width"]) - parseInt(computedStyles["paddingLeft"]) - parseInt(computedStyles["paddingRight"]);
+
+		if (this.prevWrapperSize > width)
+			this.decrease();
+		else if (this.prevWrapperSize < width)
+			this.increase();
+
+		this.prevWrapperSize = width;
 	},
 	textWrapperInsertText : function(node)
 	{
@@ -5473,5 +5984,240 @@ if(typeof(BX.ParamBag) === "undefined")
 	}
 }
 
-})(window);
+if(typeof(BX.Promise) === "undefined")
+{
+	BX.Promise = function(fn, ctx) // fn is future-reserved
+	{
+		this.state = null;
+		this.value = null;
+		this.reason = null;
+		this.next = null;
+		this.ctx = ctx || this;
 
+		this.onFulfilled = [];
+		this.onRejected = [];
+	};
+	BX.Promise.prototype.fulfill = function(value)
+	{
+		this.checkState();
+
+		this.value = value;
+		this.state = true;
+		this.execute();
+	};
+	BX.Promise.prototype.reject = function(reason)
+	{
+		this.checkState();
+
+		this.reason = reason;
+		this.state = false;
+		this.execute();
+	};
+	BX.Promise.prototype.then = function(onFulfilled, onRejected)
+	{
+		if(BX.type.isFunction(onFulfilled))
+		{
+			this.onFulfilled.push(onFulfilled);
+		}
+		if(BX.type.isFunction(onRejected))
+		{
+			this.onRejected.push(onRejected);
+		}
+
+		if(this.next === null)
+		{
+			this.next = new BX.Promise(null, this.ctx);
+		}
+
+		if(this.state !== null) // if promise was already resolved, execute immediately
+		{
+			this.execute();
+		}
+
+		return this.next;
+	};
+
+	BX.Promise.prototype.catch = function(onRejected)
+	{
+		if(BX.type.isFunction(onRejected))
+		{
+			this.onRejected.push(onRejected);
+		}
+
+		if(this.next === null)
+		{
+			this.next = new BX.Promise(null, this.ctx);
+		}
+
+		if(this.state !== null) // if promise was already resolved, execute immediately
+		{
+			this.execute();
+		}
+
+		return this.next;
+	};
+
+	BX.Promise.prototype.setAutoResolve = function(way, ms)
+	{
+		this.timer = setTimeout(BX.delegate(function(){
+			if(this.state === null)
+			{
+				this[way ? 'fulfill' : 'reject']();
+			}
+		}, this), ms || 15);
+	};
+	BX.Promise.prototype.cancelAutoResolve = function()
+	{
+		clearTimeout(this.timer);
+	};
+	/**
+	 * Resolve function. This function allows promise chaining, like ..then().then()...
+	 * Typical usage:
+	 *
+	 * var p = new Promise();
+	 *
+	 * p.then(function(value){
+	 *  return someValue; // next promise in the chain will be fulfilled with someValue
+	 * }).then(function(value){
+	 *
+	 *  var p1 = new Promise();
+	 *  *** some async code here, that eventually resolves p1 ***
+	 *
+	 *  return p1; // chain will resume when p1 resolved (fulfilled or rejected)
+	 * }).then(function(value){
+	 *
+	 *  // you can also do
+	 *  var e = new Error();
+	 *  throw e;
+	 *  // it will cause next promise to be rejected with e
+	 *
+	 *  return someOtherValue;
+	 * }).then(function(value){
+	 *  ...
+	 * }, function(reason){
+	 *  // promise was rejected with reason
+	 * })...;
+	 *
+	 * p.fulfill('let`s start this chain');
+	 *
+	 * @param x
+	 */
+	BX.Promise.prototype.resolve = function(x)
+	{
+		var this_ = this;
+
+		if(this === x)
+		{
+			this.reject(new TypeError('Promise cannot fulfill or reject itself')); // avoid recursion
+		}
+		// allow "pausing" promise chaining until promise x is fulfilled or rejected
+		else if(x instanceof BX.Promise)
+		{
+			x.then(function(value){
+				this_.fulfill(value);
+			}, function(reason){
+				this_.reject(reason);
+			});
+		}
+		else // auto-fulfill this promise
+		{
+			this.fulfill(x);
+		}
+	};
+	BX.Promise.prototype.execute = function()
+	{
+		if(this.state === null)
+		{
+			//then() must not be called before BX.Promise resolve() happens
+			return;
+		}
+
+		var value = undefined;
+		var reason = undefined;
+		var x = undefined;
+		var k;
+		if(this.state === true) // promise was fulfill()-ed
+		{
+			if(this.onFulfilled.length)
+			{
+				try
+				{
+					for(k = 0; k < this.onFulfilled.length; k++)
+					{
+						x = this.onFulfilled[k].apply(this.ctx, [this.value]);
+						if(typeof x != 'undefined')
+						{
+							value = x;
+						}
+					}
+				}
+				catch(e)
+				{
+					if('console' in window)
+					{
+						console.dir(e);
+					}
+					BX.debug(e);
+
+					reason = e; // reject next
+				}
+			}
+			else
+			{
+				value = this.value; // resolve next
+			}
+		}
+		else if(this.state === false) // promise was reject()-ed
+		{
+			if(this.onRejected.length)
+			{
+				try
+				{
+					for(k = 0; k < this.onRejected.length; k++)
+					{
+						x = this.onRejected[k].apply(this.ctx, [this.reason]);
+						if(typeof x != 'undefined')
+						{
+							value = x;
+						}
+					}
+				}
+				catch(e)
+				{
+					if('console' in window)
+					{
+						console.dir(e);
+					}
+					BX.debug(e);
+
+					reason = e; // reject next
+				}
+			}
+			else
+			{
+				reason = this.reason; // reject next
+			}
+		}
+
+		if(this.next !== null)
+		{
+			if(typeof reason != 'undefined')
+			{
+				this.next.reject(reason);
+			}
+			else if(typeof value != 'undefined')
+			{
+				this.next.resolve(value);
+			}
+		}
+	};
+	BX.Promise.prototype.checkState = function()
+	{
+		if(this.state !== null)
+		{
+			throw new Error('You can not do fulfill() or reject() multiple times');
+		}
+	};
+}
+
+})(window);

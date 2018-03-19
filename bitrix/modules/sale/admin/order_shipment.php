@@ -6,13 +6,13 @@ use \Bitrix\Sale\Internals\ShipmentTable;
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 
 $saleModulePermissions = $APPLICATION->GetGroupRight("sale");
-if ($saleModulePermissions < "U")
+if ($saleModulePermissions < "L")
 	$APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
 
 Loader::includeModule('sale');
 Loader::includeModule('currency');
 IncludeModuleLangFile(__FILE__);
-global $DB;
+global $DB, $USER;
 
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/sale/prolog.php");
 
@@ -29,6 +29,7 @@ $filter = array(
 	'filter_order_id_to',
 	'filter_allow_delivery',
 	'filter_deducted',
+	'filter_delivery_id',
 	'filter_delivery_doc_num',
 	'filter_price_delivery_from',
 	'filter_price_delivery_to',
@@ -41,12 +42,15 @@ $filter = array(
 	'filter_shipment_id_to',
 	'filter_user_id',
 	'filter_user_login',
-	'filter_user_email'
+	'filter_user_email',
+	'filter_is_delivery_request_failed',
+	'filter_is_delivery_request_sent'
 );
 
 $lAdmin->InitFilter($filter);
 
 $arFilter = array();
+$runtimeFields = array();
 
 $filter_order_id_from = intval($filter_order_id_from);
 $filter_order_id_to = intval($filter_order_id_to);
@@ -63,7 +67,7 @@ if (intval($filter_price_delivery_to) > 0)
 	$arFilter['<=PRICE_DELIVERY'] = $filter_price_delivery_to;
 
 if (strlen($filter_delivery_doc_num) > 0)
-	$arFilter['DELIVERY_DOC_NUM'] = $filter_deducted;
+	$arFilter['DELIVERY_DOC_NUM'] = $filter_delivery_doc_num;
 
 if ($filter_order_id_from > 0)
 	$arFilter['>=ORDER_ID'] = $filter_order_id_from;
@@ -80,6 +84,28 @@ if (strlen($filter_company_id) > 0 && $filter_company_id != 'NOT_REF')
 
 if (strlen($filter_date_deducted_from) > 0)
 	$arFilter[">=DATE_DEDUCTED"] = trim($filter_date_deducted_from);
+
+$serviceList = array();
+$filterServiceList = array();
+
+$dbRes = \Bitrix\Sale\Delivery\Services\Table::getList(array('select' => array('ID', 'NAME', 'PARENT_ID', 'CLASS_NAME'), 'order' => array('SORT' => 'ASC')));
+while ($service = $dbRes->fetch())
+{
+	$serviceList[$service['ID']] = $service;
+	if ($service['PARENT_ID'] > 0)
+		$filterServiceList[$service['PARENT_ID']][] = $service['ID'];
+}
+
+if (is_array($filter_delivery_id) && count($filter_delivery_id) > 0 && $filter_delivery_id[0] != 'NOT_REF')
+{
+	$arFilter['DELIVERY_ID'] = $filter_delivery_id;
+	foreach ($filter_delivery_id as $deliveryId)
+	{
+		if (array_key_exists($deliveryId, $filterServiceList))
+			$arFilter['DELIVERY_ID'] = array_merge($arFilter['DELIVERY_ID'], $filterServiceList[$deliveryId]);
+	}
+}
+
 if (strlen($filter_date_deducted_to) > 0)
 {
 	if ($arDate = ParseDateTime($filter_date_deducted_to, CSite::GetDateFormat("FULL", $siteId)))
@@ -102,11 +128,11 @@ if (strlen($filter_date_deducted_to) > 0)
 
 if (isset($filter_status) && is_array($filter_status) && count($filter_status) > 0)
 {
-	for ($i = 0, $cnt = count($filter_status); $i < $cnt; $i++)
+	foreach ($filter_status as $key => $status)
 	{
-		$filter_status[$i] = trim($filter_status[$i]);
-		if (strlen($filter_status[$i]) > 0)
-			$arFilter["STATUS_ID"][] = $filter_status[$i];
+		$filter_status[$key] = trim($status);
+		if (strlen($filter_status[$key]) > 0)
+			$arFilter["=STATUS_ID"][] = $filter_status[$key];
 	}
 }
 
@@ -119,6 +145,74 @@ if (strlen($filter_user_email)>0)
 	$arFilter["ORDER.USER.EMAIL"] = trim($filter_user_email);
 if (IntVal($filter_user_id)>0)
 	$arFilter["ORDER.USER_ID"] = IntVal($filter_user_id);
+
+if (strlen($filter_is_delivery_request_failed) > 0)
+{
+	if($filter_is_delivery_request_failed == 'Y')
+		$arFilter["!=DELIVERY_REQUEST_SHIPMENT.ERROR_DESCRIPTION"] = false;
+	else
+		$arFilter["=DELIVERY_REQUEST_SHIPMENT.ERROR_DESCRIPTION"] = false;
+}
+
+if (strlen($filter_is_delivery_request_sent) > 0)
+{
+	if($filter_is_delivery_request_sent == 'Y')
+		$arFilter["!=DELIVERY_REQUEST_SHIPMENT.REQUEST_ID"] = false;
+	else
+		$arFilter["=DELIVERY_REQUEST_SHIPMENT.REQUEST_ID"] = false;
+}
+
+$allowedStatusesView = \Bitrix\Sale\DeliveryStatus::getStatusesUserCanDoOperations($USER->GetID(), array('view'));
+$allowedStatusesUpdate = \Bitrix\Sale\DeliveryStatus::getStatusesUserCanDoOperations($USER->GetID(), array('update'));
+
+
+if($saleModulePermissions == "P")
+{
+	$userCompanyList = \Bitrix\Sale\Services\Company\Manager::getUserCompanyList($USER->GetID());
+
+	$arFilter[] = array(
+		'LOGIC' => 'OR',
+		'=COMPANY_ID' => $userCompanyList,
+		'=ORDER.RESPONSIBLE_ID' => intval($USER->GetID()),
+		'=ORDER.COMPANY_ID' => $userCompanyList,
+		'=RESPONSIBLE_ID' => intval($USER->GetID())
+	);
+
+}
+
+if($saleModulePermissions < "W")
+{
+	if(!$arFilter["=STATUS_ID"])
+		$arFilter["=STATUS_ID"] = array();
+
+	$intersected = array_intersect($arFilter["=STATUS_ID"], $allowedStatusesView, $allowedStatusesUpdate);
+
+	if(!empty($arFilter["=STATUS_ID"]))
+	{
+		if(empty($intersected))
+		{
+			$arFilter["=STATUS_ID"] = array_merge($arFilter["=STATUS_ID"], $allowedStatusesView, $allowedStatusesUpdate);
+		}
+		else
+		{
+			$arFilter["=STATUS_ID"] = $intersected;
+		}
+	}
+	else
+	{
+		$arFilter["=STATUS_ID"] = array_merge($allowedStatusesView, $allowedStatusesUpdate);
+	}
+
+}
+
+if (empty($arFilter["=STATUS_ID"]))
+{
+	unset($arFilter["=STATUS_ID"]);
+}
+else
+{
+	$arFilter["=STATUS_ID"] = array_unique($arFilter["=STATUS_ID"]);
+}
 
 if($arID = $lAdmin->GroupAction())
 {
@@ -151,7 +245,7 @@ if($arID = $lAdmin->GroupAction())
 
 	foreach ($shipments as $orderId => $ids)
 	{
-		$isDeleted = false;
+		$isOperationSuccess = false;
 		/** @var \Bitrix\Sale\Order $currentOrder */
 		$currentOrder = \Bitrix\Sale\Order::load($orderId);
 		if (!$currentOrder)
@@ -170,20 +264,39 @@ if($arID = $lAdmin->GroupAction())
 			if (!$shipment)
 				continue;
 
+			@set_time_limit(0);
+
 			switch ($_REQUEST['action'])
 			{
 				case "delete":
-					@set_time_limit(0);
-
 					$res = $shipment->delete();
 					if ($res->isSuccess())
-						$isDeleted = true;
+						$isOperationSuccess = true;
+					else
+						$lAdmin->AddGroupError(implode('\n', $res->getErrorMessages()));
+					break;
+				case "deducted":
+				case "deducted_n":
+
+					$deducted = $_REQUEST['action'] === 'deducted' ? 'Y' : 'N';
+					$res = $shipment->setField('DEDUCTED', $deducted);
+					if ($res->isSuccess())
+						$isOperationSuccess = true;
+					else
+						$lAdmin->AddGroupError(implode('\n', $res->getErrorMessages()));
+					break;
+				case "allow_delivery":
+				case "allow_delivery_n":
+					$allowDelivery = $_REQUEST['action'] === 'allow_delivery' ? 'Y' : 'N';
+					$res = $shipment->setField('ALLOW_DELIVERY', $allowDelivery);
+					if ($res->isSuccess())
+						$isOperationSuccess = true;
 					else
 						$lAdmin->AddGroupError(implode('\n', $res->getErrorMessages()));
 					break;
 			}
 		}
-		if ($isDeleted)
+		if ($isOperationSuccess)
 		{
 			$res = $currentOrder->save();
 			if (!$res->isSuccess())
@@ -215,7 +328,12 @@ $headers = array(
 	array("id" => "REASON_CANCELED", "content" => GetMessage("SALE_ORDER_REASON_CANCELED"), "default" => false),
 	array("id" => "MARKED", "content" => GetMessage("SALE_ORDER_MARKED"), "sort"=> "MARKED", "default" => false),
 	array("id" => "REASON_MARKED_ID", "content" => GetMessage("SALE_ORDER_REASON_MARKED_ID"), "default" => false),
+	array("id" => "DELIVERY_REQUEST_ID", "content" => GetMessage("SALE_ORDER_DELIVERY_REQ_ID"), "default" => false),
+	array("id" => "IS_DELIVERY_REQUEST_FAILED", "content" => GetMessage("SALE_ORDER_DELIVERY_REQ_DELIVERY_ERROR"), "default" => false),
 );
+
+$lAdmin->AddHeaders($headers);
+$visibleHeaders = $lAdmin->GetVisibleHeaderColumns();
 
 $select = array(
 	'*',
@@ -223,6 +341,7 @@ $select = array(
 	'ORDER.CURRENCY',
 	'ORDER.ACCOUNT_NUMBER',
 	'COMPANY_BY.NAME',
+	'STATUS_COLOR' => 'STATUS.COLOR',
 	'EMP_DEDUCTED_BY_NAME' => 'EMP_DEDUCTED_BY.NAME',
 	'EMP_DEDUCTED_BY_LAST_NAME' => 'EMP_DEDUCTED_BY.LAST_NAME',
 	'EMP_ALLOW_DELIVERY_BY_NAME' => 'EMP_ALLOW_DELIVERY_BY.NAME',
@@ -232,16 +351,34 @@ $select = array(
 	'ORDER_USER_NAME' => 'ORDER.USER.NAME',
 	'ORDER_USER_LAST_NAME' => 'ORDER.USER.LAST_NAME',
 	'ORDER_USER_ID' => 'ORDER.USER_ID',
+	'ORDER_RESPONSIBLE_ID' => 'ORDER.RESPONSIBLE_ID',
 	'RESPONSIBLE_BY_LAST_NAME' => 'RESPONSIBLE_BY.LAST_NAME',
 	'RESPONSIBLE_BY_NAME' => 'RESPONSIBLE_BY.NAME'
 );
 $arFilter['=STATUS.Bitrix\Sale\Internals\StatusLangTable:STATUS.LID'] = $lang;
 $arFilter['!=SYSTEM'] = 'Y';
 
+if(in_array('IS_DELIVERY_REQUEST_FAILED', $visibleHeaders)
+	|| in_array('DELIVERY_REQUEST_ID', $visibleHeaders)
+	|| strlen($filter_is_delivery_request_failed) > 0
+	|| strlen($filter_is_delivery_request_sent) > 0)
+{
+	$runtimeFields[] = new \Bitrix\Main\Entity\ReferenceField(
+		'DELIVERY_REQUEST_SHIPMENT',
+		\Bitrix\Main\Entity\Base::getInstance('\Bitrix\Sale\Delivery\Requests\ShipmentTable'),
+		array('ref.SHIPMENT_ID' => 'this.ID',),
+		array('join_type' => 'LEFT')
+	);
+
+	$select['DELIVERY_REQUEST_SHIPMENT_ERROR_DESCRIPTION'] = 'DELIVERY_REQUEST_SHIPMENT.ERROR_DESCRIPTION';
+	$select['DELIVERY_REQUEST_ID'] = 'DELIVERY_REQUEST_SHIPMENT.REQUEST_ID';
+}
+
 $params = array(
 	'select' => $select,
 	'filter' => $arFilter,
 	'order'  => array($by => $order),
+	'runtime' => $runtimeFields,
 );
 
 $usePageNavigation = true;
@@ -273,6 +410,10 @@ if ($usePageNavigation)
 	$countQuery = new \Bitrix\Main\Entity\Query(ShipmentTable::getEntity());
 	$countQuery->addSelect(new \Bitrix\Main\Entity\ExpressionField('CNT', 'COUNT(1)'));
 	$countQuery->setFilter($params['filter']);
+
+	foreach ($params['runtime'] as $key => $field)
+		$countQuery->registerRuntimeField($key, clone $field);
+
 	$totalCount = $countQuery->setLimit(null)->setOffset(null)->exec()->fetch();
 	unset($countQuery);
 	$totalCount = (int)$totalCount['CNT'];
@@ -296,7 +437,6 @@ if ($usePageNavigation)
 }
 
 $dbResultList = new CAdminResult(ShipmentTable::getList($params), $tableId);
-
 if ($usePageNavigation)
 {
 	$dbResultList->NavStart($params['limit'], $navyParams['SHOW_ALL'], $navyParams['PAGEN']);
@@ -314,15 +454,12 @@ else
 //$dbResultList->NavStart();
 $lAdmin->NavText($dbResultList->GetNavPrint(GetMessage("group_admin_nav")));
 
-$lAdmin->AddHeaders($headers);
-
 $allSelectedFields = array(
 	"ORDER_ID" => false,
 	"PAID" => false,
 	"DATE_PAID" => false
 );
 
-$visibleHeaders = $lAdmin->GetVisibleHeaderColumns();
 $allSelectedFields = array_merge($allSelectedFields, array_fill_keys($visibleHeaders, true));
 
 while ($shipment = $dbResultList->Fetch())
@@ -347,7 +484,30 @@ while ($shipment = $dbResultList->Fetch())
 
 	$row->AddField("MARKED", (($shipment["MARKED"] == "Y") ? GetMessage("SHIPMENT_ORDER_YES") : GetMessage("SHIPMENT_ORDER_NO"))."<br><a href=\"user_edit.php?ID=".$shipment['EMP_MARKED_ID']."\">".htmlspecialcharsbx($shipment['EMP_MARKED_BY_LAST_NAME'])." ".htmlspecialcharsbx($shipment['EMP_MARKED_BY_NAME'])."</a><br>".htmlspecialcharsbx($shipment['DATE_MARKED']));
 
-	$row->AddField("STATUS", htmlspecialcharsbx($shipment['STATUS_NAME']));
+	if(in_array("DELIVERY_REQUEST_ID", $visibleHeaders))
+		$row->AddField("DELIVERY_REQUEST_ID", intval($shipment["DELIVERY_REQUEST_ID"]) > 0 ? '<a href="/bitrix/admin/sale_delivery_request_view.php?lang='.LANGUAGE_ID.'&ID='.$shipment["DELIVERY_REQUEST_ID"].'">'.$shipment["DELIVERY_REQUEST_ID"].'</a>' : '');
+
+	if(in_array("IS_DELIVERY_REQUEST_FAILED", $visibleHeaders))
+		$row->AddField("IS_DELIVERY_REQUEST_FAILED", strlen($shipment["DELIVERY_REQUEST_SHIPMENT_ERROR_DESCRIPTION"]) > 0 ? GetMessage("SHIPMENT_ORDER_YES") : GetMessage("SHIPMENT_ORDER_NO"));
+
+	$colorRGB = array();
+	$colorRGB = sscanf($shipment['STATUS_COLOR'], "#%02x%02x%02x");
+
+	if (count($colorRGB))
+	{
+		$color = "background:rgba(".$colorRGB[0].",".$colorRGB[1].",".$colorRGB[2].",0.6);";
+		$status = '<div style=	"'.$color.'
+									margin: 0 0 0 -16px;
+									padding: 11px 0 10px 16px;
+									min-height: 100%;
+								">'.htmlspecialcharsbx($shipment['STATUS_NAME'])."</div>";
+	}
+	else
+	{
+		$status = htmlspecialcharsbx($shipment['STATUS_NAME']);
+	}
+
+	$row->AddField("STATUS", $status);
 
 	$arActions = array();
 	$arActions[] = array("ICON"=>"edit", "TEXT"=>GetMessage("EDIT_SHIPMENT_ALT"), "ACTION"=>$lAdmin->ActionRedirect("sale_order_shipment_edit.php?order_id=".$shipment['ORDER_ID']."&shipment_id=".$shipment['ID']."&lang=".$lang.GetFilterParams("filter_").""), "DEFAULT"=>true);
@@ -364,6 +524,10 @@ while ($shipment = $dbResultList->Fetch())
 $lAdmin->AddGroupActionTable(
 	array(
 		"delete" => GetMessage("MAIN_ADMIN_LIST_DELETE"),
+		"deducted" => GetMessage("SALE_ORDER_DELIVERY_ACTION_DEDUCT"),
+		"deducted_n" => GetMessage("SALE_ORDER_DELIVERY_ACTION_DEDUCT_N"),
+		"allow_delivery" => GetMessage("SALE_ORDER_DELIVERY_ACTION_ALLOW_DLV"),
+		"allow_delivery_n" => GetMessage("SALE_ORDER_DELIVERY_ACTION_ALLOW_DLV_N"),
 	)
 );
 
@@ -397,7 +561,9 @@ $filter = array(
 	"filter_account_num" => GetMessage("PAYMENT_ACCOUNT_NUM"),
 	"filter_user_id" => GetMessage("SALE_SHIPMENT_F_USER_ID"),
 	"filter_user_login" => GetMessage("SALE_SHIPMENT_F_USER_LOGIN"),
-	"filter_user_email" => GetMessage("SALE_SHIPMENT_F_USER_EMAIL")
+	"filter_user_email" => GetMessage("SALE_SHIPMENT_F_USER_EMAIL"),
+	"filter_is_delivery_request_failed" => GetMessage("SALE_ORDER_DELIVERY_REQ_DELIVERY_ERROR"),
+	"filter_is_delivery_request_sent" => GetMessage("SALE_ORDER_DELIVERY_REQ_IS_SENT"),
 );
 
 $oFilter = new CAdminFilter(
@@ -467,6 +633,33 @@ $oFilter->Begin();
 	</td>
 </tr>
 <tr>
+	<td><?=GetMessage("SALE_ORDER_DELIVERY_NAME");?>:</td>
+	<td>
+		<select multiple name="filter_delivery_id[]">
+			<option value="NOT_REF">(<?=GetMessage("SALE_ORDER_ALL");?>)</option>
+			<?
+			\Bitrix\Sale\Delivery\Services\Manager::getHandlersList();
+
+			$result = array();
+			foreach ($serviceList as $serviceId => $service)
+			{
+				if (is_callable($service['CLASS_NAME'].'::canHasChildren') && $service['CLASS_NAME']::canHasChildren())
+					continue;
+
+				if ((int)$service['PARENT_ID'] > 0)
+					$name = $serviceList[$service['PARENT_ID']]['NAME'].': '.$service['NAME'];
+				else
+					$name = $service['NAME'];
+
+				$selected = (is_array($filter_delivery_id) && in_array($serviceId, $filter_delivery_id)) ? 'selected' : '';
+				$name = htmlspecialcharsbx($name);
+				echo '<option title="'.$name.'" value="'.htmlspecialcharsbx($serviceId).'" '.$selected.'">['.htmlspecialcharsbx($serviceId).'] '.$name.'</option>';
+			}
+			?>
+		</select>
+	</td>
+</tr>
+<tr>
 	<td><?=GetMessage("SALE_ORDER_DELIVERY_DOC_NUM");?>:</td>
 	<td>
 		<input type="text" name="filter_delivery_doc_num" value="<?=htmlspecialcharsbx($filter_delivery_doc_num);?>">
@@ -508,26 +701,23 @@ $oFilter->Begin();
 	</td>
 </tr>
 <?
-	$params = array(
-		"select" => array(
-			'ID',
-			'STATUS_NAME' => 'Bitrix\Sale\Internals\StatusLangTable:STATUS.NAME'
-		),
-		"filter" => array(
-						'=Bitrix\Sale\Internals\StatusLangTable:STATUS.NAME'  => $lang,
-						'TYPE'      => 'O'
-		)
+	$statusesList = \Bitrix\Sale\DeliveryStatus::getStatusesUserCanDoOperations(
+		$USER->GetID(),
+		array('view')
 	);
-	$result = \Bitrix\Sale\Internals\StatusTable::getList($params);
+
+	$allStatusNames = \Bitrix\Sale\DeliveryStatus::getAllStatusesNames();
 ?>
 <tr>
 	<td valign="top"><?echo GetMessage("SALE_ORDER_SHIPMENT_STATUS")?>:<br /><img src="/bitrix/images/sale/mouse.gif" width="44" height="21" border="0" alt=""></td>
 	<td valign="top">
 		<select name="filter_status[]" multiple size="3">
 			<?
-			while ($statusList = $result->fetch())
+			foreach($statusesList as  $statusCode)
 			{
-				?><option value="<?= $statusList["ID"] ?>"<?if (is_array($filter_status) && in_array($statusList["ID"], $filter_status)) echo " selected"?>>[<?=$statusList["ID"];?>] <?= htmlspecialcharsEx($statusList["STATUS_NAME"]) ?></option><?
+				if (!$statusName = $allStatusNames[$statusCode])
+					continue;
+				?><option value="<?= htmlspecialcharsbx($statusCode) ?>"<?if (is_array($filter_status) && in_array($statusCode, $filter_status)) echo " selected"?>>[<?=htmlspecialcharsbx($statusCode)?>] <?= htmlspecialcharsEx($statusName) ?></option><?
 			}
 			?>
 		</select>
@@ -542,15 +732,35 @@ $oFilter->Begin();
 <tr>
 	<td><?echo \Bitrix\Main\Localization\Loc::getMessage("SALE_SHIPMENT_F_USER_LOGIN");?>:</td>
 	<td>
-		<input type="text" name="filter_user_login" value="<?echo htmlspecialcharsEx($filter_user_login)?>" size="40">
+		<input type="text" name="filter_user_login" value="<?echo htmlspecialcharsbx($filter_user_login)?>" size="40">
 	</td>
 </tr>
 <tr>
 	<td><?echo \Bitrix\Main\Localization\Loc::getMessage("SALE_SHIPMENT_F_USER_EMAIL");?>:</td>
 	<td>
-		<input type="text" name="filter_user_email" value="<?echo htmlspecialcharsEx($filter_user_email)?>" size="40">
+		<input type="text" name="filter_user_email" value="<?echo htmlspecialcharsbx($filter_user_email)?>" size="40">
 	</td>
 </tr>
+<tr>
+	<td><?=\Bitrix\Main\Localization\Loc::getMessage('SALE_ORDER_DELIVERY_REQ_DELIVERY_ERROR')?>:</td>
+	<td>
+		<select name="filter_is_delivery_request_failed" class="adm-select">
+			<option value="">(<?=\Bitrix\Main\Localization\Loc::getMessage('SALE_ORDER_ALL')?>)</option>
+			<option value="Y"><?=\Bitrix\Main\Localization\Loc::getMessage('SHIPMENT_ORDER_YES')?></option>
+			<option value="N"><?=\Bitrix\Main\Localization\Loc::getMessage('SHIPMENT_ORDER_NO')?></option>
+		</select>
+	</td>
+</tr>
+	<tr>
+		<td><?=\Bitrix\Main\Localization\Loc::getMessage('SALE_ORDER_DELIVERY_REQ_IS_SENT')?>:</td>
+		<td>
+			<select name="filter_is_delivery_request_sent" class="adm-select">
+				<option value="">(<?=\Bitrix\Main\Localization\Loc::getMessage('SALE_ORDER_ALL')?>)</option>
+				<option value="Y"><?=\Bitrix\Main\Localization\Loc::getMessage('SALE_ORDER_DELIVERY_REQ_IS_SENT_Y')?></option>
+				<option value="N"><?=\Bitrix\Main\Localization\Loc::getMessage('SALE_ORDER_DELIVERY_REQ_IS_SENT_N')?></option>
+			</select>
+		</td>
+	</tr>
 <?
 
 $oFilter->Buttons(

@@ -41,6 +41,7 @@ final class ForumCommentsComponent extends CBitrixComponent
 
 	const STATUS_SCOPE_MOBILE = 'mobile';
 	const STATUS_SCOPE_WEB = 'web';
+
 	private $scope;
 	public $prepareMobileData;
 
@@ -53,17 +54,21 @@ final class ForumCommentsComponent extends CBitrixComponent
 
 		$this->prepareMobileData = IsModuleInstalled("mobile");
 		$this->scope = self::STATUS_SCOPE_WEB;
-
 		if (is_callable(array('\Bitrix\MobileApp\Mobile', 'getApiVersion')) && \Bitrix\MobileApp\Mobile::getApiVersion() >= 1 &&
 			defined("BX_MOBILE") && BX_MOBILE === true)
 			$this->scope = self::STATUS_SCOPE_MOBILE;
 
 		self::$index++;
 
-		if ($this->isWeb())
-			$this->setTemplateName(".default");
-		else
-			$this->setTemplateName("mobile_app");
+		$templateName = $this->getTemplateName();
+
+		if ((empty($templateName) || $templateName == ".default" || $templateName == "bitrix24"))
+		{
+			if ($this->isWeb())
+				$this->setTemplateName(".default");
+			else
+				$this->setTemplateName("mobile_app");
+		}
 	}
 
 	public function isWeb()
@@ -201,7 +206,8 @@ final class ForumCommentsComponent extends CBitrixComponent
 					"type" => $this->arParams["ENTITY_TYPE"],
 					"id" => $this->arParams["ENTITY_ID"],
 					"xml_id" => $this->arParams["ENTITY_XML_ID"]
-				)
+				),
+				(isset($this->arParams["RECIPIENT_ID"]) ? intval($this->arParams["RECIPIENT_ID"]) : 0)
 			);
 
 			$this->forum = $this->feed->getForum();
@@ -212,7 +218,7 @@ final class ForumCommentsComponent extends CBitrixComponent
 			if (array_key_exists("ALLOW_EDIT_OWN_MESSAGE", $this->arParams))
 				$this->feed->setEditOwn($this->arParams["ALLOW_EDIT_OWN_MESSAGE"] == "ALL" ||
 					$this->arParams["ALLOW_EDIT_OWN_MESSAGE"] === "LAST");
-			$this->arParams["ALLOW_EDIT_OWN_MESSAGE"] = $this->feed->getEntity()->canEditOwn() ? "ALL" : "N";
+			$this->arParams["ALLOW_EDIT_OWN_MESSAGE"] = $this->feed->canEditOwn() ? "ALL" : "N";
 
 			if (!$this->errorCollection->hasErrors() && $this->feed->canRead())
 			{
@@ -222,7 +228,7 @@ final class ForumCommentsComponent extends CBitrixComponent
 				foreach (GetModuleEvents('forum', 'OnCommentsInit', true) as $arEvent)
 					ExecuteModuleEventEx($arEvent, array(&$this));
 
-				if (!$this->checkPreview() && $this->checkActions() === false)
+				if ($this->arParams["CHECK_ACTIONS"] != "N" && !$this->checkPreview() && $this->checkActions() === false)
 				{
 					foreach (GetModuleEvents('forum', 'OnCommentError', true) as $arEvent)
 						ExecuteModuleEventEx($arEvent, array(&$this));
@@ -274,6 +280,7 @@ final class ForumCommentsComponent extends CBitrixComponent
 
 	protected function prepareParams()
 	{
+		$this->arParams["SHOW_LOGIN"] = ($this->arParams["SHOW_LOGIN"] == "N" ? "N" : "Y");
 		if (!array_key_exists("USE_CAPTCHA", $this->arParams))
 			$this->arParams["USE_CAPTCHA"] = $this->forum["USE_CAPTCHA"];
 		if ($this->arParams["USE_CAPTCHA"] == "Y" && !$this->getUser()->IsAuthorized())
@@ -288,9 +295,10 @@ final class ForumCommentsComponent extends CBitrixComponent
 				COption::SetOptionString("main", "captcha_password", $captchaPass);
 			}
 		}
+		AddEventHandler("forum", "OnAfterCommentTopicAdd", array(&$this, "readTopic"));
 		if ($this->arParams["SUBSCRIBE_AUTHOR_ELEMENT"] == "Y" && $this->getUser()->IsAuthorized())
 		{
-			AddEventHandler("forum", "OnAfterCommentTopicAdd", Array(&$this, "subscribeAuthor"));
+			AddEventHandler("forum", "OnAfterCommentTopicAdd", array(&$this, "subscribeAuthor"));
 		}
 		if (in_array($this->arParams["ALLOW_UPLOAD"], array("A", "Y", "F", "N", "I")))
 		{
@@ -308,13 +316,14 @@ final class ForumCommentsComponent extends CBitrixComponent
 		unset($_GET["result"]);
 		unset($GLOBALS["HTTP_GET_VARS"]["result"]);
 		$this->arParams["AJAX_MODE"] = $this->isAjaxRequest() ? "Y" : "N";
-		$this->arParams["index"] = self::$index;
+		$this->arParams["index"] = $this->componentId;
+		$this->arParams["COMPONENT_ID"] = $this->componentId;
 		return $this;
 	}
 
-	private function subscribeAuthor($type, $id, $tid)
+	public function subscribeAuthor($type, $id, $tid)
 	{
-		if ($this->feed->getentity()->getType() == $type && $this->feed->getentity()->getId() == $id)
+		if ($this->feed->getEntity()->getType() == $type && $this->feed->getEntity()->getId() == $id)
 		{
 			CForumSubscribe::Add(array(
 				"USER_ID" => $this->getUser()->getId(),
@@ -324,6 +333,14 @@ final class ForumCommentsComponent extends CBitrixComponent
 				"NEW_TOPIC_ONLY" => "N")
 			);
 			BXClearCache(true, "/bitrix/forum/user/".$this->getUser()->getId()."/subscribe/");
+		}
+	}
+
+	public function readTopic($type, $id, $tid)
+	{
+		if ($this->feed->getEntity()->getType() == $type && $this->feed->getEntity()->getId() == $id)
+		{
+			ForumSetReadTopic($this->arParams["FORUM_ID"], $tid);
 		}
 	}
 

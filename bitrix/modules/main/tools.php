@@ -6,6 +6,8 @@
  * @copyright 2001-2014 Bitrix
  */
 
+use Bitrix\Main\UI\Extension;
+
 /**
  * HTML form elements
  */
@@ -26,7 +28,16 @@ function InputType($strType, $strName, $strValue, $strCmp, $strPrintValue=false,
 	$bLabel = false;
 	if ($strType == 'radio')
 		$bLabel = true;
-	return ($bLabel? '<label>': '').'<input type="'.$strType.'" '.$field1.' name="'.$strName.'" id="'.($strId <> ''? $strId : $strName).'" value="'.$strValue.'"'.
+
+	$bId = true;
+	if($strType == 'radio' || $strType == 'checkbox')
+	{
+		$bId = !preg_match('/^id="/', $field1) && !preg_match('/\sid="/', $field1);
+	}
+
+	return ($bLabel? '<label>': '').'<input type="'.$strType.'" '.$field1.' name="'.$strName.'"'.
+		($bId ? ' id="'.($strId <> ''? $strId : $strName).'"' : '').
+		' value="'.$strValue.'"'.
 		($bCheck? ' checked':'').'>'.($strPrintValue? $strValue:$strPrint).($bLabel? '</label>': '');
 }
 
@@ -105,7 +116,7 @@ function SelectBoxM($strBoxName, $a, $arr, $strDetText = "", $strDetText_selecte
  *
  * @param string $strBoxName Input name
  * @param array $a Array with items
- * @param array $arr Selected values
+ * @param array|false $arr Selected values
  * @param string $strDetText Empty item text
  * @param bool $strDetText_selected Allow to choose an empty item
  * @param string $size Size attribute
@@ -161,22 +172,26 @@ function SelectBoxFromArray(
 	$form="form1"
 	)
 {
+	$boxName = htmlspecialcharsbx($strBoxName);
 	if($go)
 	{
+		$funName = preg_replace("/[^a-z0-9_]/i", "", $strBoxName);
+		$jsName = CUtil::JSEscape($strBoxName);
+
 		$strReturnBox = "<script type=\"text/javascript\">\n".
-			"function ".$strBoxName."LinkUp()\n".
-			"{var number = document.".$form.".".$strBoxName.".selectedIndex;\n".
-			"if(document.".$form.".".$strBoxName.".options[number].value!=\"0\"){ \n".
-			"document.".$form.".".$strBoxName."_SELECTED.value=\"yes\";\n".
+			"function ".$funName."LinkUp()\n".
+			"{var number = document.".$form."['".$jsName."'].selectedIndex;\n".
+			"if(document.".$form."['".$jsName."'].options[number].value!=\"0\"){ \n".
+			"document.".$form."['".$jsName."_SELECTED'].value=\"yes\";\n".
 			"document.".$form.".submit();\n".
 			"}}\n".
 			"</script>\n";
-		$strReturnBox .= '<input type="hidden" name="'.$strBoxName.'_SELECTED" id="'.$strBoxName.'_SELECTED" value="">';
-		$strReturnBox .= '<select '.$field1.' name="'.$strBoxName.'" id="'.$strBoxName.'" onchange="'.$strBoxName.'LinkUp()" class="typeselect">';
+		$strReturnBox .= '<input type="hidden" name="'.$boxName.'_SELECTED" id="'.$boxName.'_SELECTED" value="">';
+		$strReturnBox .= '<select '.$field1.' name="'.$boxName.'" id="'.$boxName.'" onchange="'.$funName.'LinkUp()" class="typeselect">';
 	}
 	else
 	{
-		$strReturnBox = '<select '.$field1.' name="'.$strBoxName.'" id="'.$strBoxName.'">';
+		$strReturnBox = '<select '.$field1.' name="'.$boxName.'" id="'.$boxName.'">';
 	}
 
 	if(isset($db_array["reference"]) && is_array($db_array["reference"]))
@@ -212,7 +227,7 @@ function SelectBoxFromArray(
 
 function Calendar($sFieldName, $sFormName="skform", $sFromName="", $sToName="")
 {
-	if(class_exists("CAdminCalendar"))
+	if(defined("ADMIN_SECTION") && ADMIN_SECTION == true)
 		return CAdminCalendar::Calendar($sFieldName, $sFromName, $sToName);
 
 	static $bCalendarCode = false;
@@ -247,7 +262,7 @@ function Calendar($sFieldName, $sFormName="skform", $sFromName="", $sToName="")
 
 function CalendarDate($sFromName, $sFromVal, $sFormName="skform", $size="10", $param="class=\"typeinput\"")
 {
-	if(class_exists("CAdminCalendar"))
+	if(defined("ADMIN_SECTION") && ADMIN_SECTION == true)
 		return CAdminCalendar::CalendarDate($sFromName, $sFromVal, $size, ($size > 10));
 
 	return '<input type="text" name="'.$sFromName.'" id="'.$sFromName.'" size="'.$size.'" value="'.htmlspecialcharsbx($sFromVal).'" '.$param.' /> '."\n".Calendar($sFromName, $sFormName)."\n";
@@ -255,7 +270,7 @@ function CalendarDate($sFromName, $sFromVal, $sFormName="skform", $size="10", $p
 
 function CalendarPeriod($sFromName, $sFromVal, $sToName, $sToVal, $sFormName="skform", $show_select="N", $field_select="class=\"typeselect\"", $field_input="class=\"typeinput\"", $size="10")
 {
-	if(class_exists("CAdminCalendar"))
+	if(defined("ADMIN_SECTION") && ADMIN_SECTION == true)
 		return CAdminCalendar::CalendarPeriod($sFromName, $sToName, $sFromVal, $sToVal, ($show_select=="Y"), $size, ($size > 10));
 
 	$arr = array();
@@ -313,6 +328,8 @@ function ".$sFromName."_SetDate()
  */
 function CheckDateTime($datetime, $format=false)
 {
+	$datetime = strval($datetime);
+
 	if ($format===false && defined("FORMAT_DATETIME"))
 		$format = FORMAT_DATETIME;
 
@@ -345,7 +362,7 @@ function CheckDateTime($datetime, $format=false)
 		}
 		else
 		{
-			$month = GetNumMonth($ar["M"], true);
+			$month = GetNumMonth($ar["M"]);
 			if (!$month)
 				$month = intval(date('m', strtotime($ar["M"])));
 		}
@@ -692,13 +709,43 @@ function convertTimeToMilitary ($strTime, $fromFormat = 'H:MI T', $toFormat = 'H
 	return FormatDate($DB->dateFormatToPHP($toFormat), $ts);
 }
 
-function FormatDate($format="", $timestamp="", $now=false)
+/**
+ * @param string|array $format
+ * @param int|bool|\Bitrix\Main\Type\DateTime $timestamp
+ * @param int|bool|\Bitrix\Main\Type\DateTime $now
+ * 
+ * @return string
+ */
+function FormatDate($format = "", $timestamp = false, $now = false)
 {
 	global $DB;
-
-	if($now === false)
+	
+	if ($timestamp === false)
+	{
+		$timestamp = time();
+	}
+	else if ($timestamp instanceof \Bitrix\Main\Type\DateTime)
+	{
+		$timestamp = $timestamp->getTimestamp();
+	}
+	else
+	{
+		$timestamp = intval($timestamp);
+	}
+	
+	if ($now === false)
+	{
 		$now = time();
-
+	}
+	else if ($now instanceof \Bitrix\Main\Type\DateTime)
+	{
+		$now = $now->getTimestamp();
+	}
+	else
+	{
+		$now = intval($now);
+	}
+	
 	switch($format)
 	{
 		case "SHORT":
@@ -718,59 +765,132 @@ function FormatDate($format="", $timestamp="", $now=false)
 				if($seconds_ago < 60)
 					return FormatDate($format_value, $timestamp, $now);
 			}
-			elseif(preg_match('/^s(\d+)/', $format_interval, $match))
+			elseif(preg_match('/^s(\d+)\>?(\d+)?/', $format_interval, $match))
 			{
-				if($seconds_ago < intval($match[1]))
+				if (isset($match[1]) && isset($match[2]))
+				{
+					if(
+						$seconds_ago < intval($match[1])
+						&& $seconds_ago > intval($match[2])
+					)
+					{
+						return FormatDate($format_value, $timestamp, $now);
+					}
+				}
+				else if($seconds_ago < intval($match[1]))
+				{
 					return FormatDate($format_value, $timestamp, $now);
+				}
 			}
 			elseif($format_interval == "i")
 			{
 				if($seconds_ago < 60*60)
 					return FormatDate($format_value, $timestamp, $now);
 			}
-			elseif(preg_match('/^i(\d+)/', $format_interval, $match))
+			elseif(preg_match('/^i(\d+)\>?(\d+)?/', $format_interval, $match))
 			{
-				if($seconds_ago < intval($match[1])*60)
+				if (isset($match[1]) && isset($match[2]))
+				{
+					if(
+						$seconds_ago < intval($match[1])*60
+						&& $seconds_ago > intval($match[2])*60
+					)
+					{
+						return FormatDate($format_value, $timestamp, $now);
+					}
+				}
+				else if($seconds_ago < intval($match[1])*60)
+				{
 					return FormatDate($format_value, $timestamp, $now);
+				}
 			}
 			elseif($format_interval == "H")
 			{
 				if($seconds_ago < 24*60*60)
 					return FormatDate($format_value, $timestamp, $now);
 			}
-			elseif(preg_match('/^H(\d+)/', $format_interval, $match))
+			elseif(preg_match('/^H(\d+)\>?(\d+)?/', $format_interval, $match))
 			{
-				if($seconds_ago < intval($match[1])*60*60)
+				if (isset($match[1]) && isset($match[2]))
+				{
+					if(
+						$seconds_ago < intval($match[1])*60*60
+						&& $seconds_ago > intval($match[2])*60*60
+					)
+					{
+						return FormatDate($format_value, $timestamp, $now);
+					}
+				}
+				else if($seconds_ago < intval($match[1])*60*60)
+				{
 					return FormatDate($format_value, $timestamp, $now);
+				}
 			}
 			elseif($format_interval == "d")
 			{
 				if($seconds_ago < 31*24*60*60)
 					return FormatDate($format_value, $timestamp, $now);
 			}
-			elseif(preg_match('/^d(\d+)/', $format_interval, $match))
+			elseif(preg_match('/^d(\d+)\>?(\d+)?/', $format_interval, $match))
 			{
-				if($seconds_ago < intval($match[1])*60*60)
+				if (isset($match[1]) && isset($match[2]))
+				{
+					if(
+						$seconds_ago < intval($match[1])*24*60*60
+						&& $seconds_ago > intval($match[2])*24*60*60
+					)
+					{
+						return FormatDate($format_value, $timestamp, $now);
+					}
+				}
+				else if($seconds_ago < intval($match[1])*24*60*60)
+				{
 					return FormatDate($format_value, $timestamp, $now);
+				}
 			}
 			elseif($format_interval == "m")
 			{
 				if($seconds_ago < 365*24*60*60)
 					return FormatDate($format_value, $timestamp, $now);
 			}
-			elseif(preg_match('/^m(\d+)/', $format_interval, $match))
+			elseif(preg_match('/^m(\d+)\>?(\d+)?/', $format_interval, $match))
 			{
-				if($seconds_ago < intval($match[1])*31*24*60*60)
+				if (isset($match[1]) && isset($match[2]))
+				{
+					if(
+						$seconds_ago < intval($match[1])*31*24*60*60
+						&& $seconds_ago > intval($match[2])*31*24*60*60
+					)
+					{
+						return FormatDate($format_value, $timestamp, $now);
+					}
+				}
+				else if($seconds_ago < intval($match[1])*31*24*60*60)
+				{
 					return FormatDate($format_value, $timestamp, $now);
+				}
+			}
+			elseif($format_interval == "now")
+			{
+				if($timestamp == $now)
+				{
+					return FormatDate($format_value, $timestamp, $now);
+				}
 			}
 			elseif($format_interval == "today")
 			{
 				$arNow = localtime($now);
-				//le = number of seconds scince midnight
-				//$le = $arSDate[0]+$arSDate[1]*60+$arSDate[2]*3600;
-				//today_1 = truncate(now)
 				$today_1 = mktime(0, 0, 0, $arNow[4]+1, $arNow[3], $arNow[5]+1900);
-				//today_2 = truncate(now)+1
+				$today_2 = mktime(0, 0, 0, $arNow[4]+1, $arNow[3]+1, $arNow[5]+1900);
+				if($timestamp >= $today_1 && $timestamp < $today_2)
+				{
+					return FormatDate($format_value, $timestamp, $now);
+				}
+			}
+			elseif($format_interval == "todayFuture")
+			{
+				$arNow = localtime($now);
+				$today_1 = $now;
 				$today_2 = mktime(0, 0, 0, $arNow[4]+1, $arNow[3]+1, $arNow[5]+1900);
 				if($timestamp >= $today_1 && $timestamp < $today_2)
 				{
@@ -790,13 +910,13 @@ function FormatDate($format="", $timestamp="", $now=false)
 				if($timestamp >= $yesterday_1 && $timestamp < $yesterday_2)
 					return FormatDate($format_value, $timestamp, $now);
 			}
-			elseif($format_interval == "tommorow")
+			elseif($format_interval == "tommorow" || $format_interval == "tomorrow")
 			{
 				$arNow = localtime($now);
-				$tommorow_1 = mktime(0, 0, 0, $arNow[4]+1, $arNow[3]+1, $arNow[5]+1900);
-				$tommorow_2 = mktime(0, 0, 0, $arNow[4]+1, $arNow[3]+2, $arNow[5]+1900);
+				$tomorrow_1 = mktime(0, 0, 0, $arNow[4]+1, $arNow[3]+1, $arNow[5]+1900);
+				$tomorrow_2 = mktime(0, 0, 0, $arNow[4]+1, $arNow[3]+2, $arNow[5]+1900);
 
-				if($timestamp >= $tommorow_1 && $timestamp < $tommorow_2)
+				if($timestamp >= $tomorrow_1 && $timestamp < $tomorrow_2)
 					return FormatDate($format_value, $timestamp, $now);
 			}
 			elseif($format_interval == "-")
@@ -1023,18 +1143,18 @@ function FormatDate($format="", $timestamp="", $now=false)
 			$ampm = IsAmPmMode(true);
 			$timeFormat = ($ampm === AM_PM_LOWER? "g:i a" : ($ampm === AM_PM_UPPER? "g:i A" : "H:i"));
 			$formats = array();
-			$formats["tommorow"] =  "tommorow, ".$timeFormat;
-			$formats["-"] = preg_replace('/:s$/', '', $DB->DateFormatToPHP(CSite::GetDateFormat("FULL")));
+			$formats["tomorrow"] =  "tomorrow, ".$timeFormat;
+			$formats["-"] = preg_replace('/:s/', '', $DB->DateFormatToPHP(CSite::GetDateFormat("FULL")));
 			$formats["s"] = "sago";
 			$formats["i"] = "iago";
 			$formats["today"] = "today, ".$timeFormat;
 			$formats["yesterday"] = "yesterday, ".$timeFormat;
-			$formats[""] = preg_replace('/:s$/', '', $DB->DateFormatToPHP(CSite::GetDateFormat("FULL")));
+			$formats[""] = preg_replace('/:s/', '', $DB->DateFormatToPHP(CSite::GetDateFormat("FULL")));
 			$result .= FormatDate($formats, $timestamp, $now);
 			break;
 		case "X":
 			$day = FormatDate(array(
-				"tommorow" => "tommorow",
+				"tomorrow" => "tomorrow",
 				"-" => $DB->DateFormatToPHP(CSite::GetDateFormat("SHORT")),
 				"today" => "today",
 				"yesterday" => "yesterday",
@@ -1044,7 +1164,7 @@ function FormatDate($format="", $timestamp="", $now=false)
 			$ampm = IsAmPmMode(true);
 			$timeFormat = ($ampm === AM_PM_LOWER? "g:i a" : ($ampm === AM_PM_UPPER? "g:i A" : "H:i"));
 			$formats = array();
-			$formats["tommorow"] = $timeFormat;
+			$formats["tomorrow"] = $timeFormat;
 			$formats["today"] = $timeFormat;
 			$formats["yesterday"] = $timeFormat;
 			$formats[""] = "";
@@ -1336,7 +1456,9 @@ function AddTime($stmp, $add, $type="D")
 	return $ret;
 }
 
-// устаревшая функция
+/**
+ * @deprecated
+ */
 function ParseDate($strDate, $format="dmy")
 {
 	$day = $month = $year = 0;
@@ -1351,7 +1473,9 @@ function ParseDate($strDate, $format="dmy")
 	return (checkdate($month, $day, $year) ? array($day, $month, $year) : 0);
 }
 
-// устаревшая функция
+/**
+ * @deprecated
+ */
 function MkDateTime($strDT, $format="d.m.Y H:i:s")
 {
 	$arr = array("d.m.Y","d.m.Y H:i","d.m.Y H:i:s");
@@ -1382,7 +1506,9 @@ function MkDateTime($strDT, $format="d.m.Y H:i:s")
 	return $ts;
 }
 
-// устаревшая функция
+/**
+ * @deprecated
+ */
 function PHPFormatDateTime($strDateTime, $format="d.m.Y H:i:s")
 {
 	return date($format, MkDateTime(FmtDate($strDateTime,"D.M.Y H:I:S"), "d.m.Y H:i:s"));
@@ -2263,7 +2389,7 @@ function HTMLToTxt($str, $strSiteUrl="", $aDelete=array(), $maxlen=70)
 
 	//переносим длинные строки
 	if($maxlen > 0)
-		$str = preg_replace("#([^\\n\\r]{".intval($maxlen)."}[^ \\r\\n]*[\\] ])([^\\r])#", "\\1\r\n\\2", $str);
+		$str = preg_replace("#(^|[\\r\\n])([^\\n\\r]{".intval($maxlen)."}[^ \\r\\n]*[\\] ])([^\\r])#", "\\1\\2\r\n\\3", $str);
 
 	$str = str_replace(chr(1), " ",$str);
 	return trim($str);
@@ -2279,8 +2405,8 @@ function FormatText($strText, $strTextType="text")
 
 function htmlspecialcharsEx($str)
 {
-	static $search =  array("&amp;",     "&lt;",     "&gt;",     "&quot;",     "&#34",     "&#x22",     "&#39",     "&#x27",     "<",    ">",    "\"");
-	static $replace = array("&amp;amp;", "&amp;lt;", "&amp;gt;", "&amp;quot;", "&amp;#34", "&amp;#x22", "&amp;#39", "&amp;#x27", "&lt;", "&gt;", "&quot;");
+	static $search =  array("&amp;",     "&lt;",     "&gt;",     "&quot;",     "&#34;",     "&#x22;",     "&#39;",     "&#x27;",     "<",    ">",    "\"");
+	static $replace = array("&amp;amp;", "&amp;lt;", "&amp;gt;", "&amp;quot;", "&amp;#34;", "&amp;#x22;", "&amp;#39;", "&amp;#x27;", "&lt;", "&gt;", "&quot;");
 	return str_replace($search, $replace, $str);
 }
 
@@ -2291,17 +2417,13 @@ function htmlspecialcharsback($str)
 	return str_replace($search, $replace, $str);
 }
 
-function htmlspecialcharsbx($string, $flags=ENT_COMPAT)
+function htmlspecialcharsbx($string, $flags = ENT_COMPAT, $doubleEncode = true)
 {
-	//shitty function for php 5.4 where default encoding is UTF-8
-	return htmlspecialchars($string, $flags, (defined("BX_UTF")? "UTF-8" : "ISO-8859-1"));
+	//function for php 5.4 where default encoding is UTF-8
+	return htmlspecialchars($string, $flags, (defined("BX_UTF")? "UTF-8" : "ISO-8859-1"), $doubleEncode);
 }
 
-/*********************************************************************
-Файлы и каталоги
-*********************************************************************/
-
-function CheckDirPath($path, $bPermission=true)
+function CheckDirPath($path, $bPermission = true)
 {
 	$path = str_replace(array("\\", "//"), "/", $path);
 
@@ -2314,10 +2436,18 @@ function CheckDirPath($path, $bPermission=true)
 
 	$path = rtrim($path, "/");
 
+	if($path == "")
+	{
+		//current folder always exists
+		return true;
+	}
+
 	if(!file_exists($path))
+	{
 		return mkdir($path, BX_DIR_PERMISSIONS, true);
-	else
-		return is_dir($path);
+	}
+
+	return is_dir($path);
 }
 
 function CopyDirFiles($path_from, $path_to, $ReWrite = True, $Recursive = False, $bDeleteAfterCopy = False, $strExclude = "")
@@ -3443,9 +3573,9 @@ function LocalRedirect($url, $skip_security_check=false, $status="302 Found")
 
 	if(!defined("BX_UTF") && defined("LANG_CHARSET"))
 	{
-		$url = CharsetConverter::ConvertCharset($url, LANG_CHARSET, "UTF-8");
+		$url = \Bitrix\Main\Text\Encoding::convertEncoding($url, LANG_CHARSET, "UTF-8");
 	}
-
+	
 	if(function_exists("getmoduleevents"))
 	{
 		foreach(GetModuleEvents("main", "OnBeforeLocalRedirect", true) as $arEvent)
@@ -3605,6 +3735,27 @@ function GetCountryArray($lang=LANGUAGE_ID)
 	return $arCountry;
 }
 
+function GetCountries($lang=LANGUAGE_ID)
+{
+	static $result = null;
+	if(!is_null($result))
+		return $result;
+
+	include($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/countries.php");
+	$msg = IncludeModuleLangFile(__FILE__, $lang, true);
+
+	$result = array();
+	foreach ($arCounries as $country => $countryId)
+	{
+		$result[] = array(
+			'ID' => $countryId,
+			'CODE' => $country,
+			'NAME' => $msg["COUNTRY_".$countryId]
+		);
+	}
+	return $result;
+}
+
 function GetCountryIdByCode($code)
 {
 	include($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/countries.php");
@@ -3612,6 +3763,20 @@ function GetCountryIdByCode($code)
 	if(isset($arCounries[$code]))
 		return $arCounries[$code];
 	return false;
+}
+
+function GetCountryCodeById($countryId)
+{
+	$countryId = (int)$countryId;
+
+	static $countryCodes = null;
+	if(is_null($countryCodes))
+	{
+		include($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/countries.php");
+		$countryCodes = array_flip($arCounries);
+	}
+
+	return isset($countryCodes[$countryId]) ? $countryCodes[$countryId] : '';
 }
 
 function minimumPHPVersion($vercheck)
@@ -3626,10 +3791,9 @@ function minimumPHPVersion($vercheck)
 
 function FormDecode()
 {
-	global $HTTP_ENV_VARS, $HTTP_GET_VARS, $HTTP_POST_VARS, $HTTP_POST_FILES, $HTTP_COOKIE_VARS, $HTTP_SERVER_VARS;
 	$superglobals = array(
 		'_GET'=>1, '_SESSION'=>1, '_POST'=>1, '_COOKIE'=>1, '_REQUEST'=>1, '_FILES'=>1, '_SERVER'=>1, 'GLOBALS'=>1, '_ENV'=>1,
-		'DBSQLServerType'=>1, 'DBType'=>1,  'DBDebug'=>1, 'DBDebugToFile'=>1, 'DBHost'=>1, 'DBName'=>1, 'DBLogin'=>1, 'DBPassword'=>1,
+		'DBType'=>1,  'DBDebug'=>1, 'DBDebugToFile'=>1, 'DBHost'=>1, 'DBName'=>1, 'DBLogin'=>1, 'DBPassword'=>1,
 		'HTTP_ENV_VARS'=>1, 'HTTP_GET_VARS'=>1, 'HTTP_POST_VARS'=>1, 'HTTP_POST_FILES'=>1, 'HTTP_COOKIE_VARS'=>1, 'HTTP_SERVER_VARS'=>1,
 	);
 
@@ -3646,37 +3810,36 @@ function FormDecode()
 	{
 		$toGlobals = array();
 
-		$HTTP_ENV_VARS = $_ENV;
 		foreach($_ENV as $key => $val)
 			if(!isset($superglobals[$key]))
 				$toGlobals[$key] = $val;
 
-		$HTTP_GET_VARS = $_GET;
 		foreach($_GET as $key => $val)
 			if(!isset($superglobals[$key]))
 				$toGlobals[$key] = $val;
 
-		$HTTP_POST_VARS = $_POST;
 		foreach($_POST as $key => $val)
 			if(!isset($superglobals[$key]))
 				$toGlobals[$key] = $val;
 
-		$HTTP_POST_FILES = $_FILES;
-		foreach($_FILES as $key => $val)
-			if(!isset($superglobals[$key]))
-				$toGlobals[$key] = $val;
 
-		$HTTP_COOKIE_VARS = $_COOKIE;
 		foreach($_COOKIE as $key => $val)
 			if(!isset($superglobals[$key]))
 				$toGlobals[$key] = $val;
 
-		$HTTP_SERVER_VARS = $_SERVER;
 		foreach($_SERVER as $key => $val)
 			if(!isset($superglobals[$key]))
 				$toGlobals[$key] = $val;
 
-		$GLOBALS += $toGlobals;
+		//$GLOBALS += $toGlobals;
+		//PHP7 bug
+		foreach($toGlobals as $key => $val)
+		{
+			if(!isset($GLOBALS[$key]))
+			{
+				$GLOBALS[$key] = $val;
+			}
+		}
 	}
 }
 
@@ -3854,7 +4017,6 @@ function InitURLParam($url=false)
 		$length = ($end>0) ? $end-$start-1 : strlen($url);
 		$params = substr($url, $start+1, $length);
 		parse_str($params, $_GET);
-		parse_str($params, $HTTP_GET_VARS);
 		parse_str($params, $arr);
 		$_REQUEST += $arr;
 		$GLOBALS += $arr;
@@ -4051,11 +4213,7 @@ function bitrix_sess_sign()
 
 function check_bitrix_sessid($varname='sessid')
 {
-	global $USER;
-	if(defined("BITRIX_STATIC_PAGES") && (!is_object($USER) || !$USER->IsAuthorized()))
-		return true;
-	else
-		return $_REQUEST[$varname] == bitrix_sessid();
+	return $_REQUEST[$varname] == bitrix_sessid();
 }
 
 function bitrix_sessid_get($varname='sessid')
@@ -4224,6 +4382,7 @@ class CJSCore
 		if (!defined("ADMIN_SECTION") || ADMIN_SECTION !== true)
 		{
 			$arMessages["SITE_ID"] = SITE_ID;
+			$arMessages["SITE_DIR"] = SITE_DIR;
 		}
 
 		if (!$compositeMode)
@@ -4392,7 +4551,7 @@ JS;
 		$scriptsList = array();
 		foreach(self::$arCurrentlyLoadedExt as $ext=>$q)
 		{
-			if($ext!='core')
+			if($ext!='core' && isset(self::$arRegisteredExt[$ext]['js']))
 			{
 				if(is_array(self::$arRegisteredExt[$ext]['js']))
 				{
@@ -4407,19 +4566,57 @@ JS;
 		return $scriptsList;
 	}
 
-	private function _loadExt($ext, $bReturn)
+	private static function _loadExt($ext, $bReturn)
 	{
 		$ret = '';
 
-		$ext = preg_replace('/[^a-z0-9_]/i', '', $ext);
-		if (
-			!self::IsExtRegistered($ext)
-			|| (
-				isset(self::$arCurrentlyLoadedExt[$ext])
-				&& self::$arCurrentlyLoadedExt[$ext]
-			)
-		)
-			return '';
+		$ext = preg_replace('/[^a-z0-9_\.]/i', '', $ext);
+
+		if (!self::IsExtRegistered($ext))
+		{
+			$success = Extension::register($ext);
+			if (!$success)
+			{
+				return "";
+			}
+		}
+
+		if (isset(self::$arCurrentlyLoadedExt[$ext]) && self::$arCurrentlyLoadedExt[$ext])
+		{
+			return "";
+		}
+
+		if(isset(self::$arRegisteredExt[$ext]['oninit']) && is_callable(self::$arRegisteredExt[$ext]['oninit']))
+		{
+			$callbackResult = call_user_func_array(
+				self::$arRegisteredExt[$ext]['oninit'],
+				array(self::$arRegisteredExt[$ext])
+			);
+
+			if(is_array($callbackResult))
+			{
+				foreach($callbackResult as $key => $value)
+				{
+					if(!is_array($value))
+					{
+						$value = array($value);
+					}
+
+					if(!isset(self::$arRegisteredExt[$ext][$key]))
+					{
+						self::$arRegisteredExt[$ext][$key] = array();
+					}
+					elseif(!is_array(self::$arRegisteredExt[$ext][$key]))
+					{
+						self::$arRegisteredExt[$ext][$key] = array(self::$arRegisteredExt[$ext][$key]);
+					}
+
+					self::$arRegisteredExt[$ext][$key] = array_merge(self::$arRegisteredExt[$ext][$key], $value);
+				}
+			}
+
+			unset(self::$arRegisteredExt[$ext]['oninit']);
+		}
 
 		self::$arCurrentlyLoadedExt[$ext] = true;
 
@@ -4427,23 +4624,44 @@ JS;
 		{
 			foreach (self::$arRegisteredExt[$ext]['rel'] as $rel_ext)
 			{
-				if (self::IsExtRegistered($rel_ext) && !self::$arCurrentlyLoadedExt[$rel_ext])
-				{
-					$ret .= self::_loadExt($rel_ext, $bReturn);
-				}
+				$ret .= self::_loadExt($rel_ext, $bReturn);
 			}
 		}
 
-		if (self::$arRegisteredExt[$ext]['css'])
+		if (!empty(self::$arRegisteredExt[$ext]['css']))
+		{
+			if (!empty(self::$arRegisteredExt[$ext]['bundle_css']))
+			{
+				self::registerCssBundle(
+					self::$arRegisteredExt[$ext]['bundle_css'],
+					self::$arRegisteredExt[$ext]['css']
+				);
+			}
+
 			$ret .= self::_loadCSS(self::$arRegisteredExt[$ext]['css'], $bReturn);
+		}
+
 		if (self::$arRegisteredExt[$ext]['js'])
+		{
+			if (!empty(self::$arRegisteredExt[$ext]['bundle_js']))
+			{
+				self::registerJsBundle(
+					self::$arRegisteredExt[$ext]['bundle_js'],
+					self::$arRegisteredExt[$ext]['js']
+				);
+			}
+
 			$ret .= self::_loadJS(self::$arRegisteredExt[$ext]['js'], $bReturn);
+		}
+
 		if (self::$arRegisteredExt[$ext]['lang'] || self::$arRegisteredExt[$ext]['lang_additional'])
+		{
 			$ret .= self::_loadLang(
 				self::$arRegisteredExt[$ext]['lang'],
 				$bReturn,
-				isset(self::$arRegisteredExt[$ext]['lang_additional'])? self::$arRegisteredExt[$ext]['lang_additional']: false
+				!empty(self::$arRegisteredExt[$ext]['lang_additional'])? self::$arRegisteredExt[$ext]['lang_additional']: false
 			);
+		}
 
 		return $ret;
 	}
@@ -4471,7 +4689,7 @@ JS;
 
 	public static function IsExtRegistered($ext)
 	{
-		$ext = preg_replace('/[^a-z0-9_]/i', '', $ext);
+		$ext = preg_replace('/[^a-z0-9_\.]/i', '', $ext);
 		return is_array(self::$arRegisteredExt[$ext]);
 	}
 
@@ -4480,7 +4698,7 @@ JS;
 		return self::$arRegisteredExt[$ext];
 	}
 
-	private function _RegisterStandardExt()
+	private static function _RegisterStandardExt()
 	{
 		require_once($_SERVER['DOCUMENT_ROOT'].BX_ROOT.'/modules/main/jscore.php');
 	}
@@ -4515,28 +4733,12 @@ JS;
 		/** @global CMain $APPLICATION */
 		global $APPLICATION;
 		$jsMsg = '';
-		$mess_lang_default = Array();
-		$mess_lang = Array();
 
 		if ($lang)
 		{
-			$langSubst = LangSubst(LANGUAGE_ID);
-			if($langSubst <> LANGUAGE_ID)
-			{
-				$lang_filename = $_SERVER['DOCUMENT_ROOT'].str_replace("/lang/".LANGUAGE_ID."/", "/lang/".$langSubst."/", $lang);
-				if (file_exists($lang_filename))
-				{
-					$mess_lang_default = __IncludeLang($lang_filename, true, true);
-				}
-			}
+			$lang_filename = $_SERVER['DOCUMENT_ROOT'].str_replace("/lang/".LANGUAGE_ID."/", "/", $lang);
+			$mess_lang = \Bitrix\Main\Localization\Loc::loadLanguageFile($lang_filename);
 
-			$lang_filename = $_SERVER['DOCUMENT_ROOT'].$lang;
-			if (file_exists($lang_filename))
-			{
-				$mess_lang = __IncludeLang($lang_filename, true, true);
-			}
-
-			$mess_lang = array_merge($mess_lang_default, $mess_lang);
 			if (!empty($mess_lang))
 			{
 				$jsMsg = '(window.BX||top.BX).message('.CUtil::PhpToJSObject($mess_lang, false).');';
@@ -4544,7 +4746,9 @@ JS;
 		}
 
 		if (is_array($arAdditionalMess))
+		{
 			$jsMsg = '(window.BX||top.BX).message('.CUtil::PhpToJSObject($arAdditionalMess, false).');'.$jsMsg;
+		}
 
 		if ($jsMsg !== '')
 		{
@@ -4586,6 +4790,20 @@ JS;
 			$APPLICATION->SetAdditionalCSS($css);
 
 		return '';
+	}
+
+	private static function registerJsBundle($bundleName, $files)
+	{
+		$files = is_array($files) ? $files : array($files);
+
+		\Bitrix\Main\Page\Asset::getInstance()->addJsKernelInfo($bundleName, $files);
+	}
+
+	private static function registerCssBundle($bundleName, $files)
+	{
+		$files = is_array($files) ? $files : array($files);
+
+		\Bitrix\Main\Page\Asset::getInstance()->addCssKernelInfo($bundleName, $files);
 	}
 }
 
@@ -4997,7 +5215,7 @@ class CUtil
 	public static function DecodeUtf16($ch)
 	{
 		$res = chr(hexdec($ch[2])).chr(hexdec($ch[1]));
-		return CharsetConverter::ConvertCharset($res, "UTF-16", LANG_CHARSET);
+		return \Bitrix\Main\Text\Encoding::convertEncoding($res, "UTF-16", LANG_CHARSET);
 	}
 
 	public static function JSPostUnescape()
@@ -5078,7 +5296,7 @@ class CUtil
 		}
 
 		if($fromCP !== false)
-			$string = CharsetConverter::ConvertCharset($string, $fromCP, $toCP);
+			$string = \Bitrix\Main\Text\Encoding::convertEncoding($string, $fromCP, $toCP);
 
 		return $string;
 	}
@@ -5094,6 +5312,7 @@ class CUtil
 
 	public static function InitJSCore($arExt = array(), $bReturn = false)
 	{
+		
 		return CJSCore::Init($arExt, $bReturn);
 	}
 
@@ -5309,12 +5528,18 @@ class CHTTP
 	private $redirectsMade = 0;
 	private static $lastSetStatus = "";
 
-	function CHTTP()
+	public function __construct()
 	{
+		$defaultOptions = \Bitrix\Main\Config\Configuration::getValue("http_client_options");
+		if(isset($defaultOptions["socketTimeout"]))
+		{
+			$this->http_timeout = intval($defaultOptions["socketTimeout"]);
+		}
+
 		$this->user_agent = 'BitrixSM ' . __CLASS__ . ' class';
 	}
 
-	function URN2URI($urn, $server_name = '')
+	public static function URN2URI($urn, $server_name = '')
 	{
 		/** @global CMain $APPLICATION */
 		global $APPLICATION;
@@ -5340,8 +5565,7 @@ class CHTTP
 		return $uri;
 	}
 
-
-	function Download($url, $file)
+	public function Download($url, $file)
 	{
 		if (is_resource($file))
 		{
@@ -5371,7 +5595,7 @@ class CHTTP
 	/**
 	 * @deprecated Use Bitrix\Main\Web\HttpClient
 	 */
-	function Get($url)
+	public function Get($url)
 	{
 		if ($this->HTTPQuery('GET', $url))
 		{
@@ -5383,7 +5607,7 @@ class CHTTP
 	/**
 	 * @deprecated Use Bitrix\Main\Web\HttpClient
 	 */
-	function Post($url, $arPostData)
+	public function Post($url, $arPostData)
 	{
 		$postdata = CHTTP::PrepareData($arPostData);
 
@@ -5394,7 +5618,7 @@ class CHTTP
 		return false;
 	}
 
-	function PrepareData($arPostData, $prefix = '')
+	public static function PrepareData($arPostData, $prefix = '')
 	{
 		$str = '';
 
@@ -5430,7 +5654,7 @@ class CHTTP
 	/**
 	 * @deprecated Use Bitrix\Main\Web\HttpClient
 	 */
-	function HTTPQuery($method, $url, $postdata = '')
+	public function HTTPQuery($method, $url, $postdata = '')
 	{
 		if(is_resource($this->fp))
 			$file_pos = ftell($this->fp);
@@ -5483,7 +5707,7 @@ class CHTTP
 	/**
 	 * @deprecated Use Bitrix\Main\Web\HttpClient
 	 */
-	function Query($method, $host, $port, $path, $postdata = false, $proto = '', $post_content_type = 'N', $dont_wait_answer = false)
+	public function Query($method, $host, $port, $path, $postdata = false, $proto = '', $post_content_type = 'N', $dont_wait_answer = false)
 	{
 		$this->status = 0;
 		$this->result = '';
@@ -5590,7 +5814,7 @@ class CHTTP
 		return false;
 	}
 
-	function SetAuthBasic($user, $pass)
+	public function SetAuthBasic($user, $pass)
 	{
 		$this->additional_headers['Authorization'] = "Basic ".base64_encode($user.":".$pass);
 	}
@@ -5598,7 +5822,7 @@ class CHTTP
 	/**
 	 * @deprecated Use Bitrix\Main\Web\Uri
 	 */
-	public function ParseURL($url)
+	public static function ParseURL($url)
 	{
 		$arUrl = parse_url($url);
 
@@ -5704,7 +5928,7 @@ class CHTTP
 		return $ob->Post($url, $arPostData);
 	}
 
-	function SetAdditionalHeaders($arHeader=array())
+	public function SetAdditionalHeaders($arHeader=array())
 	{
 		foreach($arHeader as $name => $value)
 		{
@@ -6275,10 +6499,10 @@ function NormalizePhone($number, $minLength = 10)
 	return $number;
 }
 
-function bxmail($to, $subject, $message, $additional_headers="", $additional_parameters="")
+function bxmail($to, $subject, $message, $additional_headers="", $additional_parameters="", \Bitrix\Main\Mail\Context $context=null)
 {
 	if(function_exists("custom_mail"))
-		return custom_mail($to, $subject, $message, $additional_headers, $additional_parameters);
+		return custom_mail($to, $subject, $message, $additional_headers, $additional_parameters, $context);
 
 	if($additional_parameters!="")
 		return @mail($to, $subject, $message, $additional_headers, $additional_parameters);
@@ -6298,7 +6522,7 @@ function bx_accelerator_reset()
 
 class UpdateTools
 {
-	function CheckUpdates()
+	public static function CheckUpdates()
 	{
 		global $USER;
 
@@ -6340,7 +6564,7 @@ class UpdateTools
 		}
 	}
 
-	function SetUpdateResult()
+	public static function SetUpdateResult()
 	{
 		COption::SetOptionString('main', '~update_autocheck_result', serialize(array(
 			"check_date"=>time(),
@@ -6350,7 +6574,7 @@ class UpdateTools
 		)));
 	}
 
-	function SetUpdateError($strError)
+	public static function SetUpdateError($strError)
 	{
 		$update_res = unserialize(COption::GetOptionString('main', '~update_autocheck_result'));
 		if(!is_array($update_res))
@@ -6363,7 +6587,7 @@ class UpdateTools
 		COption::SetOptionString('main', '~update_autocheck_result', serialize($update_res));
 	}
 
-	function GetUpdateResult()
+	public static function GetUpdateResult()
 	{
 		$update_res = false;
 		if(intval(COption::GetOptionString('main', 'update_autocheck')) > 0)
@@ -6419,6 +6643,8 @@ function ini_get_bool($param)
 /**
  * Sorting array by column.
  * You can use short mode: Collection::sortByColumn($arr, 'value'); This is equal Collection::sortByColumn($arr, array('value' => SORT_ASC))
+ *
+ * Pay attention: if two members compare as equal, their relative order in the sorted array is undefined. The sorting is not stable.
  *
  * More example:
  * Collection::sortByColumn($arr, array('value' => array(SORT_NUMERIC, SORT_ASC), 'attr' => SORT_DESC), array('attr' => 'strlen'), 'www');

@@ -2,24 +2,10 @@
 if(!$arResult["CanUserComment"])
 	return;
 
-$arSmiles = array();
-if(!empty($arResult["Smiles"]))
-{
-	foreach($arResult["Smiles"] as $arSmile)
-	{
-		$arSmiles[] = array(
-			'name' => $arSmile["~LANG_NAME"],
-			'path' => "/bitrix/images/blog/smile/".$arSmile["IMAGE"],
-			'code' => str_replace("\\\\","\\",$arSmile["TYPE"]),
-			'codes' => str_replace("\\\\","\\",$arSmile["TYPING"]),
-			'width' => $arSmile["IMAGE_WIDTH"],
-			'height' => $arSmile["IMAGE_HEIGHT"],
-		);
-	}
-}
 $rand = randString(4);
+$formID = "blogCommentForm".$rand;
 $formParams = Array(
-	"FORM_ID" => "blogCommentForm".$rand,
+	"FORM_ID" => $formID,
 	"SHOW_MORE" => "Y",
 	"PARSER" => Array(
 		"Bold", "Italic", "Underline", "Strike", "ForeColor",
@@ -31,21 +17,35 @@ $formParams = Array(
 		"InsertUnorderedList",
 		"MentionUser", "SmileList", "Source"),
 	"BUTTONS" => Array(
-		((in_array("UF_BLOG_COMMENT_FILE", $arParams["COMMENT_PROPERTY"]) || in_array("UF_BLOG_COMMENT_DOC", $arParams["COMMENT_PROPERTY"])) ? "UploadFile" : ""),
-		((!$arResult["NoCommentUrl"]) ? 'CreateLink' : ''),
-		(($arResult["allowVideo"] == "Y") ? "InputVideo" : ""),
+		(
+			in_array("UF_BLOG_COMMENT_FILE", $arParams["COMMENT_PROPERTY"])
+			|| in_array("UF_BLOG_COMMENT_DOC", $arParams["COMMENT_PROPERTY"])
+				? "UploadFile"
+				: ""
+		),
+		(!$arResult["NoCommentUrl"] ? 'CreateLink' : ''),
+		($arResult["allowVideo"] == "Y" ? "InputVideo" : ""),
 		//(($arResult["allowImageUpload"] == "Y") ? 'UploadImage' : ''),
 		"Quote",
-		"MentionUser"/*, "BlogTag"*/
+		/*, "BlogTag"*/
+		(!$arParams["bPublicPage"] ? "MentionUser" : ""),
+		(
+		in_array("UF_BLOG_COMMENT_FILE", $arParams["COMMENT_PROPERTY"])
+		|| in_array("UF_BLOG_COMMENT_DOC", $arParams["COMMENT_PROPERTY"])
+			? "VideoMessage"
+			: ""
+		),
 	),
+	"BUTTONS_HTML" => Array("VideoMessage" => '<span class="feed-add-post-form-but-cnt feed-add-videomessage" onclick="BX.VideoRecorder.start(\''.$formID.'\');">'.GetMessage('BLOG_VIDEO_RECORD_BUTTON').'</span>'),
 	"TEXT" => Array(
 		"NAME" => "comment",
 		"VALUE" => "",
 		"HEIGHT" => "80px"
 	),
 	"DESTINATION" => Array(
-		"VALUE" => $arResult["FEED_DESTINATION"],
+		"VALUE" => (!$arParams["bPublicPage"] ? $arResult["FEED_DESTINATION"] : array()),
 		"SHOW" => "N",
+		"USE_CLIENT_DATABASE" => ($arParams["bPublicPage"] ? "N" : "Y")
 	),
 	"UPLOAD_FILE" => !empty($arResult["COMMENT_PROPERTIES"]["DATA"]["UF_BLOG_COMMENT_FILE"]) ? false :
 		$arResult["COMMENT_PROPERTIES"]["DATA"]["UF_BLOG_COMMENT_DOC"],
@@ -57,7 +57,7 @@ $formParams = Array(
 		"SHOW" => "N",
 		"POSTFIX" => "file"
 	),
-	"SMILES" => Array("VALUE" => $arSmiles),
+	"SMILES" => COption::GetOptionInt("blog", "smile_gallery_id", 0),
 	"LHE" => array(
 		"documentCSS" => "body {color:#434343;}",
 		"ctrlEnterHandler" => "__submit".$rand,
@@ -68,6 +68,20 @@ $formParams = Array(
 		"height" => 80
 	),
 	"IS_BLOG" => true,
+	"PROPERTIES" => array(
+		array_merge(
+			(
+				isset($arResult["COMMENT_PROPERTIES"])
+				&& isset($arResult["COMMENT_PROPERTIES"]["DATA"])
+				&& isset($arResult["COMMENT_PROPERTIES"]["DATA"]["UF_BLOG_COMM_URL_PRV"])
+				&& is_array($arResult["COMMENT_PROPERTIES"]["DATA"]["UF_BLOG_COMM_URL_PRV"])
+					? $arResult["COMMENT_PROPERTIES"]["DATA"]["UF_BLOG_COMM_URL_PRV"]
+					: array()
+			),
+			array('ELEMENT_ID' => 'url_preview_'.$rand)
+		)
+	),
+	"DISABLE_LOCAL_EDIT" => $arParams["bPublicPage"]
 );
 //===WebDav===
 if(!array_key_exists("USER", $GLOBALS) || !$GLOBALS["USER"]->IsAuthorized())
@@ -75,7 +89,7 @@ if(!array_key_exists("USER", $GLOBALS) || !$GLOBALS["USER"]->IsAuthorized())
 	unset($formParams["UPLOAD_WEBDAV_ELEMENT"]);
 	foreach($formParams["BUTTONS"] as $keyT => $valT)
 	{
-		if($valT == "UploadFile")
+		if($valT == "UploadFile" || $valT == "VideoMessage")
 		{
 			unset($formParams["BUTTONS"][$keyT]);
 		}
@@ -123,24 +137,14 @@ if($arResult["use_captcha"]===true)
 	<div class="blog-comment-field blog-comment-field-captcha">
 		<div class="blog-comment-field-captcha-label">
 			<label for="captcha_word"><?=GetMessage("B_B_MS_CAPTCHA_SYM")?></label><span class="blog-required-field">*</span><br>
-			<input type="hidden" name="captcha_code" id="captcha_code" value="<?=$arResult["CaptchaCode"]?>">
+			<input type="hidden" name="captcha_code" id="captcha_code" value="">
 			<input type="text" size="30" name="captcha_word" id="captcha_word" value=""  tabindex="7">
 		</div>
-		<div class="blog-comment-field-captcha-image"><div id="div_captcha"></div></div>
-	</div>
-	<div id="captcha_del">
-	<script data-skip-moving="true">
-		<!--
-		var cc;
-		if(document.cookie.indexOf('<?=session_name()?>=') == -1)
-			cc = Math.random();
-		else
-			cc ='<?=$arResult["CaptchaCode"]?>';
-
-		document.write('<img src="/bitrix/tools/captcha.php?captcha_code='+cc+'" width="180" height="40" id="captcha" style="display:none;">');
-		document.getElementById('captcha_code').value = cc;
-		//-->
-	</script>
+		<div class="blog-comment-field-captcha-image">
+			<div id="div_captcha">
+				<img src="" width="180" height="40" id="captcha" style="display:none;">
+			</div>
+		</div>
 	</div>
 <?
 }
@@ -176,7 +180,11 @@ BX.ready(function(){
 
 	window["SBPC"] = {
 		form : BX('<?=$formParams["FORM_ID"]?>'),
-		actionUrl : '/bitrix/urlrewrite.php?SEF_APPLICATION_CUR_PAGE_URL=<?=str_replace("%23", "#", urlencode($arResult["urlToPost"]))?>',
+		actionUrl : '<?=(
+			$arParams["SEF"] == "Y"
+				? '/bitrix/urlrewrite.php?SEF_APPLICATION_CUR_PAGE_URL='.str_replace("%23", "#", urlencode($arResult["urlToPost"]))
+				: CUtil::JSEscape($arResult["urlToPost"])
+		)?>',
 		editorId : '<?=$formParams["LHE"]["id"]?>',
 
 		jsMPFName : 'PlEditor<?=$formParams["FORM_ID"]?>'

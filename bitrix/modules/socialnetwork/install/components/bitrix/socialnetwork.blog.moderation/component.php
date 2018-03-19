@@ -1,5 +1,20 @@
 <?
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
+/** @var CBitrixComponent $this */
+/** @var array $arParams */
+/** @var array $arResult */
+/** @var string $componentPath */
+/** @var string $componentName */
+/** @var string $componentTemplate */
+/** @global CDatabase $DB */
+/** @global CUser $USER */
+/** @global CMain $APPLICATION */
+/** @global CCacheManager $CACHE_MANAGER */
+/** @global CUserTypeManager $USER_FIELD_MANAGER */
+
+use \Bitrix\Blog\Item\Permissions;
+
+global $CACHE_MANAGER, $USER_FIELD_MANAGER;
 
 if (!CModule::IncludeModule("blog"))
 {
@@ -45,9 +60,8 @@ else
 {
 	$arParams["CACHE_TIME"] = 0;
 	$arParams["CACHE_TIME_LONG"] = 0;
-
 }
-$arParams["POST_PROPERTY"] = array("UF_BLOG_POST_FILE", "UF_BLOG_POST_DOC");
+
 $arParams["DATE_TIME_FORMAT"] = trim(empty($arParams["DATE_TIME_FORMAT"]) ? $DB->DateFormatToPHP(CSite::GetDateFormat("FULL")) : $arParams["DATE_TIME_FORMAT"]);
 
 // activation rating
@@ -95,36 +109,59 @@ $arParams["IMAGE_MAX_HEIGHT"] = IntVal($arParams["IMAGE_MAX_HEIGHT"]);
 $arParams["ALLOW_POST_CODE"] = $arParams["ALLOW_POST_CODE"] !== "N";
 
 $user_id = IntVal($USER->GetID());
+$bGroupMode = (IntVal($arParams["SOCNET_GROUP_ID"]) > 0);
+
 if($arParams["SET_TITLE"] == "Y")
-	$APPLICATION->SetTitle(GetMessage("BLOG_MOD_TITLE"));
-$bGroupMode = false;
-if(IntVal($arParams["SOCNET_GROUP_ID"]) > 0)
-	$bGroupMode = true;
-if(IntVal($arParams["SOCNET_GROUP_ID"]) > 0 || (IntVal($arParams["USER_ID"]) > 0 && $user_id == $arParams["USER_ID"]))
 {
-	if (($bGroupMode && CSocNetFeatures::IsActiveFeature(SONET_ENTITY_GROUP, $arParams["SOCNET_GROUP_ID"], "blog")) || IntVal($arParams["USER_ID"]) > 0)
+	$APPLICATION->SetTitle(GetMessage("BLOG_MOD_TITLE"));
+}
+
+if(
+	IntVal($arParams["SOCNET_GROUP_ID"]) > 0
+	|| IntVal($arParams["USER_ID"]) > 0
+)
+{
+	if (
+		(
+			$bGroupMode
+			&& CSocNetFeatures::IsActiveFeature(SONET_ENTITY_GROUP, $arParams["SOCNET_GROUP_ID"], "blog")
+		)
+		|| IntVal($arParams["USER_ID"]) > 0
+	)
 	{
 		$arResult["ERROR_MESSAGE"] = Array();
 		$arResult["OK_MESSAGE"] = Array();
 		$bCurrentUserIsAdmin = CSocNetUser::IsCurrentUserModuleAdmin();
-		$arResult["perms"] = BLOG_PERMS_DENY;
+		$arResult["perms"] = Permissions::DENY;
 		if(!$bGroupMode)
-			$arResult["perms"] = BLOG_PERMS_FULL;
+		{
+			if (
+				$user_id == $arParams["USER_ID"]
+				|| CSocNetUser::isCurrentUserModuleAdmin()
+				|| $APPLICATION->getGroupRight("blog") >= "W"
+
+			)
+			{
+				$arResult["perms"] = Permissions::FULL;
+			}
+		}
 		else
 		{
 			if (CSocNetFeaturesPerms::CanPerformOperation($user_id, SONET_ENTITY_GROUP, $arParams["SOCNET_GROUP_ID"], "blog", "full_post", $bCurrentUserIsAdmin) || $APPLICATION->GetGroupRight("blog") >= "W")
-				$arResult["perms"] = BLOG_PERMS_FULL;
+				$arResult["perms"] = Permissions::FULL;
 			elseif (CSocNetFeaturesPerms::CanPerformOperation($user_id, SONET_ENTITY_GROUP, $arParams["SOCNET_GROUP_ID"], "blog", "moderate_post", $bCurrentUserIsAdmin))
-				$arResult["perms"] = BLOG_PERMS_MODERATE;
+				$arResult["perms"] = Permissions::MODERATE;
 		}
 
-		if($arResult["perms"] >= BLOG_PERMS_MODERATE)
+		if($arResult["perms"] >= Permissions::MODERATE)
 		{
 			//Message delete
 			if (IntVal($_GET["del_id"]) > 0)
 			{
 				if($_GET["success"] == "Y")
+				{
 					$arResult["OK_MESSAGE"][] = GetMessage("BLOG_BLOG_BLOG_MES_DELED");
+				}
 				else
 				{
 					if (check_bitrix_sessid())
@@ -132,30 +169,40 @@ if(IntVal($arParams["SOCNET_GROUP_ID"]) > 0 || (IntVal($arParams["USER_ID"]) > 0
 						$del_id = IntVal($_GET["del_id"]);
 						if($arPost = CBlogPost::GetByID($del_id))
 						{
-							if($arResult["perms"] >= BLOG_PERMS_FULL || $arPost["AUTHOR_ID"] == $arParams["USER_ID"])
+							if($arResult["perms"] >= Permissions::FULL || $arPost["AUTHOR_ID"] == $arParams["USER_ID"])
 							{
 								CBlogPost::DeleteLog($del_id);
 								if (CBlogPost::Delete($del_id))
 								{
 									if($bGroupMode)
+									{
 										CSocNetGroup::SetLastActivity($arParams["SOCNET_GROUP_ID"]);
+									}
 									LocalRedirect($APPLICATION->GetCurPageParam("del_id=".$del_id."&success=Y", Array("del_id", "pub_id", "sessid", "success")));
 								}
 								else
+								{
 									$arResult["ERROR_MESSAGE"][] = GetMessage("BLOG_BLOG_BLOG_MES_DEL_ERROR");
+								}
 							}
 							else
+							{
 								$arResult["ERROR_MESSAGE"][] = GetMessage("BLOG_BLOG_BLOG_MES_DEL_NO_RIGHTS");
+							}
 						}
 					}
 					else
+					{
 						$arResult["ERROR_MESSAGE"][] = GetMessage("BLOG_BLOG_SESSID_WRONG");
+					}
 				}
 			}
 			elseif (IntVal($_GET["pub_id"]) > 0)
 			{
 				if($_GET["success"] == "Y")
+				{
 					$arResult["OK_MESSAGE"][] = GetMessage("BLOG_BLOG_BLOG_MES_PUB");
+				}
 				else
 				{
 					if (check_bitrix_sessid())
@@ -164,7 +211,12 @@ if(IntVal($arParams["SOCNET_GROUP_ID"]) > 0 || (IntVal($arParams["USER_ID"]) > 0
 						$arPost = CBlogPost::GetByID($pub_id);
 						if(!empty($arPost) && ($arPost["AUTHOR_ID"] == $arParams["USER_ID"] || $bGroupMode) && $arPost["PUBLISH_STATUS"] != BLOG_PUBLISH_STATUS_PUBLISH)
 						{
-							if(CBlogPost::Update($pub_id, Array("PUBLISH_STATUS" => BLOG_PUBLISH_STATUS_PUBLISH, "=DATE_PUBLISH" => $DB->GetNowFunction())))
+							if(CBlogPost::Update($pub_id, array(
+									"PUBLISH_STATUS" => BLOG_PUBLISH_STATUS_PUBLISH,
+									"=DATE_PUBLISH" => $DB->GetNowFunction(),
+									"SEARCH_GROUP_ID" => \Bitrix\Main\Config\Option::get("socialnetwork", "userbloggroup_id", false, SITE_ID)
+								)
+							))
 							{
 								$arParamsNotify = Array(
 									"bSoNet" => true,
@@ -177,10 +229,12 @@ if(IntVal($arParams["SOCNET_GROUP_ID"]) > 0 || (IntVal($arParams["USER_ID"]) > 0
 									"SHOW_LOGIN" => $arParams["SHOW_LOGIN"],
 								);
 
+								$blogPostLivefeedProvider = new \Bitrix\Socialnetwork\Livefeed\BlogPost;
+
 								$dbRes = CSocNetLog::GetList(
 									array("ID" => "DESC"),
 									array(
-										"EVENT_ID" => array("blog_post", "blog_post_important"),
+										"EVENT_ID" => $blogPostLivefeedProvider->getEventId(),
 										"SOURCE_ID" => $pub_id
 									),
 									false,
@@ -194,11 +248,22 @@ if(IntVal($arParams["SOCNET_GROUP_ID"]) > 0 || (IntVal($arParams["USER_ID"]) > 0
 								else
 								{
 									CBlogPost::Notify($arPost, false, $arParamsNotify);
+
+									$postUrl = CComponentEngine::MakePathFromTemplate(htmlspecialcharsBack($arParams["PATH_TO_POST"]), array("post_id" => $arPost["ID"], "user_id" => $arPost["AUTHOR_ID"]));
+
+									CBlogPost::NotifyImPublish(array(
+										"TYPE" => "POST",
+										"TITLE" => $arPost["TITLE"],
+										"TO_USER_ID" => $arPost["AUTHOR_ID"],
+										"POST_URL" => $postUrl,
+										"POST_ID" => $arPost["ID"],
+									));
+
 									$socnetRights = CBlogPost::GetSocNetPermsCode($arPost["ID"]);
 									$arFieldsIM = Array(
 										"TYPE" => "POST",
 										"TITLE" => $arPost["TITLE"],
-										"URL" => CComponentEngine::MakePathFromTemplate(htmlspecialcharsBack($arParams["PATH_TO_POST"]), array("post_id" => $arPost["ID"], "user_id" => $arPost["AUTHOR_ID"])),
+										"URL" => $postUrl,
 										"ID" => $arPost["ID"],
 										"FROM_USER_ID" => $arPost["AUTHOR_ID"],
 										"TO_USER_ID" => array(),
@@ -206,7 +271,7 @@ if(IntVal($arParams["SOCNET_GROUP_ID"]) > 0 || (IntVal($arParams["USER_ID"]) > 0
 										"TO_SOCNET_RIGHTS_OLD" => array(
 											"U" => array(),
 											"SG" => array()
-										),
+										)
 									);
 
 									CBlogPost::NotifyIm($arFieldsIM);
@@ -215,7 +280,14 @@ if(IntVal($arParams["SOCNET_GROUP_ID"]) > 0 || (IntVal($arParams["USER_ID"]) > 0
 								LocalRedirect($APPLICATION->GetCurPageParam("pub_id=".$pub_id."&success=Y", Array("del_id", "pub_id", "sessid", "success")));
 							}
 							else
-								$arResult["ERROR_MESSAGE"][] = GetMessage("BLOG_BLOG_BLOG_MES_PUB_ERROR");
+							{
+								$errorMessage = GetMessage("BLOG_BLOG_BLOG_MES_PUB_ERROR");
+								if ($ex = $APPLICATION->GetException())
+								{
+									$errorMessage .= ': '.$ex->GetString();
+								}
+								$arResult["ERROR_MESSAGE"][] = $errorMessage;
+							}
 						}
 						else
 							$arResult["ERROR_MESSAGE"][] = GetMessage("BLOG_BLOG_BLOG_MES_PUB_NO_RIGHTS");
@@ -226,22 +298,28 @@ if(IntVal($arParams["SOCNET_GROUP_ID"]) > 0 || (IntVal($arParams["USER_ID"]) > 0
 			}
 
 			$arFilter = array(
-						"PUBLISH_STATUS" => BLOG_PUBLISH_STATUS_READY,
-						"BLOG_USE_SOCNET" => "Y",
-						"GROUP_ID" => $arParams["GROUP_ID"],
-						"GROUP_SITE_ID" => SITE_ID,
-					);
+				"PUBLISH_STATUS" => BLOG_PUBLISH_STATUS_READY,
+				"BLOG_USE_SOCNET" => "Y",
+				"GROUP_ID" => $arParams["GROUP_ID"],
+				"GROUP_SITE_ID" => SITE_ID,
+			);
+
 			if($bGroupMode)
+			{
 				$arFilter["SOCNET_GROUP_ID"] = $arParams["SOCNET_GROUP_ID"];
+			}
 			else
+			{
 				$arFilter["AUTHOR_ID"] = $arParams["USER_ID"];
+			}
+
 			$dbPost = CBlogPost::GetList(
-					Array("DATE_PUBLISH" => "DESC"),
-					$arFilter,
-					false,
-					array("nPageSize"=>$arParams["MESSAGE_COUNT"], "bShowAll" => false),
-					array("ID", "TITLE", "BLOG_ID", "AUTHOR_ID", "DETAIL_TEXT", "DETAIL_TEXT_TYPE", "DATE_PUBLISH", "PUBLISH_STATUS", "ENABLE_COMMENTS", "VIEWS", "NUM_COMMENTS", "CATEGORY_ID", "CODE", "BLOG_OWNER_ID", "BLOG_GROUP_ID", "BLOG_GROUP_SITE_ID", "MICRO")
-				);
+				Array("DATE_PUBLISH" => "DESC"),
+				$arFilter,
+				false,
+				array("nPageSize"=>$arParams["MESSAGE_COUNT"], "bShowAll" => false),
+				array("ID", "TITLE", "BLOG_ID", "AUTHOR_ID", "DETAIL_TEXT", "DETAIL_TEXT_TYPE", "DATE_PUBLISH", "PUBLISH_STATUS", "ENABLE_COMMENTS", "VIEWS", "NUM_COMMENTS", "CATEGORY_ID", "CODE", "BLOG_OWNER_ID", "BLOG_GROUP_ID", "BLOG_GROUP_SITE_ID", "MICRO")
+			);
 
 			$arResult["NAV_STRING"] = $dbPost->GetPageNavString(GetMessage("MESSAGE_COUNT"), $arParams["NAV_TEMPLATE"]);
 			$arResult["POST"] = Array();
@@ -250,36 +328,40 @@ if(IntVal($arParams["SOCNET_GROUP_ID"]) > 0 || (IntVal($arParams["USER_ID"]) > 0
 			{
 				$arPost["perms"] = $arResult["perms"];
 				$arPost["urlToPub"] = htmlspecialcharsex($APPLICATION->GetCurPageParam("pub_id=".$arPost["ID"]."&".bitrix_sessid_get(), Array("del_id", "sessid", "success", "pub_id")));
-				if($bGroupMode)
-				{
-					$arPost["ADIT_MENU"][6] = Array(
-						"text_php" => GetMessage("BLOG_MOD_PUB"),
-						"href" => $arPost["urlToPub"],
-						);
-				}
+
+				$arPost["ADIT_MENU"][6] = Array(
+					"text_php" => GetMessage("BLOG_MOD_PUB"),
+					"href" => $arPost["urlToPub"],
+				);
+
 				if($arResult["perms"] >= BLOG_PERMS_FULL || $arPost["AUTHOR_ID"] == $user_id)
 				{
 					$arPost["urlToDelete"] = htmlspecialcharsex($APPLICATION->GetCurPageParam("del_id=".$arPost["ID"]."&".bitrix_sessid_get(), Array("del_id", "sessid", "success", "pub_id")));
 					$arPost["ADIT_MENU"][7] = Array(
 						"text_php" => GetMessage("BLOG_MOD_DELETE"),
 						"onclick" => "function() { if(confirm('".GetMessage("BLOG_MOD_DELETE_CONFIRM")."')) window.location='".$arPost["urlToDelete"]."';  this.popupWindow.close();}",
-						);
+					);
 				}
 				$arResult["POST"][] = $arPost;
 			}
 		}
 		else
+		{
 			$arResult["ERROR_MESSAGE"][] = GetMessage("BLOG_MOD_NO_RIGHTS");
+		}
 	}
 	else
+	{
 		$arResult["ERROR_MESSAGE"][] = GetMessage("BLOG_SONET_MODULE_NOT_AVAIBLE");
+	}
 }
 else
 {
-	if($bGroupMode)
-		$arResult["ERROR_MESSAGE"][] = GetMessage("BLOG_MOD_NO_SOCNET_GROUP");
-	else
-		$arResult["ERROR_MESSAGE"][] = GetMessage("BLOG_MOD_NO_SOCNET_USER");
+	$arResult["ERROR_MESSAGE"][] = (
+		$bGroupMode
+			? GetMessage("BLOG_MOD_NO_SOCNET_GROUP")
+			: GetMessage("BLOG_MOD_EMPTY_SOCNET_USER")
+	);
 }
 $this->IncludeComponentTemplate();
 ?>

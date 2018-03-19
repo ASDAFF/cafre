@@ -11,4 +11,9 @@ $MESS["SONET_C36_EDIT_ENTRIES"] = "Group Topics";
 $MESS["SONET_C36_PAGE_TITLE2_1"] = "My groups";
 $MESS["SONET_C36_PAGE_TITLE2_2"] = "Archive groups";
 $MESS["SONET_C36_PAGE_TITLE2_3"] = "Extranet groups";
+$MESS["SONET_C36_PAGE_TITLE2_1_PROJECT"] = "My Projects";
+$MESS["SONET_C36_PAGE_TITLE1_PROJECT"] = "Projects";
+$MESS["SONET_C36_PAGE_TITLE2_PROJECT"] = "Projects";
+$MESS["SONET_C36_PAGE_TITLE2_4"] = "Favorites";
+$MESS["SONET_C36_PAGE_TITLE_COMMON"] = "Workgroups and projects";
 ?>

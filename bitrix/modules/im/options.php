@@ -79,6 +79,9 @@ if(strlen($_POST['Update'].$_GET['RestoreDefaults'])>0 && check_bitrix_sessid() 
 		COption::RemoveOption("im", "privacy_profile");
 
 		COption::RemoveOption("im", "color_enable");
+		COption::RemoveOption("im", "open_chat_enable");
+		COption::RemoveOption("im", "general_chat_message_join");
+		COption::RemoveOption("im", "general_chat_message_leave");
 		COption::RemoveOption("im", "chat_message_start");
 
 		foreach($arSites as $site)
@@ -157,6 +160,9 @@ if(strlen($_POST['Update'].$_GET['RestoreDefaults'])>0 && check_bitrix_sessid() 
 
 		$_POST['START_CHAT_MESSAGE'] = $_POST['START_CHAT_MESSAGE'] == 'first'? 'first': 'last';
 		$_POST['COLOR_ENABLE'] = isset($_POST['COLOR_ENABLE']);
+		$_POST['OPEN_CHAT_ENABLE'] = isset($_POST['OPEN_CHAT_ENABLE']);
+		$_POST['GENERAL_CHAT_MESSAGE_JOIN'] = isset($_POST['GENERAL_CHAT_MESSAGE_JOIN']);
+		$_POST['GENERAL_CHAT_MESSAGE_LEAVE'] = isset($_POST['GENERAL_CHAT_MESSAGE_LEAVE']);
 
 		$arSettings = CIMSettings::checkValues(CIMSettings::SETTINGS, Array(
 			'viewOffline' => !isset($_POST['VIEW_OFFLINE']),
@@ -187,7 +193,10 @@ if(strlen($_POST['Update'].$_GET['RestoreDefaults'])>0 && check_bitrix_sessid() 
 		COption::SetOptionString("im", "privacy_search", $arSettings['privacySearch']);
 		COption::SetOptionString("im", "privacy_profile", $arSettings['privacyProfile']);
 		COption::SetOptionString("im", "start_chat_message", $_POST['START_CHAT_MESSAGE']);
-		//COption::SetOptionString("im", "color_enable", $_POST['COLOR_ENABLE']); TODO remove this
+		COption::SetOptionString("im", "color_enable", $_POST['COLOR_ENABLE']);
+		COption::SetOptionString("im", "open_chat_enable", $_POST['OPEN_CHAT_ENABLE']);
+		COption::SetOptionString("im", "general_chat_message_join", $_POST['GENERAL_CHAT_MESSAGE_JOIN']);
+		COption::SetOptionString("im", "general_chat_message_leave", $_POST['GENERAL_CHAT_MESSAGE_LEAVE']);
 
 		if(strlen($Update)>0 && strlen($_REQUEST["back_url_settings"])>0)
 		{
@@ -315,10 +324,24 @@ $arReference = Array(
 		<td class="adm-detail-content-cell-l" width="40%"><?=GetMessage("IM_START_CHAT_MESSAGE")?></td>
 		<td class="adm-detail-content-cell-r" width="60%"><?=SelectBoxFromArray("START_CHAT_MESSAGE", array('reference_id' => Array('first', 'last'), 'reference' => Array(GetMessage('IM_START_CHAT_MESSAGE_FIRST'), GetMessage('IM_START_CHAT_MESSAGE_LAST'))), COption::GetOptionString("im", 'start_chat_message'));?></td>
 	</tr>
-	<?/*<tr>
+	<tr>
 		<td class="adm-detail-content-cell-l" width="40%"><?=GetMessage("IM_COLOR_ENABLE")?>:</td>
 		<td class="adm-detail-content-cell-r" width="60%"><input type="checkbox" name="COLOR_ENABLE" <?=(COption::GetOptionString("im", 'color_enable')?'checked="checked"' :'')?>></td>
-	</tr>*/?>
+	</tr>
+	<tr>
+		<td class="adm-detail-content-cell-l" width="40%"><?=GetMessage("IM_OPEN_CHAT_ENABLE")?>:</td>
+		<td class="adm-detail-content-cell-r" width="60%"><input type="checkbox" name="OPEN_CHAT_ENABLE" <?=(COption::GetOptionString("im", 'open_chat_enable')?'checked="checked"' :'')?>></td>
+	</tr>
+	<?if(IsModuleInstalled('intranet')):?>
+	<tr>
+		<td class="adm-detail-content-cell-l" width="40%"><?=GetMessage("IM_GENERAL_CHAT_MESSAGE_JOIN")?>:</td>
+		<td class="adm-detail-content-cell-r" width="60%"><input type="checkbox" name="GENERAL_CHAT_MESSAGE_JOIN" <?=(COption::GetOptionString("im", 'general_chat_message_join')?'checked="checked"' :'')?>></td>
+	</tr>
+	<tr>
+		<td class="adm-detail-content-cell-l" width="40%"><?=GetMessage("IM_GENERAL_CHAT_MESSAGE_LEAVE")?>:</td>
+		<td class="adm-detail-content-cell-r" width="60%"><input type="checkbox" name="GENERAL_CHAT_MESSAGE_LEAVE" <?=(COption::GetOptionString("im", 'general_chat_message_leave')?'checked="checked"' :'')?>></td>
+	</tr>
+	<?endif;?>
 	<tr>
 		<td align="right"></td>
 		<td></td>
@@ -343,11 +366,11 @@ foreach ($arSites as $site)
 			<td align ="right" valign="middle" width="50%"><?=GetMessage("IM_OPTIONS_NAME_TEMPLATE");?>:</td>
 			<td>
 				<?$curVal = CIMContactList::GetUserNameTemplate($site["LID"]);?>
-				<select name="<?php echo $key?>_<?php echo $site["LID"]?>">
+				<select name="<?=$key?>_<?=$site["LID"]?>">
 					<?
 					$arNameTemplates = CSite::GetNameTemplates();
 					$arNameTemplates = array_reverse($arNameTemplates, true); //prepend array with default '' => Site Format value
-					$arNameTemplates[""] = GetMessage("IM_OPTIONS_NAME_IN_SITE_FORMAT");
+					$arNameTemplates[""] = GetMessage("IM_OPTIONS_NAME_IN_IM_FORMAT");
 					$arNameTemplates = array_reverse($arNameTemplates, true);
 					foreach ($arNameTemplates as $template => $phrase)
 					{

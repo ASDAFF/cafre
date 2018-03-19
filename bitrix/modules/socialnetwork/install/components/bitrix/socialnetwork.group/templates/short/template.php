@@ -81,7 +81,12 @@ else
 					<?if (!$arResult["CurrentUserPerms"]["UserRole"]):?>
 						<li class="bx-icon-join"><a href="<?= $arResult["Urls"]["UserRequestGroup"] ?>"><?= GetMessage("SONET_C6_ACT_JOIN") ?></a></li>
 					<?endif;?>
-					<?if ($arResult["CurrentUserPerms"]["UserIsMember"] && !$arResult["CurrentUserPerms"]["UserIsOwner"]):?>
+					<?
+					if (
+						$arResult["CurrentUserPerms"]["UserIsMember"]
+						&& (!isset($arResult["CurrentUserPerms"]["UserIsAutoMember"]) || !$arResult["CurrentUserPerms"]["UserIsAutoMember"])
+						&& !$arResult["CurrentUserPerms"]["UserIsOwner"]
+					):?>
 						<li class="bx-icon-leave"><a href="<?= $arResult["Urls"]["UserLeaveGroup"] ?>"><?= GetMessage("SONET_C6_ACT_EXIT") ?></a></li>
 					<?endif;?>
 					</ul>

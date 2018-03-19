@@ -1,15 +1,7 @@
-<?
-/*
-##############################################
-# Bitrix: SiteManager                        #
-# Copyright (c) 2004 Bitrix                  #
-# http://www.bitrix.ru                       #
-# mailto:admin@bitrix.ru                     #
-##############################################
-*/
-
+<?php
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 require_once ($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/statistic/prolog.php");
+/** @var CMain $APPLICATION */
 $STAT_RIGHT = $APPLICATION->GetGroupRight("statistic");
 if($STAT_RIGHT=="D") $APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
 
@@ -158,15 +150,20 @@ function event_format_link($value, $total, $is_back, $group, $url, $show_money)
 	return advlist_format_link($value, $is_back, $group, $sum_alt, $url, $show_money);
 }
 
+/**
+ * @param CAdminList $lAdmin
+ * @param boolean $show_money
+ * @param boolean $get_total_events
+ *
+ * @return integer
+ */
 function create_event_list(&$lAdmin, $show_money=false, $get_total_events=false)
 {
-	$show_events = "";
-
 	// gather events data
 	global $f_EVENTS_VIEW;
-	$show_events = (strlen($f_EVENTS_VIEW)<=0) ? COption::GetOptionString("statistic", "ADV_EVENTS_DEFAULT") : $f_EVENTS_VIEW;
-	$group_events = ($show_events=="event1" || $show_events=="event2") ? $show_events : "";
 	global $arFilter;
+
+	$show_events = (strlen($f_EVENTS_VIEW)<=0) ? COption::GetOptionString("statistic", "ADV_EVENTS_DEFAULT") : $f_EVENTS_VIEW;
 	$arF = array();
 	$arF["DATE1_PERIOD"] = $arFilter["DATE1_PERIOD"];
 	$arF["DATE2_PERIOD"] = $arFilter["DATE2_PERIOD"];
@@ -182,7 +179,7 @@ function create_event_list(&$lAdmin, $show_money=false, $get_total_events=false)
 	{
 		$events = CAdv::GetEventList($adv_id,$by,$order, $arF, $v1);
 	}
-	elseif ($GROUP=="Y")
+	else
 	{
 		$value = ($find_type=="referer1") ? $f_REFERER1 : $f_REFERER2;
 		$events = CAdv::GetEventListByReferer($value, $arFilter);
@@ -419,24 +416,6 @@ function create_event_list(&$lAdmin, $show_money=false, $get_total_events=false)
 			}
 			$row =& $lAdmin->AddRow($e_ID, $arRes);
 
-			if ($show_events=="list")
-			{
-				$title = "ID = ".$e_ID;
-				if (strlen($e_EVENT1)>0) $title .= "\nevent1 = ".$e_EVENT1;
-				if (strlen($e_EVENT2)>0) $title .= "\nevent2 = ".$e_EVENT2;
-				if (strlen($e_NAME)>0) $title .= "\n".GetMessage("STAT_NAME")." ".$e_NAME;
-				if (strlen($e_DESCRIPTION)>0) $title .= "\n".GetMessage("STAT_DESCRIPTION")." ".$e_DESCRIPTION;
-				$name = "<a target=\"_blank\" href=\"event_type_list.php?lang=".LANG."&find_id=".$e_ID."&find_id_exact_match=Y&set_filter=Y\" class=\"tablebodylink\" title=\"".$title."\">".$e_EVENT."</a>";
-			}
-			elseif ($show_events=="event1")
-			{
-				$name = "<a target=\"_blank\" href=\"event_type_list.php?lang=".LANG."&find_event1=".urlencode("\"".$e_EVENT1."\"")."&set_filter=Y\" class=\"tablebodylink\">".$e_EVENT1."</a>";
-			}
-			elseif ($show_events=="event2")
-			{
-				$name = "<a target=\"_blank\" href=\"event_type_list.php?lang=".LANG."&find_event2=".urlencode("\"".$e_EVENT2."\"")."&set_filter=Y\" class=\"tablebodylink\">".$e_EVENT2."</a>";
-			}
-
 			$strHTML=event_format_link(
 				array("C"=>$e_COUNTER_TODAY,"M"=>$e_MONEY_TODAY),
 				$f_GUESTS_TODAY,
@@ -548,6 +527,8 @@ function create_event_list(&$lAdmin, $show_money=false, $get_total_events=false)
 	endif;
 	$row->AddViewField("total", $arSum["TOTAL"]);
 	$row->AddViewField("total_back", $arSum["TOTAL_BACK"]);
+
+	return 0;
 }
 
 $oSort_tab1 = new CAdminSorting($sTableID_tab1);
@@ -567,9 +548,11 @@ $lAdmin_tab1->onLoadScript = "BX.adminPanel.setTitle('".CUtil::JSEscape(GetMessa
 
 $lAdmin_tab1->BeginCustomContent();
 if(strlen($strError)>0):
-	CAdminMessage::ShowMessage($strError);
+	$m = new CAdminMessage($strError);
+	echo $m->Show();
 elseif($ar==false):
-	CAdminMessage::ShowMessage(GetMessage("STAT_NO_DATA_FOR_FILTER"));
+	$m = new CAdminMessage(GetMessage("STAT_NO_DATA_FOR_FILTER"));
+	echo $m->Show();
 elseif($_REQUEST["table_id"]=="" || $_REQUEST["table_id"]==$sTableID_tab1):
 ?>
 <table border="0" cellspacing="1" cellpadding="3" class="list-table">
@@ -582,10 +565,10 @@ elseif($_REQUEST["table_id"]=="" || $_REQUEST["table_id"]==$sTableID_tab1):
 		<td colspan="2"><?echo GetMessage("STAT_PERIOD")?><br><?=$arFilter["DATE1_PERIOD"]?>&nbsp;- <?=$arFilter["DATE2_PERIOD"]?></td>
 		<?endif;?>
 		<td colspan="2" nowrap><?echo GetMessage("STAT_TOTAL")?><br><?
-			$days = IntVal($f_ADV_TIME/86400);
+			$days = intval(intval($f_ADV_TIME)/86400);
 			echo $days."&nbsp;".GetMessage("STAT_DAYS")."&nbsp;";
 			$f_ADV_TIME = $f_ADV_TIME - $days*86400;
-			$hours = IntVal($f_ADV_TIME/3600);
+			$hours = intval(intval($f_ADV_TIME)/3600);
 			echo $hours."&nbsp;".GetMessage("STAT_HOURS");
 			?></td>
 	</tr>
@@ -684,7 +667,7 @@ elseif($_REQUEST["table_id"]=="" || $_REQUEST["table_id"]==$sTableID_tab1):
 		<?if ((strlen($find_date1_period)>0 || strlen($find_date2_period)>0) && $is_filtered):?>
 		<td align="right"><?
 			if (intval($f_SESSIONS_PERIOD)>0):
-				?><a target="_blank" title="<?echo GetMessage("STAT_SESSIONS_LIST")?>" href="session_list.php?lang=<?=LAN?>&amp;find_date1=<?=urlencode($find_date1_period); ?>&amp;find_date2=<?=urlencode($find_date2_period)?>&amp;<?
+				?><a target="_blank" title="<?echo GetMessage("STAT_SESSIONS_LIST")?>" href="session_list.php?lang=<?=LANGUAGE_ID?>&amp;find_date1=<?=urlencode($find_date1_period); ?>&amp;find_date2=<?=urlencode($find_date2_period)?>&amp;<?
 				if ($find_type=="referer1") :
 					echo "find_referer1=".urlencode("\"".$f_REFERER1."\"");
 				elseif ($find_type=="referer2") :
@@ -1108,7 +1091,7 @@ $oFilter = new CAdminFilter($sFilterID, array(
 <script type="text/javascript">
 var currentTable = null;
 var cached = new Array('<?=$sTableID_tab1?>');
-var urls = new Array();
+var urls = [];
 urls['<?=$sTableID_tab1?>']='adv_detail.php?lang=<?echo LANGUAGE_ID?>';
 urls['<?=$sTableID_tab2?>']='adv_detail.php?lang=<?echo LANGUAGE_ID?>';
 urls['<?=$sTableID_tab3?>']='adv_detail.php?lang=<?echo LANGUAGE_ID?>';
@@ -1122,7 +1105,7 @@ urls['<?=$sTableID_tab9?>']='adv_graph_list.php?lang=<?echo LANGUAGE_ID?>';
 function selectTabWithFilter(filter, table, force)
 {
 	var resultDiv = document.getElementById(table.table_id+"_result_div");
-	url = urls[table.table_id];
+	var url = urls[table.table_id];
 	if(resultDiv)
 	{
 		if(force || !cached[table.table_id])
@@ -1196,7 +1179,7 @@ function selectTabWithFilter(filter, table, force)
 			else
 				url += '?set_filter=Y'+params;
 			//alert(url);
-			resultDiv.innerHTML='<br><?=AddSlashes(GetMessage("STAT_WAIT_DATA_LOADING"))?><br>';
+			resultDiv.innerHTML='<br><?=addslashes(GetMessage("STAT_WAIT_DATA_LOADING"))?><br>';
 			table.GetAdminList(url);
 			cached[table.table_id]=true;
 		}
@@ -1205,7 +1188,7 @@ function selectTabWithFilter(filter, table, force)
 }
 function applyFilter(filter)
 {
-	cached=new Array();
+	cached=[];
 	tabControl.SelectTab('tab1');
 	selectTabWithFilter(filter, t_adv_detail_tab1);
 }
@@ -1301,4 +1284,3 @@ $lAdmin_tab2->DisplayList();
 </div>
 <?
 require_once ($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");
-?>

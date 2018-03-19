@@ -36,6 +36,16 @@ if(!empty($arResult["CommentsResult"]) && is_array($arResult["CommentsResult"]))
 		$filter = ">=ID";
 		$commentId = $_REQUEST[$arParams["COMMENT_ID_VAR"]];
 	}
+	else if (
+		$_REQUEST["ACTION"] == "CONVERT"
+		&& in_array($_REQUEST["ENTITY_TYPE_ID"], array('LOG_COMMENT', 'BLOG_COMMENT'))
+		&& $_REQUEST["ENTITY_ID"]
+		&& in_array(intval($_REQUEST["ENTITY_ID"]), $arResult["IDS"])
+	)
+	{
+		$filter = ">=ID";
+		$commentId = intval($_REQUEST["ENTITY_ID"]);
+	}
 	if (!!$filter)
 	{
 		$id = reset($arResult["IDS"]);
@@ -54,22 +64,34 @@ if(!empty($arResult["CommentsResult"]) && is_array($arResult["CommentsResult"]))
 		else
 		{
 			if (count($arResult["CommentsResult"]) > $arResult["newCount"])
+			{
 				$arResult["newCount"] = count($arResult["CommentsResult"]);
+				if (
+					$filter == ">=ID"
+					&& $commentId > 0
+				) // commentId in $_REQUEST
+				{
+					$arParams["PAGE_SIZE"] = $arResult["newCount"];
+				}
+			}
 			$arResult["CommentsResult"] = $arResult["~CommentsResult"];
 		}
-	}
-	if (
-		!$filter 
-		|| $filter == ">=ID"
-	)
-	{
-		$arParams["PAGE_SIZE"] = $arResult["newCount"];
 	}
 
 	$arResult["NAV_RESULT"] = new CDBResult;
 	$arResult["NAV_RESULT"]->InitFromArray($arResult["CommentsResult"]);
 	$arResult["NAV_RESULT"]->NavStart($arParams["PAGE_SIZE"], false);
 	$arResult["NAV_STRING"] = $arResult["urlMobileToPost"];
+
+	$arResult["NAV_STRING"] = str_replace(
+		array("#LAST_LOG_TS#"),
+		array(
+			intval($arParams["LAST_LOG_TS"]) > 0
+				? "&LAST_LOG_TS=".intval($arParams["LAST_LOG_TS"])
+				: ''
+		),
+		$arResult["urlMobileToPost"]
+	);
 
 	while($comment = $arResult["NAV_RESULT"]->Fetch())
 	{
@@ -100,3 +122,4 @@ else if ($arResult["ajax_comment"] > 0 && $_GET["delete_comment_id"] > 0)
 		"ACTION" => "DELETE"
 	);
 }
+?>

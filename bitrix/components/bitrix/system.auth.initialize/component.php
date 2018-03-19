@@ -154,7 +154,22 @@ else
 					}
 
 					$obUser->Authorize($arResult["USER"]["ID"], $_POST["USER_REMEMBER"] == "Y");
-					LocalRedirect(SITE_DIR);
+
+					$SITE_DIR = SITE_DIR;
+
+					if (!empty($arResult["USER"]["LID"]))
+					{
+						$rsSite = CSite::GetByID($arResult["USER"]["LID"]);
+						if (
+							($arSite = $rsSite->Fetch())
+							&& !empty($arSite["DIR"])
+						)
+						{
+							$SITE_DIR = $arSite["DIR"];
+						}
+					}
+
+					LocalRedirect($SITE_DIR);
 				}
 				else
 				{

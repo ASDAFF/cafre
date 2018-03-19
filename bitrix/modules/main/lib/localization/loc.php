@@ -4,6 +4,7 @@ namespace Bitrix\Main\Localization;
 use Bitrix\Main;
 use Bitrix\Main\IO\Path;
 use Bitrix\Main\Context;
+use Bitrix\Main\Config\Configuration;
 
 final class Loc
 {
@@ -150,13 +151,19 @@ final class Loc
 	 *
 	 * @param string $file
 	 * @param string $language
+	 * @param bool $normalize
 	 * @return array
 	 */
-	public static function loadLanguageFile($file, $language = null)
+	public static function loadLanguageFile($file, $language = null, $normalize = true)
 	{
 		if($language === null)
 		{
 			$language = self::getCurrentLang();
+		}
+
+		if($normalize)
+		{
+			$file = Path::normalize($file);
 		}
 
 		if(!isset(self::$messages[$language]))
@@ -230,6 +237,9 @@ final class Loc
 			if(stripos($trace[$i]["function"], "GetMessage") === 0)
 			{
 				$currentFile = Path::normalize($trace[$i]["file"]);
+
+				//we suppose there is a language file even if it wasn't registered via loadMessages()
+				self::$lazyLoadFiles[$currentFile] = $currentFile;
 				break;
 			}
 		}
@@ -237,7 +247,7 @@ final class Loc
 		if($currentFile !== null && isset(self::$lazyLoadFiles[$currentFile]))
 		{
 			//in most cases we know the file containing the "code" - load it directly
-			self::loadLanguageFile($currentFile, $language);
+			self::loadLanguageFile($currentFile, $language, false);
 			unset(self::$lazyLoadFiles[$currentFile]);
 		}
 
@@ -249,7 +259,7 @@ final class Loc
 			{
 				do
 				{
-					self::loadLanguageFile($file, $language);
+					self::loadLanguageFile($file, $language, false);
 					$unset[] = $file;
 					if(isset(self::$messages[$language][$code]))
 					{
@@ -323,16 +333,25 @@ final class Loc
 	}
 
 	/**
-	 * Returns default language for specified language. Defualt language is used when translation is not found.
+	 * Returns default language for specified language. Default language is used when translation is not found.
 	 *
 	 * @param string $lang
 	 * @return string
 	 */
 	public static function getDefaultLang($lang)
 	{
-		static $subst = array('ua'=>'ru', 'kz'=>'ru', 'ru'=>'ru');
+		static $subst = array('ua'=>'ru', 'kz'=>'ru', 'by'=>'ru', 'ru'=>'ru', 'en'=>'en', 'de'=>'en');
 		if(isset($subst[$lang]))
+		{
 			return $subst[$lang];
+		}
+
+		$options = Configuration::getValue("default_language");
+		if(isset($options[$lang]))
+		{
+			return $options[$lang];
+		}
+
 		return 'en';
 	}
 

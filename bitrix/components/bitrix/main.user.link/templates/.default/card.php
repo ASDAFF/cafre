@@ -1,5 +1,6 @@
 <?if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();?>
 <?
+
 $arFieldsSorted = array(
 	"LOGIN",
 	"NAME",	
@@ -12,7 +13,7 @@ $arFieldsSorted = array(
 	"LAST_LOGIN",
 	"DATE_REGISTER",
 	"PERSONAL_BIRTHDAY",
-	"PERSONAL_GENDER",		
+	"PERSONAL_GENDER",
 	"PERSONAL_COUNTRY",
 	"PERSONAL_STATE",
 	"PERSONAL_ZIP",
@@ -47,7 +48,7 @@ $arFieldsSorted = array(
 $arUserOutFields = array();
 
 // USER FIELDS
-				
+
 if (count($arParams["SHOW_FIELDS"]) > 0)
 {
 	foreach ($arFieldsSorted as $userFieldName)
@@ -57,9 +58,9 @@ if (count($arParams["SHOW_FIELDS"]) > 0)
 			$val = $arResult["User"][$userFieldName];
 			switch ($userFieldName)
 			{
-				case 'LOGIN':			
+				case 'LOGIN':
 				case 'NAME':
-				case 'LAST_NAME':				
+				case 'LAST_NAME':
 				case 'SECOND_NAME':
 				case 'PERSONAL_PROFESSION':
 				case 'PERSONAL_NOTES':
@@ -86,16 +87,16 @@ if (count($arParams["SHOW_FIELDS"]) > 0)
 
 				case 'LAST_LOGIN':
 				case 'DATE_REGISTER':
-					if (StrLen($val) > 0)				
+					if (StrLen($val) > 0)
 						$val = date($arParams["DATE_TIME_FORMAT"], MakeTimeStamp($val, CSite::GetDateFormat("FULL")));
 					break;
-					
+
 				case 'EMAIL':
 					if ($bIntranet && StrLen($val) > 0):
 						$val = '<a href="mailto:'.htmlspecialcharsbx($val).'">'.htmlspecialcharsbx($val).'</a>';
 					else:
 						$val = '';
-					endif;	
+					endif;
 					break;
 
 				case 'PERSONAL_WWW':
@@ -134,11 +135,11 @@ if (count($arParams["SHOW_FIELDS"]) > 0)
 						$val = '<a href="callto:'.$valEncoded.'">'.htmlspecialcharsbx($val).'</a>';
 					}
 					break;
-					
+
 				case 'PERSONAL_GENDER':
 					$val = (($val == 'F') ? GetMessage("MAIN_UL_SEX_F") : (($val == 'M') ? GetMessage("MAIN_UL_SEX_M") : ""));
 					break;
-					
+
 				case 'PERSONAL_BIRTHDAY':
 					if (StrLen($val) > 0)
 					{
@@ -150,7 +151,7 @@ if (count($arParams["SHOW_FIELDS"]) > 0)
 						$val = $day.' '.ToLower(GetMessage('MONTH_'.$month.'_S'));
 						if (($arParams['SHOW_YEAR'] == 'Y') || ($arParams['SHOW_YEAR'] == 'M' && $arResult["User"]['PERSONAL_GENDER'] == 'M'))
 							$val .= ' '.$year;
-									
+
 						$arResult['IS_BIRTHDAY'] = (intval($arDateTmp['MM']) == date('n') && intval($arDateTmp['DD']) == date('j'));
 					}
 					break;
@@ -176,9 +177,24 @@ if (count($arParams["SHOW_FIELDS"]) > 0)
 				case 'MANAGERS':
 					$sManagers = '';
 					if(is_array($val))
+					{
 						foreach($val as $manager)
-							$sManagers .= ($sManagers <> ''? ', ':'').'<a href="'.$manager["URL"].'">'.$manager["NAME_FORMATTED"].'</a>';
+						{
+							$sManagers .= ($sManagers <> ''? ', ':'').(
+								$arResult["CurrentUser"]
+								&& !in_array($arResult["CurrentUser"]["EXTERNAL_AUTH_ID"], array('email'))
+									? '<a href="'.$manager["URL"].'">'.$manager["NAME_FORMATTED"].'</a>'
+									: $manager["NAME_FORMATTED"]
+							);
+						}
+					}
 					$val = $sManagers;
+
+
+					$strCard .= '<div class="bx-user-info-data-name '.$strUserNameClass.'"><a href="'.($arResult["CurrentUser"] && !in_array($arResult["CurrentUser"]["EXTERNAL_AUTH_ID"], array('email')) ? $arTmpUser["DETAIL_URL"] : 'javascript:void(0);').'">'.$strNameFormatted.'</a></div>';
+
+
+
 					break;
 				default:
 					$val = "";
@@ -199,22 +215,45 @@ if (count($arParams["USER_PROPERTY"]) > 0)
 	{
 		if (in_array($fieldName, $arParams["USER_PROPERTY"]))
 		{
-			if ($bIntranet && $arUserField["FIELD_NAME"] == "UF_DEPARTMENT" && strlen(trim($arParams["PATH_TO_CONPANY_DEPARTMENT"])) > 0)
+			if (
+				$bIntranet
+				&& $arUserField["FIELD_NAME"] == "UF_DEPARTMENT"
+				&& strlen(trim($arParams["PATH_TO_CONPANY_DEPARTMENT"])) > 0
+			)
+			{
 				$arUserField['SETTINGS']['SECTION_URL']	= trim($arParams["PATH_TO_CONPANY_DEPARTMENT"]);
+			}
 
-			if (CModule::IncludeModule('extranet') && !CExtranet::IsIntranetUser())
+			if (
+				(
+					CModule::IncludeModule('extranet')
+					&& !CExtranet::IsIntranetUser()
+				)
+				|| (
+					$arResult["CurrentUser"]
+					&& in_array($arResult["CurrentUser"]["EXTERNAL_AUTH_ID"], array('email'))
+				)
+			)
+			{
 				$arUserField['SETTINGS']['SECTION_URL'] = false;
-				
+			}
+
 			$arUserField["EDIT_FORM_LABEL"] = StrLen($arUserField["EDIT_FORM_LABEL"]) > 0 ? $arUserField["EDIT_FORM_LABEL"] : $arUserField["FIELD_NAME"];
 			$arUserField["EDIT_FORM_LABEL"] = htmlspecialcharsEx($arUserField["EDIT_FORM_LABEL"]);
 			$arUserField["~EDIT_FORM_LABEL"] = $arUserField["EDIT_FORM_LABEL"];
 
 			$tmpVal = "";
 			
-			if ((
-				(is_array($arUserField["VALUE"]) && count($arUserField["VALUE"]) == 0) || 
-				(!is_array($arUserField["VALUE"]) && !$arUserField["VALUE"])) && $arUserField["USER_TYPE_ID"] != "boolean")
+			if (
+				(
+					(is_array($arUserField["VALUE"]) && count($arUserField["VALUE"]) == 0)
+					|| (!is_array($arUserField["VALUE"]) && !$arUserField["VALUE"])
+				)
+				&& $arUserField["USER_TYPE_ID"] != "boolean"
+			)
+			{
 				continue;
+			}
 
 			ob_start();
 			$APPLICATION->IncludeComponent(
@@ -344,11 +383,11 @@ else
 	$photoClass = "bx-user-info-data-photo no-photo";
 	$strPhoto = "";
 }
-		
-if (IsModuleInstalled('extranet'))
+
+if (IsModuleInstalled('extranet') || IsModuleInstalled('mail'))
 {
 	if (
-		!is_array($arUserFields) 
+		!is_array($arUserFields)
 		|| count($arUserFields) <= 0
 	)
 	{
@@ -359,18 +398,46 @@ if (IsModuleInstalled('extranet'))
 		(is_array($arUserFields["UF_DEPARTMENT"]["VALUE"]) && count($arUserFields["UF_DEPARTMENT"]["VALUE"]) <= 0)
 		|| (!is_array($arUserFields["UF_DEPARTMENT"]["VALUE"]) && intval($arUserFields["UF_DEPARTMENT"]["VALUE"]) <= 0)
 	);
-	$strUserNameClass = ($bExtranetUser ? " bx-user-info-extranet" : "");
+	$bEmailUser = ($arResult["User"]["EXTERNAL_AUTH_ID"] == 'email');
+	$bCrmEmailUser = !empty($arUserFields["UF_USER_CRM_ENTITY"]["VALUE"]);
+
+	if ($bCrmEmailUser)
+	{
+		$strUserNameClass = " bx-user-info-emailcrm";
+	}
+	elseif ($bEmailUser)
+	{
+		$strUserNameClass = " bx-user-info-email";
+	}
+	elseif ($bExtranetUser)
+	{
+		$strUserNameClass = " bx-user-info-extranet";
+	}
+	else
+	{
+		$strUserNameClass = "";
+	}
 }
-		
+
 $strNameFormatted = CUser::FormatName($arParams['NAME_TEMPLATE'], $arTmpUser, $bUseLogin);
-		
+
 $strPhoto = '<a href="'.$arTmpUser["DETAIL_URL"].'" class="'.$photoClass.'">'.$strPhoto.'</a>';
 
 $data_cont_class = ($GLOBALS["USER"]->IsAuthorized() && $arResult["CurrentUserPerms"]["Operations"]["videocall"] ? "bx-user-info-data-cont-video" : "bx-user-info-data-cont");
 
 $strCard = '<div class="'.$data_cont_class.'" id="bx_user_info_data_cont_'.$arTmpUser["ID"].'">';
-$strCard .= '<div class="bx-user-info-data-name '.$strUserNameClass.'"><a href="'.$arTmpUser["DETAIL_URL"].'">'.$strNameFormatted.'</a></div>';
+
+$strCard .= '<div class="bx-user-info-data-name '.$strUserNameClass.'"><a href="'.($arResult["CurrentUser"] && !in_array($arResult["CurrentUser"]["EXTERNAL_AUTH_ID"], array('email')) ? $arTmpUser["DETAIL_URL"] : 'javascript:void(0);').'">'.$strNameFormatted.'</a></div>';
+
 $strCard .= ($bExtranetUser ? '<div class="bx-user-info-extranet-description">'.GetMessage("MAIN_UL_EXTRANET_USER").'</div>' : '');
 $strCard .= '<div class="bx-user-info-data-info">'.$strUserFields.$strTmpUserRatings.'</div>';
 $strCard .= '</div>';
+
+static $includedOnce = false;
+if (!$includedOnce)
+{
+	$arScripts = array("BX.message({ MULSonetMessageChatTemplate: '".CUtil::JSEscape($arParams["~PATH_TO_SONET_MESSAGES_CHAT"])."', MULVideoCallTemplate: '".CUtil::JSEscape($arParams["~PATH_TO_VIDEO_CALL"])."' });");
+}
+
+$includedOnce = true;
 ?>

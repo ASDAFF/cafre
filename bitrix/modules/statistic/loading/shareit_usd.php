@@ -22,7 +22,7 @@ $CURRENCY = "USD"; // Currency
 
 function CleanUpCsv(&$item)
 {
-	$item = Trim($item, "\"");
+	$item = trim($item, "\"");
 }
 
 function PrepareQuotes(&$item)

@@ -1,7 +1,7 @@
-<?
+<?php
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/statistic/prolog.php");
-
+/** @var CMain $APPLICATION */
 $STAT_RIGHT = $APPLICATION->GetGroupRight("statistic");
 if ($STAT_RIGHT=="D")
 	$APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
@@ -51,12 +51,12 @@ require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_popup_adm
 	<tr>
 		<td valign="top" nowrap><?echo GetMessage("STAT_TIME")?></td>
 		<td valign="top" nowrap>&nbsp;<?
-			$hours = IntVal($f_FSESSION_TIME/3600);
+			$hours = intval($f_FSESSION_TIME/3600);
 			if ($hours>0) :
 				echo $hours."&nbsp;".GetMessage("STAT_HOUR")."&nbsp;";
 				$f_FSESSION_TIME = $f_FSESSION_TIME - $hours*3600;
 			endif;
-			echo IntVal($f_FSESSION_TIME/60)."&nbsp;".GetMessage("STAT_MIN")."&nbsp;";
+			echo intval($f_FSESSION_TIME/60)."&nbsp;".GetMessage("STAT_MIN")."&nbsp;";
 			echo ($f_FSESSION_TIME%60)."&nbsp;".GetMessage("STAT_SEC");
 			?></td>
 	</tr>
@@ -102,12 +102,12 @@ require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_popup_adm
 	<tr>
 		<td valign="top" nowrap><?echo GetMessage("STAT_TIME")?></td>
 		<td valign="top" nowrap>&nbsp;<?
-			$hours = IntVal($f_LSESSION_TIME/3600);
+			$hours = intval($f_LSESSION_TIME/3600);
 			if ($hours>0) :
 				echo $hours."&nbsp;".GetMessage("STAT_HOUR")."&nbsp;";
 				$f_LSESSION_TIME = $f_LSESSION_TIME - $hours*3600;
 			endif;
-			echo IntVal($f_LSESSION_TIME/60)."&nbsp;".GetMessage("STAT_MIN")."&nbsp;";
+			echo intval($f_LSESSION_TIME/60)."&nbsp;".GetMessage("STAT_MIN")."&nbsp;";
 			echo ($f_LSESSION_TIME%60)."&nbsp;".GetMessage("STAT_SEC");
 			?></td>
 	</tr>
@@ -129,7 +129,7 @@ require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_popup_adm
 	</tr>
 	<tr>
 		<td nowrap><?echo GetMessage("STAT_IP")?></td>
-		<td>&nbsp;<? $arr = explode(".",$f_LAST_IP) ?><?=GetWhoisLink($f_LAST_IP)?>&nbsp;[<a target="_blank" title="<?echo GetMessage("STAT_ADD_TO_STOPLIST_TITLE")?>" href="stoplist_edit.php?lang=<?=LANGUAGE_ID?>&amp;net1=<?echo $arr[0]?>&amp;net2=<?echo $arr[1]?>&amp;net3=<?echo $arr[2]?>&amp;net4=<?echo $arr[3]?>"><?echo GetMessage("STAT_STOP")?></a>]&nbsp;(<?echo @GetHostByAddr($f_LAST_IP)?>)</td>
+		<td>&nbsp;<? $arr = explode(".",$f_LAST_IP) ?><?=GetWhoisLink($f_LAST_IP)?>&nbsp;[<a target="_blank" title="<?echo GetMessage("STAT_ADD_TO_STOPLIST_TITLE")?>" href="stoplist_edit.php?lang=<?=LANGUAGE_ID?>&amp;net1=<?echo $arr[0]?>&amp;net2=<?echo $arr[1]?>&amp;net3=<?echo $arr[2]?>&amp;net4=<?echo $arr[3]?>"><?echo GetMessage("STAT_STOP")?></a>]&nbsp;(<?echo @gethostbyaddr($f_LAST_IP)?>)</td>
 	</tr>
 	<tr>
 		<td nowrap><?echo GetMessage("STAT_REGION")?>:</td>
@@ -173,7 +173,7 @@ require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_popup_adm
 	<? endif; ?>
 	<tr>
 		<td valign="top" nowrap><?echo GetMessage("STAT_LANGUAGE")?></td>
-		<td valign="top">&nbsp;<?echo htmlspecialcharsex(urldecode($f_LAST_LANGUAGE))?></td>
+		<td valign="top">&nbsp;<?echo htmlspecialcharsEx(urldecode($f_LAST_LANGUAGE))?></td>
 	</tr>
 	<?if($USER->IsAdmin()):?>
 	<tr>
@@ -181,7 +181,7 @@ require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_popup_adm
 			<?echo GetMessage("STAT_COOKIE")?></td>
 		<td>
 			<?if($f_LAST_COOKIE):?>
-				<div style="overflow:auto;"><?echo str_replace("\n", "<br>", htmlspecialcharsex(urldecode($f_LAST_COOKIE)))?></div>
+				<div style="overflow:auto;"><?echo str_replace("\n", "<br>", htmlspecialcharsEx(urldecode($f_LAST_COOKIE)))?></div>
 			<?else:?>
 				&nbsp;
 			<?endif?>
@@ -198,4 +198,4 @@ require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_popup_adm
 </table></td></tr></table>
 <?echo BeginNote(), "* - ", GetMessage("STAT_ADV_BACK"), EndNote();?>
 <input type="button" onClick="window.close()" value="<?echo GetMessage("STAT_CLOSE")?>">
-<?require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_popup_admin.php")?>
+<?require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_popup_admin.php");

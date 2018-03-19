@@ -69,7 +69,7 @@ class CBPViewHelper
 				array('MODIFIED' => 'DESC'),
 				array('WORKFLOW_ID' => $workflowId),
 				false,
-				false,
+				array('nTopCount' => 50),
 				array('ID', 'MODIFIED', 'NAME', 'DESCRIPTION', 'PARAMETERS', 'STATUS', 'IS_INLINE', 'ACTIVITY')
 			);
 			while ($task = $taskIterator->getNext())
@@ -142,6 +142,9 @@ class CBPViewHelper
 	{
 		$id = htmlspecialcharsbx($id);
 		$fieldName = htmlspecialcharsbx($fieldName);
+
+		if (is_array($content) && isset($content['TEXT']))
+			$content = $content['TEXT'];
 
 		$result = '<textarea rows="5" cols="40" id="'.$id.'" name="'.$fieldName.'">'.htmlspecialcharsbx((string)$content).'</textarea>';
 

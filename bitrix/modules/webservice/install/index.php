@@ -1,10 +1,12 @@
-<?
-global $MESS;
-$strPath2Lang = str_replace("\\", "/", __FILE__);
-$strPath2Lang = substr($strPath2Lang, 0, strlen($strPath2Lang)-18);
-include(GetLangFileName($strPath2Lang."/lang/", "/install/index.php"));
+<?php
+\Bitrix\Main\Localization\Loc::loadMessages(__FILE__);
 
-class webservice extends CModule
+if(class_exists("webservice"))
+{
+	return;
+}
+
+class webservice extends \CModule
 {
 	var $MODULE_ID = "webservice";
 	var $MODULE_VERSION;
@@ -13,7 +15,7 @@ class webservice extends CModule
 	var $MODULE_DESCRIPTION;
 	var $MODULE_GROUP_RIGHTS = "N";
 
-	function webservice()
+	public function __construct()
 	{
 		$arModuleVersion = array();
 
@@ -21,16 +23,8 @@ class webservice extends CModule
 		$path = substr($path, 0, strlen($path) - strlen("/index.php"));
 		include($path."/version.php");
 
-		if (is_array($arModuleVersion) && array_key_exists("VERSION", $arModuleVersion))
-		{
-			$this->MODULE_VERSION = $arModuleVersion["VERSION"];
-			$this->MODULE_VERSION_DATE = $arModuleVersion["VERSION_DATE"];
-		}
-		else
-		{
-			$this->MODULE_VERSION = $WEBSERVICE_VERSION;
-			$this->MODULE_VERSION_DATE = $WEBSERVICE_VERSION_DATE;
-		}
+		$this->MODULE_VERSION = $arModuleVersion["VERSION"];
+		$this->MODULE_VERSION_DATE = $arModuleVersion["VERSION_DATE"];
 
 		$this->MODULE_NAME = GetMessage("WEBS_MODULE_NAME");
 		$this->MODULE_DESCRIPTION = GetMessage("WEBS_MODULE_DESCRIPTION");
@@ -43,24 +37,29 @@ class webservice extends CModule
 		$this->InstallFiles();
 		$this->InstallDB();
 		
-		$APPLICATION->IncludeAdminFile(GetMessage("WEBS_INSTALL_TITLE"), $DOCUMENT_ROOT."/bitrix/modules/webservice/install/step.php");
+		$APPLICATION->IncludeAdminFile(GetMessage("WEBS_INSTALL_TITLE"), $_SERVER['DOCUMENT_ROOT']."/bitrix/modules/webservice/install/step.php");
 	}
 
 	function InstallFiles()
 	{
-		if($_ENV["COMPUTERNAME"]!='BX')
-		{
-			CopyDirFiles(
-				$_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/webservice/install/components", 
-				$_SERVER["DOCUMENT_ROOT"]."/bitrix/components", 
-				true, true);
+		CopyDirFiles(
+			$_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/webservice/install/components",
+			$_SERVER["DOCUMENT_ROOT"]."/bitrix/components",
+			true, true
+		);
 
-			CopyDirFiles(
-				$_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/webservice/install/tools", 
-				$_SERVER["DOCUMENT_ROOT"]."/bitrix/tools", 
-				true, true);
-		}
-		
+		CopyDirFiles(
+			$_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/webservice/install/tools",
+			$_SERVER["DOCUMENT_ROOT"]."/bitrix/tools",
+			true, true
+		);
+
+		CopyDirFiles(
+			$_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/webservice/install/js",
+			$_SERVER["DOCUMENT_ROOT"]."/bitrix/js",
+			true, true
+		);
+
 		return true;
 	}
 	
@@ -83,7 +82,7 @@ class webservice extends CModule
 		$this->UnInstallFiles();
 		$this->UnInstallDB();
 		
-		$APPLICATION->IncludeAdminFile(GetMessage("WEBS_UNINSTALL_TITLE"), $DOCUMENT_ROOT."/bitrix/modules/webservice/install/unstep.php");
+		$APPLICATION->IncludeAdminFile(GetMessage("WEBS_UNINSTALL_TITLE"), $_SERVER['DOCUMENT_ROOT']."/bitrix/modules/webservice/install/unstep.php");
 	}
 	
 	function UnInstallDB()
@@ -95,9 +94,6 @@ class webservice extends CModule
 	
 	function UnInstallFiles()
 	{
-		DeleteDirFilesEx($_SERVER["DOCUMENT_ROOT"]."/bitrix/components/bitrix/webservice.checkauth");
-		DeleteDirFilesEx($_SERVER["DOCUMENT_ROOT"]."/bitrix/components/bitrix/webservice.server");
-		
 		return true;
 	}
 	

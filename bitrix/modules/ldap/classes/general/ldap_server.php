@@ -2,17 +2,18 @@
 
 IncludeModuleLangFile(__FILE__);
 
-
 class CLdapServer
 {
-	var $arFields;
+	public $arFields = array();
+	public static $syncErrors = array();
+
 	/**
 	 *
 	 * @param $arOrder
 	 * @param $arFilter
 	 * @return __CLDAPServerDBResult
 	 */
-	function GetList($arOrder=Array(), $arFilter=Array())
+	public static function GetList($arOrder=Array(), $arFilter=Array())
 	{
 		global $USER, $DB, $APPLICATION;
 		$strSql =
@@ -46,6 +47,7 @@ class CLdapServer
 				case "ID":
 				case "PORT":
 				case "MAX_PAX_SIZE":
+				case "CONNECTION_TYPE":
 					$arSqlSearch[] = CLdapUtil::FilterCreate("ls.".$key, $val, "number", $cOperationType);
 					break;
 				case "TIMESTAMP_X":
@@ -123,6 +125,7 @@ class CLdapServer
 				case "USER_GROUP_ATTR":
 				case "USER_GROUP_ACCESSORY":
 				case "MAX_PAX_SIZE":
+				case "CONNECTION_TYPE":
 					$arSqlOrder[] = " ls.".$by." ".$order." ";
 					break;
 				default:
@@ -131,7 +134,9 @@ class CLdapServer
 		}
 
 		$strSqlOrder = "";
-		DelDuplicateSort($arSqlOrder); for ($i=0; $i<count($arSqlOrder); $i++)
+		DelDuplicateSort($arSqlOrder);
+
+		for ($i=0, $c=count($arSqlOrder); $i < $c; $i++)
 		{
 			if($i==0)
 				$strSqlOrder = " ORDER BY ";
@@ -153,12 +158,12 @@ class CLdapServer
 	 * @param $ID
 	 * @return __CLDAPServerDBResult
 	 */
-	function GetByID($ID)
+	public static function GetByID($ID)
 	{
 		return CLdapServer::GetList(Array(), $arFilter=Array("ID"=>IntVal($ID)));
 	}
 
-	function CheckFields($arFields, $ID=false)
+	public static function CheckFields($arFields, $ID=false)
 	{
 		global $DB, $APPLICATION;
 
@@ -213,7 +218,7 @@ class CLdapServer
 		return true;
 	}
 
-	function Add($arFields)
+	public static function Add($arFields)
 	{
 		global $DB, $APPLICATION;
 		$APPLICATION->ResetException();
@@ -256,7 +261,7 @@ class CLdapServer
 		return $ID;
 	}
 
-	function __UpdateAgentPeriod($server_id, $time)
+	public static function __UpdateAgentPeriod($server_id, $time)
 	{
 		$server_id = IntVal($server_id);
 		$time = IntVal($time);
@@ -266,7 +271,7 @@ class CLdapServer
 			CAgent::AddAgent("CLdapServer::SyncAgent(".$server_id.");", "ldap", "N", $time*60*60);
 	}
 
-	function SyncAgent($id)
+	public static function SyncAgent($id)
 	{
 		CLdapServer::Sync($id);
 		return "CLdapServer::SyncAgent(".$id.");";
@@ -274,7 +279,7 @@ class CLdapServer
 
 	/*********************************************************************
 	*********************************************************************/
-	function Update($ID, $arFields)
+	public static function Update($ID, $arFields)
 	{
 		global $DB, $APPLICATION;
 		$APPLICATION->ResetException();
@@ -356,7 +361,7 @@ class CLdapServer
 		return true;
 	}
 
-	function Delete($ID)
+	public static function Delete($ID)
 	{
 		global $DB;
 		$ID = IntVal($ID);
@@ -369,22 +374,21 @@ class CLdapServer
 		return $DB->Query($strSql, true);
 	}
 
-	function GetGroupMap($ID)
+	public static function GetGroupMap($ID)
 	{
 		global $DB, $APPLICATION;
 		$ID = IntVal($ID);
 		return $DB->Query("SELECT GROUP_ID, LDAP_GROUP_ID FROM b_ldap_group WHERE LDAP_SERVER_ID=".$ID." AND NOT (GROUP_ID=-1)");
 	}
 
-	function GetGroupBan($ID)
+	public static function GetGroupBan($ID)
 	{
 		global $DB, $APPLICATION;
 		$ID = IntVal($ID);
 		return $DB->Query("SELECT LDAP_GROUP_ID FROM b_ldap_group WHERE LDAP_SERVER_ID=".$ID." AND GROUP_ID=-1");
 	}
 
-
-	function SetGroupMap($ID, $arFields)
+	public static function SetGroupMap($ID, $arFields)
 	{
 		global $DB, $APPLICATION;
 		$ID = IntVal($ID);
@@ -412,10 +416,11 @@ class CLdapServer
 		}
 	}
 
-
-	function Sync($ldap_server_id)
+	public static function Sync($ldap_server_id)
 	{
 		global $DB, $USER, $APPLICATION;
+		$bUSERGen = false;
+		self::$syncErrors = array();
 
 		if(!is_object($USER))
 		{
@@ -423,7 +428,7 @@ class CLdapServer
 			$bUSERGen = true;
 		}
 
-		$dbLdapServers = CLdapServer::GetById($ldap_server_id);
+		$dbLdapServers = CLdapServer::GetByID($ldap_server_id);
 		if(!($oLdapServer = $dbLdapServers->GetNextServer()))
 			return false;
 
@@ -438,13 +443,16 @@ class CLdapServer
 
 		$APPLICATION->ResetException();
 		$db_events = GetModuleEvents("ldap", "OnLdapBeforeSync");
+
 		while($arEvent = $db_events->Fetch())
 		{
 			$arParams['oLdapServer'] = $oLdapServer;
+
 			if(ExecuteModuleEventEx($arEvent, array(&$arParams))===false)
 			{
 				if(!($err = $APPLICATION->GetException()))
 					$APPLICATION->ThrowException("Unknown error");
+
 				return false;
 			}
 		}
@@ -459,48 +467,45 @@ class CLdapServer
 
 		while($arLdapUser = $dbLdapUsers->Fetch())
 			$arLdapUsers[strtolower($arLdapUser[$ldapLoginAttr])] = $arLdapUser;
+
 		unset($dbLdapUsers);
 
 		// select all Bitrix CMS users for this LDAP
 		$arUsers = Array();
 
 		CTimeZone::Disable();
-		$dbUsers = CUser::GetList($o, $b, Array("EXTERNAL_AUTH_ID"=>"LDAP#".$ldap_server_id));
+		$dbUsers = CUser::GetList(($o=""), ($b=""), Array("EXTERNAL_AUTH_ID"=>"LDAP#".$ldap_server_id));
 		CTimeZone::Enable();
 
 		while($arUser = $dbUsers->Fetch())
 			$arUsers[strtolower($arUser["LOGIN"])] = $arUser;
+			
 		unset($dbUsers);
+
+		$arDelLdapUsers = array();
 
 		if(!$ldpEx || $ldpEx->msg != 'LDAP_SEARCH_ERROR')
 			$arDelLdapUsers = array_diff(array_keys($arUsers), array_keys($arLdapUsers));
 
-		if(strlen($oLdapServer->arFields["SYNC_LAST"])>0)
+		if(strlen($oLdapServer->arFields["SYNC_LAST"]) > 0)
 			$syncTime = MakeTimeStamp($oLdapServer->arFields["SYNC_LAST"]);
 		else
 			$syncTime = 0;
 
-		$arCache = array();
-
-		// selecting a list of groups, from which users will not be imported
-		$noImportGroups = array();
-
-		$dbGroups = CLdapServer::GetGroupBan($ldap_server_id);
-		while($arGroup = $dbGroups->Fetch())
-			$noImportGroups[md5($arGroup['LDAP_GROUP_ID'])] = $arGroup['LDAP_GROUP_ID'];
-
 		$cnt = 0;
+		$departmentCache = array();
 		// have to update $oLdapServer->arFields["FIELD_MAP"] for user fields
 		// for each one of them looking for similar in user list
 		foreach($arLdapUsers as $userLogin => $arLdapUserFields)
 		{
 			if(!is_array($arUsers[$userLogin]))
 			{
+				//For manual users import - always add
 				if($oLdapServer->arFields["SYNC_USER_ADD"] != "Y")
 					continue;
 
 				// if user is not found among already existing ones, then import him
-				// â $arLdapUserFields - user fields from ldap
+				// $arLdapUserFields - user fields from ldap
 				$userActive = $oLdapServer->getLdapValueByBitrixFieldName("ACTIVE", $arLdapUserFields);
 
 				if($userActive != "Y")
@@ -508,30 +513,18 @@ class CLdapServer
 
 				$arUserFields = $oLdapServer->GetUserFields($arLdapUserFields, $departmentCache);
 
-				// $arUserFields here contains LDAP user fields for a LDAP user
-				// make a check, whether this user belongs to those groups only, from which import will not be made...
-				$allUserGroups = $arUserFields['LDAP_GROUPS'];
+				if(self::isUserInBannedGroups($ldap_server_id, $arUserFields))
+					continue;
 
-				$userImportIsBanned = true;
-				foreach ($allUserGroups as $groupId)
-				{
-					$groupId = trim($groupId);
-					if (!empty($groupId) && !array_key_exists(md5($groupId), $noImportGroups))
-					{
-						$userImportIsBanned = false;
-						break;
-					}
-				}
-
-				// ...if he does not, then import him
-				if (!$userImportIsBanned || empty($allUserGroups))
-					$oLdapServer->SetUser($arUserFields);
+				if($oLdapServer->SetUser($arUserFields))
+					$cnt++;
 			}
 			else
 			{
 				// if date of update is set, then compare it
 				$ldapTime = time();
-				if($syncTime>0
+
+				if($syncTime > 0
 					&& strlen($oLdapServer->arFields["SYNC_ATTR"])>0
 					&& preg_match("'([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})\.0Z'", $arLdapUserFields[strtolower($oLdapServer->arFields["SYNC_ATTR"])], $arTimeMatch)
 					)
@@ -540,17 +533,22 @@ class CLdapServer
 					$userTime = MakeTimeStamp($arUsers[$userLogin]["TIMESTAMP_X"]);
 				}
 
-				if($syncTime<$ldapTime || $syncTime<$userTime)
+				if($syncTime < $ldapTime || $syncTime < $userTime)
 				{
-					// make an update
-					$arUserFields = $oLdapServer->GetUserFields($arLdapUserFields,$arCache);
+					$arUserFields = $oLdapServer->GetUserFields($arLdapUserFields, $departmentCache);
+
+					if(self::isUserInBannedGroups($ldap_server_id, $arUserFields))
+						continue;
+
 					$arUserFields["ID"] = $arUsers[$userLogin]["ID"];
 
-					//echo $arUserFields["LOGIN"]." - updated<br>";
-					$oLdapServer->SetUser($arUserFields);
-					$cnt++;
+					if($oLdapServer->SetUser($arUserFields))
+						$cnt++;
 				}
 			}
+
+			if($USER->LAST_ERROR != '')
+				self::$syncErrors[] = $userLogin.': '.$USER->LAST_ERROR;
 		}
 
 		foreach ($arDelLdapUsers as $userLogin)
@@ -566,10 +564,49 @@ class CLdapServer
 		$oLdapServer->Disconnect();
 		CLdapServer::Update($ldap_server_id, Array("~SYNC_LAST"=>$DB->CurrentTimeFunction()));
 
+		if(CModule::IncludeModule('intranet'))
+		{
+			\Bitrix\Intranet\Internals\UserSubordinationTable::performReInitialization();
+			\Bitrix\Intranet\Internals\UserToDepartmentTable::performReInitialization();
+		}
+
 		if($bUSERGen)
 			unset($USER);
 
 		return $cnt;
+	}
+
+	protected static function isUserInBannedGroups($ldap_server_id, $arUserFields)
+	{
+		static $noImportGroups = null;
+
+		if($noImportGroups === null)
+		{
+			$noImportGroups = array();
+			$dbGroups = CLdapServer::GetGroupBan($ldap_server_id);
+
+			while($arGroup = $dbGroups->Fetch())
+				$noImportGroups[md5($arGroup['LDAP_GROUP_ID'])] = $arGroup['LDAP_GROUP_ID'];
+		}
+
+		if(empty($noImportGroups))
+			return false;
+
+		$allUserGroups = $arUserFields['LDAP_GROUPS'];
+		$result = false;
+
+		foreach($allUserGroups as $groupId)
+		{
+			$groupId = trim($groupId);
+
+			if(!empty($groupId) && array_key_exists(md5($groupId), $noImportGroups))
+			{
+				$result = true;
+				break;
+			}
+		}
+
+		return $result;
 	}
 }
 
@@ -597,6 +634,3 @@ class __CLDAPServerDBResult extends CDBResult
 		return $ldap;
 	}
 }
-
-
-?>

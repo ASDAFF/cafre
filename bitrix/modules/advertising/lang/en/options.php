@@ -4,6 +4,7 @@ $MESS["AD_DONT_USE_CONTRACT"] = "Ignore contract conditions when showing banners
 $MESS["MAIN_RESTORE_DEFAULTS"] = "Set to default";
 $MESS["AD_BANNER_DAYS"] = "Number of days to keep banner statistics:";
 $MESS["AD_CLEAR"] = "Delete on save";
+$MESS["AD_DELETE_ALL"] = "Delete all";
 $MESS["AD_RECORDS"] = "currently stored records:";
 $MESS["AD_BANNER_GRAPH_WEIGHT"] = "Chart width:";
 $MESS["AD_BANNER_GRAPH_HEIGHT"] = "Chart height:";

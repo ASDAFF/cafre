@@ -28,7 +28,7 @@ $arParams["SEARCH_USE_LANGUAGE_GUESS"] = (
 		: "Y"
 );
 
-global $$arParams["SEARCH_FILTER_NAME"], $sonet_search_settings;
+global ${$arParams["SEARCH_FILTER_NAME"]}, $sonet_search_settings;
 $sonet_search_filter = array();
 $EntityType = (strpos($componentPage, "group_content_search") !== false ? SONET_ENTITY_GROUP : SONET_ENTITY_USER);
 
@@ -58,15 +58,13 @@ if (strlen($sFilterDateTo) > 0)
 	$sonet_search_filter["<=DATE_CHANGE"] = $sFilterDateTo;
 
 $sonet_search_settings = array(
-				"TASK_IBLOCK_TYPE" => $arParams["TASK_IBLOCK_TYPE"],
-				"TASK_IBLOCK_ID" => $arParams["TASK_IBLOCK_ID"],
-				"PHOTO_IBLOCK_TYPE" => ($EntityType == SONET_ENTITY_GROUP ? $arParams["PHOTO_GROUP_IBLOCK_TYPE"] : $arParams["PHOTO_USER_IBLOCK_TYPE"]),
-				"PHOTO_IBLOCK_ID" => ($EntityType == SONET_ENTITY_GROUP ? $arParams["PHOTO_GROUP_IBLOCK_ID"] : $arParams["PHOTO_USER_IBLOCK_ID"]),
-				"FILES_IBLOCK_TYPE" => ($EntityType == SONET_ENTITY_GROUP ? $arParams["FILES_GROUP_IBLOCK_TYPE"] : $arParams["FILES_USER_IBLOCK_TYPE"]),
-				"FILES_IBLOCK_ID" => ($EntityType == SONET_ENTITY_GROUP ? $arParams["FILES_GROUP_IBLOCK_ID"] : $arParams["FILES_USER_IBLOCK_ID"]),
-				"CALENDAR_IBLOCK_TYPE" => $arParams["CALENDAR_IBLOCK_TYPE"],
-				"CALENDAR_IBLOCK_ID" => ($EntityType == SONET_ENTITY_GROUP ? $arParams["CALENDAR_GROUP_IBLOCK_ID"] : $arParams["CALENDAR_USER_IBLOCK_ID"]),
-			);
+	"PHOTO_IBLOCK_TYPE" => ($EntityType == SONET_ENTITY_GROUP ? $arParams["PHOTO_GROUP_IBLOCK_TYPE"] : $arParams["PHOTO_USER_IBLOCK_TYPE"]),
+	"PHOTO_IBLOCK_ID" => ($EntityType == SONET_ENTITY_GROUP ? $arParams["PHOTO_GROUP_IBLOCK_ID"] : $arParams["PHOTO_USER_IBLOCK_ID"]),
+	"FILES_IBLOCK_TYPE" => ($EntityType == SONET_ENTITY_GROUP ? $arParams["FILES_GROUP_IBLOCK_TYPE"] : $arParams["FILES_USER_IBLOCK_TYPE"]),
+	"FILES_IBLOCK_ID" => ($EntityType == SONET_ENTITY_GROUP ? $arParams["FILES_GROUP_IBLOCK_ID"] : $arParams["FILES_USER_IBLOCK_ID"]),
+	"CALENDAR_IBLOCK_TYPE" => $arParams["CALENDAR_IBLOCK_TYPE"],
+	"CALENDAR_IBLOCK_ID" => ($EntityType == SONET_ENTITY_GROUP ? $arParams["CALENDAR_GROUP_IBLOCK_ID"] : $arParams["CALENDAR_USER_IBLOCK_ID"]),
+);
 
 AddEventHandler("search", "OnSearchPrepareFilter", Array("CSocNetSearchComponent", "OnSearchPrepareFilterHandler"));
 
@@ -89,12 +87,7 @@ class CSocNetSearchComponent
 					case "blog":
 						return " ".$strSearchContentAlias."MODULE_ID = 'blog'";
 					case "tasks":
-						$iblock_type = $GLOBALS["sonet_search_settings"]["TASK_IBLOCK_TYPE"];
-						$iblock_id = $GLOBALS["sonet_search_settings"]["TASK_IBLOCK_ID"];
-						if (strlen($iblock_type) > 0 && intval($iblock_id) > 0)
-							return " ".$strSearchContentAlias."MODULE_ID = 'socialnetwork' AND ".$strSearchContentAlias."PARAM1 = '".$iblock_type."' AND ".$strSearchContentAlias."PARAM2 = ".$iblock_id;
-						else
-							return " 1=0";
+						return " ".$strSearchContentAlias."MODULE_ID = 'tasks'";
 					case "photo":
 						$iblock_type = $GLOBALS["sonet_search_settings"]["PHOTO_IBLOCK_TYPE"];
 						$iblock_id = $GLOBALS["sonet_search_settings"]["PHOTO_IBLOCK_ID"];

@@ -1,9 +1,8 @@
 <?php
 namespace Bitrix\Catalog;
 
-use Bitrix\Main;
-use Bitrix\Main\Type;
-use Bitrix\Main\Localization\Loc;
+use Bitrix\Main,
+	Bitrix\Main\Localization\Loc;
 
 Loc::loadMessages(__FILE__);
 
@@ -71,36 +70,36 @@ class GroupTable extends Main\Entity\DataManager
 			)),
 			'TIMESTAMP_X' => new Main\Entity\DatetimeField('TIMESTAMP_X', array(
 				'title' => Loc::getMessage('GROUP_ENTITY_TIMESTAMP_X_FIELD'),
-				'default_value' => new Type\DateTime()
+				'default_value' => new Main\Type\DateTime()
 			)),
 			'MODIFIED_BY' => new Main\Entity\IntegerField('MODIFIED_BY', array(
 				'title' => Loc::getMessage('GROUP_ENTITY_MODIFIED_BY_FIELD'),
 			)),
 			'DATE_CREATE' => new Main\Entity\DatetimeField('DATE_CREATE', array(
 				'title' => Loc::getMessage('GROUP_ENTITY_DATE_CREATE_FIELD'),
-				'default_value' => new Type\DateTime()
+				'default_value' => new Main\Type\DateTime()
 			)),
 			'CREATED_BY' => new Main\Entity\IntegerField('CREATED_BY', array(
 				'title' => Loc::getMessage('GROUP_ENTITY_CREATED_BY_FIELD'),
 			)),
 			'CREATED_BY_USER' => new Main\Entity\ReferenceField(
 				'CREATED_BY_USER',
-				'Bitrix\Main\User',
+				'\Bitrix\Main\User',
 				array('=this.CREATED_BY' => 'ref.ID')
 			),
 			'MODIFIED_BY_USER' => new Main\Entity\ReferenceField(
 				'MODIFIED_BY_USER',
-				'Bitrix\Main\User',
+				'\Bitrix\Main\User',
 				array('=this.MODIFIED_BY' => 'ref.ID')
 			),
 			'LANG' => new Main\Entity\ReferenceField(
 				'LANG',
-				'Bitrix\Catalog\GroupLang',
+				'\Bitrix\Catalog\GroupLang',
 				array('=this.ID' => 'ref.CATALOG_GROUP_ID')
 			),
 			'CURRENT_LANG' => new Main\Entity\ReferenceField(
 				'CURRENT_LANG',
-				'Bitrix\Catalog\GroupLang',
+				'\Bitrix\Catalog\GroupLang',
 				array(
 					'=this.ID' => 'ref.CATALOG_GROUP_ID',
 					'=ref.LANG' => new Main\DB\SqlExpression('?', LANGUAGE_ID)

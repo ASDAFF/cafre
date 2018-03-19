@@ -47,19 +47,23 @@ foreach($arParams["OFFERS_CART_PROPERTIES"] as $i => $pid)
 	if ($pid === "")
 		unset($arParams["OFFERS_CART_PROPERTIES"][$i]);
 
-if($this->StartResultCache(false, array($elementID, ($arParams["CACHE_GROUPS"]==="N"? false: $USER->GetGroups()))))
+$arParams['BUNDLE_ITEMS_COUNT'] = (isset($arParams['BUNDLE_ITEMS_COUNT']) ? (int)$arParams['BUNDLE_ITEMS_COUNT'] : 3);
+if ($arParams['BUNDLE_ITEMS_COUNT'] < 1)
+	$arParams['BUNDLE_ITEMS_COUNT'] = 3;
+
+if($this->startResultCache(false, array($elementID, ($arParams["CACHE_GROUPS"]==="N"? false: $USER->GetGroups()))))
 {
 	if (!Loader::includeModule('catalog'))
 	{
 		ShowError(GetMessage("CATALOG_MODULE_NOT_INSTALLED"));
-		$this->AbortResultCache();
+		$this->abortResultCache();
 		return;
 	}
 	$isProductHaveSet = CCatalogProductSet::isProductHaveSet($elementID, CCatalogProductSet::TYPE_GROUP);
 	$product = false;
 	if (!$isProductHaveSet)
 	{
-		$product = CCatalogSKU::GetProductInfo($elementID, $arParams['IBLOCK_ID']);
+		$product = CCatalogSku::GetProductInfo($elementID, $arParams['IBLOCK_ID']);
 		if (!empty($product))
 		{
 			$isProductHaveSet = CCatalogProductSet::isProductHaveSet($product['ID'], CCatalogProductSet::TYPE_GROUP);
@@ -69,7 +73,7 @@ if($this->StartResultCache(false, array($elementID, ($arParams["CACHE_GROUPS"]==
 	}
 	if (!$isProductHaveSet)
 	{
-		$this->AbortResultCache();
+		$this->abortResultCache();
 		return;
 	}
 
@@ -120,7 +124,6 @@ if($this->StartResultCache(false, array($elementID, ($arParams["CACHE_GROUPS"]==
 			}
 		}
 	}
-	$arResult['CONVERT_CURRENCY'] = $arConvertParams;
 
 	$currentSet = false;
 	$productLink = array();
@@ -136,17 +139,23 @@ if($this->StartResultCache(false, array($elementID, ($arParams["CACHE_GROUPS"]==
 	unset($oneSet, $allSets);
 	if (empty($currentSet))
 	{
-		$this->AbortResultCache();
+		$this->abortResultCache();
 		return;
 	}
+
 	Main\Type\Collection::sortByColumn($currentSet['ITEMS'], array('SORT' => SORT_ASC), '', null, true);
+
 	$arSetItemsID = array($arResult['ELEMENT_ID']);
+	$productQuantity = array(
+		$arResult['ELEMENT_ID'] => 1
+	);
 	foreach ($currentSet['ITEMS'] as $index => $item)
 	{
-		$arSetItemsID[] = $item['ITEM_ID'];
-		if (!isset($productLink[$item['ITEM_ID']]))
-			$productLink[$item['ITEM_ID']] = array();
-		$productLink[$item['ITEM_ID']][] = $index;
+		$id = $item['ITEM_ID'];
+		$arSetItemsID[] = $id;
+		$productLink[$id] = $index;
+		$productQuantity[$id] = $item['QUANTITY'];
+		unset($id);
 	}
 	unset($index, $item);
 
@@ -165,13 +174,16 @@ if($this->StartResultCache(false, array($elementID, ($arParams["CACHE_GROUPS"]==
 		'CATALOG_AVAILABLE',
 		'CATALOG_MEASURE'
 	);
-	$arResult["PRICES"] = CIBlockPriceTools::GetCatalogPrices($arResult['PRODUCT_IBLOCK_ID'], $arParams["PRICE_CODE"]);
-	foreach($arResult["PRICES"] as $key => $value)
-	{
-		if (!$value['CAN_VIEW'] && !$value['CAN_BUY'])
-			continue;
-		$select[] = $value["SELECT"];
-	}
+	$filter = array(
+		'ID' => $arSetItemsID,
+		'IBLOCK_LID' => SITE_ID,
+		'ACTIVE_DATE' => 'Y',
+		'ACTIVE' => 'Y',
+		'CHECK_PERMISSIONS' => 'Y',
+		'MIN_PERMISSION' => 'R'
+	);
+	$arResult['PRICES'] = \CIBlockPriceTools::GetCatalogPrices($arResult['PRODUCT_IBLOCK_ID'], $arParams['PRICE_CODE']);
+	$allowPriceTypes = \CIBlockPriceTools::GetAllowCatalogPrices($arResult['PRICES']);
 
 	$arResult["SET_ITEMS"]["DEFAULT"] = array();
 	$arResult["SET_ITEMS"]["OTHER"] = array();
@@ -182,7 +194,10 @@ if($this->StartResultCache(false, array($elementID, ($arParams["CACHE_GROUPS"]==
 	$arResult['ITEMS_RATIO'] = array_fill_keys($arSetItemsID, 1);
 	$ratioResult = Catalog\ProductTable::getCurrentRatioWithMeasure($arSetItemsID);
 	foreach ($ratioResult as $ratioProduct => $ratioData)
+	{
 		$arResult['ITEMS_RATIO'][$ratioProduct] = $ratioData['RATIO'];
+		$productQuantity[$ratioProduct] *= $ratioData['RATIO'];
+	}
 	unset($ratioProduct, $ratioData);
 
 	$tagIblockList = array();
@@ -190,61 +205,234 @@ if($this->StartResultCache(false, array($elementID, ($arParams["CACHE_GROUPS"]==
 	$tagIblockList[$arResult['ELEMENT_IBLOCK_ID']] = $arResult['ELEMENT_IBLOCK_ID'];
 	$tagCurrencyList = array();
 
-	$found = false;
+	$foundMain = false;
+	$itemsList = array();
+	$offerList = array();
 	$itemsIterator = CIBlockElement::GetList(
 		array(),
-		array('ID' => $arSetItemsID),
+		$filter,
 		false,
 		false,
 		$select
 	);
 	while ($item = $itemsIterator->GetNext())
 	{
-		$found = true;
+		if (
+			$item['CATALOG_TYPE'] != Catalog\ProductTable::TYPE_PRODUCT
+			&& $item['CATALOG_TYPE'] != Catalog\ProductTable::TYPE_SET
+			&& $item['CATALOG_TYPE'] != Catalog\ProductTable::TYPE_OFFER
+		)
+			continue;
+
 		$item['ID'] = (int)$item['ID'];
 		$item['IBLOCK_ID'] = (int)$item['IBLOCK_ID'];
-		$tagIblockList[$item['IBLOCK_ID']] = $item['IBLOCK_ID'];
+		$itemsList[$item['ID']] = $item;
+		if ($item['CATALOG_TYPE'] == Catalog\ProductTable::TYPE_OFFER)
+			$offerList[$item['ID']] = $item['ID'];
+		if ($item['ID'] == $arResult['ELEMENT_ID'])
+			$foundMain = true;
+	}
+	unset($select, $item, $itemsIterator);
+	if (!$foundMain || count($itemsList) < 2)
+	{
+		$this->abortResultCache();
+		return;
+	}
 
-		$priceList = CIBlockPriceTools::GetItemPrices(
-			$item['IBLOCK_ID'],
-			$arResult['PRICES'],
-			$item,
-			$arParams['PRICE_VAT_INCLUDE'],
-			$arConvertParams
-		);
-		if (empty($priceList))
-			continue;
-		//TODO: after iblock 15.5.9 change this code to CIBlockPriceTools::getMinPriceFromList
-		foreach($priceList as &$price)
+	if (!empty($offerList))
+	{
+		$parents = CCatalogSku::getProductList($offerList);
+		if (!empty($parents) && is_array($parents))
 		{
-			$tagCurrencyList[$price['CURRENCY']] = $price['CURRENCY'];
-			if (isset($price['ORIG_CURRENCY']))
-				$tagCurrencyList[$price['ORIG_CURRENCY']] = $price['ORIG_CURRENCY'];
-			if ($price['MIN_PRICE'] == "Y")
+			$offersMap = array();
+			foreach ($parents as $offerId => $parentData)
 			{
-				$item['PRICE_CURRENCY'] = $price['CURRENCY'];
-				$item['PRICE_DISCOUNT_VALUE'] = $price['DISCOUNT_VALUE'];
-				$item['PRICE_PRINT_DISCOUNT_VALUE'] = $price['PRINT_DISCOUNT_VALUE'];
-				$item['PRICE_VALUE'] = $price['VALUE'];
-				$item['PRICE_PRINT_VALUE'] = $price['PRINT_VALUE'];
-				$item['PRICE_DISCOUNT_DIFFERENCE_VALUE'] = $price['DISCOUNT_DIFF'];
-				$item['PRICE_DISCOUNT_DIFFERENCE'] = $price['PRINT_DISCOUNT_DIFF'];
-				$item['PRICE_DISCOUNT_PERCENT'] = $price['DISCOUNT_DIFF_PERCENT'];
-				break;
+				$parentId = $parentData['ID'];
+				if (!isset($offersMap[$parentId]))
+					$offersMap[$parentId] = array();
+				$offersMap[$parentId][$offerId] = $offerId;
 			}
+			unset($offerId, $parentData);
+			$iterator = CIBlockElement::GetList(
+				array(),
+				array(
+					'ID' => array_keys($offersMap),
+					'IBLOCK_LID' => SITE_ID,
+					'ACTIVE_DATE' => 'Y',
+					'ACTIVE' => 'Y',
+					'CHECK_PERMISSIONS' => 'Y',
+					'MIN_PERMISSION' => 'R'
+				),
+				false,
+				false,
+				array('ID', 'IBLOCK_ID', 'PREVIEW_PICTURE', 'DETAIL_PICTURE')
+			);
+			while ($row = $iterator->Fetch())
+			{
+				$row['ID'] = (int)$row['ID'];
+				foreach ($offersMap[$row['ID']] as $itemId)
+				{
+					unset($offerList[$itemId]);
+					if ($itemsList[$itemId]['PREVIEW_PICTURE'] === null)
+						$itemsList[$itemId]['PREVIEW_PICTURE'] = $row['PREVIEW_PICTURE'];
+					if ($itemsList[$itemId]['DETAIL_PICTURE'] === null)
+						$itemsList[$itemId]['DETAIL_PICTURE'] = $row['DETAIL_PICTURE'];
+				}
+				unset($itemId);
+			}
+			unset($row, $iterator);
+			unset($offersMap);
 		}
-		unset($price, $priceList);
-		//TODO: end
+
+		if (!empty($offerList))
+		{
+			foreach ($offerList as $clearId)
+				unset($itemsList[$clearId]);
+			unset($clearId);
+		}
+	}
+	if (empty($itemsList))
+	{
+		$this->abortResultCache();
+		return;
+	}
+
+	foreach ($itemsList as $item)
+		$tagIblockList[$item['IBLOCK_ID']] = $item['IBLOCK_ID'];
+	unset($item);
+
+	if (!empty($allowPriceTypes))
+	{
+		$prices = array();
+		$iterator = Catalog\PriceTable::getList(array(
+			'select' => array(
+				'ID', 'PRODUCT_ID', 'CATALOG_GROUP_ID', 'PRICE', 'CURRENCY',
+				'QUANTITY_FROM', 'QUANTITY_TO',
+				'EXTRA_ID'
+			),
+			'filter' => array('@PRODUCT_ID' => array_keys($itemsList), '@CATALOG_GROUP_ID' => $allowPriceTypes),
+			'order' => array('PRODUCT_ID' => 'ASC', 'CATALOG_GROUP_ID' => 'ASC')
+		));
+		while ($row = $iterator->fetch())
+		{
+			$id = (int)$row['PRODUCT_ID'];
+			$rawPrice = array();
+			if ($row['QUANTITY_FROM'] !== null || $row['QUANTITY_TO'] !== null)
+			{
+				if (
+					($row['QUANTITY_FROM'] === null || (int)$row['QUANTITY_FROM'] <= $productQuantity[$id])
+					&& ($row['QUANTITY_TO'] === null || (int)$row['QUANTITY_TO'] >= $productQuantity[$id])
+				)
+					$rawPrice = $row;
+			}
+			else
+			{
+				$rawPrice = $row;
+			}
+			if (!empty($rawPrice))
+			{
+				$priceType = $rawPrice['CATALOG_GROUP_ID'];
+				$itemsList[$id]['CATALOG_PRICE_ID_'.$priceType] = $rawPrice['ID'];
+				$itemsList[$id]['~CATALOG_PRICE_ID_'.$priceType] = $rawPrice['ID'];
+				$itemsList[$id]['CATALOG_PRICE_'.$priceType] = $rawPrice['PRICE'];
+				$itemsList[$id]['~CATALOG_PRICE_'.$priceType] = $rawPrice['PRICE'];
+				$itemsList[$id]['CATALOG_CURRENCY_'.$priceType] = $rawPrice['CURRENCY'];
+				$itemsList[$id]['~CATALOG_CURRENCY_'.$priceType] = $rawPrice['CURRENCY'];
+				$itemsList[$id]['CATALOG_QUANTITY_FROM_'.$priceType] = $rawPrice['QUANTITY_FROM'];
+				$itemsList[$id]['~CATALOG_QUANTITY_FROM_'.$priceType] = $rawPrice['QUANTITY_FROM'];
+				$itemsList[$id]['CATALOG_QUANTITY_TO_'.$priceType] = $rawPrice['QUANTITY_TO'];
+				$itemsList[$id]['~CATALOG_QUANTITY_TO_'.$priceType] = $rawPrice['QUANTITY_TO'];
+				$itemsList[$id]['CATALOG_EXTRA_ID_'.$priceType] = $rawPrice['EXTRA_ID'];
+				$itemsList[$id]['~CATALOG_EXTRA_ID_'.$priceType] = $rawPrice['EXTRA_ID'];
+
+				$tagCurrencyList[$rawPrice['CURRENCY']] = $rawPrice['CURRENCY'];
+				unset($priceType);
+			}
+			unset($rawPrice, $id);
+		}
+		unset($row, $iterator);
+	}
+
+	$item = $itemsList[$arResult['ELEMENT_ID']];
+	$priceList = \CIBlockPriceTools::GetItemPrices(
+		$item['IBLOCK_ID'],
+		$arResult['PRICES'],
+		$item,
+		$arParams['PRICE_VAT_INCLUDE'],
+		$arConvertParams
+	);
+	if (empty($priceList))
+	{
+		$this->abortResultCache();
+		return;
+	}
+	$minimalPrice = \CIBlockPriceTools::getMinPriceFromList($priceList);
+	if (empty($minimalPrice))
+	{
+		$this->abortResultCache();
+		return;
+	}
+	else
+	{
+		$itemsList[$arResult['ELEMENT_ID']]['PRICE_CURRENCY'] = $minimalPrice['CURRENCY'];
+		$itemsList[$arResult['ELEMENT_ID']]['PRICE_DISCOUNT_VALUE'] = $minimalPrice['DISCOUNT_VALUE'];
+		$itemsList[$arResult['ELEMENT_ID']]['PRICE_PRINT_DISCOUNT_VALUE'] = $minimalPrice['PRINT_DISCOUNT_VALUE'];
+		$itemsList[$arResult['ELEMENT_ID']]['PRICE_VALUE'] = $minimalPrice['VALUE'];
+		$itemsList[$arResult['ELEMENT_ID']]['PRICE_PRINT_VALUE'] = $minimalPrice['PRINT_VALUE'];
+		$itemsList[$arResult['ELEMENT_ID']]['PRICE_DISCOUNT_DIFFERENCE_VALUE'] = $minimalPrice['DISCOUNT_DIFF'];
+		$itemsList[$arResult['ELEMENT_ID']]['PRICE_DISCOUNT_DIFFERENCE'] = $minimalPrice['PRINT_DISCOUNT_DIFF'];
+		$itemsList[$arResult['ELEMENT_ID']]['PRICE_DISCOUNT_PERCENT'] = $minimalPrice['DISCOUNT_DIFF_PERCENT'];
+
+		if ($arParams['CONVERT_CURRENCY'] == 'N')
+		{
+			$arConvertParams['CONVERT_CURRENCY'] = 'Y';
+			$arConvertParams['CURRENCY_ID'] = $minimalPrice['CURRENCY'];
+		}
+	}
+	unset($minimalPrice, $priceList, $item);
+
+	if ($arConvertParams['CURRENCY_ID'] !== '')
+		$tagCurrencyList[$arConvertParams['CURRENCY_ID']] = $arConvertParams['CURRENCY_ID'];
+
+	foreach ($itemsList as $item)
+	{
+		if ($item['ID'] != $arResult['ELEMENT_ID'])
+		{
+			$priceList = \CIBlockPriceTools::GetItemPrices(
+				$item['IBLOCK_ID'],
+				$arResult['PRICES'],
+				$item,
+				$arParams['PRICE_VAT_INCLUDE'],
+				$arConvertParams
+			);
+			if (empty($priceList))
+				continue;
+
+			$minimalPrice = \CIBlockPriceTools::getMinPriceFromList($priceList);
+			if (!empty($minimalPrice))
+			{
+				$item['PRICE_CURRENCY'] = $minimalPrice['CURRENCY'];
+				$item['PRICE_DISCOUNT_VALUE'] = $minimalPrice['DISCOUNT_VALUE'];
+				$item['PRICE_PRINT_DISCOUNT_VALUE'] = $minimalPrice['PRINT_DISCOUNT_VALUE'];
+				$item['PRICE_VALUE'] = $minimalPrice['VALUE'];
+				$item['PRICE_PRINT_VALUE'] = $minimalPrice['PRINT_VALUE'];
+				$item['PRICE_DISCOUNT_DIFFERENCE_VALUE'] = $minimalPrice['DISCOUNT_DIFF'];
+				$item['PRICE_DISCOUNT_DIFFERENCE'] = $minimalPrice['PRINT_DISCOUNT_DIFF'];
+				$item['PRICE_DISCOUNT_PERCENT'] = $minimalPrice['DISCOUNT_DIFF_PERCENT'];
+			}
+			unset($minimalPrice);
+		}
+
 		$item['CAN_BUY'] = CIBlockPriceTools::CanBuy(
 			$item['IBLOCK_ID'],
 			$arResult['PRICES'],
 			$item
 		);
 
-		if (!empty($productLink[$item['ID']]))
+		if (isset($productLink[$item['ID']]))
 		{
-			foreach ($productLink[$item['ID']] as &$index)
-				$currentSet['ITEMS'][$index]['ITEM_DATA'] = $item;
+			$index = $productLink[$item['ID']];
+			$currentSet['ITEMS'][$index]['ITEM_DATA'] = $item;
 			unset($index);
 		}
 		elseif ($item['ID'] == $arResult['ELEMENT_ID'])
@@ -252,10 +440,10 @@ if($this->StartResultCache(false, array($elementID, ($arParams["CACHE_GROUPS"]==
 			$currentSet['ITEM_DATA'] = $item;
 		}
 	}
-	unset($select, $item, $itemsIterator);
-	if (!$found || empty($currentSet['ITEM_DATA']))
+	unset($item, $itemsList);
+	if (empty($currentSet['ITEM_DATA']))
 	{
-		$this->AbortResultCache();
+		$this->abortResultCache();
 		return;
 	}
 	$defaultMeasure = CCatalogMeasure::getDefaultMeasure(true, true);
@@ -276,6 +464,7 @@ if($this->StartResultCache(false, array($elementID, ($arParams["CACHE_GROUPS"]==
 	);
 
 	$defaultCurrency = $arResult['ELEMENT']['PRICE_CURRENCY'];
+	$compareCurrency = empty($arConvertParams) || $arConvertParams['CONVERT_CURRENCY'] == 'N';
 	$found = false;
 	$resort = false;
 	foreach ($currentSet['ITEMS'] as &$setItem)
@@ -293,14 +482,14 @@ if($this->StartResultCache(false, array($elementID, ($arParams["CACHE_GROUPS"]==
 		$setItem['ITEM_DATA']['BASKET_QUANTITY'] = $setItem['ITEM_DATA']['SET_QUANTITY']*$setItem['ITEM_DATA']['MEASURE_RATIO'];
 		$arResult['BASKET_QUANTITY'][$setItem['ITEM_DATA']['ID']] = $setItem['ITEM_DATA']['BASKET_QUANTITY'];
 		$setItem['ITEM_DATA']['SET_SORT'] = $setItem['SORT'];
-		if ($arParams['CONVERT_CURRENCY'] == 'N' && $setItem['ITEM_DATA']['PRICE_CURRENCY'] != $defaultCurrency)
+		if ($compareCurrency && $setItem['ITEM_DATA']['PRICE_CURRENCY'] != $defaultCurrency)
 		{
 			$setItem['ITEM_DATA']['PRICE_CONVERT_DISCOUNT_VALUE'] = CCurrencyRates::ConvertCurrency($setItem['ITEM_DATA']['PRICE_DISCOUNT_VALUE'], $setItem['ITEM_DATA']['PRICE_CURRENCY'], $defaultCurrency);
 			$setItem['ITEM_DATA']['PRICE_CONVERT_VALUE'] = CCurrencyRates::ConvertCurrency($setItem['ITEM_DATA']["PRICE_VALUE"], $setItem['ITEM_DATA']['PRICE_CURRENCY'], $defaultCurrency);
 			$setItem['ITEM_DATA']['PRICE_CONVERT_DISCOUNT_DIFFERENCE_VALUE'] = CCurrencyRates::ConvertCurrency($setItem['ITEM_DATA']['PRICE_DISCOUNT_DIFFERENCE_VALUE'], $setItem['ITEM_DATA']['PRICE_CURRENCY'], $defaultCurrency);
 			$setItem['ITEM_DATA']['PRICE_CURRENCY'] = $defaultCurrency;
 		}
-		if ($setItem['ITEM_DATA']['CAN_BUY'] && $countSetDefaultItems < 3)
+		if ($setItem['ITEM_DATA']['CAN_BUY'] && $countSetDefaultItems < $arParams['BUNDLE_ITEMS_COUNT'])
 		{
 			$arResult['SET_ITEMS']['DEFAULT'][] = $setItem['ITEM_DATA'];
 			$arResult['SET_ITEMS']['PRICE'] += $setItem['ITEM_DATA']['PRICE_DISCOUNT_VALUE']*$setItem['ITEM_DATA']['BASKET_QUANTITY'];
@@ -319,7 +508,7 @@ if($this->StartResultCache(false, array($elementID, ($arParams["CACHE_GROUPS"]==
 	unset($setItem, $currentSet);
 	if (!$found || empty($arResult['SET_ITEMS']['DEFAULT']))
 	{
-		$this->AbortResultCache();
+		$this->abortResultCache();
 		return;
 	}
 	unset($found);
@@ -332,22 +521,28 @@ if($this->StartResultCache(false, array($elementID, ($arParams["CACHE_GROUPS"]==
 		$taggedCache = Application::getInstance()->getTaggedCache();
 		if (!empty($tagIblockList))
 		{
-			foreach ($tagIblockList as &$iblock)
+			foreach ($tagIblockList as $iblock)
 				$taggedCache->registerTag('iblock_id_'.$iblock);
 			unset($iblock);
 		}
 		if (!empty($tagCurrencyList))
 		{
-			foreach ($tagCurrencyList as &$currency)
+			foreach ($tagCurrencyList as $currency)
 				$taggedCache->registerTag('currency_id_'.$currency);
 			unset($currency);
 		}
 	}
 
+	$arResult['SHOW_DEFAULT_SET_DISCOUNT'] = true;
 	if ($arResult["SET_ITEMS"]["OLD_PRICE"] && $arResult["SET_ITEMS"]["OLD_PRICE"] != $arResult["SET_ITEMS"]["PRICE"])
+	{
 		$arResult["SET_ITEMS"]["OLD_PRICE"] = CCurrencyLang::CurrencyFormat($arResult["SET_ITEMS"]["OLD_PRICE"], $defaultCurrency, true);
+	}
 	else
+	{
 		$arResult["SET_ITEMS"]["OLD_PRICE"] = 0;
+		$arResult['SHOW_DEFAULT_SET_DISCOUNT'] = false;
+	}
 	if ($arResult["SET_ITEMS"]["PRICE"])
 		$arResult["SET_ITEMS"]["PRICE"] = CCurrencyLang::CurrencyFormat($arResult["SET_ITEMS"]["PRICE"], $defaultCurrency, true);
 	if ($arResult["SET_ITEMS"]["PRICE_DISCOUNT_DIFFERENCE"])
@@ -368,7 +563,8 @@ if($this->StartResultCache(false, array($elementID, ($arParams["CACHE_GROUPS"]==
 		)
 	);
 	unset($currencyFormat);
+	$arResult['CONVERT_CURRENCY'] = $arConvertParams;
 
-	$this->SetResultCacheKeys(array());
-	$this->IncludeComponentTemplate();
+	$this->setResultCacheKeys(array());
+	$this->includeComponentTemplate();
 }

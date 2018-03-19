@@ -35,12 +35,12 @@ class CForumDBTools
 		<div style='background-color:#ffffcc; border: 1px solid #ff8888; padding: 10px; margin: 5px 0; font-size:80%; '>
 			<div style='float: right; width: 150px; margin-top:-5px;'>
 				<form action="<?=POST_FORM_ACTION_URI?>" method="POST">
-					<input type='hidden' name='<?=htmlspecialcharsbx($TRIGGER)?>' value='Y' />
+					<input type="hidden" name="<?=htmlspecialcharsbx($TRIGGER)?>" value="Y" />
 						<?=bitrix_sessid_post()?>
-					<input type='submit' value='<?=GetMessage('F_DB_GO')?>' />
+					<input type="submit" value="<?=GetMessage('F_DB_GO')?>" />
 				</form>
 			</div>
-			<?=htmlspecialcharsEx($message)?>
+			<?=htmlspecialcharsbx($message)?>
 		</div>
 <?
 	}
@@ -50,7 +50,7 @@ class CForumDBTools
 		$background = ($error ? '#ffcccc' : '#ccffcc');
 ?>
 		<div style='background-color:<?=$background?>; border: 1px solid #ff8888; padding: 10px; margin: 5px 0; font-size:80%;'>
-			<?=htmlspecialcharsEx($message)?>
+			<?=htmlspecialcharsbx($message)?>
 		</div>
 <?
 	}

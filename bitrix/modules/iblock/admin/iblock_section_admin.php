@@ -1,4 +1,7 @@
 <?
+/** @global CMain $APPLICATION */
+/** @global $DB CDatabase */
+/** @global CUserTypeManager $USER_FIELD_MANAGER */
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 CModule::IncludeModule("iblock");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/iblock/prolog.php");
@@ -8,7 +11,7 @@ $arIBTYPE = CIBlockType::GetByIDLang($type, LANGUAGE_ID);
 if($arIBTYPE===false)
 	$APPLICATION->AuthForm(GetMessage("IBSEC_A_BAD_BLOCK_TYPE_ID"));
 
-$IBLOCK_ID = IntVal($IBLOCK_ID);
+$IBLOCK_ID = (isset($_REQUEST['IBLOCK_ID']) ? (int)$_REQUEST['IBLOCK_ID'] : 0);
 $arIBlock = CIBlock::GetArrayByID($IBLOCK_ID);
 
 if($arIBlock)
@@ -20,8 +23,7 @@ if($bBadBlock)
 {
 	$APPLICATION->SetTitle($arIBTYPE["NAME"]);
 	require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_after.php");
-	?>
-	<?echo ShowError(GetMessage("IBSEC_A_BAD_IBLOCK"));?>
+	ShowError(GetMessage("IBSEC_A_BAD_IBLOCK"));?>
 	<a href="iblock_admin.php?lang=<?echo LANGUAGE_ID?>&amp;type=<?echo htmlspecialcharsbx($type)?>"><?echo GetMessage("IBSEC_A_BACK_TO_ADMIN")?></a>
 	<?
 	require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");
@@ -71,7 +73,7 @@ $find_section_section = $section_id;
 //This is all parameters needed for proper navigation
 $sThisSectionUrl = '&type='.urlencode($type).'&lang='.LANGUAGE_ID.'&IBLOCK_ID='.$IBLOCK_ID.'&find_section_section='.$find_section_section;
 
-$arFilter = Array(
+$arFilter = array(
 	"IBLOCK_ID"	=> $IBLOCK_ID,
 	"?NAME"		=> $find_section_name,
 	"SECTION_ID"	=> $find_section_section,
@@ -231,6 +233,7 @@ $arHeaders = array(
 	array(
 		"id" => "XML_ID",
 		"content" => GetMessage("IBSEC_A_XML_ID"),
+		"sort" => "xml_id",
 	),
 	array(
 		"id" => "ELEMENT_CNT",
@@ -391,7 +394,7 @@ foreach ($arRows as $id => $row)
 			'size' => '3',
 		));
 		$row->AddInputField("CODE");
-		$row->AddInputField("EXTERNAL_ID");
+		$row->AddInputField("XML_ID");
 	}
 	else
 	{
@@ -399,7 +402,7 @@ foreach ($arRows as $id => $row)
 		$row->AddInputField("NAME", false);
 		$row->AddInputField("SORT", false);
 		$row->AddInputField("CODE", false);
-		$row->AddInputField("EXTERNAL_ID", false);
+		$row->AddInputField("XML_ID", false);
 	}
 
 	$arActions = array();
@@ -771,4 +774,3 @@ if(CIBlockRights::UserHasRightTo($IBLOCK_ID, $IBLOCK_ID, 'iblock_edit') && !defi
 }
 
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");
-?>

@@ -5,7 +5,7 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/catalog/general/discount
 
 class CCatalogDiscountCoupon extends CAllCatalogDiscountCoupon
 {
-	public function Add($arFields, $bAffectDataFile = true)
+	public static function Add($arFields, $bAffectDataFile = true)
 	{
 		static $eventOnBeforeAddExists = null;
 		static $eventOnAddExists = null;
@@ -49,7 +49,7 @@ class CCatalogDiscountCoupon extends CAllCatalogDiscountCoupon
 		return $ID;
 	}
 
-	public function Update($ID, $arFields)
+	public static function Update($ID, $arFields)
 	{
 		static $eventOnBeforeUpdateExists = null;
 		static $eventOnUpdateExists = null;
@@ -95,7 +95,7 @@ class CCatalogDiscountCoupon extends CAllCatalogDiscountCoupon
 		return $ID;
 	}
 
-	public function Delete($ID, $bAffectDataFile = true)
+	public static function Delete($ID, $bAffectDataFile = true)
 	{
 		static $eventOnBeforeDeleteExists = null;
 		static $eventOnDeleteExists = null;
@@ -135,7 +135,7 @@ class CCatalogDiscountCoupon extends CAllCatalogDiscountCoupon
 		return true;
 	}
 
-	public function DeleteByDiscountID($ID, $bAffectDataFile = true)
+	public static function DeleteByDiscountID($ID, $bAffectDataFile = true)
 	{
 		global $DB;
 
@@ -149,7 +149,7 @@ class CCatalogDiscountCoupon extends CAllCatalogDiscountCoupon
 		return true;
 	}
 
-	public function GetByID($ID)
+	public static function GetByID($ID)
 	{
 		global $DB;
 
@@ -179,7 +179,7 @@ class CCatalogDiscountCoupon extends CAllCatalogDiscountCoupon
 	 * @param array $arSelectFields
 	 * @return bool|CDBResult
 	 */
-	public function GetList($arOrder = array(), $arFilter = array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array())
+	public static function GetList($arOrder = array(), $arFilter = array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array())
 	{
 		global $DB;
 
@@ -271,7 +271,7 @@ class CCatalogDiscountCoupon extends CAllCatalogDiscountCoupon
 	* @deprecated deprecated since catalog 15.0.4
 	* @see \Bitrix\Sale\DiscountCouponsManager
 	*/
-	public function CouponApply($intUserID, $strCoupon)
+	public static function CouponApply($intUserID, $strCoupon)
 	{
 		if (self::$existCouponsManager === null)
 			self::initCouponManager();
@@ -361,7 +361,7 @@ class CCatalogDiscountCoupon extends CAllCatalogDiscountCoupon
 	* @deprecated deprecated since catalog 12.5.6
 	* @see CCatalogDiscountCoupon::CouponOneOrderDisable()
 	*/
-	public function __CouponOneOrderDisable($arCoupons)
+	public static function __CouponOneOrderDisable($arCoupons)
 	{
 		global $DB;
 		if (!is_array($arCoupons))
@@ -377,7 +377,7 @@ class CCatalogDiscountCoupon extends CAllCatalogDiscountCoupon
 	* @deprecated deprecated since catalog 15.0.4
 	* @see \Bitrix\Sale\DiscountCouponsManager::saveApplied
 	*/
-	public function CouponOneOrderDisable($intOrderID = 0)
+	public static function CouponOneOrderDisable($intOrderID = 0)
 	{
 		if (self::$existCouponsManager === null)
 			self::initCouponManager();
@@ -416,7 +416,7 @@ class CCatalogDiscountCoupon extends CAllCatalogDiscountCoupon
 	* @deprecated deprecated since catalog 15.0.4
 	* @see \Bitrix\Sale\DiscountCouponsManager::isExist
 	*/
-	public function IsExistCoupon($strCoupon)
+	public static function IsExistCoupon($strCoupon)
 	{
 		if (self::$existCouponsManager === null)
 			self::initCouponManager();

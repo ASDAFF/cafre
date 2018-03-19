@@ -16,7 +16,7 @@ $arParams["FAMILY"] = trim($arParams["FAMILY"]);
 $arParams["FAMILY"] = CUtil::addslashes(empty($arParams["FAMILY"]) ? "FORUM" : $arParams["FAMILY"]);
 $arParams["RETURN"] = ($arParams["RETURN"] == "Y" || $arParams["RETURN"] == "ARRAY" ? $arParams["RETURN"] : "N");
 //$arParams["SHOW_LINK"] = ($arParams["SHOW_LINK"] == "Y" ? "Y" : "N");
-$arParams["ADDITIONAL_URL"] = htmlspecialcharsEx(trim($arParams["ADDITIONAL_URL"]));
+$arParams["ADDITIONAL_URL"] = htmlspecialcharsbx(trim($arParams["ADDITIONAL_URL"]));
 $arParams["SERVER_NAME"] = (defined("SITE_SERVER_NAME") && strLen(SITE_SERVER_NAME) > 0) ? SITE_SERVER_NAME : COption::GetOptionString("main", "server_name");
 $arParams["NAME_TEMPLATE"] = str_replace(array("#NOBR#","#/NOBR#"), "", (!!$arParams["NAME_TEMPLATE"] ? $arParams["NAME_TEMPLATE"] : CSite::GetDefaultNameFormat()));
 // *************************/Input params***************************************************************

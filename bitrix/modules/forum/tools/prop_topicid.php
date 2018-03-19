@@ -45,7 +45,7 @@ class CIBlockPropertyTopicID
 				$value["VALUE"] = intVal($value["VALUE"]);
 				$arTopic = CForumTopic::GetByID($value["VALUE"]);
 				if ($arTopic)
-					$res = "[<a title='".GetMessage("IBLOCK_PROP_FORUM_VIEW_TOPIC")."' class='tablebodylink' href='/bitrix/admin/forum_topics.php?lang=".LANG."'>".intVal($arTopic["ID"])."</a>] (".htmlspecialcharsEx($arTopic["TITLE"]).") ";
+					$res = "[<a title='".GetMessage("IBLOCK_PROP_FORUM_VIEW_TOPIC")."' class='tablebodylink' href='/bitrix/admin/forum_topics.php?lang=".LANG."'>".intVal($arTopic["ID"])."</a>] (".htmlspecialcharsbx($arTopic["TITLE"]).") ";
 				else
 					$res = "&nbsp;".GetMessage("MAIN_NOT_FOUND");
 			}
@@ -67,7 +67,7 @@ class CIBlockPropertyTopicID
 				if (!array_key_exists($value["VALUE"], $cache))
 					$cache[$value["VALUE"]] = CForumTopic::GetByID($value["VALUE"]);
 				$arTopic = $cache[$value["VALUE"]];
-				$res = (!empty($arTopic) ? "[".$value["VALUE"]."] (".htmlspecialcharsEx($arTopic["TITLE"]).")" : $value["VALUE"]);
+				$res = (!empty($arTopic) ? "[".$value["VALUE"]."] (".htmlspecialcharsbx($arTopic["TITLE"]).")" : $value["VALUE"]);
 			}
 			return $res;
 		}

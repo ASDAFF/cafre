@@ -3,16 +3,20 @@
 /** @global CDatabase $DB */
 /** @global CUser $USER */
 
-use Bitrix\Iblock;
+use Bitrix\Main,
+	Bitrix\Main\Loader,
+	Bitrix\Iblock;
 
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
-CModule::IncludeModule("iblock");
+Loader::includeModule('iblock');
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/iblock/prolog.php");
 IncludeModuleLangFile(__FILE__);
 
-$ID = intval($_REQUEST["ID"]);
+$ID = (isset($_REQUEST['ID']) ? (int)$_REQUEST['ID'] : 0);
+if (!CIBlockRights::UserHasRightTo($ID, $ID, "iblock_edit"))
+	$APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
 
-$APPLICATION->AddHeadScript('/bitrix/js/iblock/iblock_edit.js');
+Main\Page\Asset::getInstance()->addJs('/bitrix/js/iblock/iblock_edit.js');
 
 define('CATALOG_NEW_OFFERS_IBLOCK_NEED','-1');
 define('PROPERTY_EMPTY_ROW_SIZE',5);
@@ -247,14 +251,6 @@ function GetPropertyInfo($strPrefix, $ID, $boolUnpack = true, $arHiddenPropField
 				$arResult['SMART_FILTER'] = ('Y' == $arResult['SMART_FILTER'] ? 'Y' : 'N');
 				$arResult['DISPLAY_TYPE'] = substr($arResult['DISPLAY_TYPE'], 0, 1);
 				$arResult['DISPLAY_EXPANDED'] = ('Y' == $arResult['DISPLAY_EXPANDED'] ? 'Y' : 'N');
-				$arProperty['FILTER_HINT'] = trim($arProperty['FILTER_HINT']);
-				if ($arProperty['FILTER_HINT'])
-				{
-					$TextParser = new CBXSanitizer();
-					$TextParser->SetLevel(CBXSanitizer::SECURE_LEVEL_LOW);
-					$TextParser->ApplyHtmlSpecChars(false);
-					$arProperty['FILTER_HINT'] = $TextParser->SanitizeHtml($arProperty['FILTER_HINT']);
-				}
 				$arResult['MULTIPLE_CNT'] = intval($arResult['MULTIPLE_CNT']);
 				if (0 >= $arResult['MULTIPLE_CNT'])
 					$arResult['MULTIPLE_CNT'] = $arDefPropInfo['MULTIPLE_CNT'];
@@ -275,89 +271,27 @@ function GetPropertyInfo($strPrefix, $ID, $boolUnpack = true, $arHiddenPropField
 	return $arResult;
 }
 
-function GetSKUProperty($ID,$SKUID)
-{
-	$arResult = false;
-	$ID = (int)$ID;
-	$SKUID = (int)$SKUID;
-	if ($ID > 0 && $SKUID > 0)
-	{
-		$rsProps = CIBlockProperty::GetList(array(),array('IBLOCK_ID' => $SKUID, 'PROPERTY_TYPE' => 'E', 'LINK_IBLOCK_ID' => $ID, 'ACTIVE' => 'Y'));
-		while ($arProp = $rsProps->Fetch())
-		{
-			if (is_array($arProp) && $arProp['MULTIPLE'] == 'N')
-			{
-				$arResult = $arProp;
-				break;
-			}
-		}
-	}
-	return $arResult;
-}
-
 function CheckSKUProperty($ID, $SKUID)
 {
-	$arResult = false;
 	$ID = (int)$ID;
 	$SKUID = (int)$SKUID;
 	if ($ID > 0 && $SKUID > 0)
 	{
-		$intSKUPropID = 0;
-		$ibp = new CIBlockProperty();
-		$arProp = GetSKUProperty($ID,$SKUID);
-
-		if (empty($arProp) || (is_array($arProp) && $arProp['MULTIPLE'] != 'N'))
+		$propertyId = CIBlockPropertyTools::createProperty($SKUID, CIBlockPropertyTools::CODE_SKU_LINK, array('LINK_IBLOCK_ID' => $ID));
+		if ($propertyId)
 		{
-			$arOFProperty = array(
-				'NAME' => GetMessage('IB_E_OF_SKU_PROPERTY_NAME'),
-				'IBLOCK_ID' => $SKUID,
-				'PROPERTY_TYPE' => Iblock\PropertyTable::TYPE_ELEMENT,
-				'USER_TYPE' => CIBlockPropertyTools::USER_TYPE_SKU_LINK,
-				'LINK_IBLOCK_ID' => $ID,
-				'ACTIVE' => 'Y',
-				'SORT' => '5',
-				'MULTIPLE' => 'N',
-				'CODE' => CIBlockPropertyTools::CODE_SKU_LINK,
-				'XML_ID' => CIBlockPropertyTools::XML_SKU_LINK,
-				'FILTRABLE' => 'Y',
-				'SEARCHABLE' => 'N',
+			$arResult = array(
+				'RESULT' => 'OK',
+				'VALUE' => $propertyId
 			);
-			$intSKUPropID = $ibp->Add($arOFProperty);
-			if (!$intSKUPropID)
-			{
-				$arResult = array(
-					'RESULT' => 'ERROR',
-					'MESSAGE' => $ibp->LAST_ERROR,
-				);
-			}
-		}
-		elseif ($arProp['USER_TYPE'] != CIBlockPropertyTools::USER_TYPE_SKU_LINK || $arProp['XML_ID'] != CIBlockPropertyTools::XML_SKU_LINK)
-		{
-			$arFields = array(
-				'USER_TYPE' => CIBlockPropertyTools::USER_TYPE_SKU_LINK,
-				'XML_ID' => CIBlockPropertyTools::XML_SKU_LINK,
-			);
-			$boolFlag = $ibp->Update($arProp['ID'],$arFields);
-			if (false === $boolFlag)
-			{
-				$arResult = array(
-					'RESULT' => 'ERROR',
-					'MESSAGE' => $ibp->LAST_ERROR,
-				);
-			}
-			else
-				$intSKUPropID = $arProp['ID'];
 		}
 		else
 		{
-			$intSKUPropID = $arProp['ID'];
-		}
-		$intSKUPropID = (int)$intSKUPropID;
-		if ($intSKUPropID > 0)
 			$arResult = array(
-				'RESULT' => 'OK',
-				'VALUE' => $intSKUPropID,
+				'RESULT' => 'ERROR',
+				'MESSAGE' => implode('. ',CIBlockPropertyTools::getErrors())
 			);
+		}
 	}
 	else
 	{
@@ -410,7 +344,7 @@ function __AddPropCellName($intOFPropID,$strPrefix,$arPropInfo)
 {
 	ob_start();
 	?><input type="text" size="25" maxlength="255" name="<?echo $strPrefix.$intOFPropID?>_NAME" id="<?echo $strPrefix.$intOFPropID?>_NAME" value="<?echo $arPropInfo['NAME']?>"><?
-	?><input type="hidden" name="<? echo $strPrefix.$intOFPropID?>_PROPINFO" id="<? echo $strPrefix.$intOFPropID?>_PROPINFO" value="<? echo $arPropInfo['PROPINFO']; ?>"><?
+	?><input type="hidden" name="<? echo $strPrefix.$intOFPropID?>_PROPINFO" id="<? echo $strPrefix.$intOFPropID?>_PROPINFO" value="<?=htmlspecialcharsbx($arPropInfo['PROPINFO']); ?>"><?
 	$strResult = ob_get_contents();
 	ob_end_clean();
 	return $strResult;
@@ -418,7 +352,11 @@ function __AddPropCellName($intOFPropID,$strPrefix,$arPropInfo)
 
 function __AddPropCellType($intOFPropID,$strPrefix,$arPropInfo)
 {
+	static $baseTypeList = null;
 	static $arUserTypeList = null;
+	
+	if ($baseTypeList === null)
+		$baseTypeList = Iblock\Helpers\Admin\Property::getBaseTypeList(true);
 	if ($arUserTypeList === null)
 	{
 		$arUserTypeList = CIBlockProperty::GetUserType();
@@ -431,14 +369,13 @@ function __AddPropCellType($intOFPropID,$strPrefix,$arPropInfo)
 	{
 		?><optgroup label="<? echo GetMessage('IB_E_PROP_BASE_TYPE_GROUP'); ?>"><?
 	}
-	?>
-	<option value="S" <?if($arPropInfo['PROPERTY_TYPE']=="S" && !$arPropInfo['USER_TYPE'])echo " selected"?>><?echo GetMessage("IB_E_PROP_TYPE_S")?></option>
-	<option value="N" <?if($arPropInfo['PROPERTY_TYPE']=="N" && !$arPropInfo['USER_TYPE'])echo " selected"?>><?echo GetMessage("IB_E_PROP_TYPE_N")?></option>
-	<option value="L" <?if($arPropInfo['PROPERTY_TYPE']=="L" && !$arPropInfo['USER_TYPE'])echo " selected"?>><?echo GetMessage("IB_E_PROP_TYPE_L")?></option>
-	<option value="F" <?if($arPropInfo['PROPERTY_TYPE']=="F" && !$arPropInfo['USER_TYPE'])echo " selected"?>><?echo GetMessage("IB_E_PROP_TYPE_F")?></option>
-	<option value="G" <?if($arPropInfo['PROPERTY_TYPE']=="G" && !$arPropInfo['USER_TYPE'])echo " selected"?>><?echo GetMessage("IB_E_PROP_TYPE_G")?></option>
-	<option value="E" <?if($arPropInfo['PROPERTY_TYPE']=="E" && !$arPropInfo['USER_TYPE'])echo " selected"?>><?echo GetMessage("IB_E_PROP_TYPE_E")?></option>
-	<?
+	foreach ($baseTypeList as $typeId => $typeTitle)
+	{
+		?><option value="<?=$typeId; ?>" <?=($arPropInfo['PROPERTY_TYPE'] == $typeId && !$arPropInfo['USER_TYPE'] ? ' selected' : '');?>><?=htmlspecialcharsbx($typeTitle); ?></option><?
+	}
+	unset($typeTitle);
+	unset($typeId);
+
 	if ($boolUserPropExist)
 	{
 		?></optgroup><optgroup label="<? echo GetMessage('IB_E_PROP_USER_TYPE_GROUP'); ?>"><?
@@ -463,8 +400,8 @@ function __AddPropCellActive($intOFPropID,$strPrefix,$arPropInfo)
 {
 	ob_start();
 	?><input type="hidden" name="<?echo $strPrefix.$intOFPropID?>_ACTIVE" id="<?echo $strPrefix.$intOFPropID?>_ACTIVE_N" value="N">
-	<input type="checkbox" name="<?echo $strPrefix.$intOFPropID?>_ACTIVE" id="<?echo $strPrefix.$intOFPropID?>_ACTIVE_Y" value="Y"<?if ($arPropInfo['ACTIVE']=="Y") echo " checked"; ?>>
-	<?
+	<input type="checkbox" name="<?echo $strPrefix.$intOFPropID?>_ACTIVE" id="<?echo $strPrefix.$intOFPropID?>_ACTIVE_Y" value="Y"<?
+	if ($arPropInfo['ACTIVE']=="Y") echo " checked"; ?> title="<?=htmlspecialcharsbx(GetMessage("IB_E_PROP_ACTIVE_SHORT")); ?>"><?
 	$strResult = ob_get_contents();
 	ob_end_clean();
 	return $strResult;
@@ -474,7 +411,8 @@ function __AddPropCellMulti($intOFPropID,$strPrefix,$arPropInfo)
 {
 	ob_start();
 	?><input type="hidden" name="<?echo $strPrefix.$intOFPropID?>_MULTIPLE" id="<?echo $strPrefix.$intOFPropID?>_MULTIPLE_N" value="N">
-	<input type="checkbox" name="<?echo $strPrefix.$intOFPropID?>_MULTIPLE" id="<?echo $strPrefix.$intOFPropID?>_MULTIPLE_Y" value="Y"<?if($arPropInfo['MULTIPLE']=="Y")echo " checked"?>>
+	<input type="checkbox" name="<?echo $strPrefix.$intOFPropID?>_MULTIPLE" id="<?echo $strPrefix.$intOFPropID?>_MULTIPLE_Y" value="Y"<?
+	if($arPropInfo['MULTIPLE']=="Y")echo " checked"?> title="<?=htmlspecialcharsbx(GetMessage("IB_E_PROP_MULT_SHORT")); ?>">
 	<?
 	$strResult = ob_get_contents();
 	ob_end_clean();
@@ -485,7 +423,8 @@ function __AddPropCellReq($intOFPropID,$strPrefix,$arPropInfo)
 {
 	ob_start();
 	?><input type="hidden" name="<?echo $strPrefix.$intOFPropID?>_IS_REQUIRED" id="<?echo $strPrefix.$intOFPropID?>_IS_REQUIRED_N" value="N">
-	<input type="checkbox" name="<?echo $strPrefix.$intOFPropID?>_IS_REQUIRED" id="<?echo $strPrefix.$intOFPropID?>_IS_REQUIRED_Y" value="Y"<?if($arPropInfo['IS_REQUIRED']=="Y")echo " checked"?>><?
+	<input type="checkbox" name="<?echo $strPrefix.$intOFPropID?>_IS_REQUIRED" id="<?echo $strPrefix.$intOFPropID?>_IS_REQUIRED_Y" value="Y"<?
+	if($arPropInfo['IS_REQUIRED']=="Y")echo " checked"?> title="<?=htmlspecialcharsbx(GetMessage("IB_E_PROP_REQIRED_SHORT")); ?>"><?
 	$strResult = ob_get_contents();
 	ob_end_clean();
 	return $strResult;
@@ -555,8 +494,8 @@ $arCellTemplates[] = CUtil::JSEscape(__AddPropCellDelete('tmp_xxx','PREFIX',$arN
 
 $arCellAttr = array(4,5,6,9,10);
 
-$bBizproc = CModule::IncludeModule("bizproc");
-$bCatalog = CModule::IncludeModule('catalog');
+$bBizproc = Loader::includeModule('bizproc');
+$bCatalog = Loader::includeModule('catalog');
 
 $arIBTYPE = CIBlockType::GetByIDLang($type, LANGUAGE_ID);
 
@@ -575,7 +514,7 @@ if(
 {
 	$DB->StartTransaction();
 
-	$arPICTURE = $HTTP_POST_FILES["PICTURE"];
+	$arPICTURE = $_FILES["PICTURE"];
 	$arPICTURE["del"] = ${"PICTURE_del"};
 	$arPICTURE["MODULE_ID"] = "iblock";
 
@@ -585,7 +524,7 @@ if(
 	if ($RSS_YANDEX_ACTIVE != "Y") $RSS_YANDEX_ACTIVE = "N";
 
 	$ib = new CIBlock();
-	$arFields = Array(
+	$arFields = array(
 		"ACTIVE"=>$ACTIVE,
 		"NAME"=>$NAME,
 		"CODE"=>$CODE,
@@ -595,7 +534,7 @@ if(
 		"INDEX_ELEMENT"=>$INDEX_ELEMENT,
 		"IBLOCK_TYPE_ID"=>$type,
 		"LID"=>$LID,
-		"SORT"=>$SORT,
+		"SORT"=>$_POST['SORT'],
 		"PICTURE"=>$arPICTURE,
 		"DESCRIPTION"=>$DESCRIPTION,
 		"DESCRIPTION_TYPE"=>$DESCRIPTION_TYPE,
@@ -631,7 +570,7 @@ if(
 
 	if($arIBTYPE["IN_RSS"]=="Y")
 	{
-		$arFields = array_merge($arFields, Array(
+		$arFields = array_merge($arFields, array(
 			"RSS_ACTIVE"=>$RSS_ACTIVE,
 			"RSS_FILE_ACTIVE"=>$RSS_FILE_ACTIVE,
 			"RSS_YANDEX_ACTIVE"=>$RSS_YANDEX_ACTIVE,
@@ -977,7 +916,7 @@ if(
 							'VAT_ID' => $VAT_ID,
 						);
 						$boolFlag = $obCatalog->Update($ID,$arOffersFields);
-						if (false == $boolFlag)
+						if (!$boolFlag)
 						{
 							$bVarsFromForm = true;
 							if ($ex = $APPLICATION->GetException())
@@ -1319,7 +1258,7 @@ if(
 								if ((false !== $arCatalog) && (0 < intval($arCatalog['OFFERS_IBLOCK_ID'])))
 								{
 									$boolFlag = $obCatalog->UnLinkSKUIBlock($ID);
-									if (false == $boolFlag)
+									if (!$boolFlag)
 									{
 										$bVarsFromForm = true;
 										$ex = $APPLICATION->GetException();
@@ -1334,7 +1273,7 @@ if(
 					}
 				}
 
-				if (false == $boolFlag)
+				if (!$boolFlag)
 				{
 					if($ex = $APPLICATION->GetException())
 					{
@@ -1570,7 +1509,7 @@ if(CIBlockRights::UserHasRightTo($ID, $ID, "iblock_edit")):
 	$aMenu = array(
 		array(
 			"TEXT"=>GetMessage("IBLOCK_BACK_TO_ADMIN"),
-			"LINK"=>'/bitrix/admin/iblock_admin.php?lang='.$lang.'&type='.urlencode($type).'&admin='.($_REQUEST["admin"]=="Y"? "Y": "N"),
+			"LINK"=>'/bitrix/admin/iblock_admin.php?lang='.LANGUAGE_ID.'&type='.urlencode($type).'&admin='.($_REQUEST["admin"]=="Y"? "Y": "N"),
 			"ICON"=>"btn_list",
 		)
 	);
@@ -1700,7 +1639,7 @@ foreach ($arCellAttr as $key => $value)
 <?CAdminMessage::ShowOldStyleError($strWarning);?>
 <?
 $bTab3 = ($arIBTYPE["IN_RSS"]=="Y");
-$bWorkflow = CModule::IncludeModule("workflow");
+$bWorkflow = Loader::includeModule("workflow");
 $bBizprocTab = $bBizproc && $str_BIZPROC == "Y";
 
 $aTabs = array(
@@ -2048,7 +1987,7 @@ $tabControl->BeginNextTab();
 			));?>
 		</td>
 	</tr>
-	<?if(COption::GetOptionString("iblock", "use_htmledit", "Y")=="Y" && CModule::IncludeModule("fileman")):?>
+	<?if(COption::GetOptionString("iblock", "use_htmledit", "Y")=="Y" && Loader::includeModule("fileman")):?>
 		<tr>
 			<td colspan="2" align="center">
 				<?CFileMan::AddHTMLEditorFrame(
@@ -4535,7 +4474,7 @@ if ($bCatalog)
 			*/
 			?>
 			<div id="offers_add_info" style="display: <? echo (CATALOG_NEW_OFFERS_IBLOCK_NEED == $str_OF_IBLOCK_ID ? 'display' : 'none'); ?>; width: 100%; text-align: center;"><table style="margin: auto;"><tbody>
-			<tr><td style="text-align: right; width: 25%;" class="field-name"><? echo GetMessage('IB_E_OF_PR_TITLE'); ?>:</td><td style="text-align: left; width: 75%;"><input type="text" name="OF_IBLOCK_NAME" value="<? echo $str_OF_IBLOCK_NAME;?>" style="width: 100%;" /></td></tr>
+			<tr><td style="text-align: right; width: 25%;" class="field-name"><? echo GetMessage('IB_E_OF_PR_TITLE'); ?>:</td><td style="text-align: left; width: 75%;"><input type="text" name="OF_IBLOCK_NAME" value="<?=htmlspecialcharsbx($str_OF_IBLOCK_NAME);?>" style="width: 100%;" /></td></tr>
 			<tr><td style="text-align: left; width: 100%;" colspan="2" class="field-name"><input type="radio" value="N" id="OF_CREATE_IBLOCK_TYPE_ID_N" name="OF_CREATE_IBLOCK_TYPE_ID" <? echo ('N' == $str_OF_CREATE_IBLOCK_TYPE_ID ? 'checked="checked"' : '')?> onclick="change_offers_ibtype(this);"><label for="CREATE_OFFERS_TYPE_N"><? echo GetMessage('IB_E_OF_PR_OLD_IBTYPE');?></label></td></tr>
 			<tr><td style="text-align: right; width: 25%;" class="field-name"><? echo GetMessage('IB_E_OF_PR_OFFERS_TYPE'); ?>:</td><td style="text-align: left; width: 75%;"><? echo SelectBoxFromArray('OF_IBLOCK_TYPE_ID',array('REFERENCE' => $arIBlockTypeNameList,'REFERENCE_ID' => $arIBlockTypeIDList),$str_OF_IBLOCK_TYPE_ID,'',('N' == $str_OF_CREATE_IBLOCK_TYPE_ID ? '' : 'disabled="disabled"')); ?></td></tr>
 			<tr><td style="text-align: left; width: 100%;" colspan="2" class="field-name"><input type="radio" value="Y" id="OF_CREATE_IBLOCK_TYPE_ID_Y" name="OF_CREATE_IBLOCK_TYPE_ID" <? echo ('Y' == $str_OF_CREATE_IBLOCK_TYPE_ID ? 'checked="checked"' : '')?> onclick="change_offers_ibtype(this);"><label for="CREATE_OFFERS_TYPE_Y"><? echo GetMessage('IB_E_OF_PR_OFFERS_NEW_IBTYPE');?></label></td></tr>
@@ -4823,7 +4762,7 @@ if(CIBlockRights::UserHasRightTo($ID, $ID, "iblock_rights_edit"))
 			else
 				$strSelected = $perm[$r["ID"]];
 
-			if($strSelected=="U" && !CModule::IncludeModule("workflow"))
+			if($strSelected=="U" && !$bWorkflow && !$bBizproc)
 				$strSelected="R";
 
 			if($strSelected!="R" &&
@@ -5005,7 +4944,7 @@ $tabControl->BeginNextTab();
 		</tr>
 	<?endforeach?>
 <?
-	$tabControl->Buttons(array("disabled"=>false, "back_url"=>'iblock_admin.php?lang='.$lang.'&type='.urlencode($type).'&admin='.($_REQUEST["admin"]=="Y"? "Y": "N")));
+	$tabControl->Buttons(array("disabled"=>false, "back_url"=>'iblock_admin.php?lang='.LANGUAGE_ID.'&type='.urlencode($type).'&admin='.($_REQUEST["admin"]=="Y"? "Y": "N")));
 	$tabControl->End();
 	?>
 </form>
@@ -5025,4 +4964,3 @@ else: //if($arIBTYPE!==false):?>
 endif;// if($arIBTYPE!==false):
 
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");
-?>

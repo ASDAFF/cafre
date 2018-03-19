@@ -11,6 +11,9 @@ CModule::IncludeModule('seo');
 IncludeModuleLangFile($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/options.php");
 IncludeModuleLangFile(__FILE__);
 
+$seoRight = $APPLICATION->GetGroupRight($module_id);
+if ($seoRight>="R") :
+
 $arAllOptions = Array(
 	Array("property_window_title", GetMessage('SEO_OPT_PROP_WINDOW_TITLE'), array("text"), "title"),
 	Array("property_description", GetMessage('SEO_OPT_PROP_DESCRIPTION'), array("text"), "description"),
@@ -18,11 +21,22 @@ $arAllOptions = Array(
 	//Array("property_internal_keywords", GetMessage('SEO_OPT_PROP_INTERNAL_KEYWORDS'), array("text"), "keywords_inner"),
 );
 
-$aTabs = array(
-	array("DIV" => "edit1", "TAB" => GetMessage('SEO_OPT_TAB_PROP'), "ICON" => "seo_settings", "TITLE" => GetMessage('SEO_OPT_TAB_PROP_TITLE')),
-	array("DIV" => "edit3", "TAB" => GetMessage('SEO_OPT_TAB_SEARCHERS'), "ICON" => "seo_settings", "TITLE" => GetMessage('SEO_OPT_TAB_SEARCHERS_TITLE')),
-	array("DIV" => "edit2", "TAB" => GetMessage("MAIN_TAB_RIGHTS"), "ICON" => "seo_settings", "TITLE" => GetMessage("MAIN_TAB_TITLE_RIGHTS")),
-);
+$bShowYandexServices =
+	COption::GetOptionString('main', 'vendor', '') == '1c_bitrix'
+	&& \Bitrix\Main\Localization\Loc::getDefaultLang(LANGUAGE_ID) == 'ru';
+
+
+$aTabs = array();
+
+if($bShowYandexServices)
+{
+	$aTabs[] = array("DIV" => "edit0", "TAB" => GetMessage('SEO_OPT_TAB_CLOUDADV'), "ICON" => "seo_settings", "TITLE" => GetMessage('SEO_OPT_TAB_CLOUDADV_TITLE'));
+}
+
+
+$aTabs[] = array("DIV" => "edit1", "TAB" => GetMessage('SEO_OPT_TAB_PROP'), "ICON" => "seo_settings", "TITLE" => GetMessage('SEO_OPT_TAB_PROP_TITLE'));
+$aTabs[] = array("DIV" => "edit3", "TAB" => GetMessage('SEO_OPT_TAB_SEARCHERS'), "ICON" => "seo_settings", "TITLE" => GetMessage('SEO_OPT_TAB_SEARCHERS_TITLE'));
+$aTabs[] = array("DIV" => "edit2", "TAB" => GetMessage("MAIN_TAB_RIGHTS"), "ICON" => "seo_settings", "TITLE" => GetMessage("MAIN_TAB_TITLE_RIGHTS"));
 
 $tabControl = new CAdminTabControl("tabControl", $aTabs);
 
@@ -76,7 +90,7 @@ if (strlen($searchers) > 0 && CModule::IncludeModule('statistic'))
 	$arSearchersList = explode(',', $searchers);
 
 	$dbRes = CSearcher::GetList($by = 's_name', $order = 'asc', array('ID' => implode('|', $arSearchersList)), $is_filtered);
-	while ($arRes = $dbRes->Fetch())
+	while ($arRes = $dbRes->GetNext())
 	{
 		$arCurrentSearchers[$arRes['ID']] = $arRes['NAME'];
 	}
@@ -97,6 +111,50 @@ $tabControl->Begin();
 <form method="POST" action="<?echo $APPLICATION->GetCurPage()?>?mid=<?=htmlspecialcharsbx($mid)?>&amp;lang=<?echo LANG?>" name="seo_settings">
 <?=bitrix_sessid_post();?>
 <?
+if($bShowYandexServices):
+	$tabControl->BeginNextTab();
+
+?>
+<tr>
+	<td>
+<?
+		\Bitrix\Main\Localization\Loc::loadMessages(dirname(__FILE__).'/admin/seo_search.php');
+		\Bitrix\Main\Localization\Loc::loadMessages(dirname(__FILE__).'/admin/seo_adv.php');
+
+		$engine = new \Bitrix\Seo\Engine\YandexDirect();
+		require_once(dirname(__FILE__)."/admin/tab/seo_search_yandex_direct_auth.php");
+
+		if(\Bitrix\Seo\Service::isRegistered())
+		{
+?>
+		<a href="javascript:void(0)" onclick="return clearCloudAdvRegister()"><?=GetMessage("SEO_OPT_TAB_CLOUDADV_CLEAR")?></a>
+<script>
+	function clearCloudAdvRegister()
+	{
+		if(confirm('<?=CUtil::JSEscape(GetMessage('SEO_OPT_TAB_CLOUDADV_CLEAR_CONFIRM'))?>'))
+		{
+			BX.ajax.loadJSON('/bitrix/tools/seo_yandex_direct.php?action=unregister&sessid=' + BX.bitrix_sessid(), function(result)
+			{
+				if(result['result'])
+				{
+					BX.reload();
+				}
+				else if(result["error"])
+				{
+					alert('<?=CUtil::JSEscape(GetMessage("SEO_ERROR"))?> : ' + result['error']['message']);
+				}
+			});
+		}
+	}
+</script>
+<?
+		}
+?>
+	</td>
+</tr>
+
+<?
+endif;
 $tabControl->BeginNextTab();
 
 foreach($arAllOptions as $arOption):
@@ -151,7 +209,9 @@ else
 
 $tabControl->BeginNextTab();
 
-require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/admin/group_rights2.php");
+//group_rights2 work some strange
+//require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/admin/group_rights2.php");
+require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/admin/group_rights.php");
 
 $tabControl->Buttons();?>
 <script language="JavaScript">
@@ -166,3 +226,5 @@ function confirmRestoreDefaults()
 <input type="submit" name="RestoreDefaults" title="<?echo GetMessage("MAIN_HINT_RESTORE_DEFAULTS")?>" OnClick="return confirmRestoreDefaults();" value="<?echo GetMessage("MAIN_RESTORE_DEFAULTS")?>">
 <?$tabControl->End();?>
 </form>
+
+<?endif;?>

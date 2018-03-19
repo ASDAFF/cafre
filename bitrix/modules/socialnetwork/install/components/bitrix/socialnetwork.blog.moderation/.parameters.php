@@ -166,13 +166,13 @@ $arComponentParameters = Array(
 		"IMAGE_MAX_WIDTH" => Array(
 				"NAME" => GetMessage("BPC_IMAGE_MAX_WIDTH"),
 				"TYPE" => "STRING",
-				"DEFAULT" => 600,
+				"DEFAULT" => COption::GetOptionString('blog', 'image_max_width'),
 				"PARENT" => "VISUAL",
 			),		
 		"IMAGE_MAX_HEIGHT" => Array(
 				"NAME" => GetMessage("BPC_IMAGE_MAX_HEIGHT"),
 				"TYPE" => "STRING",
-				"DEFAULT" => 600,
+				"DEFAULT" => COption::GetOptionString('blog', 'image_max_height'),
 				"PARENT" => "VISUAL",
 			),
 	)

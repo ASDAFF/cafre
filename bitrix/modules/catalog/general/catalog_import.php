@@ -1,7 +1,7 @@
 <?
 class CAllCatalogImport
 {
-	function CheckFields($ACTION, &$arFields)
+	public static function CheckFields($ACTION, &$arFields)
 	{
 		global $DB;
 		global $USER;
@@ -85,28 +85,31 @@ class CAllCatalogImport
 		return true;
 	}
 
-	function Delete($ID)
+	public static function Delete($ID)
 	{
 		global $DB;
 
-		$ID = IntVal($ID);
+		$ID = (int)$ID;
+		if ($ID <= 0)
+			return false;
 		return $DB->Query("DELETE FROM b_catalog_export WHERE ID = ".$ID." AND IS_EXPORT = 'N'", true, "File: ".__FILE__."<br>Line: ".__LINE__);
 	}
 
-	function GetList($arOrder=Array("ID"=>"ASC"), $arFilter=Array(), $bCount = false)
+	public static function GetList($arOrder = array("ID" => "ASC"), $arFilter = array(), $bCount = false)
 	{
 		global $DB;
-		$arSqlSearch = Array();
+		$arSqlSearch = array();
 
 		if (!is_array($arFilter))
-			$filter_keys = Array();
+			$filter_keys = array();
 		else
 			$filter_keys = array_keys($arFilter);
 
 		for ($i = 0, $intCount = count($filter_keys); $i < $intCount; $i++)
 		{
 			$val = $DB->ForSql($arFilter[$filter_keys[$i]]);
-			if (strlen($val)<=0) continue;
+			if (strlen($val)<=0)
+				continue;
 
 			$bInvert = false;
 			$key = $filter_keys[$i];
@@ -119,7 +122,7 @@ class CAllCatalogImport
 			switch(strtoupper($key))
 			{
 			case "ID":
-				$arSqlSearch[] = "CE.ID ".($bInvert?"<>":"=")." ".IntVal($val)."";
+				$arSqlSearch[] = "CE.ID ".($bInvert?"<>":"=")." ".(int)$val."";
 				break;
 			case "FILE_NAME":
 				$arSqlSearch[] = "CE.FILE_NAME ".($bInvert?"<>":"=")." '".$val."'";
@@ -177,7 +180,7 @@ class CAllCatalogImport
 			$iCnt = 0;
 			if ($ar_res = $db_res->Fetch())
 			{
-				$iCnt = IntVal($ar_res["CNT"]);
+				$iCnt = (int)$ar_res["CNT"];
 			}
 			return $iCnt;
 		}
@@ -228,7 +231,7 @@ class CAllCatalogImport
 		return $db_res;
 	}
 
-	function GetByID($ID)
+	public static function GetByID($ID)
 	{
 		global $DB;
 
@@ -249,7 +252,7 @@ class CAllCatalogImport
 		return false;
 	}
 
-	function PreGenerateImport($profile_id)
+	public static function PreGenerateImport($profile_id)
 	{
 		global $DB;
 
@@ -288,9 +291,7 @@ class CAllCatalogImport
 		{
 			parse_str($ar_profile["SETUP_VARS"], $arSetupVars);
 			if (!empty($arSetupVars) && is_array($arSetupVars))
-			{
 				$intSetupVarsCount = extract($arSetupVars, EXTR_SKIP);
-			}
 		}
 
 		global $arCatalogAvailProdFields;
@@ -329,4 +330,3 @@ class CAllCatalogImport
 		return "CCatalogImport::PreGenerateImport(".$profile_id.");";
 	}
 }
-?>

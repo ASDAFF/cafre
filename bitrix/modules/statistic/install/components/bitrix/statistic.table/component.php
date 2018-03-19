@@ -49,7 +49,7 @@ if($this->startResultCache())
 	$arResult["NOW"] = GetTime(time()+$tzOffset,"FULL");
 	$arResult["IS_ADMIN"] = $arParams["IS_ADMIN"];
 
-	$this->SetResultCacheKeys(array());
-	$this->IncludeComponentTemplate();
+	$this->setResultCacheKeys(array());
+	$this->includeComponentTemplate();
 }
 ?>

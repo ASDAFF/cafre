@@ -46,12 +46,13 @@ class CIBlockSectionPropertyLink
 					$arUpdate["DISPLAY_EXPANDED"] = $arLink["DISPLAY_EXPANDED"] === "Y"? "Y": false;
 				}
 
-				if (
-					array_key_exists("FILTER_HINT", $arLink)
-					&& $arLink["FILTER_HINT"] !== $sectionProperty["FILTER_HINT"]
-				)
+				if (array_key_exists("FILTER_HINT", $arLink))
 				{
-					$arUpdate["FILTER_HINT"] = $arLink["FILTER_HINT"];
+					$filterHint = self::cleanFilterHint($arLink["FILTER_HINT"]);
+					if ($filterHint !== $sectionProperty["FILTER_HINT"])
+					{
+						$arUpdate["FILTER_HINT"] = $filterHint;
+					}
 				}
 
 				if (
@@ -119,7 +120,7 @@ class CIBlockSectionPropertyLink
 				if (array_key_exists("DISPLAY_EXPANDED", $arLink))
 					$arUpdate["DISPLAY_EXPANDED"] = $arLink["DISPLAY_EXPANDED"];
 				if (array_key_exists("FILTER_HINT", $arLink))
-					$arUpdate["FILTER_HINT"] = $arLink["FILTER_HINT"];
+					$arUpdate["FILTER_HINT"] = self::cleanFilterHint($arLink["FILTER_HINT"]);
 				if (array_key_exists("IBLOCK_ID", $arLink))
 					$arUpdate["IBLOCK_ID"] = $arLink["IBLOCK_ID"];
 
@@ -265,7 +266,8 @@ class CIBlockSectionPropertyLink
 				0 LEFT_MARGIN,
 				B.NAME LINK_TITLE,
 				BP.PROPERTY_TYPE,
-				BP.USER_TYPE
+				BP.USER_TYPE,
+				BP.ACTIVE
 			FROM
 				b_iblock B
 				INNER JOIN b_iblock_property BP ON BP.IBLOCK_ID = B.ID
@@ -277,13 +279,20 @@ class CIBlockSectionPropertyLink
 		");
 		while ($ar = $rs->Fetch())
 		{
+			$displayTypesAvailable = self::getDisplayTypes($ar["PROPERTY_TYPE"], $ar["USER_TYPE"]);
+			if (isset($displayTypesAvailable[$ar["DISPLAY_TYPE"]]))
+				$DISPLAY_TYPE = $ar["DISPLAY_TYPE"];
+			else
+				$DISPLAY_TYPE = key($displayTypesAvailable);
+
 			if ($ar["SECTION_PROPERTY"] === "Y")
 			{
 				if (strlen($ar["LINK_ID"]))
+				{
 					$result[$ar["PROPERTY_ID"]] = array(
 						"PROPERTY_ID" => $ar["PROPERTY_ID"],
 						"SMART_FILTER" => $ar["SMART_FILTER"],
-						"DISPLAY_TYPE" => $ar["DISPLAY_TYPE"],
+						"DISPLAY_TYPE" => $DISPLAY_TYPE,
 						"DISPLAY_EXPANDED" => $ar["DISPLAY_EXPANDED"],
 						"FILTER_HINT" => $ar["FILTER_HINT"],
 						"INHERITED" => $SECTION_ID == 0 && !$bNewSection? "N" : "Y",
@@ -293,14 +302,16 @@ class CIBlockSectionPropertyLink
 						"LINK_TITLE" => $ar["LINK_TITLE"],
 						"PROPERTY_TYPE" => $ar["PROPERTY_TYPE"],
 						"USER_TYPE" => $ar["USER_TYPE"],
+						"ACTIVE" => $ar["ACTIVE"],
 					);
+				}
 			}
 			else
 			{
 				$result[$ar["PROPERTY_ID"]] = array(
 					"PROPERTY_ID" => $ar["PROPERTY_ID"],
 					"SMART_FILTER" => "N",
-					"DISPLAY_TYPE" => $ar["DISPLAY_TYPE"],
+					"DISPLAY_TYPE" => $DISPLAY_TYPE,
 					"DISPLAY_EXPANDED" => $ar["DISPLAY_EXPANDED"],
 					"INHERITED" => $SECTION_ID == 0 && !$bNewSection? "N" : "Y",
 					"INHERITED_FROM" => 0,
@@ -309,6 +320,7 @@ class CIBlockSectionPropertyLink
 					"LINK_TITLE" => $ar["LINK_TITLE"],
 					"PROPERTY_TYPE" => $ar["PROPERTY_TYPE"],
 					"USER_TYPE" => $ar["USER_TYPE"],
+					"ACTIVE" => $ar["ACTIVE"],
 				);
 			}
 		}
@@ -328,7 +340,8 @@ class CIBlockSectionPropertyLink
 					BS.LEFT_MARGIN,
 					BS.NAME LINK_TITLE,
 					BP.PROPERTY_TYPE,
-					BP.USER_TYPE
+					BP.USER_TYPE,
+					BP.ACTIVE
 				FROM
 					b_iblock B
 					INNER JOIN b_iblock_property BP ON BP.IBLOCK_ID = B.ID
@@ -344,10 +357,16 @@ class CIBlockSectionPropertyLink
 			");
 			while ($ar = $rs->Fetch())
 			{
+				$displayTypesAvailable = self::getDisplayTypes($ar["PROPERTY_TYPE"], $ar["USER_TYPE"]);
+				if (isset($displayTypesAvailable[$ar["DISPLAY_TYPE"]]))
+					$DISPLAY_TYPE = $ar["DISPLAY_TYPE"];
+				else
+					$DISPLAY_TYPE = key($displayTypesAvailable);
+
 				$result[$ar["PROPERTY_ID"]] = array(
 					"PROPERTY_ID" => $ar["PROPERTY_ID"],
 					"SMART_FILTER" => $ar["SMART_FILTER"],
-					"DISPLAY_TYPE" => $ar["DISPLAY_TYPE"],
+					"DISPLAY_TYPE" => $DISPLAY_TYPE,
 					"DISPLAY_EXPANDED" => $ar["DISPLAY_EXPANDED"],
 					"FILTER_HINT" => $ar["FILTER_HINT"],
 					"INHERITED" => $SECTION_ID == $ar["LINK_ID"] ? "N" : "Y",
@@ -356,6 +375,8 @@ class CIBlockSectionPropertyLink
 					"LEFT_MARGIN" => $ar["LEFT_MARGIN"],
 					"LINK_TITLE" => $ar["LINK_TITLE"],
 					"PROPERTY_TYPE" => $ar["PROPERTY_TYPE"],
+					"USER_TYPE" => $ar["USER_TYPE"],
+					"ACTIVE" => $ar["ACTIVE"],
 				);
 			}
 		}
@@ -502,6 +523,25 @@ class CIBlockSectionPropertyLink
 			return -1;
 		else
 			return 0;
+	}
+	
+	public static function cleanFilterHint($filterHint)
+	{
+		$TextParser = null;
+		if (!$TextParser)
+		{
+			$TextParser = new CBXSanitizer();
+			$TextParser->SetLevel(CBXSanitizer::SECURE_LEVEL_LOW);
+			$TextParser->ApplyHtmlSpecChars(false);
+		}
+		$cleanHint = trim($filterHint);
+		if ($cleanHint)
+		{
+			$cleanHint = $TextParser->SanitizeHtml($cleanHint);
+			if (preg_match('/^(<br>)+$/', $cleanHint))
+				$cleanHint = "";
+		}
+		return $cleanHint;
 	}
 }
 ?>

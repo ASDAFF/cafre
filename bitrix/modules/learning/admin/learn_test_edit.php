@@ -430,9 +430,9 @@ if($bVarsFromForm)
 	$str_FINAL_INDICATION_MARK = ($FINAL_INDICATION_MARK != "Y"? "N":"Y");
 	$str_FINAL_INDICATION_MESSAGE = ($FINAL_INDICATION_MESSAGE != "Y"? "N":"Y");
 
-	$str_MIN_TIME_BETWEEN_ATTEMPTS_D = $MIN_TIME_BETWEEN_ATTEMPTS_D;
-	$str_MIN_TIME_BETWEEN_ATTEMPTS_H = $MIN_TIME_BETWEEN_ATTEMPTS_H;
-	$str_MIN_TIME_BETWEEN_ATTEMPTS_M = $MIN_TIME_BETWEEN_ATTEMPTS_M;
+	$str_MIN_TIME_BETWEEN_ATTEMPTS_D = intval($MIN_TIME_BETWEEN_ATTEMPTS_D);
+	$str_MIN_TIME_BETWEEN_ATTEMPTS_H = intval($MIN_TIME_BETWEEN_ATTEMPTS_H);
+	$str_MIN_TIME_BETWEEN_ATTEMPTS_M = intval($MIN_TIME_BETWEEN_ATTEMPTS_M);
 }
 
 require($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/include/prolog_admin_after.php");
@@ -1036,7 +1036,7 @@ $context->Show();
 					<tr>
 						<td align="center">&nbsp;</td>
 						<td align="center">
-							<div style="white-space:nowrap;"><?echo GetMessage("LEARNING_TEST_SCORE_TILL")?> <input type="text" size="4" name="N_SCORE_<?php echo $i?>" value="<?php echo isset(${"N_SCORE_".$i}) ? ${"N_SCORE_".$i} : ""?>"> %</div>
+							<div style="white-space:nowrap;"><?echo GetMessage("LEARNING_TEST_SCORE_TILL")?> <input type="text" size="4" name="N_SCORE_<?php echo $i?>" value="<?php echo isset(${"N_SCORE_".$i}) ? intval(${"N_SCORE_".$i}) : ""?>"> %</div>
 						</td>
 						<td align="center">
 							<input type="text" size="20"  name="N_MARK_<?php echo $i?>" value="<?php echo isset(${"N_MARK_".$i}) ? htmlspecialcharsbx(${"N_MARK_".$i}) : ""?>">

@@ -35,6 +35,24 @@ class CBPSetFieldActivity
 			return CBPActivityExecutionStatus::Executing;
 		}
 
+		$documentService = $rootActivity->workflow->GetService("DocumentService");
+		$documentFields = $documentService->GetDocumentFields($documentService->GetDocumentType($documentId));
+		$documentFieldsAliasesMap = CBPDocument::getDocumentFieldsAliasesMap($documentFields);
+		if ($documentFieldsAliasesMap)
+		{
+			$fixedFields = array();
+			foreach ($fieldValue as $key => $value)
+			{
+				if (!isset($documentFields[$key]) && isset($documentFieldsAliasesMap[$key]))
+				{
+					$fixedFields[$documentFieldsAliasesMap[$key]] = $value;
+					continue;
+				}
+				$fixedFields[$key] = $value;
+			}
+			$fieldValue = $fixedFields;
+		}
+
 		$documentService->UpdateDocument($documentId, $fieldValue);
 
 		return CBPActivityExecutionStatus::Closed;
@@ -86,6 +104,7 @@ class CBPSetFieldActivity
 
 		$documentService = $runtime->GetService("DocumentService");
 		$arDocumentFieldsTmp = $documentService->GetDocumentFields($documentType);
+		$documentFieldsAliasesMap = CBPDocument::getDocumentFieldsAliasesMap($arDocumentFieldsTmp);
 
 		$arFieldTypes = $documentService->GetDocumentFieldTypes($documentType);
 		unset($arFieldTypes[FieldType::INTERNALSELECT]);
@@ -101,6 +120,9 @@ class CBPSetFieldActivity
 			{
 				foreach ($arCurrentActivity["Properties"]["FieldValue"] as $k => $v)
 				{
+					if (!isset($arDocumentFieldsTmp[$k]) && isset($documentFieldsAliasesMap[$k]))
+						$k = $documentFieldsAliasesMap[$k];
+
 					$arCurrentValues[$k] = $v;
 				}
 			}
@@ -140,22 +162,33 @@ class CBPSetFieldActivity
 				$defaultFieldValue = $key;
 		}
 
-		$javascriptFunctions = $documentService->GetJSFunctionsForFields($documentType, "objFields", $arDocumentFields, $arFieldTypes);
+		$dialog = new \Bitrix\Bizproc\Activity\PropertiesDialog(__FILE__, array(
+			'documentType' => $documentType,
+			'activityName' => $activityName,
+			'workflowTemplate' => $arWorkflowTemplate,
+			'workflowParameters' => $arWorkflowParameters,
+			'workflowVariables' => $arWorkflowVariables,
+			'currentValues' => $arCurrentValues,
+			'formName' => $formName
+		));
 
-		return $runtime->ExecuteResourceFile(
-			__FILE__,
-			"properties_dialog.php",
-			array(
-				"arCurrentValues" => $arCurrentValues,
-				"arDocumentFields" => $arDocumentFields,
-				"formName" => $formName,
-				"defaultFieldValue" => $defaultFieldValue,
-				"arFieldTypes" => $arFieldTypes,
-				"javascriptFunctions" => $javascriptFunctions,
-				"documentType" => $documentType,
-				"popupWindow" => &$popupWindow,
-			)
-		);
+		$dialog->setRuntimeData(array(
+			"arCurrentValues" => $arCurrentValues,
+			"arDocumentFields" => $arDocumentFields,
+			"formName" => $formName,
+			"defaultFieldValue" => $defaultFieldValue,
+			"arFieldTypes" => $arFieldTypes,
+			"javascriptFunctions" => $documentService->GetJSFunctionsForFields(
+				$documentType,
+				"objFields",
+				$arDocumentFields,
+				$arFieldTypes
+			),
+			"documentType" => $documentType,
+			"popupWindow" => &$popupWindow,
+		));
+
+		return $dialog;
 	}
 
 	public static function GetPropertiesDialogValues($documentType, $activityName, &$arWorkflowTemplate, &$arWorkflowParameters, &$arWorkflowVariables, $arCurrentValues, &$arErrors)

@@ -66,7 +66,7 @@ class CIBlockFormatProperties
 							$arLinkFilter,
 							false,
 							false,
-							array("ID","IBLOCK_ID","NAME","DETAIL_PAGE_URL", "PREVIEW_PICTURE", "DETAIL_PICTURE")
+							array("ID", "IBLOCK_ID", "NAME", "DETAIL_PAGE_URL", "PREVIEW_PICTURE", "DETAIL_PICTURE", "SORT")
 						);
 						$CACHE["E"][$val] = $rsLink->GetNext();
 					}
@@ -91,7 +91,7 @@ class CIBlockFormatProperties
 							array(),
 							$arSectionFilter,
 							false,
-							array("ID", "IBLOCK_ID", "NAME", "SECTION_PAGE_URL", "PICTURE", "DETAIL_PICTURE")
+							array("ID", "IBLOCK_ID", "NAME", "SECTION_PAGE_URL", "PICTURE", "DETAIL_PICTURE", "SORT")
 						);
 						$CACHE["G"][$val] = $rsSection->GetNext();
 					}
@@ -181,12 +181,11 @@ class CIBlockFormatProperties
 		switch($format)
 		{
 		case "SHORT":
-			return FormatDate($DB->dateFormatToPHP(FORMAT_DATE), $timestamp);
+			return FormatDate($DB->DateFormatToPHP(FORMAT_DATE), $timestamp);
 		case "FULL":
-			return FormatDate($DB->dateFormatToPHP(FORMAT_DATETIME), $timestamp);
+			return FormatDate($DB->DateFormatToPHP(FORMAT_DATETIME), $timestamp);
 		default:
 			return FormatDate($format, $timestamp);
 		}
 	}
 }
-?>

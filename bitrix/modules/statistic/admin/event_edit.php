@@ -1,7 +1,7 @@
-<?
+<?php
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/statistic/prolog.php");
-
+/** @var CMain $APPLICATION */
 IncludeModuleLangFile(__FILE__);
 
 $STAT_RIGHT = $APPLICATION->GetGroupRight("statistic");
@@ -92,7 +92,7 @@ $arrHandlers = CStatEvent::GetHandlerList($arUSER_HANDLERS);
 $CSV_LOADING_OK = false;
 if ($Load!="" && $tabControl_active_tab=="load_csv_tab" && $REQUEST_METHOD=="POST" && $STAT_RIGHT>="W" && check_bitrix_sessid())
 {
-	$arFile = $HTTP_POST_FILES["file_name"];
+	$arFile = $_FILES["file_name"];
 	$file = $arFile["tmp_name"];
 	if (move_uploaded_file($file, $INPUT_CSV_FILE))
 	{
@@ -222,7 +222,7 @@ if (strlen($success) <= 0 || $success == "Y")
 	elseif (CModule::IncludeModule("currency"))
 	{
 		CAdminMessage::ShowMessage(array(
-			"DETAILS" => GetMessage("STAT_BASE_CURRENCY_NOT_INSTALLED").'<br><a href="/bitrix/admin/settings.php?lang=<?=LANG?>&amp;mid=statistic">'.GetMessage("STAT_CHOOSE_CURRENCY").'</a>',
+			"DETAILS" => GetMessage("STAT_BASE_CURRENCY_NOT_INSTALLED").'<br><a href="/bitrix/admin/settings.php?lang='.LANGUAGE_ID.'&amp;mid=statistic">'.GetMessage("STAT_CHOOSE_CURRENCY").'</a>',
 			"HTML" => true,
 			"TYPE" => "ERROR",
 		));
@@ -332,33 +332,33 @@ function addNewRow(currentId)
 	var oCell = oRow.insertCell(i++);
 	oCell.innerHTML = id;
 
-	var oCell = oRow.insertCell(i++);
+	oCell = oRow.insertCell(i++);
 	oCell.innerHTML = '<input type="checkbox" value="Y" name="LOAD_'+id+'" checked>';
 
-	var oCell = oRow.insertCell(i++);
+	oCell = oRow.insertCell(i++);
 	oCell.noWrap = true;
 	oCell.innerHTML = '<input type="hidden" name="ARR[]" value="'+id+'"><input type="text" size="14" name="EVENT_ID_'+id+'" value="" OnFocus="addNewRow('+id+')"><input type="button" onClick="SelectEvent(\'form1\',\'EVENT_ID_'+id+'\')" title="<?echo GetMessage("STAT_SELECT_EVENT")?>" value="..."></a>';
 
-	var oCell = oRow.insertCell(i++);
+	oCell = oRow.insertCell(i++);
 	oCell.innerHTML = '<input type="text" size="20" name="EVENT3_'+id+'" value="" OnFocus="addNewRow('+id+')">';
 
-	var oCell = oRow.insertCell(i++);
+	oCell = oRow.insertCell(i++);
 	oCell.innerHTML = '<input type="text" name="DATE_ENTER_'+id+'" size="18" value=""> <a href="javascript:void(0);" onClick="Calendar(\'name=DATE_ENTER_'+id+'&from=&to=&form=form1\', document.form1.DATE_ENTER_'+id+'.value);" title="<?echo GetMessage("STAT_CALENDAR")?>"><img src="/bitrix/images/icons/calendar.gif" alt="<?echo GetMessage("STAT_CALENDAR")?>" width="15" height="15" border="0"></a>';
 
-	var oCell = oRow.insertCell(i++);
+	oCell = oRow.insertCell(i++);
 	oCell.innerHTML = '<input type="text" name="PARAM_'+id+'" value="" OnFocus="addNewRow('+id+')">';
 
-	var oCell = oRow.insertCell(i++);
+	oCell = oRow.insertCell(i++);
 	oCell.innerHTML = '<input type="text" size="5" name="MONEY_'+id+'" value="" OnFocus="addNewRow('+id+')">';
 
 	<?if ($currency_module=="Y") :?>
-	var oCell = oRow.insertCell(i++);
-	var strSelectBox, prevSelectValue;
+	oCell = oRow.insertCell(i++);
+	var strSelectBox;
 	<?=$strJavaCurArray?>
-	objPrevSelect = document.getElementsByName("CURRENCY_"+(id-1))[0];
-	prevSelectValue = objPrevSelect[objPrevSelect.selectedIndex].value;
+	var objPrevSelect = document.getElementsByName("CURRENCY_"+(id-1))[0];
+	var prevSelectValue = objPrevSelect[objPrevSelect.selectedIndex].value;
 	strSelectBox = '<select name="CURRENCY_'+id+'">';
-	for (ii=0;ii<arrCur.length;ii++)
+	for (var ii=0;ii<arrCur.length;ii++)
 	{
 		strSelectBox = strSelectBox+'<option value="'+arrCur[ii]+'"';
 		strSelectBox = strSelectBox+'>'+arrCur[ii]+'</option>';
@@ -367,10 +367,10 @@ function addNewRow(currentId)
 	oCell.innerHTML = strSelectBox;
 	<?endif;?>
 
-	var oCell = oRow.insertCell(i++);
+	oCell = oRow.insertCell(i++);
 	oCell.innerHTML = '<input type="checkbox" value="Y" name="CHARGEBACK_'+id+'">';
 
-	var oCell = oRow.insertCell(i++);
+	oCell = oRow.insertCell(i++);
 	oCell.innerHTML = '<a href="javascript: Copy('+id+')"><img src="/bitrix/images/statistic/copy.gif" width="15" height="15" border=0 class="tb2" hspace="2" alt="<?echo GetMessage("STAT_COPY")?>"></a>';
 
 	document.form1.nums.value = id;
@@ -430,7 +430,7 @@ function SelectHandler()
 	objHandlerSelect = document.form1.handler;
 	strHandlerValue = objHandlerSelect[objHandlerSelect.selectedIndex].value;
 	document.getElementById("edit_link_span").style.display = "none";
-	for (i=0;i<arrUserHandler.length;i++)
+	for (var i=0;i<arrUserHandler.length;i++)
 	{
 		if (strHandlerValue==arrUserHandler[i])
 		{
@@ -447,7 +447,7 @@ function OnSelectAll(fl)
 		return;
 	if(arCheckbox.length>0)
 	{
-		for(i=0; i<arCheckbox.length; i++)
+		for(var i=0; i<arCheckbox.length; i++)
 		{
 			document.getElementsByName("LOAD_"+(i+1))[0].checked = fl;
 		}
@@ -567,7 +567,7 @@ $tabControl->BeginNextTab();
 		<td><?echo GetMessage("STAT_STEP")?></td>
 		<td><input type="text" name="step" size="5" value="<?=$step?>"></td>
 	</tr>
-<?=$tabControl->Buttons();?>
+<?$tabControl->Buttons();?>
 <?if($STAT_RIGHT=="W"):?>
 	<?echo bitrix_sessid_post();?>
 	<input type="hidden" name="lang" value="<?=LANG?>">
@@ -595,4 +595,5 @@ tabControl.SelectTab('load_manual_tab');
 
 <?endif;?>
 
-<?require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");?>
+<?
+require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");

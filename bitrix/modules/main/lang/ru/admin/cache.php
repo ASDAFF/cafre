@@ -1,8 +1,6 @@
 <?
 $MESS["MCACHE_TITLE"] = "Настройки кеширования";
-$MESS["MAIN_OPTION_HTML_CACHE"] = "Управление генерацией HTML страниц";
 $MESS["MAIN_TAB_3"] = "Очистка файлов кеша";
-$MESS["MAIN_TAB_2"] = "HTML кеш";
 $MESS["MAIN_TAB_4"] = "Кеширование компонентов";
 $MESS["MAIN_OPTION_CLEAR_CACHE"] = "Очистка файлов кеша";
 $MESS["MAIN_OPTION_PUBL"] = "Настройка кеширования компонентов";
@@ -16,24 +14,6 @@ $MESS["MAIN_OPTION_CACHE_ON"] = "Автокеширование компонентов включено";
 $MESS["MAIN_OPTION_CACHE_OFF"] = "Автокеширование компонентов выключено";
 $MESS["MAIN_OPTION_CACHE_BUTTON_OFF"] = "Выключить автокеширование";
 $MESS["MAIN_OPTION_CACHE_BUTTON_ON"] = "Включить автокеширование";
-$MESS["MAIN_OPTION_HTML_CACHE_WARNING"] = "Внимание! Установлены модули статистики или рекламы. Для HTML кеширования учет данных будет вестись некорректно.";
-$MESS["MAIN_OPTION_HTML_CACHE_WARNING_TRANSID"] = "Внимание! Включен параметр session.use_trans_sid. HTML кеширование не будет работать.";
-$MESS["MAIN_OPTION_HTML_CACHE_ON"] = "Кеширование HTML включено";
-$MESS["MAIN_OPTION_HTML_CACHE_OFF"] = "Кеширование HTML выключено";
-$MESS["MAIN_OPTION_HTML_CACHE_BUTTON_OFF"] = "Выключить HTML кеширование";
-$MESS["MAIN_OPTION_HTML_CACHE_BUTTON_ON"] = "Включить  HTML кеширование";
-$MESS["MAIN_OPTION_HTML_CACHE_OPT"] = "Настройки HTML кеша";
-$MESS["MAIN_OPTION_HTML_CACHE_INC_MASK"] = "Маска включения";
-$MESS["MAIN_OPTION_HTML_CACHE_EXC_MASK"] = "Маска исключения";
-$MESS["MAIN_OPTION_HTML_CACHE_QUOTA"] = "Дисковая квота (мегабайт)";
-$MESS["MAIN_OPTION_HTML_CACHE_SUCCESS"] = "Режим создания HTML кеша успешно изменен.";
-$MESS["MAIN_OPTION_HTML_CACHE_STAT"] = "Статистика";
-$MESS["MAIN_OPTION_HTML_CACHE_STAT_HITS"] = "Попаданий в кеш";
-$MESS["MAIN_OPTION_HTML_CACHE_STAT_MISSES"] = "Промахов мимо кеша";
-$MESS["MAIN_OPTION_HTML_CACHE_STAT_QUOTA"] = "Очисток кеша из-за ограничений дискового пространства";
-$MESS["MAIN_OPTION_HTML_CACHE_STAT_POSTS"] = "Очисток кеша вызванных модификациями данных";
-$MESS["MAIN_OPTION_HTML_CACHE_SAVE"] = "Сохранить настройки HTML кеша";
-$MESS["MAIN_OPTION_HTML_CACHE_RESET"] = "Установить настройки по умолчанию";
 $MESS["cache_admin_note4"] = "<p>Механизм HTML-кеширования лучше всего включить на какой-нибудь редко изменяющийся раздел с регулярным посещением анонимных посетителей, так как при включенном HTML-кешировании происходят следующие процессы:</p>
 <ul style=\"font-size:100%\">
 <li>механизмом HTML-кеша обрабатываются только страницы, не указанные в маске исключения и указанные в маске включения;</li>
@@ -87,7 +67,7 @@ $MESS["main_cache_managed_const"] = "Определена константа BX_COMP_MANAGED_CACHE 
 $MESS["main_cache_managed_turn_on"] = "Включить управляемый кеш";
 $MESS["main_cache_managed_note"] = "		Технология управляемого кеширования <b>Сache Dependencies</b> автоматически обновляет кеш компонентов при изменении данных.
 		Если управляемое кеширование включено, вам не потребуется вручную обновлять кеш компонентов при изменении новостей или товаров, изменения сразу станут видны посетителям сайта.
-		<br><br>Узнайте подробнее о технологии <a href=\"http://www.1c-bitrix.ru/blog/rsv/2074.php\">Сache Dependencies</a> на нашем сайте.
+		<br><br>Узнайте подробнее о технологии <a href=\"http://dev.1c-bitrix.ru/community/blogs/rsv/2074.php\">Сache Dependencies</a> на нашем сайте.
 	<br><br>
 	<span style=\"color:grey\">Замечание: не все компоненты могут поддерживать управляемое кеширование.</span>";
 $MESS["cache_admin_note5"] = "В данной редакции HTML кеш всегда включен.";

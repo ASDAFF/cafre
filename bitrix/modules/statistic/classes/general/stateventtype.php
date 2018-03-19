@@ -1,37 +1,40 @@
-<?
+<?php
 IncludeModuleLangFile(__FILE__);
 
 class CAllStatEventType
 {
-	function Delete($ID, $DELETE_EVENT="Y")
+	public static function Delete($ID, $DELETE_EVENT="Y")
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
 		$ID = intval($ID);
+
 		$strSql = "SELECT ID FROM b_stat_event_list WHERE EVENT_ID='$ID'";
 		$a = $DB->Query($strSql, false, $err_mess.__LINE__);
-		while ($ar = $a->Fetch()) CStatEvent::Delete($ar["ID"]);
+		while ($ar = $a->Fetch())
+		{
+			CStatEvent::Delete($ar["ID"]);
+		}
+
 		$DB->Query("DELETE FROM b_stat_event_day WHERE EVENT_ID='$ID'", false, $err_mess.__LINE__);
 		if ($DELETE_EVENT=="Y")
 		{
 			$DB->Query("DELETE FROM b_stat_event WHERE ID='$ID'", false, $err_mess.__LINE__);
-			return true;
 		}
 		else
 		{
 			$DB->Query("UPDATE b_stat_event SET DATE_ENTER=null WHERE ID='$ID'", false, $err_mess.__LINE__);
-			return true;
 		}
-		return false;
+		return true;
 	}
 
 	// returns arrays which is nedded for plot drawing
-	function GetGraphArray($arFilter, &$arrLegend)
+	public static function GetGraphArray($arFilter, &$arrLegend)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
 		$arSqlSearch = Array();
-		$strSqlSearch = "";
+
 		if (is_array($arFilter))
 		{
 			foreach ($arFilter as $key => $val)
@@ -90,21 +93,19 @@ class CAllStatEventType
 				$arrLegend[0]["COUNTER_TYPE"] = "TOTAL";
 			}
 		}
-		reset($arrLegend);
+
+		$color = "";
 		$total = sizeof($arrLegend);
-		while (list($key, $arr) = each($arrLegend))
+		foreach ($arrLegend as $key => $arr)
 		{
 			$color = GetNextRGB($color, $total);
-			$arr["COLOR"] = $color;
-			$arrLegend[$key] = $arr;
+			$arrLegend[$key]["COLOR"] = $color;
 		}
 
-		reset($arrDays);
-		reset($arrLegend);
 		return $arrDays;
 	}
 
-	function ConditionSet($event1, $event2, &$arEventType)
+	public static function ConditionSet($event1, $event2, &$arEventType)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -128,7 +129,7 @@ class CAllStatEventType
 		return intval($EVENT_ID);
 	}
 
-	function GetByEvents($event1, $event2)
+	public static function GetByEvents($event1, $event2)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -152,8 +153,11 @@ class CAllStatEventType
 		return $w;
 	}
 
-	function DynamicDays($EVENT_ID, $date1="", $date2="")
+	public static function DynamicDays($EVENT_ID, $date1="", $date2="")
 	{
+		$by = "";
+		$order = "";
+		$arMaxMin = array();
 		$arFilter = array("DATE1"=>$date1, "DATE2"=>$date2);
 		$z = CStatEventType::GetDynamicList($EVENT_ID, $by, $order, $arMaxMin, $arFilter);
 		$d = 0;
@@ -188,4 +192,3 @@ class CAllStatEventType
 		return true;
 	}
 }
-?>

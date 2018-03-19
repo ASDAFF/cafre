@@ -296,8 +296,8 @@ $oFilter->Begin();
 		<td><?= GetMessage("BPATT_F_AUTOEXECUTE") ?>:</td>
 		<td><select name="filter_autoexecute">
 				<option value="">(<?= GetMessage("BPATT_ANY") ?>)</option>
-				<option value='<?= CBPDocumentEventType::Create ?>'<?= ($filter_autoexecute == CBPDocumentEventType::Create ? " selected" : "") ?>><?= GetMessage("BPATT_F_CREATE") ?></option>
-				<option value='<?= CBPDocumentEventType::Edit ?>'<?= ($filter_autoexecute == CBPDocumentEventType::Edit ? " selected" : "") ?>><?= GetMessage("BPATT_F_EDIT") ?></option>
+				<option value="<?= CBPDocumentEventType::Create ?>"<?= ($filter_autoexecute == CBPDocumentEventType::Create ? " selected" : "") ?>><?= GetMessage("BPATT_F_CREATE") ?></option>
+				<option value="<?= CBPDocumentEventType::Edit ?>"<?= ($filter_autoexecute == CBPDocumentEventType::Edit ? " selected" : "") ?>><?= GetMessage("BPATT_F_EDIT") ?></option>
 			</select>
 		</td>
 	</tr>

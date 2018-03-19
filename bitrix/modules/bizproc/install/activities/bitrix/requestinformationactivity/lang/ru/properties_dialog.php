@@ -35,6 +35,7 @@ $MESS["BP_WF_UP"] = "Выше";
 $MESS["BP_WF_DOWN"] = "Ниже";
 $MESS["BPAR_PD_TASK_BUTTON_MESSAGE"] = "Текст кнопки в задании";
 $MESS["BPAR_PD_SHOW_COMMENT"] = "Показывать поле ввода комментария";
+$MESS["BPAR_PD_COMMENT_REQUIRED"] = "Обязательность комментария";
 $MESS["BPAR_PD_COMMENT_LABEL_MESSAGE"] = "Метка для поля комментария";
 $MESS["BPSFA_PD_SET_STATUS_MESSAGE"] = "Устанавливать текст статуса";
 $MESS["BPSFA_PD_STATUS_MESSAGE"] = "Текст статуса";
@@ -46,4 +47,5 @@ $MESS["BPSFA_PD_TIME_H"] = "часов";
 $MESS["BPSFA_PD_TIME_M"] = "минут";
 $MESS["BPSFA_PD_TIME_S"] = "секунд";
 $MESS["BPSFA_PD_TIMEOUT_LIMIT"] = "Минимальный период ожидания";
+$MESS["BPSFA_PD_DELEGATION_TYPE"] = "Тип делегирования";
 ?>

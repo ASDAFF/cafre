@@ -395,6 +395,7 @@ if ($STEP == 2)
 				{
 					$arAvailFields[$intCount] = $oneField;
 					$arAvailFields[$intCount]['value'] .= $currentDepthLevel;
+					$arAvailFields[$intCount]['sort'] = ($intCount+1)*10;
 					if ($boolSep)
 					{
 						$arAvailFields[$intCount]['SEP'] = GetMessage('CAT_ADM_CSV_EXP_SEP_SECTIONS');
@@ -574,7 +575,7 @@ if ($STEP == 2)
 				var boolCheck = obj.checked;
 				var intCurrent = parseInt(BX('count_checked').value);
 				intCurrent += (boolCheck ? 1 : -1);
-				BX('field_needed_all').checked = (intCurrent < cnt ? false : true);
+				BX('field_needed_all').checked = (intCurrent >= cnt);
 				BX('count_checked').value = intCurrent;
 			}
 			</script>

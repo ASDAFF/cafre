@@ -18,16 +18,14 @@ if($MOD_RIGHT>="R"):
 
 $arAllLdapServers = array(0 => GetMessage('LDAP_NOT_USE_DEFAULT_NTLM_SERVER'));
 $rsLdapServers = CLdapServer::GetList();
+
 while($arLdapServer = $rsLdapServers->Fetch())
 {
 	$arAllLdapServers[$arLdapServer['ID']] = $arLdapServer['NAME'];
 }
 
 // get current NTLM user login for displaying later
-if (!($ntlmVarname = $_POST['ntlm_varname']))
-{
-	$ntlmVarname = COption::GetOptionString($module_id, 'ntlm_varname', 'REMOTE_USER');
-}
+$ntlmVarname = COption::GetOptionString($module_id, 'ntlm_varname', 'REMOTE_USER');
 
 if (array_key_exists($ntlmVarname,$_SERVER) && trim($_SERVER[$ntlmVarname])!='')
 {
@@ -49,6 +47,7 @@ $arAllOptions =	Array(
 		Array("ntlm_default_server", GetMessage('LDAP_DEFAULT_NTLM_SERVER'), "0", Array("selectbox", $arAllLdapServers)),
 		Array("add_user_when_auth", GetMessage("LDAP_OPTIONS_NEW_USERS"), "Y", Array("checkbox")),
 		Array("ntlm_auth_without_prefix", GetMessage("LDAP_WITHOUT_PREFIX"), "Y", Array("checkbox")),
+		Array("ldap_create_duplicate_login_user", GetMessage("LDAP_DUPLICATE_LOGIN_USER"), "Y", Array("checkbox")),
 		GetMessage("LDAP_BITRIXVM_BLOCK"),
 		Array("bitrixvm_auth_support", GetMessage("LDAP_BITRIXVM_SUPPORT"), "N", Array("checkbox")),
 		Array("bitrixvm_auth_net", GetMessage('LDAP_BITRIXVM_NET'), "", Array("text", 40)),

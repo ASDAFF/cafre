@@ -1091,7 +1091,7 @@ class Otp
 	 * Most complex method, can check everything:-)
 	 * ToDo: describe after refactoring
 	 *
-	 * @param array $params
+	 * @param array $params Event parameters.
 	 * @throws ArgumentTypeException
 	 * @return bool
 	 */

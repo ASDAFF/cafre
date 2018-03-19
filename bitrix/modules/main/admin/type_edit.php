@@ -68,7 +68,8 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && ($_POST["save"] <> '' || $_POST["appl
 			"LID" => $idLang,
 			"EVENT_NAME" => $res["EVENT_NAME"],
 		);
-		if ((CAdminList::IsUpdated($idLang)) && ($_REQUEST[$idLang] == "Y"))
+		$admList = new CAdminList("dummy");
+		if ($admList->IsUpdated($idLang) && $_REQUEST[$idLang] == "Y")
 		{
 			if ((intval($arType["ID"]) > 0 && (!CEventType::Update(array("ID" => $arType["ID"]), $arType))) ||
 				((intval($arType["ID"]) <= 0) && !CEventType::Add($arType)))

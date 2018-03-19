@@ -1,4 +1,5 @@
-BX.LiveFeedClass = (function ()
+BX.namespace("BX.Lists");
+BX.Lists.LiveFeedClass = (function ()
 {
 	var LiveFeedClass = function (parameters)
 	{
@@ -27,6 +28,10 @@ BX.LiveFeedClass = (function ()
 
 	LiveFeedClass.prototype.init = function (iblock)
 	{
+		this.manyTemplate = false;
+		this.constantsPopup = null;
+		this.templateId = null;
+
 		if(iblock instanceof Array)
 		{
 			var iblockId = iblock[0],
@@ -44,19 +49,28 @@ BX.LiveFeedClass = (function ()
 
 	LiveFeedClass.prototype.isConstantsTuned = function (iblockId)
 	{
-		BX.ajax({
+		BX.Lists.ajax({
 			method: 'POST',
 			dataType: 'json',
-			url: this.addToLinkParam(this.ajaxUrl, 'action', 'isConstantsTuned'),
+			url: BX.Lists.addToLinkParam(this.ajaxUrl, 'action', 'isConstantsTuned'),
 			data: {
-				iblockId: iblockId,
-				sessid: BX.bitrix_sessid()
+				iblockId: iblockId
 			},
 			onsuccess: BX.delegate(function (result)
 			{
 				if(result.status == 'success')
 				{
-					BX('bx-lists-template-id').value = result.templateId;
+					var value = '', k, count = 0;
+					for(k in result.templateData)
+					{
+						value += k + ',';
+						count++;
+					}
+					if(count > 1)
+					{
+						this.manyTemplate = true;
+					}
+					BX('bx-lists-template-id').value = value;
 					if(result.admin === true)
 					{
 						this.setResponsible();
@@ -64,13 +78,13 @@ BX.LiveFeedClass = (function ()
 					else if(result.admin === false)
 					{
 						this.notifyAdmin();
-						BX('bx-lists-cjeck-notify-admin').value = 1;
+						BX('bx-lists-check-notify-admin').value = 1;
 					}
 				}
 				else
 				{
 					result.errors = result.errors || [{}];
-					this.showModalWithStatusAction({
+					BX.Lists.showModalWithStatusAction({
 						status: 'error',
 						message: result.errors.pop().message
 					})
@@ -97,11 +111,11 @@ BX.LiveFeedClass = (function ()
 		{
 			if(lists[i].value == iblockId)
 			{
-				this.show(BX('bx-lists-div-list-'+lists[i].value));
+				BX.show(BX('bx-lists-div-list-'+lists[i].value));
 			}
 			else
 			{
-				this.hide(BX('bx-lists-div-list-'+lists[i].value));
+				BX.hide(BX('bx-lists-div-list-'+lists[i].value));
 			}
 		}
 
@@ -112,17 +126,17 @@ BX.LiveFeedClass = (function ()
 			return;
 		}
 
-		BX.ajax({
-			url: this.addToLinkParam(this.ajaxUrl, 'action', 'getList'),
+		BX.Lists.ajax({
+			url: BX.Lists.addToLinkParam(this.ajaxUrl, 'action', 'getList'),
 			method: 'POST',
 			dataType: 'html',
+			processData: false,
 			data: {
 				iblockId: iblockId,
 				iblockDescription: iblockDescription,
 				iblockCode: iblockCode,
 				socnetGroupId: this.socnetGroupId,
-				randomString: this.randomString,
-				sessid: BX.bitrix_sessid()
+				randomString: this.randomString
 			},
 			onsuccess: BX.delegate(function (data)
 			{
@@ -146,134 +160,17 @@ BX.LiveFeedClass = (function ()
 						},
 						attrs: {
 							style: 'display: block;'
-						}
+						},
+						html: data
 					})
 				);
-				BX.adjust(BX('bx-lists-div-list-'+iblockId), {
-					html: data
-				});
+				var ob = BX.processHTML(data);
+				BX.ajax.processScripts(ob.SCRIPT);
 			}, this)
 		});
 		BX.unbindAll(BX('blog-submit-button-save'));
-		BX('blog-submit-button-save').setAttribute('onclick','BX["LiveFeedClass_'+this.randomString+'"].submitForm();');
-	};
-
-	LiveFeedClass.prototype.removeElement = function (elem)
-	{
-		return elem.parentNode ? elem.parentNode.removeChild(elem) : elem;
-	};
-
-	LiveFeedClass.prototype.addToLinkParam = function (link, name, value)
-	{
-		if (!link.length) {
-			return '?' + name + '=' + value;
-		}
-		link = BX.util.remove_url_param(link, name);
-		if (link.indexOf('?') != -1) {
-			return link + '&' + name + '=' + value;
-		}
-		return link + '?' + name + '=' + value;
-	};
-
-	LiveFeedClass.prototype.showModalWithStatusAction = function (response, action)
-	{
-		response = response || {};
-		if (!response.message) {
-			if (response.status == 'success') {
-				response.message = BX.message('LISTS_JS_STATUS_ACTION_SUCCESS');
-			}
-			else {
-				response.message = BX.message('LISTS_JS_STATUS_ACTION_ERROR') + '. ' + this.getFirstErrorFromResponse(response);
-			}
-		}
-		var messageBox = BX.create('div', {
-			props: {
-				className: 'bx-lists-alert'
-			},
-			children: [
-				BX.create('span', {
-					props: {
-						className: 'bx-lists-aligner'
-					}
-				}),
-				BX.create('span', {
-					props: {
-						className: 'bx-lists-alert-text'
-					},
-					text: response.message
-				}),
-				BX.create('div', {
-					props: {
-						className: 'bx-lists-alert-footer'
-					}
-				})
-			]
-		});
-
-		var currentPopup = BX.PopupWindowManager.getCurrentPopup();
-		if(currentPopup)
-		{
-			currentPopup.destroy();
-		}
-
-		var idTimeout = setTimeout(function ()
-		{
-			var w = BX.PopupWindowManager.getCurrentPopup();
-			if (!w || w.uniquePopupId != 'bx-lists-status-action') {
-				return;
-			}
-			w.close();
-			w.destroy();
-		}, 3500);
-		var popupConfirm = BX.PopupWindowManager.create('bx-lists-status-action', null, {
-			content: messageBox,
-			onPopupClose: function ()
-			{
-				this.destroy();
-				clearTimeout(idTimeout);
-			},
-			autoHide: true,
-			zIndex: 2000,
-			className: 'bx-lists-alert-popup'
-		});
-		popupConfirm.show();
-
-		BX('bx-lists-status-action').onmouseover = function (e)
-		{
-			clearTimeout(idTimeout);
-		};
-
-		BX('bx-lists-status-action').onmouseout = function (e)
-		{
-			idTimeout = setTimeout(function ()
-			{
-				var w = BX.PopupWindowManager.getCurrentPopup();
-				if (!w || w.uniquePopupId != 'bx-lists-status-action') {
-					return;
-				}
-				w.close();
-				w.destroy();
-			}, 3500);
-		};
-	};
-
-	LiveFeedClass.prototype.addNewTableRow = function(tableID, col_count, regexp, rindex)
-	{
-		var tbl = document.getElementById(tableID);
-		var cnt = tbl.rows.length;
-		var oRow = tbl.insertRow(cnt);
-
-		for(var i=0;i<col_count;i++)
-		{
-			var oCell = oRow.insertCell(i);
-			var html = tbl.rows[cnt-1].cells[i].innerHTML;
-			oCell.innerHTML = html.replace(regexp,
-				function(html)
-				{
-					return html.replace('[n'+arguments[rindex]+']', '[n'+(1+parseInt(arguments[rindex]))+']');
-				}
-			);
-		}
+		BX('blog-submit-button-save').setAttribute('onclick','BX.Lists["LiveFeedClass_'
+			+this.randomString+'"].submitForm();');
 	};
 
 	LiveFeedClass.prototype.addNewFileTableRow = function(tableID, col_count, regexp, rindex)
@@ -403,16 +300,13 @@ BX.LiveFeedClass = (function ()
 				{'id':'UnorderedList','compact':true,'sort':'160'},
 				{'id':'AlignList','compact':false,'sort':'190'},
 				{'separator':true,'compact':false,'sort':'200'},
-				{'id':'InsertLink','compact':true,'sort':'210','wrap':'bx-htmleditor-'+formId},
+				{'id':'InsertLink','compact':true,'sort':'210'},
 				{'id':'InsertImage','compact':false,'sort':'220'},
-				{'id':'InsertVideo','compact':true,'sort':'230','wrap':'bx-htmleditor-'+formId},
+				{'id':'InsertVideo','compact':true,'sort':'230'},
 				{'id':'InsertTable','compact':false,'sort':'250'},
-				{'id':'Code','compact':true,'sort':'260'},
-				{'id':'Quote','compact':true,'sort':'270','wrap':'bx-htmleditor-'+formId},
 				{'id':'Smile','compact':false,'sort':'280'},
 				{'separator':true,'compact':false,'sort':'290'},
 				{'id':'Fullscreen','compact':false,'sort':'310'},
-				{'id':'BbCode','compact':true,'sort':'340'},
 				{'id':'More','compact':true,'sort':'400'}],
 			'autoResize':true,
 			'autoResizeOffset':'40',
@@ -435,17 +329,16 @@ BX.LiveFeedClass = (function ()
 		}
 	};
 
-	LiveFeedClass.prototype.createSettingsDropdown = function (e) {
-
+	LiveFeedClass.prototype.createSettingsDropdown = function (e)
+	{
 		BX.PreventDefault(e);
-		BX.ajax({
+		BX.Lists.ajax({
 			method: 'POST',
 			dataType: 'json',
-			url: this.addToLinkParam(this.ajaxUrl, 'action', 'createSettingsDropdown'),
+			url: BX.Lists.addToLinkParam(this.ajaxUrl, 'action', 'createSettingsDropdown'),
 			data: {
 				iblockId: BX('bx-lists-selected-list').value,
-				randomString: this.randomString,
-				sessid: BX.bitrix_sessid()
+				randomString: this.randomString
 			},
 			onsuccess: BX.delegate(function (result)
 			{
@@ -475,7 +368,7 @@ BX.LiveFeedClass = (function ()
 				else
 				{
 					result.errors = result.errors || [{}];
-					this.showModalWithStatusAction({
+					BX.Lists.showModalWithStatusAction({
 						status: 'error',
 						message: result.errors.pop().message
 					})
@@ -491,27 +384,27 @@ BX.LiveFeedClass = (function ()
 			BX.PopupWindowManager.getCurrentPopup().close();
 		}
 
-		var hide = this.hide,
-			addToLinkParam = this.addToLinkParam,
-			showModalWithStatusAction = this.showModalWithStatusAction,
+		var hide = BX.Lists.hide,
+			addToLinkParam = BX.Lists.addToLinkParam,
+			showModalWithStatusAction = BX.Lists.showModalWithStatusAction,
 			ajaxUrl = this.ajaxUrl;
 
-		BX.ajax({
+		BX.Lists.ajax({
 			method: 'POST',
 			dataType: 'json',
-			url: this.addToLinkParam(this.ajaxUrl, 'action', 'checkDelegateResponsible'),
+			url: BX.Lists.addToLinkParam(this.ajaxUrl, 'action', 'checkDelegateResponsible'),
 			data: {
-				iblockId: BX('bx-lists-selected-list').value,
-				sessid: BX.bitrix_sessid()
+				iblockId: BX('bx-lists-selected-list').value
 			},
 			onsuccess: BX.delegate(function (result)
 			{
 				if(result.status == 'success')
 				{
-					this.show(BX('feed-add-lists-right'));
-					this.modalWindow({
+					BX.show(BX('feed-add-lists-right'));
+					BX.Lists.modalWindow({
 						modalId: 'bx-lists-popup',
 						title: BX.message("LISTS_SELECT_STAFF_SET_RIGHT"),
+						draggable: true,
 						overlay: false,
 						autoHide: true,
 						contentStyle: {
@@ -522,17 +415,10 @@ BX.LiveFeedClass = (function ()
 						content: [BX('feed-add-lists-right')],
 						events : {
 							onPopupClose : function() {
-								hide(BX('feed-add-lists-right'));
+								BX.hide(BX('feed-add-lists-right'));
 								BX('bx-lists-total-div-id').appendChild(BX('feed-add-lists-right'));
-								this.destroy();
 							},
 							onAfterPopupShow : function(popup) {
-								var title = BX.findChild(popup.contentContainer, {className: 'bx-lists-popup-title'}, true);
-								if (title)
-								{
-									title.style.cursor = "move";
-									BX.bind(title, "mousedown", BX.proxy(popup._startDrag, popup));
-								}
 								BX.PopupMenu.destroy('settings-lists');
 							}
 						},
@@ -544,20 +430,20 @@ BX.LiveFeedClass = (function ()
 								},
 								events : {
 									click : BX.delegate(function (e) {
-										var selectSpan = BX.findChildrenByClassName(BX('feed-add-post-lists-item'), 'feed-add-post-lists'),
+										var selectSpan = BX.findChildrenByClassName(
+											BX('feed-add-post-lists-item'), 'feed-add-post-lists'),
 											selectUsers = [];
 										for(var i = 0; i < selectSpan.length; i++)
 										{
 											selectUsers.push(selectSpan[i].getAttribute('data-id'));
 										}
-										BX.ajax({
+										BX.Lists.ajax({
 											method: 'POST',
 											dataType: 'json',
 											url: addToLinkParam(ajaxUrl, 'action', 'setDelegateResponsible'),
 											data: {
 												iblockId: BX('bx-lists-selected-list').value,
-												selectUsers: selectUsers,
-												sessid: BX.bitrix_sessid()
+												selectUsers: selectUsers
 											},
 											onsuccess: function (result) {
 												if(result.status == 'success')
@@ -597,7 +483,8 @@ BX.LiveFeedClass = (function ()
 					});
 					for(var k in result.listUser)
 					{
-						var selected = BX.findChildrenByClassName(BX('feed-add-post-lists-item'), 'feed-add-post-lists');
+						var selected = BX.findChildrenByClassName(
+							BX('feed-add-post-lists-item'), 'feed-add-post-lists');
 						for(var i in selected)
 						{
 							if(result.listUser[k].id == selected[i].getAttribute('data-id'))
@@ -611,7 +498,7 @@ BX.LiveFeedClass = (function ()
 				else
 				{
 					result.errors = result.errors || [{}];
-					this.showModalWithStatusAction({
+					BX.Lists.showModalWithStatusAction({
 						status: 'error',
 						message: result.errors.pop().message
 					})
@@ -622,24 +509,24 @@ BX.LiveFeedClass = (function ()
 
 	LiveFeedClass.prototype.jumpSettingProcess = function ()
 	{
-		BX.ajax({
+		BX.Lists.ajax({
 			method: 'POST',
 			dataType: 'json',
-			url: this.addToLinkParam(this.ajaxUrl, 'action', 'checkPermissions'),
+			url: BX.Lists.addToLinkParam(this.ajaxUrl, 'action', 'checkPermissions'),
 			data: {
-				iblockId: BX('bx-lists-selected-list').value,
-				sessid: BX.bitrix_sessid()
+				iblockId: BX('bx-lists-selected-list').value
 			},
 			onsuccess: BX.delegate(function (result)
 			{
 				if(result.status == 'success')
 				{
-					document.location.href = BX('bx-lists-lists-page').value+BX('bx-lists-selected-list').value+'/edit/';
+					document.location.href = BX('bx-lists-lists-page').value+
+						BX('bx-lists-selected-list').value+'/edit/';
 				}
 				else
 				{
 					result.errors = result.errors || [{}];
-					this.showModalWithStatusAction({
+					BX.Lists.showModalWithStatusAction({
 						status: 'error',
 						message: result.errors.pop().message
 					})
@@ -650,24 +537,76 @@ BX.LiveFeedClass = (function ()
 
 	LiveFeedClass.prototype.jumpProcessDesigner = function ()
 	{
-		BX.ajax({
+		BX.Lists.ajax({
 			method: 'POST',
 			dataType: 'json',
-			url: this.addToLinkParam(this.ajaxUrl, 'action', 'getBizprocTemplateId'),
+			url: BX.Lists.addToLinkParam(this.ajaxUrl, 'action', 'getBizprocTemplateId'),
 			data: {
-				iblockId: BX('bx-lists-selected-list').value,
-				sessid: BX.bitrix_sessid()
+				iblockId: BX('bx-lists-selected-list').value
 			},
 			onsuccess: BX.delegate(function (result)
 			{
 				if(result.status == 'success')
 				{
-					document.location.href = BX('bx-lists-lists-page').value+BX('bx-lists-selected-list').value+'/bp_edit/'+result.templateId+'/';
+					var k;
+					if(result.manyTemplate)
+					{
+						var html = '<p>'+BX.message("LISTS_DESIGNER_POPUP_DESCRIPTION")+'</p>';
+						for(k in result.templateData)
+						{
+							var url = BX('bx-lists-lists-page').value+BX('bx-lists-selected-list').value+'/bp_edit/'+result.templateData[k].ID+'/';
+							html += '<a href="'+url+'"><div class="bx-lists-designer-item">'+result.templateData[k].NAME+'</div></a>';
+						}
+						html += '';
+						BX('bx-lists-designer-template-popup-content').innerHTML = html;
+						BX.Lists.modalWindow({
+							modalId: 'bx-lists-popup',
+							title: BX.message("LISTS_DESIGNER_POPUP_TITLE"),
+							draggable: true,
+							overlay: false,
+							contentStyle: {
+								width: '400px',
+								paddingTop: '10px',
+								paddingBottom: '10px'
+							},
+							content: [BX('bx-lists-designer-template-popup-content')],
+							events : {
+								onPopupClose : function() {
+									BX('bx-lists-designer-template-popup-content').innerHTML = '';
+									BX('bx-lists-designer-template-popup')
+										.appendChild(BX('bx-lists-designer-template-popup-content'));
+								},
+								onAfterPopupShow : function(popup) {
+									BX.PopupMenu.destroy('settings-lists');
+								}
+							},
+							buttons: [
+								BX.create('a', {
+									text : BX.message("LISTS_CANCEL_BUTTON_CLOSE"),
+									props: {
+										className: 'webform-small-button webform-button-cancel'
+									},
+									events : {
+										click : BX.delegate(function (e) {
+											BX.PopupWindowManager.getCurrentPopup().close();
+										}, this)
+									}
+								})
+							]
+						});
+					}
+					else
+					{
+						for(k in result.templateData)
+						{
+							document.location.href = BX('bx-lists-lists-page').value+BX('bx-lists-selected-list').value+'/bp_edit/'+result.templateData[k].ID+'/';
+						}
+					}
 				}
 				else
 				{
 					result.errors = result.errors || [{}];
-					this.showModalWithStatusAction({
+					BX.Lists.showModalWithStatusAction({
 						status: 'error',
 						message: result.errors.pop().message
 					})
@@ -688,30 +627,30 @@ BX.LiveFeedClass = (function ()
 		{
 			siteId = BX('bx-lists-select-site-id').value;
 		}
-		BX.ajax({
+		BX.Lists.ajax({
 			method: 'POST',
 			dataType: 'json',
-			url: this.addToLinkParam(this.ajaxUrl, 'action', 'notifyAdmin'),
+			url: BX.Lists.addToLinkParam(this.ajaxUrl, 'action', 'notifyAdmin'),
 			data: {
 				iblockId: BX('bx-lists-selected-list').value,
 				iblockName: BX('bx-lists-title-notify-admin-popup').value,
 				userId: userId,
 				siteDir: siteDir,
-				siteId: siteId,
-				sessid: BX.bitrix_sessid()
+				siteId: siteId
 			},
 			onsuccess: BX.delegate(function (result)
 			{
 				if(result.status == 'success')
 				{
-					this.removeElement(BX('bx-lists-notify-button-'+userId));
+					BX.Lists.removeElement(BX('bx-lists-notify-button-'+userId));
 					BX('bx-lists-notify-success-'+userId).innerHTML = result.message;
 				}
 				else
 				{
-					BX('bx-lists-notify-button-'+userId).setAttribute('onclick','BX["LiveFeedClass_'+this.randomString+'"].notify('+userId+')');
+					BX('bx-lists-notify-button-'+userId).setAttribute(
+						'onclick','BX.Lists["LiveFeedClass_'+this.randomString+'"].notify('+userId+')');
 					result.errors = result.errors || [{}];
-					this.showModalWithStatusAction({
+					BX.Lists.showModalWithStatusAction({
 						status: 'error',
 						message: result.errors.pop().message
 					})
@@ -722,13 +661,12 @@ BX.LiveFeedClass = (function ()
 
 	LiveFeedClass.prototype.notifyAdmin = function ()
 	{
-		BX.ajax({
+		BX.Lists.ajax({
 			method: 'POST',
 			dataType: 'json',
-			url: this.addToLinkParam(this.ajaxUrl, 'action', 'getListAdmin'),
+			url: BX.Lists.addToLinkParam(this.ajaxUrl, 'action', 'getListAdmin'),
 			data: {
-				iblockId: BX('bx-lists-selected-list').value,
-				sessid: BX.bitrix_sessid()
+				iblockId: BX('bx-lists-selected-list').value
 			},
 			onsuccess: BX.delegate(function (result)
 			{
@@ -749,15 +687,16 @@ BX.LiveFeedClass = (function ()
 						html += '<div class="bp-question-item"><a href="#" class="bp-question-item-avatar"><span class="bp-question-item-avatar-inner">'+img +
 						'</span></a><span class="bp-question-item-info"><span>'+result.listAdmin[k].name+'</span></span>' +
 							'<span id="bx-lists-notify-success-'+result.listAdmin[k].id+'" class="bx-lists-notify-success"></span>'+
-						'<a id="bx-lists-notify-button-'+result.listAdmin[k].id+'" href="#" onclick=\'BX["LiveFeedClass_'+this.randomString+'"].notify('+result.listAdmin[k].id+');\' class="webform-small-button bp-small-button webform-small-button-blue">' +
+						'<a id="bx-lists-notify-button-'+result.listAdmin[k].id+'" href="#" onclick=\'BX.Lists["LiveFeedClass_'+this.randomString+'"].notify('+result.listAdmin[k].id+');\' class="webform-small-button bp-small-button webform-small-button-blue">' +
 						''+BX.message('LISTS_NOTIFY_ADMIN_MESSAGE_BUTTON')+'</a></div>';
 					}
 
 					BX('bx-lists-notify-admin-popup-content').innerHTML = html;
 
-					this.modalWindow({
+					BX.Lists.modalWindow({
 						modalId: 'bx-lists-popup',
 						title: BX('bx-lists-title-notify-admin-popup').value,
+						draggable: true,
 						overlay: false,
 						contentStyle: {
 							width: '600px',
@@ -767,16 +706,11 @@ BX.LiveFeedClass = (function ()
 						content: [BX('bx-lists-notify-admin-popup-content')],
 						events : {
 							onPopupClose : function() {
-								BX('bx-lists-notify-admin-popup').appendChild(BX('bx-lists-notify-admin-popup-content'));
-								this.destroy();
+								BX('bx-lists-notify-admin-popup-content').innerHTML = '';
+								BX('bx-lists-notify-admin-popup')
+									.appendChild(BX('bx-lists-notify-admin-popup-content'));
 							},
 							onAfterPopupShow : function(popup) {
-								var title = BX.findChild(popup.contentContainer, {className: 'bx-lists-popup-title'}, true);
-								if (title)
-								{
-									title.style.cursor = "move";
-									BX.bind(title, "mousedown", BX.proxy(popup._startDrag, popup));
-								}
 								BX.PopupMenu.destroy('settings-lists');
 							}
 						},
@@ -798,7 +732,7 @@ BX.LiveFeedClass = (function ()
 				else
 				{
 					result.errors = result.errors || [{}];
-					this.showModalWithStatusAction({
+					BX.Lists.showModalWithStatusAction({
 						status: 'error',
 						message: result.errors.pop().message
 					})
@@ -807,105 +741,46 @@ BX.LiveFeedClass = (function ()
 		});
 	};
 
-	LiveFeedClass.prototype.setResponsible = function ()
+	LiveFeedClass.prototype.setResponsible = function (templateId)
 	{
-		if(BX.PopupWindowManager.getCurrentPopup())
-		{
-			BX.PopupWindowManager.getCurrentPopup().close();
-		}
+		this.templateId = templateId;
 
-		BX.ajax({
+		BX.Lists.ajax({
 			method: 'POST',
 			dataType: 'json',
-			url: this.addToLinkParam(this.ajaxUrl, 'action', 'checkPermissions'),
+			url: BX.Lists.addToLinkParam(this.ajaxUrl, 'action', 'checkPermissions'),
 			data: {
-				iblockId: BX('bx-lists-selected-list').value,
-				sessid: BX.bitrix_sessid()
+				iblockId: BX('bx-lists-selected-list').value
 			},
 			onsuccess: BX.delegate(function (result)
 			{
-				if(result.status == 'success')
+				if(result.status === 'success')
 				{
-					BX.ajax({
-						url: this.addToLinkParam(this.ajaxUrl, 'action', 'setResponsible'),
+					BX.Lists.ajax({
+						url: BX.Lists.addToLinkParam(this.ajaxUrl, 'action', 'setResponsible'),
 						method: 'POST',
 						dataType: 'html',
 						data: {
 							iblockId: BX('bx-lists-selected-list').value,
-							sessid: BX.bitrix_sessid()
+							randomString: this.randomString,
+							templateId: this.templateId
 						},
 						onsuccess: BX.delegate(function (data)
 						{
-							BX.adjust(BX('bx-lists-set-responsible-content'), {
-								html: data
-							});
+							this.showConstantsPopup(data);
 						}, this)
-					});
-
-					this.modalWindow({
-						modalId: 'bx-lists-popup',
-						title: BX.message("LISTS_SELECT_STAFF_SET_RESPONSIBLE"),
-						overlay: false,
-						contentStyle: {
-							width: '600px',
-							paddingTop: '10px',
-							paddingBottom: '10px'
-						},
-						content: [BX('bx-lists-set-responsible-content')],
-						events : {
-							onPopupClose : function() {
-								BX('bx-lists-set-responsible').appendChild(BX('bx-lists-set-responsible-content'));
-								this.destroy();
-							},
-							onAfterPopupShow : function(popup) {
-								var title = BX.findChild(popup.contentContainer, {className: 'bx-lists-popup-title'}, true);
-								if (title)
-								{
-									title.style.cursor = "move";
-									BX.bind(title, "mousedown", BX.proxy(popup._startDrag, popup));
-								}
-								BX.PopupMenu.destroy('settings-lists');
-							}
-						},
-						buttons: [
-							BX.create('a', {
-								text : BX.message("LISTS_SAVE_BUTTON_SET_RIGHT"),
-								props: {
-									className: 'webform-small-button webform-small-button-accept'
-								},
-								events : {
-									click : BX.delegate(function (e)
-									{
-										var form = BX.findChild(BX('bx-lists-set-responsible-content'), {tag: 'FORM'}, true);
-										if (form)
-											form.onsubmit(form, e);
-									})
-								}
-							}),
-							BX.create('a', {
-								text : BX.message("LISTS_CANCEL_BUTTON_SET_RIGHT"),
-								props: {
-									className: 'webform-small-button webform-button-cancel'
-								},
-								events : {
-									click : BX.delegate(function (e) {
-										BX.PopupWindowManager.getCurrentPopup().close();
-									}, this)
-								}
-							})
-						]
 					});
 				}
 				else
 				{
-					if(BX('bx-lists-cjeck-notify-admin').value)
+					if(BX('bx-lists-check-notify-admin').value)
 					{
 						this.notifyAdmin();
 					}
 					else
 					{
 						result.errors = result.errors || [{}];
-						this.showModalWithStatusAction({
+						BX.Lists.showModalWithStatusAction({
 							status: 'error',
 							message: result.errors.pop().message
 						})
@@ -915,194 +790,120 @@ BX.LiveFeedClass = (function ()
 		});
 	};
 
-	LiveFeedClass.prototype.show = function (el)
+	LiveFeedClass.prototype.showConstantsPopup = function(contentHtml)
 	{
-		if (this.getRealDisplay(el) != 'none')
-			return;
+		if(BX.PopupWindowManager.getCurrentPopup())
+			BX.PopupWindowManager.getCurrentPopup().close();
 
-		var old = el.getAttribute("displayOld");
-		el.style.display = old || "";
-
-		if (this.getRealDisplay(el) === "none" ) {
-			var nodeName = el.nodeName, body = document.body, display;
-
-			if (displayCache[nodeName]) {
-				display = displayCache[nodeName];
-			} else {
-				var testElem = document.createElement(nodeName);
-				body.appendChild(testElem);
-				display = this.getRealDisplay(testElem);
-
-				if (display === "none" ) {
-					display = "block";
-				}
-
-				body.removeChild(testElem);
-				displayCache[nodeName] = display;
-			}
-
-			el.setAttribute('displayOld', display);
-			el.style.display = display;
-		}
-	};
-
-	LiveFeedClass.prototype.hide = function (el)
-	{
-		if (!el.getAttribute('displayOld'))
+		if(this.manyTemplate && !this.templateId)
 		{
-			el.setAttribute("displayOld", el.style.display);
-		}
-		el.style.display = "none";
-	};
-
-	LiveFeedClass.prototype.getRealDisplay = function (elem) {
-		if (elem.currentStyle) {
-			return elem.currentStyle.display;
-		} else if (window.getComputedStyle) {
-			var computedStyle = window.getComputedStyle(elem, null );
-			return computedStyle.getPropertyValue('display');
-		}
-	};
-
-	LiveFeedClass.prototype.modalWindow = function (params)
-	{
-		params = params || {};
-		params.title = params.title || false;
-		params.bindElement = params.bindElement || null;
-		params.overlay = typeof params.overlay == "undefined" ? true : params.overlay;
-		params.autoHide = params.autoHide || false;
-		params.closeIcon = typeof params.closeIcon == "undefined"? {right: "20px", top: "10px"} : params.closeIcon;
-		params.modalId = params.modalId || 'lists_modal_window_' + (Math.random() * (200000 - 100) + 100);
-		params.withoutContentWrap = typeof params.withoutContentWrap == "undefined" ? false : params.withoutContentWrap;
-		params.contentClassName = params.contentClassName || '';
-		params.contentStyle = params.contentStyle || {};
-		params.content = params.content || [];
-		params.buttons = params.buttons || false;
-		params.events = params.events || {};
-		params.withoutWindowManager = !!params.withoutWindowManager || false;
-
-		var contentDialogChildren = [];
-		if (params.title) {
-			contentDialogChildren.push(BX.create('div', {
-				props: {
-					className: 'bx-lists-popup-title'
+			this.constantsPopup = BX.Lists.modalWindow({
+				modalId: 'bx-lists-popup',
+				title: BX.message("LISTS_DESIGNER_POPUP_TITLE"),
+				overlay: false,
+				draggable: true,
+				contentStyle: {
+					width: '600px',
+					paddingBottom: '10px'
 				},
-				text: params.title
-			}));
-		}
-		if (params.withoutContentWrap) {
-			contentDialogChildren = contentDialogChildren.concat(params.content);
-		}
-		else {
-			contentDialogChildren.push(BX.create('div', {
-				props: {
-					className: 'bx-lists-popup-content ' + params.contentClassName
+				content: [this.getConstantsForm(contentHtml)],
+				events : {
+					onPopupClose : function() {
+						this.constantsPopup = null;
+					}.bind(this),
+					onAfterPopupShow : function(popup) {
+						BX.PopupMenu.destroy('settings-lists');
+					}
 				},
-				style: params.contentStyle,
-				children: params.content
-			}));
-		}
-		var buttons = [];
-		if (params.buttons) {
-			for (var i in params.buttons) {
-				if (!params.buttons.hasOwnProperty(i)) {
-					continue;
-				}
-				if (i > 0) {
-					buttons.push(BX.create('SPAN', {html: '&nbsp;'}));
-				}
-				buttons.push(params.buttons[i]);
-			}
-
-			contentDialogChildren.push(BX.create('div', {
-				props: {
-					className: 'bx-lists-popup-buttons'
-				},
-				children: buttons
-			}));
-		}
-
-		var contentDialog = BX.create('div', {
-			props: {
-				className: 'bx-lists-popup-container'
-			},
-			children: contentDialogChildren
-		});
-
-		params.events.onPopupShow = BX.delegate(function () {
-			if (buttons.length) {
-				firstButtonInModalWindow = buttons[0];
-				BX.bind(document, 'keydown', BX.proxy(this._keyPress, this));
-			}
-
-			if(params.events.onPopupShow)
-				BX.delegate(params.events.onPopupShow, BX.proxy_context);
-		}, this);
-		var closePopup = params.events.onPopupClose;
-		params.events.onPopupClose = BX.delegate(function () {
-
-			firstButtonInModalWindow = null;
-			try
-			{
-				BX.unbind(document, 'keydown', BX.proxy(this._keypress, this));
-			}
-			catch (e) { }
-
-			if(closePopup)
-			{
-				BX.delegate(closePopup, BX.proxy_context)();
-			}
-
-			if(params.withoutWindowManager)
-			{
-				delete windowsWithoutManager[params.modalId];
-			}
-
-			BX.proxy_context.destroy();
-		}, this);
-
-		var modalWindow;
-		if(params.withoutWindowManager)
-		{
-			if(!!windowsWithoutManager[params.modalId])
-			{
-				return windowsWithoutManager[params.modalId]
-			}
-			modalWindow = new BX.PopupWindow(params.modalId, params.bindElement, {
-				content: contentDialog,
-				closeByEsc: true,
-				closeIcon: params.closeIcon,
-				autoHide: params.autoHide,
-				overlay: params.overlay,
-				events: params.events,
-				buttons: [],
-				zIndex : isNaN(params["zIndex"]) ? 0 : params.zIndex
+				buttons: [
+					BX.create('a', {
+						text : BX.message("LISTS_CANCEL_BUTTON_CLOSE"),
+						props: {
+							className: 'webform-small-button webform-button-cancel'
+						},
+						events : {
+							click : BX.delegate(function (e) {
+								if(!!this.constantsPopup) this.constantsPopup.close();
+							}, this)
+						}
+					})
+				]
 			});
-			windowsWithoutManager[params.modalId] = modalWindow;
 		}
 		else
 		{
-			modalWindow = BX.PopupWindowManager.create(params.modalId, params.bindElement, {
-				content: contentDialog,
-				closeByEsc: true,
-				closeIcon: params.closeIcon,
-				autoHide: params.autoHide,
-				overlay: params.overlay,
-				events: params.events,
-				buttons: [],
-				zIndex : isNaN(params["zIndex"]) ? 0 : params.zIndex
+			this.constantsPopup = BX.Lists.modalWindow({
+				modalId: 'bx-lists-popup',
+				title: BX.message("LISTS_SELECT_STAFF_SET_RESPONSIBLE"),
+				overlay: false,
+				draggable: true,
+				withoutWindowManager: true,
+				contentStyle: {
+					width: '600px',
+					paddingBottom: '10px'
+				},
+				content: [this.getConstantsForm(contentHtml)],
+				events : {
+					onPopupClose : function() {
+						this.constantsPopup = null;
+					}.bind(this),
+					onAfterPopupShow : function(popup) {
+						BX.PopupMenu.destroy('settings-lists');
+					}
+				},
+				buttons: [
+					BX.create('a', {
+						text : BX.message("LISTS_SAVE_BUTTON_SET_RIGHT"),
+						props: {
+							className: 'webform-small-button webform-small-button-accept'
+						},
+						events : {
+							click : BX.delegate(function (e)
+							{
+								var form = BX.findChild(BX('bx-lists-set-responsible-content'),
+									{tag: 'FORM'}, true);
+								if(form)
+								{
+									form.modalWindow = this.constantsPopup;
+									form.onsubmit(form, e);
+								}
+							}, this)
+						}
+					}),
+					BX.create('a', {
+						text : BX.message("LISTS_CANCEL_BUTTON_SET_RIGHT"),
+						props: {
+							className: 'webform-small-button webform-button-cancel'
+						},
+						events : {
+							click : BX.delegate(function (e) {
+								if (!!this.constantsPopup) this.constantsPopup.close();
+							}, this)
+						}
+					})
+				]
 			});
-
 		}
+	};
 
-		modalWindow.show();
-
-		return modalWindow;
+	LiveFeedClass.prototype.getConstantsForm = function(html)
+	{
+		return BX.create("div", {
+			children: [
+				BX.create("div", {
+					props: {
+						id: "bx-lists-set-responsible-content",
+						className: "bx-lists-set-responsible-content"
+					},
+					html: html
+				})
+			]
+		});
 	};
 
 	LiveFeedClass.prototype.submitForm = function()
 	{
-		if(this.getRealDisplay(BX('feed-add-post-content-lists')) == 'none')
+		if(BX('feed-add-post-content-lists').style.display == 'none')
 			BX.bind(BX('blog-submit-button-save'), 'click', submitBlogPostForm());
 
 		BX('blog-submit-button-save').setAttribute('onclick','');
@@ -1112,14 +913,14 @@ BX.LiveFeedClass = (function ()
 		{
 			if(lists[i].value != BX('bx-lists-selected-list').value)
 			{
-				this.removeElement(BX('bx-lists-div-list-'+lists[i].value));
-				this.removeElement(BX('bx-lists-input-list-'+lists[i].value));
+				BX.Lists.removeElement(BX('bx-lists-div-list-'+lists[i].value));
+				BX.Lists.removeElement(BX('bx-lists-input-list-'+lists[i].value));
 			}
 		}
 
 		BX.ajax.submitAjax(BX('blogPostForm'), {
 			method : "POST",
-			url: this.addToLinkParam(this.ajaxUrl, 'action', 'checkDataElementCreation'),
+			url: BX.Lists.addToLinkParam(this.ajaxUrl, 'action', 'checkDataElementCreation'),
 			processData : true,
 			onsuccess: BX.delegate(function (startResult)
 			{
@@ -1135,16 +936,18 @@ BX.LiveFeedClass = (function ()
 					{
 						BX.removeClass(BX('blog-submit-button-save'), 'feed-add-button-load');
 						BX('bx-lists-block-errors').innerHTML = result.errors.pop().message;
-						this.show(BX('bx-lists-block-errors'));
-						BX('blog-submit-button-save').setAttribute('onclick','BX["LiveFeedClass_'+this.randomString+'"].submitForm();');
+						BX.show(BX('bx-lists-block-errors'));
+						BX('blog-submit-button-save').setAttribute('onclick','BX.Lists["LiveFeedClass_'+
+							this.randomString+'"].submitForm();');
 					}
 				}
 				else
 				{
 					BX.removeClass(BX('blog-submit-button-save'), 'feed-add-button-load');
 					BX('bx-lists-block-errors').innerHTML = startResult;
-					this.show(BX('bx-lists-block-errors'));
-					BX('blog-submit-button-save').setAttribute('onclick', 'BX["LiveFeedClass_' + this.randomString + '"].submitForm();');
+					BX.show(BX('bx-lists-block-errors'));
+					BX('blog-submit-button-save').setAttribute('onclick', 'BX.Lists["LiveFeedClass_' +
+						this.randomString + '"].submitForm();');
 				}
 
 			}, this)
@@ -1153,7 +956,7 @@ BX.LiveFeedClass = (function ()
 
 	LiveFeedClass.prototype.errorPopup = function (message)
 	{
-		this.showModalWithStatusAction({
+		BX.Lists.showModalWithStatusAction({
 			status: 'error',
 			message: message
 		})

@@ -20,7 +20,10 @@ class CBPSetStateActivity
 		{
 			$stateActivity->SetNextStateName($this->TargetStateName);
 			if ($this->CancelCurrentState == 'Y')
-				$stateActivity->Cancel();
+			{
+				$this->workflow->CancelActivity($stateActivity);
+				return CBPActivityExecutionStatus::Executing;
+			}
 		}
 
 		return CBPActivityExecutionStatus::Closed;

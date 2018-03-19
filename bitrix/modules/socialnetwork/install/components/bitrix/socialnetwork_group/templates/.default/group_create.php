@@ -1,12 +1,13 @@
-<?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();?>
-<?
-if ($_GET["IFRAME"] == "Y")
-	$component_tmp = "bitrix:socialnetwork.group_create.ex";
-else
-	$component_tmp = "bitrix:socialnetwork.group_create";
+<?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
+/** @var CBitrixComponentTemplate $this */
+/** @var array $arParams */
+/** @var array $arResult */
+/** @global CDatabase $DB */
+/** @global CUser $USER */
+/** @global CMain $APPLICATION */
 
 $APPLICATION->IncludeComponent(
-	$component_tmp,
+	"bitrix:socialnetwork.group_create.ex",
 	"", 
 	Array(
 		"PATH_TO_USER" => $arParams["PATH_TO_USER"],
@@ -24,7 +25,8 @@ $APPLICATION->IncludeComponent(
 		"SHOW_LOGIN" => $arParams["SHOW_LOGIN"],
 		"USE_KEYWORDS" => $arParams["GROUP_USE_KEYWORDS"],
 		"USE_AUTOSUBSCRIBE" => "N",
+		"FIRST_ROW" => ($_GET["firstRow"] == "project" ? "project" : ""),
 	),
-	$component 
+	$this->getComponent()
 );
 ?>

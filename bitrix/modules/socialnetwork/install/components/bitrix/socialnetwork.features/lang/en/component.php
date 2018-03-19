@@ -19,4 +19,5 @@ $MESS["SONET_C3_PVU_ALL"] = "All Visitors";
 $MESS["SONET_C3_PVU_AUTHORIZED"] = "Authorized Users";
 $MESS["SONET_WEBDAV_RIGHS_NOTE"] = "Access permissions to files can be set in the document library of a workgroup";
 $MESS["SONET_CALENDAR_ACCESS_NOTE"] = "Access permissions for the calendar are configured directly on the event calendar page: Settings --> Access permissions.";
+$MESS["SONET_C3_GROUP_SETTINGS_PROJECT"] = "Project settings";
 ?>

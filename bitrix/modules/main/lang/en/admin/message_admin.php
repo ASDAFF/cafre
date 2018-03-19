@@ -63,4 +63,7 @@ $MESS["MAIN_ADMIN_ADD_COPY"] = "Add copy";
 $MESS["MAIN_ADMIN_MENU_DELETE"] = "Delete";
 $MESS["MAIN_ADMIN_LIST_ACTIVATE"] = "activate";
 $MESS["MAIN_ADMIN_LIST_DEACTIVATE"] = "deactivate";
+$MESS["main_mess_admin_lang"] = "Language";
+$MESS["main_mess_admin_lang1"] = "Language";
+$MESS["main_mess_admin_lang2"] = "Language:";
 ?>

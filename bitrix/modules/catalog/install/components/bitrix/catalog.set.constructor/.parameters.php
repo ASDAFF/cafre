@@ -1,7 +1,9 @@
 <?
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) die();
 
-use Bitrix\Main\Loader;
+use Bitrix\Main\Loader,
+	Bitrix\Catalog,
+	Bitrix\Currency;
 
 if (!Loader::includeModule('catalog'))
 	return;
@@ -9,28 +11,27 @@ if (!Loader::includeModule('catalog'))
 $arIBlockType = CIBlockParameters::GetIBlockTypes();
 
 $arIBlock = array();
-if (isset($arCurrentValues["IBLOCK_TYPE_ID"]) && !empty($arCurrentValues["IBLOCK_TYPE_ID"]))
-{
-	$filterIBlock = array("TYPE" => $arCurrentValues["IBLOCK_TYPE_ID"], "ACTIVE"=>"Y");
-}
-else
-{
-	$filterIBlock = array("ACTIVE"=>"Y");
-}
+$filterIBlock = (
+	isset($arCurrentValues["IBLOCK_TYPE_ID"]) && !empty($arCurrentValues["IBLOCK_TYPE_ID"])
+	? array("TYPE" => $arCurrentValues["IBLOCK_TYPE_ID"], "ACTIVE"=>"Y")
+	: array("ACTIVE"=>"Y")
+);
 $rsIBlock = CIBlock::GetList(array("sort" => "asc"), $filterIBlock);
 while ($arr = $rsIBlock->Fetch())
 	$arIBlock[$arr["ID"]] = "[".$arr["ID"]."] ".$arr["NAME"];
-if (isset($arr))
-	unset($arr);
-unset($rsIBlock, $filterIBlock);
+unset($arr, $rsIBlock, $filterIBlock);
 
 $arPrice = array();
-$rsPrice = CCatalogGroup::GetListEx(array("SORT" => "ASC"), array(), false, false, array('ID', 'NAME', 'NAME_LANG'));
-while ($arr = $rsPrice->Fetch())
-	$arPrice[$arr["NAME"]] = "[".$arr["NAME"]."] ".$arr["NAME_LANG"];
-if (isset($arr))
-	unset($arr);
-unset($rsPrice);
+$priceTypeIterator = Catalog\GroupTable::getList(array(
+	'select' => array('ID', 'NAME', 'NAME_LANG' => 'CURRENT_LANG.NAME'),
+	'order' => array('SORT' => 'ASC')
+));
+while ($priceType = $priceTypeIterator->fetch())
+{
+	$priceType['NAME_LANG'] = (string)$priceType['NAME_LANG'];
+	$arPrice[$priceType['NAME']] = '['.$priceType['NAME'].']'.($priceType['NAME_LANG'] != '' ? ' '.$priceType['NAME_LANG'] : '');
+}
+unset($priceType, $priceTypeIterator);
 
 $arProperty_LNS = array();
 $arProperty_N = array();
@@ -107,13 +108,6 @@ $arComponentParameters = array(
 			"TYPE" => "STRING",
 			"DEFAULT" => ""
 		),
-		/*"PRODUCT_PROPERTIES" => array(
-			"PARENT" => "BASE",
-			"NAME" => GetMessage("CATALOG_SET_PRODUCT_PROPERTIES"),
-			"TYPE" => "LIST",
-			"MULTIPLE" => "Y",
-			"VALUES" => $arProperty_X,
-		),*/
 		"BASKET_URL" => array(
 			"PARENT" => "URL_TEMPLATES",
 			"NAME" => GetMessage("IBLOCK_BASKET_URL"),
@@ -133,13 +127,19 @@ $arComponentParameters = array(
 			"TYPE" => "CHECKBOX",
 			"DEFAULT" => "Y",
 		),
-		"CACHE_TIME"  =>  Array("DEFAULT"=>36000000),
+		"CACHE_TIME" => array("DEFAULT"=>36000000),
 		"CACHE_GROUPS" => array(
 			"PARENT" => "CACHE_SETTINGS",
 			"NAME" => GetMessage("CP_BCT_CACHE_GROUPS"),
 			"TYPE" => "CHECKBOX",
 			"DEFAULT" => "Y",
 		),
+		"BUNDLE_ITEMS_COUNT" => array(
+			"PARENT" => "VISUAL",
+			"NAME" => GetMessage("CP_CSC_PARAM_TITLE_BUNDLE_ITEMS_COUNT"),
+			"TYPE" => "STRING",
+			"DEFAULT" => "3"
+		)
 	),
 );
 
@@ -153,20 +153,12 @@ $arComponentParameters["PARAMETERS"]['CONVERT_CURRENCY'] = array(
 
 if (isset($arCurrentValues['CONVERT_CURRENCY']) && 'Y' == $arCurrentValues['CONVERT_CURRENCY'])
 {
-	$arCurrencyList = array();
-	$by = 'SORT';
-	$order = 'ASC';
-	$rsCurrencies = CCurrency::GetList($by, $order);
-	while ($arCurrency = $rsCurrencies->Fetch())
-	{
-		$arCurrencyList[$arCurrency['CURRENCY']] = $arCurrency['CURRENCY'];
-	}
 	$arComponentParameters['PARAMETERS']['CURRENCY_ID'] = array(
 		'PARENT' => 'PRICES',
 		'NAME' => GetMessage('CP_BCT_CURRENCY_ID'),
 		'TYPE' => 'LIST',
-		'VALUES' => $arCurrencyList,
-		'DEFAULT' => CCurrency::GetBaseCurrency(),
+		'VALUES' => Currency\CurrencyManager::getCurrencyList(),
+		'DEFAULT' => Currency\CurrencyManager::getBaseCurrency(),
 		"ADDITIONAL_VALUES" => "Y",
 	);
 }
@@ -181,4 +173,3 @@ if($OFFERS_IBLOCK_ID)
 		"VALUES" => $arProperty_Offers,
 	);
 }
-?>

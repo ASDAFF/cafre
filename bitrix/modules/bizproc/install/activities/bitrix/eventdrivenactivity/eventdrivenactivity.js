@@ -13,7 +13,7 @@ EventDrivenActivity = function()
 			ob.DrawSequentialWorkflowActivity(d);
 		else
 			ob.DrawSequenceActivity(d);
-	}
+	};
 
 	ob.AfterSDraw = function ()
 	{
@@ -22,7 +22,12 @@ EventDrivenActivity = function()
 			ob.childsContainer.rows[0].style.display = 'none';
 			ob.childsContainer.rows[1].style.display = 'none';
 		}
-	}
+	};
+
+	ob.SetError = function (s, setFocus)
+	{
+		ob.parentActivity.SetError(s, setFocus);
+	};
 
 	return ob;
-}
+};

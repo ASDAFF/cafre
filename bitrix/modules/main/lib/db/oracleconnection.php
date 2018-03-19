@@ -57,12 +57,7 @@ class OracleConnection extends Connection
 		$this->isConnected = true;
 		$this->resource = $connection;
 
-		/** @noinspection PhpUnusedLocalVariableInspection */
-		global $DB, $USER, $APPLICATION;
-		if ($fn = \Bitrix\Main\Loader::getPersonal("php_interface/after_connect_d7.php"))
-		{
-			include($fn);
-		}
+		$this->afterConnected();
 	}
 
 	/**
@@ -201,9 +196,9 @@ class OracleConnection extends Connection
 	 * - query($sql, $binds, $offset, $limit)
 	 *
 	 * @param string $sql Sql query.
-	 * @param array $binds,... Array of binds.
-	 * @param int $offset,... Offset of first row returned.
-	 * @param int $limit,... Limit rows count.
+	 * @param array $binds Array of binds.
+	 * @param int $offset Offset of the first row to return, starting from 0.
+	 * @param int $limit Limit rows count.
 	 *
 	 * @return Result
 	 * @throws \Bitrix\Main\Db\SqlQueryException

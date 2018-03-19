@@ -220,7 +220,7 @@ if (CWikiSocnet::isEnabledSocnet() && !empty($arParams['SOCNET_GROUP_ID']))
 
 				$url = str_replace(
 					array('#group_id#', '#wiki_name#'),
-					array(intval($this->SonetGroupID), urlencode($arElement['NAME'])),
+					array(intval($this->SonetGroupID), rawurlencode($arElement['NAME'])),
 					$this->arPath['PATH_TO_POST']
 				);
 
@@ -279,9 +279,9 @@ if (CWikiSocnet::isEnabledSocnet() && !empty($arParams['SOCNET_GROUP_ID']))
 
 			$arForum = CForumNew::GetByID($this->ForumID);
 
-			$parser = new textParser(LANGUAGE_ID, $this->arPath['PATH_TO_SMILE']);
-			$parser->image_params['width'] = false;
-			$parser->image_params['height'] = false;
+			$parser = new forumTextParser(LANGUAGE_ID, $this->arPath['PATH_TO_SMILE']);
+			$parser->imageWidth = false;
+			$parser->imageHeight = false;
 
 			$arAllow = array(
 				'HTML' => "N",
@@ -302,9 +302,9 @@ if (CWikiSocnet::isEnabledSocnet() && !empty($arParams['SOCNET_GROUP_ID']))
 				$arMessage = CForumMessage::GetByIDEx($messageID);
 				$sAuthorForMail = str_replace('#TITLE#', $arMessage['AUTHOR_NAME'], GetMessage('SONET_FORUM_LOG_TEMPLATE_GUEST'));
 
-				$parser = new textParser(LANGUAGE_ID, $this->arPath['PATH_TO_SMILE']);
-				$parser->image_params['width'] = false;
-				$parser->image_params['height'] = false;
+				$parser = new forumTextParser(LANGUAGE_ID, $this->arPath['PATH_TO_SMILE']);
+				$parser->imageWidth = false;
+				$parser->imageHeight = false;
 
 				if (intVal($arMessage['AUTHOR_ID']) > 0)
 					$sAuthorForMail = str_replace(array('#URL#', '#TITLE#'), array('http://'.SITE_SERVER_NAME.CComponentEngine::MakePathFromTemplate(
@@ -316,7 +316,7 @@ if (CWikiSocnet::isEnabledSocnet() && !empty($arParams['SOCNET_GROUP_ID']))
 					'ENTITY_ID' => intval($this->SonetGroupID),
 					'EVENT_ID' => 'wiki_comment',
 					'=LOG_DATE' => $GLOBALS['DB']->CharToDateFunction($arMessage['POST_DATE'], "FULL", SITE_ID),
-					'MESSAGE' => $parser->convert($arMessage['POST_MESSAGE'], $arAllow),
+					'MESSAGE' => $arMessage['POST_MESSAGE'],
 					'TEXT_MESSAGE' => $parser->convert4mail($arMessage['POST_MESSAGE'].$sAuthorForMail),
 					'URL' => $arLogParams["URL"],
 					'MODULE_ID' => false,

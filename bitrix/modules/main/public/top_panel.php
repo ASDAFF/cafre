@@ -14,7 +14,7 @@ IncludeModuleLangFile(__FILE__);
 class CTopPanel
 {
 	//Check permissions functions
-	function IsCanCreatePage($currentDirPath, $documentRoot, $filemanExists)
+	public static function IsCanCreatePage($currentDirPath, $documentRoot, $filemanExists)
 	{
 		global $USER;
 
@@ -29,7 +29,7 @@ class CTopPanel
 		return true;
 	}
 
-	function IsCanCreateSection($currentDirPath, $documentRoot, $filemanExists)
+	public static function IsCanCreateSection($currentDirPath, $documentRoot, $filemanExists)
 	{
 		global $USER;
 
@@ -46,7 +46,7 @@ class CTopPanel
 		return true;
 	}
 
-	function IsCanEditPage($currentFilePath, $documentRoot, $filemanExists)
+	public static function IsCanEditPage($currentFilePath, $documentRoot, $filemanExists)
 	{
 		global $USER;
 
@@ -65,7 +65,7 @@ class CTopPanel
 		return true;
 	}
 
-	function IsCanEditSection($currentDirPath, $filemanExists)
+	public static function IsCanEditSection($currentDirPath, $filemanExists)
 	{
 		global $USER;
 
@@ -78,7 +78,7 @@ class CTopPanel
 		return true;
 	}
 
-	function IsCanEditPermission($currentFilePath, $documentRoot, $filemanExists)
+	public static function IsCanEditPermission($currentFilePath, $documentRoot, $filemanExists)
 	{
 		global $USER;
 
@@ -95,7 +95,7 @@ class CTopPanel
 		return true;
 	}
 
-	function IsCanDeletePage($currentFilePath, $documentRoot, $filemanExists)
+	public static function IsCanDeletePage($currentFilePath, $documentRoot, $filemanExists)
 	{
 		global $USER;
 
@@ -110,7 +110,7 @@ class CTopPanel
 		return true;
 	}
 
-	function GetStandardButtons()
+	public static function GetStandardButtons()
 	{
 		global $USER, $APPLICATION, $DB;
 
@@ -178,8 +178,8 @@ class CTopPanel
 					if($pageTemplate['type'] == '' || $pageTemplate['type'] == 'page')
 					{
 						$arSubmenu[] = array(
-							"TEXT"=>"<b>".$pageTemplate['name']."</b>".($pageTemplate['description'] <> ''? "<br>".$pageTemplate['description']:""),
-							"TITLE"=>GetMessage("top_panel_template")." ".$pageTemplate['file'],
+							"TEXT"=>$pageTemplate['name'],
+							"TITLE"=>GetMessage("top_panel_template")." ".$pageTemplate['file'].($pageTemplate['description'] <> ''? "\n".$pageTemplate['description']:""),
 							"ICON"=>($pageTemplate['icon'] == ''? "panel-new-file-template":""),
 							"IMAGE"=>($pageTemplate['icon'] <> ''? $pageTemplate['icon']:""),
 							"ACTION"=> str_replace("public_file_new.php?", "public_file_new.php?wiz_template=".urlencode($pageTemplate['file'])."&", $defaultUrl),
@@ -265,8 +265,8 @@ class CTopPanel
 					if($pageTemplate['type'] == '' || $pageTemplate['type'] == 'section')
 					{
 						$arSectSubmenu[] = array(
-							"TEXT"=>"<b>".$pageTemplate['name']."</b>".($pageTemplate['description'] <> ''? "<br>".$pageTemplate['description']:""),
-							"TITLE"=>GetMessage("top_panel_template")." ".$pageTemplate['file'],
+							"TEXT"=>$pageTemplate['name'],
+							"TITLE"=>GetMessage("top_panel_template")." ".$pageTemplate['file'].($pageTemplate['description'] <> ''? "\n".$pageTemplate['description']:""),
 							"ICON"=>($pageTemplate['icon'] == ''? "panel-new-file-template":""),
 							"IMAGE"=>($pageTemplate['icon'] <> ''? $pageTemplate['icon']:""),
 							"ACTION"=> str_replace("public_file_new.php?", "public_file_new.php?newFolder=Y&wiz_template=".urlencode($pageTemplate['file'])."&", $defaultUrl),
@@ -601,7 +601,7 @@ class CTopPanel
 					"TEXT"=>GetMessage("top_panel_cache_comp"),
 					"TITLE"=>GetMessage("top_panel_cache_comp_title"),
 					"ICON"=>"panel-comp-cache",
-					"ACTION"=>"jsComponentUtils.ClearCache('component_name=".CUtil::addslashes(implode(",", $APPLICATION->aCachedComponents))."&site_id=".SITE_ID."');",
+					"ACTION"=>"jsComponentUtils.ClearCache('component_name=".CUtil::addslashes(implode(",", $APPLICATION->aCachedComponents))."&site_id=".SITE_ID."&".bitrix_sessid_get()."');",
 					"HK_ID" => "top_panel_cache_comp",
 				);
 			}
@@ -851,7 +851,7 @@ class CTopPanel
 					"HK_ID"	=>"top_panel_debug_time",
 				),
 			);
-			if(IsModuleInstalled("compression"))
+			if(\Bitrix\Main\Loader::includeModule("compression") && CCompress::CheckCanGzip() !== 0)
 			{
 				$bShowCompressed = isset($_SESSION["SESS_COMPRESS"]) && $_SESSION["SESS_COMPRESS"] == "Y";
 				if(isset($_GET["compress"]))
@@ -932,7 +932,7 @@ class CTopPanel
 		}
 	}
 
-	function InitPanelIcons()
+	public static function InitPanelIcons()
 	{
 		static $bPanelIcons = false;
 		if ($bPanelIcons)
@@ -956,7 +956,7 @@ class CTopPanel
 		}
 	}
 
-	function ShowPanelScripts($bReturn=false)
+	public static function ShowPanelScripts($bReturn=false)
 	{
 		global $APPLICATION, $adminPage;
 
@@ -987,19 +987,42 @@ class CTopPanel
 		return null;
 	}
 
-	function IsShownForUser()
+	public static function IsShownForUser($bShowPanel)
 	{
 		global $USER;
 
-		static $bShowPanel = null;
-		if($bShowPanel === null)
+		$userCodes = null;
+
+		//we have settings in the main module options
+		if($bShowPanel == false)
 		{
-			//we have settings in the main module options
 			$arCodes = unserialize(COption::GetOptionString("main", "show_panel_for_users"));
-			if(!empty($arCodes) && $USER->CanAccess($arCodes))
-				$bShowPanel = true;
-			else
-				$bShowPanel = false;
+			if(!empty($arCodes))
+			{
+				$userCodes = $USER->GetAccessCodes();
+				$diff = array_intersect($arCodes, $userCodes);
+				if(!empty($diff))
+				{
+					$bShowPanel = true;
+				}
+			}
+		}
+		//hiding the panel has the higher priority
+		if($bShowPanel == true)
+		{
+			$arCodes = unserialize(COption::GetOptionString("main", "hide_panel_for_users"));
+			if(!empty($arCodes))
+			{
+				if($userCodes == null)
+				{
+					$userCodes = $USER->GetAccessCodes();
+				}
+				$diff = array_intersect($arCodes, $userCodes);
+				if(!empty($diff))
+				{
+					$bShowPanel = false;
+				}
+			}
 		}
 		return $bShowPanel;
 	}
@@ -1034,15 +1057,12 @@ class CTopPanel
 			}
 		}
 
-		if ($bShowPanel == false)
-		{
-			$bShowPanel = self::IsShownForUser();
-		}
+		$bShowPanel = self::IsShownForUser($bShowPanel);
 
 		return $bShowPanel;
 	}
 
-	function InitPanel()
+	public static function InitPanel()
 	{
 		if (self::shouldShowPanel())
 		{
@@ -1050,7 +1070,7 @@ class CTopPanel
 		}
 	}
 
-	function AddAttrHint($hint_title, $hint_text = false)
+	public static function AddAttrHint($hint_title, $hint_text = false)
 	{
 		if (!$hint_text)
 			return 'onmouseover="BX.hint(this, \''.htmlspecialcharsbx(CUtil::JSEscape($hint_title)).'\')"';
@@ -1058,12 +1078,12 @@ class CTopPanel
 			return 'onmouseover="BX.hint(this, \''.htmlspecialcharsbx(CUtil::JSEscape($hint_title)).'\', \''.htmlspecialcharsbx(CUtil::JSEscape($hint_text)).'\')"';
 	}
 
-	function AddConstantHint($element_id, $hint_title, $hint_text, $hint_id = false)
+	public static function AddConstantHint($element_id, $hint_title, $hint_text, $hint_id = false)
 	{
 		return '<script type="text/javascript">BX.ready(function() {BX.hint(BX(\''.CUtil::JSEscape($element_id).'\'), \''.CUtil::JSEscape($hint_title).'\', \''.CUtil::JSEscape($hint_text).'\''.($hint_id ? ', \''.CUtil::JSEscape($hint_id).'\'' : '').')});</script>';
 	}
 
-	function GetPanelHtml()
+	public static function GetPanelHtml()
 	{
 		global $USER, $APPLICATION, $adminPage;
 

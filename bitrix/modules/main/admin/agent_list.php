@@ -149,16 +149,18 @@ $rsData = new CAdminResult($agentList, $sTableID);
 $rsData->NavStart(20);
 $lAdmin->NavText($rsData->GetNavPrint(GetMessage("MAIN_AGENT_LIST_PAGE")));
 $lAdmin->AddHeaders(array(
-	array("id"=>"ID", "content"=>GetMessage("MAIN_AGENT_ID"), "sort"=>"ID", "default"=>true),
+	array("id"=>"ID", "content"=>GetMessage("MAIN_AGENT_ID"), "sort"=>"ID", "default"=>true, "align"=>"right"),
 	array("id"=>"MODULE_ID","content"=>GetMessage("MAIN_AGENT_MODULE_ID"), "sort"=>"MODULE_ID", "default"=>true),
-	array("id"=>"USER_ID", "content"=>GetMessage("MAIN_AGENT_USER_ID"), "sort"=>"USER_ID", "default"=>true),
+	array("id"=>"USER_ID", "content"=>GetMessage("MAIN_AGENT_USER_ID"), "sort"=>"USER_ID"),
 	array("id"=>"SORT", "content"=>GetMessage("MAIN_AGENT_SORT"), "sort"=>"SORT"),
 	array("id"=>"NAME", "content"=>GetMessage("MAIN_AGENT_NAME"), "sort"=>"NAME", "default"=>true),
 	array("id"=>"ACTIVE", "content"=>GetMessage("MAIN_AGENT_ACTIVE"), "sort"=>"ACTIVE", "default"=>true),
 	array("id"=>"LAST_EXEC", "content"=>GetMessage("MAIN_AGENT_LAST_EXEC"), "sort"=>"LAST_EXEC", "default"=>true),
 	array("id"=>"NEXT_EXEC", "content"=>GetMessage("MAIN_AGENT_NEXT_EXEC"), "sort"=>"NEXT_EXEC", "default"=>true),
-	array("id"=>"AGENT_INTERVAL", "content"=>GetMessage("MAIN_AGENT_INTERVAL"), "sort"=>"AGENT_INTERVAL", "default"=>true),
-	array("id"=>"IS_PERIOD", "content"=>GetMessage("MAIN_AGENT_PERIOD"), "sort"=>"IS_PERIOD")
+	array("id"=>"AGENT_INTERVAL", "content"=>GetMessage("MAIN_AGENT_INTERVAL"), "sort"=>"AGENT_INTERVAL", "default"=>true, "align"=>"right"),
+	array("id"=>"IS_PERIOD", "content"=>GetMessage("MAIN_AGENT_LIST_PERIODICAL"), "sort"=>"IS_PERIOD"),
+	array("id"=>"DATE_CHECK", "content"=>GetMessage("MAIN_AGENT_LIST_DATE_CHECK"), "sort"=>"DATE_CHECK"),
+	array("id"=>"RUNNING", "content"=>GetMessage("MAIN_AGENT_LIST_RUNNING")),
 ));
 while($db_res = $rsData->NavNext(true, "a_"))
 {
@@ -172,7 +174,9 @@ while($db_res = $rsData->NavNext(true, "a_"))
 	$row->AddField("LAST_EXEC", $a_LAST_EXEC);
 	$row->AddField("NEXT_EXEC", $a_NEXT_EXEC);
 	$row->AddInputField("AGENT_INTERVAL");
-	$row->AddCheckField("IS_PERIOD", ($a_IS_PERIOD == "Y") ? GetMessage("MAIN_AGENT_PERIOD_YES") : GetMessage("MAIN_AGENT_PERIOD_NO"));
+	$row->AddField("IS_PERIOD", ($a_IS_PERIOD == "Y"? GetMessage("MAIN_AGENT_LIST_PERIODICAL_TIME") : GetMessage("MAIN_AGENT_LIST_PERIODICAL_INTERVAL")));
+	$row->AddField("DATE_CHECK", $a_DATE_CHECK);
+	$row->AddField("RUNNING", ($a_RUNNING == "Y"? GetMessage("MAIN_AGENT_ACTIVE_YES") : GetMessage("MAIN_AGENT_ACTIVE_NO")));
 
 	$arActions = array();
 	$arActions[] = array(
@@ -290,9 +294,9 @@ $oFilter->Begin();
 	<td><?echo CalendarDate("find_next_exec", htmlspecialcharsbx($find_next_exec), "find_form")?></td>
 </tr>
 <tr>
-	<td><?echo GetMessage("MAIN_AGENT_FLT_IS_PERIOD")?>:</td>
+	<td><?echo GetMessage("MAIN_AGENT_FLT_PERIODICAL1")?></td>
 	<td><?
-		$arr = array("reference"=>array(GetMessage("MAIN_YES"), GetMessage("MAIN_NO")), "reference_id"=>array("Y","N"));
+		$arr = array("reference"=>array(GetMessage("MAIN_AGENT_FLT_PERIODICAL_INTERVAL"), GetMessage("MAIN_AGENT_FLT_PERIODICAL_TIME")), "reference_id"=>array("N", "Y"));
 		echo SelectBoxFromArray("find_is_period", $arr, htmlspecialcharsbx($find_is_period), GetMessage('MAIN_ALL'));
 		?>
 	</td>

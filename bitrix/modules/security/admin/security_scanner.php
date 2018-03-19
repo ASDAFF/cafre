@@ -1,4 +1,5 @@
 <?
+define("BX_SESSION_ID_CHANGE", false);
 define("ADMIN_MODULE_NAME", "security");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 

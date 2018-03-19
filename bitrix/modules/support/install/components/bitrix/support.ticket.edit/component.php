@@ -246,7 +246,7 @@ if ($arTicket = $rsTicket->GetNext())
 				$suffix_length = strlen($arFile["EXTENSION_SUFFIX"]);
 				$name = substr($name, 0, strlen($name)-$suffix_length);
 			}
-			$arMessagesFiles[$arFile["MESSAGE_ID"]][] = array("HASH" => $arFile["HASH"], "NAME" => htmlspecialcharsbx($name), "FILE_SIZE" => $arFile["FILE_SIZE"]);
+			$arMessagesFiles[$arFile["MESSAGE_ID"]][] = array("ID" => $arFile["ID"], "HASH" => $arFile["HASH"], "NAME" => htmlspecialcharsbx($name), "FILE_SIZE" => $arFile["FILE_SIZE"]);
 		}
 	}
 

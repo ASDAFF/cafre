@@ -1,8 +1,9 @@
-<?
+<?php
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/statistic/classes/general/traffic.php");
+
 class CTraffic extends CAllTraffic
 {
-	function GetSumList($DATA_TYPE, $arFilter=Array())
+	public static function GetSumList($DATA_TYPE, $arFilter=Array())
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -135,7 +136,7 @@ class CTraffic extends CAllTraffic
 		return $rs;
 	}
 
-	function GetDailyList(&$by, &$order, &$arMaxMin, $arFilter=Array(), &$is_filtered, $get_maxmin="Y")
+	public static function GetDailyList(&$by, &$order, &$arMaxMin, $arFilter=Array(), &$is_filtered, $get_maxmin="Y")
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -319,7 +320,7 @@ class CTraffic extends CAllTraffic
 		return $res;
 	}
 
-	function GetCommonValues($arFilter=Array(), $bIgnoreErrors=false)
+	public static function GetCommonValues($arFilter=Array(), $bIgnoreErrors=false)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -434,8 +435,7 @@ class CTraffic extends CAllTraffic
 		return $result;
 	}
 
-
-	function GetRefererList(&$by, &$order, $arFilter=Array(), &$is_filtered, $limit=10)
+	public static function GetRefererList(&$by, &$order, $arFilter=Array(), &$is_filtered, $limit=10)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -524,7 +524,7 @@ class CTraffic extends CAllTraffic
 		return $DB->Query($strSql, false, $err_mess.__LINE__);
 	}
 
-	function GetPhraseList(&$s_by, &$s_order, $arFilter=Array(), &$is_filtered, $limit=10)
+	public static function GetPhraseList(&$s_by, &$s_order, $arFilter=Array(), &$is_filtered, $limit=10)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -610,4 +610,3 @@ class CTraffic extends CAllTraffic
 		return $DB->Query($strSql, false, $err_mess.__LINE__);
 	}
 }
-?>

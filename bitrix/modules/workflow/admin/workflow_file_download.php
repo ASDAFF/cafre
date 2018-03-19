@@ -27,7 +27,8 @@ if($USER->IsAdmin() || !in_array(GetFileExtension($fname), GetScriptFileExt()))
 		$path = CWorkflow::GetTempDir().$zr["TEMP_FILENAME"];
 		if(file_exists($path))
 		{
-			$filename = basename($zr["FILENAME"]);
+			$io = CBXVirtualIo::GetInstance();
+			$filename = $io->RandomizeInvalidFilename(basename($zr["FILENAME"]));
 		}
 	}
 }

@@ -287,9 +287,6 @@ $arCheckListStructure=Array(
 		"QP0080" => Array(
 			"PARENT"=>"QPERFORMANCE"
 		),
-		"QP0090" => Array(
-			"PARENT"=>"QPERFORMANCE"
-		),
 		"QP0100" => Array(
 			"PARENT"=>"QPERFORMANCE"
 		),
@@ -346,6 +343,55 @@ $arCheckListStructure=Array(
 
 	),
 );
+
+$bIntranet = CModule::IncludeModule('intranet');
+if ($bIntranet)
+{
+	$wenvCategories = array(
+		'WENV' => array(),
+	);
+	$arCheckListStructure['CATEGORIES'] = array_merge($wenvCategories, $arCheckListStructure['CATEGORIES']);
+
+	$wenvPoints = array(
+		//WENV
+		"QWE0010" => Array(
+			"PARENT"=>"WENV",
+			"REQUIRE"=>"Y",
+			"AUTO"=>"Y",
+			"CLASS_NAME"=>"CAutoCheck",
+			"METHOD_NAME"=>"CheckVMBitrix",
+		),
+		"QWE0020" => Array(
+			"PARENT"=>"WENV",
+			"REQUIRE"=>"Y",
+			"AUTO"=>"Y",
+			"CLASS_NAME"=>"CAutoCheck",
+			"METHOD_NAME"=>"CheckSiteCheckerStatus",
+		),
+		"QWE0030" => Array(
+			"PARENT"=>"WENV",
+			"REQUIRE"=>"Y",
+			"AUTO"=>"Y",
+			"CLASS_NAME"=>"CAutoCheck",
+			"METHOD_NAME"=>"CheckSiteCheckerStatus",
+		),
+	);
+	$arCheckListStructure['POINTS'] = array_merge($wenvPoints, $arCheckListStructure['POINTS']);
+
+	$secPoints = array(
+		"QSEC0090" => array(
+			"REQUIRE"=>"Y",
+			"PARENT"=>"QSECURITY",
+			"AUTO"=>"Y",
+			"CLASS_NAME"=>"CAutoCheck",
+			"METHOD_NAME"=>"CheckSecurityScannerStatus",
+		)
+	);
+
+	$arCheckListStructure['POINTS'] = array_merge($arCheckListStructure['POINTS'], $secPoints);
+
+	unset($arCheckListStructure['POINTS']['QH0030']);
+}
 
 return $arCheckListStructure;
 ?>

@@ -8,10 +8,13 @@ use \Bitrix\Bizproc\RestActivityTable;
 */
 class CBPRuntime
 {
+	const EXCEPTION_CODE_INSTANCE_NOT_FOUND = 404;
+
 	const REST_ACTIVITY_PREFIX = 'rest_';
 
 	private $isStarted = false;
 	private static $instance;
+	private static $featuresCache = array();
 
 	private $arServices = array(
 		"SchedulerService" => null,
@@ -76,6 +79,27 @@ class CBPRuntime
 		trigger_error('Clone in not allowed.', E_USER_ERROR);
 	}
 
+	/**
+	 * Method checks if feature is enabled.
+	 * @param string $featureName Feature name. Checks default if empty.
+	 * @return bool
+	 */
+	public static function isFeatureEnabled($featureName = '')
+	{
+		if (!CModule::IncludeModule('bitrix24'))
+			return true;
+
+		$featureName = (string)$featureName;
+
+		if ($featureName === '')
+			$featureName = 'bizproc';
+
+		if (!isset(static::$featuresCache[$featureName]))
+			static::$featuresCache[$featureName] = \Bitrix\Bitrix24\Feature::isFeatureEnabled($featureName);
+
+		return static::$featuresCache[$featureName];
+	}
+
 	/*********************  START / STOP RUNTIME  **************************************************/
 
 	/**
@@ -115,6 +139,7 @@ class CBPRuntime
 		if (!$this->isStarted)
 			return;
 
+		/** @var CBPWorkflow $workflow */
 		foreach ($this->arWorkflows as $key => $workflow)
 			$workflow->OnRuntimeStopped();
 
@@ -148,11 +173,13 @@ class CBPRuntime
 		$arDocumentId = CBPHelper::ParseDocumentId($documentId);
 
 		$limit = \Bitrix\Main\Config\Option::get("bizproc", "limit_simultaneous_processes", "0");
-		if (intval($limit) > 0)
+		$ignoreLimits = !empty($workflowParameters[CBPDocument::PARAM_IGNORE_SIMULTANEOUS_PROCESSES_LIMIT]);
+		if (!$ignoreLimits && intval($limit) > 0)
 		{
 			if (CBPStateService::CountDocumentWorkflows($documentId) >= $limit)
 				throw new Exception(GetMessage("BPCGDOC_LIMIT_SIMULTANEOUS_PROCESSES", array("#NUM#" => $limit)));
 		}
+		unset($workflowParameters[CBPDocument::PARAM_IGNORE_SIMULTANEOUS_PROCESSES_LIMIT]);
 
 		if (!$this->isStarted)
 			$this->StartRuntime();
@@ -230,7 +257,7 @@ class CBPRuntime
 	* Returns service instance by its code.
 	* 
 	* @param mixed $name - Service code.
-	* @return mixed - Service instance or null if service is not found.
+	* @return mixed|CBPSchedulerService|CBPStateService|CBPTrackingService|CBPTaskService|CBPHistoryService|CBPDocumentService - Service instance or null if service is not found.
 	*/
 	public function GetService($name)
 	{
@@ -403,7 +430,8 @@ class CBPRuntime
 			$lang = LANGUAGE_ID;
 
 		$p = $path."/lang/".$lang."/".$file;
-		$pe = $path."/lang/en/".$file;
+		$defaultLang = \Bitrix\Main\Localization\Loc::getDefaultLang($lang);
+		$pe = $path."/lang/".$defaultLang."/".$file;
 
 		if (file_exists($p) && is_file($p))
 			include($p);
@@ -470,12 +498,18 @@ class CBPRuntime
 					$arActivityDescription = array();
 					$this->LoadActivityLocalization($folder."/".$dir, ".description.php");
 					include($folder."/".$dir."/.description.php");
-					if (strtolower($arActivityDescription["TYPE"]) == $type)
+
+					//Support multiple types
+					$activityType = (array)$arActivityDescription['TYPE'];
+					foreach ($activityType as $i => $aType)
+						$activityType[$i] = strtolower(trim($aType));
+
+					if (in_array($type, $activityType, true))
 					{
 						$arProcessedDirs[$dirKey] = $arActivityDescription;
 						$arProcessedDirs[$dirKey]["PATH_TO_ACTIVITY"] = $folder."/".$dir;
 						if (
-							isset($arActivityDescription['FILTER'])
+							isset($arActivityDescription['FILTER']) && is_array($arActivityDescription['FILTER'])
 							&& !$this->checkActivityFilter($arActivityDescription['FILTER'], $documentType)
 						)
 							$arProcessedDirs[$dirKey]['EXCLUDED'] = true;
@@ -492,6 +526,14 @@ class CBPRuntime
 			$arProcessedDirs = array_merge($arProcessedDirs, $this->getRestActivities(false, $documentType));
 		}
 
+		if ($type == 'robot_activity')
+		{
+			$arProcessedDirs = array_merge($arProcessedDirs, $this->getRestRobots(false, $documentType));
+		}
+
+		if ($type != 'condition')
+			\Bitrix\Main\Type\Collection::sortByColumn($arProcessedDirs, 'NAME');
+
 		return $arProcessedDirs;
 	}
 
@@ -504,7 +546,9 @@ class CBPRuntime
 	public function getRestActivities($lang = false, $documentType = null)
 	{
 		$result = array();
-		$iterator = RestActivityTable::getList();
+		$iterator = RestActivityTable::getList(array(
+			'filter' => array('=IS_ROBOT' => 'N')
+		));
 
 		while ($activity = $iterator->fetch())
 		{
@@ -513,6 +557,28 @@ class CBPRuntime
 
 		return $result;
 	}
+
+	/**
+	 * @param bool $lang Language ID.
+	 * @param null|array $documentType Document type.
+	 * @return array
+	 * @throws \Bitrix\Main\ArgumentException
+	 */
+	public function getRestRobots($lang = false, $documentType = null)
+	{
+		$result = array();
+		$iterator = RestActivityTable::getList(array(
+			'filter' => array('=IS_ROBOT' => 'Y')
+		));
+
+		while ($activity = $iterator->fetch())
+		{
+			$result[static::REST_ACTIVITY_PREFIX.$activity['INTERNAL_CODE']] = $this->makeRestRobotDescription($activity, $lang, $documentType);
+		}
+
+		return $result;
+	}
+
 
 	private function makeRestActivityDescription($activity, $lang = false, $documentType = null)
 	{
@@ -536,7 +602,7 @@ class CBPRuntime
 		);
 
 		if (
-			isset($activity['FILTER'])
+			isset($activity['FILTER']) && is_array($activity['FILTER'])
 			&& !$this->checkActivityFilter($activity['FILTER'], $documentType)
 		)
 			$result['EXCLUDED'] = true;
@@ -556,6 +622,38 @@ class CBPRuntime
 				'NAME' => GetMessage('BPRA_IS_TIMEOUT'),
 				'TYPE' => \Bitrix\Bizproc\FieldType::INT
 			);
+
+		return $result;
+	}
+
+	private function makeRestRobotDescription($activity, $lang = false, $documentType = null)
+	{
+		if ($lang === false)
+			$lang = LANGUAGE_ID;
+
+		$code = static::REST_ACTIVITY_PREFIX.$activity['INTERNAL_CODE'];
+		$result = array(
+			'NAME' => '['.RestActivityTable::getLocalization($activity['APP_NAME'], $lang).'] '
+				.RestActivityTable::getLocalization($activity['NAME'], $lang),
+			'DESCRIPTION' => RestActivityTable::getLocalization($activity['DESCRIPTION'], $lang),
+			'TYPE' => array('activity', 'robot_activity'),
+			'CLASS' => $code,
+			'JSCLASS' => 'BizProcActivity',
+			'CATEGORY' => array(),
+			'RETURN' => array(),
+			//compatibility
+			'PATH_TO_ACTIVITY' => '',
+			'ROBOT_SETTINGS' => array(
+				'CATEGORY' => 'other',
+				'IS_AUTO' => true
+			)
+		);
+
+		if (
+			isset($activity['FILTER']) && is_array($activity['FILTER'])
+			&& !$this->checkActivityFilter($activity['FILTER'], $documentType)
+		)
+			$result['EXCLUDED'] = true;
 
 		return $result;
 	}

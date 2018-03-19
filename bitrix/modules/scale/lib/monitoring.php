@@ -339,8 +339,7 @@ class Monitoring
 			$shellAdapter = new ShellAdapter();
 			$execRes = $shellAdapter->syncExec("sudo -u root /usr/bin/ansible ".$hostname." -m setup");
 			$serversData = $shellAdapter->getLastOutput();
-			$pos1 = strpos($serversData, ">>");
-			$serversData = substr($serversData, $pos1+3-strlen($serversData));
+			$serversData = substr($serversData, strpos($serversData, "{"));
 
 			if($execRes)
 			{

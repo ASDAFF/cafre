@@ -8,6 +8,8 @@
 
 class CComponentEngine
 {
+	public $cacheSalt = '';
+
 	private $component = null;
 	private $greedyParts = array();
 	private $resolveCallback = false;
@@ -224,6 +226,7 @@ class CComponentEngine
 			return false;
 
 		$currentPageUrl = substr($requestURL, strlen($folder404));
+		$this->cacheSalt = md5($currentPageUrl);
 
 		$pageCandidates = array();
 		$arUrlTemplates = $this->sortUrlTemplates($arUrlTemplates, $bHasGreedyPartsInTemplates);
@@ -299,12 +302,17 @@ class CComponentEngine
 						$arVariables[$variableName] = $_REQUEST[$aliasName];
 		}
 
-		for ($i = 0, $cnt = count($arComponentVariables); $i < $cnt; $i++)
-			if (!array_key_exists($arComponentVariables[$i], $arVariables)
-				&& array_key_exists($arComponentVariables[$i], $_REQUEST))
+		if ($arComponentVariables && is_array($arComponentVariables))
+		{
+			for ($i = 0, $cnt = count($arComponentVariables); $i < $cnt; $i++)
 			{
-				$arVariables[$arComponentVariables[$i]] = $_REQUEST[$arComponentVariables[$i]];
+				if (!array_key_exists($arComponentVariables[$i], $arVariables)
+					&& array_key_exists($arComponentVariables[$i], $_REQUEST))
+				{
+					$arVariables[$arComponentVariables[$i]] = $_REQUEST[$arComponentVariables[$i]];
+				}
 			}
+		}
 	}
 	/**
 	 * Prepares templates based on default and provided.

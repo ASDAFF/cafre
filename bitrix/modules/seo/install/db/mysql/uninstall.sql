@@ -13,3 +13,6 @@ DROP TABLE if exists b_seo_adv_order;
 DROP TABLE if exists b_seo_adv_log;
 DROP TABLE if exists b_seo_adv_autolog;
 DROP TABLE if exists b_seo_yandex_direct_stat;
+DROP TABLE if exists b_seo_service_rtg_queue;
+DROP TABLE if exists b_seo_service_log;
+DROP TABLE if exists b_seo_service_webhook;

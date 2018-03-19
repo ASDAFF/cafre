@@ -3,7 +3,7 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/forum/classes/general/to
 
 class CForumTopic extends CAllForumTopic
 {
-	function GetList($arOrder = Array("SORT"=>"ASC"), $arFilter = Array(), $bCount = false, $iNum = 0, $arAddParams = array())
+	public static function GetList($arOrder = Array("SORT"=>"ASC"), $arFilter = Array(), $bCount = false, $iNum = 0, $arAddParams = array())
 	{
 		global $DB;
 		$arOrder = (is_array($arOrder) ? $arOrder : array());
@@ -233,7 +233,7 @@ class CForumTopic extends CAllForumTopic
 		return new _CTopicDBResult($db_res, $arAddParams);
 	}
 
-	function GetListEx($arOrder = Array("SORT"=>"ASC"), $arFilter = Array(), $bCount = false, $iNum = 0, $arAddParams = array())
+	public static function GetListEx($arOrder = Array("SORT"=>"ASC"), $arFilter = Array(), $bCount = false, $iNum = 0, $arAddParams = array())
 	{
 		global $DB, $USER;
 		$arOrder = (is_array($arOrder) ? $arOrder : array());
@@ -625,4 +625,3 @@ class CForumTopic extends CAllForumTopic
 		return new _CTopicDBResult($db_res, $arAddParams);
 	}
 }
-?>

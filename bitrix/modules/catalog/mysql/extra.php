@@ -3,11 +3,11 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/catalog/general/extra.ph
 
 class CExtra extends CAllExtra
 {
-	function Add($arFields)
+	public static function Add($arFields)
 	{
 		global $DB;
 
-		if (!CExtra::CheckFields('ADD', $arFields))
+		if (!static::CheckFields('ADD', $arFields))
 			return false;
 
 		$arInsert = $DB->PrepareInsert("b_catalog_extra", $arFields);
@@ -15,13 +15,19 @@ class CExtra extends CAllExtra
 		$strSql = "INSERT INTO b_catalog_extra(".$arInsert[0].") VALUES(".$arInsert[1].")";
 		$DB->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
 
-		$ID = intval($DB->LastID());
-		CExtra::ClearCache();
-
-		return $ID;
+		static::ClearCache();
+		return (int)$DB->LastID();
 	}
 
-	function GetList($arOrder = array(), $arFilter = array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array())
+	/**
+	 * @param array $arOrder
+	 * @param array $arFilter
+	 * @param bool|array $arGroupBy
+	 * @param bool|array $arNavStartParams
+	 * @param array $arSelectFields
+	 * @return bool|CDBResult
+	 */
+	public static function GetList($arOrder = array(), $arFilter = array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array())
 	{
 		global $DB;
 
@@ -107,12 +113,10 @@ class CExtra extends CAllExtra
 		else
 		{
 			if ($boolNavStartParams && 0 < $intTopCount)
-			{
 				$strSql .= " LIMIT ".$intTopCount;
-			}
+
 			$dbRes = $DB->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
 		}
 		return $dbRes;
 	}
 }
-?>

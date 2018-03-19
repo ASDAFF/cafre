@@ -562,7 +562,8 @@ else
 									$arFields = Array(
 										"USER_ID"	=>	$NEW_USER_ID,
 										"CHECKWORD"	=>	$checkword,
-										"EMAIL"	=>	$email["EMAIL"]
+										"EMAIL"	=>	$email["EMAIL"],
+										"USER_TEXT" => ''
 									);
 									$event->Send("EXTRANET_INVITATION", SITE_ID, $arFields);
 								}

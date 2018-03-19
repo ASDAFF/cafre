@@ -1,8 +1,9 @@
-<?
+<?php
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/statistic/classes/general/adv.php");
+
 class CAdv extends CAllAdv
 {
-	function GetAnalysisGraphArray_SQL($strSqlSearch, $DATA_TYPE)
+	public static function GetAnalysisGraphArray_SQL($strSqlSearch, $DATA_TYPE)
 	{
 		$DB = CDatabase::GetModuleConnection('statistic');
 		switch ($DATA_TYPE)
@@ -74,7 +75,7 @@ class CAdv extends CAllAdv
 		return $strSql;
 	}
 
-	function GetList(&$by, &$order, $arFilter=Array(), &$is_filtered, $limit="", &$arrGROUP_DAYS, &$strSql_res)
+	public static function GetList(&$by, &$order, $arFilter=Array(), &$is_filtered, $limit="", &$arrGROUP_DAYS, &$strSql_res)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -569,7 +570,7 @@ class CAdv extends CAllAdv
 		return $res;
 	}
 
-	function GetByID($ID)
+	public static function GetByID($ID)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -590,7 +591,7 @@ class CAdv extends CAllAdv
 		return $res;
 	}
 
-	function GetEventList($ID, &$by, &$order, $arFilter=Array(), &$is_filtered)
+	public static function GetEventList($ID, &$by, &$order, $arFilter=Array(), &$is_filtered)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -820,7 +821,7 @@ class CAdv extends CAllAdv
 		return $res;
 	}
 
-	function GetEventListByReferer($value, $arFilter)
+	public static function GetEventListByReferer($value, $arFilter)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -925,7 +926,7 @@ class CAdv extends CAllAdv
 		return $res;
 	}
 
-	function GetDynamicList($ADV_ID, &$by, &$order, &$arMaxMin, $arFilter=Array())
+	public static function GetDynamicList($ADV_ID, &$by, &$order, &$arMaxMin, $arFilter=Array())
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -1036,7 +1037,7 @@ class CAdv extends CAllAdv
 		return $res;
 	}
 
-	function GetDropDownList($strSqlOrder="ORDER BY REFERER1, REFERER2")
+	public static function GetDropDownList($strSqlOrder="ORDER BY REFERER1, REFERER2")
 	{
 		$DB = CDatabase::GetModuleConnection('statistic');
 		$err_mess = "File: ".__FILE__."<br>Line: ";
@@ -1052,7 +1053,7 @@ class CAdv extends CAllAdv
 		return $res;
 	}
 
-	function GetSimpleList(&$by, &$order, $arFilter=Array(), &$is_filtered)
+	public static function GetSimpleList(&$by, &$order, $arFilter=Array(), &$is_filtered)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -1119,4 +1120,3 @@ class CAdv extends CAllAdv
 		return $res;
 	}
 }
-?>

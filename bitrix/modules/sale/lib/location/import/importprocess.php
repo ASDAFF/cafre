@@ -187,6 +187,9 @@ final class ImportProcess extends Location\Util\Process
 			if($opts['SOURCE'] == self::SOURCE_REMOTE)
 			{
 				$this->data['settings']['additional'] = is_array($this->options['REQUEST']['ADDITIONAL']) ? array_flip(array_values($this->options['REQUEST']['ADDITIONAL'])) : array();
+
+				if(isset($this->data['settings']['additional']['ZIP']))
+					$this->data['settings']['additional']['ZIP_LOWER'] = $this->data['settings']['additional']['ZIP'];
 			}
 			elseif($this->checkSource(self::SOURCE_FILE))
 			{
@@ -649,19 +652,36 @@ final class ImportProcess extends Location\Util\Process
 					if($this->checkExternalServiceAllowed($sCode))
 					{
 						$serviceId = $this->data['externalService']['code2id'][$sCode];
+
 						if(!$serviceId)
 							throw new Main\SystemException('Location import failed: external service doesnt exist');
 
-						foreach($values as $val)
+						if($sCode == 'ZIP_LOWER')
 						{
-							if(!strlen($val))
+							if(strlen($values) <= 0)
 								continue;
 
-							$this->hitData['HANDLES']['EXTERNAL']->insert(array(
-								'SERVICE_ID' => 	$serviceId,
-								'XML_ID' => 		$val,
-								'LOCATION_ID' => 	$locationId
-							));
+							$values = explode(',', $values);
+
+							if(!is_array($values))
+								continue;
+
+							$values = array_unique($values);
+						}
+
+						if(is_array($values))
+						{
+							foreach($values as $val)
+							{
+								if(strlen($val) <= 0)
+									continue;
+
+								$this->hitData['HANDLES']['EXTERNAL']->insert(array(
+									'SERVICE_ID' => 	$serviceId,
+									'XML_ID' => 		$val,
+									'LOCATION_ID' => 	$locationId
+								));
+							}
 						}
 					}
 				}
@@ -932,7 +952,8 @@ final class ImportProcess extends Location\Util\Process
 			return;
 		}
 
-		$this->rebalanceInserter->flush();
+		if($this->rebalanceInserter)
+			$this->rebalanceInserter->flush();
 
 		$this->nextStep();
 	}
@@ -1491,6 +1512,9 @@ final class ImportProcess extends Location\Util\Process
 		if($this->data['settings']['additional'] === false)
 			return true; // ANY
 
+		if($code == 'ZIP_LOWER')
+			$code = 'ZIP';
+
 		return isset($this->data['settings']['additional'][$code]);
 	}
 
@@ -1526,7 +1550,7 @@ final class ImportProcess extends Location\Util\Process
 		);
 
 		// get static index, it will be always in memory
-		$parameters['filter'] = array('TYPE_ID' => array('COUNTRY', 'COUNTRY_DISTRICT', 'REGION')); // todo: from typegroup later
+		$parameters['filter'] = array('TYPE.CODE' => array('COUNTRY', 'COUNTRY_DISTRICT', 'REGION')); // todo: from typegroup later
 
 		$this->data['existedlocs'] = array('static' => array());
 		$res = Location\LocationTable::getList($parameters);
@@ -1849,7 +1873,11 @@ final class ImportProcess extends Location\Util\Process
 			unlink($storeTo);
 		}
 
-		$query = 'http://'.self::DISTRIBUTOR_HOST.':'.self::DISTRIBUTOR_PORT.self::REMOTE_PATH.$fileName;
+		if(!defined('SALE_LOCATIONS_IMPORT_SOURCE_URL'))
+			$query = 'http://'.self::DISTRIBUTOR_HOST.':'.self::DISTRIBUTOR_PORT.self::REMOTE_PATH.$fileName;
+		else
+			$query = 'http://'.SALE_LOCATIONS_IMPORT_SOURCE_URL.'/'.$fileName;
+
 		$client = new HttpClient();
 
 		if(!$client->download($query, $storeTo))
@@ -2206,7 +2234,7 @@ final class ImportProcess extends Location\Util\Process
 
 			while(time() < $endTime)
 			{
-				$block = $csvReader->ReadBlockLowLevel($descriptior['POS']/*changed inside*/, 100);
+				$block = $csvReader->ReadBlockLowLevel($descriptior['POS']/*changed inside*/, 10);
 
 				if(!count($block))
 					break;
@@ -2242,7 +2270,7 @@ final class ImportProcess extends Location\Util\Process
 					{
 						foreach($item['EXT'] as $code => $values)
 						{
-							if(is_array($values) && !empty($values))
+							if(!empty($values))
 							{
 								if(!isset($descriptior['SERVICES'][$code]))
 								{
@@ -2251,22 +2279,45 @@ final class ImportProcess extends Location\Util\Process
 									));
 								}
 
-								foreach($values as $value)
+								if($code == 'ZIP_LOWER')
 								{
-									if(!strlen($value))
+									if(strlen($values[0]) <= 0)
 										continue;
 
-									$item['EXTERNAL'][] = array(
-										'SERVICE_ID' => $descriptior['SERVICES'][$code],
-										'XML_ID' => $value
-									);
+									$values = explode(',', $values[0]);
+
+									if(!is_array($values))
+										continue;
+
+									$values = array_unique($values);
+								}
+
+								if(is_array($values))
+								{
+									foreach($values as $value)
+									{
+										if(strlen($value) <= 0)
+											continue;
+
+										$item['EXTERNAL'][] = array(
+											'SERVICE_ID' => $descriptior['SERVICES'][$code],
+											'XML_ID' => $value
+										);
+									}
 								}
 							}
 						}
 					}
-					unset($item['EXT']);
+					unset($item['EXT'], $item['ZIP_LOWER']);
 
-					$res = Location\LocationTable::add($item, array('REBALANCE' => false, 'RESET_LEGACY' => false));
+					$res = Location\LocationTable::addExtended(
+						$item,
+						array(
+							'RESET_LEGACY' => false,
+							'REBALANCE' => false
+						)
+					);
+
 					if(!$res->isSuccess())
 						throw new Main\SystemException('Cannot create location');
 

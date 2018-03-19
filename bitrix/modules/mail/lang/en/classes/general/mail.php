@@ -58,4 +58,6 @@ $MESS["MAIL_ERR_API_LONG_PASSWORD"] = "Password is too long (max. 20 characters)
 $MESS["MAIL_ERR_API_DOMAIN_OCCUPIED"] = "This domain is already in use";
 $MESS["MAIL_ERR_API_BAD_DOMAIN"] = "Unavailable domain name";
 $MESS["MAIL_ERR_API_PROHIBITED_DOMAIN"] = "The domain name is forbidden for connection";
+$MESS["MAIL_ERR_ENTRY_NOT_FOUND"] = "Invalid link";
+$MESS["MAIL_ERR_API_OLD_TOKEN"] = "The token has expired. Please get a new one.";
 ?>

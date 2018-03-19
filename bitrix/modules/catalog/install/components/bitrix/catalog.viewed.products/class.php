@@ -1,13 +1,20 @@
 <?php
+
 use Bitrix\Main,
 	Bitrix\Iblock,
 	Bitrix\Catalog,
-	Bitrix\Main\Text\String as String,
-	Bitrix\Main\Localization\Loc,
-	Bitrix\Main\SystemException as SystemException;
+	Bitrix\Main\Localization\Loc;
 
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) die();
 
+/**
+ * Class CCatalogViewedProductsComponent
+ *
+ * No longer used by internal code and not recommended. Use "catalog.products.viewed" instead.
+ *
+ * @deprecated deprecated since catalog 17.0.5
+ * @use \CatalogProductsViewedComponent
+ */
 class CCatalogViewedProductsComponent extends CBitrixComponent
 {
 	const ACTION_BUY = 'BUY';
@@ -38,7 +45,7 @@ class CCatalogViewedProductsComponent extends CBitrixComponent
 	 * Used in CIBlockElement::getList()
 	 * @var string[]
 	 */
-	private $filter = array();
+	protected $filter = array();
 
 	/**
 	 * Select fields for items.
@@ -120,15 +127,14 @@ class CCatalogViewedProductsComponent extends CBitrixComponent
 
 	protected function getUserId()
 	{
-		if (!empty($this->arParams['USER_ID']))
-		{
+		if (isset($this->arParams['USER_ID']))
 			return $this->arParams['USER_ID'];
-		}
-		else
-		{
-			global $USER;
-			return $USER->getId();
-		}
+
+		global $USER;
+		if (isset($USER) && $USER instanceof CUser)
+			return (int)$USER->getId();
+
+		return 0;
 	}
 
 	/**
@@ -177,7 +183,7 @@ class CCatalogViewedProductsComponent extends CBitrixComponent
 		if (isset($_REQUEST[$this->arParams['PRODUCT_ID_VARIABLE']]))
 			$productID = (int)$_REQUEST[$this->arParams['PRODUCT_ID_VARIABLE']];
 		if ($productID <= 0)
-			throw new SystemException(Loc::getMessage('CVP_ACTION_PRODUCT_ID_REQUIRED'));
+			throw new Main\SystemException(Loc::getMessage('CVP_ACTION_PRODUCT_ID_REQUIRED'));
 
 		$this->addProductToBasket($productID, $this->getProductQuantityFromRequest(), $this->getProductPropertiesFromRequest());
 
@@ -188,7 +194,8 @@ class CCatalogViewedProductsComponent extends CBitrixComponent
 		else
 		{
 			$APPLICATION->restartBuffer();
-			echo CUtil::PhpToJSObject(array('STATUS' => 'OK', 'MESSAGE' => ''));
+			header('Content-Type: application/json');
+			echo Main\Web\Json::encode(array('STATUS' => 'OK', 'MESSAGE' => ''));
 			die();
 		}
 	}
@@ -209,7 +216,7 @@ class CCatalogViewedProductsComponent extends CBitrixComponent
 		if (isset($_REQUEST[$this->arParams["PRODUCT_ID_VARIABLE"]]))
 			$productID = (int)$_REQUEST[$this->arParams["PRODUCT_ID_VARIABLE"]];
 		if ($productID <= 0)
-			throw new SystemException(Loc::getMessage("CVP_ACTION_PRODUCT_ID_REQUIRED"));
+			throw new Main\SystemException(Loc::getMessage("CVP_ACTION_PRODUCT_ID_REQUIRED"));
 
 		$this->addProductToBasket($productID, $this->getProductQuantityFromRequest(), $this->getProductPropertiesFromRequest());
 
@@ -220,7 +227,8 @@ class CCatalogViewedProductsComponent extends CBitrixComponent
 		else
 		{
 			$APPLICATION->restartBuffer();
-			echo CUtil::PhpToJSObject(array('STATUS' => 'OK', 'MESSAGE' => Loc::getMessage("CVP_PRODUCT_ADDED")));
+			header('Content-Type: application/json');
+			echo Main\Web\Json::encode(array('STATUS' => 'OK', 'MESSAGE' => Loc::getMessage("CVP_PRODUCT_ADDED")));
 			die();
 		}
 	}
@@ -241,7 +249,7 @@ class CCatalogViewedProductsComponent extends CBitrixComponent
 		if (isset($_REQUEST[$this->arParams["PRODUCT_ID_VARIABLE"]]))
 			$productID = (int)$_REQUEST[$this->arParams["PRODUCT_ID_VARIABLE"]];
 		if ($productID <= 0)
-			throw new SystemException(Loc::getMessage("CVP_ACTION_PRODUCT_ID_REQUIRED"));
+			throw new Main\SystemException(Loc::getMessage("CVP_ACTION_PRODUCT_ID_REQUIRED"));
 
 		$rewriteFields = array('SUBSCRIBE' => 'Y', 'CAN_BUY' => 'N');
 
@@ -254,7 +262,8 @@ class CCatalogViewedProductsComponent extends CBitrixComponent
 		else
 		{
 			$APPLICATION->restartBuffer();
-			echo CUtil::PhpToJSObject(array('STATUS' => 'OK', 'MESSAGE' => Loc::getMessage("CVP_PRODUCT_SUBSCIBED")));
+			header('Content-Type: application/json');
+			echo Main\Web\Json::encode(array('STATUS' => 'OK', 'MESSAGE' => Loc::getMessage("CVP_PRODUCT_SUBSCIBED")));
 			die();
 		}
 	}
@@ -281,17 +290,18 @@ class CCatalogViewedProductsComponent extends CBitrixComponent
 		{
 			$this->doActionsList();
 		}
-		catch (SystemException $e)
+		catch (Main\SystemException $e)
 		{
 			if ($this->isAjax())
 			{
 				$APPLICATION->restartBuffer();
-				echo CUtil::PhpToJSObject(array('STATUS' => 'ERROR', 'MESSAGE' => $e->getMessage()));
+				header('Content-Type: application/json');
+				echo Main\Web\Json::encode(array('STATUS' => 'ERROR', 'MESSAGE' => $e->getMessage()));
 				die();
 			}
 			else
 			{
-				$this->warnings[] = String::htmlEncode($e->getMessage());
+				$this->warnings[] = Main\Text\HtmlFilter::encode($e->getMessage());
 			}
 		}
 	}
@@ -334,7 +344,7 @@ class CCatalogViewedProductsComponent extends CBitrixComponent
 
 						if (!is_array($productProperties))
 						{
-							throw new SystemException(Loc::getMessage("CVP_PARTIAL_BASKET_PROPERTIES_ERROR"));
+							throw new Main\SystemException(Loc::getMessage("CVP_PARTIAL_BASKET_PROPERTIES_ERROR"));
 						}
 					}
 				}
@@ -372,11 +382,11 @@ class CCatalogViewedProductsComponent extends CBitrixComponent
 		}
 		else // Cannot  define product catalog
 		{
-			throw new SystemException(Loc::getMessage('CVP_CATALOG_PRODUCT_NOT_FOUND') . ".");
+			throw new Main\SystemException(Loc::getMessage('CVP_CATALOG_PRODUCT_NOT_FOUND') . ".");
 		}
 
 		if (!Add2BasketByProductID($productID, $quantity, $arRewriteFields, $productProperties))
-			throw new SystemException(Loc::getMessage("CVP_CATALOG_ERROR2BASKET") . ".");
+			throw new Main\SystemException(Loc::getMessage("CVP_CATALOG_ERROR2BASKET") . ".");
 	}
 
 	/**
@@ -386,7 +396,7 @@ class CCatalogViewedProductsComponent extends CBitrixComponent
 	protected function checkModules()
 	{
 		if (!Main\Loader::includeModule('catalog'))
-			throw new SystemException(Loc::getMessage('CVP_CATALOG_MODULE_NOT_INSTALLED'));
+			throw new Main\SystemException(Loc::getMessage('CVP_CATALOG_MODULE_NOT_INSTALLED'));
 		$this->isCurrency = true;
 		if (!Main\Loader::includeModule('sale'))
 			$this->isSale = false;
@@ -410,9 +420,7 @@ class CCatalogViewedProductsComponent extends CBitrixComponent
 		if ($params["BASKET_URL"] === '')
 			$params["BASKET_URL"] = "/personal/basket.php";
 
-		$params["ACTION_VARIABLE"] = trim($params["ACTION_VARIABLE"]);
-		if ($params["ACTION_VARIABLE"] === '' || !preg_match("/^[A-Za-z_][A-Za-z01-9_]*$/", $params["ACTION_VARIABLE"]))
-			$params["ACTION_VARIABLE"] = "action";
+		$params['ACTION_VARIABLE'] = $this->prepareActionVariable($params);
 
 		$params["PRODUCT_ID_VARIABLE"] = trim($params["PRODUCT_ID_VARIABLE"]);
 		if ($params["PRODUCT_ID_VARIABLE"] === '' || !preg_match("/^[A-Za-z_][A-Za-z01-9_]*$/", $params["PRODUCT_ID_VARIABLE"]))
@@ -501,10 +509,29 @@ class CCatalogViewedProductsComponent extends CBitrixComponent
 				if ($iBlockID <= 0)
 					continue;
 
-				if ($params[$name] != "" && $params[$name] != "-")
+				if (is_array($params[$name]))
 				{
-					$params['LABEL_PROP'][$iBlockID] = $params[$name];
+					$value = '';
+					foreach ($params[$name] as $rawValue)
+					{
+						if ($rawValue != '' && $rawValue != '-')
+						{
+							$value = $rawValue;
+							break;
+						}
+					}
 				}
+				else
+				{
+					$value = $params[$name];
+				}
+
+				if ($value != "" && $value != "-")
+				{
+					$params['LABEL_PROP'][$iBlockID] = $value;
+				}
+				unset($value);
+
 				unset($params[$arMatches[0]]);
 			} // Offer Group property
 			elseif (preg_match("/^OFFER_TREE_PROPS_(\d+)$/", $name, $arMatches))
@@ -589,6 +616,13 @@ class CCatalogViewedProductsComponent extends CBitrixComponent
 		$params['SECTION_ELEMENT_ID'] = (isset($params['SECTION_ELEMENT_ID']) ? (int)$params['SECTION_ELEMENT_ID'] : 0);
 		$params['SECTION_ELEMENT_CODE'] = (isset($params['SECTION_ELEMENT_CODE']) ? trim($params['SECTION_ELEMENT_CODE']) : '');
 
+		if (isset($params['USER_ID']))
+		{
+			$params['USER_ID'] = (int)$params['USER_ID'];
+			if ($params['USER_ID'] < 0)
+				$params['USER_ID'] = 0;
+		}
+
 		return $params;
 	}
 
@@ -596,18 +630,23 @@ class CCatalogViewedProductsComponent extends CBitrixComponent
 	{
 		$sectionId = 0;
 
-		if ($sectionCode !== '')
+		$sectionCode = (string)$sectionCode;
+		if ($sectionCode === '')
 			return $sectionId;
 
 		$sectionFilter = array(
-			"IBLOCK_ID" => $this->arParams['IBLOCK_ID'],
-			"IBLOCK_ACTIVE" => "Y",
+			'@IBLOCK_ID' => $this->arParams['IBLOCK_ID'],
+			'=IBLOCK.ACTIVE' => 'Y',
+			'=CODE' => $sectionCode
 		);
 
-		$sectionFilter["=CODE"] = $sectionCode;
-		$sectionIt = CIBlockSection::getList(array(), $sectionFilter, false, array("ID"));
-		if ($section = $sectionIt->Fetch())
-			$sectionId = $section['ID'];
+		$section = Iblock\SectionTable::getList(array(
+			'select' => array('ID'),
+			'filter' => $sectionFilter
+		))->fetch();
+		if (!empty($section))
+			$sectionId = (int)$section['ID'];
+		unset($section, $sectionFilter);
 
 		return $sectionId;
 	}
@@ -653,7 +692,11 @@ class CCatalogViewedProductsComponent extends CBitrixComponent
 		if (!Main\Loader::includeModule('sale'))
 			return array();
 
-		$basketUserId = (int)CSaleBasket::GetBasketUserID(false);
+		$skipUserInit = false;
+		if (!Catalog\Product\Basket::isNotCrawler())
+			$skipUserInit = true;
+
+		$basketUserId = (int)CSaleBasket::GetBasketUserID($skipUserInit);
 		if ($basketUserId <= 0)
 			return array();
 
@@ -687,7 +730,7 @@ class CCatalogViewedProductsComponent extends CBitrixComponent
 			if ($this->arParams['SECTION_ELEMENT_ID'] > 0)
 				$filter['!=ELEMENT_ID'] = $this->arParams['SECTION_ELEMENT_ID'];
 
-			$viewedIterator = Catalog\CatalogViewedProductTable::GetList(array(
+			$viewedIterator = Catalog\CatalogViewedProductTable::getList(array(
 				'select' => array('PRODUCT_ID', 'ELEMENT_ID'),
 				'filter' => $filter,
 				'order' => array('DATE_VISIT' => 'DESC'),
@@ -724,15 +767,17 @@ class CCatalogViewedProductsComponent extends CBitrixComponent
 	}
 
 	/**
-	 * Return converted product ids map. Now unused method for compatibility only.
-	 *
-	 * @param array $ids source product ids
-	 *
-	 * @return array("KEY" => "VALUE")
+	 * Returns catalog prices data by product.
+	 * @param array $item Product.
+	 * @return array
 	 */
-	private function makeSkuMap(array $ids = array())
+	protected function getPriceDataByItem(array $item)
 	{
-		return Catalog\CatalogViewedProductTable::getProductsMap($ids);
+		$prices = CIBlockPriceTools::GetItemPrices($item['IBLOCK_ID'], $this->data['CATALOG_PRICES'], $item, $this->arParams['PRICE_VAT_INCLUDE'], $this->data['CONVERT_CURRENCY']);
+		return array(
+			'PRICES' => $prices,
+			'MIN_PRICE' => CIBlockPriceTools::getMinPriceFromList($prices),
+		);
 	}
 
 	/**
@@ -749,7 +794,7 @@ class CCatalogViewedProductsComponent extends CBitrixComponent
 			$parentId = $this->productIdsMap[$prodId];
 
 			if (isset($this->items[$parentId])) // always
-				$tmpItems[$prodId] = $this->items[$parentId];
+				$tmpItems[$parentId] = $this->items[$parentId];
 		}
 
 		$this->items = $tmpItems;
@@ -807,7 +852,7 @@ class CCatalogViewedProductsComponent extends CBitrixComponent
 	 *
 	 * @return array
 	 */
-	protected function getAdditionalRefereneces()
+	protected function getAdditionalReferences()
 	{
 		return array();
 	}
@@ -833,13 +878,14 @@ class CCatalogViewedProductsComponent extends CBitrixComponent
 		{
 			// Catalog Groups
 			$cached['CATALOG_GROUP'] = array();
-			$catalogGroupIterator = CCatalogGroup::GetList(
-				array("SORT" => "ASC")
-			);
-			while ($catalogGroup = $catalogGroupIterator->fetch())
+			$catalogGroupList = CCatalogGroup::GetListArray();
+			if (!empty($catalogGroupList))
 			{
-				$cached['CATALOG_GROUP'][$catalogGroup['NAME']] = $catalogGroup;
+				foreach ($catalogGroupList as $catalogGroup)
+					$cached['CATALOG_GROUP'][$catalogGroup['NAME']] = $catalogGroup;
+				unset($catalogGroup);
 			}
+			unset($catalogGroupList);
 
 			// Catalog Prices
 			$cached['CATALOG_PRICE'] = CIBlockPriceTools::GetCatalogPrices(false, array_keys($cached['CATALOG_GROUP']));
@@ -866,19 +912,19 @@ class CCatalogViewedProductsComponent extends CBitrixComponent
 				$catalog['CATALOG_TYPE'] = $info['CATALOG_TYPE'];
 				$cached['CATALOG'][$catalog['IBLOCK_ID']] = $catalog;
 			}
+			unset($catalog, $catalogIterator);
 
 			// Measure list
 			$cached['MEASURE'] = array();
 			$measureIterator = CCatalogMeasure::getList(array("CODE" => "ASC"));
 			while ($measure = $measureIterator->fetch())
-			{
 				$cached['MEASURE'][$measure['ID']] = $measure;
-			}
+			unset($measure, $measureIterator);
 
 			// Default Measure
 			$cached['DEFAULT_MEASURE'] = CCatalogMeasure::getDefaultMeasure(true, true);
 
-			$additionalCache = $this->getAdditionalRefereneces();
+			$additionalCache = $this->getAdditionalReferences();
 			if (!empty($additionalCache) && is_array($additionalCache))
 			{
 				foreach ($additionalCache as $cacheKey => $cacheData)
@@ -1172,7 +1218,7 @@ class CCatalogViewedProductsComponent extends CBitrixComponent
 
 	/**
 	 * set prices for all items
-	 * @return array currency list
+	 * @return void
 	 */
 	protected function setItemsPrices()
 	{
@@ -1195,8 +1241,10 @@ class CCatalogViewedProductsComponent extends CBitrixComponent
 			if (!empty($item['OFFERS']))
 				continue;
 
-			$item['PRICES'] = CIBlockPriceTools::GetItemPrices($item['IBLOCK_ID'], $this->data['CATALOG_PRICES'], $item, $this->arParams['PRICE_VAT_INCLUDE'], $this->data['CONVERT_CURRENCY']);
-			$item['MIN_PRICE'] = CIBlockPriceTools::getMinPriceFromList($item['PRICES']);
+			$priceDataByItem = $this->getPriceDataByItem($item);
+
+			$item['PRICES'] = $priceDataByItem['PRICES'];
+			$item['MIN_PRICE'] = $priceDataByItem['MIN_PRICE'];
 			$item['CAN_BUY'] = CIBlockPriceTools::CanBuy($item['IBLOCK_ID'], $this->data['CATALOG_PRICES'], $item);
 		}
 		unset($item);
@@ -1218,7 +1266,7 @@ class CCatalogViewedProductsComponent extends CBitrixComponent
 			{
 				$measure = $measures[$item['CATALOG_MEASURE']];
 				$item['~CATALOG_MEASURE_NAME'] = ($this->getLanguageId() == "ru") ? $measure["SYMBOL_RUS"] : $measure["SYMBOL_INTL"];
-				$item['CATALOG_MEASURE_NAME'] = String::htmlEncode($item['~CATALOG_MEASURE_NAME']);
+				$item['CATALOG_MEASURE_NAME'] = Main\Text\HtmlFilter::encode($item['~CATALOG_MEASURE_NAME']);
 			}
 		}
 
@@ -1238,13 +1286,12 @@ class CCatalogViewedProductsComponent extends CBitrixComponent
 				$intRatio = (int)$ratio['RATIO'];
 				$dblRatio = (float)$ratio['RATIO'];
 				$mxRatio = ($dblRatio > $intRatio ? $dblRatio : $intRatio);
-				if (CATALOG_VALUE_EPSILON > abs($mxRatio))
-					$mxRatio = 1;
-				elseif (0 > $mxRatio)
+				if ($mxRatio < CATALOG_VALUE_EPSILON)
 					$mxRatio = 1;
 				$this->items[$ratio['PRODUCT_ID']]['CATALOG_MEASURE_RATIO'] = $mxRatio;
 			}
 		}
+		unset($ratio, $ratioIterator);
 	}
 
 	/**
@@ -1413,10 +1460,25 @@ class CCatalogViewedProductsComponent extends CBitrixComponent
 	}
 
 	/**
+	 * Check action variable.
+	 *
+	 * @param array $params			Component params.
+	 * @return string
+	 */
+	protected function prepareActionVariable($params)
+	{
+		$actionVariable = (isset($params['ACTION_VARIABLE']) ? trim($params['ACTION_VARIABLE']) : '');
+		if ($actionVariable === '' || !preg_match("/^[A-Za-z_][A-Za-z01-9_]*$/", $actionVariable))
+			$actionVariable = 'action_cvp';
+		return $actionVariable;
+	}
+
+	/**
 	 * Start Component
 	 */
 	public function executeComponent()
 	{
+		/** @global CMain $APPLICATION */
 		global $APPLICATION;
 		try
 		{
@@ -1431,14 +1493,15 @@ class CCatalogViewedProductsComponent extends CBitrixComponent
 				$this->putDataToCache();
 			}
 		}
-		catch (SystemException $e)
+		catch (Main\SystemException $e)
 		{
 			$this->abortDataCache();
 
 			if ($this->isAjax())
 			{
 				$APPLICATION->restartBuffer();
-				echo CUtil::PhpToJSObject(array('STATUS' => 'ERROR', 'MESSAGE' => $e->getMessage()));
+				header('Content-Type: application/json');
+				echo Main\Web\Json::encode(array('STATUS' => 'ERROR', 'MESSAGE' => $e->getMessage()));
 				die();
 			}
 

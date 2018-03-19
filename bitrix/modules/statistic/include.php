@@ -1,32 +1,36 @@
 <?
-global $DBType;
+$DB_test = CDatabase::GetModuleConnection("statistic", true);
+if(!is_object($DB_test))
+	return false;
+
 IncludeModuleLangFile(__FILE__);
 
 require_once ($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/filter_tools.php");
 require_once ($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/statistic/stat_tools.php");
 require_once ($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/statistic/ip_tools.php");
 /*patchlimitationmutatormark1*/
+$dbType = strtolower($DB_test->type);
 CModule::AddAutoloadClasses(
 	"statistic",
 	array(
 		"CKeepStatistics" => "classes/general/keepstatistic.php",
 		"CAllStatistics" => "classes/general/statistic.php",
-		"CStatistics" => "classes/".$DBType."/statistic.php",
-		"CAdv" => "classes/".$DBType."/adv.php",
-		"CGuest" => "classes/".$DBType."/guest.php",
-		"CTraffic" => "classes/".$DBType."/traffic.php",
-		"CUserOnline" => "classes/".$DBType."/useronline.php",
-		"CStoplist" => "classes/".$DBType."/stoplist.php",
+		"CStatistics" => "classes/".$dbType."/statistic.php",
+		"CAdv" => "classes/".$dbType."/adv.php",
+		"CGuest" => "classes/".$dbType."/guest.php",
+		"CTraffic" => "classes/".$dbType."/traffic.php",
+		"CUserOnline" => "classes/".$dbType."/useronline.php",
+		"CStoplist" => "classes/".$dbType."/stoplist.php",
 		"CHit" => "classes/general/hit.php",
-		"CSession" => "classes/".$DBType."/session.php",
+		"CSession" => "classes/".$dbType."/session.php",
 		"CReferer" => "classes/general/referer.php",
 		"CPhrase" => "classes/general/phrase.php",
-		"CSearcher" => "classes/".$DBType."/searcher.php",
+		"CSearcher" => "classes/".$dbType."/searcher.php",
 		"CSearcherHit" => "classes/general/searcherhit.php",
-		"CPage" => "classes/".$DBType."/page.php",
-		"CStatEvent" => "classes/".$DBType."/statevent.php",
-		"CStatEventType" => "classes/".$DBType."/stateventtype.php",
-		"CAutoDetect" => "classes/".$DBType."/autodetect.php",
+		"CPage" => "classes/".$dbType."/page.php",
+		"CStatEvent" => "classes/".$dbType."/statevent.php",
+		"CStatEventType" => "classes/".$dbType."/stateventtype.php",
+		"CAutoDetect" => "classes/".$dbType."/autodetect.php",
 		"CCountry" => "classes/general/country.php",
 		"CCity" => "classes/general/city.php",
 		"CStatRegion" => "classes/general/city.php",
@@ -46,8 +50,3 @@ CModule::AddAutoloadClasses(
 		"statistic" => "install/index.php",
 	)
 );
-
-$DB_test = CDatabase::GetModuleConnection("statistic", true);
-if(!is_object($DB_test))
-	return false;
-?>

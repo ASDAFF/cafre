@@ -38,8 +38,10 @@ $main_exec_time = round(microtime(true) - START_EXEC_TIME, 4);
 
 \Bitrix\Main\Context::getCurrent()->getResponse()->flush($r);
 
-if(defined("HTML_PAGES_FILE") && !defined("ERROR_404"))
-	CHTMLPagesCache::writeFile(HTML_PAGES_FILE, $r);
+if (!defined('BX_WITH_ON_AFTER_EPILOG'))
+{
+	define('BX_WITH_ON_AFTER_EPILOG', true);
+}
 
 $arAllEvents = GetModuleEvents("main", "OnAfterEpilog", true);
 

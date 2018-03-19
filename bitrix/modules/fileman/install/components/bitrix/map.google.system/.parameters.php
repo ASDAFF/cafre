@@ -4,7 +4,16 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) die();
 $arComponentParameters = array(
 	'GROUPS' => array(
 	),
+
 	'PARAMETERS' => array(
+
+		'API_KEY' => array(
+			'NAME' => GetMessage('MYMS_PARAM_API_KEY').' https://developers.google.com/maps/documentation/javascript/get-api-key',
+			'TYPE' => 'STRING',
+			'DEFAULT' => '',
+			'PARENT' => 'BASE',
+		),
+
 		'INIT_MAP_TYPE' => array(
 			'NAME' => GetMessage('MYMS_PARAM_INIT_MAP_TYPE'),
 			'TYPE' => 'LIST',
@@ -18,7 +27,7 @@ $arComponentParameters = array(
 			'ADDITIONAL_VALUES' => 'N',
 			'PARENT' => 'BASE',
 		),
-		
+
 		'MAP_WIDTH' => array(
 			'NAME' => GetMessage('MYMS_PARAM_MAP_WIDTH'),
 			'TYPE' => 'STRING',
@@ -68,7 +77,7 @@ $arComponentParameters = array(
 			'DEFAULT' => '',
 			'PARENT' => 'ADDITIONAL_SETTINGS',
 		
-		),
-	),
+		)
+	)
 );
 ?>

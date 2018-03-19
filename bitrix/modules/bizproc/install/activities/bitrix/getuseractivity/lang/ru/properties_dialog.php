@@ -6,8 +6,9 @@ $MESS["BPCRU_PD_USER1"] = "–езервные пользователи";
 $MESS["BPCRU_PD_MAX_LEVEL"] = "”ровень начальника (чем больше, тем выше уровень)";
 $MESS["BPCRU_PD_TYPE_RANDOM"] = "случайный";
 $MESS["BPCRU_PD_TYPE_BOSS"] = "начальник";
+$MESS["BPCRU_PD_TYPE_ORDER"] = "последовательный";
 $MESS["BPCRU_PD_MAX_LEVEL_1"] = "1 (непосредственный начальник)";
 $MESS["BPCRU_PD_SKIP_ABSENT"] = "ѕропускать отсутствующих";
+$MESS["BPCRU_PD_SKIP_TIMEMAN"] = "ѕропускать с завершенным рабочим днем";
 $MESS["BPCRU_PD_YES"] = "ƒа";
 $MESS["BPCRU_PD_NO"] = "Ќет";
-?>

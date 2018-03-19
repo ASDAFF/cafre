@@ -80,7 +80,7 @@ class CAllSocNetUserRelations
 		return True;
 	}
 
-	function Delete($ID)
+	public static function Delete($ID)
 	{
 		global $DB;
 
@@ -130,7 +130,7 @@ class CAllSocNetUserRelations
 		return $bSuccess;
 	}
 
-	function DeleteNoDemand($userID)
+	public static function DeleteNoDemand($userID)
 	{
 		global $DB;
 
@@ -167,7 +167,7 @@ class CAllSocNetUserRelations
 	/***************************************/
 	/**********  DATA SELECTION  ***********/
 	/***************************************/
-	function GetByID($ID)
+	public static function GetByID($ID)
 	{
 		global $DB;
 
@@ -209,7 +209,7 @@ class CAllSocNetUserRelations
 		return False;
 	}
 
-	function GetRelatedUsers($userID, $relation, $arNavStartParams = false, $bActiveOnly = "N")
+	public static function GetRelatedUsers($userID, $relation, $arNavStartParams = false, $bActiveOnly = "N")
 	{
 		global $DB, $arSocNetAllowedRelations;
 
@@ -250,7 +250,7 @@ class CAllSocNetUserRelations
 	/***************************************/
 	/**********  COMMON METHODS  ***********/
 	/***************************************/
-	function GetRelation($firstUserID, $secondUserID)
+	public static function GetRelation($firstUserID, $secondUserID)
 	{
 		global $DB;
 
@@ -349,7 +349,7 @@ class CAllSocNetUserRelations
 		return $arSocNetUserRelationsCache1[$firstUserID."_".$secondUserID];
 	}
 
-	function IsFriends($firstUserID, $secondUserID)
+	public static function IsFriends($firstUserID, $secondUserID)
 	{
 		global $DB;
 		static $arSocNetUserRelationsCache = array();
@@ -643,7 +643,7 @@ class CAllSocNetUserRelations
 		return true;
 	}
 
-	function ConfirmRequestToBeFriend($senderUserID, $relationID, $bAutoSubscribe = true)
+	public static function ConfirmRequestToBeFriend($senderUserID, $relationID, $bAutoSubscribe = true)
 	{
 		global $APPLICATION;
 
@@ -757,7 +757,7 @@ class CAllSocNetUserRelations
 		return true;
 	}
 
-	function RejectRequestToBeFriend($senderUserID, $relationID)
+	public static function RejectRequestToBeFriend($senderUserID, $relationID)
 	{
 		global $APPLICATION;
 

@@ -7,6 +7,17 @@ class CMailDomain2
 	{
 	}
 
+	public static function getImapData()
+	{
+		$result = CMailYandex2::getImapData();
+
+		return array(
+			'server' => $result['server'],
+			'port'   => $result['port'],
+			'secure' => $result['secure'] ? 'Y' : 'N',
+		);
+	}
+
 	public static function addDomain($token, $domain, &$error)
 	{
 		$result = CMailYandex2::addDomain($token, $domain, $error);
@@ -98,10 +109,33 @@ class CMailDomain2
 
 	public static function addUser($token, $domain, $login, $password, &$error)
 	{
+		$domain = trim(strtolower($domain));
+		$login  = trim(strtolower($login));
+
+		if (empty($domain))
+		{
+			$error = self::getErrorCode('no_domain');
+			return null;
+		}
+
+		if (empty($login))
+		{
+			$error = self::getErrorCode('no_login');
+			return null;
+		}
+
 		$result = CMailYandex2::addUser($token, $domain, $login, $password, $error);
 
 		if ($result !== false)
 		{
+			\Bitrix\Mail\Internals\DomainEmailTable::add(array(
+				'DOMAIN' => $domain,
+				'LOGIN'  => $login,
+			));
+
+			// @TODO: temporary fix for simple passwords
+			\CMailYandex2::editUser($token, $domain, $login, array('password' => $password), $dummy);
+
 			return true;
 		}
 		else
@@ -156,26 +190,72 @@ class CMailDomain2
 		}
 	}
 
-	public static function getDomainUsers($token, $domain, &$error)
+	public static function getDomainUsers($token, $domain, &$error, $resync = false)
 	{
+		global $DB;
+
+		$domain = trim(strtolower($domain));
 		$users = array();
 
-		$page = 0;
-		do
+		if (empty($domain))
 		{
-			$result = CMailYandex2::getDomainUsers($token, $domain, $per_page = 30, ++$page, $error);
+			$error = self::getErrorCode('no_domain');
+			return null;
+		}
 
-			if ($result === false)
-				break;
+		$res = \Bitrix\Mail\Internals\DomainEmailTable::getList(array(
+			'filter' => array(
+				'=DOMAIN' => $domain,
+			),
+		));
+		if ($res !== false)
+		{
+			while ($item = $res->fetch())
+				$users[] = $item['LOGIN'];
+		}
 
-			foreach ($result['accounts'] as $email)
+		if ($resync || empty($users))
+		{
+			$cached = $users;
+			$users = array();
+
+			$page = 0;
+			do
 			{
-				list($login, $emailDomain) = explode('@', $email['login'], 2);
-				if ($emailDomain == $domain)
-					$users[] = $login;
+				$result = CMailYandex2::getDomainUsers($token, $domain, $per_page = 30, ++$page, $error);
+
+				if ($result === false)
+					break;
+
+				foreach ($result['accounts'] as $email)
+				{
+					list($login, $emailDomain) = explode('@', $email['login'], 2);
+					if ($emailDomain == $domain)
+						$users[] = trim(strtolower($login));
+				}
+			}
+			while ($result['total'] > $per_page*$page);
+
+			$users = array_unique($users);
+
+			if (!$error)
+			{
+				foreach (array_diff($cached, $users) as $login)
+				{
+					\Bitrix\Mail\Internals\DomainEmailTable::delete(array(
+						'DOMAIN' => $domain,
+						'LOGIN'  => $login,
+					));
+				}
+				foreach (array_diff($users, $cached) as $login)
+				{
+					\Bitrix\Mail\Internals\DomainEmailTable::add(array(
+						'DOMAIN' => $domain,
+						'LOGIN'  => $login,
+					));
+				}
 			}
 		}
-		while ($result['total'] > $per_page*$page);
 
 		if (empty($users) && $error)
 		{
@@ -237,10 +317,30 @@ class CMailDomain2
 
 	public static function deleteUser($token, $domain, $login, &$error)
 	{
+		$domain = trim(strtolower($domain));
+		$login  = trim(strtolower($login));
+
+		if (empty($domain))
+		{
+			$error = self::getErrorCode('no_domain');
+			return null;
+		}
+
+		if (empty($login))
+		{
+			$error = self::getErrorCode('no_login');
+			return null;
+		}
+
 		$result = CMailYandex2::deleteUser($token, $domain, $login, $error);
 
 		if ($result !== false)
 		{
+			\Bitrix\Mail\Internals\DomainEmailTable::delete(array(
+				'DOMAIN' => $domain,
+				'LOGIN'  => $login,
+			));
+
 			return true;
 		}
 		else
@@ -278,7 +378,8 @@ class CMailDomain2
 			'passwd-empty'      => CMail::ERR_API_EMPTY_PASSWORD,
 			'login-toolong'     => CMail::ERR_API_LONG_NAME,
 			'badlogin'          => CMail::ERR_API_BAD_NAME,
-			'not_master_admin'  => CMail::ERR_API_DENIED
+			'not_master_admin'  => CMail::ERR_API_DENIED,
+			'get_new_token_please' => CMail::ERR_API_OLD_TOKEN,
 		);
 
 		$error = explode(',', $error);
@@ -304,7 +405,8 @@ class CMailDomain2
 			'occupied'          => CMail::ERR_API_DOMAIN_OCCUPIED,
 			'not_master_admin'  => CMail::ERR_API_DENIED,
 			'bad_country'       => CMail::ERR_API_DEFAULT,
-			'status_none'       => CMail::ERR_API_DEFAULT
+			'status_none'       => CMail::ERR_API_DEFAULT,
+			'get_new_token_please' => CMail::ERR_API_OLD_TOKEN,
 		);
 
 		$error = explode(',', $error);

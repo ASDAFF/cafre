@@ -20,17 +20,10 @@
  */
 class WLL_User
 {
-
 	/**
     * Initialize the User with time stamp, userid, flags, context and token.
     */
-	function WLL_User($timestamp, $id, $flags, $context, $token)
-	{
-		$this->__construct($timestamp, $id, $flags, $context, $token);
-	}
-
-	/*public*/
-	function __construct($timestamp, $id, $flags, $context, $token)
+	public function __construct($timestamp, $id, $flags, $context, $token)
 	{
 		WLL_User::setTimestamp($timestamp);
 		WLL_User::setId($id);
@@ -235,22 +228,7 @@ class WLL_ConsentToken
      * delegation token, refresh token, session key, expiry, offers,
      * location ID, context, decoded token, and raw token.
      */
-
-	function WLL_ConsentToken(
-						$wll, $delegationtoken, $refreshtoken,
-						$sessionkey, $expiry, $offers, $locationID, $context,
-						$decodedtoken, $token
-	)
-	{
-		$this->__construct(
-						$wll, $delegationtoken, $refreshtoken,
-						$sessionkey, $expiry, $offers, $locationID, $context,
-						$decodedtoken, $token
-				);
-	}
-
-	/*public*/
-	function __construct(
+	public function __construct(
 						$wll, $delegationtoken, $refreshtoken,
 						$sessionkey, $expiry, $offers, $locationID, $context,
 						$decodedtoken, $token
@@ -612,22 +590,7 @@ class WindowsLiveLogin
      *  recommend that your Delegated Authentication application always
      *  be registered for enhanced security and functionality.
      */
-	function WindowsLiveLogin(
-					$appid=null, $secret=null, $securityalgorithm=null,
-					$force_delauth_nonprovisioned=null,
-					$policyurl=null, $returnurl=null
-
-	)
-	{
-		$this->__construct(
-					$appid=null, $secret=null, $securityalgorithm=null,
-					$force_delauth_nonprovisioned=null,
-					$policyurl=null, $returnurl=null
-				);
-	}
-
-	/*public*/
-	function __construct(
+	public function __construct(
 					$appid=null, $secret=null, $securityalgorithm=null,
 					$force_delauth_nonprovisioned=null,
 					$policyurl=null, $returnurl=null

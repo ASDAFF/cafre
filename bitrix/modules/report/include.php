@@ -12,3 +12,10 @@ CModule::AddAutoloadClasses(
 		'\Bitrix\Report\ReportTable' => 'lib/report.php',
 	)
 );
+
+CJSCore::RegisterExt('report', array(
+	'js' => '/bitrix/js/report/js/report.js',
+	'css' => '/bitrix/js/report/css/report.css',
+	'lang' => BX_ROOT.'/modules/report/lang/'.LANGUAGE_ID.'/install/js/report.php',
+	'rel' => array('core', 'popup', 'json', 'ajax')
+));

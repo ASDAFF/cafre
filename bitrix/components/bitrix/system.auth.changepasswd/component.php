@@ -11,6 +11,11 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
  * @global CUser $USER
  */
 
+if(!is_array($arParams["~AUTH_RESULT"]) && $arParams["~AUTH_RESULT"] <> '')
+{
+	$arParams["~AUTH_RESULT"] = array("MESSAGE" => $arParams["~AUTH_RESULT"], "TYPE" => "ERROR");
+}
+
 $arParamsToDelete = array(
 	"login",
 	"logout",
@@ -82,6 +87,12 @@ if(!CMain::IsHTTPS() && COption::GetOptionString('main', 'use_encrypted_auth', '
 		$sec->AddToForm('bform', array('USER_PASSWORD', 'USER_CONFIRM_PASSWORD'));
 		$arResult["SECURE_AUTH"] = true;
 	}
+}
+
+$arResult["USE_CAPTCHA"] = (COption::GetOptionString("main", "captcha_restoring_password", "N") == "Y");
+if($arResult["USE_CAPTCHA"])
+{
+	$arResult["CAPTCHA_CODE"] = htmlspecialcharsbx($APPLICATION->CaptchaGetCode());
 }
 
 $this->IncludeComponentTemplate();

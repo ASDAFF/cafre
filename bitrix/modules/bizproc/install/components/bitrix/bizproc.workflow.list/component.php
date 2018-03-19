@@ -156,7 +156,10 @@ $gridSort = $gridOptions->GetSorting(array("sort" => array("NAME" => "ASC")));
 
 $db_res = CBPWorkflowTemplateLoader::GetList(
 	$gridSort["sort"],
-	array("DOCUMENT_TYPE" => $documentType),
+	array(
+		"DOCUMENT_TYPE" => $documentType,
+		'!AUTO_EXECUTE' => CBPDocumentEventType::Automation
+	),
 	false,
 	false,
 	array("ID", "NAME", "DESCRIPTION", "MODIFIED", "USER_ID", "AUTO_EXECUTE", "USER_NAME", "USER_LAST_NAME", "USER_LOGIN", "ACTIVE", "USER_SECOND_NAME"));

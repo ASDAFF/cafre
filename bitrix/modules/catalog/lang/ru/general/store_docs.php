@@ -14,7 +14,7 @@ $MESS["CAT_DOC_ERROR_CANCEL_STATUS"] = "ƒокумент еще не проведен.";
 $MESS["CAT_DOC_AND_MORE"] = "и еще #COUNT# товаров.";
 $MESS["CAT_DOC_WRONG_RESERVED_AMOUNT"] = "Ќет такого количества зарезервированного товара #PRODUCT#.";
 $MESS["CAT_DOC_WRONG_ELEMENT_COUNT"] = "¬ведите хот€ бы один товар.";
-$MESS["CAT_DOC_ERROR_ELEMENT_IN_DOCUMENT"] = "Ќекоторые проведенные документы складского учета содержат данный товар.";
+$MESS["CAT_DOC_ERROR_ELEMENT_IN_DOCUMENT_EXT"] = "ѕроведенные документы складского учета содержат данный товар. ќтмените активность документов и удалите товар.";
 $MESS["CAT_DOC_WRONG_SITE_ID"] = "”казан неверный SITE_ID";
 $MESS["CAT_DOC_STATUS_ALREADY_YES"] = "ƒокумент уже проведен";
 ?>

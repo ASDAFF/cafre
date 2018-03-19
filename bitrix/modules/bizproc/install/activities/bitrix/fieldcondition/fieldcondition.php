@@ -28,6 +28,7 @@ class CBPFieldCondition
 		$documentService = $ownerActivity->workflow->GetService("DocumentService");
 		$document = $documentService->GetDocument($documentId);
 		$documentFields = $documentService->GetDocumentFields($documentService->GetDocumentType($documentId));
+		$documentFieldsAliasesMap = CBPDocument::getDocumentFieldsAliasesMap($documentFields);
 
 		$result = array(0 => true);
 		$i = 0;
@@ -39,10 +40,19 @@ class CBPFieldCondition
 			if (!isset($document[$cond[0]]) && substr($cond[0], -strlen('_PRINTABLE')) == '_PRINTABLE')
 				$cond[0] = substr($cond[0], 0, strlen($cond[0]) - strlen('_PRINTABLE'));
 
+			if (!isset($document[$cond[0]]) && isset($documentFieldsAliasesMap[$cond[0]]))
+				$cond[0] = $documentFieldsAliasesMap[$cond[0]];
+
 			if (array_key_exists($cond[0], $document))
 			{
 				$fld = isset($document[$cond[0]."_XML_ID"]) ? $document[$cond[0]."_XML_ID"] : $document[$cond[0]];
-				if (!$this->CheckCondition($cond[0], $fld, $cond[1], $cond[2], $documentFields[$cond[0]]["BaseType"], $rootActivity))
+				$type = $documentFields[$cond[0]]["BaseType"];
+				if ($documentFields[$cond[0]]['Type'] === 'UF:boolean')
+				{
+					$type = 'bool';
+				}
+
+				if (!$this->CheckCondition($cond[0], $fld, $cond[1], $cond[2], $type, $rootActivity))
 				{
 					$r = false;
 				}
@@ -136,6 +146,11 @@ class CBPFieldCondition
 		if (CBPHelper::IsAssociativeArray($value))
 			$value = array_keys($value);
 
+		if (sizeof($field) === 0)
+			$field = array(null);
+		if (sizeof($value) === 0)
+			$value = array(null);
+
 		$i = 0;
 		$fieldCount = count($field);
 		$valueCount = count($value);
@@ -174,6 +189,18 @@ class CBPFieldCondition
 				$v1 = $v1Tmp;
 			}
 
+			if ($type === 'bool')
+			{
+				$f1 = CBPHelper::getBool($f1);
+				$v1 = CBPHelper::getBool($v1);
+			}
+
+			//normalize "0" == "" comparing
+			if ($v1 === '' && $f1 === '0' || $f1 === '' && $v1 === '0')
+			{
+				$f1 = $v1 = null;
+			}
+
 			switch ($operation)
 			{
 				case ">":
@@ -210,6 +237,7 @@ class CBPFieldCondition
 
 		$documentService = $runtime->GetService("DocumentService");
 		$arDocumentFieldsTmp = $documentService->GetDocumentFields($documentType);
+		$documentFieldsAliasesMap = CBPDocument::getDocumentFieldsAliasesMap($arDocumentFieldsTmp);
 
 		$arFieldTypes = $documentService->GetDocumentFieldTypes($documentType);
 
@@ -221,6 +249,9 @@ class CBPFieldCondition
 				$i = 0;
 				foreach ($defaultValue as $value)
 				{
+					if (!isset($arDocumentFieldsTmp[$value[0]]) && isset($documentFieldsAliasesMap[$value[0]]))
+						$value[0] = $documentFieldsAliasesMap[$value[0]];
+
 					if (strlen($arCurrentValues["field_condition_count"]) > 0)
 						$arCurrentValues["field_condition_count"] .= ",";
 					$arCurrentValues["field_condition_count"] .= $i;
@@ -230,13 +261,13 @@ class CBPFieldCondition
 					$arCurrentValues["field_condition_value_".$i] = $value[2];
 					$arCurrentValues["field_condition_joiner_".$i] = $value[3];
 
-					if ($arDocumentFieldsTmp[$arCurrentValues["field_condition_field_".$i]]["BaseType"] == "user"
-						&& $arDocumentFieldsTmp[$arCurrentValues["field_condition_field_".$i]]["Type"] != 'S:employee')
-					{
-						if (!is_array($arCurrentValues["field_condition_value_".$i]))
-							$arCurrentValues["field_condition_value_".$i] = array($arCurrentValues["field_condition_value_".$i]);
-						$arCurrentValues["field_condition_value_".$i] = CBPHelper::UsersArrayToString($arCurrentValues["field_condition_value_".$i], $arWorkflowTemplate, $documentType);
-					}
+					//if ($arDocumentFieldsTmp[$arCurrentValues["field_condition_field_".$i]]["BaseType"] == "user"
+					//	&& $arDocumentFieldsTmp[$arCurrentValues["field_condition_field_".$i]]["Type"] != 'S:employee')
+					//{
+					//	if (!is_array($arCurrentValues["field_condition_value_".$i]))
+					//		$arCurrentValues["field_condition_value_".$i] = array($arCurrentValues["field_condition_value_".$i]);
+					//	$arCurrentValues["field_condition_value_".$i] = CBPHelper::UsersArrayToString($arCurrentValues["field_condition_value_".$i], $arWorkflowTemplate, $documentType);
+					//}
 
 					$i++;
 				}

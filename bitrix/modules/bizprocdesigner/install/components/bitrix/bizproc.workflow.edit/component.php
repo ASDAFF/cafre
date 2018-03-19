@@ -11,6 +11,7 @@ $arResult['ID'] = $arParams["ID"];
 
 $arResult['LIST_PAGE_URL'] = $arParams['LIST_PAGE_URL'];
 $arResult["EDIT_PAGE_TEMPLATE"] = $arParams["EDIT_PAGE_TEMPLATE"];
+$backUrl = (isset($_REQUEST['back_url']) && $_REQUEST['back_url'][0] === '/' && $_REQUEST['back_url'][1] !== '/') ? (string)$_REQUEST['back_url'] : null;
 
 define("MODULE_ID", $arParams["MODULE_ID"]);
 define("ENTITY", $arParams["ENTITY"]);
@@ -63,7 +64,7 @@ if($ID <= 0)
 	$workflowTemplateDescription = '';
 	$workflowTemplateAutostart = 1;
 
-	if($_GET['init']=='statemachine')
+	if ($_GET['init'] == 'statemachine')
 	{
 		$arWorkflowTemplate = array(
 			array(
@@ -94,8 +95,14 @@ if($ID <= 0)
 if(!$canWrite)
 	$APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
 
-//print_r($arWorkflowTemplate);
-//print_r($arWorkflowParameters);
+$saveUrl = $arResult["LIST_PAGE_URL"];
+$applyUrl = str_replace("#ID#", $ID, $arResult["EDIT_PAGE_TEMPLATE"]);
+if ($backUrl)
+{
+	$saveUrl = $backUrl;
+	$applyUrl = CHTTP::urlAddParams($applyUrl, array('back_url' => $backUrl), array('encode' => true));
+	$arResult['BACK_URL'] = $backUrl;
+}
 
 //////////////////////////////////////////
 // AJAX
@@ -103,56 +110,20 @@ if(!$canWrite)
 if($_SERVER['REQUEST_METHOD']=='POST' && $_REQUEST['saveajax']=='Y' && check_bitrix_sessid())
 {
 	$APPLICATION->RestartBuffer();
-	CUtil::DecodeUriComponent($_POST);
+	CBPHelper::decodeTemplatePostData($_POST);
 
 	if($_REQUEST['saveuserparams']=='Y')
 	{
-		if (!is_array($_POST['USER_PARAMS']))
-		{
-			$_POST['USER_PARAMS'] = (array) CUtil::JsObjectToPhp($_POST['USER_PARAMS']);
-		}
 		$d = serialize($_POST['USER_PARAMS']);
-		if (strlen($d) > 64000)
+		if (\Bitrix\Main\Text\BinaryString::getLength($d) > 64000)
 		{
-			?>
-			<script>
-			alert('<?=GetMessage("BIZPROC_USER_PARAMS_SAVE_ERROR")?>');
-			</script>
-			<?
+			?><!--SUCCESS--><script>
+			alert('<?=GetMessageJS("BIZPROC_USER_PARAMS_SAVE_ERROR")?>');
+			</script><?
 			die();
 		}
 		CUserOptions::SetOption("~bizprocdesigner", "activity_settings", $d);
-		die();
-	}
-
-	if (LANG_CHARSET != "UTF-8")
-	{
-		function BPasDecodeArrayKeys($item)
-		{
-			if (is_array($item))
-			{
-				$ar = array();
-
-				foreach ($item as $k => $v)
-					$ar[$GLOBALS["APPLICATION"]->ConvertCharset($k, "UTF-8", LANG_CHARSET)] = BPasDecodeArrayKeys($v);
-
-				return $ar;
-			}
-			else
-			{
-				return $item;
-			}
-		}
-
-		$_POST = BPasDecodeArrayKeys($_POST);
-	}
-
-	foreach (array('arWorkflowTemplate', 'arWorkflowParameters', 'arWorkflowVariables', 'arWorkflowConstants') as $k)
-	{
-		if (!is_array($_POST[$k]))
-		{
-			$_POST[$k] = (array) CUtil::JsObjectToPhp($_POST[$k]);
-		}
+		die('<!--SUCCESS-->');
 	}
 
 	$arFields = Array(
@@ -174,19 +145,48 @@ if($_SERVER['REQUEST_METHOD']=='POST' && $_REQUEST['saveajax']=='Y' && check_bit
 	if(!is_array($arFields["CONSTANTS"]))
 		$arFields["CONSTANTS"] = array();
 
+	/**
+	 * @param CBPWorkflowTemplateValidationException $e
+	 */
 	function wfeexception_handler($e)
 	{
-		// PHP 5.2.1 bug http://bugs.php.net/bug.php?id=40456
-		//print_r($e);
-		?>
-		<script>
-			alert('<?=GetMessage("BIZPROC_WFEDIT_SAVE_ERROR")?>\n<?=preg_replace('#\.\W?#', ".\\n", CUtil::JSEscape($e->getMessage()))?>');
-		</script>
-		<?
+		$errorMessages = array();
+		if (method_exists($e, 'getErrors'))
+		{
+			foreach($e->getErrors() as $error)
+			{
+				$errorMessages[] = CUtil::JSEscape($error['message']);
+			}
+		}
+		else
+		{
+			$errorMessages[] = CUtil::JSEscape($e->getMessage());
+		}
+		?><!--SUCCESS--><script>
+			alert('<?=GetMessageJS("BIZPROC_WFEDIT_SAVE_ERROR")?>\n<?=implode('\n', $errorMessages)?>');
+			(function(){
+				var i, setFocus = true, activity, error, errors = [];
+				errors = <?=\Bitrix\Main\Web\Json::encode($errors);?>;
+
+				for (i = 0; i < errors.length; ++i)
+				{
+					error = errors[i];
+					if (error.activityName)
+					{
+						activity = window.rootActivity.findChildById(error.activityName);
+						/** @var BizProcActivity activity */
+						if (activity)
+						{
+							activity.SetError(true, setFocus);
+							setFocus = false;
+						}
+					}
+				}
+			})();
+		</script><?
 		die();
 	}
-
-	set_exception_handler('wfeexception_handler');
+	//set_exception_handler('wfeexception_handler');
 	try
 	{
 		if($ID>0)
@@ -194,19 +194,24 @@ if($_SERVER['REQUEST_METHOD']=='POST' && $_REQUEST['saveajax']=='Y' && check_bit
 			CBPWorkflowTemplateLoader::Update($ID, $arFields);
 		}
 		else
+		{
 			$ID = CBPWorkflowTemplateLoader::Add($arFields);
+			$applyUrl = str_replace("#ID#", $ID, $arResult["EDIT_PAGE_TEMPLATE"]);
+			if ($backUrl)
+			{
+				$applyUrl = CHTTP::urlAddParams($applyUrl, array('back_url' => $backUrl), array('encode' => true));
+			}
+		}
 	}
 	catch (Exception $e)
 	{
 		wfeexception_handler($e);
 	}
-	restore_exception_handler();
-	?>
-	<script>
+	//restore_exception_handler();
+	?><!--SUCCESS--><script>
 		BPTemplateIsModified = false;
-		window.location = '<?=($_REQUEST["apply"]=="Y"? str_replace("#ID#", $ID, $arResult["EDIT_PAGE_TEMPLATE"]) : CUtil::JSEscape($arResult["LIST_PAGE_URL"]))?>';
-	</script>
-	<?
+		window.location = '<?=($_REQUEST["apply"]=="Y"? CUtil::JSEscape($applyUrl) : CUtil::JSEscape($saveUrl))?>';
+	</script><?
 	die();
 }
 
@@ -263,11 +268,17 @@ if($_SERVER['REQUEST_METHOD']=='POST' && $_REQUEST['import_template']=='Y' && ch
 	?>
 	<script>
 	<?if (intval($r) <= 0):?>
-		alert('<?= GetMessage("BIZPROC_WFEDIT_IMPORT_ERROR").(strlen($errTmp) > 0 ? ": ".CUtil::JSEscape($errTmp) : "" ) ?>');
+		alert('<?= GetMessageJS("BIZPROC_WFEDIT_IMPORT_ERROR").(strlen($errTmp) > 0 ? ": ".CUtil::JSEscape($errTmp) : "" ) ?>');
 	<?else:?>
 		<?$ID = $r;?>
-	<?endif;?>
-	window.location = '<?=str_replace("#ID#", $ID, $arResult["EDIT_PAGE_TEMPLATE"])?>';
+	<?endif;
+	$applyUrl = str_replace("#ID#", $ID, $arResult["EDIT_PAGE_TEMPLATE"]);
+	if ($backUrl)
+	{
+		$applyUrl = CHTTP::urlAddParams($applyUrl, array('back_url' => $backUrl), array('encode' => true));
+	}
+	?>
+	window.location = '<?=CUtil::JSEscape($applyUrl)?>';
 	</script>
 	<?
 	die();
@@ -275,12 +286,14 @@ if($_SERVER['REQUEST_METHOD']=='POST' && $_REQUEST['import_template']=='Y' && ch
 
 $arAllActGroups = array(
 		"document" => GetMessage("BIZPROC_WFEDIT_CATEGORY_DOC"),
+		'task' => GetMessage('BIZPROC_WFEDIT_CATEGORY_TASKS'),
 		"logic" => GetMessage("BIZPROC_WFEDIT_CATEGORY_CONSTR"),
 		"interaction" => GetMessage("BIZPROC_WFEDIT_CATEGORY_INTER"),
 		"rest" => GetMessage("BIZPROC_WFEDIT_CATEGORY_REST"),
 );
 
 $runtime = CBPRuntime::GetRuntime();
+$runtime->StartRuntime();
 $arAllActivities = $runtime->SearchActivitiesByType("activity", array(MODULE_ID, ENTITY, $document_type));
 
 foreach ($arAllActivities as $activity)
@@ -308,6 +321,10 @@ $arResult['TEMPLATE_CHECK_STATUS'] = CBPWorkflowTemplateLoader::checkTemplateAct
 $arResult['PARAMETERS'] = $arWorkflowParameters;
 $arResult['VARIABLES'] = $arWorkflowVariables;
 $arResult['CONSTANTS'] = $arWorkflowConstants;
+
+/** @var CBPDocumentService $documentService */
+$documentService = $runtime->GetService('DocumentService');
+$arResult['DOCUMENT_FIELDS'] = $documentService->GetDocumentFields(array(MODULE_ID, ENTITY, $document_type));
 
 $arResult["ID"] = $ID;
 

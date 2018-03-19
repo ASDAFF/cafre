@@ -14,6 +14,11 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) die();
 /** @var string $parentComponentTemplate */
 $this->setFrameMode(false);
 
+if($arParams["IBLOCK_TYPE_ID"] == COption::GetOptionString("lists", "livefeed_iblock_type_id"))
+	$APPLICATION->SetTitle(GetMessage("CC_BLL_TITLE_TEXT_CLAIM"));
+else
+	$APPLICATION->SetTitle(GetMessage("CC_BLL_TITLE_TEXT_LISTS"));
+
 if(!CModule::IncludeModule('lists'))
 {
 	ShowError(GetMessage("CC_BLL_MODULE_NOT_INSTALLED"));
@@ -115,8 +120,3 @@ if($this->StartResultCache(0/*disable cache because it's individual for each use
 	$CACHE_MANAGER->EndTagCache();
 	$this->IncludeComponentTemplate();
 }
-
-if($arParams["IBLOCK_TYPE_ID"] == COption::GetOptionString("lists", "livefeed_iblock_type_id"))
-	$APPLICATION->SetTitle(GetMessage("CC_BLL_TITLE_TEXT_CLAIM"));
-else
-	$APPLICATION->SetTitle(GetMessage("CC_BLL_TITLE_TEXT_LISTS"));

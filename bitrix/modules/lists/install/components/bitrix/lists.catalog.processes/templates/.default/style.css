@@ -6,8 +6,9 @@
 .bx-lists-lcp-table-processes caption {font-size:15px; padding:3px; font-weight:bold; color:#80868e; margin-bottom:5px;}
 .bx-lists-lcp-table-processes #allocate {cursor: pointer;}
 .bx-lists-lcp-table-processes td {padding: 0px 5px 0px 5px;}
-.bx-lists-lcp-table-tr-mouseover {background-color: #A4E4F9;}
-.bx-lists-lcp-table-tr-mousedown {background-color: #A4E4F9;}
+.bx-lists-lcp-table-processes tr {background-color: #EEF2F4;}
+.bx-lists-lcp-table-tr-mouseover {background-color: #A4E4F9 !important;}
+.bx-lists-lcp-table-tr-mousedown {background-color: #A4E4F9 !important;}
 .bx-lists-lcp-table-tr-mouseout {background-color: #EEF2F4;}
 .bx-lists-lcp-button-block {margin: 15px 10px 0px 5px;}
 .bx-lists-lcp-table-td-div {padding: 5px 0px 5px 5px;}

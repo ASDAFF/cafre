@@ -253,6 +253,7 @@ input.bx-bizproc-folder-title{
 	opacity:.2;
 	background:url(images/sprite.png) no-repeat;
 	background-position:-16px -191px;
+	vertical-align: top;
 }
 .bx-bizproc-actions-col            a.bx-bizproc-action .empty,
 .bx-bizproc-actions-col            a.bx-bizproc-action .empty:hover,

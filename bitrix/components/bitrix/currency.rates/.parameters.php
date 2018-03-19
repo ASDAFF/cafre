@@ -1,7 +1,7 @@
 <?if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) die();?><?
 /** @var array $arCurrentValues */
-use Bitrix\Main\Loader;
-use Bitrix\Currency;
+use Bitrix\Main\Loader,
+	Bitrix\Currency;
 
 if (!Loader::includeModule('currency'))
 	return;

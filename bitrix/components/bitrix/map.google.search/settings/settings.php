@@ -62,6 +62,7 @@ $APPLICATION->IncludeComponent('bitrix:map.google.system', '', array(
 	'INIT_MAP_SCALE' => $arData['google_scale'],
 	'MAP_ID' => 'system_search_edit',
 	'DEV_MODE' => 'Y',
+	'API_KEY' => $arParams['API_KEY']
 ), false, array('HIDE_ICONS' => 'Y'));
 ?>
 </div><div class="bx-google-map-address-search" id="bx_google_map_address_search" style="visibility: hidden; ">

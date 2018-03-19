@@ -107,7 +107,7 @@ if ($arParams["ENTITY_TYPE"] == SONET_ENTITY_GROUP)
 }
 else
 {
-	$canViewProfile = CSocNetUserPerms::CanPerformOperation($GLOBALS["USER"]->GetID(), $$arParams["ENTITY_ID"], "viewprofile", $bCurrentUserIsAdmin);
+	$canViewProfile = CSocNetUserPerms::CanPerformOperation($GLOBALS["USER"]->GetID(), $arParams["ENTITY_ID"], "viewprofile", $bCurrentUserIsAdmin);
 
 	if (!$canViewProfile)
 	{

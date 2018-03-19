@@ -26,7 +26,7 @@
 	$arFilter = array("DICTIONARY_ID" => $DICTIONARY_ID);
 	$find_pattern = trim($find_pattern);
 	if (strLen($find_pattern)>0)
-		$arFilter = array_merge($arFilter, array("%".htmlspecialcharsEx(strToUpper($find_type)) => "%".$find_pattern."%"));
+		$arFilter = array_merge($arFilter, array("%".htmlspecialcharsbx(strToUpper($find_type)) => "%".$find_pattern."%"));
 	if (($USE_IT) && $USE_IT != "all")
 		$arFilter = array_merge($arFilter,  array("USE_IT"	=> (trim($USE_IT) == "Y"? "Y" : "N")));	
 	if ($PATTERN_CREATE && $PATTERN_CREATE != "ALL")
@@ -199,7 +199,7 @@
 	<tr valign="center">
 		<td><b><?=GetMessage("MAIN_FIND")?>:</b></td>
 		<td>
-			<input type="text" size="47" name="find_pattern" value="<?=htmlspecialcharsEx($find_pattern)?>" title="<?=GetMessage("MAIN_FIND_TITLE")?>">
+			<input type="text" size="47" name="find_pattern" value="<?=htmlspecialcharsbx($find_pattern)?>" title="<?=GetMessage("MAIN_FIND_TITLE")?>">
 		<?
 		$arr = array(
 			"reference" => array(

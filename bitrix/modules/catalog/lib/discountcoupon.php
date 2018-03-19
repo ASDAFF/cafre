@@ -18,12 +18,15 @@ Loc::loadMessages(__FILE__);
  * <li> ACTIVE bool optional default 'Y'
  * <li> COUPON string(32) mandatory
  * <li> DATE_APPLY datetime optional
- * <li> ONE_TIME bool optional default 'Y'
+ * <li> TYPE enum optional default 'O'
  * <li> TIMESTAMP_X datetime optional
  * <li> MODIFIED_BY int optional
  * <li> DATE_CREATE datetime optional
  * <li> CREATED_BY int optional
  * <li> DESCRIPTION string optional
+ * <li> CREATED_BY_USER reference to {@link \Bitrix\Main\UserTable}
+ * <li> MODIFIED_BY_USER reference to {@link \Bitrix\Main\UserTable}
+ * <li> DISCOUNT reference to {@link \Bitrix\Catalog\DiscountTable}
  * </ul>
  *
  * @package Bitrix\Catalog
@@ -84,7 +87,7 @@ class DiscountCouponTable extends Main\Entity\DataManager
 			'TYPE' => new Main\Entity\EnumField('TYPE', array(
 				'column_name' => 'ONE_TIME',
 				'values' => array(self::TYPE_ONE_ROW, self::TYPE_ONE_ORDER, self::TYPE_NO_LIMIT),
-				'default_value' => self::TYPE_ONE_ROW,
+				'default_value' => self::TYPE_ONE_ORDER,
 				'title' => Loc::getMessage('DISCOUNT_COUPON_ENTITY_ONE_TIME_FIELD')
 			)),
 			'TIMESTAMP_X' => new Main\Entity\DatetimeField('TIMESTAMP_X', array(
@@ -109,18 +112,19 @@ class DiscountCouponTable extends Main\Entity\DataManager
 			)),
 			'CREATED_BY_USER' => new Main\Entity\ReferenceField(
 				'CREATED_BY_USER',
-				'Bitrix\Main\User',
+				'\Bitrix\Main\User',
 				array('=this.CREATED_BY' => 'ref.ID')
 			),
 			'MODIFIED_BY_USER' => new Main\Entity\ReferenceField(
 				'MODIFIED_BY_USER',
-				'Bitrix\Main\User',
+				'\Bitrix\Main\User',
 				array('=this.MODIFIED_BY' => 'ref.ID')
 			),
 			'DISCOUNT' => new Main\Entity\ReferenceField(
 				'DISCOUNT',
-				'Bitrix\Catalog\Discount',
-				array('=this.DISCOUNT_ID' => 'ref.ID')
+				'\Bitrix\Catalog\Discount',
+				array('=this.DISCOUNT_ID' => 'ref.ID'),
+				array('join_type' => 'LEFT')
 			)
 		);
 	}

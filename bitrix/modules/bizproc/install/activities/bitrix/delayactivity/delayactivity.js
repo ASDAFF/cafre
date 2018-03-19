@@ -6,14 +6,11 @@ DelayActivity = function()
 	var ob = new BizProcActivity();
 	ob.Type = 'DelayActivity';
 
+	/** @return boolean */
 	ob.CheckFields = function ()
 	{
-		if(!ob.Properties['TimeoutDuration'])
-		{
-			return false;
-		}
-		return true;
-	}
+		return !!ob.Properties['TimeoutDuration'];
+	};
 
 	return ob;
 }

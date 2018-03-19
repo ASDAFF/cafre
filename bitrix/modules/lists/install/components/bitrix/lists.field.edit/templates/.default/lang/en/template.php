@@ -43,4 +43,12 @@ $MESS["CT_BLFE_FIELD_SHOW_ADD_FORM"] = "Show in new item form";
 $MESS["CT_BLFE_FIELD_SHOW_EDIT_FORM"] = "Show in edit item form";
 $MESS["CT_BLFE_TEXT_WIDTH_NEW"] = "Control width (px)";
 $MESS["CT_BLFE_TEXT_HEIGHT_NEW"] = "Control height (px)";
+$MESS["CT_BLFE_FIELD_ADD_READ_ONLY_FIELD"] = "Read-only (new item form)";
+$MESS["CT_BLFE_FIELD_EDIT_READ_ONLY_FIELD"] = "Read-only (item edit form)";
+$MESS["CT_BLFE_FIELD_SHOW_FIELD_PREVIEW"] = "Show field when creating a list item link";
+$MESS["CT_BLFE_FIELD_CODE"] = "Code";
+$MESS["CT_BLEE_SAVE_BUTTON"] = "Save";
+$MESS["CT_BLEE_CANCEL_BUTTON"] = "Cancel";
+$MESS["CT_BLFE_TOOLBAR_ACTION"] = "Actions";
+$MESS["CT_BLFE_TOOLBAR_RETURN_LIST_ELEMENT"] = "BACK TO FIELDS LIST";
 ?>

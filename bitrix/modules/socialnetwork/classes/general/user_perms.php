@@ -6,7 +6,7 @@ class CAllSocNetUserPerms
 	/***************************************/
 	/********  DATA MODIFICATION  **********/
 	/***************************************/
-	function CheckFields($ACTION, &$arFields, $ID = 0)
+	public static function CheckFields($ACTION, &$arFields, $ID = 0)
 	{
 		global $DB, $arSocNetUserOperations, $arSocNetAllowedRelationsType;
 
@@ -63,7 +63,7 @@ class CAllSocNetUserPerms
 		return True;
 	}
 
-	function Delete($ID)
+	public static function Delete($ID)
 	{
 		global $DB;
 
@@ -79,7 +79,7 @@ class CAllSocNetUserPerms
 		return $bSuccess;
 	}
 
-	function DeleteNoDemand($userID)
+	public static function DeleteNoDemand($userID)
 	{
 		global $DB;
 
@@ -95,7 +95,7 @@ class CAllSocNetUserPerms
 		return $bSuccess;
 	}
 
-	function Update($ID, $arFields)
+	public static function Update($ID, $arFields)
 	{
 		global $DB;
 
@@ -104,27 +104,13 @@ class CAllSocNetUserPerms
 
 		$ID = IntVal($ID);
 
-		$arFields1 = array();
-		foreach ($arFields as $key => $value)
-		{
-			if (substr($key, 0, 1) == "=")
-			{
-				$arFields1[substr($key, 1)] = $value;
-				unset($arFields[$key]);
-			}
-		}
+		$arFields1 = \Bitrix\Socialnetwork\Util::getEqualityFields($arFields);
 
 		if (!CSocNetUserPerms::CheckFields("UPDATE", $arFields, $ID))
 			return false;
 
 		$strUpdate = $DB->PrepareUpdate("b_sonet_user_perms", $arFields);
-
-		foreach ($arFields1 as $key => $value)
-		{
-			if (strlen($strUpdate) > 0)
-				$strUpdate .= ", ";
-			$strUpdate .= $key."=".$value." ";
-		}
+		\Bitrix\Socialnetwork\Util::processEqualityFieldsToUpdate($arFields1, $strUpdate);
 
 		if (strlen($strUpdate) > 0)
 		{
@@ -145,7 +131,7 @@ class CAllSocNetUserPerms
 	/***************************************/
 	/**********  DATA SELECTION  ***********/
 	/***************************************/
-	function GetByID($ID)
+	public static function GetByID($ID)
 	{
 		global $DB;
 
@@ -166,7 +152,7 @@ class CAllSocNetUserPerms
 	/***************************************/
 	/**********  COMMON METHODS  ***********/
 	/***************************************/
-	function GetOperationPerms($userID, $operation)
+	public static function GetOperationPerms($userID, $operation)
 	{
 		global $arSocNetUserOperations;
 		static $arCachedUserPerms;
@@ -242,7 +228,7 @@ class CAllSocNetUserPerms
 		}
 	}
 
-	function CanPerformOperation($fromUserID, $toUserID, $operation, $bCurrentUserIsAdmin = false)
+	public static function CanPerformOperation($fromUserID, $toUserID, $operation, $bCurrentUserIsAdmin = false)
 	{
 		global $arSocNetUserOperations;
 
@@ -291,7 +277,7 @@ class CAllSocNetUserPerms
 		return false;
 	}
 
-	function InitUserPerms($currentUserID, $userID, $bCurrentUserIsAdmin)
+	public static function InitUserPerms($currentUserID, $userID, $bCurrentUserIsAdmin)
 	{
 		global $arSocNetUserOperations, $USER;
 
@@ -301,7 +287,9 @@ class CAllSocNetUserPerms
 		$userID = IntVal($userID);
 
 		if ($userID <= 0)
+		{
 			return false;
+		}
 
 		$arReturn["Operations"] = array();
 		if ($currentUserID <= 0)
@@ -311,32 +299,43 @@ class CAllSocNetUserPerms
 			$arReturn["Operations"]["modifyuser"] = false;
 			$arReturn["Operations"]["viewcontacts"] = false;
 			foreach ($arSocNetUserOperations as $operation => $defPerm)
+			{
 				$arReturn["Operations"][$operation] = CSocNetUserPerms::CanPerformOperation($currentUserID, $userID, $operation, false);
+			}
 		}
 		else
 		{
 			$arReturn["IsCurrentUser"] = ($currentUserID == $userID);
-			if ($arReturn["IsCurrentUser"])
-				$arReturn["Relation"] = false;
-			else
-				$arReturn["Relation"] = CSocNetUserRelations::GetRelation($currentUserID, $userID);
+			$arReturn["Relation"] = (
+				$arReturn["IsCurrentUser"]
+					? false
+					: CSocNetUserRelations::GetRelation($currentUserID, $userID)
+			);
 
-			if ($bCurrentUserIsAdmin || $arReturn["IsCurrentUser"])
+			if (
+				$bCurrentUserIsAdmin
+				|| $arReturn["IsCurrentUser"]
+			)
 			{
 				$arReturn["Operations"]["modifyuser"] = true;
 				$arReturn["Operations"]["viewcontacts"] = true;
 				foreach ($arSocNetUserOperations as $operation => $defPerm)
+				{
 					$arReturn["Operations"][$operation] = true;
+				}
 			}
 			else
 			{
 				$arReturn["Operations"]["modifyuser"] = false;
-				if (CSocNetUser::IsFriendsAllowed())
-					$arReturn["Operations"]["viewcontacts"] = ($arReturn["Relation"] == SONET_RELATIONS_FRIEND);
-				else
-					$arReturn["Operations"]["viewcontacts"] = true;
+				$arReturn["Operations"]["viewcontacts"] = (
+					CSocNetUser::IsFriendsAllowed()
+						? ($arReturn["Relation"] == SONET_RELATIONS_FRIEND)
+						: true
+				);
 				foreach ($arSocNetUserOperations as $operation => $defPerm)
+				{
 					$arReturn["Operations"][$operation] = CSocNetUserPerms::CanPerformOperation($currentUserID, $userID, $operation, false);
+				}
 			}
 
 			$arReturn["Operations"]["modifyuser_main"] = false;
@@ -355,14 +354,14 @@ class CAllSocNetUserPerms
 				)
 			)
 			{
-				$arReturn["Operations"]["modifyuser_main"] = true;				
+				$arReturn["Operations"]["modifyuser_main"] = true;
 			}
 		}
-		
+
 		return $arReturn;
 	}
 
-	function SetPerm($userID, $feature, $perm)
+	public static function SetPerm($userID, $feature, $perm)
 	{
 		$userID = IntVal($userID);
 		$feature = Trim($feature);
@@ -401,4 +400,3 @@ class CAllSocNetUserPerms
 		return $r;
 	}
 }
-?>

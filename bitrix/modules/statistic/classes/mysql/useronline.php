@@ -1,7 +1,8 @@
-<?
+<?php
+
 class CUserOnline
 {
-	function GetGuestCount()
+	public static function GetGuestCount()
 	{
 		$DB = CDatabase::GetModuleConnection('statistic');
 		$err_mess = "File: ".__FILE__."<br>Line: ";
@@ -21,7 +22,7 @@ class CUserOnline
 		return intval($ar["CNT"]);
 	}
 
-	function GetList(&$guest_count, &$session_count, $arOrder=Array(), $arFilter=Array())
+	public static function GetList(&$guest_count, &$session_count, $arOrder=Array(), $arFilter=Array())
 	{
 		$DB = CDatabase::GetModuleConnection('statistic');
 		$err_mess = "File: ".__FILE__."<br>Line: ";
@@ -211,4 +212,3 @@ class CUserOnline
 		return $rs;
 	}
 }
-?>

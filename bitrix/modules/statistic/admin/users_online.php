@@ -1,4 +1,4 @@
-<?
+<?php
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/statistic/prolog.php");
 /** @var $APPLICATION CMain */
@@ -459,10 +459,13 @@ var timeCounterID = null;
 
 function Refresh(delay)
 {
+	delay = parseInt(delay);
+	if (delay <= 0)
+		delay = 30;
 	if (timeID) clearTimeout(timeID);
 	if (timeCounterID) clearTimeout(timeCounterID);
 	<?=$sTableID?>.GetAdminList('/bitrix/admin/users_online.php?delay='+delay+'&lang=<?=LANG?>');
-	timeID = setTimeout('Refresh('+delay+')', delay+'000');
+	timeID = setTimeout('Refresh('+delay+')', delay*1000);
 	timeCounterID = setTimeout('ShowCounter('+delay+')',950);
 }
 
@@ -583,4 +586,4 @@ $filter->End();?>
 <?
 $lAdmin->DisplayList();
 
-require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");?>
+require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");

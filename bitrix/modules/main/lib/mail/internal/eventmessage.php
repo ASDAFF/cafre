@@ -13,7 +13,6 @@ use Bitrix\Main\Type as Type;
 
 class EventMessageTable extends Entity\DataManager
 {
-
 	/**
 	 * @return string
 	 */
@@ -111,6 +110,9 @@ class EventMessageTable extends Entity\DataManager
 			'EVENT_MESSAGE_SITE' => array(
 				'data_type' => 'Bitrix\Main\Mail\Internal\EventMessageSite',
 				'reference' => array('=this.ID' => 'ref.EVENT_MESSAGE_ID'),
+			),
+			'LANGUAGE_ID' => array(
+				'data_type' => 'string',
 			),
 		);
 	}

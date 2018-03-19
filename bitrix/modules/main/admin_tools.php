@@ -10,7 +10,7 @@ IncludeModuleLangFile(__FILE__);
 
 class CMainAdmin
 {
-	function GetTemplateList($rel_dir)
+	public static function GetTemplateList($rel_dir)
 	{
 		$arrTemplate = array();
 		$arrTemplateDir = array();
@@ -62,7 +62,7 @@ class CMainAdmin
 
 class CTemplates
 {
-	function GetList($arFilter = array(), $arCurrentValues = array(), $template_id = array())
+	public static function GetList($arFilter = array(), $arCurrentValues = array(), $template_id = array())
 	{
 		if(!is_set($arFilter, "FOLDER"))
 		{
@@ -160,7 +160,7 @@ class CTemplates
 		return $arTemplates;
 	}
 
-	function GetByID($id, $arCurrentValues = array(), $templateID = array())
+	public static function GetByID($id, $arCurrentValues = array(), $templateID = array())
 	{
 		$folder = substr($id, 0, strpos($id, "/"));
 		$arRes = CTemplates::GetList(array("FOLDER"=>array($folder)), $arCurrentValues, $templateID);
@@ -170,7 +170,7 @@ class CTemplates
 		return false;
 	}
 
-	function __FindTemplates($root, &$arTemplates, $arCurrentValues=array(), $init="")
+	public static function __FindTemplates($root, &$arTemplates, $arCurrentValues=array(), $init="")
 	{
 		if(is_dir($_SERVER['DOCUMENT_ROOT'].$root.$init))
 		{
@@ -198,7 +198,7 @@ class CTemplates
 		}
 	}
 
-	function GetFolderList($template_id = false)
+	public static function GetFolderList($template_id = false)
 	{
 		$arTemplateFolders = array();
 		$arTemplateFoldersSort = array();
@@ -282,7 +282,7 @@ class CTemplates
 
 class CPageTemplate
 {
-	function GetList($arSiteTemplates=array())
+	public static function GetList($arSiteTemplates=array())
 	{
 		global $APPLICATION;
 
@@ -353,12 +353,12 @@ class CPageTemplate
 		return $res;
 	}
 
-	function GetDescription()
+	public static function GetDescription()
 	{
 		return array();
 	}
 
-	function _templ_sort($a, $b)
+	public static function _templ_sort($a, $b)
 	{
 		if($a["sort"] < $b["sort"])
 			return -1;
@@ -368,7 +368,7 @@ class CPageTemplate
 			return strcmp($a["name"], $b["name"]);
 	}
 
-	function GetTemplate($template, $arSiteTemplates=array())
+	public static function GetTemplate($template, $arSiteTemplates=array())
 	{
 		global $APPLICATION;
 
@@ -406,7 +406,7 @@ class CPageTemplate
 		return false;
 	}
 
-	function IncludeLangFile($filepath)
+	public static function IncludeLangFile($filepath)
 	{
 		$file = basename($filepath);
 		$dir = dirname($filepath);
@@ -781,50 +781,50 @@ function GetDirList($path, &$arDirs, &$arFiles, $arFilter=array(), $sort=array()
 
 class _FilesCmp
 {
-	function cmp_size_asc($a, $b)
+	public static function cmp_size_asc($a, $b)
 	{
 		if($a["SIZE"] == $b["SIZE"])
 			return 0;
 		return ($a["SIZE"] < $b["SIZE"]) ? -1 : 1;
 	}
-	function cmp_size_desc($a, $b)
+	public static function cmp_size_desc($a, $b)
 	{
 		if ($a["SIZE"] == $b["SIZE"])
 			return 0;
 		return ($a["SIZE"] > $b["SIZE"]) ? -1 : 1;
 	}
-	function cmp_timestamp_asc($a, $b)
+	public static function cmp_timestamp_asc($a, $b)
 	{
 		if($a["TIMESTAMP"] == $b["TIMESTAMP"])
 			return 0;
 		return ($a["TIMESTAMP"] < $b["TIMESTAMP"]) ? -1 : 1;
 	}
-	function cmp_timestamp_desc($a, $b)
+	public static function cmp_timestamp_desc($a, $b)
 	{
 		if ($a["TIMESTAMP"] == $b["TIMESTAMP"])
 			return 0;
 		return ($a["TIMESTAMP"] > $b["TIMESTAMP"]) ? -1 : 1;
 	}
-	function cmp_name_asc($a, $b)
+	public static function cmp_name_asc($a, $b)
 	{
 		if($a["NAME"] == $b["NAME"])
 			return 0;
 		return ($a["NAME"] < $b["NAME"]) ? -1 : 1;
 	}
-	function cmp_name_desc($a, $b)
+	public static function cmp_name_desc($a, $b)
 	{
 		if($a["NAME"] == $b["NAME"])
 			return 0;
 		return ($a["NAME"] > $b["NAME"]) ? -1 : 1;
 	}
-	function cmp_name_nat_asc($a, $b)
+	public static function cmp_name_nat_asc($a, $b)
 	{
 		$cmp = strnatcasecmp(trim($a["NAME"]), trim($b["NAME"]));
 		if($cmp == 0)
 			$cmp = strnatcmp(trim($a["NAME"]), trim($b["NAME"]));
 		return $cmp;
 	}
-	function cmp_name_nat_desc($a, $b)
+	public static function cmp_name_nat_desc($a, $b)
 	{
 		$cmp = strnatcasecmp(trim($a["NAME"]), trim($b["NAME"]));
 		if($cmp == 0)

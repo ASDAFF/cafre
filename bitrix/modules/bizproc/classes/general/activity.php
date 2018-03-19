@@ -16,10 +16,10 @@ abstract class CBPActivity
 	const ClosedEvent = 3;
 	const FaultingEvent = 4;
 
-	const ValuePattern = '#^\s*\{=\s*(?<object>[a-z0-9_]+)\s*\:\s*(?<field>[a-z0-9_]+)(\s*>\s*(?<mod1>[a-z0-9_\:]+)(\s*,\s*(?<mod2>[a-z0-9_]+))?)?\s*\}\s*$#i';
-	const ValueInlinePattern = '#\{=\s*(?<object>[a-z0-9_]+)\s*\:\s*(?<field>[a-z0-9_]+)(\s*>\s*(?<mod1>[a-z0-9_\:]+)(\s*,\s*(?<mod2>[a-z0-9_]+))?)?\s*\}#i';
+	const ValuePattern = '#^\s*\{=\s*(?<object>[a-z0-9_]+)\s*\:\s*(?<field>[a-z0-9_\.]+)(\s*>\s*(?<mod1>[a-z0-9_\:]+)(\s*,\s*(?<mod2>[a-z0-9_]+))?)?\s*\}\s*$#i';
+	const ValueInlinePattern = '#\{=\s*(?<object>[a-z0-9_]+)\s*\:\s*(?<field>[a-z0-9_\.]+)(\s*>\s*(?<mod1>[a-z0-9_\:]+)(\s*,\s*(?<mod2>[a-z0-9_]+))?)?\s*\}#i';
 	/** Internal pattern used in calc.php */
-	const ValueInternalPattern = '\{=\s*([a-z0-9_]+)\s*\:\s*([a-z0-9_]+)(\s*>\s*([a-z0-9_\:]+)(\s*,\s*([a-z0-9_]+))?)?\s*\}';
+	const ValueInternalPattern = '\{=\s*([a-z0-9_]+)\s*\:\s*([a-z0-9_\.]+)(\s*>\s*([a-z0-9_\:]+)(\s*,\s*([a-z0-9_]+))?)?\s*\}';
 
 	const CalcPattern = '#^\s*(=\s*(.*)|\{\{=\s*(.*)\s*\}\})\s*$#is';
 	const CalcInlinePattern = '#\{\{=\s*(.*?)\s*\}\}([^\}]|$)#is';
@@ -52,6 +52,7 @@ abstract class CBPActivity
 		$rootActivity = $this->GetRootActivity();
 		if (!is_array($rootActivity->documentType) || count($rootActivity->documentType) <= 0)
 		{
+			/** @var CBPDocumentService $documentService */
 			$documentService = $this->workflow->GetService("DocumentService");
 			$rootActivity->documentType = $documentService->GetDocumentType($rootActivity->documentId);
 		}
@@ -62,6 +63,12 @@ abstract class CBPActivity
 	{
 		$rootActivity = $this->GetRootActivity();
 		$rootActivity->documentType = $documentType;
+	}
+
+	public function getDocumentEventType()
+	{
+		$rootActivity = $this->GetRootActivity();
+		return (int)$rootActivity->getRawProperty(CBPDocument::PARAM_DOCUMENT_EVENT_TYPE);
 	}
 
 	public function GetWorkflowStatus()
@@ -102,14 +109,17 @@ abstract class CBPActivity
 			{
 				if ($rootActivity->arFieldTypes[$value["Type"]]["BaseType"] == "file")
 				{
-					if (is_array($rootActivity->arProperties[$key]))
+					foreach ((array) $rootActivity->arProperties[$key] as $v)
 					{
-						foreach ($rootActivity->arProperties[$key] as $v)
-							CFile::Delete($v);
-					}
-					else
-					{
-						CFile::Delete($rootActivity->arProperties[$key]);
+						if (intval($v) > 0)
+						{
+							$iterator = \CFile::getByID($v);
+							if ($file = $iterator->fetch())
+							{
+								if ($file['MODULE_ID'] === 'bizproc')
+									CFile::Delete($v);
+							}
+						}
 					}
 				}
 				if ($fieldTypeObject = $documentService->getFieldTypeObject($documentType, $value))
@@ -125,6 +135,12 @@ abstract class CBPActivity
 	{
 		$rootActivity = $this->GetRootActivity();
 		return $rootActivity->arFieldTypes[$rootActivity->arPropertiesTypes[$propertyName]["Type"]]["BaseType"];
+	}
+
+	public function getTemplatePropertyType($propertyName)
+	{
+		$rootActivity = $this->GetRootActivity();
+		return $rootActivity->arPropertiesTypes[$propertyName];
 	}
 
 	public function SetProperties($arProperties = array())
@@ -161,14 +177,17 @@ abstract class CBPActivity
 			{
 				if ($rootActivity->arFieldTypes[$value["Type"]]["BaseType"] == "file")
 				{
-					if (is_array($rootActivity->arVariables[$key]))
+					foreach ((array) $rootActivity->arVariables[$key] as $v)
 					{
-						foreach ($rootActivity->arVariables[$key] as $v)
-							CFile::Delete($v);
-					}
-					else
-					{
-						CFile::Delete($rootActivity->arVariables[$key]);
+						if (intval($v) > 0)
+						{
+							$iterator = \CFile::getByID($v);
+							if ($file = $iterator->fetch())
+							{
+								if ($file['MODULE_ID'] === 'bizproc')
+									CFile::Delete($v);
+							}
+						}
 					}
 				}
 				if ($fieldTypeObject = $documentService->getFieldTypeObject($documentType, $value))
@@ -298,6 +317,7 @@ abstract class CBPActivity
 			$arState = $stateService->GetWorkflowState($this->GetWorkflowInstanceId());
 
 			$arActivities = $rootActivity->CollectNestedActivities();
+			/** @var CBPActivity $activity */
 			foreach ($arActivities as $activity)
 				if ($activity->GetName() == $arState["STATE_NAME"])
 					break;
@@ -474,7 +494,7 @@ abstract class CBPActivity
 						$r = $calc->Calculate($matches[1]);
 						if (is_array($r))
 							$r = implode(', ', $r);
-						return $r !== null? $r : $matches[0];
+						return $r !== null? $r.$matches[2] : $matches[0];
 					},
 					$val
 				);
@@ -510,6 +530,20 @@ abstract class CBPActivity
 			/** @var CBPDocumentService $documentService */
 			$documentService = $this->workflow->GetService("DocumentService");
 			$document = $documentService->GetDocument($documentId);
+			$documentType = $this->GetDocumentType();
+			$documentFields = $documentService->GetDocumentFields($documentType);
+			//check aliases
+			$documentFieldsAliasesMap = CBPDocument::getDocumentFieldsAliasesMap($documentFields);
+			if (!isset($document[$fieldName]) && strtoupper(substr($fieldName, -strlen('_PRINTABLE'))) == '_PRINTABLE')
+			{
+				$fieldName = substr($fieldName, 0, -strlen('_PRINTABLE'));
+				if (!in_array('printable', $modifiers))
+					$modifiers[] = 'printable';
+			}
+			if (!isset($document[$fieldName]) && isset($documentFieldsAliasesMap[$fieldName]))
+			{
+				$fieldName = $documentFieldsAliasesMap[$fieldName];
+			}
 
 			$result = '';
 
@@ -521,9 +555,7 @@ abstract class CBPActivity
 
 				if (!empty($modifiers))
 				{
-					$documentType = $this->GetDocumentType();
-					$fields = $documentService->GetDocumentFields($documentType);
-					$property = isset($fields[$fieldName]) ? $fields[$fieldName] : null;
+					$property = isset($documentFields[$fieldName]) ? $documentFields[$fieldName] : null;
 				}
 			}
 		}
@@ -541,7 +573,7 @@ abstract class CBPActivity
 			{
 				case 'Variable':
 					$result = $rootActivity->GetVariable($fieldName);
-					$property = $rootActivity->arVariablesTypes[$fieldName];
+					$property = $rootActivity->getVariableType($fieldName);
 					break;
 				case 'Constant':
 					$result = $rootActivity->GetConstant($fieldName);
@@ -549,7 +581,7 @@ abstract class CBPActivity
 					break;
 				default:
 					$result = $rootActivity->{$fieldName};
-					$property = $rootActivity->arPropertiesTypes[$fieldName];
+					$property = $rootActivity->getTemplatePropertyType($fieldName);
 			}
 		}
 		elseif ($objectName == "Workflow")
@@ -570,16 +602,17 @@ abstract class CBPActivity
 
 			$result = null;
 			$property = array('Type' => 'datetime');
-			if ($fieldName == "Now")
+			$systemField = strtolower($fieldName);
+			if ($systemField === 'now')
 				$result = date($DB->DateFormatToPHP(CSite::GetDateFormat("FULL")));
-			elseif ($fieldName == "NowLocal")
+			elseif ($systemField === 'nowlocal')
 			{
 				$result = time();
 				if (CTimeZone::Enabled())
 					$result += CTimeZone::GetOffset();
 				$result = date($DB->DateFormatToPHP(CSite::GetDateFormat("FULL")), $result);
 			}
-			elseif ($fieldName == "Date")
+			elseif ($systemField == 'date')
 			{
 				$result = date($DB->DateFormatToPHP(CSite::GetDateFormat("SHORT")));
 				$property = array('Type' => 'date');
@@ -615,8 +648,7 @@ abstract class CBPActivity
 		if (empty($property) || empty($modifiers) || !is_array($property))
 			return $value;
 
-		$typeClass = null;
-		$format = null;
+		$typeName = $typeClass = $format = null;
 
 		$rootActivity = $this->GetRootActivity();
 		$documentId = $rootActivity->GetDocumentId();
@@ -629,9 +661,19 @@ abstract class CBPActivity
 		{
 			$m = strtolower($m);
 			if (isset($typesMap[$m]))
+			{
+				$typeName = $m;
 				$typeClass = $typesMap[$m];
+			}
 			else
+			{
 				$format = $m;
+			}
+		}
+
+		if ($typeName === \Bitrix\Bizproc\FieldType::STRING && $format === 'printable')
+		{
+			$typeClass = null;
 		}
 
 		if ($typeClass || $format)
@@ -783,6 +825,7 @@ abstract class CBPActivity
 
 		if (is_subclass_of($this, "CBPCompositeActivity"))
 		{
+			/** @var CBPActivity $activity */
 			foreach ($this->arActivities as $activity)
 				$result .= $activity->Dump($level + 1);
 		}
@@ -793,6 +836,10 @@ abstract class CBPActivity
 	/************************  PROCESS  ***********************************************************/
 
 	public function Initialize()
+	{
+	}
+
+	public function Finalize()
 	{
 	}
 
@@ -1031,9 +1078,9 @@ abstract class CBPActivity
 					}
 				}
 
+				/** @var CBPTrackingService $trackingService */
 				$trackingService = $this->workflow->GetService("TrackingService");
 				$trackingService->Write($this->GetWorkflowInstanceId(), CBPTrackingType::CloseActivity, $this->name, $this->executionStatus, $this->executionResult, ($this->IsPropertyExists("Title") ? $this->Title : ""));
-
 				$this->SetStatus(CBPActivityExecutionStatus::Closed, $arEventParameters);
 
 				//if ($this->parent)
@@ -1048,6 +1095,7 @@ abstract class CBPActivity
 
 	protected function WriteToTrackingService($message = "", $modifiedBy = 0, $trackingType = -1)
 	{
+		/** @var CBPTrackingService $trackingService */
 		$trackingService = $this->workflow->GetService("TrackingService");
 		if ($trackingType < 0)
 			$trackingType = CBPTrackingType::Custom;
@@ -1080,4 +1128,3 @@ abstract class CBPActivity
 		return false;
 	}
 }
-?>

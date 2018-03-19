@@ -41,10 +41,13 @@ CModule::AddAutoloadClasses(
 	)
 );
 
+CJSCore::RegisterExt('stssync', array(
+	'js' => '/bitrix/js/webservice/stssync.js',
+	'rel' => array('ajax')
+));
+
 require_once ($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/classes/general/xml.php");
 
-//require_once ($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/webservice/classes/general/webservice.wsdl.phpt");
-//require_once ($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/webservice/classes/general/msoffice.research.phpt");
 IncludeModuleLangFile(__FILE__);
 
 ?>

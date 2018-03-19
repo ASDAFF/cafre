@@ -1,195 +1,226 @@
-2018-Mar-19 06:04:27 Наличие необходимых модулей php (check_php_modules): Ok
+2018-Mar-19 10:01:57 Наличие необходимых модулей php (check_php_modules): Ok
 Все необходимые модули установлены
-2018-Mar-19 06:04:27 Обязательные параметры PHP (check_php_settings): Fail
-Ошибка! Значение max_input_vars должно быть не ниже 10000. Текущее значение: 1000
-2018-Mar-19 06:04:27 Модули веб-сервера (check_security): Warning
-Замечание. Загружен модуль mod_dav/mod_dav_fs, WebDav не будет работать
-2018-Mar-19 06:04:27 Значения переменных сервера (check_server_vars): Ok
+2018-Mar-19 10:01:57 Обязательные параметры PHP (check_php_settings): Ok
+Настройки правильные
+2018-Mar-19 10:01:57 Модули веб-сервера (check_security): Ok
+Конфликтов не выявлено
+2018-Mar-19 10:01:57 Значения переменных сервера (check_server_vars): Ok
 Корректные
-2018-Mar-19 06:04:28 Сохранение сессии (check_session): Ok
+2018-Mar-19 10:01:58 Сохранение сессии (check_session): Ok
 50% done
-2018-Mar-19 06:04:28 Сохранение сессии (check_session): Ok
+2018-Mar-19 10:01:58 Сохранение сессии (check_session): Ok
 Успешно
-2018-Mar-19 06:04:28 Параметры настройки UTF (mbstring и константа BX_UTF) (check_mbstring): Ok
+2018-Mar-19 10:01:58 Параметры настройки UTF (mbstring и константа BX_UTF) (check_mbstring): Ok
 Правильные. Сайт работает в однобайтовой кодировке
-2018-Mar-19 06:04:28 Служебные скрипты в корне сайта (check_install_scripts): Ok
+2018-Mar-19 10:01:58 Служебные скрипты в корне сайта (check_install_scripts): Ok
 Отсутствуют
-2018-Mar-19 06:04:28 Работа с сокетами (check_socket): Ok
+2018-Mar-19 10:01:58 Работа с сокетами (check_socket): Ok
 Connection to ssl://test.cafre.ru:443	Success
 
 Успешно
-2018-Mar-19 06:04:28 Параметры подключения к базе данных (check_dbconn_settings): Ok
-Успешно
-2018-Mar-19 06:04:29 Лишний вывод в файлах конфигурации (check_dbconn): Ok
-Connection to ssl://test.cafre.ru:443	Success
-
-Успешно
-2018-Mar-19 06:04:29 Выполнение агентов на cron (check_bx_crontab): Warning
+2018-Mar-19 10:01:58 Выполнение агентов на cron (check_bx_crontab): Warning
 Замечание. Агенты выполняются на хитах, рекомендуется перевести выполнение агентов на cron
-2018-Mar-19 06:04:29 Сохранение сессии без UserAgent (check_session_ua): Ok
-50% done
-Connection to ssl://test.cafre.ru:443	Success
-
-2018-Mar-19 06:04:29 Сохранение сессии без UserAgent (check_session_ua): Ok
+2018-Mar-19 10:01:58 Параметры подключения к базе данных (check_dbconn_settings): Ok
+Успешно
+2018-Mar-19 10:01:59 Лишний вывод в файлах конфигурации (check_dbconn): Ok
 Connection to ssl://test.cafre.ru:443	Success
 
 Успешно
-2018-Mar-19 06:04:30 Настройки сайтов (check_sites): Ok
+2018-Mar-19 10:01:59 Сохранение сессии без UserAgent (check_session_ua): Ok
+50% done
+Connection to ssl://test.cafre.ru:443	Success
+
+2018-Mar-19 10:01:59 Сохранение сессии без UserAgent (check_session_ua): Ok
+Connection to ssl://test.cafre.ru:443	Success
+
+Успешно
+2018-Mar-19 10:01:59 Настройки сайтов (check_sites): Ok
 Правильные
-2018-Mar-19 06:04:30 Передача объектов по ссылке (check_clone): Ok
+2018-Mar-19 10:01:59 Передача объектов по ссылке (check_clone): Ok
 Успешно
-2018-Mar-19 06:04:30 Размер стека и pcre.recursion_limit (check_pcre_recursion): Fail
+2018-Mar-19 10:01:59 Размер стека и pcre.recursion_limit (check_pcre_recursion): Warning
 Connection to ssl://test.cafre.ru:443	Success
 
-Ошибка! Не работает
-2018-Mar-19 06:04:30 Вызов method_exists на строке (check_method_exists): Ok
-Connection to ssl://test.cafre.ru:443	Success
-
-Успешно
-2018-Mar-19 06:04:30 Загрузка файла (check_upload): Ok
+Замечание. Возможны проблемы в работе с длинными строками из-за системных ограничений
+2018-Mar-19 10:01:59 Загрузка файла (check_upload): Ok
 Connection to ssl://test.cafre.ru:443	Success
 
 Успешно
-2018-Mar-19 06:04:31 Загрузка файла больше 4Мб (check_upload_big): Fail
-Connection to ssl://test.cafre.ru:443	Success
-== Request ==
-POST /bitrix/admin/site_checker.php?test_type=upload_test&unique_id=b86ba8da2206dfe1d31a0efdef0ec827&big=1&raw=0 HTTP/1.1
-Host: test.cafre.ru
-Content-Type: multipart/form-data; boundary=--------bd8e874970dbc57b20e1578f333e8530
-Content-Length: 4200195
-
-----------bd8e874970dbc57b20e1578f333e8530
-Content-Disposition: form-data; name="test_file"; filename="site_checker.bin
-Content-Type: image/gif
-
-()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~ЂЃ‚ѓ„…†‡€‰Љ‹ЊЌЋЏђ‘’“”•–—™љ›њќћџ ЎўЈ¤Ґ¦§Ё©Є«¬­®Ї°±Ііґµ¶·ё№є»јЅѕїАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмноп()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~ЂЃ‚ѓ„…†‡€‰Љ‹ЊЌЋЏђ‘’“”•–—™љ›њќћџ ЎўЈ¤Ґ¦§Ё©Є«¬­®Ї°±Ііґµ¶·ё№є»јЅѕїАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмноп()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~ЂЃ‚ѓ„…†‡€‰Љ‹ЊЌЋЏђ‘’“”•–—™љ›њќћџ ЎўЈ¤Ґ¦§Ё©Є«¬­®Ї°±Ііґµ¶·ё№є»јЅѕїАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзий ... (4200452 bytes)
-== Response ==
-HTTP/1.1 200 OK
-Date: Mon, 19 Mar 2018 03:04:30 GMT
-Server: Apache/2.4.25 (Debian)
-Strict-Transport-Security: max-age=31536000; preload
-Vary: Accept-Encoding
-Content-Length: 299
-Content-Type: text/html; charset=UTF-8
-
-== Body ==
-move_uploaded_file(,/var/www/www-root/data/www/test.cafre.ru/bitrix/tmp/site_checker.bin)=false
-$_FILES=
-Array
-(
-    [test_file] => Array
-        (
-            [name] => site_checker.bin
-            [type] => 
-            [tmp_name] => 
-            [error] => 1
-            [size] => 0
-        )
-
-)
-
-==========
-
-Ошибка! Не работает
-2018-Mar-19 06:04:31 Загрузка файла через php://input (check_upload_raw): Ok
+2018-Mar-19 10:01:59 Загрузка файла больше 4Мб (check_upload_big): Ok
 Connection to ssl://test.cafre.ru:443	Success
 
 Успешно
-2018-Mar-19 06:04:31 Передача POST запроса с большим числом параметров (check_post): Ok
+2018-Mar-19 10:01:59 Загрузка файла через php://input (check_upload_raw): Ok
 Connection to ssl://test.cafre.ru:443	Success
 
 Успешно
-2018-Mar-19 06:04:31 Отправка почты (check_mail): Ok
+2018-Mar-19 10:02:00 Передача POST запроса с большим числом параметров (check_post): Ok
+Connection to ssl://test.cafre.ru:443	Success
+
 Успешно
-2018-Mar-19 06:04:32 Отправка почтового сообщения больше 64Кб (check_mail_big): Ok
+2018-Mar-19 10:02:00 Отправка почты (check_mail): Ok
 Успешно
-2018-Mar-19 06:04:32 Проверка на наличие неотправленных сообщений (check_mail_b_event): Ok
+2018-Mar-19 10:02:00 Отправка почтового сообщения больше 64Кб (check_mail_big): Ok
 Успешно
-2018-Mar-19 06:04:32 Внутреннее перенаправление (функция LocalRedirect) (check_localredirect): Ok
+2018-Mar-19 10:02:00 Проверка на наличие неотправленных сообщений (check_mail_b_event): Ok
+Успешно
+2018-Mar-19 10:02:00 Внутреннее перенаправление (функция LocalRedirect) (check_localredirect): Ok
 50% done
 Connection to ssl://test.cafre.ru:443	Success
 
-2018-Mar-19 06:04:32 Внутреннее перенаправление (функция LocalRedirect) (check_localredirect): Ok
+2018-Mar-19 10:02:00 Внутреннее перенаправление (функция LocalRedirect) (check_localredirect): Ok
 Connection to ssl://test.cafre.ru:443	Success
 
 Успешно
-2018-Mar-19 06:04:32 Фактическое ограничение памяти (check_memory_limit): Ok
+2018-Mar-19 10:02:01 Фактическое ограничение памяти (check_memory_limit): Ok
 20% done
 Connection to ssl://test.cafre.ru:443	Success
 
-2018-Mar-19 06:04:33 Фактическое ограничение памяти (check_memory_limit): Ok
+2018-Mar-19 10:02:01 Фактическое ограничение памяти (check_memory_limit): Ok
 40% done
 Connection to ssl://test.cafre.ru:443	Success
 
-2018-Mar-19 06:04:33 Фактическое ограничение памяти (check_memory_limit): Ok
+2018-Mar-19 10:02:01 Фактическое ограничение памяти (check_memory_limit): Ok
 60% done
 Connection to ssl://test.cafre.ru:443	Success
 
-2018-Mar-19 06:04:33 Фактическое ограничение памяти (check_memory_limit): Ok
+2018-Mar-19 10:02:01 Фактическое ограничение памяти (check_memory_limit): Ok
 80% done
 Connection to ssl://test.cafre.ru:443	Success
 
-2018-Mar-19 06:04:33 Фактическое ограничение памяти (check_memory_limit): Warning
+2018-Mar-19 10:02:01 Фактическое ограничение памяти (check_memory_limit): Warning
 Connection to ssl://test.cafre.ru:443	Success
 
 Замечание. Не менее 256 М Значение memory_limit было увеличено с 128M до 512M на момент тестирования через ini_set.
-2018-Mar-19 06:04:34 Работа с файлами кеша (check_cache): Ok
+2018-Mar-19 10:02:02 Работа с файлами кеша (check_cache): Ok
 Успешно
-2018-Mar-19 06:04:34 Доступ к серверу обновлений (check_update): Ok
+2018-Mar-19 10:02:02 Доступ к серверу обновлений (check_update): Ok
 Успешно
-2018-Mar-19 06:04:34 HTTP авторизация (check_http_auth): Ok
+2018-Mar-19 10:02:02 HTTP авторизация (check_http_auth): Ok
 Connection to ssl://test.cafre.ru:443	Success
 
 Успешно
-2018-Mar-19 06:04:34 Создание и запуск файла (check_exec): Ok
+2018-Mar-19 10:02:02 Создание и запуск файла (check_exec): Ok
 Connection to ssl://test.cafre.ru:443	Success
 
 Успешно
-2018-Mar-19 06:04:34 Функция getimagesize для swf (check_getimagesize): Ok
+2018-Mar-19 10:02:02 Функция getimagesize для swf (check_getimagesize): Ok
 Успешно
-2018-Mar-19 06:04:35 Версия MySQL-сервера (check_mysql_bug_version): Ok
+2018-Mar-19 10:02:02 Версия MySQL-сервера (check_mysql_bug_version): Ok
 Успешно
-2018-Mar-19 06:04:36 Время на БД и веб-сервере (check_mysql_time): Ok
+2018-Mar-19 10:02:03 Время на БД и веб-сервере (check_mysql_time): Ok
 Успешно
-2018-Mar-19 06:04:36 Режим работы MySQL (check_mysql_mode): Fail
-Ошибка! Переменная sql_mode в MySQL должна быть пустая, текущее значение: NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
-2018-Mar-19 06:04:36 Кодировка соединения (check_mysql_connection_charset): Ok
+2018-Mar-19 10:02:03 Режим работы MySQL (check_mysql_mode): Ok
+Успешно
+2018-Mar-19 10:02:03 Кодировка соединения (check_mysql_connection_charset): Ok
 character_set_connection=cp1251, collation_connection=cp1251_general_ci, character_set_results=cp1251
 Успешно
-2018-Mar-19 06:04:36 Кодировка базы данных (check_mysql_db_charset): Ok
+2018-Mar-19 10:02:03 Кодировка базы данных (check_mysql_db_charset): Ok
 CHARSET=cp1251, COLLATION=cp1251_general_ci
 Успешно
-2018-Mar-19 06:04:37 Кодировки таблиц в БД (check_mysql_table_charset): Fail
-Кодировка таблицы "b_hlbd_ottenok" (utf8) отличается от кодировки базы (cp1251)
-Кодировка поля "UF_NAME" таблицы "b_hlbd_ottenok" (utf8) отличается от кодировки базы (cp1251)
-Кодировка поля "UF_XML_ID" таблицы "b_hlbd_ottenok" (utf8) отличается от кодировки базы (cp1251)
-Кодировка поля "UF_LINK" таблицы "b_hlbd_ottenok" (utf8) отличается от кодировки базы (cp1251)
-Кодировка поля "UF_DESCRIPTION" таблицы "b_hlbd_ottenok" (utf8) отличается от кодировки базы (cp1251)
-Кодировка поля "UF_FULL_DESCRIPTION" таблицы "b_hlbd_ottenok" (utf8) отличается от кодировки базы (cp1251)
-Кодировка таблицы "b_hlbd_tipkraski" (utf8) отличается от кодировки базы (cp1251)
-Кодировка поля "UF_NAME" таблицы "b_hlbd_tipkraski" (utf8) отличается от кодировки базы (cp1251)
-Кодировка поля "UF_XML_ID" таблицы "b_hlbd_tipkraski" (utf8) отличается от кодировки базы (cp1251)
-Кодировка поля "UF_LINK" таблицы "b_hlbd_tipkraski" (utf8) отличается от кодировки базы (cp1251)
-Кодировка поля "UF_DESCRIPTION" таблицы "b_hlbd_tipkraski" (utf8) отличается от кодировки базы (cp1251)
-Кодировка поля "UF_FULL_DESCRIPTION" таблицы "b_hlbd_tipkraski" (utf8) отличается от кодировки базы (cp1251)
-Кодировка таблицы "b_hlbd_tsvet" (utf8) отличается от кодировки базы (cp1251)
-Кодировка поля "UF_NAME" таблицы "b_hlbd_tsvet" (utf8) отличается от кодировки базы (cp1251)
-Кодировка поля "UF_XML_ID" таблицы "b_hlbd_tsvet" (utf8) отличается от кодировки базы (cp1251)
-Кодировка поля "UF_LINK" таблицы "b_hlbd_tsvet" (utf8) отличается от кодировки базы (cp1251)
-Кодировка поля "UF_DESCRIPTION" таблицы "b_hlbd_tsvet" (utf8) отличается от кодировки базы (cp1251)
-Кодировка поля "UF_FULL_DESCRIPTION" таблицы "b_hlbd_tsvet" (utf8) отличается от кодировки базы (cp1251)
-Кодировка таблицы "b_utm_iblock_26_section" (utf8) отличается от кодировки базы (cp1251)
-Кодировка поля "VALUE" таблицы "b_utm_iblock_26_section" (utf8) отличается от кодировки базы (cp1251)
-Кодировка таблицы "b_uts_iblock_26_section" (utf8) отличается от кодировки базы (cp1251)
-Кодировка поля "UF_TOP_TEXT" таблицы "b_uts_iblock_26_section" (utf8) отличается от кодировки базы (cp1251)
-Кодировка поля "UF_BOTTOM_TEXT" таблицы "b_uts_iblock_26_section" (utf8) отличается от кодировки базы (cp1251)
-Кодировка поля "UF_RUSNAME" таблицы "b_uts_iblock_26_section" (utf8) отличается от кодировки базы (cp1251)
-Кодировка поля "UF_URL_SVG" таблицы "b_uts_iblock_26_section" (utf8) отличается от кодировки базы (cp1251)
-Кодировка таблицы "b_xml_tree" (utf8) отличается от кодировки базы (cp1251)
-Кодировка поля "NAME" таблицы "b_xml_tree" (utf8) отличается от кодировки базы (cp1251)
-Кодировка поля "VALUE" таблицы "b_xml_tree" (utf8) отличается от кодировки базы (cp1251)
-Кодировка поля "ATTRIBUTES" таблицы "b_xml_tree" (utf8) отличается от кодировки базы (cp1251)
-
-Ошибка! Кодировки таблиц имеют ошибки, общее число ошибок: 29, из них автоматически могут быть исправлены: 0.
-2018-Mar-19 06:04:37 Структура базы данных (check_mysql_table_structure): Warning
-Замечание. Не проверено из-за ошибок кодировки таблиц
+2018-Mar-19 10:02:05 Кодировки таблиц в БД (check_mysql_table_charset): Ok
+Успешно
+2018-Mar-19 10:02:06 Структура базы данных (check_mysql_table_structure): Ok
+0% done
+2018-Mar-19 10:02:12 Структура базы данных (check_mysql_table_structure): Ok
+1% done
+2018-Mar-19 10:02:12 Структура базы данных (check_mysql_table_structure): Ok
+3% done
+2018-Mar-19 10:02:12 Структура базы данных (check_mysql_table_structure): Ok
+5% done
+2018-Mar-19 10:02:13 Структура базы данных (check_mysql_table_structure): Ok
+7% done
+2018-Mar-19 10:02:13 Структура базы данных (check_mysql_table_structure): Ok
+9% done
+2018-Mar-19 10:02:14 Структура базы данных (check_mysql_table_structure): Ok
+11% done
+2018-Mar-19 10:02:14 Структура базы данных (check_mysql_table_structure): Ok
+13% done
+2018-Mar-19 10:02:14 Структура базы данных (check_mysql_table_structure): Ok
+15% done
+2018-Mar-19 10:02:14 Структура базы данных (check_mysql_table_structure): Ok
+17% done
+2018-Mar-19 10:02:19 Структура базы данных (check_mysql_table_structure): Ok
+19% done
+2018-Mar-19 10:02:20 Структура базы данных (check_mysql_table_structure): Ok
+21% done
+2018-Mar-19 10:02:20 Структура базы данных (check_mysql_table_structure): Ok
+23% done
+2018-Mar-19 10:02:21 Структура базы данных (check_mysql_table_structure): Ok
+25% done
+2018-Mar-19 10:02:21 Структура базы данных (check_mysql_table_structure): Ok
+27% done
+2018-Mar-19 10:02:21 Структура базы данных (check_mysql_table_structure): Ok
+29% done
+2018-Mar-19 10:02:21 Структура базы данных (check_mysql_table_structure): Ok
+31% done
+2018-Mar-19 10:02:29 Структура базы данных (check_mysql_table_structure): Ok
+33% done
+2018-Mar-19 10:02:32 Структура базы данных (check_mysql_table_structure): Ok
+35% done
+2018-Mar-19 10:02:34 Структура базы данных (check_mysql_table_structure): Ok
+37% done
+2018-Mar-19 10:02:58 Структура базы данных (check_mysql_table_structure): Ok
+39% done
+2018-Mar-19 10:02:58 Структура базы данных (check_mysql_table_structure): Ok
+41% done
+2018-Mar-19 10:02:58 Структура базы данных (check_mysql_table_structure): Ok
+43% done
+2018-Mar-19 10:03:07 Структура базы данных (check_mysql_table_structure): Ok
+45% done
+2018-Mar-19 10:03:08 Структура базы данных (check_mysql_table_structure): Ok
+47% done
+2018-Mar-19 10:03:08 Структура базы данных (check_mysql_table_structure): Ok
+49% done
+2018-Mar-19 10:03:08 Структура базы данных (check_mysql_table_structure): Ok
+50% done
+2018-Mar-19 10:03:24 Структура базы данных (check_mysql_table_structure): Ok
+52% done
+2018-Mar-19 10:03:25 Структура базы данных (check_mysql_table_structure): Ok
+54% done
+2018-Mar-19 10:03:27 Структура базы данных (check_mysql_table_structure): Ok
+56% done
+2018-Mar-19 10:03:27 Структура базы данных (check_mysql_table_structure): Ok
+58% done
+2018-Mar-19 10:03:30 Структура базы данных (check_mysql_table_structure): Ok
+60% done
+2018-Mar-19 10:03:30 Структура базы данных (check_mysql_table_structure): Ok
+62% done
+2018-Mar-19 10:03:30 Структура базы данных (check_mysql_table_structure): Ok
+64% done
+2018-Mar-19 10:03:30 Структура базы данных (check_mysql_table_structure): Ok
+66% done
+2018-Mar-19 10:03:30 Структура базы данных (check_mysql_table_structure): Ok
+68% done
+2018-Mar-19 10:03:35 Структура базы данных (check_mysql_table_structure): Ok
+70% done
+2018-Mar-19 10:03:35 Структура базы данных (check_mysql_table_structure): Ok
+72% done
+2018-Mar-19 10:03:35 Структура базы данных (check_mysql_table_structure): Ok
+74% done
+2018-Mar-19 10:03:35 Структура базы данных (check_mysql_table_structure): Ok
+76% done
+2018-Mar-19 10:03:36 Структура базы данных (check_mysql_table_structure): Ok
+78% done
+2018-Mar-19 10:03:40 Структура базы данных (check_mysql_table_structure): Ok
+80% done
+2018-Mar-19 10:03:42 Структура базы данных (check_mysql_table_structure): Ok
+82% done
+2018-Mar-19 10:03:44 Структура базы данных (check_mysql_table_structure): Ok
+84% done
+2018-Mar-19 10:03:44 Структура базы данных (check_mysql_table_structure): Ok
+86% done
+2018-Mar-19 10:03:44 Структура базы данных (check_mysql_table_structure): Ok
+88% done
+2018-Mar-19 10:03:44 Структура базы данных (check_mysql_table_structure): Ok
+90% done
+2018-Mar-19 10:03:48 Структура базы данных (check_mysql_table_structure): Ok
+92% done
+2018-Mar-19 10:03:50 Структура базы данных (check_mysql_table_structure): Ok
+94% done
+2018-Mar-19 10:03:51 Структура базы данных (check_mysql_table_structure): Ok
+96% done
+2018-Mar-19 10:03:57 Структура базы данных (check_mysql_table_structure): Ok
+98% done
+2018-Mar-19 10:03:59 Структура базы данных (check_mysql_table_structure): Ok
+Успешно

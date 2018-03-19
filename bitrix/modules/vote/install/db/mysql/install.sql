@@ -5,7 +5,7 @@ create table if not exists b_vote_channel (
 	FIRST_SITE_ID char(2),
 	ACTIVE char(1) not null default 'Y',
 	HIDDEN char(1) not null default 'N',
-	TIMESTAMP_X datetime not null default '0000-00-00 00:00:00',
+	TIMESTAMP_X datetime not null,
 	TITLE varchar(255) not null,
 	VOTE_SINGLE char(1) not null default 'Y',
 	USE_CAPTCHA char(1) not null default 'N',
@@ -31,9 +31,9 @@ create table if not exists b_vote (
 	ACTIVE char(1) not null default 'Y',
 	NOTIFY char(1) not null default 'N',
 	AUTHOR_ID int(18),
-	TIMESTAMP_X datetime not null default '0000-00-00 00:00:00',
-	DATE_START datetime not null default '0000-00-00 00:00:00',
-	DATE_END datetime not null default '0000-00-00 00:00:00',
+	TIMESTAMP_X datetime not null,
+	DATE_START datetime not null,
+	DATE_END datetime not null,
 	URL varchar(255) NULL,
 	COUNTER int(11) not null default '0',
 	TITLE varchar(255),
@@ -45,8 +45,6 @@ create table if not exists b_vote (
 	EVENT3 varchar(255),
 	UNIQUE_TYPE int(18) not null default '2',
 	KEEP_IP_SEC int(18),
-	DELAY int(18),
-	DELAY_TYPE char(1),
 	TEMPLATE varchar(255),
 	RESULT_TEMPLATE varchar(255),
 	primary key (ID),
@@ -55,7 +53,7 @@ create table if not exists b_vote (
 create table if not exists b_vote_question (
 	ID int(18) not null auto_increment,
 	ACTIVE char(1) not null default 'Y',
-	TIMESTAMP_X datetime not null default '0000-00-00 00:00:00',
+	TIMESTAMP_X datetime not null,
 	VOTE_ID int(18) not null default '0',
 	C_SORT int(18) default '100',
 	COUNTER int(11) not null default '0',
@@ -73,7 +71,7 @@ create table if not exists b_vote_question (
 create table if not exists b_vote_answer (
 	ID int(18) not null auto_increment,
 	ACTIVE char(1) not null default 'Y',
-	TIMESTAMP_X datetime not null default '0000-00-00 00:00:00',
+	TIMESTAMP_X datetime not null,
 	QUESTION_ID int(18) not null default '0',
 	C_SORT int(18) default '100',
 	MESSAGE text,
@@ -91,7 +89,7 @@ create table if not exists b_vote_event (
 	ID int(18) not null auto_increment,
 	VOTE_ID int(18) not null default '0',
 	VOTE_USER_ID int(18) not null default '0',
-	DATE_VOTE datetime not null default '0000-00-00 00:00:00',
+	DATE_VOTE datetime not null,
 	STAT_SESSION_ID int(18),
 	IP varchar(15),
 	VALID char(1) not null default 'Y',
@@ -120,7 +118,23 @@ create table if not exists b_vote_user (
 	STAT_GUEST_ID int(18),
 	AUTH_USER_ID int(18),
 	COUNTER int(18) not null default '0',
-	DATE_FIRST datetime not null default '0000-00-00 00:00:00',
-	DATE_LAST datetime not null default '0000-00-00 00:00:00',
+	DATE_FIRST datetime not null,
+	DATE_LAST datetime not null,
 	LAST_IP varchar(15),
 	primary key (ID));
+
+create table if not exists b_vote_attached_object (
+	ID int(11) not null auto_increment,
+	OBJECT_ID int(11) not null,
+
+	MODULE_ID varchar(32) not null,
+	ENTITY_TYPE varchar(100) not null,
+	ENTITY_ID int(11) not null,
+
+	CREATE_TIME datetime not null,
+	CREATED_BY int(11),
+
+	PRIMARY KEY (ID),
+
+	KEY IX_VOTE_AO_1 (OBJECT_ID),
+	KEY IX_VOTE_AO_2 (MODULE_ID, ENTITY_TYPE, ENTITY_ID));

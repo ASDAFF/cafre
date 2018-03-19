@@ -27,6 +27,16 @@ class CAllSaleOrderUserProps
 	}
 	*/
 
+	/**
+	 * @param $userId
+	 * @param $profileId
+	 * @param $profileName
+	 * @param $personTypeId
+	 * @param $orderProps
+	 * @param $arErrors
+	 *
+	 * @return bool|int
+	 */
 	static function DoSaveUserProfile($userId, $profileId, $profileName, $personTypeId, $orderProps, &$arErrors)
 	{
 		$profileId = intval($profileId);
@@ -93,18 +103,41 @@ class CAllSaleOrderUserProps
 		}
 		*/
 
+		$utilPropertyList = array();
+
+
 		$dbOrderProperties = CSaleOrderProps::GetList(
 			array(),
-			array("PERSON_TYPE_ID" => $personTypeId, "ACTIVE" => "Y", "UTIL" => "N", "USER_PROPS" => "Y"),
+			array("PERSON_TYPE_ID" => $personTypeId, "ACTIVE" => "Y", "USER_PROPS" => "Y"),
 			false,
 			false,
-			array("ID", "TYPE", "NAME", "CODE")
+			array("ID", "TYPE", "NAME", "CODE", "UTIL", "MULTIPLE")
 		);
 		while ($arOrderProperty = $dbOrderProperties->Fetch())
 		{
+			if ($arOrderProperty['UTIL'] == "Y")
+			{
+				$utilPropertyList[] = $arIDs[$arOrderProperty["ID"]];
+			}
+
 			$curVal = $orderProps[$arOrderProperty["ID"]];
 			if (($arOrderProperty["TYPE"] == "MULTISELECT") && is_array($curVal))
 				$curVal = implode(",", $curVal);
+
+			if (($arOrderProperty["TYPE"] == "FILE") && is_array($curVal))
+			{
+				$fileList = array();
+				foreach ($curVal as $fileDat)
+				{
+					$fileList[] = $fileDat['ID'];
+				}
+				$curVal = serialize($fileList);
+			}
+
+			if ($arOrderProperty["MULTIPLE"] === "Y" & is_array($curVal))
+			{
+				$curVal = serialize($curVal);
+			}
 
 			if (strlen($curVal) > 0)
 			{
@@ -144,7 +177,14 @@ class CAllSaleOrderUserProps
 		}
 
 		foreach ($arIDs as $id)
+		{
+			if (!empty($utilPropertyList) && in_array($id, $utilPropertyList))
+				continue;
+
 			CSaleOrderUserPropsValue::Delete($id);
+		}
+
+		return $profileId;
 	}
 
 	public static function DoLoadProfiles($userId, $personTypeId = null)

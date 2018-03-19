@@ -9,6 +9,8 @@ $arActivityDescription = array(
 	"JSCLASS" => "BizProcActivity",
 	"CATEGORY" => array(
 		"ID" => "document",
+		'OWN_ID' => 'task',
+		'OWN_NAME' => GetMessage('BPAA_DESCR_TASKS')
 	),
 	"RETURN" => array(
 		"Comments" => array(
@@ -22,6 +24,10 @@ $arActivityDescription = array(
 		"InfoUser" => array(
 			"NAME" => GetMessage("BPAA_DESCR_LU"),
 			"TYPE" => "user",
+		),
+		"Changes" => array(
+			"NAME" => GetMessage("BPAA_DESCR_CHANGES"),
+			"TYPE" => "string",
 		),
 	),
 );

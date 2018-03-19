@@ -19,6 +19,7 @@ $arFilterFields = array(
 	"filter_period_from",
 	"filter_period_to",
 	"filter_currency",
+	"filter_base_currency"
 );
 
 $adminList->InitFilter($arFilterFields);
@@ -26,7 +27,9 @@ $adminList->InitFilter($arFilterFields);
 $adminFilter = new CAdminFilter(
 	$adminListTableID."_filter",
 	array(
+		GetMessage("curr_rates_date1"),
 		GetMessage("curr_rates_curr1"),
+		GetMessage("BX_CURRENCY_RATE_BASE_CURRENCY")
 	)
 );
 
@@ -34,6 +37,8 @@ $filter = array(
 );
 if (!empty($filter_currency))
 	$filter['=CURRENCY'] = $filter_currency;
+if (!empty($filter_base_currency))
+	$filter["=BASE_CURRENCY"] = $filter_base_currency;
 if (!empty($filter_period_from))
 {
 	try
@@ -124,6 +129,8 @@ if($CURRENCY_RIGHT=="W" && $arID = $adminList->GroupAction())
 	}
 }
 
+$currencyList = Currency\Helpers\Admin\Tools::getCurrencyLinkList();
+
 $usePageNavigation = true;
 $navyParams = array();
 if (isset($_REQUEST['mode']) && $_REQUEST['mode'] == 'excel')
@@ -155,6 +162,7 @@ if ($usePageNavigation)
 	$getListParams['offset'] = $navyParams['SIZEN']*($navyParams['PAGEN']-1);
 }
 $totalPages = 0;
+$totalCount = 0;
 if ($usePageNavigation)
 {
 	$countQuery = new Main\Entity\Query(Currency\CurrencyRateTable::getEntity());
@@ -206,6 +214,12 @@ $arHeaders[] = array(
 	"default" => true
 );
 $arHeaders[] = array(
+	"id" => "BASE_CURRENCY",
+	"content" => GetMessage('BX_CURRENCY_RATE_BASE_CURRENCY'),
+	"sort" => "BASE_CURRENCY",
+	"default" => true
+);
+$arHeaders[] = array(
 	"id" => "DATE_RATE",
 	"content" => GetMessage('curr_rates_date1'),
 	"sort" => "DATE_RATE",
@@ -232,7 +246,14 @@ while ($rate = $rateIterator->Fetch())
 	$row = &$adminList->AddRow($rate['ID'], $rate, $editUrl, GetMessage('CURRENCY_RATES_A_EDIT'));
 
 	$row->AddViewField('ID', '<a href="'.$editUrl.'" title="'.GetMessage('CURRENCY_RATES_A_EDIT_TITLE').'">'.$rate['ID'].'</a>');
-	$row->AddViewField('CURRENCY', '<a href="/bitrix/admin/currency_edit.php?ID='.$rate['CURRENCY'].'&lang='.LANGUAGE_ID.'" title="'.GetMessage('CURRENCY_A_EDIT_TITLE').'">'.$rate['CURRENCY'].'</a>');
+	$row->AddViewField(
+		'CURRENCY',
+		(isset($currencyList[$rate['CURRENCY']]) ? $currencyList[$rate['CURRENCY']] : htmlspecialcharsbx($rate['CURRENCY']))
+	);
+	$row->AddViewField(
+		'BASE_CURRENCY',
+		(isset($currencyList[$rate['BASE_CURRENCY']]) ? $currencyList[$rate['BASE_CURRENCY']] : htmlspecialcharsbx($rate['BASE_CURRENCY']))
+	);
 	$row->AddCalendarField('DATE_RATE');
 
 	$row->AddInputField("RATE_CNT", array("size" => "5"));
@@ -241,20 +262,19 @@ while ($rate = $rateIterator->Fetch())
 	$arActions = array();
 
 	$arActions[] = array(
-		"ICON"=>"edit",
-		"TEXT"=>GetMessage("MAIN_ADMIN_MENU_EDIT"),
+		"ICON" => "edit",
+		"TEXT" => GetMessage("MAIN_ADMIN_MENU_EDIT"),
 		"DEFAULT" => "Y",
-		"ACTION"=>$adminList->ActionRedirect($editUrl)
+		"ACTION" => $adminList->ActionRedirect($editUrl)
 	);
 
 	if ($CURRENCY_RIGHT=="W")
 	{
-		$arActions[] = array("SEPARATOR"=>true);
-
+		$arActions[] = array("SEPARATOR" => true);
 		$arActions[] = array(
-			"ICON"=>"delete",
-			"TEXT"=>GetMessage("MAIN_ADMIN_MENU_DELETE"),
-			"ACTION"=>"if(confirm('".GetMessage('CONFIRM_DEL_MESSAGE')."')) ".$adminList->ActionDoGroup($rate['ID'], "delete")
+			"ICON" => "delete",
+			"TEXT" => GetMessage("MAIN_ADMIN_MENU_DELETE"),
+			"ACTION" => "if(confirm('".GetMessage('CONFIRM_DEL_MESSAGE')."')) ".$adminList->ActionDoGroup($rate['ID'], "delete")
 		);
 	}
 
@@ -304,11 +324,21 @@ require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_aft
 	<tr>
 		<td><?echo GetMessage("curr_rates_curr1")?>:</td>
 		<td>
-			<?echo CCurrency::SelectBox("filter_currency", $filter_currency, GetMessage("curr_rates_all"), True, "", "") ?>
+			<?echo CCurrency::SelectBox("filter_currency", $filter_currency, GetMessage("curr_rates_all"), true, "", "") ?>
 		</td>
 	</tr>
-<?$adminFilter->Buttons(array("table_id"=>$adminListTableID, "url"=>$APPLICATION->GetCurPage(), "form"=>"find_form"));
+	<tr>
+		<td><?echo GetMessage("BX_CURRENCY_RATE_BASE_CURRENCY"); ?>:</td>
+		<td>
+			<?echo CCurrency::SelectBox("filter_base_currency", (isset($filter_base_currency) ? $filter_base_currency : ''), GetMessage("curr_rates_all"), true, "", "") ?>
+		</td>
+	</tr>
+<?$adminFilter->Buttons(array(
+	"table_id" => $adminListTableID,
+	"url" => $APPLICATION->GetCurPage(),
+	"form"=>"find_form"
+));
 $adminFilter->End();?>
 </form>
-<?$adminList->DisplayList();?>
-<?require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");?>
+<?$adminList->DisplayList();
+require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");

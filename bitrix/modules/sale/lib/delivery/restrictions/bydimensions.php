@@ -3,6 +3,8 @@ namespace Bitrix\Sale\Delivery\Restrictions;
 
 use Bitrix\Sale\Delivery\Restrictions;
 use Bitrix\Main\Localization\Loc;
+use Bitrix\Sale\Internals\Entity;
+use Bitrix\Sale\Shipment;
 
 Loc::loadMessages(__FILE__);
 
@@ -28,51 +30,63 @@ class ByDimensions extends Restrictions\Base
 	 * @param array $restrictionParams
 	 * @param int $deliveryId
 	 * @return bool
+	 * @internal
 	 */
-	public function check($dimensions, array $restrictionParams, $deliveryId = 0)
-	{
-		foreach($restrictionParams as $name => $value) //LENGTH, WIDTH, HEIGHT
-		{
-			if($value <=0)
-				continue;
-
-			if(!isset($dimensions[$name]))
-				continue;
-
-			if(intval($dimensions[$name]) <= 0)
-				continue;
-
-			if(intval($dimensions[$name]) > intval($value))
-				return false;
-		}
-
-		return true;
-	}
-
-	public function checkByShipment(\Bitrix\Sale\Shipment $shipment, array $restrictionParams, $deliveryId = 0)
+	public static function check($dimensionsList, array $restrictionParams, $deliveryId = 0)
 	{
 		if(empty($restrictionParams))
 			return true;
 
-		foreach($shipment->getShipmentItemCollection() as $shipmentItem)
+		foreach($dimensionsList as $dimensions)
 		{
-			$basketItem = $shipmentItem->getBasketItem();
-			$dimensions = $basketItem->getField("DIMENSIONS");
+			foreach($restrictionParams as $name => $value) //LENGTH, WIDTH, HEIGHT
+			{
+				if($value <=0)
+					continue;
 
-			if(is_string($dimensions))
-				$dimensions = unserialize($dimensions);
+				if(!isset($dimensions[$name]))
+					continue;
 
-			if(!is_array($dimensions) || empty($dimensions))
-				return true;
+				if(intval($dimensions[$name]) <= 0)
+					continue;
 
-			if(!$this->check($dimensions, $restrictionParams, $deliveryId))
-				return false;
+				if(intval($dimensions[$name]) > intval($value))
+					return false;
+			}
 		}
 
 		return true;
 	}
 
-	public static function getParamsStructure()
+	protected static function extractParams(Entity $entity)
+	{
+		$paramsToCheck = array();
+
+		if ($entity instanceof Shipment)
+		{
+			foreach($entity->getShipmentItemCollection() as $shipmentItem)
+			{
+				$basketItem = $shipmentItem->getBasketItem();
+
+				if(!$basketItem)
+					continue;
+
+				$dimensions = $basketItem->getField("DIMENSIONS");
+
+				if(is_string($dimensions))
+					$dimensions = unserialize($dimensions);
+
+				if(!is_array($dimensions) || empty($dimensions))
+					continue;
+
+				$paramsToCheck[] = $dimensions;
+			}
+		}
+
+		return $paramsToCheck;
+	}
+
+	public static function getParamsStructure($entityId = 0)
 	{
 		return array(
 			"LENGTH" => array(

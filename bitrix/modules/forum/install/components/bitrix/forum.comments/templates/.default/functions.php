@@ -20,6 +20,7 @@ function forumCommentsCommentWeb(
 			"NAME" => $comment["~NAME"],
 			"LAST_NAME" => $comment["~LAST_NAME"],
 			"SECOND_NAME" => $comment["~SECOND_NAME"],
+			"LOGIN" => $comment["~LOGIN"],
 			"AVATAR" => ($comment["AVATAR"] && $comment["AVATAR"]["FILE"] ? $comment["AVATAR"]["FILE"]['src'] : "")
 		),
 		"FILES" => $comment["FILES"],

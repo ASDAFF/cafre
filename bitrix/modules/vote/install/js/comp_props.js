@@ -5,7 +5,11 @@ function IsNumeric(input)
 
 function ComponentPropsVoteIPDelayUpdate()
 {
-	BX("__FD_PARAM_VOTE_UNIQUE_IP_DELAY").value = BX("VOTE_UNIQUE_IP_DELAY_INPUT").value + " " + BX("VOTE_UNIQUE_IP_DELAY_SELECT").value;
+	if (BX("VOTE_UNIQUE_IP_DELAY_INPUT"))
+	{
+		var node = BX.findChild(BX("VOTE_UNIQUE_IP_DELAY_INPUT").parentNode, {tagName : "INPUT", attrs : {"data-bx-property-id" : "VOTE_UNIQUE_IP_DELAY"}});
+		node.value = BX("VOTE_UNIQUE_IP_DELAY_INPUT").value + " " + BX("VOTE_UNIQUE_IP_DELAY_SELECT").value;
+	}
 }
 
 function ComponentPropsVoteIPDelay(arParams)

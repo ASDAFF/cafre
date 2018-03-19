@@ -1,6 +1,8 @@
 <?
 IncludeModuleLangFile(__FILE__);
 
+use Bitrix\Main\Mail;
+
 class CPostingGeneral
 {
 	var $LAST_ERROR="";
@@ -8,7 +10,7 @@ class CPostingGeneral
 	static $current_emails_per_hit = 0;
 
 	//get by ID
-	function GetByID($ID)
+	public static function GetByID($ID)
 	{
 		global $DB;
 		$ID = intval($ID);
@@ -27,7 +29,7 @@ class CPostingGeneral
 	}
 
 	//list of categories linked with message
-	function GetRubricList($ID)
+	public static function GetRubricList($ID)
 	{
 		global $DB;
 		$ID = intval($ID);
@@ -53,7 +55,7 @@ class CPostingGeneral
 	}
 
 	//list of user group linked with message
-	function GetGroupList($ID)
+	public static function GetGroupList($ID)
 	{
 		global $DB;
 		$ID = intval($ID);
@@ -76,12 +78,10 @@ class CPostingGeneral
 	}
 
 	// delete by ID
-	function Delete($ID)
+	public static function Delete($ID)
 	{
 		global $DB;
 		$ID = intval($ID);
-
-		$DB->StartTransaction();
 
 		CPosting::DeleteFile($ID);
 
@@ -93,15 +93,10 @@ class CPostingGeneral
 		if($res)
 			$res = $DB->Query("DELETE FROM b_posting WHERE ID='".$ID."' ", false, "File: ".__FILE__."<br>Line: ".__LINE__);
 
-		if($res)
-			$DB->Commit();
-		else
-			$DB->Rollback();
-
 		return $res;
 	}
 
-	function OnGroupDelete($group_id)
+	public static function OnGroupDelete($group_id)
 	{
 		global $DB;
 		$group_id = intval($group_id);
@@ -109,19 +104,19 @@ class CPostingGeneral
 		return $DB->Query("DELETE FROM b_posting_group WHERE GROUP_ID=".$group_id, true);
 	}
 
-	function DeleteFile($ID, $file_id=false)
+	public static function DeleteFile($ID, $file_id=false)
 	{
 		global $DB;
 
 		$rsFile = CPosting::GetFileList($ID, $file_id);
 		while($arFile = $rsFile->Fetch())
 		{
-			$rs = $DB->Query("DELETE FROM b_posting_file where POSTING_ID=".intval($ID)." AND FILE_ID=".intval($arFile["ID"]), false, "File: ".__FILE__."<br>Line: ".__LINE__);
+			$DB->Query("DELETE FROM b_posting_file where POSTING_ID=".intval($ID)." AND FILE_ID=".intval($arFile["ID"]), false, "File: ".__FILE__."<br>Line: ".__LINE__);
 			CFile::Delete(intval($arFile["ID"]));
 		}
 	}
 
-	function SplitFileName($file_name)
+	public static function SplitFileName($file_name)
 	{
 		$found = array();
 		// exapmle(2).txt
@@ -212,7 +207,7 @@ class CPostingGeneral
 		}
 	}
 
-	function GetFileList($ID, $file_id=false)
+	public static function GetFileList($ID, $file_id=false)
 	{
 		global $DB;
 		$ID = intval($ID);
@@ -283,9 +278,12 @@ class CPostingGeneral
 
 		if(array_key_exists("CHARSET", $arFields))
 		{
-			$aCharset = explode(",", COption::GetOptionString("subscribe", "posting_charset"));
-			if(!in_array($arFields["CHARSET"], $aCharset))
+			$sCharset = COption::GetOptionString("subscribe", "posting_charset");
+			$aCharset = explode(",", ToLower($sCharset));
+			if (!in_array(ToLower($arFields["CHARSET"]), $aCharset))
+			{
 				$aMsg[] = array("id"=>"CHARSET", "text"=>GetMessage("class_post_err_charset"));
+			}
 		}
 
 		if(!empty($aMsg))
@@ -449,7 +447,7 @@ class CPostingGeneral
 		return $aEmail;
 	}
 
-	function AutoSend($ID=false, $limit=false, $site_id=false)
+	public static function AutoSend($ID=false, $limit=false, $site_id=false)
 	{
 		if($ID===false)
 		{
@@ -506,7 +504,7 @@ class CPostingGeneral
 	{
 		global $DB, $APPLICATION;
 
-		$eol = CEvent::GetMailEOL();
+		$eol = \Bitrix\Main\Mail\Mail::getMailEol();
 		$ID = intval($ID);
 		$timeout = intval($timeout);
 		$start_time = getmicrotime();
@@ -623,6 +621,9 @@ class CPostingGeneral
 		}
 
 		$bHasAttachments = false;
+		$sHeader = "";
+		$sBoundary = "";
+
 		if(count($tools->aMatches) > 0)
 		{
 			$bHasAttachments = true;
@@ -744,6 +745,10 @@ class CPostingGeneral
 		}
 
 		$mail_additional_parameters = trim(COption::GetOptionString("subscribe", "mail_additional_parameters"));
+
+		$context = new Mail\Context();
+		$context->setCategory(Mail\Context::CAT_EXTERNAL);
+
 		if($post_arr["DIRECT_SEND"] == "Y")
 		{
 			//personal delivery
@@ -772,7 +777,8 @@ class CPostingGeneral
 
 				if(is_array($arFields))
 				{
-					$result = bxmail($arFields["EMAIL"], $arFields["SUBJECT"], $arFields["BODY"], $arFields["HEADER"], $mail_additional_parameters);
+					$to = CMailTools::EncodeHeaderFrom($arFields["EMAIL"], $post_arr["CHARSET"]);
+					$result = bxmail($to, $arFields["SUBJECT"], $arFields["BODY"], $arFields["HEADER"], $mail_additional_parameters, $context);
 				}
 				else
 				{
@@ -808,7 +814,7 @@ class CPostingGeneral
 			{
 				$BCC = implode(",", $aStep);
 				$sHeaderStep = $sHeader.$eol."Bcc: ".$BCC;
-				$result = bxmail($post_arr["TO_FIELD"], $sSubject, $sBody, $sHeaderStep, $mail_additional_parameters);
+				$result = bxmail($post_arr["TO_FIELD"], $sSubject, $sBody, $sHeaderStep, $mail_additional_parameters, $context);
 				if($result)
 				{
 					$DB->Query("UPDATE b_posting_email SET STATUS='N' WHERE ID in (".implode(", ", array_keys($aStep)).")");
@@ -841,7 +847,7 @@ class CPostingGeneral
 		return ($STATUS=="P"? "CONTINUE": true);
 	}
 
-	function GetEmailStatuses($ID)
+	public static function GetEmailStatuses($ID)
 	{
 		global $DB;
 		$arStatuses = array();
@@ -856,7 +862,7 @@ class CPostingGeneral
 		return $arStatuses;
 	}
 
-	function GetEmailsByStatus($ID, $STATUS)
+	public static function GetEmailsByStatus($ID, $STATUS)
 	{
 		global $DB;
 
@@ -917,6 +923,15 @@ class CPostingGeneral
 						AND (U.ID IS NULL OR U.ACTIVE = 'Y')
 						".(strlen($post_arr["SUBSCR_FORMAT"]) <= 0 || $post_arr["SUBSCR_FORMAT"]==="NOT_REF" ? "": "AND S.FORMAT='".($post_arr["SUBSCR_FORMAT"]=="text"? "text": "html")."'")."
 						".(strlen($post_arr["EMAIL_FILTER"]) <= 0 || $post_arr["EMAIL_FILTER"]==="NOT_REF" ? "": "AND ".GetFilterQuery("S.EMAIL", $post_arr["EMAIL_FILTER"], "Y", array("@", ".", "_")))."
+				");
+				$DB->Query("
+					DELETE pe
+					from b_posting_email pe
+					left join b_posting_email pe0 on
+						pe0.POSTING_ID = pe.POSTING_ID
+						and pe0.EMAIL = pe.EMAIL
+					WHERE pe.POSTING_ID = ".$ID."
+					AND pe0.ID < pe.ID
 				");
 
 				//send to user groups
@@ -1035,7 +1050,7 @@ class CMailTools
 	var $server_name = null;
 	var $maxFileSize = 0;
 
-	function IsEightBit($str)
+	public static function IsEightBit($str)
 	{
 		$len = strlen($str);
 		for($i=0; $i<$len; $i++)
@@ -1044,15 +1059,15 @@ class CMailTools
 		return false;
 	}
 
-	function EncodeMimeString($text, $charset)
+	public static function EncodeMimeString($text, $charset)
 	{
 		if(!CMailTools::IsEightBit($text))
 			return $text;
 
-		$maxl = IntVal((76 - strlen($charset) + 7)*0.4);
+		$maxl = intval((76 - strlen($charset) + 7)*0.4);
 
 		$res = "";
-		$eol = CEvent::GetMailEOL();
+		$eol = \Bitrix\Main\Mail\Mail::getMailEol();
 		$len = strlen($text);
 		for($i=0; $i<$len; $i=$i+$maxl)
 		{
@@ -1063,12 +1078,12 @@ class CMailTools
 		return $res;
 	}
 
-	function EncodeSubject($text, $charset)
+	public static function EncodeSubject($text, $charset)
 	{
 		return "=?".$charset."?B?".base64_encode($text)."?=";
 	}
 
-	function EncodeHeaderFrom($text, $charset)
+	public static function EncodeHeaderFrom($text, $charset)
 	{
 		$i = CUtil::BinStrlen($text);
 		while($i > 0)
@@ -1190,9 +1205,9 @@ class CMailTools
 		return $text;
 	}
 
-	function ImageTypeToMimeType($type)
+	public static function ImageTypeToMimeType($type)
 	{
-		$aTypes = array(
+		static $aTypes = array(
 			1 => "image/gif",
 			2 => "image/jpeg",
 			3 => "image/png",
@@ -1210,7 +1225,7 @@ class CMailTools
 			15 => "image/vnd.wap.wbmp",
 			16 => "image/xbm",
 		);
-		if(!empty($aTypes[$type]))
+		if (isset($aTypes[$type]))
 			return $aTypes[$type];
 		else
 			return "application/octet-stream";

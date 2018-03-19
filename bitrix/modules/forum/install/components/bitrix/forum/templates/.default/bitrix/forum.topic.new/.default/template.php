@@ -62,7 +62,7 @@ elseif ($arResult["SHOW_MESSAGE_FOR_AJAX"] == "Y"):
 				array_walk($item, "__ConvertData");
 			else
 			{
-				$item = htmlspecialcharsEx($item);
+				$item = htmlspecialcharsbx($item);
 				$item = str_replace($search, $replace, $item);
 			}
 		}

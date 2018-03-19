@@ -21,6 +21,7 @@ $arCategoryFilter = $arCategoryFilter["CODE"];
 		"INDEX"			=> $arResult["PATH_TO_INDEX"],
 		"RSS_CNT" => 10,
 		"CUSTOM_TITLE" => GetMessage("RSS_TITLE", array("#IDEA_CATEGORY#" => $arCategoryList[ToUpper($arResult["VARIABLES"]["category"])]["NAME"])),
+		"ALLOW_POST_CODE" => $arParams["ALLOW_POST_CODE"],
 	),
 	$component
 );

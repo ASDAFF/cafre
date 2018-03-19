@@ -3,6 +3,7 @@ if (!CModule::IncludeModule("vote")):
 	ShowError(GetMessage("VOTE_MODULE_IS_NOT_INSTALLED"));
 	return;
 endif;
+$this->setFrameMode(false);
 /********************************************************************
 				Input params
 ********************************************************************/
@@ -32,8 +33,8 @@ $cache_id = "vote_current_".serialize($arParams).(($tzOffset = CTimeZone::GetOff
 
 if (!$obCache->InitCache($arParams["CACHE_TIME"], $cache_id, $cache_path))
 {
-	$arVote = array(); $db_res = false;
-	if (!!$arParams["VOTE_ID"])
+	$db_res = false;
+	if ($arParams["VOTE_ID"] > 0)
 	{
 		$db_res = CVote::GetByIDEx($arParams["VOTE_ID"]);
 	}
@@ -73,7 +74,7 @@ if ($arParams["PERMISSION"] <= 0)
 elseif ($GLOBALS["VOTING_OK"] == "Y" && $GLOBALS["VOTING_ID"] == $arParams["VOTE_ID"] && !empty($arParams["VOTE_RESULT_TEMPLATE"]))
 {
 	$var = array("VOTE_ID", "VOTING_OK", "VOTE_SUCCESSFULL", "view_result", "view_form");
-	$url = CComponentEngine::MakePathFromTemplate($arParams["VOTE_RESULT_TEMPLATE"], array("VOTE_ID" => $arVote["ID"]));
+	$url = CComponentEngine::MakePathFromTemplate($arParams["VOTE_RESULT_TEMPLATE"], array("VOTE_ID" => $arResult["VOTE"]["ID"]));
 	if (strpos($url, "?") === false)
 	{
 		$url .= "?";
@@ -86,13 +87,27 @@ elseif ($GLOBALS["VOTING_OK"] == "Y" && $GLOBALS["VOTING_ID"] == $arParams["VOTE
 	$strNavQueryString = DeleteParam($var);
 	LocalRedirect($url."&VOTE_SUCCESSFULL=Y&VOTE_ID=".intval($_REQUEST["VOTE_ID"]).($strNavQueryString <> "" ? "&" : "").$strNavQueryString);
 }
-
-$voteUserID = ($_SESSION["VOTE_USER_ID"] ? $_SESSION["VOTE_USER_ID"] : intval($GLOBALS["APPLICATION"]->get_cookie("VOTE_USER_ID")));
-$arParams["VOTED"] = CVote::UserAlreadyVote($arResult["VOTE_ID"], $voteUserID, $arResult["VOTE"]["UNIQUE_TYPE"], $arResult["VOTE"]["KEEP_IP_SEC"], $GLOBALS["USER"]->GetID());
+else if ($arParams["PERMISSION"] >= 4 && $arParams["VOTE_ID"] > 0 && check_bitrix_sessid())
+{
+	if ($this->request->getPost("stopVoting") == $arParams["VOTE_ID"])
+	{
+		\Bitrix\Vote\Vote::loadFromId($arParams["VOTE_ID"])->stop();
+		$arResult["VOTE"]["LAMP"] = "red";
+	}
+	else if ($this->request->getPost("resumeVoting") == $arParams["VOTE_ID"])
+	{
+		\Bitrix\Vote\Vote::loadFromId($arParams["VOTE_ID"])->resume();
+		$arResult["VOTE"]["LAMP"] = "green";
+	}
+	else if ($this->request->getQuery("exportVoting") == $arParams["VOTE_ID"])
+	{
+		\Bitrix\Vote\Vote::loadFromId($arParams["VOTE_ID"])->exportExcel();
+	}
+}
+$arParams["VOTED"] = \Bitrix\Vote\User::getCurrent()->isVotedFor($arResult["VOTE"]["ID"]);
 $isUserCanVote = ($arParams["VOTED"] == false);
 $arParams["CAN_VOTE"] = $arResult["CAN_VOTE"] = ($isUserCanVote && $arParams["PERMISSION"] > 1 ? "Y" : "N");
-$arParams["CAN_REVOTE"] = ($arParams["VOTED"] == 8 && $arParams["PERMISSION"] > 1 ? "Y" : "N");
-
+$arParams["CAN_REVOTE"] = ($arParams["VOTED"] == 8 && $USER->IsAuthorized() && $arParams["PERMISSION"] > 1 ? "Y" : "N");
 $bShowResult = ($arResult["VOTE"]["LAMP"] != "green" || ($arParams["CAN_VOTE"] != "Y" && $arParams["CAN_REVOTE"] != "Y"));
 
 if (!$bShowResult)

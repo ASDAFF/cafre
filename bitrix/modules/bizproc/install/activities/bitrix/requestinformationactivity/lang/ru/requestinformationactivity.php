@@ -19,4 +19,5 @@ $MESS ['BPRIA_ACT_NONAPPROVE_TRACK'] = "Пользователь #PERSON# отклонил документ#
 $MESS ['BPRIA_ACT_BUTTON2'] = "Отклонить";
 $MESS ['BPRIA_ACT_NO_ACTION'] = "Не указано действие";
 $MESS ['BPRIA_LOG_N'] = "Отклонен";
+$MESS ['BPRIA_ACT_COMMENT_ERROR'] = "Не заполнено поле: #COMMENT_LABEL#";
 ?>

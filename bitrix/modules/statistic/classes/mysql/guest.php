@@ -1,8 +1,9 @@
-<?
+<?php
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/statistic/classes/general/guest.php");
+
 class CGuest extends CAllGuest
 {
-	function GetLastByID($ID)
+	public static function GetLastByID($ID)
 	{
 		$DB = CDatabase::GetModuleConnection('statistic');
 		$ID = intval($ID);
@@ -29,4 +30,3 @@ class CGuest extends CAllGuest
 		return $res;
 	}
 }
-?>

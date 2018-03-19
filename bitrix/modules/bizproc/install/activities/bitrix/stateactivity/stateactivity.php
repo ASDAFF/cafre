@@ -201,7 +201,7 @@ class CBPStateActivity
 		for ($i = 0, $s = sizeof($this->arActivities); $i < $s; $i++)
 		{
 			$activity2 = $this->arActivities[$i];
-			if (is_a($activity2, "CBPEventDrivenActivity"))
+			if (is_a($activity2, "CBPEventDrivenActivity") && isset($this->arActivityState[$i]))
 			{
 				$parentEventHandler = $this->arActivityState[$i];
 				$activity3 = $activity2->GetEventActivity();

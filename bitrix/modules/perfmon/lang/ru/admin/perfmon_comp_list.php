@@ -14,9 +14,13 @@ $MESS["PERFMON_COMP_CACHE_TYPE_YES"] = "Да";
 $MESS["PERFMON_COMP_CACHE_TYPE_NO"] = "Нет";
 $MESS["PERFMON_COMP_CACHE_TYPE_AUTO"] = "Авто";
 $MESS["PERFMON_COMP_CACHE_SIZE"] = "Кеш";
-$MESS['PERFMON_COMP_CACHE_COUNT'] = "Кеш-операций";
-$MESS['PERFMON_COMP_CACHE_COUNT_R'] = "Кеш-чтений";
-$MESS['PERFMON_COMP_CACHE_COUNT_W'] = "Кеш-записей";
-$MESS['PERFMON_COMP_CACHE_COUNT_C'] = "Кеш-сбросов";
+$MESS["PERFMON_COMP_CACHE_COUNT"] = "Кеш-операций";
+$MESS["PERFMON_COMP_CACHE_COUNT_R"] = "Кеш-чтений";
+$MESS["PERFMON_COMP_CACHE_COUNT_W"] = "Кеш-записей";
+$MESS["PERFMON_COMP_CACHE_COUNT_C"] = "Кеш-сбросов";
 $MESS["PERFMON_COMP_HIT_SCRIPT_NAME"] = "Страница";
+$MESS["PERFMON_COMP_COUNT"] = "Количество";
+$MESS["PERFMON_COMP_GROUP"] = "Группировка";
+$MESS["PERFMON_COMP_GROUP_ON"] = "Группировка включена";
+$MESS["PERFMON_COMP_GROUP_OFF"] = "Группировка выключена";
 ?>

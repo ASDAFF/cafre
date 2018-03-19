@@ -9,6 +9,8 @@ $arActivityDescription = array(
 	"JSCLASS" => "ApproveActivity",
 	"CATEGORY" => array(
 		"ID" => "document",
+		'OWN_ID' => 'task',
+		'OWN_NAME' => GetMessage('BPAA_DESCR_TASKS')
 	),
 	"RETURN" => array(
 		"Comments" => array(

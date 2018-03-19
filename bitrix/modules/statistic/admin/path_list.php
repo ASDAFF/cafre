@@ -1,6 +1,7 @@
-<?
+<?php
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/statistic/prolog.php");
+/** @var CMain $APPLICATION */
 $STAT_RIGHT = $APPLICATION->GetGroupRight("statistic");
 if($STAT_RIGHT=="D") $APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
 
@@ -219,7 +220,7 @@ if($find_diagram_type=="COUNTER"):
 					?>
 					<tr>
 						<td nowrap><?=$i?></td>
-						<td nowrap><a title="<?=GetMessage("STAT_GO")?>" href="<?=$page?>">&raquo;</a>&nbsp;<?
+						<td nowrap><a title="<?=GetMessage("STAT_GO")?>" href="<?=htmlspecialcharsbx($page)?>">&raquo;</a>&nbsp;<?
 							$new_path_id = GetStatPathID($page, $path_id);
 							$arParent[$new_path_id] = $path_id;
 							$path_id = $new_path_id;
@@ -227,18 +228,18 @@ if($find_diagram_type=="COUNTER"):
 								$prev_parent_path = $path_id;
 								$action_url = "path_list.php?lang=".LANGUAGE_ID."&find_diagram_type=COUNTER&parent_id=".urlencode($path_id)."&context=".urlencode($context);
 								$action_js = ($table_id==""? $sTableID:$table_id).".GetAdminList('".CUtil::JSEscape($action_url)."');";
-									?><a href="#" onclick="<?echo htmlspecialcharsbx($action_js)?>"><?
+									?><a href="javascript:void(0)" onclick="<?echo htmlspecialcharsbx($action_js)?>"><?
 								if($err_404=="Y"):
-									?><span class="stat_attention"><?echo TruncateText($page,65)?></span><?
+									?><span class="stat_attention"><?echo htmlspecialcharsEx(TruncateText($page,65))?></span><?
 								else:
-									echo TruncateText($page,65);
+									echo htmlspecialcharsEx(TruncateText($page,65));
 								endif;
 								?></a><?
 							else :
 								if($err_404=="Y"):
-									?><span class="stat_attention"><?echo TruncateText($page,65)?></span><?
+									?><span class="stat_attention"><?echo htmlspecialcharsEx(TruncateText($page,65))?></span><?
 								else:
-									echo TruncateText($page,65);
+									echo htmlspecialcharsEx(TruncateText($page,65));
 								endif;
 							endif;
 							$arFilter["PATH_ID"] = $path_id;
@@ -299,7 +300,7 @@ while($arRes = $rsData->NavNext(true, "f_"))
 		$action_url = "path_list.php?lang=".LANGUAGE_ID."&find_diagram_type=COUNTER&parent_id=".urlencode($f_PATH_ID)."&context=".urlencode($context);
 		$action_js = ($table_id==""? $sTableID:$table_id).".GetAdminList('".CUtil::JSEscape($action_url)."');";
 		$str .= "";
-		$str .= '<a title="'.GetMessage("STAT_GO").'" href="'.$f_LAST_PAGE.'">&raquo;</a>&nbsp;<a title="'.GetMessage("STAT_NEXT_STEP").'" href="#" onclick="'.htmlspecialcharsbx($action_js).'">';
+		$str .= '<a title="'.GetMessage("STAT_GO").'" href="'.$f_LAST_PAGE.'">&raquo;</a>&nbsp;<a title="'.GetMessage("STAT_NEXT_STEP").'" href="javascript:void(0)" onclick="'.htmlspecialcharsbx($action_js).'">';
 
 		if($f_LAST_PAGE_404=="Y")
 			$str .= "<span class=\"stat_attention\">".TruncateText($f_LAST_PAGE,65)."</span>";
@@ -333,7 +334,7 @@ while($arRes = $rsData->NavNext(true, "f_"))
 				$path_id = GetStatPathID($page, $path_id);
 				$action_url = "path_list.php?lang=".LANGUAGE_ID."&find_diagram_type=COUNTER&parent_id=".urlencode($path_id)."&context=".urlencode($context);
 				$action_js = ($table_id==""? $sTableID: $table_id).".GetAdminList('".CUtil::JSEscape($action_url)."');";
-				$str .= '<a title="'.GetMessage("STAT_GO").'" href="'.$page.'">&raquo;</a>&nbsp;<a title="'.GetMessage("STAT_NEXT_PAGES").'" href="#" onclick="'.htmlspecialcharsbx($action_js).'">';
+				$str .= '<a title="'.GetMessage("STAT_GO").'" href="'.$page.'">&raquo;</a>&nbsp;<a title="'.GetMessage("STAT_NEXT_PAGES").'" href="javascript:void(0)" onclick="'.htmlspecialcharsbx($action_js).'">';
 				if($err_404=="Y")
 					$str .= '<span class="stat_attention">'.TruncateText($page,65).'</span>';
 				else
@@ -475,4 +476,4 @@ if($message)
 $lAdmin->DisplayList();
 ?>
 
-<?require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");?>
+<?require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");

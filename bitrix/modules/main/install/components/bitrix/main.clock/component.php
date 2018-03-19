@@ -11,6 +11,8 @@ if ($arParams['INPUT_TITLE'])
 	$clockParams['inputTitle'] = $arParams['INPUT_TITLE'];
 if ($arParams['INIT_TIME'])
 	$clockParams['initTime'] = $arParams['INIT_TIME'];
+if ($arParams['ZINDEX'])
+	$clockParams['zIndex'] = intval($arParams['ZINDEX']);
 if ($arParams['STEP'] && $arParams['STEP'] != 5)
 	$clockParams['STEP'] = $arParams['STEP'];
 $arResult['clockParams'] = $clockParams;

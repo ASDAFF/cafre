@@ -4,16 +4,6 @@ $GLOBALS['APPLICATION']->AddHeadScript("/bitrix/js/main/utils.js");
 $GLOBALS['APPLICATION']->AddHeadScript("/bitrix/components/bitrix/forum.interface/templates/popup/script.js");
 $arParams['FORM_METHOD_GET'] = (isset($arParams['FORM_METHOD_GET']) && ($arParams['FORM_METHOD_GET'] == 'Y')) ? 'Y' : 'N';
 $iIndex = rand();
-?>
-<script>
-if (phpVars == null || typeof(phpVars) != "object")
-{
-	var phpVars = {
-		'ADMIN_THEME_ID': '.default',
-		'titlePrefix': '<?=CUtil::JSEscape(COption::GetOptionString("main", "site_name", $_SERVER["SERVER_NAME"]))?> - '};
-}
-</script>
-<?
 $method = ($arParams['FORM_METHOD_GET'] == 'Y' ? 'get' : 'post');
 $action = ($method === 'get' ? htmlspecialcharsbx($APPLICATION->GetCurPage()) : POST_FORM_ACTION_URI );
 ?>
@@ -43,7 +33,9 @@ $action = ($method === 'get' ? htmlspecialcharsbx($APPLICATION->GetCurPage()) : 
 
 		if ($res["TYPE"] == "SELECT"):
 			if (!empty($_REQUEST["del_filter"]))
-				$res["ACTIVE"] = "";
+				$res["ACTIVE"] = array();
+			else if (!is_array($res["ACTIVE"]))
+				$res["ACTIVE"] = array($res["ACTIVE"]);
 ?>
 			<select name="<?=$res["NAME"]?>" class="<?=$res["CLASS"]?>" id="<?=$res["ID"]?>" <?=($res["MULTIPLE"] == "Y" ? "multiple='multiple' size='5'" : "")?>>
 <?
@@ -55,7 +47,7 @@ $action = ($method === 'get' ? htmlspecialcharsbx($APPLICATION->GetCurPage()) : 
 <?
 				else:
 ?>
-				<option value="<?=$key?>" <?=($res["ACTIVE"] == $key ? " selected='selected'" : "")?>><?=str_replace(
+				<option value="<?=$key?>" <?=(in_array($key, $res["ACTIVE"]) ? " selected='selected'" : "")?>><?=str_replace(
 					array(" ", "&amp;nbsp;"), "&nbsp;", $val["NAME"])?></option>
 <?
 				endif;

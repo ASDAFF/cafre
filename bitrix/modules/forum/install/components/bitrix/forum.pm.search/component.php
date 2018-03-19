@@ -75,7 +75,7 @@ array_walk($_REQUEST, '__UnEscape');
 	$arResult["~search_template"] = trim($_REQUEST["search_template"]);
 	if (!empty($arResult["~search_template"]))
 		$arResult["~search_template"] = preg_replace("/[%]+/", "%", "%".str_replace("*", "%", $arResult["~search_template"])."%");
-	$arResult["search_template"] = htmlspecialcharsEx($_REQUEST["search_template"]);
+	$arResult["search_template"] = htmlspecialcharsbx($_REQUEST["search_template"]);
 // *****************************************************************************************
 	$arResult["SHOW_SEARCH_RESULT"] = "N";
 	$arResult["SEARCH_RESULT"] = array();

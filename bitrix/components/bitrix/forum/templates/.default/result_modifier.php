@@ -302,18 +302,9 @@ if ($arParams["SHOW_FORUMS"] == "Y" && in_array($this->__page, array("forums", "
 endif;
 ?><script type="text/javascript">
 //<![CDATA[
-	if (phpVars == null || typeof(phpVars) != "object")
-	{
-		var phpVars = {
-			'ADMIN_THEME_ID': '.default',
-			'titlePrefix': '<?=CUtil::JSEscape(COption::GetOptionString("main", "site_name", $_SERVER["SERVER_NAME"]))?> - '};
-	}
-	phpVars['isAuthorized'] = '<?=($GLOBALS['USER']->IsAuthorized() ? "Y" : "N")?>';
-	if (typeof oText != "object")
-	{
-		var oText = {};
-	}
-	oText['wait_window'] = '<?=GetMessageJS("F_LOAD")?>';
+	BX.message({
+		F_LOAD : '<?=GetMessageJS("F_LOAD")?>',
+		FORUMJS_TITLE : '<?=CUtil::JSEscape(COption::GetOptionString("main", "site_name", $_SERVER["SERVER_NAME"]))?> - '
+	});
 //]]>
-window.oForumForm = {};
 </script>

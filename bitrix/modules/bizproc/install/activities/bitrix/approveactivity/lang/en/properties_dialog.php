@@ -14,7 +14,7 @@ $MESS["BPAA_PD_NO"] = "No";
 $MESS["BPAA_PD_STATUS_MESSAGE"] = "Status Text";
 $MESS["BPAA_PD_STATUS_MESSAGE_HINT"] = "The following macros are available: #PERC# - percent, #REV# - persons currently acquainted, #TOT# - total persons to be acquainted.";
 $MESS["BPAA_PD_TIMEOUT_DURATION"] = "Time limit";
-$MESS["BPAA_PD_TIMEOUT_DURATION_HINT"] = "If a document is not approved or rejected before this period expires, it will be automatically rejected. An empty or zero value specifies that no period is to be applied.";
+$MESS["BPAA_PD_TIMEOUT_DURATION_HINT"] = "If an element is not approved or rejected before this period expires, it will be automatically rejected. An empty or zero value specifies that no period is to be applied.";
 $MESS["BPAA_PD_TIME_D"] = "days";
 $MESS["BPAA_PD_TIME_H"] = "hours";
 $MESS["BPAA_PD_TIME_M"] = "minutes";
@@ -26,4 +26,8 @@ $MESS["BPAR_PD_TASK_BUTTON1_MESSAGE"] = "Accept button text";
 $MESS["BPAR_PD_TASK_BUTTON2_MESSAGE"] = "Reject button text";
 $MESS["BPAR_PD_ACCESS_CONTROL"] = "Show assignment description only to responsible persons";
 $MESS["BPAA_PD_TIMEOUT_LIMIT"] = "Minimum approval time";
+$MESS["BPAR_PD_COMMENT_REQUIRED"] = "Comment is required";
+$MESS["BPAR_PD_COMMENT_REQUIRED_YA"] = "Only when approved";
+$MESS["BPAR_PD_COMMENT_REQUIRED_YR"] = "Only when declined";
+$MESS["BPAR_PD_DELEGATION_TYPE"] = "Delegate to";
 ?>

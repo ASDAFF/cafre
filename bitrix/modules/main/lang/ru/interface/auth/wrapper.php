@@ -29,4 +29,5 @@ $MESS["AUTH_GOTO_CHANGE_FORM"] = "Перейти на форму для смены пароля";
 $MESS["AUTH_GET_CHECK_STRING"] = "Выслать контрольную строку";
 $MESS["AUTH_GET_CHECK_STRING_SENT"] = "Контрольная строка выслана";
 $MESS["AUTH_SEND"] = "Выслать";
+$MESS["AUTH_NW_SECTION"] = "Или войдите через";
 ?>

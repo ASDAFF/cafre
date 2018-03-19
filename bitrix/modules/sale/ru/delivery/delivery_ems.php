@@ -12,7 +12,7 @@ CModule::IncludeModule("sale");
 IncludeModuleLangFile($_SERVER["DOCUMENT_ROOT"].'/bitrix/modules/sale/delivery/delivery_ems.php');
 
 define('DELIVERY_EMS_CACHE_LIFETIME', 2592000); // cache lifetime - 30 days (60*60*24*30)
-define('DELIVERY_EMS_PRICE_TARIFF', 0.01); // price koefficient - 1%
+define('DELIVERY_EMS_PRICE_TARIFF', 0.004956); // declared value koeff - 0,42% + VAT. https://www.pochta.ru/support/post-rules/valuable-departure
 define('DELIVERY_EMS_WRITE_LOG', 0); // flag 'write to log'. use CDeliveryEMS::__WriteToLog() for logging.
 
 class CDeliveryEMS
@@ -45,6 +45,8 @@ class CDeliveryEMS
 
 			"COMPABILITY" => array("CDeliveryEMS", "Compability"),
 			"CALCULATOR" => array("CDeliveryEMS", "Calculate"),
+
+			"DEPRECATED" => "Y",
 
 			/* List of delivery profiles */
 			"PROFILES" => array(
@@ -286,42 +288,104 @@ class CDeliveryEMS
 	function __GetLocation($location)
 	{
 		$arLocation = CSaleHelper::getLocationByIdHitCached($location);
-
 		$arLocation["IS_RUSSIAN"] = CDeliveryEMS::__IsRussian($arLocation) ? "Y" : "N";
 
 		if ($arLocation["IS_RUSSIAN"] == 'Y')
 		{
-			static $arEMSCityList;
-
-			if (!is_array($arEMSCityList))
+			// Cities
+			if(!empty($arLocation['CITY_NAME_ORIG']) || !empty($arLocation['CITY_SHORT_NAME']) || !empty($arLocation['CITY_NAME_LANG']) || !empty($arLocation['CITY_NAME']))
 			{
-				if (file_exists(dirname(__FILE__).'/ems/city.php'))
-					require_once(dirname(__FILE__).'/ems/city.php');
-			}
+				static $arEMSCityList;
 
-			$arLocation['CITY_NAME_ORIG'] = ToUpper($arLocation['CITY_NAME_ORIG']);
-			$arLocation['CITY_SHORT_NAME'] = ToUpper($arLocation['CITY_SHORT_NAME']);
-			$arLocation['CITY_NAME_LANG'] = ToUpper($arLocation['CITY_NAME_LANG']);
-			$arLocation['CITY_NAME'] = ToUpper($arLocation['CITY_NAME']);
+				if (!is_array($arEMSCityList))
+				{
+					if (file_exists(dirname(__FILE__).'/ems/city.php'))
+						require_once(dirname(__FILE__).'/ems/city.php');
+				}
 
-			if (is_array($arEMSCityList))
-			{
-				$arLocation['EMS_ID'] =
-					$arEMSCityList[$arLocation['CITY_NAME_ORIG']] ? $arEMSCityList[$arLocation['CITY_NAME_ORIG']] :	(
-						$arEMSCityList[$arLocation['CITY_SHORT_NAME']] ? $arEMSCityList[$arLocation['CITY_SHORT_NAME']] : (
-							$arEMSCityList[$arLocation['CITY_NAME_LANG']] ? $arEMSCityList[$arLocation['CITY_NAME_LANG']] : (
-								$arEMSCityList[$arLocation['CITY_NAME']] ? $arEMSCityList[$arLocation['CITY_NAME']] : (
-									$arEMSCityList[ToUpper($arLocation['CITY_NAME'])] ? $arEMSCityList[ToUpper($arLocation['CITY_NAME'])] : ''
+				$arLocation['CITY_NAME_ORIG'] = ToUpper($arLocation['CITY_NAME_ORIG']);
+				$arLocation['CITY_SHORT_NAME'] = ToUpper($arLocation['CITY_SHORT_NAME']);
+				$arLocation['CITY_NAME_LANG'] = ToUpper($arLocation['CITY_NAME_LANG']);
+				$arLocation['CITY_NAME'] = ToUpper($arLocation['CITY_NAME']);
+
+				if (is_array($arEMSCityList))
+				{
+					$arLocation['EMS_ID'] =
+						$arEMSCityList[$arLocation['CITY_NAME_ORIG']] ? $arEMSCityList[$arLocation['CITY_NAME_ORIG']] :	(
+							$arEMSCityList[$arLocation['CITY_SHORT_NAME']] ? $arEMSCityList[$arLocation['CITY_SHORT_NAME']] : (
+								$arEMSCityList[$arLocation['CITY_NAME_LANG']] ? $arEMSCityList[$arLocation['CITY_NAME_LANG']] : (
+									$arEMSCityList[$arLocation['CITY_NAME']] ? $arEMSCityList[$arLocation['CITY_NAME']] : (
+										$arEMSCityList[ToUpper($arLocation['CITY_NAME'])] ? $arEMSCityList[ToUpper($arLocation['CITY_NAME'])] : ''
+									)
 								)
 							)
-						)
-					);
+						);
 
-				$arLocation['EMS_TYPE'] = 'city';
+					$arLocation['EMS_TYPE'] = 'city';
+				}
+				else
+				{
+					$arLocation['EMS_CITIES_NOT_LOADED'] = true;
+				}
 			}
-			else
+
+
+			if(empty($arLocation['EMS_ID']) && (!empty($arLocation['REGION_NAME_ORIG']) || !empty($arLocation['REGION_SHORT_NAME']) || !empty($arLocation['REGION_NAME_LANG']) || !empty($arLocation['REGION_NAME'])))
 			{
-				$arLocation['EMS_CITIES_NOT_LOADED'] = true;
+				// Regions
+				static $arEMSRegionList;
+
+				if (!is_array($arEMSRegionList))
+				{
+					if (file_exists(dirname(__FILE__).'/ems/region.php'))
+						require_once(dirname(__FILE__).'/ems/region.php');
+				}
+
+				if($arLocation['REGION_NAME_ORIG'] == 'Ñàõà /ßêóòèÿ/ Ðåñï' || $arLocation['REGION_NAME_ORIG'] == 'Ðåñïóáëèêà Ñàõà (ßêóòèÿ)')
+					$arLocation['REGION_NAME_ORIG']  = 'ÑÀÕÀ (ßÊÓÒÈß) ÐÅÑÏÓÁËÈÊÀ';
+				elseif($arLocation['REGION_NAME_ORIG'] == 'Åâðåéñêàÿ Àîáë')
+					$arLocation['REGION_NAME_ORIG']  = 'ÅÂÐÅÉÑÊÀß ÀÂÒÎÍÎÌÍÀß ÎÁËÀÑÒÜ';
+				elseif($arLocation['REGION_NAME_ORIG'] == 'Íåíåöêèé ÀÎ')
+					$arLocation['REGION_NAME_ORIG']  = 'ÍÅÍÅÖÊÈÉ ÀÂÒÎÍÎÌÍÛÉ ÎÊÐÓÃ';
+				elseif($arLocation['REGION_NAME_ORIG'] == 'Ñåâåðíàÿ Îñåòèÿ - Àëàíèÿ Ðåñï')
+					$arLocation['REGION_NAME_ORIG']  = 'ÑÅÂÅÐÍÀß ÎÑÅÒÈß-ÀËÀÍÈß ÐÅÑÏÓÁËÈÊÀ';
+				elseif($arLocation['REGION_NAME_ORIG'] == 'Õàíòû-Ìàíñèéñêèé Àâòîíîìíûé îêðóã - Þãðà ÀÎ' || $arLocation['REGION_NAME_ORIG'] == 'Õàíòû-Ìàíñèéñêèé àâòîíîìíûé îêðóã')
+					$arLocation['REGION_NAME_ORIG']  = 'ÕÀÍÒÛ-ÌÀÍÑÈÉÑÊÈÉ-ÞÃÐÀ ÀÂÒÎÍÎÌÍÛÉ ÎÊÐÓÃ';
+				elseif($arLocation['REGION_NAME_ORIG'] == '×óêîòñêèé ÀÎ')
+					$arLocation['REGION_NAME_ORIG']  = '×ÓÊÎÒÑÊÈÉ ÀÂÒÎÍÎÌÍÛÉ ÎÊÐÓÃ';
+				elseif($arLocation['REGION_NAME_ORIG'] == 'ßìàëî-Íåíåöêèé ÀÎ')
+					$arLocation['REGION_NAME_ORIG']  = 'ßÌÀËÎ-ÍÅÍÅÖÊÈÉ ÀÂÒÎÍÎÌÍÛÉ ÎÊÐÓÃ';
+				elseif($arLocation['REGION_NAME_ORIG'] == 'Êðûì')
+					$arLocation['REGION_NAME_ORIG']  = 'ÊÐÛÌ ÐÅÑÏÓÁËÈÊÀ';
+
+				$arLocation['REGION_NAME_ORIG'] = preg_replace('/\sÎÁË$/i'.BX_UTF_PCRE_MODIFIER, ' ÎÁËÀÑÒÜ', ToUpper($arLocation['REGION_NAME_ORIG']));
+				$arLocation['REGION_NAME_ORIG'] = preg_replace('/\sÐÅÑÏ$/'.BX_UTF_PCRE_MODIFIER, ' ÐÅÑÏÓÁËÈÊÀ', ToUpper($arLocation['REGION_NAME_ORIG']));
+				$arLocation['REGION_NAME_ORIG'] = preg_replace('/^(ÐÅÑÏÓÁËÈÊÀ)\s*(.*)$/'.BX_UTF_PCRE_MODIFIER, '$2 $1', ToUpper($arLocation['REGION_NAME_ORIG']));
+
+				$arLocation['REGION_NAME_ORIG'] = ToUpper($arLocation['REGION_NAME_ORIG']);
+				$arLocation['REGION_SHORT_NAME'] = ToUpper($arLocation['REGION_SHORT_NAME']);
+				$arLocation['REGION_NAME_LANG'] = ToUpper($arLocation['REGION_NAME_LANG']);
+				$arLocation['REGION_NAME'] = ToUpper($arLocation['REGION_NAME']);
+
+				if (is_array($arEMSRegionList))
+				{
+					$arLocation['EMS_ID'] =
+						$arEMSRegionList[$arLocation['REGION_NAME_ORIG']] ? $arEMSRegionList[$arLocation['REGION_NAME_ORIG']] :	(
+						$arEMSRegionList[$arLocation['REGION_SHORT_NAME']] ? $arEMSRegionList[$arLocation['REGION_SHORT_NAME']] : (
+						$arEMSRegionList[$arLocation['REGION_NAME_LANG']] ? $arEMSRegionList[$arLocation['REGION_NAME_LANG']] : (
+						$arEMSRegionList[$arLocation['REGION_NAME']] ? $arEMSRegionList[$arLocation['REGION_NAME']] : (
+						$arEMSRegionList[ToUpper($arLocation['REGION_NAME'])] ? $arEMSRegionList[ToUpper($arLocation['REGION_NAME'])] : ''
+						)
+						)
+						)
+						);
+
+					$arLocation['EMS_TYPE'] = 'region';
+				}
+				else
+				{
+					$arLocation['EMS_REGIONS_NOT_LOADED'] = true;
+				}
 			}
 		}
 		else
@@ -412,6 +476,46 @@ class CDeliveryEMS
 			);
 		}
 
+		if (isset($arLocationTo['EMS_REGIONS_NOT_LOADED']))
+		{
+			// get cities and proceed to next step
+
+			$data = CDeliveryEMS::__EMSQuery('ems.get.locations', array('type' => 'regions', 'plain' => 'true'));
+
+			if (!is_array($data) || $data['rsp']['stat'] != 'ok' || !is_array($data['rsp']['locations']))
+			{
+				return array(
+					"RESULT" => "ERROR",
+					"TEXT" => GetMessage('SALE_DH_EMS_ERROR_CONNECT'),
+				);
+			}
+
+			$arEMSRegionList = array();
+			foreach ($data['rsp']['locations'] as $arLocation)
+			{
+				$arEMSRegionList[$arLocation['name']] = $arLocation['value'];
+			}
+
+			$path = dirname(__FILE__);
+			CheckDirPath($path."/ems/");
+			if ($fp = fopen($path."/ems/region.php", "w"))
+			{
+				fwrite($fp, '<'."?\r\n");
+				fwrite($fp, '$'."arEMSRegionList = array();\r\n");
+				foreach ($arEMSRegionList as $key => $value)
+				{
+					fwrite($fp, '$'."arEMSRegionList['".addslashes($key)."'] = '".htmlspecialcharsbx(trim($value))."';\r\n");
+				}
+				fwrite($fp, '?'.'>');
+				fclose($fp);
+			}
+
+			return array(
+				"RESULT" => "NEXT_STEP",
+				"TEXT" => GetMessage('SALE_DH_EMS_CORRECT_REGIONS'),
+			);
+		}
+
 		if (isset($arLocationTo['EMS_COUNTRIES_NOT_LOADED']))
 		{
 			// get cities and proceed to next step
@@ -459,7 +563,7 @@ class CDeliveryEMS
 		if (!$arLocationTo['EMS_ID'])
 		{
 			if ($arLocationTo['IS_RUSSIAN'] == 'Y')
-				$text = str_replace('#CITY#', $arLocationTo['CITY_NAME_ORIG'], GetMessage('SALE_DH_EMS_ERROR_NO_CITY_TO'));
+				$text = GetMessage('SALE_DH_EMS_ERROR_NO_LOCATION_TO');
 			else
 				$text = str_replace('#COUNTRY#', $arLocationTo['COUNTRY_NAME_ORIG'], GetMessage('SALE_DH_EMS_ERROR_NO_COUNTRY_TO'));
 
@@ -513,22 +617,14 @@ class CDeliveryEMS
 		$arParams = array();
 
 		if ($arLocationTo['IS_RUSSIAN'] != 'Y')
-		{
 			$arParams['type'] = $arConfig["category"]["VALUE"];
-		}
 		else
-		{
 			$arParams['from'] = $arLocationFrom['EMS_ID'];
-		}
 
 		$arParams['to'] = $arLocationTo['EMS_ID'];
 		$arParams['weight'] = $arOrder['WEIGHT'] / 1000;
-
 		$arParams['plain'] = 'true';
-
 		$data = CDeliveryEMS::__EMSQuery('ems.calculate', $arParams);
-
-		//echo '<pre style="text-align: left;">answer: '; print_r($data); echo '</pre>';
 
 		if (is_array($data) && $data['rsp']['stat'] == 'ok')
 		{
@@ -551,7 +647,7 @@ class CDeliveryEMS
 
 			return array(
 				"RESULT" => "OK",
-				"VALUE" => $data['rsp']['price'],
+				"VALUE" => $result,
 				'TRANSIT' => $data['rsp']['term']['min'].'-'.$data['rsp']['term']['max']." ".GetMessage("SALE_DH_EMS_DAYS")
 			);
 		}
@@ -564,6 +660,9 @@ class CDeliveryEMS
 
 	function Compability($arOrder, $arConfig)
 	{
+		//It will work never.
+		return array();
+
 		$arLocationFrom = CSaleHelper::getLocationByIdHitCached($arOrder["LOCATION_FROM"]);
 		$arLocationTo = CDeliveryEMS::__GetLocation($arOrder["LOCATION_TO"]);
 

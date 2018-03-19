@@ -103,24 +103,29 @@ if($isAdmin && !$fb && check_bitrix_sessid())
 		else
 			$fn = $_SERVER["DOCUMENT_ROOT"].getLocalPath("modules/".preg_replace("/[^a-z0-9.]/", "", $_REQUEST["id"])."/install/version.php");
 
+		$count = intval($_REQUEST['count']);
+		$count = $count > 0? $count: 1;
+
 		if(file_exists($fn) && is_file($fn))
 		{
 			$fc = file_get_contents($fn);
 			if(preg_match("/(\\d+)\\.(\\d+)\\.(\\d+)/", $fc, $match))
 			{
-				if($match[3] > 20)
-					$match[3] -= 10;
-				elseif($match[3] > 0)
-					$match[3] -= 1;
+				if ($match[3]-$count >= 0)
+				{
+					$match[3] -= $count;
+				}
 				else
 				{
-					$match[3] = 99;
-					if($match[2] == 5)
-						$match[2] = 0;
+					$match[3] = (100-$count)+($match[3]);
+					if ($match[2] == 0)
+					{
+						$match[2] = 9;
+						$match[1] -= 1;
+					}
 					else
 					{
-						$match[2] = 5;
-						$match[1] -= 1;
+						$match[2] -= 1;
 					}
 				}
 
@@ -147,14 +152,14 @@ require($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/include/prolog_admin_af
 <script>
 function DoAction(oEvent, action, module_id)
 {
-	if (oEvent.ctrlKey || BX.browser.IsMac() && oEvent.altKey)
+	if (oEvent.ctrlKey || BX.browser.IsMac() && (oEvent.altKey || oEvent.metaKey))
 	{
 		BX('version_for_' + module_id).className = 'no-select';
 		if(action == 'version_down')
 		{
 			ShowWaitWindow();
 			BX.ajax.post(
-				'module_admin.php?lang=<?echo LANGUAGE_ID?>&id='+module_id+'&<?echo bitrix_sessid_get()?>&action='+action,
+				'module_admin.php?lang=<?echo LANGUAGE_ID?>&id='+module_id+'&count='+(oEvent.shiftKey? 10: 1)+'&<?echo bitrix_sessid_get()?>&action='+action,
 				null,
 				function(result){
 					CloseWaitWindow();
@@ -200,7 +205,7 @@ foreach($arModules as $info) :
 				<input type="hidden" name="id" value="<?echo htmlspecialcharsbx($info["MODULE_ID"])?>">
 				<?=bitrix_sessid_post()?>
 				<?if($info["IsInstalled"]):?>
-					<input <?if (!$isAdmin || $info["MODULE_ID"] == 'fileman' || $info["MODULE_ID"] == 'intranet') echo "disabled" ?> type="submit" name="uninstall" value="<?echo GetMessage("MOD_DELETE")?>">
+					<input <?if (!$isAdmin || in_array($info["MODULE_ID"], array("fileman", "intranet", "ui"))) echo "disabled" ?> type="submit" name="uninstall" value="<?echo GetMessage("MOD_DELETE")?>">
 				<?else:?>
 					<input <?if (!$isAdmin) echo "disabled" ?> type="submit" class="adm-btn-green" name="install" value="<?echo GetMessage("MOD_INSTALL_BUTTON")?>">
 				<?endif?>

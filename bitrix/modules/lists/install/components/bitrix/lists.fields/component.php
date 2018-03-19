@@ -69,17 +69,21 @@ $arParams["CAN_EDIT"] =
 	)
 ;
 
+CUtil::JSPostUnescape();
+
 $arIBlock = CIBlock::GetArrayByID(intval($arParams["~IBLOCK_ID"]));
 $arResult["~IBLOCK"] = $arIBlock;
 $arResult["IBLOCK"] = htmlspecialcharsex($arIBlock);
 $arResult["IBLOCK_ID"] = $arIBlock["ID"];
+$arResult["RAND_STRING"] = $this->randString();
+$arResult['JS_OBJECT'] = 'ListClass_'.$arResult['RAND_STRING'];
 
 if(isset($arParams["SOCNET_GROUP_ID"]) && $arParams["SOCNET_GROUP_ID"] > 0)
 	$arParams["SOCNET_GROUP_ID"] = intval($arParams["SOCNET_GROUP_ID"]);
 else
 	$arParams["SOCNET_GROUP_ID"] = "";
 
-$arResult["GRID_ID"] = "lists_fields";
+$arResult["GRID_ID"] = "lists_fields_".$arResult["IBLOCK_ID"];
 
 $arResult["~LISTS_URL"] = str_replace(
 	array("#group_id#"),
@@ -150,9 +154,6 @@ if(
 		//Clear components cache
 		$CACHE_MANAGER->ClearByTag("lists_list_".$arResult["IBLOCK_ID"]);
 	}
-
-	if(!isset($_POST["AJAX_CALL"]))
-		LocalRedirect($arResult["LIST_FIELDS_URL"]);
 }
 
 global $CACHE_MANAGER;
@@ -195,12 +196,11 @@ if($this->StartResultCache(false))
 
 		$aCols = array(
 			"TYPE" => $arResult["TYPES"][$data["TYPE"]],
-			"NAME" => '<a target="_self" href="'.$data["LIST_FIELD_EDIT_URL"].'">'.$data["NAME"].'</a>',
+			"NAME" => '<a target="_self" href="'.$data["LIST_FIELD_EDIT_URL"].'">'.$data["NAME"].'</a>'
 		);
 
 		$aActions = array(
 			array(
-				"ICONCLASS" => "edit",
 				"TEXT" => GetMessage("CC_BLF_ACTION_MENU_EDIT"),
 				"ONCLICK" => "jsUtils.Redirect(arguments, '".CUtil::JSEscape($data["~LIST_FIELD_EDIT_URL"])."')",
 				"DEFAULT" => true,
@@ -209,34 +209,54 @@ if($this->StartResultCache(false))
 
 		if($data["TYPE"] != "NAME")
 		{
-			$aActions[] = array("SEPARATOR" => true);
 			$aActions[] = array(
-				"ICONCLASS" => "delete",
 				"TEXT" => GetMessage("CC_BLF_ACTION_MENU_DELETE"),
-				"ONCLICK" => "bxGrid_".$arResult["GRID_ID"].".DeleteItem('".$ID."', '".GetMessage("CC_BLF_ACTION_MENU_DELETE_CONF")."')",
+				"ONCLICK" => "javascript:BX.Lists['".$arResult['JS_OBJECT']."'].deleteRow('".
+					$arResult["GRID_ID"]."', '".$ID."')",
 			);
 		}
 
-		$aEditable = array();
+		$data["DEFAULT"] = true;
+		$data["DEFAULT_VALUE"] = Bitrix\Lists\Field::renderField($data);
+
+		$editable = array();
 		if($obList->is_field($arField["TYPE"]))
 		{
-			$aEditable["MULTIPLE"] = false;
+			$editable["MULTIPLE"] = false;
 			$data["MULTIPLE"] = "N";
 		}
-
 		if($obList->is_readonly($ID))
 		{
-			$aEditable["IS_REQUIRED"] = false;
+			$editable["IS_REQUIRED"] = false;
 			$data["IS_REQUIRED"] = "N";
 		}
 		elseif($ID == "NAME")
 		{
-			$aEditable["IS_REQUIRED"] = false;
+			$editable["IS_REQUIRED"] = false;
 			$data["IS_REQUIRED"] = "Y";
 		}
 
-		$arResult["ROWS"][] = array("id" => $ID, "data"=>$data, "actions"=>$aActions, "columns"=>$aCols, "editable"=>$aEditable);
+		$arResult["ROWS"][] = array(
+			"id" => $ID, 
+			"data" => $data,
+			"actions" => $aActions,
+			"columns" => $aCols,
+			"editable" => $editable
+		);
 	}
+
+	$snippet = new \Bitrix\Main\Grid\Panel\Snippet();
+	$actionsPanel = array(
+		"GROUPS" => array(
+			array("ITEMS" =>
+				array(
+					$snippet->getEditButton(),
+					$snippet->getRemoveButton()
+				)
+			)
+		)
+	);
+	$arResult["ACTION_PANEL"] = $actionsPanel;
 
 	$CACHE_MANAGER->EndTagCache();
 	$this->EndResultCache();
@@ -244,10 +264,7 @@ if($this->StartResultCache(false))
 
 $this->IncludeComponentTemplate();
 
-if($arParams["IBLOCK_TYPE_ID"] == COption::GetOptionString("lists", "livefeed_iblock_type_id"))
-	$APPLICATION->SetTitle(GetMessage("CC_BLF_TITLE_EDIT_PROCESS", array("#NAME#" => $arResult["IBLOCK"]["NAME"])));
-else
-	$APPLICATION->SetTitle(GetMessage("CC_BLF_TITLE_EDIT", array("#NAME#" => $arResult["IBLOCK"]["NAME"])));
+$APPLICATION->SetTitle(GetMessage("CC_BLF_TITLE_FIELDS", array("#NAME#" => $arResult["IBLOCK"]["NAME"])));
 
 $APPLICATION->AddChainItem($arResult["IBLOCK"]["NAME"], $arResult["~LIST_URL"]);
 

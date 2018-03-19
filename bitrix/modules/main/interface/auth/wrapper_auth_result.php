@@ -1,12 +1,22 @@
-<?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) die();?>
 <?
+if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)
+{
+	die();
+}
+
 if (!is_array($arAuthResult))
+{
 	$arAuthResult = array("TYPE" => "ERROR", "MESSAGE" => $arAuthResult);
+}
 
 if($inc_file === "otp")
 {
 	$arAuthResult['CAPTCHA'] = CModule::IncludeModule("security")
 		&& \Bitrix\Security\Mfa\Otp::isCaptchaRequired();
+}
+elseif($inc_file == 'forgot_password' || $inc_file == 'change_password')
+{
+	$arAuthResult['CAPTCHA'] = COption::GetOptionString("main", "captcha_restoring_password", "N") == "Y";
 }
 else
 {

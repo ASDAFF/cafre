@@ -1,104 +1,123 @@
-<style type="text/css">
-	.bx-mailpost{font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;}
-	.bx-mailpost-tablecontent{}
-	.bx-text-50,
-	.bx-text-33,
-	.bx-images-left,
-	.bx-text-left,
-	.bx-text-right{
-		float: left;
-	}
-	.bx-text-33{width: 33%;}
-	.bx-images-right{float: right;}
-	.bx-images-right,
-	.bx-images-left{
-		width: 30%;
-	}
-	.bx-text-right,
-	.bx-text-left{
-		width: 70%;
-		text-align: left
-	}
-	@media (max-width: 480px){
-		.bx-text-50,
-		.bx-text-33,
-		.bx-images-left,
-		.bx-images-right,
-		.bx-text-left,
-		.bx-text-right{
-			display: block !important;
-			width: 100% !important;
-			float: none !important;
-		}
-		.bx-images-left,
-		.bx-images-right{
-			text-align: center !important;
-		}
-
-	}
-</style>
-<table class="bx-mailpost" width="100%" cellspacing="0" cellpadding="0" border="0">
+<table class="mail-grid" width="640" border="0" cellpadding="0" cellspacing="0">
 	<tr>
-		<td style="padding:5px;" align="center">
+		<td>
 
-			<table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;max-width:600px;">
+			<table class="mail-grid-cell"   width="100%" border="0" cellspacing="0" cellpadding="0" align="center">
 				<tr>
-					<td style="padding:5px;" align="middle">
+					<td data-bx-block-editor-place="body">
+						<!-- content -->
+						<div data-bx-block-editor-block-type="text">
+							<table border="0" cellpadding="0" cellspacing="0" width="100%" class="bxBlockText">
+								<tbody class="bxBlockOut">
+								<tr>
+									<td valign="top" class="bxBlockInn bxBlockInnText">
+										<table align="left" border="0" cellpadding="0" cellspacing="0" width="100%">
+											<tbody>
+											<tr>
+												<td valign="top" class="bxBlockPadding bxBlockContentText">
+													<h2>%HEADER%</h2><br>%TEXT1%
+												</td>
+											</tr>
+											</tbody>
+										</table>
+									</td>
+								</tr>
+								</tbody>
+							</table>
+						</div>
 
-						<table cellpadding="0">
-							<tr>
-								<td style="padding:5px;vertical-align: top;">
-									<b>Lorem ipsum</b>
-									<p>
-										Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-									</p>
-								</td>
-							</tr>
-						</table>
+						<div data-bx-block-editor-block-type="imagegroup">
+							<table border="0" cellpadding="0" cellspacing="0" width="100%" class="bxBlockImageGroup">
+								<tbody class="bxBlockOut">
+								<tr>
+									<td valign="top" class="bxBlockInn bxBlockInnImageGroup">
+										<table align="left" border="0" cellpadding="0" cellspacing="0">
+											<tbody>
+											<tr>
+												<td valign="top" class="bxBlockContentImageGroup">
+													<table align="left" border="0" cellpadding="0" cellspacing="0" width="260">
+														<tbody>
+														<tr>
+															<td valign="top" class="bxBlockPadding bxBlockContentImage">
+																<a href="#">
+																	<img align="left" data-bx-editor-def-image="0" src="/bitrix/images/sender/preset/blocked1/choco.jpg" class="bxImage">
+																</a>
+															</td>
+														</tr>
+														</tbody>
+													</table>
 
-						<br />
+													<table align="left" border="0" cellpadding="0" cellspacing="0" width="260">
+														<tbody>
+														<tr>
+															<td valign="top" class="bxBlockPadding bxBlockContentImage">
+																<a href="#">
+																	<img align="left" data-bx-editor-def-image="0" src="/bitrix/images/sender/preset/blocked1/ocean.jpg" class="bxImage">
+																</a>
+															</td>
+														</tr>
+														</tbody>
+													</table>
 
-						<table cellpadding="0">
-							<tr>
-								<td style="padding:5px;vertical-align: top;">
-									<img width="100%" src="/bitrix/images/sender/preset/default_wide.png" style="max-width:100%;height: auto;">
-								</td>
-							</tr>
-						</table>
+													<table align="left" border="0" cellpadding="0" cellspacing="0" width="260">
+														<tbody>
+														<tr>
+															<td valign="top" class="bxBlockPadding bxBlockContentImage">
+																<a href="#">
+																	<img align="left" data-bx-editor-def-image="0" src="/bitrix/images/sender/preset/blocked1/ocean.jpg" class="bxImage">
+																</a>
+															</td>
+														</tr>
+														</tbody>
+													</table>
 
-						<br />
+													<table align="left" border="0" cellpadding="0" cellspacing="0" width="260">
+														<tbody>
+														<tr>
+															<td valign="top" class="bxBlockPadding bxBlockContentImage">
+																<a href="#">
+																	<img align="left" data-bx-editor-def-image="0" src="/bitrix/images/sender/preset/blocked1/choco.jpg" class="bxImage">
+																</a>
+															</td>
+														</tr>
+														</tbody>
+													</table>
+												</td>
+											</tr>
+											</tbody>
+										</table>
+									</td>
+								</tr>
+								</tbody>
+							</table>
+						</div>
 
-						<table cellpadding="0">
-							<tr>
-								<td style="padding:5px;vertical-align: top;">
-									<b>Lorem ipsum</b>
-									<p>
-										Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-									</p>
-								</td>
-							</tr>
-						</table>
-
-						<br />
-
-						<table cellpadding="0">
-							<tr>
-								<td style="padding:5px;vertical-align: top;">
-									<b>Lorem ipsum</b>
-									<p>
-										Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-									</p>
-								</td>
-							</tr>
-						</table>
-
-						<br />
-
-						<div style="padding: 5px;">%TEXT_UNSUB_TEXT%<a href="#UNSUBSCRIBE_LINK#">%TEXT_UNSUB_LINK%</a></div>
-
+						<div data-bx-block-editor-block-type="button">
+							<table border="0" cellpadding="0" cellspacing="0" width="100%" class="bxBlockButton">
+								<tbody class="bxBlockOut">
+								<tr>
+									<td valign="top" class="bxBlockPadding bxBlockInn bxBlockInnButton">
+										<table align="center" border="0" cellpadding="0" cellspacing="0" class="bxBlockContentButtonEdge">
+											<tbody>
+											<tr>
+												<td valign="top">
+													<a class="bxBlockContentButton" title="%BUTTON%" href="/" target="_blank">
+														%BUTTON%
+													</a>
+												</td>
+											</tr>
+											</tbody>
+										</table>
+									</td>
+								</tr>
+								</tbody>
+							</table>
+						</div>
+						<!-- / content -->
 					</td>
 				</tr>
 			</table>
+
 		</td>
 	</tr>
 </table>

@@ -15,7 +15,10 @@ if (!CModule::IncludeModule('learning'))
 }
 
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/learning/prolog.php");
-IncludeModuleLangFile(__FILE__);
+Bitrix\Main\Localization\Loc::loadLanguageFile(__FILE__);
+Bitrix\Main\Localization\Loc::loadLanguageFile(dirname(__FILE__)."/learn_question_edit.php");
+
+
 
 $ATTEMPT_ID = intval($ATTEMPT_ID);
 
@@ -143,7 +146,8 @@ $lAdmin->AddHeaders(array(
 	array("id"=>"ANSWERED", "content"=>GetMessage('LEARNING_ADMIN_ANSWERED'),"sort" => "answered", "default"=>true),
 	array("id"=>"CORRECT", "content"=>GetMessage('LEARNING_ADMIN_CORRECT'),"sort" => "correct", "default"=>true),
 	array("id"=>"POINT", "content"=>GetMessage('LEARNING_ADMIN_POINT'),"sort"=>"point", "default"=>true),
-	array("id"=>"RESPONSE_TEXT", "content"=>GetMessage('LEARNING_ADMIN_USER_RESPONSE_TEXT'),"sort"=>"point", "default"=>true),
+	array("id"=>"RESPONSE_TEXT", "content"=>GetMessage('LEARNING_ADMIN_USER_RESPONSE_TEXT'), "default"=>true),
+	array("id"=>"CORRECT_REQUIRED", "content"=>GetMessage('LEARNING_CORRECT_REQUIRED'), "default"=> false),
 ));
 
 // building list
@@ -188,6 +192,8 @@ while($arRes = $rsData->NavNext(true, "f_"))
 	$row->AddCheckField("CORRECT");
 
 	$row->AddViewField('RESPONSE_TEXT', $arRes['RESPONSE_TEXT']);
+
+	$row->AddViewField("CORRECT_REQUIRED", $arData["CORRECT_REQUIRED"] === "Y" ? GetMessage("LEARNING_YES") : GetMessage("LEARNING_NO"));
 
 	$arActions = Array();
 

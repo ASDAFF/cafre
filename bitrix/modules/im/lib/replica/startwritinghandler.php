@@ -21,6 +21,11 @@ class StartWritingHandler extends \Bitrix\Replica\Client\BaseHandler
 
 	function onStartWriting($userId, $dialogId)
 	{
+		if (\Bitrix\Im\User::getInstance($userId)->isBot())
+		{
+			return true;
+		}
+
 		$operation = new \Bitrix\Replica\Db\Execute();
 		if (substr($dialogId, 0, 4) === "chat")
 		{
@@ -61,12 +66,14 @@ class StartWritingHandler extends \Bitrix\Replica\Client\BaseHandler
 				)
 			);
 		}
+
+		return true;
 	}
 
 	function onExecuteStartWriting(\Bitrix\Main\Event $event)
 	{
 		$parameters = $event->getParameters();
-		$userId = $parameters[0];
+		$userId = intval($parameters[0]);
 		$dialogId = $parameters[1].$parameters[2];
 
 		if ($userId > 0)
@@ -76,36 +83,67 @@ class StartWritingHandler extends \Bitrix\Replica\Client\BaseHandler
 
 			\CPushManager::DeleteFromQueueBySubTag($userId, 'IM_MESS');
 
-			if (intval($dialogId) > 0)
+			$userName = \Bitrix\Im\User::getInstance($userId)->getFullName();
+
+
+			if (substr($dialogId, 0, 4) == 'chat')
 			{
-				\CPullStack::AddByUser($dialogId, Array(
+				$chatId = substr($dialogId, 4);
+				$arRelation = \CIMChat::GetRelationById($chatId);
+				unset($arRelation[$userId]);
+
+				$chat = \Bitrix\Im\Model\ChatTable::getById($chatId);
+				$chatData = $chat->fetch();
+
+				$pullMessage = Array(
 					'module_id' => 'im',
 					'command' => 'startWriting',
 					'expiry' => 60,
 					'params' => Array(
-						'senderId' => $userId,
-						'dialogId' => $dialogId
+						'dialogId' => $dialogId,
+						'userId' => $userId,
+						'userName' => $userName
+					),
+					'extra' => Array(
+						'im_revision' => IM_REVISION,
+						'im_revision_mobile' => IM_REVISION_MOBILE,
+					),
+				);
+				if ($chatData['ENTITY_TYPE'] == 'LINES')
+				{
+					foreach ($arRelation as $rel)
+					{
+						if ($rel["EXTERNAL_AUTH_ID"] == 'imconnector')
+						{
+							unset($arRelation[$rel["USER_ID"]]);
+						}
+					}
+				}
+				\Bitrix\Pull\Event::add(array_keys($arRelation), $pullMessage);
+
+				$orm = \Bitrix\Im\Model\ChatTable::getById($chatId);
+				$chat = $orm->fetch();
+				if ($chat['TYPE'] == IM_MESSAGE_OPEN || $chat['TYPE'] == IM_MESSAGE_OPEN_LINE)
+				{
+					\CPullWatch::AddToStack('IM_PUBLIC_'.$chatId, $pullMessage);
+				}
+			}
+			else if (intval($dialogId) > 0)
+			{
+				\Bitrix\Pull\Event::add($dialogId, Array(
+					'module_id' => 'im',
+					'command' => 'startWriting',
+					'expiry' => 60,
+					'params' => Array(
+						'dialogId' => $userId,
+						'userId' => $userId,
+						'userName' => $userName
+					),
+					'extra' => Array(
+						'im_revision' => IM_REVISION,
+						'im_revision_mobile' => IM_REVISION_MOBILE,
 					),
 				));
-			}
-			elseif (substr($dialogId, 0, 4) == 'chat')
-			{
-				$arRelation = \CIMChat::GetRelationById(substr($dialogId, 4));
-				foreach ($arRelation as $rel)
-				{
-					if ($rel['USER_ID'] == $userId)
-						continue;
-
-					\CPullStack::AddByUser($rel['USER_ID'], Array(
-						'module_id' => 'im',
-						'command' => 'startWriting',
-						'expiry' => 60,
-						'params' => Array(
-							'senderId' => $userId,
-							'dialogId' => $dialogId
-						),
-					));
-				}
 			}
 		}
 	}

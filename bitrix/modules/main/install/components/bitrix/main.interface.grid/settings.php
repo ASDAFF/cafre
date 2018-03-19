@@ -17,7 +17,7 @@ define("NO_AGENT_STATISTIC", true);
 define("NOT_CHECK_PERMISSIONS", true);
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");
 
-if($USER->IsAuthorized() && check_bitrix_sessid())
+if($USER->IsAuthorized() && check_bitrix_sessid() && $_REQUEST["GRID_ID"] <> '')
 {
 	//get saved columns and sorting from user settings
 	$gridOptions = new CGridOptions($_REQUEST["GRID_ID"]);

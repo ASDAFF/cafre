@@ -213,7 +213,7 @@ class CAllSocNetMessages
 		return true;
 	}
 
-	function DeleteNoDemand($userID)
+	public static function DeleteNoDemand($userID)
 	{
 		global $DB;
 

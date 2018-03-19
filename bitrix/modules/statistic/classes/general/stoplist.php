@@ -1,18 +1,23 @@
-<?
+<?php
 IncludeModuleLangFile(__FILE__);
 
 class CAllStopList
 {
-	function GetByID($STOPLIST_ID)
+	public static function GetByID($STOPLIST_ID)
 	{
 		$STOPLIST_ID = intval($STOPLIST_ID);
 		if($STOPLIST_ID <= 0)
 			return false;
+
+		$by = '';
+		$order = '';
 		$arFilter = array(
 			"ID" => $STOPLIST_ID,
 			"ID_EXACT_MATCH" => "Y",
 		);
-		$rs = CStopList::GetList($v1, $v2, $arFilter, $v3);
+		$is_filtered = '';
+		$rs = CStopList::GetList($by, $order, $arFilter, $is_filtered);
+
 		return $rs;
 	}
 
@@ -167,7 +172,7 @@ class CAllStopList
 		return $DB->Query("DELETE FROM b_stop_list WHERE ID = ".$ID);
 	}
 
-	function CleanCache()
+	public static function CleanCache()
 	{
 		$DB = CDatabase::GetModuleConnection('statistic');
 		$file = $_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/managed_cache/".$DB->type."/b_stop_list";
@@ -175,4 +180,3 @@ class CAllStopList
 			unlink($file);
 	}
 }
-?>

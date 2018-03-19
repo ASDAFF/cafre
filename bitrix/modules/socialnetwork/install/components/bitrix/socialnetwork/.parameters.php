@@ -218,13 +218,6 @@ $arComponentParameters = array(
 				"DEFAULT" => "group/#user_id#/group_search/",
 				"VARIABLES" => array("user_id"),
 			),
-
-			"mail" => array(
-				"NAME" => GetMessage("SONET_SEF_PATH_MAIL"),
-				"DEFAULT" => "mail/",
-				"VARIABLES" => array(),
-			),
-
 			"message_form" => array(
 				"NAME" => GetMessage("SONET_SEF_PATH_MESSAGE_FORM"),
 				"DEFAULT" => "messages/form/#user_id#/",
@@ -457,20 +450,6 @@ $arComponentParameters = array(
 			"TYPE" => "STRING",
 			"MULTIPLE" => "N",
 			"DEFAULT" => "/bitrix/images/blog/smile/",
-		),
-		"PATH_TO_FORUM_SMILE" => Array(
-			"PARENT" => "ADDITIONAL_SETTINGS",
-			"NAME" => GetMessage("SONET_PATH_TO_FORUM_SMILE"),
-			"TYPE" => "STRING",
-			"MULTIPLE" => "N",
-			"DEFAULT" => "/bitrix/images/forum/smile/",
-		),
-		"SONET_PATH_TO_FORUM_ICON" => Array(
-			"PARENT" => "ADDITIONAL_SETTINGS",
-			"NAME" => GetMessage("SONET_PATH_TO_FORUM_ICON"),
-			"TYPE" => "STRING",
-			"MULTIPLE" => "N",
-			"DEFAULT" => "/bitrix/images/forum/icon/",
 		),
 		"CACHE_TIME"  =>  Array("DEFAULT" => 3600),
 		"SET_TITLE" => Array(),
@@ -1032,66 +1011,7 @@ if (CModule::IncludeModule("intranet"))
 		"VARIABLES" => array("group_id"),
 	);
 
-	$arIBlockTypeTask = array();
-	$rsIBlockTypeTask = CIBlockType::GetList(array("sort"=>"asc"), array("ACTIVE"=>"Y"));
-	while ($arrTask=$rsIBlockTypeTask->Fetch())
-	{
-		if($arTask=CIBlockType::GetByIDLang($arrTask["ID"], LANGUAGE_ID))
-			$arIBlockTypeTask[$arrTask["ID"]] = "[".$arrTask["ID"]."] ".$arTask["NAME"];
-	}
-
-	$arIBlockTask=array();
-	$rsIBlockTask = CIBlock::GetList(Array("sort" => "asc"), Array("TYPE" => $arCurrentValues["TASK_IBLOCK_TYPE"], "ACTIVE"=>"Y"));
-	while($arrTask=$rsIBlockTask->Fetch())
-		$arIBlockTask[$arrTask["ID"]] = "[".$arrTask["ID"]."] ".$arrTask["NAME"];
-
-	$arTasksFields = array(
-		"ID" => "[ID] ".GetMessage("INTL_TF_ID"),
-		"NAME" => "[NAME] ".GetMessage("INTL_TF_NAME"),
-		"CODE" => "[CODE] ".GetMessage("INTL_TF_CODE"),
-		"XML_ID" => "[XML_ID] ".GetMessage("INTL_TF_XML_ID"),
-		"MODIFIED_BY" => "[MODIFIED_BY] ".GetMessage("INTL_TF_MODIFIED_BY"),
-		"DATE_CREATE" => "[DATE_CREATE] ".GetMessage("INTL_TF_DATE_CREATE"),
-		"CREATED_BY" => "[CREATED_BY] ".GetMessage("INTL_TF_CREATED_BY"),
-		"DATE_ACTIVE_FROM" => "[DATE_ACTIVE_FROM] ".GetMessage("INTL_TF_DATE_ACTIVE_FROM"),
-		"DATE_ACTIVE_TO" => "[DATE_ACTIVE_TO] ".GetMessage("INTL_TF_DATE_ACTIVE_TO"),
-		"IBLOCK_SECTION" => "[IBLOCK_SECTION] ".GetMessage("INTL_TF_IBLOCK_SECTION"),
-		"DETAIL_TEXT" => "[DETAIL_TEXT] ".GetMessage("INTL_TF_DETAIL_TEXT"),
-	);
-
-	$dbTasksCustomProps = CIBlockProperty::GetList(
-		array("sort" => "asc", "name" => "asc"),
-		array("ACTIVE" => "Y", "IBLOCK_ID" => $arCurrentValues["TASK_IBLOCK_ID"])
-	);
-	while ($arTasksCustomProp = $dbTasksCustomProps->Fetch())
-	{
-		$ind = ((StrLen($arTasksCustomProp["CODE"]) > 0) ? $arTasksCustomProp["CODE"] : $arTasksCustomProp["ID"]);
-		$arTasksFields[StrToUpper($ind)] = "[".$ind."] ".$arTasksCustomProp["NAME"];
-	}
-
 	$arComponentParameters["GROUPS"]["TASKS"] = array("NAME" => GetMessage("INT_TASKS_GROUP"));
-
-	$arComponentParameters["PARAMETERS"]["TASK_IBLOCK_TYPE"] = Array(
-		"PARENT" => "TASKS",
-		"NAME" => GetMessage("INTL_TASK_IBLOCK_TYPE"),
-		"TYPE" => "LIST",
-		"VALUES" => $arIBlockTypeTask,
-		"REFRESH" => "Y",
-	);
-	$arComponentParameters["PARAMETERS"]["TASK_IBLOCK_ID"] = array(
-		"PARENT" => "TASKS",
-		"NAME" => GetMessage("INTL_TASK_IBLOCK"),
-		"TYPE" => "LIST",
-		"VALUES" => $arIBlockTask,
-		"REFRESH" => "Y",
-	);
-	$arComponentParameters["PARAMETERS"]["TASKS_FIELDS_SHOW"] = array(
-		"PARENT" => "TASKS",
-		"NAME" => GetMessage("INTL_TASKS_FIELDS_SHOW"),
-		"TYPE" => "LIST",
-		"MULTIPLE" => "Y",
-		"VALUES" => $arTasksFields,
-	);
 
 	if (CModule::IncludeModule("forum"))
 	{
@@ -1304,13 +1224,13 @@ if(CModule::IncludeModule("blog"))
 	$arComponentParameters["PARAMETERS"]["BLOG_IMAGE_MAX_WIDTH"] = Array(
 				"NAME" => GetMessage("BPC_IMAGE_MAX_WIDTH"),
 				"TYPE" => "STRING",
-				"DEFAULT" => 800,
+				"DEFAULT" => COption::GetOptionString('blog', 'image_max_width'),
 				"PARENT" => "BLOG_SETTINGS",
 			);
 	$arComponentParameters["PARAMETERS"]["BLOG_IMAGE_MAX_HEIGHT"] = Array(
 				"NAME" => GetMessage("BPC_IMAGE_MAX_HEIGHT"),
 				"TYPE" => "STRING",
-				"DEFAULT" => 800,
+				"DEFAULT" => COption::GetOptionString('blog', 'image_max_height'),
 				"PARENT" => "BLOG_SETTINGS",
 			);
 	$arComponentParameters["PARAMETERS"]["BLOG_COMMENT_AJAX_POST"] = Array(
@@ -1467,8 +1387,7 @@ if (CModule::IncludeModule("forum"))
 			$rVoteChannels = CAllVoteChannel::GetList($by, $order, array('ACTIVE' => 'Y'), $is_filtered);
 			if ($rVoteChannels)
 			{
-
-				__IncludeLang($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/components/bitrix/voting.current/lang/".LANGUAGE_ID."/.parameters.php");
+				\Bitrix\Main\Localization\Loc::loadLanguageFile($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/components/bitrix/voting.current/.parameters.php");
 
 				$defaultVoteChannel = -1;
 				while ($arVoteChannel = $rVoteChannels->Fetch())

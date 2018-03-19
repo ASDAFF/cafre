@@ -37,6 +37,7 @@ $MESS["SEC_REDIRECT_PARAMETER_NAME"] = "Имя параметра:";
 $MESS["SEC_REDIRECT_ADD"] = "Добавить";
 $MESS["SEC_REDIRECT_ACTIONS_HEADER"] = "Действия";
 $MESS["SEC_REDIRECT_ACTIONS"] = "Действия защиты от фишинга:";
+$MESS["SEC_REDIRECT_SHOW_MESSAGE_AND_STAY"] = "Показать сообщение о попытке перенаправления на другой сайт.";
 $MESS["SEC_REDIRECT_ACTION_SHOW_MESSAGE"] = "Перенаправить на другой сайт с показом сообщения и задержкой.";
 $MESS["SEC_REDIRECT_MESSAGE"] = "Сообщение:";
 $MESS["SEC_REDIRECT_TIMEOUT"] = "Задержка:";

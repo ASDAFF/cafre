@@ -22,6 +22,7 @@ include($_SERVER["DOCUMENT_ROOT"]."/bitrix/components/bitrix/socialnetwork_group
 	"SECTION_ID" => $arResult["VARIABLES"]["section_id"],
 	"LISTS_URL" => $arResult["PATH_TO_GROUP_LISTS"],
 	"LIST_EDIT_URL" => $arResult["PATH_TO_GROUP_LIST_EDIT"],
+	"LIST_FIELDS_URL" => $arResult["PATH_TO_GROUP_LIST_FIELDS"],
 	"LIST_URL" => $arResult["PATH_TO_GROUP_LIST_VIEW"],
 	"LIST_SECTIONS_URL" => $arResult["PATH_TO_GROUP_LIST_SECTIONS"],
 	"LIST_ELEMENT_URL" => $arResult["PATH_TO_GROUP_LIST_ELEMENT_EDIT"],

@@ -771,7 +771,7 @@ create table if not exists b_stat_event_list (
    EVENT_ID int(18) not null default '0',
    EVENT3 varchar(255),
    MONEY decimal(18,4) not null default '0.0000',
-   DATE_ENTER datetime not null default '0000-00-00 00:00:00',
+   DATE_ENTER datetime not null,
    REFERER_URL text,
    URL text,
    REDIRECT_URL text,
@@ -885,7 +885,7 @@ create table if not exists b_stat_phrase_list (
 create table if not exists b_stat_referer (
    ID int(18) not null auto_increment,
    DATE_FIRST datetime,
-   DATE_LAST datetime not null default '0000-00-00 00:00:00',
+   DATE_LAST datetime not null,
    SITE_NAME varchar(255) not null,
    SESSIONS int(18) not null default '0',
    HITS int(18) not null default '0',
@@ -981,7 +981,7 @@ create table if not exists b_stat_session (
 
 create table if not exists b_stat_page (
    ID int(11) not null auto_increment,
-   DATE_STAT date not null default '0000-00-00',
+   DATE_STAT date not null,
    DIR char(1) not null default 'N',
    URL text not null,
    URL_404 char(1) not null default 'N',

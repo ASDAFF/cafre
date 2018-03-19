@@ -440,7 +440,7 @@ else
 
 							$postUrl = str_replace(
 											array('#group_id#', '#wiki_name#'),
-											array(intval($arParams['SOCNET_GROUP_ID']), urlencode($arFields['NAME'])),
+											array(intval($arParams['SOCNET_GROUP_ID']), rawurlencode($arFields['NAME'])),
 											$arParams['~PATH_TO_POST']
 										);
 
@@ -454,7 +454,9 @@ else
 								}
 							}
 
-							$text4message =  $CWikiParser->Parse($arFields['DETAIL_TEXT'], $arFields['DETAIL_TEXT_TYPE'], $arCurImages);
+							$arCat = array();
+							$text4message = $CWikiParser->parseBeforeSave($arFields['DETAIL_TEXT'], $arCat);
+							$text4message =  $CWikiParser->Parse($text4message, $arFields['DETAIL_TEXT_TYPE'], $arCurImages);
 							$text4message = CWikiSocnet::PrepareTextForFeed($text4message);
 							$text4message = $CWikiParser->Clear($text4message);
 
@@ -510,7 +512,7 @@ else
 											"EXCLUDE_USERS" => array($arSoFields["USER_ID"])
 										);
 
-										CSocNetSubscription::NotifyGroup($arNotifyParams);										
+										CSocNetSubscription::NotifyGroup($arNotifyParams);
 									}
 								}
 							}
@@ -532,7 +534,7 @@ else
 									'MODULE_ID' => 'wiki',
 									'URL' => str_replace(
 										array('#group_id#', '#wiki_name#'),
-										array(intval($arParams['SOCNET_GROUP_ID']), urlencode($arFields['NAME'])),
+										array(intval($arParams['SOCNET_GROUP_ID']), rawurlencode($arFields['NAME'])),
 										$arParams['~PATH_TO_POST']
 									),
 									'CALLBACK_FUNC' => false,
@@ -675,7 +677,7 @@ else
 						{
 							$postUrl = str_replace(
 											array('#group_id#', '#wiki_name#'),
-											array(intval($arParams['SOCNET_GROUP_ID']), urlencode($newName)),
+											array(intval($arParams['SOCNET_GROUP_ID']), rawurlencode($newName)),
 											$arParams['~PATH_TO_POST']
 										);
 
@@ -736,7 +738,7 @@ else
 				if (!isset($_POST['apply']))
 					LocalRedirect(CHTTP::urlAddParams(CComponentEngine::MakePathFromTemplate($arParams['PATH_TO_POST'],
 						array(
-							'wiki_name' => urlencode($arParams['ELEMENT_NAME']),
+							'wiki_name' => rawurlencode($arParams['ELEMENT_NAME']),
 							'group_id' => CWikiSocnet::$iSocNetId,
 						)),
 						array('wiki_page_cache_clear' => 'Y'))
@@ -744,7 +746,7 @@ else
 				else
 					LocalRedirect(CHTTP::urlAddParams(CComponentEngine::MakePathFromTemplate($arParams['PATH_TO_POST_EDIT'],
 						array(
-							'wiki_name' => urlencode($arParams['ELEMENT_NAME']),
+							'wiki_name' => rawurlencode($arParams['ELEMENT_NAME']),
 							'group_id' => CWikiSocnet::$iSocNetId
 						)),
 						$arParams['IN_COMPLEX'] == 'Y' && $arParams['SEF_MODE'] == 'N' ? array($arParams['OPER_VAR'] => $arResult['WIKI_oper']) : array())
@@ -816,7 +818,7 @@ else
 	$arResult['PATH_TO_POST_EDIT'] = CHTTP::urlAddParams(
 		CComponentEngine::MakePathFromTemplate($arParams['PATH_TO_POST_EDIT'],
 			array(
-				'wiki_name' => urlencode($arParams['ELEMENT_NAME']),
+				'wiki_name' => rawurlencode($arParams['ELEMENT_NAME']),
 				'group_id' => CWikiSocnet::$iSocNetId
 			)
 		),
@@ -829,7 +831,7 @@ else
 	{
 		$arResult['PATH_TO_POST_EDIT_SUBMIT'] = CHTTP::urlAddParams(
 			CHTTP::urlDeleteParams(POST_FORM_ACTION_URI, array('SEF_APPLICATION_CUR_PAGE_URL')),
-			array('SEF_APPLICATION_CUR_PAGE_URL' => urlencode($arResult['~PATH_TO_POST_EDIT']))
+			array('SEF_APPLICATION_CUR_PAGE_URL' => rawurlencode($arResult['~PATH_TO_POST_EDIT']))
 		);
 	}
 	else

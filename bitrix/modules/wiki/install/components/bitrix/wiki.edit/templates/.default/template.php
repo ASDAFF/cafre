@@ -1,18 +1,17 @@
 <?
-use Bitrix\Main\Localization\Loc;
 if(!defined('B_PROLOG_INCLUDED') || B_PROLOG_INCLUDED!==true) die();
 ?>
 <script>
 	BX.message({
-		'FILE_NAME': '<?=Loc::getMessage('FILE_NAME')?>',
-		'CATEGORY_NAME': '<?=Loc::getMessage('CATEGORY_NAME')?>',
-		'WIKI_INSERT_IMAGE': '<?=Loc::getMessage('WIKI_INSERT_IMAGE')?>',
-		'WIKI_BUTTON_INSERT': '<?=Loc::getMessage('WIKI_BUTTON_INSERT')?>',
-		'WIKI_INSERT_CATEGORY': '<?=Loc::getMessage('WIKI_INSERT_CATEGORY')?>',
-		'WIKI_INSERT_HYPERLINK': '<?=Loc::getMessage('WIKI_INSERT_HYPERLINK')?>',
-		'WIKI_INSERT_EXTERANL_HYPERLINK': '<?=Loc::getMessage('WIKI_INSERT_EXTERANL_HYPERLINK')?>',
-		'WIKI_IMAGE_UPLOAD': '<?=Loc::getMessage('WIKI_IMAGE_UPLOAD')?>',
-		'WIKI_SAVE': '<?=Loc::getMessage('WIKI_SAVE')?>'
+		'FILE_NAME': '<?=GetMessageJS('FILE_NAME')?>',
+		'CATEGORY_NAME': '<?=GetMessageJS('CATEGORY_NAME')?>',
+		'WIKI_INSERT_IMAGE': '<?=GetMessageJS('WIKI_INSERT_IMAGE')?>',
+		'WIKI_BUTTON_INSERT': '<?=GetMessageJS('WIKI_BUTTON_INSERT')?>',
+		'WIKI_INSERT_CATEGORY': '<?=GetMessageJS('WIKI_INSERT_CATEGORY')?>',
+		'WIKI_INSERT_HYPERLINK': '<?=GetMessageJS('WIKI_INSERT_HYPERLINK')?>',
+		'WIKI_INSERT_EXTERANL_HYPERLINK': '<?=GetMessageJS('WIKI_INSERT_EXTERANL_HYPERLINK')?>',
+		'WIKI_IMAGE_UPLOAD': '<?=GetMessageJS('WIKI_IMAGE_UPLOAD')?>',
+		'WIKI_SAVE': '<?=GetMessageJS('WIKI_SAVE')?>'
 	});
 
 	window.wikiMainEditor = new BXWikiEditor({

@@ -3,20 +3,19 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/support/classes/general/
 
 class CTicket extends CAllTicket
 {
-
-	static function isnull( $field, $alternative )
+	public static function isnull( $field, $alternative )
 	{
 		return "ifnull(" . $field . "," . $alternative . ")";
 	}
 
-	function err_mess()
+	public static function err_mess()
 	{
 		$module_id = "support";
 		@include($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/".$module_id."/install/version.php");
 		return "<br>Module: ".$module_id." <br>Class: CTicket<br>File: ".__FILE__;
 	}
 
-	function AutoClose()
+	public static function AutoClose()
 	{
 		$err_mess = (CTicket::err_mess())."<br>Function: AutoClose<br>Line: ";
 		global $DB;
@@ -61,7 +60,7 @@ class CTicket extends CAllTicket
 		return "CTicket::AutoClose();";
 	}
 
-	function CleanUpOnline()
+	public static function CleanUpOnline()
 	{
 		$err_mess = (CTicket::err_mess())."<br>Function: CleanUpOnline<br>Line: ";
 		global $DB;
@@ -74,7 +73,7 @@ class CTicket extends CAllTicket
 		return "CTicket::CleanUpOnline();";
 	}
 
-	function GetOnline($ticketID)
+	public static function GetOnline($ticketID)
 	{
 		$err_mess = (CTicket::err_mess())."<br>Function: GetOnline<br>Line: ";
 		global $DB;
@@ -105,7 +104,7 @@ class CTicket extends CAllTicket
 		return $z;
 	}
 
-	function DeleteMessage($ID, $checkRights="Y")
+	public static function DeleteMessage($ID, $checkRights="Y")
 	{
 		$err_mess = (CTicket::err_mess())."<br>Function: DeleteMessage<br>Line: ";
 		global $DB;
@@ -161,7 +160,7 @@ class CTicket extends CAllTicket
 		}
 	}
 
-	function UpdateMessage($MESSAGE_ID, $arFields, $checkRights="Y")
+	public static function UpdateMessage($MESSAGE_ID, $arFields, $checkRights="Y")
 	{
 		$err_mess = (CTicket::err_mess())."<br>Function: UpdateMessage<br>Line: ";
 		global $DB, $USER;
@@ -311,7 +310,7 @@ class CTicket extends CAllTicket
 		}
 	}
 
-	function AddMessage($ticketID, $arFields, &$arrFILES, $checkRights="Y")
+	public static function AddMessage($ticketID, $arFields, &$arrFILES, $checkRights="Y")
 	{
 		if (strlen($arFields["MESSAGE"])>0 || (is_array($arFields["FILES"]) && count($arFields["FILES"])>0))
 		{
@@ -586,7 +585,7 @@ class CTicket extends CAllTicket
 		return $mid;
 	}
 
-	function GetStatus($ticketID)
+	public static function GetStatus($ticketID)
 	{
 		$err_mess = (CTicket::err_mess())."<br>Function: GetStatus<br>Line: ";
 		global $DB, $USER;
@@ -633,7 +632,7 @@ class CTicket extends CAllTicket
 		return false;
 	}
 
-	function GetList(&$by, &$order, $arFilter=Array(), &$isFiltered, $checkRights="Y", $getUserName="Y", $getExtraNames="Y", $siteID=false, $arParams = Array() )
+	public static function GetList(&$by, &$order, $arFilter=Array(), &$isFiltered, $checkRights="Y", $getUserName="Y", $getExtraNames="Y", $siteID=false, $arParams = Array() )
 	{
 		$err_mess = (CTicket::err_mess())."<br>Function: GetList<br>Line: ";
 		global $DB, $USER, $USER_FIELD_MANAGER;
@@ -1385,7 +1384,7 @@ class CTicket extends CAllTicket
 		return $res;
 	}
 
-	function GetSupportTeamList()
+	public static function GetSupportTeamList()
 	{
 		$err_mess = (CTicket::err_mess())."<br>Function: GetSupportTeamList<br>Line: ";
 		global $DB;
@@ -1452,7 +1451,7 @@ class CTicket extends CAllTicket
 		return $res;
 	}*/
 
-	function GetMessageList(&$by, &$order, $arFilter=Array(), &$isFiltered, $checkRights="Y", $getUserName="Y")
+	public static function GetMessageList(&$by, &$order, $arFilter=Array(), &$isFiltered, $checkRights="Y", $getUserName="Y")
 	{
 		$err_mess = (CTicket::err_mess())."<br>Function: GetMessageList<br>Line: ";
 		global $DB, $USER, $APPLICATION;
@@ -1593,7 +1592,7 @@ class CTicket extends CAllTicket
 		return $res;
 	}
 
-	function GetDynamicList(&$by, &$order, $arFilter=Array())
+	public static function GetDynamicList(&$by, &$order, $arFilter=Array())
 	{
 		$err_mess = (CTicket::err_mess())."<br>Function: GetDynamicList<br>Line: ";
 		global $DB;
@@ -1702,7 +1701,7 @@ class CTicket extends CAllTicket
 		return $res;
 	}
 
-	function GetMessageDynamicList(&$by, &$order, $arFilter=Array())
+	public static function GetMessageDynamicList(&$by, &$order, $arFilter=Array())
 	{
 		$err_mess = (CTicket::err_mess())."<br>Function: GetMessageDynamicList<br>Line: ";
 		global $DB;
@@ -1821,5 +1820,3 @@ class CTicket extends CAllTicket
 		return $res;
 	}
 }
-
-?>

@@ -25,7 +25,7 @@ create table b_medialib_item
 (
 	ID int not null auto_increment,
 	NAME varchar(255) not null,
-	ITEM_TYPE  char(30) not null,
+	ITEM_TYPE char(30) null,
 	DESCRIPTION text null,
 	DATE_CREATE datetime not null,
 	DATE_UPDATE datetime not null,

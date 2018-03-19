@@ -3,6 +3,10 @@
  * @var CMain $APPLICATION
  * @var CUser $USER
  */
+use \Bitrix\Main\UI;
+
+UI\Extension::load("ui.animations");
+
 $APPLICATION->SetAdditionalCSS("/bitrix/components/bitrix/socialnetwork.log.ex/templates/.default/style.css");
 $APPLICATION->SetAdditionalCSS("/bitrix/components/bitrix/socialnetwork.blog.blog/templates/.default/style.css");
 \Bitrix\Main\Page\Asset::getInstance()->addJs("/bitrix/components/bitrix/main.post.list/templates/.default/scripts_for_form.js");
@@ -16,8 +20,18 @@ if (!empty($arParams["RATING_TYPE_ID"]))
 	\Bitrix\Main\Page\Asset::getInstance()->addJs("/bitrix/js/main/rating_like.js");
 }
 
-CUtil::InitJSCore(array("date", "fx", "popup", "viewer"));
-$ajax_page = CUtil::JSEscape($APPLICATION->GetCurPageParam("", array("logajax", "bxajaxid", "logout")));
+CUtil::InitJSCore(array("date", "fx", "popup", "viewer", "tooltip", "clipboard"));
+if (CModule::IncludeModule('socialnetwork'))
+{
+	CUtil::InitJSCore(array("comment_aux"));
+}
+
+$tooltip_ajax_page = (
+	isset($arParams["AUTHOR_URL"])
+	&& $arParams["AUTHOR_URL"] != ""
+		? CUtil::JSEscape($APPLICATION->GetCurPageParam("", array("logajax", "bxajaxid", "logout")))
+		: ""
+);
 
 ob_start();
 ?>
@@ -29,12 +43,19 @@ ob_start();
 			#BEFORE_HEADER#
 			<div class="feed-com-avatar feed-com-avatar-#AUTHOR_AVATAR_IS#"><img src="#AUTHOR_AVATAR#" width="<?=$arParams["AVATAR_SIZE"]?>" height="<?=$arParams["AVATAR_SIZE"]?>" /></div>
 			<!--/noindex-->
-				<span class="feed-com-name feed-author-name feed-author-name-#AUTHOR_ID#">#AUTHOR_NAME#</span>
-				<a class="feed-com-name #AUTHOR_EXTRANET_STYLE# feed-author-name feed-author-name-#AUTHOR_ID#" id="bpc_#FULL_ID#" href="#AUTHOR_URL#">#AUTHOR_NAME#</a>
-				<script type="text/javascript">BX.tooltip('#AUTHOR_ID#', "bpc_#FULL_ID#", '<?=$ajax_page?>');</script>
+				<span class="feed-com-name #AUTHOR_EXTRANET_STYLE# feed-author-name feed-author-name-#AUTHOR_ID#">#AUTHOR_NAME#</span>
+				<a target="_top" class="feed-com-name #AUTHOR_EXTRANET_STYLE# feed-author-name feed-author-name-#AUTHOR_ID#" id="bpc_#FULL_ID#" href="<?=($arParams["AUTHOR_URL"] != "" ? "#AUTHOR_URL#" : "javascript:void(0);")?>">#AUTHOR_NAME#</a>
+				<?
+				if ($arParams["AUTHOR_URL"] != "")
+				{
+					?>
+					<script type="text/javascript">BX.tooltip('#AUTHOR_ID#', "bpc_#FULL_ID#", '<?=$tooltip_ajax_page?>', '', false, #AUTHOR_TOOLTIP_PARAMS#);</script>
+					<?
+				}
+				?>
 			<!--/noindex-->
 			<div class="feed-com-informers">
-				<span class="feed-time">#DATE#</span>
+				<span class="feed-comment-time-wrap"><span class="feed-time"><a href="#VIEW_URL##com#ID#" rel="nofollow">#DATE#</a></span></span>
 				#BEFORE_ACTIONS#
 				<?if ( $arParams["SHOW_POST_FORM"] == "Y" )
 				{
@@ -42,6 +63,7 @@ ob_start();
 						?>id="record-#FULL_ID#-actions-reply" <?
 						?>onclick="window['UC']['#ENTITY_XML_ID#'].reply(this)" <?
 						?>bx-mpl-author-id="#AUTHOR_ID#" <?
+						?>bx-mpl-author-gender="#AUTHOR_PERSONAL_GENDER#" <?
 						?>bx-mpl-author-name="#AUTHOR_NAME#"><?=GetMessage("BLOG_C_REPLY")?></a><?
 				} ?>
 				<a href="#" <?
@@ -50,7 +72,15 @@ ob_start();
 					?>bx-mpl-edit-url="#EDIT_URL#" bx-mpl-edit-show="#EDIT_SHOW#" <?
 					?>bx-mpl-moderate-url="#MODERATE_URL#" bx-mpl-moderate-show="#MODERATE_SHOW#" bx-mpl-moderate-approved="#APPROVED#" <?
 					?>bx-mpl-delete-url="#DELETE_URL###ID#" bx-mpl-delete-show="#DELETE_SHOW#" <?
-					?>onclick="fcShowActions('#ENTITY_XML_ID#', '#ID#', this); return BX.PreventDefault(this);" <?
+					?>bx-mpl-createtask-show="#CREATETASK_SHOW#" <?
+					if (!!$arParams["bPublicPage"])
+					{
+						?>onclick="javascript:void(0); return BX.PreventDefault(this);" <?
+					}
+					else
+					{
+						?>onclick="fcShowActions('#ENTITY_XML_ID#', '#ID#', this); return BX.PreventDefault(this);" <?
+					}
 					?>class="feed-post-more-link feed-post-more-link-#VIEW_SHOW#-#EDIT_SHOW#-#MODERATE_SHOW#-#DELETE_SHOW#"><?
 					?><span class="feed-post-more-text"><?=GetMessage("BLOG_C_BUTTON_MORE")?></span><?
 					?><span class="feed-post-more-arrow"></span><?
@@ -60,12 +90,12 @@ ob_start();
 			#AFTER_HEADER#
 			#BEFORE#
 			<div class="feed-com-text">
-				<div class="feed-com-text-inner">
+				<div class="feed-com-text-inner" bx-content-view-xml-id="#CONTENT_ID#" id="feed-com-text-inner-#CONTENT_ID#" bx-content-view-save="N">
 					<div class="feed-com-text-inner-inner" id="record-#FULL_ID#-text">
 						<div>#TEXT#</div>
 					</div>
 				</div>
-				<div class="feed-post-text-more" onclick="fcExpandComment('#FULL_ID#', this)" id="record-#FULL_ID#-more">
+				<div class="feed-post-text-more" onclick="fcCommentExpand(this);" id="record-#FULL_ID#-more">
 					<div class="feed-post-text-more-but"><div class="feed-post-text-more-left"></div><div class="feed-post-text-more-right"></div></div>
 				</div><?
 				?><script>
@@ -151,7 +181,8 @@ BX.ready(function(){
 			rights : {
 				MODERATE : '<?=$arParams["RIGHTS"]["MODERATE"]?>',
 				EDIT : '<?=$arParams["RIGHTS"]["EDIT"]?>',
-				DELETE : '<?=$arParams["RIGHTS"]["DELETE"]?>'
+				DELETE : '<?=$arParams["RIGHTS"]["DELETE"]?>',
+				CREATETASK : '<?=$arParams["RIGHTS"]["CREATETASK"]?>'
 			},
 			sign : '<?=$arParams["SIGN"]?>'
 		},
@@ -161,6 +192,7 @@ BX.ready(function(){
 			MODERATE_URL : '<?=CUtil::JSEscape($arParams["~MODERATE_URL"])?>',
 			DELETE_URL : '<?=CUtil::JSEscape($arParams["~DELETE_URL"])?>',
 			AUTHOR_URL : '<?=CUtil::JSEscape($arParams["~AUTHOR_URL"])?>',
+			AUTHOR_URL_PARAMS: <?=(isset($arParams["AUTHOR_URL_PARAMS"]) ? CUtil::PhpToJSObject($arParams["AUTHOR_URL_PARAMS"]) : '{}')?>,
 
 			AVATAR_SIZE : '<?=CUtil::JSEscape($arParams["AVATAR_SIZE"])?>',
 			NAME_TEMPLATE : '<?=CUtil::JSEscape($arParams["~NAME_TEMPLATE"])?>',

@@ -1,16 +1,27 @@
-<?if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();?>
+<?if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
+/** @var CBitrixComponent $this */
+/** @var array $arParams */
+/** @var array $arResult */
+/** @var string $componentPath */
+/** @var string $componentName */
+/** @var string $componentTemplate */
+/** @global CDatabase $DB */
+/** @global CUser $USER */
+/** @global CMain $APPLICATION */
+
+?>
 <script>
 	BX.message({
-		'BX_FPD_LINK_1':'<?=GetMessageJS("MPF_DESTINATION_1")?>',
-		'BX_FPD_LINK_2':'<?=GetMessageJS("MPF_DESTINATION_2")?>'
-		});
+		BX_FPD_LINK_1:'<?=GetMessageJS("MPF_DESTINATION_1")?>',
+		BX_FPD_LINK_2:'<?=GetMessageJS("MPF_DESTINATION_2")?>'
+	});
 
 	var socBPDest = {
-			shareUrl : '/bitrix/urlrewrite.php?SEF_APPLICATION_CUR_PAGE_URL=<?=str_replace("%23", "#", urlencode($arParams["PATH_TO_POST"]))?>', 
-			department : <?=(empty($arResult["FEED_DESTINATION"]['DEPARTMENT'])? '{}': CUtil::PhpToJSObject($arResult["FEED_DESTINATION"]['DEPARTMENT']))?>,
-			departmentRelation : {},
-			relation : {}
-		};
+		shareUrl : '/bitrix/urlrewrite.php?SEF_APPLICATION_CUR_PAGE_URL=<?=str_replace("%23", "#", urlencode($arParams["PATH_TO_POST"]))?>',
+		department : <?=(empty($arResult["FEED_DESTINATION"]['DEPARTMENT'])? '{}': CUtil::PhpToJSObject($arResult["FEED_DESTINATION"]['DEPARTMENT']))?>,
+		departmentRelation : {},
+		relation : {}
+	};
 
 	<?if(empty($arResult["FEED_DESTINATION"]['DEPARTMENT_RELATION']))
 	{
@@ -77,14 +88,14 @@
 	var BXSocNetLogDestinationFormNamePost = '<?=randString(6)?>';
 	BXSocNetLogDestinationDisableBackspace = null;
 	BX.SocNetLogDestination.init({
-		'name' : BXSocNetLogDestinationFormNamePost,
-		'searchInput' : BX('feed-add-post-destination-input-post'),
-		'extranetUser' :  <?=($arResult["FEED_DESTINATION"]["EXTRANET_USER"] == 'Y'? 'true': 'false')?>,
-		'bindMainPopup' : { 'node' : BX('feed-add-post-destination-container-post'), 'offsetTop' : '5px', 'offsetLeft': '15px'},
-		'bindSearchPopup' : { 'node' : BX('feed-add-post-destination-container-post'), 'offsetTop' : '5px', 'offsetLeft': '15px'},
-		'callback' : {
-			'select' : BXfpdPostSelectCallback,
-			'unSelect' : BX.delegate(BX.SocNetLogDestination.BXfpUnSelectCallback, {
+		name : BXSocNetLogDestinationFormNamePost,
+		searchInput : BX('feed-add-post-destination-input-post'),
+		extranetUser :  <?=($arResult["FEED_DESTINATION"]["EXTRANET_USER"] == 'Y'? 'true': 'false')?>,
+		bindMainPopup : { 'node' : BX('feed-add-post-destination-container-post'), 'offsetTop' : '5px', 'offsetLeft': '15px'},
+		bindSearchPopup : { 'node' : BX('feed-add-post-destination-container-post'), 'offsetTop' : '5px', 'offsetLeft': '15px'},
+		callback : {
+			select : BXfpdPostSelectCallback,
+			unSelect : BX.delegate(BX.SocNetLogDestination.BXfpUnSelectCallback, {
 				formName: window.BXSocNetLogDestinationFormNamePost,
 				inputContainerName: 'feed-add-post-destination-item-post',
 				inputName: 'feed-add-post-destination-input-post',
@@ -93,52 +104,56 @@
 				tagLink2: BX.message('BX_FPD_LINK_2'),
 				undeleteClassName: 'feed-add-post-destination-undelete'
 			}),
-			'openDialog' : BX.delegate(BX.SocNetLogDestination.BXfpOpenDialogCallback, {
+			openDialog : BX.delegate(BX.SocNetLogDestination.BXfpOpenDialogCallback, {
 				inputBoxName: 'feed-add-post-destination-input-box-post',
 				inputName: 'feed-add-post-destination-input-post',
 				tagInputName: 'bx-destination-tag-post'
 			}),
-			'closeDialog' : BX.delegate(BX.SocNetLogDestination.BXfpCloseDialogCallback, {
+			closeDialog : BX.delegate(BX.SocNetLogDestination.BXfpCloseDialogCallback, {
 				inputBoxName: 'feed-add-post-destination-input-box-post',
 				inputName: 'feed-add-post-destination-input-post',
 				tagInputName: 'bx-destination-tag-post'
 			}),
-			'openSearch' : BX.delegate(BX.SocNetLogDestination.BXfpOpenDialogCallback, {
-				inputBoxName: 'feed-add-post-destination-input-box-post',
-				inputName: 'feed-add-post-destination-input-post',
-				tagInputName: 'bx-destination-tag-post'
-			}),
-			'closeSearch' : BX.delegate(BX.SocNetLogDestination.BXfpCloseSearchCallback, {
+			openSearch : BX.delegate(BX.SocNetLogDestination.BXfpOpenDialogCallback, {
 				inputBoxName: 'feed-add-post-destination-input-box-post',
 				inputName: 'feed-add-post-destination-input-post',
 				tagInputName: 'bx-destination-tag-post'
 			})
 		},
-		'items' : {
-			'users' : <?=(empty($arResult["FEED_DESTINATION"]['USERS'])? '{}': CUtil::PhpToJSObject($arResult["FEED_DESTINATION"]['USERS']))?>,
-			'groups' : <?=(
+		items : {
+			users : <?=(empty($arResult["FEED_DESTINATION"]['USERS'])? '{}': CUtil::PhpToJSObject($arResult["FEED_DESTINATION"]['USERS']))?>,
+			emails: <?=(empty($arResult["FEED_DESTINATION"]['EMAILS'])? '{}': CUtil::PhpToJSObject($arResult["FEED_DESTINATION"]['EMAILS']))?>,
+			crmemails: <?=(empty($arResult["FEED_DESTINATION"]['CRMEMAILS'])? '{}': CUtil::PhpToJSObject($arResult["FEED_DESTINATION"]['CRMEMAILS']))?>,
+			groups : <?=(
 				$arResult["FEED_DESTINATION"]["EXTRANET_USER"] == 'Y'
 				|| (array_key_exists("DENY_TOALL", $arResult["FEED_DESTINATION"]) && $arResult["FEED_DESTINATION"]["DENY_TOALL"])
 					? '{}'
 					: "{'UA' : {'id':'UA','name': '".(!empty($arResult["FEED_DESTINATION"]['DEPARTMENT']) ? GetMessageJS("MPF_DESTINATION_3"): GetMessageJS("MPF_DESTINATION_4"))."'}}"
 				)?>,
-			'sonetgroups' : <?=(empty($arResult["FEED_DESTINATION"]['SONETGROUPS'])? '{}': CUtil::PhpToJSObject($arResult["FEED_DESTINATION"]['SONETGROUPS']))?>,
-			'department' : socBPDest.department,
-			'departmentRelation' : socBPDest.departmentRelation
+			sonetgroups : <?=(empty($arResult["FEED_DESTINATION"]['SONETGROUPS'])? '{}': CUtil::PhpToJSObject($arResult["FEED_DESTINATION"]['SONETGROUPS']))?>,
+			department : socBPDest.department,
+			departmentRelation : socBPDest.departmentRelation
 		},
-		'itemsLast' : {
-			'users' : <?=(empty($arResult["FEED_DESTINATION"]['LAST']['USERS'])? '{}': CUtil::PhpToJSObject($arResult["FEED_DESTINATION"]['LAST']['USERS']))?>,
-			'sonetgroups' : <?=(empty($arResult["FEED_DESTINATION"]['LAST']['SONETGROUPS'])? '{}': CUtil::PhpToJSObject($arResult["FEED_DESTINATION"]['LAST']['SONETGROUPS']))?>,
-			'department' : <?=(empty($arResult["FEED_DESTINATION"]['LAST']['DEPARTMENT'])? '{}': CUtil::PhpToJSObject($arResult["FEED_DESTINATION"]['LAST']['DEPARTMENT']))?>,
-			'groups' : <?=(
+		itemsLast : {
+			users : <?=(empty($arResult["FEED_DESTINATION"]['LAST']['USERS'])? '{}': CUtil::PhpToJSObject($arResult["FEED_DESTINATION"]['LAST']['USERS']))?>,
+			emails: <?=(empty($arResult["FEED_DESTINATION"]['LAST']['EMAILS'])? '{}': CUtil::PhpToJSObject($arResult["FEED_DESTINATION"]['LAST']['EMAILS']))?>,
+			crmemails: <?=(empty($arResult["FEED_DESTINATION"]['LAST']['CRMEMAILS'])? '{}': CUtil::PhpToJSObject($arResult["FEED_DESTINATION"]['LAST']['CRMEMAILS']))?>,
+			sonetgroups : <?=(empty($arResult["FEED_DESTINATION"]['LAST']['SONETGROUPS'])? '{}': CUtil::PhpToJSObject($arResult["FEED_DESTINATION"]['LAST']['SONETGROUPS']))?>,
+			department : <?=(empty($arResult["FEED_DESTINATION"]['LAST']['DEPARTMENT'])? '{}': CUtil::PhpToJSObject($arResult["FEED_DESTINATION"]['LAST']['DEPARTMENT']))?>,
+			groups : <?=(
 				$arResult["FEED_DESTINATION"]["EXTRANET_USER"] == 'Y'
 				|| (array_key_exists("DENY_TOALL", $arResult["FEED_DESTINATION"]) && $arResult["FEED_DESTINATION"]["DENY_TOALL"])
 					? '{}'
 					: "{'UA':true}"
 			)?>
 		},
-		'itemsSelected' : '{}',
-		'destSort' : <?=CUtil::PhpToJSObject($arResult["DEST_SORT"])?>
+		itemsSelected : '{}',
+		destSort : <?=CUtil::PhpToJSObject($arResult["DEST_SORT"])?>,
+		useClientDatabase : <?=(!isset($arResult["bPublicPage"]) || !$arResult["bPublicPage"] ? 'true' : 'false'); ?>,
+		allowAddUser: <?=($arResult["ALLOW_EMAIL_INVITATION"] ? 'true' : 'false'); ?>,
+		allowAddCrmContact: <?=($arResult["ALLOW_EMAIL_INVITATION"] && CModule::IncludeModule('crm') && CCrmContact::CheckCreatePermission() ? 'true' : 'false'); ?>,
+		showVacations: true,
+		usersVacation : <?=(empty($arResult["FEED_DESTINATION"]['USERS_VACATION'])? '{}': CUtil::PhpToJSObject($arResult["FEED_DESTINATION"]['USERS_VACATION']))?>
 	});
 	BX.bind(BX('feed-add-post-destination-input-post'), 'keyup', BX.delegate(BX.SocNetLogDestination.BXfpSearch, {
 		formName: BXSocNetLogDestinationFormNamePost,
@@ -148,6 +163,10 @@
 	BX.bind(BX('feed-add-post-destination-input-post'), 'keydown', BX.delegate(BX.SocNetLogDestination.BXfpSearchBefore, {
 		formName: BXSocNetLogDestinationFormNamePost,
 		inputName: 'feed-add-post-destination-input-post'
+	}));
+	BX.bind(BX('feed-add-post-destination-input-post'), 'blur', BX.delegate(BX.SocNetLogDestination.BXfpBlurInput, {
+		inputBoxName: 'feed-add-post-destination-input-box-post',
+		tagInputName: 'bx-destination-tag-post'
 	}));
 	BX.bind(BX('bx-destination-tag-post'), 'click', function(e){BX.SocNetLogDestination.openDialog(BXSocNetLogDestinationFormNamePost); BX.PreventDefault(e); });
 	BX.bind(BX('feed-add-post-destination-container-post'), 'click', function(e){BX.SocNetLogDestination.openDialog(BXSocNetLogDestinationFormNamePost); BX.PreventDefault(e); });

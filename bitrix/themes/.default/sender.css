@@ -200,10 +200,13 @@ div.sender-group-address-counter .sender-group-address-counter-cnttext{
 .sender-test-recent{
     padding-bottom: 20px;
 }
-.sender-link-email, .sender-link-email:hover{
+.sender-link-email{
     text-decoration: none;
-    border-bottom: 1px dashed #2675d7;
     cursor: pointer;
+}
+.sender-link-email:hover{
+    text-decoration: none;
+    border-bottom: 1px dotted #2675d7;
 }
 
 
@@ -358,8 +361,19 @@ div.sender-group-address-counter .sender-group-address-counter-cnttext{
 .sender-template-list-container {
     width: 100%; margin-left: 20px;
 }
+.sender-template-btn-close{
+    background: url("/bitrix/panel/main/images/popup_sprite.png") no-repeat 0 -30px;
+    cursor: pointer;
+    display: inline-block;
+    height: 30px;
+    width: 28px;
+    background-position: 0 -90px
+}
 .sender-template-list-type-blockempty{
-    margin: 50px;
+    margin: 50px 0;
+    font-size: 38px;
+    color: #dddddd;
+    text-align: center;
 }
 .sender-template-list-type-block{
     width: 140px;

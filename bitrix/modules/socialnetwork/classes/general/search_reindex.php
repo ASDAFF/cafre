@@ -30,8 +30,7 @@ class CSocNetSearchReindex extends CSocNetSearch
 		CALENDAR_GROUP_IBLOCK_ID
 		PATH_TO_GROUP_CALENDAR_ELEMENT
 
-		TASK_IBLOCK_ID
-		PATH_TO_GROUP_TASK_ELEMENT
+				PATH_TO_GROUP_TASK_ELEMENT
 		PATH_TO_USER_TASK_ELEMENT
 
 		FILES_PROPERTY_CODE
@@ -495,163 +494,6 @@ class CSocNetSearchReindex extends CSocNetSearch
 		return false;
 	}
 
-	function ReindexUserTasks($arSection, $path, $last_id)
-	{
-		$rsElements = CIBlockElement::GetList(
-			array("ID"=>"asc"),
-			array(
-				"IBLOCK_ID" => $arSection["IBLOCK_ID"],
-				"SECTION_ID" => $arSection["ID"],
-				"INCLUDE_SUBSECTIONS" => "Y",
-				">ID" => intval($last_id),
-				"CHECK_PERMISSIONS" => "N",
-			),
-			false, false,
-			array("ID", "IBLOCK_ID", "IBLOCK_TYPE_ID", "NAME", "DETAIL_TEXT", "TAGS", "TIMESTAMP_X", "IBLOCK_SECTION_ID", "CREATED_BY", "PROPERTY_TaskAssignedTo", "PROPERTY_FORUM_TOPIC_ID")
-		);
-		while($ar = $rsElements->Fetch())
-		{
-			$creator_id = intval($ar["CREATED_BY"]);
-			$assigned_id = intval($ar["PROPERTY_TASKASSIGNEDTO_VALUE"]);
-			if($creator_id && $assigned_id)
-			{
-				$url = str_replace(
-					array(
-						"#user_id#",
-						"#element_id#",
-						"#task_id#",
-						"#action#",
-					),
-					array(
-						$assigned_id,
-						$ar["ID"],
-						$ar["ID"],
-						"view",
-					),
-					$path
-				);
-
-				$topic_id = intval($ar["PROPERTY_FORUM_TOPIC_ID_VALUE"]);
-				if($topic_id)
-					$this->UpdateForumTopicIndex($topic_id, "U", $assigned_id, "tasks", "view_all", $this->Url($url, array("MID" => "#message_id#"), "message#message_id#"));
-
-				CSearch::Index("socialnetwork", $ar["ID"], array(
-					"LAST_MODIFIED" => $ar["TIMESTAMP_X"],
-					"TITLE" => $ar["NAME"],
-					"BODY" => ($ar["DETAIL_TEXT_TYPE"]=="html"? HTMLToTxt($ar["DETAIL_TEXT"]): $ar["DETAIL_TEXT"]),
-					"SITE_ID" => array(SITE_ID => $url),
-					"PARAM1" => $ar["IBLOCK_TYPE_ID"],
-					"PARAM2" => $ar["IBLOCK_ID"],
-					"PARAM3" => "tasks",
-					"TAGS" => $ar["TAGS"],
-					"PERMISSIONS" => $this->GetSearchGroups(
-						"U",
-						$assigned_id,
-						'tasks',
-						'view_all'
-					),
-					"PARAMS" => $this->GetSearchParams(
-						"U",
-						$assigned_id,
-						'tasks',
-						'view_all'
-					),
-					"REINDEX_FLAG" => true,
-				), true, $this->_sess_id);
-
-				$this->_counter++;
-			}
-
-			if($this->_end_time && $this->_end_time <= time())
-				return $ar["ID"];
-		}
-
-		return false;
-	}
-
-	function ReindexGroupTasks($iblock_id, $path, $last_id)
-	{
-		if(!CModule::IncludeModule("iblock"))
-			return false;
-
-		$arSections = array();
-
-		$rsElements = CIBlockElement::GetList(
-			array("ID"=>"asc"),
-			array(
-				"IBLOCK_ID" => $iblock_id,
-				">ID" => intval($last_id),
-				"CHECK_PERMISSIONS" => "N",
-			),
-			false, false,
-			array("ID", "IBLOCK_ID", "IBLOCK_TYPE_ID", "NAME", "DETAIL_TEXT", "TAGS", "TIMESTAMP_X", "IBLOCK_SECTION_ID", "PROPERTY_FORUM_TOPIC_ID")
-		);
-		while($ar = $rsElements->Fetch())
-		{
-			if(!array_key_exists($ar["IBLOCK_SECTION_ID"], $arSections))
-			{
-				$rsPath = CIBlockSection::GetNavChain($ar["IBLOCK_ID"], $ar["IBLOCK_SECTION_ID"]);
-				$arSection = $rsPath->Fetch();
-				$arSections[$ar["IBLOCK_SECTION_ID"]] = intval($arSection["XML_ID"]);
-			}
-			$entity_id = $arSections[$ar["IBLOCK_SECTION_ID"]];
-
-			if($entity_id)
-			{
-				$url = str_replace(
-					array(
-						"#group_id#",
-						"#element_id#",
-						"#task_id#",
-						"#action#",
-					),
-					array(
-						$entity_id,
-						$ar["ID"],
-						$ar["ID"],
-						"view",
-					),
-					$path
-				);
-
-				$topic_id = intval($ar["PROPERTY_FORUM_TOPIC_ID_VALUE"]);
-				if($topic_id)
-					$this->UpdateForumTopicIndex($topic_id, "G", $entity_id, "tasks", "view", $this->Url($url, array("MID" => "#message_id#"), "message#message_id#"));
-
-				CSearch::Index("socialnetwork", $ar["ID"], array(
-					"LAST_MODIFIED" => $ar["TIMESTAMP_X"],
-					"TITLE" => $ar["NAME"],
-					"BODY" => ($ar["DETAIL_TEXT_TYPE"]=="html"? HTMLToTxt($ar["DETAIL_TEXT"]): $ar["DETAIL_TEXT"]),
-					"SITE_ID" => array(SITE_ID => $url),
-					"PARAM1" => $ar["IBLOCK_TYPE_ID"],
-					"PARAM2" => $ar["IBLOCK_ID"],
-					"PARAM3" => "tasks",
-					"TAGS" => $ar["TAGS"],
-					"PERMISSIONS" => $this->GetSearchGroups(
-						"G",
-						$entity_id,
-						'tasks',
-						'view'
-					),
-					"PARAMS" => $this->GetSearchParams(
-						"G",
-						$entity_id,
-						'tasks',
-						'view'
-					),
-					"REINDEX_FLAG" => true,
-				), true, $this->_sess_id);
-
-				$this->_counter++;
-			}
-
-			if($this->_end_time && $this->_end_time <= time())
-				return $ar["ID"];
-		}
-
-		return false;
-	}
-
 	function ReindexGroups($last_id)
 	{
 		return $this->OnSearchReindex(array(
@@ -767,44 +609,6 @@ class CSocNetSearchReindex extends CSocNetSearch
 
 			if(strlen($path_template) && $iblock)
 				$last_id = $this->ReindexIBlock($iblock, "G", "calendar", "view", $path_template, array("DETAIL_TEXT"), $last_id);
-			else
-				$last_id = 0;
-			break;
-
-		case "group_tasks":
-			$path_template = trim($this->_params["PATH_TO_GROUP_TASK_ELEMENT"]);
-			$iblock = intval($this->_params["TASK_IBLOCK_ID"]);
-
-			if(strlen($path_template) && $iblock)
-				$last_id = $this->ReindexGroupTasks($iblock, $path_template, $last_id);
-			else
-				$last_id = 0;
-			break;
-
-		case "user_tasks":
-			$path_template = trim($this->_params["PATH_TO_USER_TASK_ELEMENT"]);
-			if(strlen($path_template) && CModule::IncludeModule("iblock"))
-			{
-				$iblock = intval($this->_params["TASK_IBLOCK_ID"]);
-				$rsSection = CIBlockSection::GetList(
-					array(),
-					array(
-						"GLOBAL_ACTIVE" => "Y",
-						"EXTERNAL_ID" => "users_tasks",
-						"IBLOCK_ID" => $iblock,
-						"SECTION_ID" => 0
-					),
-					false
-				);
-				$arSection = $rsSection->Fetch();
-			}
-			else
-			{
-				$arSection = false;
-			}
-
-			if($arSection)
-				$last_id = $this->ReindexUserTasks($arSection, $path_template, $last_id);
 			else
 				$last_id = 0;
 			break;

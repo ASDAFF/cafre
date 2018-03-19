@@ -8,7 +8,7 @@ IncludeModuleLangFile(__FILE__);
 
 class CCityLookup
 {
-
+	public $is_installed = false;
 	public $ip_addr = "";
 	public $ip_number = "";
 	public $country_code = "";
@@ -21,7 +21,6 @@ class CCityLookup
 
 	/**
 	 * @param array[string]string $arDBRecord
-	 * @return void
 	*/
 	function __construct($arDBRecord = /*.(array[string]string).*/array())
 	{
@@ -47,7 +46,7 @@ class CCityLookup
 	 * @param array[string]string $arDBRecord
 	 * @return CCityLookup
 	*/
-	function OnCityLookup($arDBRecord = /*.(array[string]string).*/array())
+	public static function OnCityLookup($arDBRecord = /*.(array[string]string).*/array())
 	{
 		return new CCityLookup($arDBRecord);
 	}
@@ -246,7 +245,6 @@ class CCity
 
 	/**
 	 * @param string $dbRecord
-	 * @return void
 	*/
 	function __construct($dbRecord = "")
 	{
@@ -291,7 +289,7 @@ class CCity
 	 * @param array[string]string $arFilter
 	 * @return CDBResult
 	*/
-	function GetList($arOrder = /*.(array[string]string).*/array(), $arFilter = /*.(array[string]string).*/array())
+	public static function GetList($arOrder = /*.(array[string]string).*/array(), $arFilter = /*.(array[string]string).*/array())
 	{
 		$DB = CDatabase::GetModuleConnection('statistic');
 
@@ -416,7 +414,7 @@ class CCity
 		return $this->lookup->GetFullInfo();
 	}
 
-	function GetHandler()
+	public static function GetHandler()
 	{
 		$selected = COption::GetOptionString("statistic", "IP_LOOKUP_CLASS", "");
 		if(!$selected)
@@ -519,13 +517,12 @@ class CCity
 		return $this->city_id > 0? intval($this->city_id): "";
 	}
 
-	function GetGraphArray($arFilter, &$arLegend, $sort = false, $top = 0)
+	public static function GetGraphArray($arFilter, &$arLegend, $sort = false, $top = 0)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		global $arCityColor;
 		$DB = CDatabase::GetModuleConnection('statistic');
 		$arSqlSearch = Array();
-		$strSqlSearch = "";
 		if(is_array($arFilter))
 		{
 			foreach ($arFilter as $key => $val)
@@ -668,12 +665,13 @@ class CCity
 			}
 		}
 
+		$color_getnext = '';
 		$total = count($arLegend);
 		foreach($arLegend as $key => $arr)
 		{
-			if (strlen($arCountryColor[$key])>0)
+			if (strlen($arCityColor[$key])>0)
 			{
-				$color = $arCountryColor[$key];
+				$color = $arCityColor[$key];
 			}
 			else
 			{
@@ -687,7 +685,7 @@ class CCity
 		return $arrDays;
 	}
 
-	function FindFiles($type = 'country', $path = '/bitrix/modules/statistic/ip2country')
+	public static function FindFiles($type = 'country', $path = '/bitrix/modules/statistic/ip2country')
 	{
 		$arFiles = array();
 		$handle = opendir($_SERVER["DOCUMENT_ROOT"].$path);
@@ -778,7 +776,7 @@ class CCity
 		return $arResult;
 	}
 
-	function GetCSVFormatType($fp)
+	public static function GetCSVFormatType($fp)
 	{
 		$line = trim(fgets($fp, 1024), " \t\n\r");
 		if(preg_match('/maxmind/i', $line))
@@ -838,7 +836,7 @@ class CCity
 		}
 	}
 
-	function ResolveIPRange($newStartIP, $newEndIP)
+	public static function ResolveIPRange($newStartIP, $newEndIP)
 	{
 		global $DB;
 
@@ -944,7 +942,7 @@ class CCity
 	}
 
 
-	function LoadCSV($file_name, $step, &$file_position)
+	public static function LoadCSV($file_name, $step, &$file_position)
 	{
 		global $APPLICATION;
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -1260,4 +1258,3 @@ class CCity
 		return "Y";
 	}
 }
-?>

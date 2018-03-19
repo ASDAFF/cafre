@@ -17,11 +17,11 @@ class CAdminPage
 	var $aModules = array();
 	var $bInit = false;
 
-	function CAdminPage()
+	public function __construct()
 	{
 	}
 
-	function Init()
+	public function Init()
 	{
 		if($this->bInit)
 			return;
@@ -32,13 +32,13 @@ class CAdminPage
 			$this->aModules[] = $module["ID"];
 	}
 
-	function ShowTitle()
+	public function ShowTitle()
 	{
 		global $APPLICATION;
 		$APPLICATION->AddBufferContent(array(&$this, "GetTitle"));
 	}
 
-	function ShowJsTitle()
+	public function ShowJsTitle()
 	{
 		global $APPLICATION;
 		$APPLICATION->AddBufferContent(array(&$this, "GetJsTitle"));
@@ -56,7 +56,7 @@ class CAdminPage
 		return CUtil::JSEscape($APPLICATION->GetTitle(false, true));
 	}
 
-	function ShowPopupCSS()
+	public function ShowPopupCSS()
 	{
 		/** @global CMain $APPLICATION */
 		global $APPLICATION;
@@ -79,7 +79,7 @@ class CAdminPage
 		return $s;
 	}
 
-	function ShowCSS()
+	public function ShowCSS()
 	{
 		/** @global CMain $APPLICATION */
 		global $APPLICATION;
@@ -106,7 +106,7 @@ class CAdminPage
 		return $s;
 	}
 
-	function GetModulesCSS($module_id='')
+	public function GetModulesCSS($module_id='')
 	{
 		global $CACHE_MANAGER;
 		$rel_theme_path = ADMIN_THEMES_PATH."/".ADMIN_THEME_ID."/";
@@ -163,7 +163,7 @@ class CAdminPage
 			return array();
 	}
 
-	function ShowScript()
+	public function ShowScript()
 	{
 		/** @global CMain $APPLICATION */
 		global $APPLICATION;
@@ -213,7 +213,7 @@ var phpVars = {
 		return $s;
 	}
 
-	function ShowSectionIndex($menu_id, $module_id=false)
+	public function ShowSectionIndex($menu_id, $module_id=false)
 	{
 		/** @global CMain $APPLICATION */
 		global $APPLICATION;
@@ -263,9 +263,8 @@ var phpVars = {
 					$aUserOptGlobal["sound_login"] = "/bitrix/sounds/main/bitrix_tune.mp3";
 
 				ob_start();
-				$APPLICATION->IncludeComponent("bitrix:player",	"",
+				$APPLICATION->IncludeComponent("bitrix:player",	"audio",
 					Array(
-						"PLAYER_TYPE" => "flv",
 						"PATH" => htmlspecialcharsbx($aUserOptGlobal["sound_login"]),
 						"WIDTH" => "1",
 						"HEIGHT" => "1",
@@ -284,7 +283,6 @@ var phpVars = {
 				ob_end_clean();
 
 				$res = '
-<script type="text/javascript" src="'.CUtil::GetAdditionalFileURL('/bitrix/components/bitrix/player/mediaplayer/flvscript.js', true).'"></script>
 <div style="position:absolute; top:-1000px; left:-1000px;">
 '.$res.'
 </div>
@@ -292,6 +290,93 @@ var phpVars = {
 			}
 		}
 		return $res;
+	}
+
+	public function getSSOSwitcherButton()
+	{
+		global $CACHE_MANAGER, $USER;
+
+		if($CACHE_MANAGER->Read(86400, "sso_portal_list_".$USER->GetID()))
+		{
+			$queryResult = $CACHE_MANAGER->Get("sso_portal_list_".$USER->GetID());
+		}
+		else
+		{
+			$queryResult = false;
+			if(\Bitrix\Main\Loader::includeModule('socialservices'))
+			{
+				if(class_exists('CBitrix24NetTransport'))
+				{
+					$query = \CBitrix24NetTransport::init();
+					if ($query)
+					{
+						$queryResult = $query->call('admin.profile.list', array());
+					}
+
+					$CACHE_MANAGER->Set("sso_portal_list_".$USER->GetID(), $queryResult);
+				}
+			}
+		}
+
+		if(is_array($queryResult))
+		{
+			$ssoMenu = array();
+
+			if(isset($queryResult['error']))
+			{
+				if(
+					$queryResult['error'] == 'insufficient_scope'
+					&& \Bitrix\Main\Loader::includeModule('socialservices')
+					&& class_exists("Bitrix\\Socialservices\\Network")
+					&& method_exists("Bitrix\\Socialservices\\Network", "getAuthUrl")
+				)
+				{
+					$n = new \Bitrix\Socialservices\Network();
+					$ssoMenu[] =  array(
+						"TEXT" => \Bitrix\Main\Localization\Loc::getMessage("admin_lib_sso_auth"),
+						"TITLE" => \Bitrix\Main\Localization\Loc::getMessage("admin_lib_sso_auth_title"),
+						"ONCLICK"=>"BX.util.popup('".CUtil::JSEscape($n->getAuthUrl("popup", array("admin")))."', 800, 600);",
+					);
+				}
+			}
+			elseif(isset($queryResult['result']))
+			{
+				$currentHost = \Bitrix\Main\Context::getCurrent()->getRequest()->getHttpHost();
+
+				foreach($queryResult['result']['admin'] as $site)
+				{
+					if($site["TITLE"] != $currentHost)
+					{
+						$ssoMenu[] =  array(
+							"TEXT" => $site["TITLE"],
+							"TITLE"=> "Go to ". $site["TITLE"],
+							"LINK"=>$site["URL"]."bitrix/admin/",
+						);
+					}
+				}
+
+				if(
+					count($ssoMenu) > 0
+					&& count($queryResult['result']["portal"]) > 0
+				)
+				{
+					$ssoMenu[] = array("SEPARATOR" => true);
+				}
+
+				foreach($queryResult['result']['portal'] as $site)
+				{
+					$ssoMenu[] =  array(
+						"TEXT" => $site["TITLE"],
+						"TITLE"=> "Go to ". $site["TITLE"],
+						"LINK"=>$site["URL"],
+					);
+				}
+			}
+
+			return $ssoMenu;
+		}
+
+		return false;
 	}
 }
 
@@ -301,7 +386,7 @@ class CAdminMenu
 	var $aGlobalMenu, $aActiveSections=array(), $aOpenedSections=array();
 	var $bInit = false;
 
-	function CAdminMenu()
+	public function __construct()
 	{
 	}
 
@@ -757,18 +842,20 @@ class CAdminMenu
 
 		?><span class="adm-submenu-item-arrow"<?=$level > 0 ? ' style="width:'.$this->_get_menu_item_width($level).'px;"' : ''?><?=$onclick ? ' onclick="'.$onclick.'"' : ''?>><span class="adm-submenu-item-arrow-icon"></span></span><?
 
+		$menuText = htmlspecialcharsbx(htmlspecialcharsback($aMenu["text"]));
 		if(isset($aMenu["url"]) && $aMenu["url"] <> ""):
-			?><a class="adm-submenu-item-name-link<?=(isset($aMenu["readonly"]) && $aMenu["readonly"] == true? ' menutext-readonly':'')?>"<?=$level > 0 ? ' style="padding-left:'.$this->_get_menu_item_padding($level).'px;"' : ''?> href="<?=$aMenu["url"]?>"><?=$icon?><span class="adm-submenu-item-name-link-text"><?=$aMenu["text"]?></span></a><?
+			$menuUrl = htmlspecialcharsbx(htmlspecialcharsback($aMenu["url"]));
+			?><a class="adm-submenu-item-name-link<?=(isset($aMenu["readonly"]) && $aMenu["readonly"] == true? ' menutext-readonly':'')?>"<?=$level > 0 ? ' style="padding-left:'.$this->_get_menu_item_padding($level).'px;"' : ''?> href="<?=$menuUrl?>"><?=$icon?><span class="adm-submenu-item-name-link-text"><?=$menuText?></span></a><?
 		elseif ($bSubmenu):
 			if(isset($aMenu["dynamic"]) && $aMenu["dynamic"] == true && !$bSectionActive && (!$aMenu["items"] || count($aMenu["items"]) <= 0)):
-				?><a class="adm-submenu-item-name-link<?=(isset($aMenu["readonly"]) && $aMenu["readonly"] == true? ' menutext-readonly':'')?>"<?=$level > 0 ? ' style="padding-left:'.$this->_get_menu_item_padding($level).'px;"' : ''?> href="javascript:void(0)" onclick="BX.adminMenu.toggleDynSection(<?=$this->_get_menu_item_width($level)?>, this.parentNode.parentNode, '<?=htmlspecialcharsbx(CUtil::JSEscape($aMenu["module_id"]))?>', '<?=htmlspecialcharsbx(CUtil::JSEscape($aMenu["items_id"]))?>', '<?=$level+1?>')"><?=$icon?><span class="adm-submenu-item-name-link-text"><?=$aMenu["text"]?></span></a><?
+				?><a class="adm-submenu-item-name-link<?=(isset($aMenu["readonly"]) && $aMenu["readonly"] == true? ' menutext-readonly':'')?>"<?=$level > 0 ? ' style="padding-left:'.$this->_get_menu_item_padding($level).'px;"' : ''?> href="javascript:void(0)" onclick="BX.adminMenu.toggleDynSection(<?=$this->_get_menu_item_width($level)?>, this.parentNode.parentNode, '<?=htmlspecialcharsbx(CUtil::JSEscape($aMenu["module_id"]))?>', '<?=htmlspecialcharsbx(CUtil::JSEscape($aMenu["items_id"]))?>', '<?=$level+1?>')"><?=$icon?><span class="adm-submenu-item-name-link-text"><?=$menuText?></span></a><?
 			elseif(!$aMenu["dynamic"] || !$bSectionActive || $aMenu['dynamic'] && $bSectionActive && isset($aMenu["items"]) && count($aMenu["items"]) > 0):
-				?><a class="adm-submenu-item-name-link<?=(isset($aMenu["readonly"]) && $aMenu["readonly"] == true? ' menutext-readonly':'')?>"<?=$level > 0 ? ' style="padding-left:'.$this->_get_menu_item_padding($level).'px;"' : ''?> href="javascript:void(0)" onclick="BX.adminMenu.toggleSection(this.parentNode.parentNode, '<?=htmlspecialcharsbx(CUtil::JSEscape($aMenu["items_id"]))?>', '<?=$level+1?>')"><?=$icon?><span class="adm-submenu-item-name-link-text"><?=$aMenu["text"]?></span></a><?
+				?><a class="adm-submenu-item-name-link<?=(isset($aMenu["readonly"]) && $aMenu["readonly"] == true? ' menutext-readonly':'')?>"<?=$level > 0 ? ' style="padding-left:'.$this->_get_menu_item_padding($level).'px;"' : ''?> href="javascript:void(0)" onclick="BX.adminMenu.toggleSection(this.parentNode.parentNode, '<?=htmlspecialcharsbx(CUtil::JSEscape($aMenu["items_id"]))?>', '<?=$level+1?>')"><?=$icon?><span class="adm-submenu-item-name-link-text"><?=$menuText?></span></a><?
 			else:
-				?><span class="adm-submenu-item-name-link<?=(isset($aMenu["readonly"]) && $aMenu["readonly"] == true? ' menutext-readonly':'')?>"<?=$level > 0 ? ' style="padding-left:'.$this->_get_menu_item_padding($level).'px"' : ''?>><?=$icon?><span class="adm-submenu-item-name-link-text"><?=$aMenu["text"]?></span></span><?
+				?><span class="adm-submenu-item-name-link<?=(isset($aMenu["readonly"]) && $aMenu["readonly"] == true? ' menutext-readonly':'')?>"<?=$level > 0 ? ' style="padding-left:'.$this->_get_menu_item_padding($level).'px"' : ''?>><?=$icon?><span class="adm-submenu-item-name-link-text"><?=$menuText?></span></span><?
 			endif;
 		else:
-			?><span class="adm-submenu-item-name-link<?=(isset($aMenu["readonly"]) && $aMenu["readonly"] == true? ' menutext-readonly':'')?>"<?=$level > 0 ? ' style="padding-left:'.$this->_get_menu_item_padding($level).'px"' : ''?>><?=$icon?><span class="adm-submenu-item-name-link-text"><?=$aMenu["text"]?></span></span><?
+			?><span class="adm-submenu-item-name-link<?=(isset($aMenu["readonly"]) && $aMenu["readonly"] == true? ' menutext-readonly':'')?>"<?=$level > 0 ? ' style="padding-left:'.$this->_get_menu_item_padding($level).'px"' : ''?>><?=$icon?><span class="adm-submenu-item-name-link-text"><?=$menuText?></span></span><?
 		endif;
 		?></div><?
 
@@ -959,7 +1046,7 @@ class CAdminPopup
 	var $items;
 	var $params;
 
-	function CAdminPopup($name, $id, $items=false, $params=false)
+	public function __construct($name, $id, $items=false, $params=false)
 	{
 		//SEPARATOR, ID, ONCLICK, ICONCLASS, TEXT, DEFAULT=>true|false, DISABLED=>true|false
 		$this->name = $name;
@@ -997,7 +1084,7 @@ window.'.$this->name.' = new PopupMenu("'.$this->id.'"'.
 		return null;
 	}
 
-	function GetGlobalIconClass($old_icon)
+	public static function GetGlobalIconClass($old_icon)
 	{
 		switch($old_icon)
 		{
@@ -1051,7 +1138,7 @@ window.'.$this->name.' = new PopupMenu("'.$this->id.'"'.
 		return false;
 	}
 
-	function PhpToJavaScript($items)
+	public static function PhpToJavaScript($items)
 	{
 		$sMenuUrl = "[";
 		if(is_array($items))
@@ -1092,6 +1179,7 @@ window.'.$this->name.' = new PopupMenu("'.$this->id.'"'.
 						(isset($action["AUTOHIDE"]) && $action["AUTOHIDE"] == false? "'AUTOHIDE':false,":"").
 						(isset($action["DEFAULT"]) && $action["DEFAULT"] == true? "'DEFAULT':true,":"").
 						($action["TEXT"]<>""? "'TEXT':'".CUtil::JSEscape($action["TEXT"])."',":"").
+						($action["HTML"]<>""? "'HTML':'".CUtil::JSEscape($action["HTML"])."',":"").
 						(isset($action["TITLE"]) && $action["TITLE"]<>""? "'TITLE':'".CUtil::JSEscape($action["TITLE"])."',":"").
 						(isset($action["SHOW_TITLE"]) && $action["SHOW_TITLE"] == true ? "'SHOW_TITLE':true,":"").
 						($action["ACTION"]<>""? "'ONCLICK':'".CUtil::JSEscape(htmlspecialcharsback($action["ACTION"]))."',":"").
@@ -1123,7 +1211,7 @@ class CAdminPopupEx extends CAdminPopup
 	 */
 	public function __construct($element_id, $items=false, $params=false)
 	{
-//SEPARATOR, ID, ONCLICK|LINK, ICONCLASS, TEXT, DEFAULT=>true|false, MENU
+		//SEPARATOR, ID, ONCLICK|LINK, ICONCLASS, TEXT, DEFAULT=>true|false, MENU
 		$this->element_id = $element_id;
 		$this->items = $items;
 		$this->params = $params;
@@ -1156,805 +1244,6 @@ BX.ready(function(){
 	}
 }
 
-class CAdminFilter
-{
-	public 	$id;
-	private $popup;
-	private $arItems = array();
-	private $arOptFlt = array();
-	private static $defaultSort = 100;
-	private static $defaultPresetSort = 50;
-	private $url=false;
-	private $tableId=false;
-	const   SESS_PARAMS_NAME = "main.adminFilter";
-
-	public function __construct($id, $popup=false, $arExtraParams=array())
-	{
-		global $USER;
-
-		$uid = $USER->GetID();
-		$isAdmin = $USER->CanDoOperation('edit_other_settings');
-
-		if(empty($popup) || !is_array($popup))
-			$popup = false;
-
-		$this->id = $id;
-		$this->popup = $popup;
-
-		if(is_array($arExtraParams))
-		{
-			if(isset($arExtraParams["url"]) && !empty($arExtraParams["url"]))
-				$this->url = $arExtraParams["url"];
-
-			if(isset($arExtraParams["table_id"]) && !empty($arExtraParams["table_id"]))
-				$this->tableId = $arExtraParams["table_id"];
-		}
-
-		$this->arOptFlt = CUserOptions::GetOption("filter", $this->id, array(
-			"rows" => "",
-			"styleFolded" => "N",
-			"presetsDeleted" => ""
-		));
-
-		$presetsDeleted = explode(",", $this->arOptFlt["presetsDeleted"]);
-
-		$this->arOptFlt["presetsDeleted"] = $presetsDeleted ? $presetsDeleted : array();
-
-		$presetsDeletedJS='';
-
-		if(is_array($presetsDeleted))
-			foreach($presetsDeleted as $preset)
-				if(trim($preset) <> "")
-					$presetsDeletedJS .= ($presetsDeletedJS <> "" ? ",":"").'"'.CUtil::JSEscape(trim($preset)).'"';
-
-		$this->arOptFlt["presetsDeletedJS"] = $presetsDeletedJS;
-
-		$dbRes = $this->GetList(array(), array("USER_ID" => $uid, "FILTER_ID" => $this->id), true);
-		while($arFilter = $dbRes->Fetch())
-		{
-			if(!is_null($arFilter["LANGUAGE_ID"]) && $arFilter["LANGUAGE_ID"] != LANG )
-				continue;
-
-			$arItem = $arFilter;
-			$arItem["FIELDS"] = unserialize($arFilter["FIELDS"]);
-
-			if(!is_null($arFilter["SORT_FIELD"]))
-				$arItem["SORT_FIELD"] = unserialize($arFilter["SORT_FIELD"]);
-
-			if($arFilter["PRESET"] == "Y" && is_null($arFilter["LANGUAGE_ID"]))
-			{
-				$langName = GetMessage($arFilter["NAME"]);
-
-				if($langName)
-						$arItem["NAME"] = $langName;
-
-				foreach ($arItem["FIELDS"] as $key => $field)
-				{
-					$langValue = GetMessage($arItem["FIELDS"][$key]["value"]);
-
-					if($langValue)
-						$arItem["FIELDS"][$key]["value"] = $langValue;
-				}
-			}
-
-			$arItem["EDITABLE"] = ((($isAdmin || $arFilter["USER_ID"] == $uid ) && $arFilter["PRESET"] != "Y") ? true : false );
-
-			$this->AddItem($arItem);
-		}
-	}
-
-	private function err_mess()
-	{
-		return "<br>Class: CAdminFilter<br>File: ".__FILE__;
-	}
-
-	private function AddItem($arItem, $bInsertFirst = false)
-	{
-		//if user "deleted" preset http://jabber.bx/view.php?id=34405
-		if(!$arItem["EDITABLE"] && !empty($this->arOptFlt["presetsDeleted"]))
-			if(in_array($arItem["ID"], $this->arOptFlt["presetsDeleted"]))
-				return false;
-
-		$customPresetId = $this->FindItemByPresetId($arItem["ID"]);
-
-		if($customPresetId)
-		{
-			$this->arItems[$customPresetId]["SORT"] = $arItem["SORT"];
-			return false;
-		}
-
-		if(isset($arItem["PRESET_ID"]))
-		{
-			$presetID = $this->FindItemByID($arItem["PRESET_ID"]);
-
-			if($presetID)
-			{
-				$arItem["SORT"] = $this->arItems[$presetID]["SORT"];
-				unset($this->arItems[$presetID]);
-			}
-
-		}
-
-		if(!isset($arItem["SORT"]))
-			$arItem["SORT"] = self::$defaultSort;
-
-		if($bInsertFirst)
-		{
-			$arNewItems[$arItem["ID"]] = $arItem;
-
-			foreach ($this->arItems as $key => $item)
-				$arNewItems[$key] = $item;
-
-			$this->arItems = $arNewItems;
-		}
-		else
-			$this->arItems[$arItem["ID"]] = $arItem;
-
-		unset($this->arItems[$arItem["ID"]][$arItem["ID"]]);
-
-		return true;
-	}
-
-	private function CheckFields($arFields)
-	{
-		/** @global CMain $APPLICATION */
-		global $APPLICATION;
-
-		$aMsg = array();
-
-		if(!is_set($arFields, "FILTER_ID") || (is_set($arFields, "FILTER_ID") && trim($arFields["FILTER_ID"])==""))
-			$aMsg[] = array("id"=>"FILTER_ID", "text"=>GetMessage("filters_error_table_name"));
-
-		if(!is_set($arFields, "NAME") || (is_set($arFields, "NAME") && trim($arFields["NAME"])==""))
-			$aMsg[] = array("id"=>"NAME", "text"=>GetMessage("filters_error_name"));
-
-		if(!is_set($arFields, "FIELDS") || (is_set($arFields, "FIELDS") && trim($arFields["FIELDS"])==""))
-			$aMsg[] = array("id"=>"FIELDS", "text"=>GetMessage("filters_error_fields"));
-
-		if((!is_set($arFields, "USER_ID") && $arFields["COMMON"] != "Y") || (is_set($arFields, "USER_ID") && trim($arFields["USER_ID"])==""))
-			$aMsg[] = array("id"=>"USER_ID", "text"=>GetMessage("filters_error_user"));
-
-		if(is_set($arFields, "USER_ID"))
-		{
-			if(intval($arFields["USER_ID"]) > 0)
-			{
-				$res = CUser::GetByID(intval($arFields["USER_ID"]));
-				if(!$res->Fetch())
-					$aMsg[] = array("id"=>"USER_ID", "text"=>GetMessage("filters_error_user"));
-			}
-		}
-
-		if(!empty($aMsg))
-		{
-			$e = new CAdminException($aMsg);
-			$APPLICATION->ThrowException($e);
-			return false;
-		}
-
-		return true;
-	}
-
-	private function FieldsExcess($arFields)
-	{
-		$arResult = array();
-
-		if(is_array($arFields))
-			foreach ($arFields as $key => $field)
-					$arResult[$key] = array(
-										"value" => $field,
-										"hidden" => "false",
-										);
-		return $arResult;
-	}
-
-	private function FieldsDelHiddenEmpty($arFields)
-	{
-		$arResult = array();
-
-		if(!is_array($arFields))
-			return false;
-
-		foreach ($arFields as $key => $field)
-		{
-				if(!empty($field["value"]) || $field["hidden"] == "false")
-					$arResult[$key] = array(
-										"value" => $field["value"],
-										"hidden" => $field["hidden"],
-										);
-		}
-		return $arResult;
-	}
-
-	/**
-	 * Sets default rows, witch will be shown to user when he comes to page for the first time/
-	 * This function must be called on admin page with the filter initialization.
-	 * For example: $oFilter->SetDefaultRows("find_created, find_menu_id");
-	 *
-	 * @param str rows - rows identificators separated by commas ("rowid_1, rowid_2, ...")
-	 * @return bool
-	 */
-	public function SetDefaultRows($rows)
-	{
-		if(is_array($rows))
-			$outRows = implode(",",$rows);
-		else
-			$outRows = $rows;
-
-		if(!$outRows)
-			return false;
-
-		if(!empty($this->arOptFlt["rows"]))
-			return true;
-
-		$this->arOptFlt["rows"] = $outRows;
-
-		return true;
-	}
-
-	public static function SetDefaultRowsOption($filterId, $rows)
-	{
-		if(!$filterId)
-			return false;
-
-		if(is_array($rows))
-			$outRows = implode(",",$rows);
-		else
-			$outRows = $rows;
-
-		if(!$outRows)
-			return false;
-
-		return CUserOptions::SetOption("filter", $filterId, array("rows" => $outRows),true);
-	}
-
-	/**
-	 * Sets new filter tab with collection of fields and values
-	 * This function must be called on admin page with the filter initialization.
-	 * For example: $oFilter->AddPreset(array(
-	 *									"ID" => "preset1",
-	 *									"NAME" => "Test filter",
-	 *									"SORT" => 100,
-	 *									"SORT_FIELD" => array ("name" => "asc"),
-	 *									"FIELDS" => array(
-	 *										"find_name"=>"Smith",
-	 *										"find_id"=>"15"
-	 *										)
-	 *									));
-	 *
-	 * @param array $arFields = array(
-	 *								"ID" =>  filter id,
-	 *								"NAME" => filter name,
-	 *								"SORT" = > filter sorting order. Default value - 100, for presets - 50;
-	 *								"SORT_FIELD" => array("Table column name" => "sort order"),
-	 *								"FIELDS" => array(
-	 *											"field1_name" => "field1_value",
-	 *											"field2_name" => "field2_value",
-	 *											...
-	 * 												)
-	 *							)
-	 * @return bool
-	 */
-	public function AddPreset($arFields)
-	{
-		if(!isset($arFields["NAME"]) || empty($arFields["NAME"]))
-			return false;
-
-		if(!isset($arFields["ID"]) || empty($arFields["ID"]))
-			return false;
-
-		$item = array(
-			"ID" => "page-".$arFields["ID"],
-			"FILTER_ID" => $this->id,
-			"NAME" => $arFields["NAME"],
-			"EDITABLE" => false,
-			"PRESET" => "Y"
-			);
-
-		if(isset($arFields["FIELDS"]))
-			$item["FIELDS"] = CAdminFilter::FieldsExcess($arFields["FIELDS"]);
-		else
-			$item["FIELDS"] = array();
-
-		if(isset($arFields["SORT"]) && !empty($arFields["SORT"]))
-			$item["SORT"] = intval($arFields["SORT"]);
-		else
-			$item["SORT"] =self::$defaultPresetSort+count($this->arItems)*10;
-
-		if(isset($arFields["SORT_FIELD"]) && is_array($arFields["SORT_FIELD"]) && !empty($arFields["SORT_FIELD"]))
-			$item["SORT_FIELD"] = $arFields["SORT_FIELD"];
-
-		return $this->AddItem($item, false);
-	}
-
-
-	private function FindItemByPresetId($strID)
-	{
-
-		if(!is_array($this->arItems))
-			return false;
-
-		foreach ($this->arItems as $key => $item)
-			if($item["PRESET_ID"] == $strID)
-				return $key;
-
-		return false;
-	}
-
-	private function FindItemByID($strID)
-	{
-		if(!is_array($this->arItems))
-			return false;
-
-		foreach ($this->arItems as $key => $item)
-			if($item["ID"] == $strID)
-				return $key;
-
-		return false;
-	}
-
-	public function AddPresetToBase($arFields)
-	{
-		if(!isset($arFields["NAME"]) || empty($arFields["NAME"]))
-			return false;
-
-		$arFields["PRESET"] = "Y";
-		$arFields["COMMON"] = "Y";
-
-		if(isset($arFields["FIELDS"]))
-			$arFields["FIELDS"] = CAdminFilter::FieldsExcess($arFields["FIELDS"]);
-		else
-			$item["FIELDS"] = array();
-
-
-		if(!isset($arFields["SORT"]) || empty($arFields["SORT"]))
-			$arFields["SORT"] = self::$defaultPresetSort;
-
-		return CAdminFilter::Add($arFields);
-	}
-
-	public function Add($arFields)
-	{
-		global $DB;
-
-		$arFields["FIELDS"] = CAdminFilter::FieldsDelHiddenEmpty($arFields["FIELDS"]);
-
-		if(!$arFields["FIELDS"])
-			return false;
-
-		$arFields["FIELDS"] = serialize($arFields["FIELDS"]);
-
-		if(isset($arFields["SORT_FIELD"]))
-			$arFields["SORT_FIELD"] = serialize($arFields["SORT_FIELD"]);
-
-		if(!CAdminFilter::CheckFields($arFields))
-			return false;
-
-		$ID = $DB->Add("b_filters", $arFields, array("FIELDS"));
-		return $ID;
-	}
-
-	public function Delete($ID)
-	{
-		global $DB;
-
-		return ($DB->Query("DELETE FROM b_filters WHERE ID='".intval($ID)."'", false, "File: ".__FILE__."<br>Line: ".__LINE__));
-	}
-
-	public function Update($ID, $arFields)
-	{
-		global $DB;
-		$ID = intval($ID);
-
-		$arFields["FIELDS"] = CAdminFilter::FieldsDelHiddenEmpty($arFields["FIELDS"]);
-
-		if(!$arFields["FIELDS"])
-			return false;
-
-		$arFields["FIELDS"] = serialize($arFields["FIELDS"]);
-
-		if(isset($arFields["SORT_FIELD"]))
-			$arFields["SORT_FIELD"] = serialize($arFields["SORT_FIELD"]);
-
-		if(!CAdminFilter::CheckFields($arFields))
-			return false;
-
-		$strUpdate = $DB->PrepareUpdate("b_filters", $arFields);
-
-		$arBinds=Array();
-		if(is_set($arFields, "FIELDS"))
-			$arBinds["FIELDS"] = $arFields["FIELDS"];
-
-
-		if(strlen($strUpdate) > 0)
-		{
-			$strSql = "UPDATE b_filters SET ".$strUpdate." WHERE ID=".$ID;
-			return $DB->QueryBind($strSql, $arBinds);
-
-			//if(!$DB->Query($strSql))
-			//	return false;
-		}
-
-		return false;
-	}
-
-	public function GetList($aSort=array(), $arFilter=Array(), $getCommon=true)
-	{
-		global $DB;
-
-		$err_mess = (CAdminFilter::err_mess())."<br>Function: GetList<br>Line: ";
-		$arSqlSearch = Array();
-		if (is_array($arFilter))
-		{
-			foreach ($arFilter as $key => $val)
-			{
-				if (strlen($val)<=0 || $val=="NOT_REF")
-					continue;
-
-				switch(strtoupper($key))
-				{
-				case "ID":
-					$arSqlSearch[] = GetFilterQuery("F.ID",$val,"N");
-					break;
-				case "USER_ID":
-					if($getCommon)
-						$arSqlSearch[] = "F.USER_ID=".intval($val)." OR F.COMMON='Y'";
-					else
-						$arSqlSearch[] = "F.USER_ID = ".intval($val);
-					break;
-				case "FILTER_ID":
-					$arSqlSearch[] = "F.FILTER_ID = '".$DB->ForSql($val)."'";
-					break;
-				case "NAME":
-					$arSqlSearch[] = GetFilterQuery("F.NAME", $val);
-					break;
-				case "FIELDS":
-					$arSqlSearch[] = GetFilterQuery("F.FIELDS", $val);
-					break;
-				case "COMMON":
-					$arSqlSearch[] = "F.COMMON = '".$DB->ForSql($val,1)."'";
-					break;
-				case "PRESET":
-					$arSqlSearch[] = "F.PRESET = '".$DB->ForSql($val,1)."'";
-					break;
-				case "LANGUAGE_ID":
-					$arSqlSearch[] = "F.LANGUAGE_ID = '".$DB->ForSql($val,2)."'";
-					break;
-				case "PRESET_ID":
-					$arSqlSearch[] = GetFilterQuery("F.PRESET_ID", $val);
-					break;
-				case "SORT":
-					$arSqlSearch[] = GetFilterQuery("F.SORT", $val);
-					break;
-				case "SORT_FIELD":
-					$arSqlSearch[] = GetFilterQuery("F.SORT_FIELD", $val);
-					break;
-				}
-			}
-		}
-
-		$sOrder = "";
-		foreach($aSort as $key=>$val)
-		{
-			$ord = (strtoupper($val) <> "ASC"? "DESC":"ASC");
-			switch (strtoupper($key))
-			{
-				case "ID":		$sOrder .= ", F.ID ".$ord; break;
-				case "USER_ID":	$sOrder .= ", F.USER_ID ".$ord; break;
-				case "FILTER_ID":	$sOrder .= ", F.FILTER_ID ".$ord; break;
-				case "NAME":	$sOrder .= ", F.NAME ".$ord; break;
-				case "FIELDS":	$sOrder .= ", F.FIELDS ".$ord; break;
-				case "COMMON":	$sOrder .= ", F.COMMON ".$ord; break;
-				case "PRESET":	$sOrder .= ", F.PRESET ".$ord; break;
-				case "LANGUAGE_ID":	$sOrder .= ", F.LANGUAGE_ID ".$ord; break;
-				case "PRESET_ID":	$sOrder .= ", F.PRESET_ID ".$ord; break;
-				case "SORT":	$sOrder .= ", F.SORT ".$ord; break;
-				case "SORT_FIELD":	$sOrder .= ", F.SORT_FIELD ".$ord; break;
-			}
-		}
-		if (strlen($sOrder)<=0)
-			$sOrder = "F.ID ASC";
-		$strSqlOrder = " ORDER BY ".TrimEx($sOrder,",");
-
-		$strSqlSearch = GetFilterSqlSearch($arSqlSearch,"noFilterLogic");
-		$strSql = "
-			SELECT
-				F.ID, F.USER_ID, F.NAME, F.FILTER_ID, F.FIELDS, F.COMMON, F.PRESET, F.LANGUAGE_ID, F.PRESET_ID, F.SORT, F.SORT_FIELD
-			FROM
-				b_filters F
-			WHERE
-			".$strSqlSearch."
-			".$strSqlOrder;
-
-		$res = $DB->Query($strSql, false, $err_mess.__LINE__);
-		return $res;
-	}
-
-	private static function Cmp($a, $b)
-	{
-		if ($a["SORT"] == $b["SORT"])
-			return ($a["ID"] < $b["ID"]) ? -1 : 1;
-
-		return ($a["SORT"] < $b["SORT"]) ? -1 : 1;
-	}
-
-	public function Begin()
-	{
-		uasort($this->arItems, "CAdminFilter::Cmp");
-
-		echo '
-<div id="adm-filter-tab-wrap-'.$this->id.'" class="adm-filter-wrap'.($this->arOptFlt["styleFolded"]=="Y" ? " adm-filter-folded" : "").'" style = "display: none;">
-	<table class="adm-filter-main-table">
-		<tr>
-			<td class="adm-filter-main-table-cell">
-				<div class="adm-filter-tabs-block" id="filter-tabs-'.$this->id.'">
-					<span id="adm-filter-tab-'.$this->id.'-0" class="adm-filter-tab adm-filter-tab-active" onclick="'.$this->id.'.SetActiveTab(this); '.$this->id.'.ApplyFilter(\'0\'); " title="'.GetMessage("admin_lib_filter_goto_dfilter").'">'.GetMessage("admin_lib_filter_filter").'</span>';
-
-		if(is_array($this->arItems) && !empty($this->arItems))
-		{
-			foreach($this->arItems as $filter_id => $filter)
-			{
-				$name = ($filter["NAME"] <> '' ? $filter["NAME"] : GetMessage("admin_lib_filter_no_name"));
-				echo '<span id="adm-filter-tab-'.$this->id.'-'.$filter_id.'" class="adm-filter-tab" onclick="'.$this->id.'.SetActiveTab(this); '.$this->id.'.ApplyFilter(\''.$filter_id.'\');" title="'.GetMessage("admin_lib_filter_goto_filter").": &quot;".htmlspecialcharsbx($name).'&quot;">'.htmlspecialcharsbx($name).'</span>';
-			}
-		}
-
-			echo '<span id="adm-filter-add-tab-'.$this->id.'" class="adm-filter-tab adm-filter-add-tab" onclick="'.$this->id.'.SaveAs();" title="'.GetMessage("admin_lib_filter_new").'"></span><span onclick="'.$this->id.'.SetFoldedView();" class="adm-filter-switcher-tab"><span id="adm-filter-switcher-tab" class="adm-filter-switcher-tab-icon"></span></span><span class="adm-filter-tabs-block-underlay"></span>
-				</div>
-			</td>
-		</tr>
-		<tr>
-			<td class="adm-filter-main-table-cell">
-				<div class="adm-filter-content" id="'.$this->id.'_content">
-					<div class="adm-filter-content-table-wrap">
-						<table cellspacing="0" class="adm-filter-content-table" id="'.$this->id.'">';
-	}
-
-	/**
-	 * @param bool|array $aParams
-	 */
-	public function Buttons($aParams=false)
-	{
-		$hkInst = CHotKeys::getInstance();
-
-		echo '
-
-						</table>
-					</div>
-					<div class="adm-filter-bottom-separate" id="'.$this->id.'_bottom_separator"></div>
-					<div class="adm-filter-bottom">';
-
-		if($aParams !== false)
-		{
-			$url = $aParams["url"];
-			if(strpos($url, "?")===false)
-				$url .= "?";
-			else
-				$url .= "&";
-
-			if(strpos($url, "lang=")===false)
-				$url .= "lang=".LANG;
-
-			if(!$this->url)
-				$this->url = $url;
-
-			if(!$this->tableId)
-				$this->tableId = $aParams["table_id"];
-
-			if(isset($aParams['report']) && $aParams['report'])
-			{
-				echo '
-						<input type="submit" class="adm-btn" id="'.$this->id.'set_filter" name="set_filter" title="'.GetMessage("admin_lib_filter_set_rep_title").$hkInst->GetTitle("set_filter").'" onclick="return '.htmlspecialcharsbx($this->id.'.OnSet(\''.CUtil::AddSlashes($aParams["table_id"]).'\', \''.CUtil::AddSlashes($url).'\', this);').'" value="'.GetMessage("admin_lib_filter_set_rep").'">
-						<input type="submit" class="adm-btn" id="'.$this->id.'del_filter" name="del_filter" title="'.GetMessage("admin_lib_filter_clear_butt_title").$hkInst->GetTitle("del_filter").'" onclick="return '.htmlspecialcharsbx($this->id.'.OnClear(\''.CUtil::AddSlashes($aParams["table_id"]).'\', \''.CUtil::AddSlashes($url).'\', this);').'" value="'.GetMessage("admin_lib_filter_clear_butt").'">';
-			}
-			else
-				echo '
-						<input type="submit" class="adm-btn" id="'.$this->id.'set_filter" name="set_filter" title="'.GetMessage("admin_lib_filter_set_butt").$hkInst->GetTitle("set_filter").'" onclick="return '.htmlspecialcharsbx($this->id.'.OnSet(\''.CUtil::AddSlashes($aParams["table_id"]).'\', \''.CUtil::AddSlashes($url).'\', this);').'" value="'.GetMessage("admin_lib_filter_set_butt").'">
-						<input type="submit" class="adm-btn" id="'.$this->id.'del_filter" name="del_filter" title="'.GetMessage("admin_lib_filter_clear_butt").$hkInst->GetTitle("del_filter").'" onclick="return '.htmlspecialcharsbx($this->id.'.OnClear(\''.CUtil::AddSlashes($aParams["table_id"]).'\', \''.CUtil::AddSlashes($url).'\', this);').'" value="'.GetMessage("admin_lib_filter_clear_butt").'">';
-
-		}
-		if($this->popup)
-		{
-
-			echo '
-						<div class="adm-filter-setting-block">
-							<span class="adm-filter-setting" onClick="this.blur();'.$this->id.'.SaveMenuShow(this);return false;" hidefocus="true" title="'.GetMessage("admin_lib_filter_savedel_title").'"></span>
-							<span class="adm-filter-add-button" onClick="this.blur();'.$this->id.'.SettMenuShow(this);return false;" hidefocus="true" title="'.GetMessage("admin_lib_filter_more_title").'"></span>
-						</div>';
-		}
-	}
-
-	public function End()
-	{
-
-		echo '
-					</div>
-				</div>
-			</td>
-		</tr>
-	</table>
-</div>';
-
-		$sRowIds = $sVisRowsIds = "";
-
-
-		if(is_array($this->popup))
-		{
-			foreach($this->popup as $key=>$item)
-				if($item !== null)
-					$sRowIds .= ($sRowIds <> ""? ",":"").'"'.CUtil::JSEscape($key).'"';
-
-			$aRows = explode(",", $this->arOptFlt["rows"]);
-
-			if(is_array($aRows))
-				foreach($aRows as $row)
-					if(trim($row) <> "")
-						$sVisRowsIds .= ($sVisRowsIds <> ""? ",":"").'"'.CUtil::JSEscape(trim($row)).'":true';
-		}
-
-		$this->PrintSaveOptionsDIV();
-		$this->GetParamsFromCookie();
-
-		$openedTabUri = false;
-		$openedTabSes = $filteredTab = null;
-
-		if(isset($_REQUEST["adm_filter_applied"]) && !empty($_REQUEST["adm_filter_applied"]))
-		{
-			$openedTabUri = $_REQUEST["adm_filter_applied"];
-		}
-		else
-		{
-			$openedTabSes = $_SESSION[self::SESS_PARAMS_NAME][$this->id]["activeTabId"];
-			$filteredTab = $_SESSION[self::SESS_PARAMS_NAME][$this->id]["filteredId"];
-		}
-
-		echo '
-<script type="text/javascript">
-		var '.$this->id.' = {};
-		BX.ready(function(){
-			'.$this->id.' = new BX.AdminFilter("'.$this->id.'", ['.$sRowIds.']);
-			'.$this->id.'.state.init = true;
-			'.$this->id.'.state.folded = '.($this->arOptFlt["styleFolded"] == "Y" ? "true" : "false").';
-			'.$this->id.'.InitFilter({'.$sVisRowsIds.'});
-			'.$this->id.'.oOptions = '.CUtil::PhpToJsObject($this->arItems).';
-			'.$this->id.'.popupItems = '.CUtil::PhpToJsObject($this->popup).';
-			'.$this->id.'.InitFirst();
-			'.$this->id.'.url = "'.CUtil::AddSlashes($this->url).'";
-			'.$this->id.'.table_id = "'.CUtil::AddSlashes($this->tableId).'";
-			'.$this->id.'.presetsDeleted = ['.$this->arOptFlt["presetsDeletedJS"].'];';
-
-			if($filteredTab != null || $openedTabUri != false)
-			{
-				$tabToInit = ($openedTabUri ? $openedTabUri : $filteredTab);
-
-				echo '
-			'.$this->id.'.InitFilteredTab("'.CUtil::JSEscape(htmlspecialcharsbx($tabToInit)).'");';
-			}
-
-			if($openedTabSes != null || $openedTabUri != false)
-				echo '
-			var openedFTab = '.$this->id.'.InitOpenedTab("'.CUtil::JSEscape(htmlspecialcharsbx($openedTabUri)).'", "'.CUtil::JSEscape(htmlspecialcharsbx($openedTabSes)).'");';
-
-			echo '
-			'.$this->id.'.state.init = false;
-			BX("adm-filter-tab-wrap-'.$this->id.'").style.display = "block";';
-
-			//making filter tabs draggable
-			if($this->url)
-			{
-				$registerUrl = CHTTP::urlDeleteParams($this->url, array("adm_filter_applied", "adm_filter_preset"));
-
-				foreach($this->arItems as $filter_id => $filter)
-				{
-					$arParamsAdd = array("adm_filter_applied"=>$filter_id);
-
-					if(isset($filter["PRESET_ID"]))
-						$arParamsAdd["adm_filter_preset"] = $filter["PRESET_ID"];
-
-					$filterUrl = CHTTP::urlAddParams($registerUrl, $arParamsAdd, array("encode","skip_empty"));
-
-					echo "
-					BX.adminMenu.registerItem('adm-filter-tab-".$this->id.'-'.$filter_id."', {URL:'".$filterUrl."', TITLE: true});";
-				}
-			}
-
-			echo '
-			}
-		);
-</script>';
-
-		$hkInst = CHotKeys::getInstance();
-		$Execs = $hkInst->GetCodeByClassName("CAdminFilter");
-		echo $hkInst->PrintJSExecs($Execs);
-	}
-
-
-	//experemental
-	//extracting filter params from cookie and transfer them to session
-	private function GetParamsFromCookie()
-	{
-		$cookieName = COption::GetOptionString("main", "cookie_name", "BITRIX_SM")."_ADM_FLT_PARAMS";
-		if(!isset($_COOKIE[$cookieName]) || $_COOKIE[$cookieName] == "")
-			return false;
-
-		$aParams = explode(",",$_COOKIE[$cookieName]);
-		SetCookie($cookieName,'');
-
-		if(empty($aParams))
-			return false;
-
-		$filterId = "";
-
-		foreach ($aParams as $key => $aValue)
-		{
-			$aParam = explode(":",$aValue);
-			unset($aParams[$key]);
-
-			if(!empty($aParam) && $aParam[0] != "filter_id")
-				$aParams[$aParam[0]] = $aParam[1];
-			elseif($aParam[0] == "filter_id")
-				$filterId = $aParam[1];
-		}
-
-		if($filterId == "")
-			return false;
-
-		foreach ($aParams as $paramName => $value)
-			$_SESSION[self::SESS_PARAMS_NAME][$filterId][$paramName] = $value;
-
-		return true;
-	}
-
-	//experemental
-	private function IsFiltered()
-	{
-		$fltTable = $_SESSION["SESS_ADMIN"][$this->tableId];
-
-		if(!isset($fltTable) || !is_array($fltTable))
-			return false;
-
-		foreach ($fltTable as $value)
-			if(!is_null($value))
-				return true;
-
-		return false;
-	}
-
-	private function PrintSaveOptionsDIV()
-	{
-		global $USER;
-		$isAdmin = $USER->CanDoOperation('edit_other_settings');
-		?>
-<div style="display:none">
-	<div id="filter_save_opts_<?=$this->id?>">
-		<table width="100%">
-			<tr>
-				<td align="right" width="40%"><?=GetMessage("admin_lib_filter_sett_name")?></td>
-				<td><input type="text" name="save_filter_name" value="" size="30" maxlength="255"></td>
-			</tr>
-			<?if($isAdmin):?>
-				<tr>
-					<td align="right" width="40%"><?=GetMessage("admin_lib_filter_sett_common")?></td>
-					<td><input type="checkbox" name="common" ></td>
-				</tr>
-			<?endif;?>
-		</table>
-	</div>
-</div>
-		<?
-	}
-
-	public function UnEscape($aFilter)
-	{
-		if(defined("BX_UTF"))
-			return;
-		if(!is_array($aFilter))
-			return;
-		foreach($aFilter as $flt)
-			if(is_string($GLOBALS[$flt]) && CUtil::DetectUTF8($GLOBALS[$flt]))
-				CUtil::decodeURIComponent($GLOBALS[$flt]);
-	}
-}
-
 /* Context links menu for edit forms */
 class CAdminContextMenu
 {
@@ -1963,7 +1252,7 @@ class CAdminContextMenu
 	var $bMenuAdded = false;
 	var $bRightBarAdded = false;
 
-	function CAdminContextMenu($items, $additional_items = array())
+	public function __construct($items, $additional_items = array())
 	{
 		//array(
 		//	array("NEWBAR"=>true),
@@ -1976,6 +1265,16 @@ class CAdminContextMenu
 		//)
 		$this->items = $items;
 		$this->additional_items = $additional_items;
+	}
+
+	/**
+	 * @deprecated
+	 * @param $items
+	 * @param array $additional_items
+	 */
+	function CAdminContextMenu($items, $additional_items = array())
+	{
+		self::__construct($items, $additional_items);
 	}
 
 	function Show()
@@ -2091,7 +1390,7 @@ BX.Fix(right_bar, {type: 'right', limit_node: BX.previousSibling(right_bar)});
 		return '';
 	}
 
-	function GetActiveClassByID()
+	function GetActiveClassByID($icon_id)
 	{
 		return 'adm-btn-active';
 	}
@@ -2190,7 +1489,10 @@ class CAdminSorting
 	var $by_initial;
 	var $order_initial;
 
-	function CAdminSorting($table_id, $by_initial=false, $order_initial=false, $by_name="by", $ord_name="order")
+	protected $field;
+	protected $order;
+
+	public function __construct($table_id, $by_initial=false, $order_initial=false, $by_name="by", $ord_name="order")
 	{
 		/** @global CMain $APPLICATION */
 		global $APPLICATION;
@@ -2205,9 +1507,13 @@ class CAdminSorting
 
 		$aOptSort = array();
 		if(isset($GLOBALS[$this->by_name]))
+		{
 			$_SESSION["SESS_SORT_BY"][$uniq] = $GLOBALS[$this->by_name];
+		}
 		elseif(isset($_SESSION["SESS_SORT_BY"][$uniq]))
+		{
 			$GLOBALS[$this->by_name] = $_SESSION["SESS_SORT_BY"][$uniq];
+		}
 		else
 		{
 			$aOptSort = CUserOptions::GetOption("list", $this->table_id, array("by"=>$by_initial, "order"=>$order_initial));
@@ -2218,9 +1524,13 @@ class CAdminSorting
 		}
 
 		if(isset($GLOBALS[$this->ord_name]))
+		{
 			$_SESSION["SESS_SORT_ORDER"][$uniq] = $GLOBALS[$this->ord_name];
+		}
 		elseif(isset($_SESSION["SESS_SORT_ORDER"][$uniq]))
+		{
 			$GLOBALS[$this->ord_name] = $_SESSION["SESS_SORT_ORDER"][$uniq];
+		}
 		else
 		{
 			if(empty($aOptSort["order"]))
@@ -2230,6 +1540,9 @@ class CAdminSorting
 			elseif($order_initial !== false)
 				$GLOBALS[$this->ord_name] = $order_initial;
 		}
+
+		$this->field = $GLOBALS[$this->by_name];
+		$this->order = $GLOBALS[$this->ord_name];
 	}
 
 	function Show($text, $sort_by, $alt_title = false, $baseCssClass = "")
@@ -2237,10 +1550,10 @@ class CAdminSorting
 		$ord = "asc";
 		$class = "";
 		$title = GetMessage("admin_lib_sort_title")." ".($alt_title?$alt_title:$text);
-		//echo $this->by_name.'/'.strtolower($GLOBALS[$this->by_name]) .'=='. strtolower($sort_by).'<br>';
-		if(strtolower($GLOBALS[$this->by_name]) == strtolower($sort_by))
+
+		if(strtolower($this->field) == strtolower($sort_by))
 		{
-			if(strtolower($GLOBALS[$this->ord_name]) == "desc")
+			if(strtolower($this->order) == "desc")
 			{
 				$class = "-down";
 				$title .= " ".GetMessage("admin_lib_sort_down");
@@ -2271,6 +1584,16 @@ class CAdminSorting
 
 		return 'class="'.$baseCssClass.' adm-list-table-cell-sort'.$class.'" onclick="'.$this->table_id.'.Sort(\''.htmlspecialcharsbx(CUtil::addslashes($url)).'\', '.($class <> ""? "false" : "true").', arguments);" title="'.$title.'"';
 	}
+
+	public function getField()
+	{
+		return $this->field;
+	}
+
+	public function getOrder()
+	{
+		return $this->order;
+	}
 }
 
 /* Navigation */
@@ -2285,15 +1608,21 @@ class CAdminResult extends CDBResult
 	var $nInitialSize;
 	var $table_id;
 
-	function CAdminResult($res, $table_id)
+	public function __construct($res, $table_id)
 	{
-		parent::CDBResult($res);
+		parent::__construct($res);
 		$this->table_id = $table_id;
 	}
 
-	function NavStart($nPageSize=20, $bShowAll=true, $iNumPage=false)
+	/** @deprecated */
+	public function CAdminResult($res, $table_id)
 	{
-		$nSize = CAdminResult::GetNavSize($this->table_id, $nPageSize);
+		self::__construct($res, $table_id);
+	}
+
+	public function NavStart($nPageSize=20, $bShowAll=true, $iNumPage=false)
+	{
+		$nSize = self::GetNavSize($this->table_id, $nPageSize);
 
 		if(!is_array($nPageSize))
 			$nPageSize = array();
@@ -2307,12 +1636,17 @@ class CAdminResult extends CDBResult
 		parent::NavStart($nPageSize, $bShowAll, $iNumPage);
 	}
 
+	protected function parentNavStart($nPageSize, $bShowAll, $iNumPage)
+	{
+		parent::NavStart($nPageSize, $bShowAll, $iNumPage);
+	}
+
 	/**
 	 * @param bool|string $table_id
 	 * @param int|array $nPageSize
 	 * @return int
 	 */
-	function GetNavSize($table_id=false, $nPageSize=20)
+	public function GetNavSize($table_id=false, $nPageSize=20)
 	{
 		/** @global CMain $APPLICATION */
 		global $NavNum, $APPLICATION;
@@ -2348,1905 +1682,11 @@ class CAdminResult extends CDBResult
 		return $nSize;
 	}
 
-	function GetNavPrint($title, $show_allways=true, $StyleText="", $template_path=false, $arDeleteParam=false)
+	public function GetNavPrint($title, $show_allways=true, $StyleText="", $template_path=false, $arDeleteParam=false)
 	{
 		if($template_path === false)
 			$template_path = $_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/interface/navigation.php";
 		return parent::GetNavPrint($title, $show_allways, $StyleText, $template_path, array('action', 'sessid'));
-	}
-}
-
-/*Tab Control*/
-class CAdminTabControl
-{
-	var $name, $unique_name;
-	var $tabs = array();
-	var $selectedTab;
-	var $tabIndex = 0;
-	var $bButtons = false;
-	var $bCanExpand;
-	var $bPublicModeBuffer = false;
-	var $bShowSettings = false;
-	var $publicModeBuffer_id;
-
-	/** @var CAdminTabEngine */
-	var $customTabber;
-
-	var $bPublicMode = false;
-	var $publicObject = 'BX.WindowManager.Get()';
-
-	var $AUTOSAVE = null;
-	protected $tabEvent = false;
-
-	function CAdminTabControl($name, $tabs, $bCanExpand = true, $bDenyAutoSave = false)
-	{
-		/** @global CMain $APPLICATION */
-		global $APPLICATION;
-
-		//array(array("DIV"=>"", "TAB"=>"", "ICON"=>, "TITLE"=>"", "ONSELECT"=>"javascript"), ...)
-		if(is_array($tabs))
-		{
-			$this->tabs = $tabs;
-		}
-		$this->name = $name;
-		$this->unique_name = $name."_".md5($APPLICATION->GetCurPage());
-
-		$this->bPublicMode = defined('BX_PUBLIC_MODE') && BX_PUBLIC_MODE == 1;
-		$this->bCanExpand = !$this->bPublicMode && (bool)$bCanExpand;
-
-		$this->SetSelectedTab();
-
-		if (!$bDenyAutoSave && CAutoSave::Allowed())
-		{
-			$this->AUTOSAVE = new CAutoSave();
-		}
-	}
-
-	function SetPublicMode($jsObject = false)
-	{
-		$this->bPublicMode = true;
-		$this->bShowSettings = false;
-		$this->bCanExpand = false;
-		$this->bPublicModeBuffer = true;
-
-		if ($jsObject)
-			$this->publicObject = $jsObject;
-	}
-
-	/**
-	 * @param CAdminTabEngine $customTabber
-	 */
-	function AddTabs(&$customTabber)
-	{
-		if (!$this->customTabber)
-		{
-			$this->customTabber = $customTabber;
-
-			$arCustomTabs = $this->customTabber->GetTabs();
-			if ($arCustomTabs && is_array($arCustomTabs))
-			{
-				$arTabs = array();
-				$i = 0;
-				foreach ($this->tabs as $value)
-				{
-					foreach ($arCustomTabs as $key1 => $value1)
-					{
-						if (array_key_exists("SORT", $value1) && IntVal($value1["SORT"]) == $i)
-						{
-							$arTabs[] = array_merge($value1, array("CUSTOM" => "Y"));
-							unset($arCustomTabs[$key1]);
-						}
-					}
-
-					$arTabs[] = $value;
-					$i++;
-				}
-
-				foreach ($arCustomTabs as $value1)
-					$arTabs[] = array_merge($value1, array("CUSTOM" => "Y"));
-
-				$this->tabs = $arTabs;
-				$this->SetSelectedTab();
-			}
-		}
-	}
-
-	function OnAdminTabControlBegin()
-	{
-		if (!$this->tabEvent)
-		{
-			foreach(GetModuleEvents("main", "OnAdminTabControlBegin", true) as $arEvent)
-				ExecuteModuleEventEx($arEvent, array(&$this));
-			$this->tabEvent = true;
-		}
-	}
-
-	function SetSelectedTab()
-	{
-		$this->selectedTab = $this->tabs[0]["DIV"];
-		if(isset($_REQUEST[$this->name."_active_tab"]))
-		{
-			foreach($this->tabs as $tab)
-			{
-				if($tab["DIV"] == $_REQUEST[$this->name."_active_tab"])
-				{
-					$this->selectedTab = $_REQUEST[$this->name."_active_tab"];
-					break;
-				}
-			}
-		}
-	}
-
-	function Begin()
-	{
-		$hkInst = CHotKeys::getInstance();
-
-		$this->OnAdminTabControlBegin();
-		$this->tabIndex = 0;
-
-		$this->SetSelectedTab();
-
-		if (!$this->bPublicMode)
-		{
-?>
-<div class="adm-detail-block" id="<?=$this->name?>_layout">
-	<div class="adm-detail-tabs-block<?=$this->bShowSettings?' adm-detail-tabs-block-settings':''?>" id="<?=$this->name?>_tabs">
-<?
-		}
-
-		$len = count($this->tabs);
-		$tabs_html = '';
-		foreach($this->tabs as $key => $tab)
-		{
-			$bSelected = ($tab["DIV"] == $this->selectedTab);
-			$tabs_html .= '<span title="'.$tab["TITLE"].$hkInst->GetTitle("tab-container").'" '.
-				'id="tab_cont_'.$tab["DIV"].'" '.
-				'class="adm-detail-tab'.($bSelected ? ' adm-detail-tab-active':'').($key==$len-1? ' adm-detail-tab-last':'').'" '.
-				'onclick="'.$this->name.'.SelectTab(\''.$tab["DIV"].'\');">'.htmlspecialcharsex($tab["TAB"]).'</span>';
-		}
-
-		$tabs_html .= $this->ShowTabButtons();
-
-		if (!$this->bPublicMode)
-		{
-			echo $tabs_html;
-?>
-	</div>
-	<div class="adm-detail-content-wrap">
-<?
-		}
-		else
-		{
-			echo '
-<script type="text/javascript">
-'.$this->publicObject.'.SetHead(\''.CUtil::JSEscape($tabs_html).'\');
-';
-			if ($this->AUTOSAVE)
-			{
-				echo '
-'.$this->publicObject.'.setAutosave();
-';
-			}
-			echo '
-</script>
-';
-			if ($this->bPublicModeBuffer)
-			{
-				$this->publicModeBuffer_id = 'bx_tab_control_'.RandString(6);
-				echo '<div id="'.$this->publicModeBuffer_id.'" style="display: none;">';
-			}
-		}
-	}
-
-	function ShowTabButtons()
-	{
-		$s = '';
-		if (!$this->bPublicMode)
-		{
-			if(count($this->tabs) > 1 && $this->bCanExpand/* || $this->AUTOSAVE*/)
-			{
-				$s .= '<div class="adm-detail-title-setting" onclick="'.$this->name.'.ToggleTabs();" title="'.GetMessage("admin_lib_expand_tabs").'" id="'.$this->name.'_expand_link"><span class="adm-detail-title-setting-btn adm-detail-title-expand"></span></div>';
-			}
-		}
-		return $s;
-	}
-
-	function BeginNextTab()
-	{
-		if ($this->AUTOSAVE)
-			$this->AUTOSAVE->Init();
-
-		//end previous tab
-		$this->EndTab();
-
-		if($this->tabIndex >= count($this->tabs))
-			return;
-
-		$css = '';
-		if ($this->tabs[$this->tabIndex]["DIV"] <> $this->selectedTab)
-			$css .= 'display:none; ';
-
-		echo '
-<div class="adm-detail-content" id="'.$this->tabs[$this->tabIndex]["DIV"].'"'.($css != '' ? ' style="'.$css.'"' : '').'>';
-
-		/*if($this->tabs[$this->tabIndex]["ICON"] <> "")
-			echo '
-		<td class="icon"><div id="'.$this->tabs[$this->tabIndex]["ICON"].'"></div></td>
-';*/
-		echo '
-	<div class="adm-detail-title">'.$this->tabs[$this->tabIndex]["TITLE"].'</div>';
-
-echo '
-	<div class="adm-detail-content-item-block">
-		<table class="adm-detail-content-table edit-table" id="'.$this->tabs[$this->tabIndex]["DIV"].'_edit_table">
-			<tbody>
-';
-		if(array_key_exists("CUSTOM", $this->tabs[$this->tabIndex]) && $this->tabs[$this->tabIndex]["CUSTOM"] == "Y")
-		{
-			$this->customTabber->ShowTab($this->tabs[$this->tabIndex]["DIV"]);
-			$this->tabIndex++;
-			$this->BeginNextTab();
-		}
-		elseif(array_key_exists("CONTENT", $this->tabs[$this->tabIndex]))
-		{
-			echo $this->tabs[$this->tabIndex]["CONTENT"];
-			$this->tabIndex++;
-			$this->BeginNextTab();
-		}
-		else
-		{
-			$this->tabIndex++;
-		}
-	}
-
-	function EndTab()
-	{
-		if(
-			$this->tabIndex < 1
-			|| $this->tabIndex > count($this->tabs)
-			|| $this->tabs[$this->tabIndex-1]["_closed"] === true
-		)
-		{
-			return;
-		}
-
-		echo '
-			</tbody>
-		</table>
-	</div>
-</div>
-';
-
-		$this->tabs[$this->tabIndex-1]["_closed"] = true;
-	}
-
-	/**
-	 * @param bool|array $aParams
-	 */
-	function Buttons($aParams=false)
-	{
-		$hkInst = CHotKeys::getInstance();
-
-		while($this->tabIndex < count($this->tabs))
-			$this->BeginNextTab();
-
-		$this->bButtons = true;
-
-		//end previous tab
-		$this->EndTab();
-
-		if (!$this->bPublicMode)
-		{
-			echo '<div class="adm-detail-content-btns-wrap" id="'.$this->name.'_buttons_div"><div class="adm-detail-content-btns">';
-		}
-
-		if ($_REQUEST['subdialog'])
-		{
-			echo '<input type="hidden" name="suffix" value="'.substr($GLOBALS['obJSPopup']->suffix, 1).'" />';
-			echo '<input type="hidden" name="subdialog" value="Y" />';
-		}
-
-		if($aParams !== false)
-		{
-			if ($this->bPublicMode)
-			{
-				if (strlen($_REQUEST['from_module']))
-				{
-					echo '<input type="hidden" name="from_module" value="'.htmlspecialcharsbx($_REQUEST['from_module']).'" />';
-				}
-
-				if(is_array($aParams['buttons']))
-				{
-					echo '
-<input type="hidden" name="bxpublic" value="Y" />
-<script type="text/javascript">'.$this->publicObject.'.SetButtons('.CUtil::PhpToJsObject($aParams['buttons']).');</script>
-';
-				}
-				else
-				{
-					echo '
-<input type="hidden" name="bxpublic" value="Y" /><input type="hidden" name="save" value="Y" />
-<script type="text/javascript">'.$this->publicObject.'.SetButtons(['.$this->publicObject.'.btnSave, '.$this->publicObject.'.btnCancel]);</script>
-';
-				}
-			}
-			else
-			{
-				if($aParams["btnSave"] !== false)
-				{
-					echo '<input'.($aParams["disabled"] === true? " disabled":"").' type="submit" name="save" value="'.GetMessage("admin_lib_edit_save").'" title="'.GetMessage("admin_lib_edit_save_title").$hkInst->GetTitle("Edit_Save_Button").'" class="adm-btn-save" />';
-					echo $hkInst->PrintJSExecs($hkInst->GetCodeByClassName("Edit_Save_Button"));
-				}
-				if($aParams["btnApply"] !== false)
-				{
-					echo '<input'.($aParams["disabled"] === true? " disabled":"").' type="submit" name="apply" value="'.GetMessage("admin_lib_edit_apply").'" title="'.GetMessage("admin_lib_edit_apply_title").$hkInst->GetTitle("Edit_Apply_Button").'" />';
-					echo $hkInst->PrintJSExecs($hkInst->GetCodeByClassName("Edit_Apply_Button"));
-				}
-				if($aParams["btnCancel"] !== false && $aParams["back_url"] <> '' && !preg_match('/(javascript|data)[\s\0-\13]*:/i', $aParams["back_url"]))
-				{
-					echo '<input type="button" value="'.GetMessage("admin_lib_edit_cancel").'" name="cancel" onClick="window.location=\''.htmlspecialcharsbx(CUtil::addslashes($aParams["back_url"])).'\'" title="'.GetMessage("admin_lib_edit_cancel_title").$hkInst->GetTitle("Edit_Cancel_Button").'" />';
-					echo $hkInst->PrintJSExecs($hkInst->GetCodeByClassName("Edit_Cancel_Button"));
-				}
-				if($aParams["btnSaveAndAdd"] === true)
-				{
-					echo '<input'.($aParams["disabled"] === true? " disabled":"").' type="submit" name="save_and_add" value="'.GetMessage("admin_lib_edit_save_and_add").'" title="'.GetMessage("admin_lib_edit_save_and_add_title").$hkInst->GetTitle("Edit_Save_And_Add_Button").'" class="adm-btn-add" />';
-					echo $hkInst->PrintJSExecs($hkInst->GetCodeByClassName("Edit_Save_And_Add_Button"));
-				}
-			}
-		}
-	}
-
-	/**
-	 * @param bool|array $arJSButtons
-	 */
-	function ButtonsPublic($arJSButtons = false)
-	{
-		while ($this->tabIndex < count($this->tabs))
-			$this->BeginNextTab();
-
-		$this->bButtons = true;
-		$this->EndTab();
-
-		if ($this->bPublicMode)
-		{
-			if (strlen($_REQUEST['from_module']))
-				echo '<input type="hidden" name="from_module" value="'.htmlspecialcharsbx($_REQUEST['from_module']).'" />';
-
-			if ($arJSButtons === false)
-			{
-				echo '
-<input type="hidden" name="bxpublic" value="Y" /><input type="hidden" name="save" value="Y" />
-<script type="text/javascript">'.$this->publicObject.'.SetButtons(['.$this->publicObject.'.btnSave, '.$this->publicObject.'.btnCancel]);</script>
-';
-			}
-			elseif (is_array($arJSButtons))
-			{
-				$arJSButtons = array_values($arJSButtons);
-				echo '
-<input type="hidden" name="bxpublic" value="Y" />
-<script type="text/javascript">'.$this->publicObject.'.SetButtons([
-';
-				foreach ($arJSButtons as $key => $btn)
-				{
-					if (substr($btn, 0, 1) == '.')
-						$btn = $this->publicObject.$btn;
-					echo $key ? ',' : '', $btn, "\r\n"; // NO JSESCAPE HERE! string must contain valid js object
-				}
-				echo '
-]);</script>
-';
-			}
-		}
-	}
-
-	function End()
-	{
-		$hkInst = CHotKeys::getInstance();
-
-		if(!$this->bButtons)
-		{
-			while ($this->tabIndex < count($this->tabs))
-				$this->BeginNextTab();
-
-			//end previous tab
-			$this->EndTab();
-			if (!$this->bPublicMode)
-				echo '<div class="adm-detail-content-btns-wrap"><div class="adm-detail-content-btns adm-detail-content-btns-empty"></div></div>';
-		}
-		elseif (!$this->bPublicMode)
-		{
-			echo '</div></div>';
-		}
-
-		if (!$this->bPublicMode)
-		{
-			echo '
-</div></div>
-';
-		}
-
-		$Execs = $hkInst->GetCodeByClassName("CAdminTabControl");
-		echo $hkInst->PrintJSExecs($Execs, $this->name);
-
-		echo '
-
-<input type="hidden" id="'.$this->name.'_active_tab" name="'.$this->name.'_active_tab" value="'.htmlspecialcharsbx($this->selectedTab).'">
-
-<script type="text/javascript">';
-		$s = "";
-		foreach($this->tabs as $tab)
-		{
-			$s .= ($s <> ""? ", ":"").
-			"{".
-			"'DIV': '".$tab["DIV"]."' ".
-			($tab["ONSELECT"] <> ""? ", 'ONSELECT': '".CUtil::JSEscape($tab["ONSELECT"])."'":"").
-			"}";
-		}
-		echo '
-if (!window.'.$this->name.' || !BX.is_subclass_of(window.'.$this->name.', BX.adminTabControl))
-	window.'.$this->name.' = new BX.adminTabControl("'.$this->name.'", "'.$this->unique_name.'", ['.$s.']);
-else if(!!window.'.$this->name.')
-	window.'.$this->name.'.PreInit(true);
-';
-
-		if (!$this->bPublicMode)
-		{
-			$aEditOpt = CUserOptions::GetOption("edit", $this->unique_name, array());
-			$aTabOpt = CUserOptions::GetOption("edit", 'admin_tabs', array());
-
-			if($this->bCanExpand && count($this->tabs) > 1)
-			{
-				if($aEditOpt["expand"] == "on")
-				{
-					echo '
-'.$this->name.'.ToggleTabs();';
-				}
-			}
-
-			if ($aTabOpt["fix_top"] == "off" && $aEditOpt["expand"] != "on")
-			{
-				echo '
-'.$this->name.'.ToggleFix(\'top\');';
-			}
-
-			if ($aTabOpt["fix_bottom"] == "off")
-			{
-				echo '
-'.$this->name.'.ToggleFix(\'bottom\');';
-			}
-		}
-		else
-		{
-			echo 'window.'.$this->name.'.setPublicMode(true); ';
-		}
-echo '
-</script>
-';
-		if ($this->bPublicModeBuffer)
-		{
-			echo '</div>';
-			echo '<script type="text/javascript">BX.ready(function() {'.$this->publicObject.'.SwapContent(\''.$this->publicModeBuffer_id.'\');});</script>';
-		}
-	}
-
-	function ActiveTabParam()
-	{
-		return $this->name."_active_tab=".urlencode($this->selectedTab);
-	}
-
-	// this method is temporarily disabled!
-	//string, CAdminException, array("id"=>"name", ...)
-	function ShowWarnings($form, $messages, $aFields=false)
-	{
-/*
-		if(!$messages)
-			return;
-		$aMess = $messages->GetMessages();
-		if(empty($aMess) || !is_array($aMess))
-			return;
-		$s = "";
-		foreach($aMess as $msg)
-		{
-			$field_name = (is_array($aFields)? $aFields[$msg["id"]] : $msg["id"]);
-			if(empty($field_name))
-				continue;
-			$s .= ($s <> ""? ", ":"")."{'name':'".CUtil::JSEscape($field_name)."', 'title':'".CUtil::JSEscape(htmlspecialcharsback($msg["text"]))."'}";
-		}
-		echo '
-<script>
-'.$this->name.'.ShowWarnings("'.CUtil::JSEscape($form).'", ['.$s.']);
-</script>
-';
-*/
-	}
-}
-
-/*View Tab Control*/
-class CAdminViewTabControl
-{
-	var $name;
-	var $tabs;
-	var $selectedTab;
-	var $tabIndex = 0;
-
-	function CAdminViewTabControl($name, $tabs)
-	{
-		//array(array("DIV"=>"", "TAB"=>"", "ICON"=>, "TITLE"=>"", "ONSELECT"=>"javascript"), ...)
-		$this->tabs = $tabs;
-		$this->name = $name;
-		if(isset($_REQUEST[$this->name."_active_tab"]))
-			$this->selectedTab = $_REQUEST[$this->name."_active_tab"];
-		else
-		{
-			foreach($tabs as $tab)
-			{
-				if (
-					!isset($tab["VISIBLE"])
-					|| $tab["VISIBLE"]
-				)
-				{
-					$this->selectedTab = $tab["DIV"];
-					break;
-				}
-			}
-		}
-	}
-
-	function Begin()
-	{
-		echo '
-<div class="adm-detail-subtabs-block">
-';
-		$i = 0;
-		foreach($this->tabs as $tab)
-		{
-			$bSelected = ($tab["DIV"] == $this->selectedTab);
-			echo '<span class="adm-detail-subtabs'.($bSelected? " adm-detail-subtab-active":"").'" id="view_tab_'.$tab["DIV"].'" onclick="'.$this->name.'.SelectTab(\''.$tab["DIV"].'\');" title="'.$tab["TITLE"].'"'.(isset($tab["VISIBLE"]) && !$tab["VISIBLE"] ? ' style="display: none;"' : '').'>'.$tab["TAB"].'</span>'."\n";
-			$i++;
-		}
-echo '</div>';
-	}
-
-	function BeginNextTab()
-	{
-		//end previous tab
-		$this->EndTab();
-
-		if($this->tabIndex >= count($this->tabs))
-			return;
-
-		echo '
-<div id="'.$this->tabs[$this->tabIndex]["DIV"].'"'.($this->tabs[$this->tabIndex]["DIV"] <> $this->selectedTab ? ' style="display:none;"':'').'>
-	<div class="adm-detail-content-item-block-view-tab">
-	<div class="adm-detail-title-view-tab">'.$this->tabs[$this->tabIndex]["TITLE"].'</div>
-';
-		$this->tabIndex++;
-	}
-
-	function EndTab()
-	{
-		if($this->tabIndex < 1 || $this->tabIndex > count($this->tabs))
-			return;
-		echo '
-	</div>
-</div>
-';
-	}
-
-	function End()
-	{
-		$this->EndTab();
-		echo '
-<script type="text/javascript">
-';
-		$s = "";
-		foreach($this->tabs as $tab)
-		{
-			$s .= ($s <> ""? ", ":"").
-			"{".
-			"'DIV': '".$tab["DIV"]."' ".
-			($tab["ONSELECT"] <> ""? ", 'ONSELECT': '".CUtil::JSEscape($tab["ONSELECT"])."'":"").
-			"}";
-		}
-		echo 'var '.$this->name.' = new BX.adminViewTabControl(['.$s.']); ';
-
-		if(defined('BX_PUBLIC_MODE') && BX_PUBLIC_MODE == 1)
-		{
-			echo 'window.'.$this->name.'.setPublicMode(true); ';
-		}
-
-		echo '</script>';
-	}
-}
-
-class CAdminList
-{
-	var $table_id;
-	/** @var CAdminSorting */
-	var $sort;
-	var $aHeaders = array();
-	var $aVisibleHeaders = array();
-	/** @var CAdminListRow[] */
-	var $aRows = array();
-	var $aHeader = array();
-	var $arVisibleColumns = array();
-	var $aFooter = array();
-	var $sNavText = '';
-	var $arFilterErrors = Array();
-	var $arUpdateErrors = array();
-	var $arUpdateErrorIDs = Array();
-	var $arGroupErrors = array();
-	var $arGroupErrorIDs = Array();
-	var $arActionSuccess = array();
-	var $bEditMode = false;
-	var $bMultipart = false;
-	var $bCanBeEdited = false;
-	var $bCanBeDeleted = false;
-	var $arActions = Array();
-	var $arActionsParams = Array();
-	/** @var CAdminContextMenuList */
-	var $context = false;
-	var $sContent = false, $sPrologContent = '', $sEpilogContent = '';
-	var $bShowActions;
-	var $onLoadScript;
-	var $arEditedRows;
-
-	private $filter;
-
-	public function getFilter()
-	{
-		return $this->filter;
-	}
-
-	/**
-	 * @param string $table_id
-	 * @param CAdminSorting|bool $sort
-	 */
-	function CAdminList($table_id, $sort = false)
-	{
-		$this->table_id = $table_id;
-		$this->sort = $sort;
-	}
-
-	//id, name, content, sort, default
-	function AddHeaders($aParams)
-	{
-		if (isset($_REQUEST['showallcol']) && $_REQUEST['showallcol'])
-			$_SESSION['SHALL'] = ($_REQUEST['showallcol'] == 'Y');
-
-		$aOptions = CUserOptions::GetOption("list", $this->table_id, array());
-
-		$aColsTmp = explode(",", $aOptions["columns"]);
-		$aCols = array();
-		foreach ($aColsTmp as $col)
-		{
-			$col = trim($col);
-			if ($col <> "")
-				$aCols[] = $col;
-		}
-
-		$bEmptyCols = empty($aCols);
-		foreach ($aParams as $param)
-		{
-			$param["__sort"] = -1;
-			$this->aHeaders[$param["id"]] = $param;
-			if (
-				(isset($_SESSION['SHALL']) && $_SESSION['SHALL'])
-				|| ($bEmptyCols && $param["default"] == true)
-				|| in_array($param["id"], $aCols)
-			)
-			{
-				$this->arVisibleColumns[] = $param["id"];
-			}
-		}
-
-		$aAllCols = null;
-		if (isset($_REQUEST["mode"]) && $_REQUEST["mode"] == "settings")
-			$aAllCols = $this->aHeaders;
-
-		if (!$bEmptyCols)
-		{
-			foreach ($aCols as $i => $col)
-				if (isset($this->aHeaders[$col]))
-					$this->aHeaders[$col]["__sort"] = $i;
-
-			uasort($this->aHeaders, create_function('$a, $b', 'if($a["__sort"] == $b["__sort"]) return 0; return ($a["__sort"] < $b["__sort"])? -1 : 1;'));
-		}
-
-		foreach($this->aHeaders as $id=>$arHeader)
-		{
-			if(in_array($id, $this->arVisibleColumns))
-				$this->aVisibleHeaders[$id] = $arHeader;
-		}
-
-		if (isset($_REQUEST["mode"]) && $_REQUEST["mode"] == "settings")
-			$this->ShowSettings($aAllCols, $aCols, $aOptions);
-	}
-
-	function ShowSettings($aAllCols, $aCols, $aOptions)
-	{
-		global $USER;
-
-		require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_js.php");
-		require($_SERVER['DOCUMENT_ROOT']."/bitrix/modules/main/interface/settings_admin_list.php");
-		require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin_js.php");
-		die();
-	}
-
-	function AddVisibleHeaderColumn($id)
-	{
-		if (isset($this->aHeaders[$id]) && !isset($this->aVisibleHeaders[$id]))
-		{
-			$this->arVisibleColumns[] = $id;
-			$this->aVisibleHeaders[$id] = $this->aHeaders[$id];
-		}
-	}
-
-	function GetVisibleHeaderColumns()
-	{
-		return $this->arVisibleColumns;
-	}
-
-	function AddAdminContextMenu($aContext=array(), $bShowExcel=true, $bShowSettings=true)
-	{
-		/** @global CMain $APPLICATION */
-		global $APPLICATION;
-
-		$aAdditionalMenu = array();
-
-		if($bShowSettings)
-		{
-			$link = DeleteParam(array("mode"));
-			$link = $APPLICATION->GetCurPage()."?mode=settings".($link <> ""? "&".$link:"");
-			$aAdditionalMenu[] = array(
-				"TEXT"=>GetMessage("admin_lib_context_sett"),
-				"TITLE"=>GetMessage("admin_lib_context_sett_title"),
-				"ONCLICK"=>$this->table_id.".ShowSettings('".CUtil::JSEscape($link)."')",
-				"GLOBAL_ICON"=>"adm-menu-setting",
-			);
-		}
-
-		if($bShowExcel)
-		{
-			$link = DeleteParam(array("mode"));
-			$link = $APPLICATION->GetCurPage()."?mode=excel".($link <> ""? "&".$link:"");
-			$aAdditionalMenu[] = array(
-				"TEXT"=>"Excel",
-				"TITLE"=>GetMessage("admin_lib_excel"),
-				//"LINK"=>htmlspecialcharsbx($link),
-				"ONCLICK"=>"location.href='".htmlspecialcharsbx($link)."'",
-				"GLOBAL_ICON"=>"adm-menu-excel",
-			);
-		}
-
-		if(count($aContext)>0 || count($aAdditionalMenu) > 0)
-			$this->context = new CAdminContextMenuList($aContext, $aAdditionalMenu);
-	}
-
-	function IsUpdated($ID)
-	{
-		$f = $_REQUEST['FIELDS'][$ID];
-		$f_old = $_REQUEST['FIELDS_OLD'][$ID];
-
-		if(!is_array($f) || !is_array($f_old))
-			return true;
-
-		foreach($f as $k=>$v)
-		{
-			if(is_array($v))
-			{
-				if(!is_array($f_old[$k]))
-					return true;
-				else
-				{
-					foreach($v as $k2 => $v2)
-					{
-						if($f_old[$k][$k2] !== $v2)
-							return true;
-						unset($f_old[$k][$k2]);
-					}
-					if(count($f_old[$k]) > 0)
-						return true;
-				}
-			}
-			else
-			{
-				if(is_array($f_old[$k]))
-					return true;
-				elseif($f_old[$k] !== $v)
-					return true;
-			}
-			unset($f_old[$k]);
-		}
-		if(count($f_old) > 0)
-			return true;
-
-		return false;
-	}
-
-	function EditAction()
-	{
-		if($_SERVER['REQUEST_METHOD']=='POST' && isset($_REQUEST['save'])  && check_bitrix_sessid())
-		{
-			$arrays = array(&$_POST, &$_REQUEST, &$GLOBALS);
-			foreach($arrays as $i => $array)
-			{
-				if(is_array($array["FIELDS"]))
-				{
-					foreach($array["FIELDS"] as $id=>$fields)
-					{
-						if(is_array($fields))
-						{
-							$keys = array_keys($fields);
-							foreach($keys as $key)
-							{
-								if(($c = substr($key, 0, 1)) == '~' || $c == '=')
-								{
-									unset($arrays[$i]["FIELDS"][$id][$key]);
-								}
-							}
-						}
-					}
-				}
-			}
-			return true;
-		}
-		return false;
-	}
-
-	function GroupAction()
-	{
-		//AddMessage2Log("GroupAction");
-		if(!empty($_REQUEST['action_button']))
-			$_REQUEST['action'] = $_REQUEST['action_button'];
-
-		if(!isset($_REQUEST['action']) || !check_bitrix_sessid())
-			return false;
-
-		//AddMessage2Log("GroupAction = ".$_REQUEST['action']." & ".($this->bCanBeEdited?'bCanBeEdited':'ne'));
-		if($_REQUEST['action_button']=="edit")
-		{
-			if(isset($_REQUEST['ID']))
-			{
-				if(!is_array($_REQUEST['ID']))
-					$arID = Array($_REQUEST['ID']);
-				else
-					$arID = $_REQUEST['ID'];
-
-				$this->arEditedRows = $arID;
-				$this->bEditMode = true;
-			}
-			return false;
-		}
-
-		//AddMessage2Log("GroupAction = X");
-		if($_REQUEST['action_target']!='selected')
-		{
-			if(!is_array($_REQUEST['ID']))
-				$arID = Array($_REQUEST['ID']);
-			else
-				$arID = $_REQUEST['ID'];
-		}
-		else
-			$arID = Array('');
-
-		return $arID;
-	}
-
-	function ActionRedirect($url)
-	{
-		if(strpos($url, "lang=")===false)
-		{
-			if(strpos($url, "?")===false)
-				$url .= '?';
-			else
-				$url .= '&';
-			$url .= 'lang='.LANGUAGE_ID;
-		}
-		return "BX.adminPanel.Redirect([], '".CUtil::AddSlashes($url)."', event);";
-	}
-
-	function ActionAjaxReload($url)
-	{
-		if(strpos($url, "lang=")===false)
-		{
-			if(strpos($url, "?")===false)
-				$url .= '?';
-			else
-				$url .= '&';
-			$url .= 'lang='.LANGUAGE_ID;
-		}
-		return $this->table_id.".GetAdminList('".CUtil::AddSlashes($url)."');";
-	}
-
-	function ActionPost($url = false, $action_name = false, $action_value = 'Y')
-	{
-		$res = '';
-		if($url)
-		{
-			if(strpos($url, "lang=")===false)
-			{
-				if(strpos($url, "?")===false)
-					$url .= '?';
-				else
-					$url .= '&';
-				$url .= 'lang='.LANGUAGE_ID;
-			}
-
-			if(strpos($url, "mode=")===false)
-				$url .= '&mode=frame';
-
-			$res = 'BX(\'form_'.$this->table_id.'\').action=\''.CUtil::AddSlashes($url).'\';';
-		}
-
-		if ($action_name)
-			return $res.'; BX.submit(document.forms.form_'.$this->table_id.', \''.CUtil::JSEscape($action_name).'\', \''.CUtil::JSEscape($action_value).'\');';
-		else
-			return $res.'; BX.submit(document.forms.form_'.$this->table_id.');';
-	}
-
-	function ActionDoGroup($id, $action_id, $add_params='')
-	{
-		/** @global CMain $APPLICATION */
-		global $APPLICATION;
-		return $this->table_id.".GetAdminList('".CUtil::AddSlashes($APPLICATION->GetCurPage())."?ID=".CUtil::AddSlashes($id)."&action_button=".CUtil::AddSlashes($action_id)."&lang=".LANGUAGE_ID."&".bitrix_sessid_get().($add_params<>""?"&".CUtil::AddSlashes($add_params):"")."');";
-	}
-
-	function InitFilter($arFilterFields)
-	{
-		$sTableID = $this->table_id;
-		global $del_filter, $set_filter, $save_filter;
-		if($del_filter <> "")
-			DelFilterEx($arFilterFields, $sTableID);
-		elseif($set_filter <> "")
-		{
-			CAdminFilter::UnEscape($arFilterFields);
-			InitFilterEx($arFilterFields, $sTableID, "set");
-		}
-		elseif($save_filter <> "")
-		{
-			CAdminFilter::UnEscape($arFilterFields);
-		}
-		else
-			InitFilterEx($arFilterFields, $sTableID, "get");
-
-		foreach ($arFilterFields as $f)
-		{
-			$fperiod = $f."_FILTER_PERIOD";
-			$fdirection = $f."_FILTER_DIRECTION";
-			$fbdays = $f."_DAYS_TO_BACK";
-
-			global $$f, $$fperiod, $$fdirection, $$fbdays;
-			if (isset($$f))
-				$this->filter[$f] = $$f;
-			if (isset($$fperiod))
-				$this->filter[$fperiod] = $$fperiod;
-			if (isset($$fdirection))
-				$this->filter[$fdirection] = $$fdirection;
-			if (isset($$fbdays))
-				$this->filter[$fbdays] = $$fbdays;
-		}
-
-		return $this->filter;
-	}
-
-	function IsDefaultFilter()
-	{
-		global $set_default;
-		$sTableID = $this->table_id;
-		return $set_default=="Y" && (!isset($_SESSION["SESS_ADMIN"][$sTableID]) || empty($_SESSION["SESS_ADMIN"][$sTableID]));
-	}
-
-	function &AddRow($id = false, $arRes = Array(), $link = false, $title = false)
-	{
-		$row = new CAdminListRow($this->aHeaders, $this->table_id);
-		$row->id = $id;
-		$row->arRes = $arRes;
-		$row->link = $link;
-		$row->title = $title;
-		$row->pList = &$this;
-
-		if($id)
-		{
-			if($this->bEditMode && in_array($id, $this->arEditedRows))
-				$row->bEditMode = true;
-			elseif(in_array($id, $this->arUpdateErrorIDs))
-				$row->bEditMode = true;
-		}
-
-		$this->aRows[] = &$row;
-		return $row;
-	}
-
-	function AddFooter($aFooter)
-	{
-		$this->aFooter = $aFooter;
-	}
-
-	function NavText($sNavText)
-	{
-		$this->sNavText = $sNavText;
-	}
-
-	function Display()
-	{
-		/** @global CMain $APPLICATION */
-		global $APPLICATION;
-
-		foreach(GetModuleEvents("main", "OnAdminListDisplay", true) as $arEvent)
-			ExecuteModuleEventEx($arEvent, array(&$this));
-
-		$errmsg = '';
-		foreach ($this->arFilterErrors as $err)
-			$errmsg .= ($errmsg<>''? '<br>': '').$err;
-		foreach ($this->arUpdateErrors as $err)
-			$errmsg .= ($errmsg<>''? '<br>': '').$err[0];
-		foreach ($this->arGroupErrors as $err)
-			$errmsg .= ($errmsg<>''? '<br>': '').$err[0];
-		if($errmsg<>'')
-			CAdminMessage::ShowMessage(array("MESSAGE"=>GetMessage("admin_lib_error"), "DETAILS"=>$errmsg, "TYPE"=>"ERROR"));
-
-		$successMessage = '';
-		for ($i = 0, $cnt = count($this->arActionSuccess); $i < $cnt; $i++)
-			$successMessage .= ($successMessage != '' ? '<br>' : '').$this->arActionSuccess[$i];
-		if ($successMessage != '')
-			CAdminMessage::ShowMessage(array("MESSAGE" => GetMessage("admin_lib_success"), "DETAILS" => $successMessage, "TYPE" => "OK"));
-
-		echo $this->sPrologContent;
-
-		if($this->sContent===false)
-		{
-?>
-<div class="adm-list-table-wrap<?=$this->context ? '' : ' adm-list-table-without-header'?><?=count($this->arActions)<=0 && !$this->bCanBeEdited ? ' adm-list-table-without-footer' : ''?>">
-<?
-		}
-
-		if($this->context)
-			$this->context->Show();
-
-		if(
-			(isset($_REQUEST['ajax_debugx']) && $_REQUEST['ajax_debugx']=='Y')
-			|| (isset($_SESSION['AJAX_DEBUGX']) && $_SESSION['AJAX_DEBUGX'])
-		)
-			echo '<form method="POST" '.($this->bMultipart?' enctype="multipart/form-data" ':'').' onsubmit="CheckWin();ShowWaitWindow();" target="frame_debug" id="form_'.$this->table_id.'" name="form_'.$this->table_id.'" action="'.htmlspecialcharsbx($APPLICATION->GetCurPageParam("mode=frame", array("mode"))).'">';
-		else
-			echo '<form method="POST" '.($this->bMultipart?' enctype="multipart/form-data" ':'').' onsubmit="return BX.ajax.submitComponentForm(this, \''.$this->table_id.'_result_div\', true);" id="form_'.$this->table_id.'" name="form_'.$this->table_id.'" action="'.htmlspecialcharsbx($APPLICATION->GetCurPageParam("mode=frame", array("mode", "action", "action_button"))).'">';
-
-		if($this->bEditMode && !$this->bCanBeEdited)
-			$this->bEditMode = false;
-
-		if($this->sContent!==false)
-		{
-			echo $this->sContent;
-			echo '</form>';
-			return;
-		}
-
-		$bShowSelectAll = (count($this->arActions)>0 || $this->bCanBeEdited);
-		$this->bShowActions = false;
-		foreach($this->aRows as $row)
-		{
-			if(!empty($row->aActions))
-			{
-				$this->bShowActions = true;
-				break;
-			}
-		}
-
-		//!!! insert filter's hiddens
-		echo bitrix_sessid_post();
-		//echo $this->sNavText;
-
-		$colSpan = 0;
-?>
-<table class="adm-list-table" id="<?=$this->table_id;?>">
-	<thead>
-		<tr class="adm-list-table-header">
-<?
-		if($bShowSelectAll):
-?>
-			<td class="adm-list-table-cell adm-list-table-checkbox" onclick="this.firstChild.firstChild.click(); return BX.PreventDefault(event);"><div class="adm-list-table-cell-inner"><input class="adm-checkbox adm-designed-checkbox" type="checkbox" id="<?=$this->table_id?>_check_all" onclick="<?=$this->table_id?>.SelectAllRows(this); return BX.eventCancelBubble(event);" title="<?=GetMessage("admin_lib_list_check_all")?>" /><label for="<?=$this->table_id?>_check_all" class="adm-designed-checkbox-label"></label></div></td>
-<?
-			$colSpan++;
-		endif;
-
-		if($this->bShowActions):
-?>
-			<td class="adm-list-table-cell adm-list-table-popup-block" title="<?=GetMessage("admin_lib_list_act")?>"><div class="adm-list-table-cell-inner"></div></td>
-<?
-			$colSpan++;
-		endif;
-
-		foreach($this->aVisibleHeaders as $header):
-			$bSort = $this->sort && !empty($header["sort"]);
-
-			if ($bSort)
-				$attrs = $this->sort->Show($header["content"], $header["sort"], $header["title"], "adm-list-table-cell");
-			else
-				$attrs = 'class="adm-list-table-cell"';
-
-?>
-			<td <?=$attrs?>>
-				<div class="adm-list-table-cell-inner"><?=$header["content"]?></div>
-			</td>
-<?
-			$colSpan++;
-		endforeach;
-?>
-		</tr>
-	</thead>
-	<tbody>
-<?
-		if(!empty($this->aRows)):
-			foreach($this->aRows as $row)
-			{
-				$row->Display();
-			}
-		elseif(!empty($this->aHeaders)):
-?>
-		<tr><td colspan="<?=$colSpan?>" class="adm-list-table-cell adm-list-table-empty"><?=GetMessage("admin_lib_no_data")?></td></tr>
-<?
-		endif;
-?>
-	</tbody>
-</table>
-<?
-		$this->ShowActionTable();
-
-// close form and div.adm-list-table-wrap
-
-		echo $this->sEpilogContent;
-		echo '
-	</form>
-</div>
-';
-		echo $this->sNavText;
-	}
-
-	function DisplayExcel()
-	{
-		/** @global CMain $APPLICATION */
-		global $APPLICATION;
-		echo '
-		<html>
-		<head>
-		<title>'.$APPLICATION->GetTitle().'</title>
-		<meta http-equiv="Content-Type" content="text/html; charset='.LANG_CHARSET.'">
-		<style>
-			td {mso-number-format:\@;}
-			.number0 {mso-number-format:0;}
-			.number2 {mso-number-format:Fixed;}
-		</style>
-		</head>
-		<body>';
-
-		echo "<table border=\"1\">";
-		echo "<tr>";
-
-		foreach($this->aVisibleHeaders as $header)
-		{
-			echo '<td>';
-			echo $header["content"];
-			echo '</td>';
-		}
-		echo "</tr>";
-
-
-		foreach($this->aRows as $row)
-		{
-			echo "<tr>";
-			foreach($this->aVisibleHeaders as $id=>$header_props)
-			{
-				$field = $row->aFields[$id];
-				if(!is_array($row->arRes[$id]))
-					$val = trim($row->arRes[$id]);
-				else
-					$val = $row->arRes[$id];
-
-				switch($field["view"]["type"])
-				{
-					case "checkbox":
-						if($val=='Y')
-							$val = htmlspecialcharsex(GetMessage("admin_lib_list_yes"));
-						else
-							$val = htmlspecialcharsex(GetMessage("admin_lib_list_no"));
-						break;
-					case "select":
-						if($field["edit"]["values"][$val])
-							$val = htmlspecialcharsex($field["edit"]["values"][$val]);
-						break;
-					case "file":
-						$arFile = CFile::GetFileArray($val);
-						if(is_array($arFile))
-							$val = htmlspecialcharsex(CHTTP::URN2URI($arFile["SRC"]));
-						else
-							$val = "";
-						break;
-					case "html":
-						$val = trim(strip_tags($field["view"]['value'], "<br>"));
-						break;
-					default:
-						$val = htmlspecialcharsex($val);
-						break;
-				}
-
-				echo '<td';
-				if ($header_props['align'])
-					echo ' align="'.$header_props['align'].'"';
-				if ($header_props['valign'])
-					echo ' valign="'.$header_props['valign'].'"';
-				if (preg_match("/^([1-9][0-9]*|[1-9][0-9]*[.,][0-9]+)\$/", $val))
-					echo ' class="number0"';
-				echo '>';
-				echo ($val<>""? $val: '&nbsp;');
-				echo '</td>';
-			}
-			echo "</tr>";
-		}
-
-		echo "</table>";
-		echo '</body></html>';
-	}
-
-
-	function AddGroupActionTable($arActions, $arParams=array())
-	{
-		//array("action"=>"text", ...)
-		//OR array(array("action" => "custom JS", "value" => "action", "type" => "button", "title" => "", "name" => ""), ...)
-		$this->arActions = $arActions;
-		//array("disable_action_target"=>true, "select_onchange"=>"custom JS")
-		$this->arActionsParams = $arParams;
-	}
-
-	function ShowActionTable()
-	{
-		if(count($this->arActions)<=0 && !$this->bCanBeEdited)
-			return;
-
-?>
-<div class="adm-list-table-footer" id="<?=$this->table_id?>_footer<?=$this->bEditMode || count($this->arUpdateErrorIDs)>0 ? '_edit' : ''?>">
-	<input type="hidden" name="action_button" value="" />
-<?
-		if($this->bEditMode || count($this->arUpdateErrorIDs)>0):
-?>
-		<input type="hidden" name="save" id="<?=$this->table_id?>_hidden_save" value="Y">
-		<input type="submit" class="adm-btn-save" name="save" value="<?=GetMessage("admin_lib_list_edit_save")?>" title="<?=GetMessage("admin_lib_list_edit_save_title")?>" />
-		<input type="button" onclick="BX('<?=$this->table_id?>_hidden_save').name='cancel'; <?=htmlspecialcharsbx($this->ActionPost(false, 'action_button', ''))?> " name="cancel" value="<?=GetMessage("admin_lib_list_edit_cancel")?>" title="<?=GetMessage("admin_lib_list_edit_cancel_title")?>" />
-
-<?
-		else: //($this->bEditMode || count($this->arUpdateErrorIDs)>0)
-			if($this->arActionsParams["disable_action_target"] <> true):
-?>
-	<span class="adm-selectall-wrap"><input type="checkbox" class="adm-checkbox adm-designed-checkbox" name="action_target" value="selected" id="action_target" onclick="if(this.checked && !confirm('<?=CUtil::JSEscape(GetMessage("admin_lib_list_edit_for_all_warn"))?>')) {this.checked=false;} <?=$this->table_id?>.EnableActions();" title="<?=GetMessage("admin_lib_list_edit_for_all")?>" /><label for="action_target" class="adm-checkbox adm-designed-checkbox-label"></label><label title="<?=GetMessage("admin_lib_list_edit_for_all")?>" for="action_target" class="adm-checkbox-label"><?=GetMessage("admin_lib_list_for_all");?></label></span>
-<?
-			endif;
-
-			$this->bCanBeDeleted = array_key_exists("delete", $this->arActions);
-
-			if ($this->bCanBeEdited || $this->bCanBeDeleted)
-			{
-				echo '
-	<span class="adm-table-item-edit-wrap'.(!$this->bCanBeEdited || !$this->bCanBeDeleted ? ' adm-table-item-edit-single' : '').'">
-';
-				if($this->bCanBeEdited)
-				{
-					echo '<a href="javascript:void(0)" class="adm-table-btn-edit adm-edit-disable" hidefocus="true" onclick="this.blur();if('.$this->table_id.'.IsActionEnabled(\'edit\')){document.forms[\'form_'.$this->table_id.'\'].elements[\'action_button\'].value=\'edit\'; '.
-						htmlspecialcharsbx($this->ActionPost(false, 'action_button', 'edit')).'}" title="'.GetMessage("admin_lib_list_edit").'" id="action_edit_button"></a>';
-				}
-				if($this->bCanBeDeleted)
-				{
-					echo '<a href="javascript:void(0);" class="adm-table-btn-delete adm-edit-disable" hidefocus="true" onclick="this.blur();if('.$this->table_id.'.IsActionEnabled() && confirm((document.getElementById(\'action_target\') && document.getElementById(\'action_target\').checked? \''.GetMessage("admin_lib_list_del").'\':\''.GetMessage("admin_lib_list_del_sel").'\'))) {document.forms[\'form_'.$this->table_id.'\'].elements[\'action_button\'].value=\'delete\'; '.
-						htmlspecialcharsbx($this->ActionPost(false, 'action_button', 'delete')).'}" title="'.GetMessage("admin_lib_list_del_title").'" class="context-button icon action-delete-button-dis" id="action_delete_button"></a>';
-				}
-				echo '
-	</span>
-';
-			}
-
-			$list = '';
-			$html = '';
-			$buttons = '';
-			foreach($this->arActions as $k=>$v)
-			{
-				if($k === "delete")
-				{
-					continue;
-				}
-				else
-				{
-					if(is_array($v))
-					{
-						if($v["type"] == "button")
-						{
-							$buttons .= '<input type="button" name="" value="'.htmlspecialcharsbx($v['name']).'" onclick="'.(!empty($v["action"])? htmlspecialcharsbx($v['action']) : 'document.forms[\'form_'.$this->table_id.'\'].elements[\'action_button\'].value=\''.htmlspecialcharsbx($v["value"]).'\'; '.htmlspecialcharsbx($this->ActionPost()).'').'" title="'.htmlspecialcharsbx($v["title"]).'" />';
-						}
-						elseif($v["type"] == "html")
-						{
-							$html .= '<span class="adm-list-footer-ext">'.$v["value"].'</span>';
-						}
-						else
-						{
-							$list .= '<option value="'.htmlspecialcharsbx($v['value']).'"'.($v['action']?' custom_action="'.htmlspecialcharsbx($v['action']).'"':'').'>'.htmlspecialcharsex($v['name']).'</option>';
-						}
-					}
-					else
-					{
-						$list .= '<option value="'.htmlspecialcharsbx($k).'">'.htmlspecialcharsex($v).'</option>';
-					}
-				}
-			}
-
-			if (strlen($buttons) > 0)
-				echo '<span class="adm-list-footer-ext">'.$buttons.'</span>';
-
-			if (strlen($list) > 0):
-?>
-	<span class="adm-select-wrap">
-		<select name="action" class="adm-select"<?=($this->arActionsParams["select_onchange"] <> ""? ' onchange="'.htmlspecialcharsbx($this->arActionsParams["select_onchange"]).'"':'')?>>
-			<option value=""><?=GetMessage("admin_lib_list_actions")?></option>
-<?=$list?>
-		</select>
-	</span>
-<?
-				if (strlen($html) > 0)
-					echo $html;
-?>
-	<input type="submit" name="apply" value="<?=GetMessage("admin_lib_list_apply")?>" onclick="if(this.form.action[this.form.action.selectedIndex].getAttribute('custom_action')){eval(this.form.action[this.form.action.selectedIndex].getAttribute('custom_action'));return false;}" disabled="disabled" class="adm-table-action-button" />
-<?
-			endif; //(strlen($list) > 0)
-?>
-	<span class="adm-table-counter" id="<?=$this->table_id?>_selected_count"><?=GetMessage('admin_lib_checked')?>: <span>0</span></span>
-<?
-		endif; // ($this->bEditMode || count($this->arUpdateErrorIDs)>0):
-?>
-</div>
-<?
-	}
-
-	function DisplayList($arParams = array())
-	{
-		$menu = new CAdminPopup($this->table_id."_menu", $this->table_id."_menu");
-		$menu->Show();
-
-		if(
-			(isset($_REQUEST['ajax_debugx']) && $_REQUEST['ajax_debugx']=='Y')
-			|| (isset($_SESSION['AJAX_DEBUGX']) && $_SESSION['AJAX_DEBUGX'])
-		)
-		{
-			echo '<script>
-				function CheckWin()
-				{
-					window.open("about:blank", "frame_debug");
-				}
-				</script>';
-		}
-		else
-		{
-			echo '<iframe src="javascript:\'\'" id="frame_'.$this->table_id.'" name="frame_'.$this->table_id.'" style="width:1px; height:1px; border:0px; position:absolute; left:-10px; top:-10px; z-index:0;"></iframe>';
-		}
-
-		$aUserOpt = CUserOptions::GetOption("global", "settings");
-
-		if (!is_array($arParams))
-			$arParams = array();
-
-		if (!isset($arParams['FIX_HEADER']))
-			$arParams['FIX_HEADER'] = true;
-		if (!isset($arParams['FIX_FOOTER']))
-			$arParams['FIX_FOOTER'] = true;
-		if (!isset($arParams['context_ctrl']))
-			$arParams['context_ctrl'] = ($aUserOpt["context_ctrl"] == "Y");
-		if (!isset($arParams['context_menu']))
-			$arParams['context_menu'] = ($aUserOpt["context_menu"] <> "N");
-
-		$tbl = CUtil::JSEscape($this->table_id);
-?>
-<script type="text/javascript">
-window['<?=$tbl?>'] = new BX.adminList('<?=$tbl?>', <?=CUtil::PhpToJsObject($arParams)?>);
-BX.adminChain.addItems("<?=$tbl?>_navchain_div");
-</script>
-<?
-
-		echo '<div id="'.$this->table_id.'_result_div" class="adm-list-table-layout">';
-		$this->Display();
-		echo '</div>';
-	}
-
-	function AddUpdateError($strError, $id = false)
-	{
-		$this->arUpdateErrors[] = Array($strError, $id);
-		$this->arUpdateErrorIDs[] = $id;
-	}
-
-	function AddGroupError($strError, $id = false)
-	{
-		$this->arGroupErrors[] = Array($strError, $id);
-		$this->arGroupErrorIDs[] = $id;
-	}
-
-	function AddActionSuccessMessage($strMessage)
-	{
-		$this->arActionSuccess[] = $strMessage;
-	}
-
-	function AddFilterError($strError)
-	{
-		$this->arFilterErrors[] = $strError;
-	}
-
-	function BeginPrologContent()
-	{
-		ob_start();
-	}
-
-	function EndPrologContent()
-	{
-		$this->sPrologContent .= ob_get_contents();
-		ob_end_clean();
-	}
-
-	function BeginEpilogContent()
-	{
-		ob_start();
-	}
-
-	function EndEpilogContent()
-	{
-		$this->sEpilogContent = ob_get_contents();
-		ob_end_clean();
-	}
-
-	function BeginCustomContent()
-	{
-		ob_start();
-	}
-
-	function EndCustomContent()
-	{
-		$this->sContent = ob_get_contents();
-		ob_end_clean();
-	}
-
-	function CreateChain()
-	{
-		return new CAdminChain($this->table_id."_navchain_div", false);
-	}
-
-	/**
-	 * @param CAdminChain $chain
-	 */
-	function ShowChain($chain)
-	{
-		$this->BeginPrologContent();
-		$chain->Show();
-		$this->EndPrologContent();
-	}
-
-	function CheckListMode()
-	{
-		/** @global CMain $APPLICATION */
-		global $APPLICATION;
-
-		if (!isset($_REQUEST["mode"]))
-			return;
-
-		if($_REQUEST["mode"]=='list' || $_REQUEST["mode"]=='frame')
-		{
-			ob_start();
-			$this->Display();
-			$string = ob_get_contents();
-			ob_end_clean();
-
-			if($_REQUEST["mode"]=='frame')
-			{
-?>
-<html><head></head><body><?=$string?><script type="text/javascript">
-top.bxcompajaxframeonload = function() {
-	top.BX.adminPanel.closeWait();
-	top.<?=$this->table_id?>.Destroy(false);
-	top.<?=$this->table_id?>.Init();
-<?
-				if(isset($this->onLoadScript)):
-?>
-	top.BX.evalGlobal('<?=CUtil::JSEscape($this->onLoadScript)?>');
-<?
-				endif;
-?>
-};
-top.BX.ajax.UpdatePageData({});
-</script></body></html>
-<?
-			}
-			else
-			{
-				if(isset($this->onLoadScript)):
-?>
-<script type="text/javascript"><?=$this->onLoadScript?></script>
-<?
-				endif;
-
-				echo $string;
-			}
-			define("ADMIN_AJAX_MODE", true);
-			require($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/include/epilog_admin_after.php");
-			die();
-		}
-		elseif($_REQUEST["mode"]=='excel')
-		{
-			$fname = basename($APPLICATION->GetCurPage(), ".php");
-			// http response splitting defence
-			$fname = str_replace(array("\r", "\n"), "", $fname);
-
-			header("Content-Type: application/vnd.ms-excel");
-			header("Content-Disposition: filename=".$fname.".xls");
-			$this->DisplayExcel();
-			require($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/include/epilog_admin_after.php");
-			die();
-		}
-	}
-}
-
-class CAdminListRow
-{
-	var $aHeaders = array();
-	var $aHeadersID = array();
-	var $aFields = array();
-	var $aActions = array();
-	var $table_id;
-	var $indexFields = 0;
-	var $edit = false;
-	var $id;
-	var $bReadOnly = false;
-	var $aFeatures = array();
-	var $bEditMode = false;
-	var $arRes;
-	var $link;
-	var $title;
-	var $pList;
-
-
-	function CAdminListRow(&$aHeaders, $table_id)
-	{
-		$this->aHeaders = $aHeaders;
-		$this->aHeadersID = array_keys($aHeaders);
-		$this->table_id = $table_id;
-	}
-
-	function SetFeatures($aFeatures)
-	{
-		//array("footer"=>true)
-		$this->aFeatures = $aFeatures;
-	}
-
-	function AddField($id, $text, $edit=false)
-	{
-		$this->aFields[$id] = array();
-		if($edit !== false)
-		{
-			$this->aFields[$id]["edit"] = Array("type"=>"input", "value"=>$edit);
-			$this->pList->bCanBeEdited = true;
-		}
-		$this->aFields[$id]["view"] = Array("type"=>"html", "value"=>$text);
-	}
-
-	/**
-	 * @param string $id
-	 * @param array|boolean $arAttributes
-	 * @return void
-	 */
-	function AddCheckField($id, $arAttributes = Array())
-	{
-		if($arAttributes!==false)
-		{
-			$this->aFields[$id]["edit"] = Array("type"=>"checkbox", "attributes"=>$arAttributes);
-			$this->pList->bCanBeEdited = true;
-		}
-		$this->aFields[$id]["view"] = Array("type"=>"checkbox");
-	}
-
-	/**
-	 * @param string $id
-	 * @param array $arValues
-	 * @param array|boolean $arAttributes
-	 * @return void
-	 */
-	function AddSelectField($id, $arValues = Array(), $arAttributes = Array())
-	{
-		if($arAttributes!==false)
-		{
-			$this->aFields[$id]["edit"] = Array("type"=>"select", "values"=>$arValues, "attributes"=>$arAttributes);
-			$this->pList->bCanBeEdited = true;
-		}
-		$this->aFields[$id]["view"] = Array("type"=>"select", "values"=>$arValues);
-	}
-
-	/**
-	 * @param string $id
-	 * @param array|boolean $arAttributes
-	 * @return void
-	 */
-	function AddInputField($id, $arAttributes = Array())
-	{
-		if($arAttributes!==false)
-		{
-			$this->aFields[$id]["edit"] = Array("type"=>"input", "attributes"=>$arAttributes);
-			$this->pList->bCanBeEdited = true;
-		}
-	}
-
-	/**
-	 * @param string $id
-	 * @param array|boolean $arAttributes
-	 * @param bool $useTime
-	 * @return void
-	 */
-	function AddCalendarField($id, $arAttributes = Array(), $useTime = false)
-	{
-		if($arAttributes!==false)
-		{
-			$this->aFields[$id]["edit"] = array("type"=>"calendar", "attributes"=>$arAttributes, "useTime" => $useTime);
-			$this->pList->bCanBeEdited = true;
-		}
-	}
-
-	function AddViewField($id, $sHTML)
-	{
-		$this->aFields[$id]["view"] = Array("type"=>"html", "value"=>$sHTML);
-	}
-
-	function AddEditField($id, $sHTML)
-	{
-		$this->aFields[$id]["edit"] = Array("type"=>"html", "value"=>$sHTML);
-		$this->pList->bCanBeEdited = true;
-	}
-
-	/**
-	 * @param string $id
-	 * @param bool|array $showInfo
-	 * @return void
-	 */
-	function AddViewFileField($id, $showInfo = false)
-	{
-		static $fileman = 0;
-		if (!($fileman++))
-			CModule::IncludeModule('fileman');
-
-		$this->aFields[$id]["view"] = array(
-			"type" => "file",
-			"showInfo" => $showInfo,
-			"inputs" => array(
-				'upload' => false,
-				'medialib' => false,
-				'file_dialog' => false,
-				'cloud' => false,
-				'del' => false,
-				'description' => false,
-			),
-		);
-	}
-
-	/**
-	 * @param string $id
-	 * @param bool|array $showInfo
-	 * @param array $inputs
-	 * @return void
-	 */
-	function AddFileField($id, $showInfo = false, $inputs = array())
-	{
-		$this->aFields[$id]["edit"] = array(
-			"type" => "file",
-			"showInfo" => $showInfo,
-			"inputs" => $inputs,
-		);
-		$this->pList->bCanBeEdited = true;
-		$this->AddViewFileField($id, $showInfo);
-	}
-
-	function AddActions($aActions)
-	{
-		$this->aActions = $aActions;
-	}
-
-	function __AttrGen($attr)
-	{
-		$res = '';
-		foreach($attr as $name=>$val)
-			$res .= ' '.htmlspecialcharsbx($name).'="'.htmlspecialcharsbx($val).'"';
-
-		return $res;
-	}
-
-	function VarsFromForm()
-	{
-		return ($this->bEditMode && is_array($this->pList->arUpdateErrorIDs) && in_array($this->id, $this->pList->arUpdateErrorIDs));
-	}
-
-	function Display()
-	{
-		$sDefAction = $sDefTitle = "";
-		if(!$this->bEditMode)
-		{
-			if(!empty($this->link))
-			{
-				$sDefAction = "BX.adminPanel.Redirect([], '".CUtil::JSEscape($this->link)."', event);";
-				$sDefTitle = $this->title;
-			}
-			else
-			{
-				$this->aActions = array_values($this->aActions);
-				foreach($this->aActions as $action)
-				{
-					if($action["DEFAULT"] == true)
-					{
-						$sDefAction = $action["ACTION"]
-							? htmlspecialcharsbx($action["ACTION"])
-							: "BX.adminPanel.Redirect([], '".CUtil::JSEscape($action["LINK"])."', event)"
-						;
-						$sDefTitle = (!empty($action["TITLE"])? $action["TITLE"]:$action["TEXT"]);
-						break;
-					}
-				}
-			}
-		}
-
-		$sMenuItems = "";
-		if(!empty($this->aActions))
-			$sMenuItems = htmlspecialcharsbx(CAdminPopup::PhpToJavaScript($this->aActions));
-?>
-<tr class="adm-list-table-row<?=(isset($this->aFeatures["footer"]) && $this->aFeatures["footer"] == true? ' footer':'')?><?=$this->bEditMode?' adm-table-row-active' : ''?>"<?=($sMenuItems <> ""? ' oncontextmenu="return '.$sMenuItems.';"':'');?><?=($sDefAction <> ""? ' ondblclick="'.$sDefAction.'"'.(!empty($sDefTitle)? ' title="'.GetMessage("admin_lib_list_double_click").' '.$sDefTitle.'"':''):'')?>>
-<?
-
-		if(count($this->pList->arActions)>0 || $this->pList->bCanBeEdited):
-			$check_id = RandString(5);
-?>
-	<td class="adm-list-table-cell adm-list-table-checkbox adm-list-table-checkbox-hover<?=$this->bReadOnly? ' adm-list-table-checkbox-disabled':''?>"><input type="checkbox" class="adm-checkbox adm-designed-checkbox" name="ID[]" id="<?=$this->table_id."_".$this->id."_".$check_id;?>" value="<?=$this->id?>" autocomplete="off" title="<?=GetMessage("admin_lib_list_check")?>"<?=$this->bReadOnly? ' disabled="disabled"':''?><?=$this->bEditMode ? ' checked="checked" disabled="disabled"' : ''?> /><label class="adm-designed-checkbox-label adm-checkbox" for="<?=$this->table_id."_".$this->id."_".$check_id;?>"></label></td>
-<?
-		endif;
-
-		if($this->pList->bShowActions):
-			if(!empty($this->aActions)):
-?>
-	<td class="adm-list-table-cell adm-list-table-popup-block" onclick="BX.adminList.ShowMenu(this.firstChild, this.parentNode.oncontextmenu(), this.parentNode);"><div class="adm-list-table-popup" title="<?=GetMessage("admin_lib_list_actions_title")?>"></div></td>
-<?
-			else:
-?>
-	<td class="adm-list-table-cell"></td>
-<?
-			endif;
-		endif;
-
-		end($this->pList->aVisibleHeaders);
-		$last_id = key($this->pList->aVisibleHeaders);
-		reset($this->pList->aVisibleHeaders);
-
-		$bVarsFromForm = ($this->bEditMode && is_array($this->pList->arUpdateErrorIDs) && in_array($this->id, $this->pList->arUpdateErrorIDs));
-		foreach($this->pList->aVisibleHeaders as $id=>$header_props)
-		{
-			$field = $this->aFields[$id];
-			if($this->bEditMode && isset($field["edit"]))
-			{
-				if($bVarsFromForm && $_REQUEST["FIELDS"])
-					$val = $_REQUEST["FIELDS"][$this->id][$id];
-				else
-					$val = $this->arRes[$id];
-
-				$val_old = $this->arRes[$id];
-
-				echo '<td class="adm-list-table-cell',
-					(isset($header_props['align']) && $header_props['align']? ' align-'.$header_props['align']: ''),
-					(isset($header_props['valign']) && $header_props['valign']? ' valign-'.$header_props['valign']: ''),
-					($id === $last_id? ' adm-list-table-cell-last': ''),
-				'">';
-
-				if(is_array($val_old))
-				{
-					foreach($val_old as $k=>$v)
-						echo '<input type="hidden" name="FIELDS_OLD['.htmlspecialcharsbx($this->id).']['.htmlspecialcharsbx($id).']['.htmlspecialcharsbx($k).']" value="'.htmlspecialcharsbx($v).'">';
-				}
-				else
-				{
-					echo '<input type="hidden" name="FIELDS_OLD['.htmlspecialcharsbx($this->id).']['.htmlspecialcharsbx($id).']" value="'.htmlspecialcharsbx($val_old).'">';
-				}
-				switch($field["edit"]["type"])
-				{
-					case "checkbox":
-						echo '<input type="hidden" name="FIELDS['.htmlspecialcharsbx($this->id).']['.htmlspecialcharsbx($id).']" value="N">';
-						echo '<input type="checkbox" name="FIELDS['.htmlspecialcharsbx($this->id).']['.htmlspecialcharsbx($id).']" value="Y"'.($val=='Y'?' checked':'').'>';
-						break;
-					case "select":
-						echo '<select name="FIELDS['.htmlspecialcharsbx($this->id).']['.htmlspecialcharsbx($id).']"'.$this->__AttrGen($field["edit"]["attributes"]).'>';
-						foreach($field["edit"]["values"] as $k=>$v)
-							echo '<option value="'.htmlspecialcharsbx($k).'" '.($k==$val?' selected':'').'>'.htmlspecialcharsbx($v).'</option>';
-						echo '</select>';
-						break;
-					case "input":
-						if(!$field["edit"]["attributes"]["size"])
-							$field["edit"]["attributes"]["size"] = "10";
-						echo '<input type="text" '.$this->__AttrGen($field["edit"]["attributes"]).' name="FIELDS['.htmlspecialcharsbx($this->id).']['.htmlspecialcharsbx($id).']" value="'.htmlspecialcharsbx($val).'">';
-						break;
-					case "calendar":
-						if(!$field["edit"]["attributes"]["size"])
-							$field["edit"]["attributes"]["size"] = "10";
-						echo '<span style="white-space:nowrap;"><input type="text" '.$this->__AttrGen($field["edit"]["attributes"]).' name="FIELDS['.htmlspecialcharsbx($this->id).']['.htmlspecialcharsbx($id).']" value="'.htmlspecialcharsbx($val).'">';
-						echo CAdminCalendar::Calendar(
-								'FIELDS['.htmlspecialcharsbx($this->id).']['.htmlspecialcharsbx($id).']',
-								'',
-								'',
-								$field['edit']['useTime']
-							).'</span>';
-						break;
-					case "file":
-						echo CFileInput::Show(
-							'FIELDS['.htmlspecialcharsbx($this->id).']['.htmlspecialcharsbx($id).']',
-							$val,
-							$field["edit"]["showInfo"],
-							$field["edit"]["inputs"]
-						);
-						break;
-					default:
-						echo $field["edit"]['value'];
-				}
-				echo '</td>';
-			}
-			else
-			{
-				if(!is_array($this->arRes[$id]))
-					$val = trim($this->arRes[$id]);
-				else
-					$val = $this->arRes[$id];
-
-				if(isset($field["view"]))
-				{
-					switch($field["view"]["type"])
-					{
-						case "checkbox":
-							if($val=='Y')
-								$val = htmlspecialcharsex(GetMessage("admin_lib_list_yes"));
-							else
-								$val = htmlspecialcharsex(GetMessage("admin_lib_list_no"));
-							break;
-						case "select":
-							if($field["edit"]["values"][$val])
-								$val = htmlspecialcharsex($field["edit"]["values"][$val]);
-							break;
-						case "file":
-							if ($val > 0)
-								$val = CFileInput::Show(
-									'NO_FIELDS['.htmlspecialcharsbx($this->id).']['.htmlspecialcharsbx($id).']',
-									$val,
-									$field["view"]["showInfo"],
-									$field["view"]["inputs"]
-								);
-							else
-								$val = '';
-							break;
-						case "html":
-							$val = $field["view"]['value'];
-							break;
-						default:
-							$val = htmlspecialcharsex($val);
-							break;
-					}
-				}
-				else
-				{
-					$val = htmlspecialcharsex($val);
-				}
-
-				echo '<td class="adm-list-table-cell',
-					(isset($header_props['align']) && $header_props['align']? ' align-'.$header_props['align']: ''),
-					(isset($header_props['valign']) && $header_props['valign']? ' valign-'.$header_props['valign']: ''),
-					($id === $last_id? ' adm-list-table-cell-last': ''),
-				'">';
-				echo ((string)$val <> ""? $val: '&nbsp;');
-				if(isset($field["edit"]) && $field["edit"]["type"] == "calendar")
-					CAdminCalendar::ShowScript();
-				echo '</td>';
-			}
-		}
-?>
-</tr>
-<?
 	}
 }
 
@@ -4260,7 +1700,7 @@ class CAdminMessage
 	 * @param string|array $message
 	 * @param CAdminException|bool $exception
 	 */
-	function CAdminMessage($message, $exception=false)
+	public function __construct($message, $exception=false)
 	{
 		//array("MESSAGE"=>"", "TYPE"=>("ERROR"|"OK"|"PROGRESS"), "DETAILS"=>"", "HTML"=>true)
 		if(!is_array($message))
@@ -4269,6 +1709,12 @@ class CAdminMessage
 			$message["DETAILS"] = $exception->GetString();
 		$this->message = $message;
 		$this->exception = $exception;
+	}
+
+	/** @deprecated */
+	public function CAdminMessage($message, $exception=false)
+	{
+		self::__construct($message, $exception);
 	}
 
 	function Show()
@@ -4417,7 +1863,7 @@ class CAdminChain
 	var $items = array();
 	var $id, $bVisible;
 
-	function CAdminChain($id=false, $bVisible=true)
+	public function __construct($id=false, $bVisible=true)
 	{
 		$this->id = $id;
 		$this->bVisible = $bVisible;
@@ -4448,13 +1894,14 @@ class CAdminChain
 
 			$className = !empty($item['CLASS'])?' '.htmlspecialcharsbx($item['CLASS']):'';
 
+			$text = htmlspecialcharsbx(htmlspecialcharsback($item["TEXT"]));
 			if (!empty($item['LINK']))
 			{
-				echo '<a class="adm-navchain-item" href="'.$item["LINK"].'"'.(!empty($item["ONCLICK"])? ' onclick="'.$item["ONCLICK"].'"':'').'><span class="adm-navchain-item-text'.$className.'">'.$item["TEXT"].'</span></a>';
+				echo '<a class="adm-navchain-item" href="'.htmlspecialcharsbx(htmlspecialcharsback($item["LINK"])).'"'.(!empty($item["ONCLICK"])? ' onclick="'.$item["ONCLICK"].'"':'').'><span class="adm-navchain-item-text'.$className.'">'.$text.'</span></a>';
 			}
 			elseif (!empty($item['ID']))
 			{
-				echo '<a href="javascript:void(0)" class="adm-navchain-item" id="bx_admin_chain_item_'.$item['ID'].'"><span class="adm-navchain-item-text'.$className.'">'.$item["TEXT"].'</span></a>';
+				echo '<a href="javascript:void(0)" class="adm-navchain-item" id="bx_admin_chain_item_'.$item['ID'].'"><span class="adm-navchain-item-text'.$className.'">'.$text.'</span></a>';
 
 				$chainScripts .= 'new BX.COpener('.CUtil::PhpToJsObject(array(
 					'DIV' => 'bx_admin_chain_item_'.$item['ID'],
@@ -4465,7 +1912,7 @@ class CAdminChain
 			}
 			else
 			{
-				echo '<span class="adm-navchain-item adm-navchain-item-empty'.$className.'"><span class="adm-navchain-item-text">'.$item["TEXT"].'</span></span>';
+				echo '<span class="adm-navchain-item adm-navchain-item-empty'.$className.'"><span class="adm-navchain-item-text">'.$text.'</span></span>';
 			}
 
 			if ($n < $cnt)
@@ -4507,9 +1954,9 @@ class CAdminMainChain extends CAdminChain
 {
 	var $bInit = false;
 
-	function CAdminMainChain($id=false, $bVisible=true)
+	public function __construct($id=false, $bVisible=true)
 	{
-		$this->CAdminChain($id, $bVisible);
+		parent::__construct($id, $bVisible);
 	}
 
 	function Init()
@@ -4541,209 +1988,9 @@ class CAdminMainChain extends CAdminChain
 	}
 }
 
-class CAdminCalendar
-{
-	const PERIOD_EMPTY = "NOT_REF";
-	const PERIOD_DAY = "day";
-	const PERIOD_WEEK = "week";
-	const PERIOD_MONTH = "month";
-	const PERIOD_QUARTER = "quarter";
-	const PERIOD_YEAR = "year";
-	const PERIOD_EXACT = "exact";
-	const PERIOD_BEFORE = "before";
-	const PERIOD_AFTER = "after";
-	const PERIOD_INTERVAL = "interval";
-
-	private function InitPeriodList($arPeriodParams = array())
-	{
-		$arPeriod = array(
-			self::PERIOD_EMPTY => GetMessage("admin_lib_calend_no_period"),
-			self::PERIOD_DAY => GetMessage("admin_lib_calend_day"),
-			self::PERIOD_WEEK => GetMessage("admin_lib_calend_week"),
-			self::PERIOD_MONTH => GetMessage("admin_lib_calend_month"),
-			self::PERIOD_QUARTER => GetMessage("admin_lib_calend_quarter"),
-			self::PERIOD_YEAR => GetMessage("admin_lib_calend_year"),
-			self::PERIOD_EXACT => GetMessage("admin_lib_calend_exact"),
-			self::PERIOD_BEFORE => GetMessage("admin_lib_calend_before"),
-			self::PERIOD_AFTER => GetMessage("admin_lib_calend_after"),
-			self::PERIOD_INTERVAL => GetMessage("admin_lib_calend_interval")
-		);
-
-		if (empty($arPeriodParams) || !is_array($arPeriodParams))
-			return $arPeriod;
-
-		$arReturnPeriod = array();
-
-		foreach ($arPeriodParams as $periodName => $lPhrase)
-		{
-			if (isset($arPeriod[$periodName]))
-				$arReturnPeriod[$periodName] = $lPhrase;
-			elseif (isset($arPeriod[$arPeriodParams[$periodName]]))
-				$arReturnPeriod[$arPeriodParams[$periodName]] = $arPeriod[$arPeriodParams[$periodName]];
-		}
-
-		if (empty($arReturnPeriod))
-			$arReturnPeriod = $arPeriod;
-		return $arReturnPeriod;
-	}
-
-	public function ShowScript()
-	{
-		CJSCore::Init(array('date'));
-	}
-
-	public function Calendar($sFieldName, $sFromName="", $sToName="", $bTime=false)
-	{
-		/** @global CMain $APPLICATION */
-		global $APPLICATION;
-
-		ob_start();
-		$APPLICATION->IncludeComponent('bitrix:main.calendar', '', array(
-			'RETURN' => 'Y',
-			'SHOW_INPUT' => 'N',
-			'INPUT_NAME' => $sFieldName,
-			'SHOW_TIME' => $bTime ? 'Y' : 'N'
-		), null, array('HIDE_ICONS' => 'Y'));
-		$res = ob_get_contents();
-		ob_end_clean();
-
-		return $res;
-	}
-
-	public function CalendarDate($sFieldName, $sValue="", $size="10", $bTime=false)
-	{
-		// component can't set 'size' param
-		return '
-	<div class="adm-input-wrap adm-input-wrap-calendar">
-		<input class="adm-input adm-input-calendar" type="text" name="'.$sFieldName.'" size="'.(intval($size)+3).'" value="'.htmlspecialcharsbx($sValue).'">
-		<span class="adm-calendar-icon" title="'.GetMessage("admin_lib_calend_title").'" onclick="BX.calendar({node:this, field:\''.$sFieldName.'\', form: \'\', bTime: '.($bTime ? 'true' : 'false').', bHideTime: false});"></span>
-	</div>';
-
-	}
-
-	/**
-	 * @param string $sFromName
-	 * @param string $sToName
-	 * @param string $sFromVal
-	 * @param string $sToVal
-	 * @param bool $bSelectShow
-	 * @param int $size
-	 * @param bool $bTime
-	 * @param bool|array $arPeriod
-	 * @param string $periodValue
-	 * @return string
-	 */
-	public function CalendarPeriodCustom($sFromName, $sToName, $sFromVal="", $sToVal="", $bSelectShow=false, $size=10, $bTime=false, $arPeriod = false, $periodValue = '')
-	{
-		$arPeriodList = self::InitPeriodList($arPeriod);
-
-		return self::GetPeriodHtml($sFromName, $sToName, $sFromVal, $sToVal, $bSelectShow, $size, $bTime, $arPeriodList, $periodValue);
-	}
-
-	/**
-	 * @param string $sFromName
-	 * @param string $sToName
-	 * @param string $sFromVal
-	 * @param string $sToVal
-	 * @param bool $bSelectShow
-	 * @param int $size
-	 * @param bool $bTime
-	 * @return string
-	 */
-	public function CalendarPeriod($sFromName, $sToName, $sFromVal="", $sToVal="", $bSelectShow=false, $size=10, $bTime=false)
-	{
-		$arPeriodList = self::InitPeriodList();
-
-		return self::GetPeriodHtml($sFromName, $sToName, $sFromVal, $sToVal, $bSelectShow, $size, $bTime, $arPeriodList);
-	}
-
-	/**
-	 * @param $sFromName
-	 * @param $sToName
-	 * @param string $sFromVal
-	 * @param string $sToVal
-	 * @param bool $bSelectShow
-	 * @param int $size
-	 * @param bool $bTime
-	 * @param $arPeriod
-	 * @param string $periodValue
-	 * @return string
-	 */
-	private function GetPeriodHtml($sFromName, $sToName, $sFromVal="", $sToVal="", $bSelectShow=false, $size = 10, $bTime=false, $arPeriod, $periodValue = '')
-	{
-		$size = (int)$size;
-
-		$s = '
-		<div class="adm-calendar-block adm-filter-alignment">
-			<div class="adm-filter-box-sizing">';
-
-		if($bSelectShow)
-		{
-			$sPeriodName = $sFromName."_FILTER_PERIOD";
-			$sDirectionName = $sFromName."_FILTER_DIRECTION";
-
-			$arDirection = array(
-				"previous"=>GetMessage("admin_lib_calend_previous"),
-				"current"=>GetMessage("admin_lib_calend_current"),
-				"next"=>GetMessage("admin_lib_calend_next")
-			);
-
-			$s .= '<span class="adm-select-wrap adm-calendar-period" ><select class="adm-select adm-calendar-period" id="'.$sFromName.'_calendar_period" name="'.$sPeriodName.'" onchange="BX.CalendarPeriod.OnChangeP(this);" title="'.GetMessage("admin_lib_calend_period_title").'">';
-
-			$currentPeriod = '';
-			if (isset($GLOBALS[$sPeriodName]))
-				$currentPeriod = (string)$GLOBALS[$sPeriodName];
-			$periodValue = (string)$periodValue;
-			if ($periodValue != '')
-				$currentPeriod = $periodValue;
-			foreach($arPeriod as $k => $v)
-			{
-					$k = ($k != "NOT_REF" ? $k : "");
-					$s .= '<option value="'.$k.'"'.(($currentPeriod != '' && $currentPeriod == $k) ? " selected":"").'>'.$v.'</option>';
-			}
-			unset($currentPeriod);
-
-			$s .='</select></span>';
-
-			$currentDirection = '';
-			if (isset($GLOBALS[$sDirectionName]))
-				$currentDirection = (string)$GLOBALS[$sDirectionName];
-			$s .= '<span class="adm-select-wrap adm-calendar-direction" style="display: none;"><select class="adm-select adm-calendar-direction" id="'.$sFromName.'_calendar_direct" name="'.$sDirectionName.'" onchange="BX.CalendarPeriod.OnChangeD(this);"  title="'.GetMessage("admin_lib_calend_direct_title").'">';
-			foreach($arDirection as $k => $v)
-					$s .= '<option value="'.$k.'"'.($currentDirection == $k ? " selected":"").'>'.$v.'</option>';
-			unset($currentDirection);
-
-			$s .='</select></span>';
-		}
-
-		$s .=''.
-		'<div class="adm-input-wrap adm-calendar-inp adm-calendar-first" style="display: '.($bSelectShow ? 'none' : 'inline-block').';">'.
-			'<input type="text" class="adm-input adm-calendar-from" id="'.$sFromName.'_calendar_from" name="'.$sFromName.'" size="'.($size+5).'" value="'.htmlspecialcharsbx($sFromVal).'">'.
-			'<span class="adm-calendar-icon" title="'.GetMessage("admin_lib_calend_title").'" onclick="BX.calendar({node:this, field:\''.$sFromName.'\', form: \'\', bTime: '.($bTime ? 'true' : 'false').', bHideTime: false});"></span>'.
-		'</div>
-		<span class="adm-calendar-separate" style="display: '.($bSelectShow ? 'none' : 'inline-block').'"></span>'.
-		'<div class="adm-input-wrap adm-calendar-second" style="display: '.($bSelectShow ? 'none' : 'inline-block').';">'.
-			'<input type="text" class="adm-input adm-calendar-to" id="'.$sToName.'_calendar_to" name="'.$sToName.'" size="'.($size+5).'" value="'.htmlspecialcharsbx($sToVal).'">'.
-			'<span class="adm-calendar-icon" title="'.GetMessage("admin_lib_calend_title").'" onclick="BX.calendar({node:this, field:\''.$sToName.'\', form: \'\', bTime: '.($bTime ? 'true' : 'false').', bHideTime: false});"></span>'.
-		'</div>'.
-		'<script type="text/javascript">
-			window["'.$sFromName.'_bTime"] = '.($bTime ? "true" : "false").';';
-
-		if($bSelectShow)
-			$s .='BX.CalendarPeriod.Init(BX("'.$sFromName.'_calendar_from"), BX("'.$sToName.'_calendar_to"), BX("'.$sFromName.'_calendar_period"));';
-
-		$s .='
-		</script>
-		</div>
-		</div>';
-
-		return $s;
-	}
-}
-
 class CAdminTheme
 {
-	function GetList()
+	public static function GetList()
 	{
 		/** @noinspection PhpUnusedLocalVariableInspection */
 		global $MESS;
@@ -4785,7 +2032,7 @@ class CAdminTheme
 		return $aThemes;
 	}
 
-	function GetCurrentTheme()
+	public static function GetCurrentTheme()
 	{
 		$aUserOpt = CUserOptions::GetOption("global", "settings");
 		if($aUserOpt["theme_id"] <> "")
@@ -4798,1423 +2045,6 @@ class CAdminTheme
 		}
 
 		return ".default";
-	}
-}
-
-/**********************************************************************/
-
-class CAdminTabEngine
-{
-	var $name;
-	var $bInited = False;
-	var $arEngines = array();
-	var $arArgs = array();
-	var $bVarsFromForm = False;
-
-	function CAdminTabEngine($name, $arArgs = array())
-	{
-		$this->bInited = False;
-		$this->name = $name;
-		$this->arEngines = array();
-		$this->arArgs = $arArgs;
-
-		foreach (GetModuleEvents("main", $this->name, true) as $arEvent)
-		{
-			$res = ExecuteModuleEventEx($arEvent, array($this->arArgs));
-			if (is_array($res))
-				$this->arEngines[$res["TABSET"]] = $res;
-			$this->bInited = True;
-		}
-	}
-
-	function SetErrorState($bVarsFromForm = False)
-	{
-		$this->bVarsFromForm = $bVarsFromForm;
-	}
-
-	function SetArgs($arArgs = array())
-	{
-		$this->arArgs = $arArgs;
-	}
-
-	function Check()
-	{
-		if (!$this->bInited)
-			return True;
-
-		$result = True;
-
-		foreach ($this->arEngines as $value)
-		{
-			if (array_key_exists("Check", $value))
-			{
-				$resultTmp = call_user_func_array($value["Check"], array($this->arArgs));
-				if ($result && !$resultTmp)
-					$result = False;
-			}
-		}
-
-		return $result;
-	}
-
-	function Action()
-	{
-		if (!$this->bInited)
-			return True;
-
-		$result = True;
-
-		foreach ($this->arEngines as $value)
-		{
-			if (array_key_exists("Action", $value))
-			{
-				$resultTmp = call_user_func_array($value["Action"], array($this->arArgs));
-				if ($result && !$resultTmp)
-					$result = False;
-			}
-		}
-
-		return $result;
-	}
-
-	function GetTabs()
-	{
-		if (!$this->bInited)
-			return False;
-
-		$arTabs = array();
-		foreach ($this->arEngines as $key => $value)
-		{
-			if (array_key_exists("GetTabs", $value))
-			{
-				$arTabsTmp = call_user_func_array($value["GetTabs"], array($this->arArgs));
-				if (is_array($arTabsTmp))
-				{
-					foreach ($arTabsTmp as $key1 => $value1)
-					{
-						$arTabsTmp[$key1]["DIV"] = $key."_".$arTabsTmp[$key1]["DIV"];
-					}
-
-					$arTabs = array_merge($arTabs, $arTabsTmp);
-				}
-			}
-		}
-
-		return $arTabs;
-	}
-
-	function ShowTab($divName)
-	{
-		if (!$this->bInited)
-			return False;
-
-		foreach ($this->arEngines as $key => $value)
-		{
-			if (SubStr($divName, 0, StrLen($key."_")) == $key."_")
-			{
-				if (array_key_exists("ShowTab", $value))
-					call_user_func_array($value["ShowTab"], array(SubStr($divName, StrLen($key."_")), $this->arArgs, $this->bVarsFromForm));
-			}
-		}
-		return null;
-	}
-}
-
-class CJSPopup
-{
-	var $__form_name = 'bx_popup_form';
-	var $post_args;
-	var $title = '';
-	var $bDescriptionStarted = false;
-	var $bContentStarted = false;
-	var $bButtonsStarted = false;
-	var $suffix = '';
-	var $jsPopup = 'BX.WindowManager.Get()';
-	var $bContentBuffered;
-	var $cont_id;
-
-	var $bInited = false;
-
-	/*
-	$arConfig = array(
-		'TITLE' => 'Popup window title',
-		'ARGS' => 'param1=values1&param2=value2', // additional GET arguments for POST query
-	)
-	*/
-	function CJSPopup($title = '', $arConfig = array())
-	{
-		if ($title != '') $this->SetTitle($title);
-		if (is_set($arConfig, 'TITLE')) $this->SetTitle($arConfig['TITLE']);
-		if (is_set($arConfig, 'ARGS')) $this->SetAdditionalArgs($arConfig['ARGS']);
-		if (is_set($arConfig, 'SUFFIX') && strlen($arConfig['SUFFIX']) > 0) $this->SetSuffix($arConfig['SUFFIX']);
-	}
-
-	function InitSystem()
-	{
-		/** @global CMain $APPLICATION */
-		global $APPLICATION;
-
-		if (!$this->bInited && $_REQUEST['bxsender'] != 'core_window_cauthdialog')
-		{
-			$this->InitScripts();
-
-			$APPLICATION->AddBufferContent(array($this, "_InitSystem"));
-
-			$APPLICATION->ShowHeadStrings();
-			$APPLICATION->ShowHeadScripts();
-
-			$this->bInited = true;
-		}
-	}
-
-	function _InitSystem()
-	{
-		$adminPage = new CAdminPage();
-
-		echo $adminPage->ShowPopupCSS();
-		echo $adminPage->ShowScript();
-
-	}
-
-	function InitScripts()
-	{
-		CJSCore::Init(array('admin_interface'));
-	}
-
-	function SetAdditionalArgs($additional_args = '')
-	{
-		$this->post_args = $additional_args;
-	}
-
-	function SetTitle($title = '')
-	{
-		$this->title = trim($title);
-	}
-
-	function GetFormName()
-	{
-		return $this->__form_name;
-	}
-
-	function SetSuffix($suffix)
-	{
-		$this->suffix = '_'.trim($suffix);
-		$this->__form_name .= $this->suffix;
-	}
-
-	function ShowTitlebar($title = '')
-	{
-		$this->InitSystem();
-
-		if ($title == '')
-			$title = $this->title;
-?>
-<script type="text/javascript">top.<?=$this->jsPopup?>.SetTitle('<?echo CUtil::JSEscape($title)?>');</script>
-<?
-	}
-
-	function StartDescription($icon = false)
-	{
-		$this->InitSystem();
-
-		$this->bDescriptionStarted = true;
-?>
-<script type="text/javascript"><?if ($icon):?>
-	<?if (strpos($icon, '/') === false):?>
-
-		<?=$this->jsPopup?>.SetIcon('<?echo CUtil::JSEscape($icon)?>');
-	<?else:?>
-
-		<?=$this->jsPopup?>.SetIconFile('<?echo CUtil::JSEscape($icon)?>');
-	<?endif;?>
-<?endif;?>
-<?
-			ob_start();
-	}
-
-	function EndDescription()
-	{
-		if ($this->bDescriptionStarted)
-		{
-			$descr = ob_get_contents();
-			ob_end_clean();
-?>
-
-<?=$this->jsPopup?>.SetHead('<?echo CUtil::JSEscape($descr)?>');</script>
-<?
-			//echo '</div></div>';
-			$this->bDescriptionStarted = false;
-		}
-	}
-
-	function StartContent($arAdditional = array())
-	{
-		$this->InitSystem();
-
-		$this->EndDescription();
-		$this->bContentStarted = true;
-
-		if ($arAdditional['buffer'])
-		{
-			$this->bContentBuffered = true;
-			//ob_start();
-			$this->cont_id = RandString(10);
-			echo '<div id="'.$this->cont_id.'" style="display: none;">';
-		}
-
-		echo '<form name="'.$this->__form_name.'">'."\r\n";
-		echo bitrix_sessid_post()."\r\n";
-
-		if (is_set($_REQUEST, 'back_url'))
-			echo '<input type="hidden" name="back_url" value="'.htmlspecialcharsbx($_REQUEST['back_url']).'" />'."\r\n";
-	}
-
-	function EndContent()
-	{
-		if ($this->bContentStarted)
-		{
-			echo '</form>'."\r\n";
-
-			$hkInstance = CHotKeys::getInstance();
-			$Execs = $hkInstance->GetCodeByClassName("CDialog");
-			echo $hkInstance->PrintJSExecs($Execs, "", true, true);
-
-			if ($this->bContentBuffered)
-			{
-?></div><script type="text/javascript">BX.ready(function() {<?=$this->jsPopup?>.SwapContent(BX('<?echo $this->cont_id?>'))});</script><?
-			}
-
-			if (!defined('BX_PUBLIC_MODE') || BX_PUBLIC_MODE == false)
-			{
-?><script type="text/javascript"><?echo "BX.adminFormTools.modifyFormElements(".$this->jsPopup.".DIV);"?></script><?
-			}
-
-			$this->bContentStarted = false;
-		}
-	}
-
-	function StartButtons()
-	{
-		$this->InitSystem();
-
-		$this->EndDescription();
-		$this->EndContent();
-
-		$this->bButtonsStarted = true;
-
-		ob_start();
-	}
-
-	function EndButtons()
-	{
-		if ($this->bButtonsStarted)
-		{
-			$buttons = ob_get_contents();
-			ob_end_clean();
-?>
-		<script type="text/javascript"><?=$this->jsPopup?>.SetButtons('<?echo CUtil::JSEscape($buttons)?>');</script>
-<?
-			$this->bButtonsStarted = false;
-		}
-	}
-
-	function ShowStandardButtons($arButtons = array('save', 'cancel'))
-	{
-		$this->InitSystem();
-
-		if (!is_array($arButtons)) return;
-
-		if ($this->bButtonsStarted)
-		{
-			$this->EndButtons();
-		}
-
-		$arSB = array('save' => $this->jsPopup.'.btnSave', 'cancel' => $this->jsPopup.'.btnCancel', 'close' => $this->jsPopup.'.btnClose');
-
-		foreach ($arButtons as $key => $value)
-			if (!$arSB[$value]) unset($arButtons[$key]);
-		$arButtons = array_values($arButtons);
-
-?>
-<script type="text/javascript"><?=$this->jsPopup?>.SetButtons([<?
-	foreach ($arButtons as $key => $btn)
-		echo ($key ? ',' : '').$arSB[$btn];
-?>]);</script><?
-	}
-
-	function ShowValidationError($errortext)
-	{
-		$this->EndDescription();
-		echo '<script>top.'.$this->jsPopup.'.ShowError(\''.CUtil::JSEscape(str_replace(array('<br>', '<br />', '<BR>', '<BR />'), "\r\n", $errortext)).'\')</script>';
-	}
-
-	function ShowError($errortext, $title = '')
-	{
-		$this->ShowTitlebar($title != "" ? $title : $this->title);
-
-		if (!$this->bDescriptionStarted)
-			$this->StartDescription();
-
-		ShowError($errortext);
-
-		$this->ShowStandardButtons(array("close"));
-		echo '<script>'.$this->jsPopup.'.AdjustShadow();</script>';
-		require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin_js.php");
-
-		exit();
-	}
-
-	function Close($bReload = true, $back_url = false)
-	{
-		if (!$back_url && is_set($_REQUEST, 'back_url'))
-			$back_url = $_REQUEST['back_url'];
-
-		echo '<script>';
-		echo 'top.'.$this->jsPopup.'.Close(); ';
-
-		if ($bReload)
-		{
-			echo 'top.BX.showWait(); ';
-			echo "top.BX.reload('".CUtil::JSEscape($back_url)."', true);";
-		}
-		echo '</script>';
-		die();
-	}
-}
-
-class CJSPopupOnPage extends CJSPopup
-{
-	function InitSystem() {} // this SHOULD be empty!
-}
-
-class CAdminFormSettings
-{
-	public static function getTabsArray($formId)
-	{
-		$arCustomTabs = array();
-		$customTabs = CUserOptions::GetOption("form", $formId);
-		if($customTabs && $customTabs["tabs"])
-		{
-			$arTabs = explode("--;--", $customTabs["tabs"]);
-			foreach($arTabs as $customFields)
-			{
-				if ($customFields == "")
-					continue;
-
-				$arCustomFields = explode("--,--", $customFields);
-				$arCustomTabID = "";
-				foreach($arCustomFields as $customField)
-				{
-					if($arCustomTabID == "")
-					{
-						list($arCustomTabID, $arCustomTabName) = explode("--#--", $customField);
-						$arCustomTabs[$arCustomTabID] = array(
-							"TAB" => $arCustomTabName,
-							"FIELDS" => array(),
-						);
-					}
-					else
-					{
-						list($arCustomFieldID, $arCustomFieldName) = explode("--#--", $customField);
-						$arCustomFieldName = ltrim($arCustomFieldName, defined("BX_UTF")? "* -\xa0\xc2": "* -\xa0");
-						$arCustomTabs[$arCustomTabID]["FIELDS"][$arCustomFieldID] = $arCustomFieldName;
-					}
-				}
-			}
-		}
-		return $arCustomTabs;
-	}
-
-	public static function setTabsArray($formId, $arCustomTabs, $common = false, $userID = false)
-	{
-		$option = "";
-		if (is_array($arCustomTabs))
-		{
-			foreach($arCustomTabs as $arCustomTabID => $arTab)
-			{
-				if (is_array($arTab) && isset($arTab["TAB"]))
-				{
-					$option .= $arCustomTabID.'--#--'.$arTab["TAB"];
-					if (isset($arTab["FIELDS"]) && is_array($arTab["FIELDS"]))
-					{
-						foreach ($arTab["FIELDS"] as $arCustomFieldID => $arCustomFieldName)
-						{
-							$option .= '--,--'.$arCustomFieldID.'--#--'.$arCustomFieldName;
-						}
-					}
-				}
-				$option .= '--;--';
-			}
-		}
-		CUserOptions::SetOption("form", $formId, array("tabs" => $option), $common, $userID);
-	}
-}
-
-
-class CAdminForm extends CAdminTabControl
-{
-	var $arParams = array();
-	var $arFields = array();
-	var $arForbiddenFields = array();
-	var $group = "";
-	var $group_ajax = false;
-	var $arFieldValues = array();
-	var $sPrologContent = "";
-	var $sEpilogContent = "";
-	var $arButtonsParams = false;
-	var $sButtonsContent = "";
-
-	var $arSavedTabs = array();
-	var $arSystemTabs = array();
-	var $arSystemFields = array();
-	var $arReqiredTabs = array();
-
-	var $arCustomLabels = array();
-	var $bCustomFields = false;
-	var $sCurrentLabel = "";
-	var $bCurrentReq = false;
-
-	var $bShowSettings = true;
-
-	function CAdminForm($name, $tabs, $bCanExpand = true, $bDenyAutosave = false)
-	{
-		parent::CAdminTabControl($name, $tabs, $bCanExpand, $bDenyAutosave);
-		$this->tabIndex = 0;
-		foreach($this->tabs as $i => $arTab)
-			$this->tabs[$i]["FIELDS"] = array();
-
-		//Parse customized labels
-		$this->arCustomLabels = array();
-		foreach (CAdminFormSettings::getTabsArray($this->name) as $arTab)
-		{
-			foreach ($arTab["FIELDS"] as $customID => $customName)
-			{
-				$this->arCustomLabels[$customID] = $customName;
-			}
-		}
-		ob_start();
-	}
-
-	function SetSelectedTab()
-	{
-		parent::SetSelectedTab();
-
-		$arDisabled = CUserOptions::GetOption("form", $this->name."_disabled", "N");
-		if(!is_array($arDisabled) || $arDisabled["disabled"] !== "Y")
-		{
-			if(isset($_REQUEST[$this->name."_active_tab"]))
-			{
-				$arCustomTabs = CAdminFormSettings::getTabsArray($this->name);
-				foreach($arCustomTabs as $tab_id => $arTab)
-				{
-					if($tab_id == $_REQUEST[$this->name."_active_tab"])
-					{
-						$this->selectedTab = $_REQUEST[$this->name."_active_tab"];
-						break;
-					}
-				}
-			}
-		}
-	}
-
-	function SetShowSettings($v)
-	{
-		$this->bShowSettings = $v;
-	}
-
-	function ShowSettings()
-	{
-		/** @noinspection PhpUnusedLocalVariableInspection */
-		/** @global CMain $APPLICATION */
-		global $APPLICATION, $USER;
-
-		$APPLICATION->RestartBuffer();
-
-		require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_js.php");
-
-		require($_SERVER['DOCUMENT_ROOT']."/bitrix/modules/main/interface/settings_admin_form.php");
-
-		require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin_js.php");
-
-		die();
-	}
-
-	function SetFieldsValues($bVarsFromForm, $db_record, $default_values)
-	{
-		foreach($default_values as $key=>$value)
-			$this->SetFieldValue($key, $bVarsFromForm, $db_record, $value);
-	}
-
-	function SetFieldValue($field_name, $bVarsFromForm, $db_record, $default_value = false)
-	{
-		if($bVarsFromForm)
-		{
-			if(array_key_exists($field_name, $_REQUEST))
-				$this->arFieldValues[$field_name] = $_REQUEST[$field_name];
-			else
-				$this->arFieldValues[$field_name] = $default_value;
-		}
-		else
-		{
-			if(is_array($db_record) && array_key_exists($field_name, $db_record) && isset($db_record[$field_name]))
-				$this->arFieldValues[$field_name] = $db_record[$field_name];
-			else
-				$this->arFieldValues[$field_name] = $default_value;
-		}
-	}
-
-	function GetFieldValue($field_name)
-	{
-		return $this->arFieldValues[$field_name];
-	}
-
-	function GetHTMLFieldValue($field_name)
-	{
-		return htmlspecialcharsbx($this->arFieldValues[$field_name]);
-	}
-
-	function GetHTMLFieldValueEx($field_name)
-	{
-		return htmlspecialcharsex($this->arFieldValues[$field_name]);
-	}
-
-	function GetFieldLabel($id)
-	{
-		return $this->arFields[$id]["content"];
-	}
-
-	function ShowTabButtons()
-	{
-		/** @global CMain $APPLICATION */
-		global $APPLICATION;
-
-		$s = '';
-		if (!$this->bPublicMode)
-		{
-			if ($this->bShowSettings)
-			{
-				$link = DeleteParam(array("mode"));
-				$link = $APPLICATION->GetCurPage()."?mode=settings".($link <> ""? "&".$link:"");
-
-				$aAdditionalMenu = array();
-
-				$aAdditionalMenu[] = array(
-					"TEXT"=>GetMessage("admin_lib_menu_settings"),
-					"TITLE"=>GetMessage("admin_lib_context_sett_title"),
-					"ONCLICK"=>$this->name.".ShowSettings('".htmlspecialcharsex(CUtil::JSEscape($link))."')",
-					"GLOBAL_ICON"=>"adm-menu-setting"
-				);
-
-				if($this->bCustomFields)
-				{
-					if(is_array($_SESSION["ADMIN_CUSTOM_FIELDS"]) && array_key_exists($this->name, $_SESSION["ADMIN_CUSTOM_FIELDS"]))
-					{
-						$aAdditionalMenu[] = array(
-							"TEXT" => GetMessage("admin_lib_sett_sett_enable_text"),
-							"TITLE" => GetMessage("admin_lib_sett_sett_enable"),
-							"ONCLICK" => $this->name.'.EnableSettings();',
-							"ICON" => 'custom-fields-on',
-						);
-					}
-					else
-					{
-						$aAdditionalMenu[] = array(
-							"TEXT" => GetMessage("admin_lib_sett_sett_disable_text"),
-							"TITLE" => GetMessage("admin_lib_sett_sett_disable"),
-							"ONCLICK" => $this->name.'.DisableSettings();',
-							"ICON" => 'custom-fields-off'
-						);
-
-					}
-				}
-
-				if (count($aAdditionalMenu) > 1)
-				{
-					$sMenuUrl = "BX.adminShowMenu(this, ".htmlspecialcharsbx(CAdminPopup::PhpToJavaScript($aAdditionalMenu)).", {active_class: 'bx-settings-btn-active'});";
-					$bCustomFieldsOff = is_array($_SESSION["ADMIN_CUSTOM_FIELDS"]) && array_key_exists($this->name, $_SESSION["ADMIN_CUSTOM_FIELDS"]);
-
-					$s .= '<span id="'.$this->name.'_settings_btn" class="adm-detail-settings adm-detail-settings-arrow'.($bCustomFieldsOff ? '' : ' adm-detail-settings-active').'" onclick="'.$sMenuUrl.'"></span>';
-				}
-				else
-				{
-					$s .= '<a class="adm-detail-settings" href="javascript:void(0)" onclick="'.$aAdditionalMenu[0]['ONCLICK'].'"></a>';
-
-				}
-			}
-		}
-
-		return $s.parent::ShowTabButtons();
-	}
-
-	function Begin($arParams = array())
-	{
-		$this->tabIndex = -1;
-		if(is_array($arParams))
-			$this->arParams = $arParams;
-		else
-			$this->arParams = array();
-	}
-
-	function BeginNextFormTab()
-	{
-		if($this->tabIndex >= count($this->tabs))
-			return;
-
-		$this->tabIndex++;
-		while(
-			isset($this->tabs[$this->tabIndex])
-			&& array_key_exists("CUSTOM", $this->tabs[$this->tabIndex])
-			&& $this->tabs[$this->tabIndex]["CUSTOM"] == "Y"
-		)
-		{
-			ob_start();
-			$this->customTabber->ShowTab($this->tabs[$this->tabIndex]["DIV"]);
-			$this->tabs[$this->tabIndex]["required"] = true;
-			$this->tabs[$this->tabIndex]["CONTENT"] = ob_get_contents();
-			ob_end_clean();
-			$this->tabIndex++;
-		}
-	}
-
-	function Show()
-	{
-		/** @global CMain $APPLICATION */
-		global $APPLICATION;
-
-		//Save form defined tabs
-		$this->arSavedTabs = $this->tabs;
-		$this->arSystemTabs = array();
-		$this->arReqiredTabs = array();
-
-		foreach($this->tabs as $arTab)
-		{
-			$this->arSystemTabs[$arTab["DIV"]] = $arTab;
-
-			if(is_array($arTab["FIELDS"]))
-			{
-				foreach($arTab["FIELDS"] as $arField)
-					$this->arFields[$arField["id"]] = $arField;
-			}
-
-			if (
-				$arTab["required"]
-				&& (
-					is_array($arTab["FIELDS"])
-					|| isset($arTab["CONTENT"])
-				)
-			)
-			{
-				$this->arReqiredTabs[$arTab["DIV"]] = $arTab;
-			}
-		}
-		//Save form defined fields
-		$this->arSystemFields = $this->arFields;
-
-		$arCustomTabs = CAdminFormSettings::getTabsArray($this->name);
-		if (!empty($arCustomTabs))
-		{
-			$this->bCustomFields = true;
-			$this->tabs = array();
-			foreach($arCustomTabs as $tab_id => $arTab)
-			{
-				if(array_key_exists($tab_id, $this->arSystemTabs))
-				{
-					$arNewTab = $this->arSystemTabs[$tab_id];
-					$arNewTab["TAB"] = $arTab["TAB"];
-					$arNewTab["FIELDS"] = array();
-				}
-				else
-				{
-					$arNewTab = array(
-						"DIV" => $tab_id,
-						"TAB" => $arTab["TAB"],
-						"ICON" => "main_user_edit",
-						"TITLE" => "",
-						"FIELDS" => array(),
-					);
-				}
-
-				$bHasFields = false;
-				foreach($arTab["FIELDS"] as $field_id => $content)
-				{
-					if(array_key_exists($field_id, $this->arSystemFields))
-					{
-						$arNewField = $this->arSystemFields[$field_id];
-						$arNewField["content"] = $content;
-						$bHasFields = true;
-					}
-					elseif(array_key_exists($field_id, $this->arForbiddenFields))
-					{
-						$arNewField = false;
-					}
-					elseif(strlen($content) > 0)
-					{
-						$arNewField = array(
-							"id" => $field_id,
-							"content" => $content,
-							"html" => '<td colspan="2">'.htmlspecialcharsex($content).'</td>',
-							"delimiter" => true,
-						);
-					}
-					else
-					{
-						$arNewField = false;
-					}
-
-					if(is_array($arNewField))
-					{
-						$this->arFields[$field_id] = $arNewField;
-						$arNewTab["FIELDS"][] = $arNewField;
-						foreach ($this->arReqiredTabs as $tab_id => $arReqTab)
-						{
-							if (is_array($arReqTab["FIELDS"]))
-							{
-								foreach ($arReqTab["FIELDS"] as $i => $arReqTabField)
-								{
-									if ($arReqTabField["id"] == $field_id)
-										unset($this->arReqiredTabs[$tab_id]["FIELDS"][$i]);
-								}
-							}
-						}
-					}
-				}
-
-				if ($bHasFields)
-					$this->tabs[] = $arNewTab;
-			}
-
-			foreach ($this->arReqiredTabs as $arReqTab)
-			{
-				if (!empty($arReqTab["FIELDS"]))
-				{
-					$this->tabs[] = $arReqTab;
-					foreach ($arReqTab["FIELDS"] as $arReqTabField)
-					{
-						$this->arFields[$arReqTabField["id"]] = $arReqTabField;
-					}
-				}
-				elseif (isset($arReqTab["CONTENT"]))
-				{
-					$this->tabs[] = $arReqTab;
-				}
-			}
-		}
-
-		if($_REQUEST["mode"] == "settings")
-		{
-			ob_end_clean();
-			$this->ShowSettings($this->arFields);
-			die();
-		}
-		else
-		{
-			ob_end_flush();
-		}
-
-		if(!is_array($_SESSION["ADMIN_CUSTOM_FIELDS"]))
-			$_SESSION["ADMIN_CUSTOM_FIELDS"] = array();
-		$arDisabled = CUserOptions::GetOption("form", $this->name."_disabled", "N");
-		if(is_array($arDisabled) && $arDisabled["disabled"] === "Y")
-		{
-			$_SESSION["ADMIN_CUSTOM_FIELDS"][$this->name] = true;
-			$this->tabs = $this->arSavedTabs;
-			$this->arFields = $this->arSystemFields;
-		}
-		else
-		{
-			unset($_SESSION["ADMIN_CUSTOM_FIELDS"][$this->name]);
-		}
-
-		if(isset($_REQUEST[$this->name."_active_tab"]))
-			$this->selectedTab = $_REQUEST[$this->name."_active_tab"];
-		else
-			$this->selectedTab = $this->tabs[0]["DIV"];
-
-		//To show
-		$arHiddens = $this->arFields;
-		echo $this->sPrologContent;
-		if(array_key_exists("FORM_ACTION", $this->arParams))
-			$action = htmlspecialcharsbx($this->arParams["FORM_ACTION"]);
-		else
-			$action = htmlspecialcharsbx($APPLICATION->GetCurPage());
-		echo '<form method="POST" action="'.$action.'"  enctype="multipart/form-data" id="'.$this->name.'_form" name="'.$this->name.'_form"'.($this->arParams["FORM_ATTRIBUTES"] <> ''? ' '.$this->arParams["FORM_ATTRIBUTES"]:'').'>';
-
-		$htmlGroup = "";
-		if($this->group)
-		{
-			if (!empty($arCustomTabs))
-			{
-				foreach($this->tabs as $arTab)
-				{
-					if(is_array($arTab["FIELDS"]))
-					{
-						foreach($arTab["FIELDS"] as $arField)
-						{
-							if(
-								(strlen($this->arFields[$arField["id"]]["custom_html"]) > 0)
-								|| (strlen($this->arFields[$arField["id"]]["html"]) > 0)
-							)
-							{
-								$p = array_search($arField["id"], $this->arFields[$this->group]["group"]);
-								if($p !== false)
-									unset($this->arFields[$this->group]["group"][$p]);
-							}
-						}
-					}
-				}
-			}
-
-			if(!empty($this->arFields[$this->group]["group"]))
-			{
-				$htmlGroup .= '<tr class="heading" id="tr_'.$this->arFields[$this->group]["id"].'">'
-					.$this->arFields[$this->group]["html"].'</tr>'
-					."\n";
-			}
-		}
-
-		$this->OnAdminTabControlBegin();
-		$this->tabIndex = 0;
-		while($this->tabIndex < count($this->tabs))
-		{
-			ob_start();//Start of the tab content
-			$arTab = $this->tabs[$this->tabIndex];
-			if(is_array($arTab["FIELDS"]))
-			{
-				foreach($arTab["FIELDS"] as $arField)
-				{
-					if(isset($this->arFields[$arField["id"]]["group"]))
-					{
-						if(!empty($this->arFields[$arField["id"]]["group"]))
-						{
-							echo $htmlGroup;
-							foreach($this->arFields[$arField["id"]]["group"] as $p)
-							{
-								if($this->arFields[$p]["custom_html"])
-									echo preg_replace("/^\\s*<tr/is", "<tr class=\"bx-in-group\"", $this->arFields[$p]["custom_html"]);
-								elseif($this->arFields[$p]["html"] && !$this->arFields[$p]["delimiter"])
-									echo '<tr class="bx-in-group" '.($this->arFields[$p]["valign"] <> ''? ' valign="'.$this->arFields[$p]["valign"].'"':'').' id="tr_'.$p.'">', $this->arFields[$p]["html"], "</tr>\n";
-								unset($arHiddens[$this->arFields[$p]["id"]]);
-								$this->arFields[$p] = array();
-							}
-						}
-					}
-					elseif(strlen($this->arFields[$arField["id"]]["custom_html"]) > 0)
-					{
-						if($this->group_ajax)
-							echo preg_replace("#<script[^>]*>.*?</script>#im".BX_UTF_PCRE_MODIFIER, "", $this->arFields[$arField["id"]]["custom_html"]);
-						else
-							echo $this->arFields[$arField["id"]]["custom_html"];
-					}
-					elseif(strlen($this->arFields[$arField["id"]]["html"]) > 0)
-					{
-						$rowClass = (
-							array_key_exists("rowClass", $this->arFields[$arField["id"]])
-							? ' class="'.$this->arFields[$arField["id"]]["rowClass"].'"'
-							: ''
-						);
-
-						if($this->arFields[$arField["id"]]["delimiter"])
-							echo '<tr class="heading" id="tr_'.$arField["id"].'"'.$rowClass.'>';
-						else
-							echo '<tr'.($this->arFields[$arField["id"]]["valign"] <> ''? ' valign="'.$this->arFields[$arField["id"]]["valign"].'"':'').' id="tr_'.$arField["id"].'"'.$rowClass.'>';
-						echo $this->arFields[$arField["id"]]["html"].'</tr>'."\n";
-					}
-					unset($arHiddens[$arField["id"]]);
-				}
-			}
-			elseif (isset($arTab["CONTENT"]))
-			{
-				echo $arTab["CONTENT"];
-			}
-			$tabContent = ob_get_contents();
-			ob_end_clean(); //Dispose tab content
-
-			if ($tabContent == "")
-			{
-				array_splice($this->tabs, $this->tabIndex, 1); // forget about tab
-			}
-			else
-			{
-
-				$this->tabs[$this->tabIndex]["CONTENT"] = $tabContent;
-				$this->tabIndex++;
-			}
-		}
-
-		//sometimes form settings are incorrect but we must show required fields
-		$requiredFields = '';
-		foreach($arHiddens as $arField)
-		{
-			if($arField["required"])
-			{
-				if(strlen($this->arFields[$arField["id"]]["custom_html"]) > 0)
-				{
-					$requiredFields .= $this->arFields[$arField["id"]]["custom_html"];
-				}
-				elseif(strlen($this->arFields[$arField["id"]]["html"]) > 0)
-				{
-					if($this->arFields[$arField["id"]]["delimiter"])
-						$requiredFields .= '<tr class="heading">';
-					else
-						$requiredFields .= '<tr>';
-					$requiredFields .= $this->arFields[$arField["id"]]["html"].'</tr>';
-				}
-				unset($arHiddens[$arField["id"]]);
-			}
-		}
-		if($requiredFields <> '')
-		{
-			$this->tabs[] = array(
-				"CONTENT" => $requiredFields,
-				"DIV" => "bx_req",
-				"TAB" => GetMessage("admin_lib_required"),
-				"TITLE" => GetMessage("admin_lib_required"),
-			);
-		}
-
-		parent::Begin();
-
-		while($this->tabIndex < count($this->tabs))
-		{
-			$this->BeginNextTab();
-			echo $this->tabs[$this->tabIndex]["CONTENT"];
-		}
-
-		parent::Buttons($this->arButtonsParams);
-		echo $this->sButtonsContent;
-
-		$this->End();
-		echo $this->sEpilogContent;
-
-		echo '<span class="bx-fields-hidden">';
-		foreach($arHiddens as $arField)
-		{
-			echo $arField["hidden"];
-		}
-		echo '</span>';
-
-		echo '</form>';
-	}
-
-	function GetName()
-	{
-		return $this->name;
-	}
-
-	function GetFormName()
-	{
-		return $this->name."_form";
-	}
-
-	function GetCustomLabel($id, $content)
-	{
-		$bColumnNeeded = substr($content, -1)==":";
-
-		if($id === false)
-			return $this->sCurrentLabel;
-		elseif(array_key_exists($id, $this->arCustomLabels))
-			return $this->arCustomLabels[$id].($bColumnNeeded? ":": "");
-		else
-			return $content;
-	}
-
-	function GetCustomLabelHTML($id = false, $content = "")
-	{
-		$bColumnNeeded = substr($content, -1)==":";
-
-		if($id === false)
-			return ($this->bCurrentReq? '<span class="adm-required-field">'.htmlspecialcharsex($this->sCurrentLabel).'</span>': htmlspecialcharsex($this->sCurrentLabel));
-		elseif(array_key_exists($id, $this->arCustomLabels))
-			return ($this->arFields[$id]["required"]? '<span class="adm-required-field">'.htmlspecialcharsex($this->arCustomLabels[$id]).($bColumnNeeded? ":": "").'</span>': htmlspecialcharsex($this->arCustomLabels[$id]).($bColumnNeeded? ":": ""));
-		else
-			return ($this->tabs[$this->tabIndex]["FIELDS"][$id]["required"]? '<span class="adm-required-field">'.htmlspecialcharsex($content).'</span>': htmlspecialcharsex($content));
-	}
-
-	function ShowWarnings($form, $messages, $aFields=false)
-	{
-		parent::ShowWarnings($this->name.'_form', $messages, $aFields);
-	}
-
-	function BeginPrologContent()
-	{
-		ob_start();
-	}
-
-	function EndPrologContent()
-	{
-		$this->sPrologContent = ob_get_contents();
-		ob_end_clean();
-	}
-
-	function BeginEpilogContent()
-	{
-		ob_start();
-	}
-
-	function EndEpilogContent()
-	{
-		$this->sEpilogContent = ob_get_contents();
-		ob_end_clean();
-	}
-
-	function AddFieldGroup($id, $content, $arFields, $bAjax = false)
-	{
-		$this->group = $id;
-		$this->group_ajax = $bAjax;
-		$this->tabs[$this->tabIndex]["FIELDS"][$id] = array(
-			"id" => $id,
-			"content" => $content,
-			"group" => $arFields,
-			"html" => '<td colspan="2">'.$this->GetCustomLabelHTML($id, $content).'</td>',
-		);
-	}
-
-	function HideField($id)
-	{
-		$this->arForbiddenFields[$id] = true;
-	}
-
-	function AddSection($id, $content, $required = false)
-	{
-		$this->tabs[$this->tabIndex]["FIELDS"][$id] = array(
-			"id" => $id,
-			"required" => $required,
-			"delimiter" => true,
-			"content" => $content,
-			"html" => '<td colspan="2">'.($required? '<span class="adm-required-field">'.$this->GetCustomLabelHTML($id, $content).'</span>': $this->GetCustomLabelHTML($id, $content)).'</td>',
-		);
-	}
-
-	function AddViewField($id, $content, $html, $required=false)
-	{
-		$this->tabs[$this->tabIndex]["FIELDS"][$id] = array(
-			"id" => $id,
-			"required" => $required,
-			"content" => $content,
-			"html" => ($html <> ''? '<td width="40%">'.$this->GetCustomLabelHTML($id, $content).'</td><td>'.$html.'</td>' : ''),
-		);
-	}
-
-	function AddDropDownField($id, $content, $required, $arSelect, $value=false, $arParams=array())
-	{
-		if($value === false)
-			$value = $this->arFieldValues[$id];
-
-		$html = '<select name="'.$id.'"';
-		foreach($arParams as $param)
-			$html .= ' '.$param;
-		$html .= '>';
-
-		foreach($arSelect as $key => $val)
-			$html .= '<option value="'.htmlspecialcharsbx($key).'"'.($value == $key? ' selected': '').'>'.htmlspecialcharsex($val).'</option>';
-		$html .= '</select>';
-
-		$this->tabs[$this->tabIndex]["FIELDS"][$id] = array(
-			"id" => $id,
-			"required" => $required,
-			"content" => $content,
-			"html" => '<td width="40%">'.($required? '<span class="adm-required-field">'.$this->GetCustomLabelHTML($id, $content).'</span>': $this->GetCustomLabelHTML($id, $content)).'</td><td>'.$html.'</td>',
-			"hidden" => '<input type="hidden" name="'.$id.'" value="'.htmlspecialcharsbx($value).'">',
-		);
-	}
-
-	function AddEditField($id, $content, $required, $arParams = array(), $value = false)
-	{
-		if($value === false)
-			$value = htmlspecialcharsbx($this->arFieldValues[$id]);
-		$html = '<input type="text" name="'.$id.'" value="'.$value.'"';
-		if(intval($arParams["size"]) > 0)
-			$html .= ' size="'.intval($arParams["size"]).'"';
-		if(intval($arParams["maxlength"]) > 0)
-			$html .= ' maxlength="'.intval($arParams["maxlength"]).'"';
-		if($arParams["id"])
-			$html .= ' id="'.htmlspecialcharsbx($arParams["id"]).'"';
-		$html .= '>';
-
-		$this->tabs[$this->tabIndex]["FIELDS"][$id] = array(
-			"id" => $id,
-			"required" => $required,
-			"content" => $content,
-			"html" => '<td width="40%">'.($required? '<span class="adm-required-field">'.$this->GetCustomLabelHTML($id, $content).'</span>': $this->GetCustomLabelHTML($id, $content)).'</td><td>'.$html.'</td>',
-			"hidden" => '<input type="hidden" name="'.$id.'" value="'.$value.'">',
-		);
-	}
-
-	function AddTextField($id, $label, $value, $arParams=array(), $required=false)
-	{
-		$html = '<textarea name="'.$id.'"';
-		if(intval($arParams["cols"]) > 0)
-			$html .= ' cols="'.intval($arParams["cols"]).'"';
-		if(intval($arParams["rows"]) > 0)
-			$html .= ' rows="'.intval($arParams["rows"]).'"';
-		$html .= '>'.$value.'</textarea>';
-
-		$this->tabs[$this->tabIndex]["FIELDS"][$id] = array(
-			"id" => $id,
-			"required" => $required,
-			"content" => $label,
-			"html" => '<td width="40%">'.($required? '<span class="adm-required-field">'.$this->GetCustomLabelHTML($id, $label).'</span>': $this->GetCustomLabelHTML($id, $label)).'</td><td>'.$html.'</td>',
-			"hidden" => '<input type="hidden" name="'.$id.'" value="'.$value.'">',
-			"valign" => "top",
-		);
-	}
-
-	function AddCalendarField($id, $label, $value, $required=false)
-	{
-		$html = CalendarDate($id, $value, $this->GetFormName());
-
-		$this->tabs[$this->tabIndex]["FIELDS"][$id] = array(
-			"id" => $id,
-			"required" => $required,
-			"content" => $label,
-			"html" => '<td width="40%">'.($required? '<span class="adm-required-field">'.$this->GetCustomLabelHTML($id, $label).'</span>': $this->GetCustomLabelHTML($id, $label)).'</td><td>'.$html.'</td>',
-			"hidden" => '<input type="hidden" name="'.$id.'" value="'.$value.'">',
-		);
-	}
-
-	function AddCheckBoxField($id, $content, $required, $value, $checked, $arParams=array())
-	{
-		if (is_array($value))
-		{
-			$html = '<input type="hidden" name="'.$id.'" value="'.htmlspecialcharsbx($value[1]).'">
-				<input type="checkbox" name="'.$id.'" value="'.htmlspecialcharsbx($value[0]).'"'.($checked? ' checked': '');
-			$hidden = '<input type="hidden" name="'.$id.'" value="'.htmlspecialcharsbx($checked? $value[0]: $value[1]).'">';
-		}
-		else
-		{
-			$html = '<input type="checkbox" name="'.$id.'" value="'.htmlspecialcharsbx($value).'"'.($checked? ' checked': '');
-			$hidden = '<input type="hidden" name="'.$id.'" value="'.htmlspecialcharsbx($value).'">';
-		}
-
-		foreach($arParams as $param)
-			$html .= ' '.$param;
-		$html .= '>';
-
-		$label = $this->GetCustomLabelHTML($id, $content);
-		if ($required)
-		{
-			$label = '<span class="adm-required-field">'.$label.'</span>';
-		}
-
-		$this->tabs[$this->tabIndex]["FIELDS"][$id] = array(
-			"id" => $id,
-			"required" => $required,
-			"content" => $content,
-			"html" => '<td width="40%">'.$label.'</td><td>'.$html.'</td>',
-			"hidden" => $hidden,
-		);
-	}
-
-	function AddFileField($id, $label, $value, $arParams=array(), $required=false)
-	{
-		$arDefParams = array("iMaxW"=>150, "iMaxH"=>150, "sParams"=>"border=0", "strImageUrl"=>"", "bPopup"=>true, "sPopupTitle"=>false);
-		foreach($arDefParams as $key=>$val)
-			if(!array_key_exists($key, $arParams))
-				$arParams[$key] = $val;
-
-		$html = CFile::InputFile($id, 20, $value);
-		if($value <> '')
-			$html .= '<div class="adm-detail-file-image">'.CFile::ShowImage($value, $arParams["iMaxW"], $arParams["iMaxH"], $arParams["sParams"], $arParams["strImageUrl"], $arParams["bPopup"], $arParams["sPopupTitle"])."</div>";
-
-		$this->tabs[$this->tabIndex]["FIELDS"][$id] = array(
-			"id" => $id,
-			"required" => $required,
-			"content" => $label,
-			"html" => '<td width="40%">'.($required? '<span class="adm-required-field">'.$this->GetCustomLabelHTML($id, $label).'</span>': $this->GetCustomLabelHTML($id, $label)).'</td><td>'.$html.'</td>',
-			"valign" => "top",
-			"rowClass" => "adm-detail-file-row"
-		);
-	}
-
-	function BeginCustomField($id, $content, $required = false)
-	{
-		$this->sCurrentLabel = $this->GetCustomLabel($id, $content);
-		$this->bCurrentReq = $required;
-		$this->tabs[$this->tabIndex]["FIELDS"][$id] = array(
-			"id" => $id,
-			"required" => $required,
-			"content" => $content,
-		);
-
-		ob_start();
-	}
-
-	function EndCustomField($id, $hidden = "")
-	{
-		$html = ob_get_contents();
-		ob_end_clean();
-
-		$this->tabs[$this->tabIndex]["FIELDS"][$id]["custom_html"] = $html;
-		$this->tabs[$this->tabIndex]["FIELDS"][$id]["hidden"] = $hidden;
-	}
-
-	function ShowUserFields($PROPERTY_ID, $ID, $bVarsFromForm)
-	{
-		/**
-		 * @global CMain $APPLICATION
-		 * @global CUserTypeManager $USER_FIELD_MANAGER
-		 */
-		global $USER_FIELD_MANAGER, $APPLICATION;
-
-		if($USER_FIELD_MANAGER->GetRights($PROPERTY_ID) >= "W")
-		{
-			$this->BeginCustomField("USER_FIELDS_ADD", GetMessage("admin_lib_add_user_field"));
-			?>
-				<tr>
-					<td colspan="2" align="left">
-						<a href="/bitrix/admin/userfield_edit.php?lang=<?echo LANGUAGE_ID?>&amp;ENTITY_ID=<?echo urlencode($PROPERTY_ID)?>&amp;back_url=<?echo urlencode($APPLICATION->GetCurPageParam($this->name.'_active_tab=user_fields_tab', array($this->name.'_active_tab')))?>"><?echo $this->GetCustomLabelHTML()?></a>
-					</td>
-				</tr>
-			<?
-			$this->EndCustomField("USER_FIELDS_ADD", '');
-		}
-
-		$arUserFields = $USER_FIELD_MANAGER->GetUserFields($PROPERTY_ID, $ID, LANGUAGE_ID);
-		foreach($arUserFields as $FIELD_NAME => $arUserField)
-		{
-			$arUserField["VALUE_ID"] = intval($ID);
-			if(array_key_exists($FIELD_NAME, $this->arCustomLabels))
-				$strLabel = $this->arCustomLabels[$FIELD_NAME];
-			else
-				$strLabel = $arUserField["EDIT_FORM_LABEL"]? $arUserField["EDIT_FORM_LABEL"]: $arUserField["FIELD_NAME"];
-			$arUserField["EDIT_FORM_LABEL"] = $strLabel;
-
-			$this->BeginCustomField($FIELD_NAME, $strLabel, $arUserField["MANDATORY"]=="Y");
-
-			if(isset($_REQUEST['def_'.$FIELD_NAME]))
-				$arUserField['SETTINGS']['DEFAULT_VALUE'] = $_REQUEST['def_'.$FIELD_NAME];
-
-			echo $USER_FIELD_MANAGER->GetEditFormHTML($bVarsFromForm, $GLOBALS[$FIELD_NAME], $arUserField);
-
-			$form_value = $GLOBALS[$FIELD_NAME];
-			if(!$bVarsFromForm)
-				$form_value = $arUserField["VALUE"];
-			elseif($arUserField["USER_TYPE"]["BASE_TYPE"]=="file")
-				$form_value = $GLOBALS[$arUserField["FIELD_NAME"]."_old_id"];
-
-			$hidden = "";
-			if(is_array($form_value))
-			{
-				foreach($form_value as $value)
-					$hidden .= '<input type="hidden" name="'.$FIELD_NAME.'[]" value="'.htmlspecialcharsbx($value).'">';
-			}
-			else
-			{
-				$hidden .= '<input type="hidden" name="'.$FIELD_NAME.'" value="'.htmlspecialcharsbx($form_value).'">';
-			}
-			$this->EndCustomField($FIELD_NAME, $hidden);
-		}
-	}
-
-	function ShowUserFieldsWithReadyData($PROPERTY_ID, $readyData, $bVarsFromForm, $primaryIdName = 'VALUE_ID')
-	{
-		/**
-		 * @global CMain $APPLICATION
-		 * @global CUserTypeManager $USER_FIELD_MANAGER
-		 */
-		global $USER_FIELD_MANAGER, $APPLICATION;
-
-		if($USER_FIELD_MANAGER->GetRights($PROPERTY_ID) >= "W")
-		{
-			$this->BeginCustomField("USER_FIELDS_ADD", GetMessage("admin_lib_add_user_field"));
-			?>
-			<tr>
-				<td colspan="2" align="left">
-					<a href="/bitrix/admin/userfield_edit.php?lang=<?echo LANGUAGE_ID?>&amp;ENTITY_ID=<?echo urlencode($PROPERTY_ID)?>&amp;back_url=<?echo urlencode($APPLICATION->GetCurPageParam($this->name.'_active_tab=user_fields_tab', array($this->name.'_active_tab')))?>"><?echo $this->GetCustomLabelHTML()?></a>
-				</td>
-			</tr>
-			<?
-			$this->EndCustomField("USER_FIELDS_ADD", '');
-		}
-
-		$arUserFields = $USER_FIELD_MANAGER->getUserFieldsWithReadyData($PROPERTY_ID, $readyData, LANGUAGE_ID, false, $primaryIdName);
-
-		foreach($arUserFields as $FIELD_NAME => $arUserField)
-		{
-			$arUserField["VALUE_ID"] = intval($readyData[$primaryIdName]);
-			if(array_key_exists($FIELD_NAME, $this->arCustomLabels))
-				$strLabel = $this->arCustomLabels[$FIELD_NAME];
-			else
-				$strLabel = $arUserField["EDIT_FORM_LABEL"]? $arUserField["EDIT_FORM_LABEL"]: $arUserField["FIELD_NAME"];
-			$arUserField["EDIT_FORM_LABEL"] = $strLabel;
-
-			$this->BeginCustomField($FIELD_NAME, $strLabel, $arUserField["MANDATORY"]=="Y");
-
-			if(isset($_REQUEST['def_'.$FIELD_NAME]))
-				$arUserField['SETTINGS']['DEFAULT_VALUE'] = $_REQUEST['def_'.$FIELD_NAME];
-
-			echo $USER_FIELD_MANAGER->GetEditFormHTML($bVarsFromForm, $GLOBALS[$FIELD_NAME], $arUserField);
-
-			$form_value = $GLOBALS[$FIELD_NAME];
-			if(!$bVarsFromForm)
-				$form_value = $arUserField["VALUE"];
-			elseif($arUserField["USER_TYPE"]["BASE_TYPE"]=="file")
-				$form_value = $GLOBALS[$arUserField["FIELD_NAME"]."_old_id"];
-
-			$hidden = "";
-			if(is_array($form_value))
-			{
-				foreach($form_value as $value)
-					$hidden .= '<input type="hidden" name="'.$FIELD_NAME.'[]" value="'.htmlspecialcharsbx($value).'">';
-			}
-			else
-			{
-				$hidden .= '<input type="hidden" name="'.$FIELD_NAME.'" value="'.htmlspecialcharsbx($form_value).'">';
-			}
-			$this->EndCustomField($FIELD_NAME, $hidden);
-		}
-	}
-
-	function Buttons($aParams=false, $additional_html="")
-	{
-		if($aParams === false)
-			$this->arButtonsParams = false;
-		else
-			$this->arButtonsParams = $aParams;
-		$this->sButtonsContent = $additional_html;
-
-		while($this->tabIndex < count($this->tabs))
-			$this->BeginNextFormTab();
-	}
-
-	/**
-	 * @param bool|array $arJSButtons
-	 * @return void
-	 */
-	function ButtonsPublic($arJSButtons = false)
-	{
-		if ($this->bPublicMode)
-		{
-			if (strlen($_REQUEST['from_module']))
-				$this->sButtonsContent .= '<input type="hidden" name="from_module" value="'.htmlspecialcharsbx($_REQUEST['from_module']).'" />';
-
-			ob_start();
-			if ($arJSButtons === false)
-			{
-				echo '
-<input type="hidden" name="bxpublic" value="Y" /><input type="hidden" name="save" value="Y" />
-<script type="text/javascript">'.$this->publicObject.'.SetButtons(['.$this->publicObject.'.btnSave, '.$this->publicObject.'.btnCancel]);</script>
-';
-			}
-			elseif (is_array($arJSButtons))
-			{
-				$arJSButtons = array_values($arJSButtons);
-				echo '
-<input type="hidden" name="bxpublic" value="Y" />
-<script type="text/javascript">'.$this->publicObject.'.SetButtons([
-';
-				foreach ($arJSButtons as $key => $btn)
-				{
-					if (substr($btn, 0, 1) == '.')
-						$btn = $this->publicObject.$btn;
-					echo $key ? ',' : '', $btn, "\r\n"; // NO JSESCAPE HERE! string must contain valid js object
-				}
-				echo '
-]);</script>
-';
-			}
-			$this->sButtonsContent .= ob_get_clean();
-		}
 	}
 }
 
@@ -6289,174 +2119,3 @@ function ShowJSHint($text, $arParams=false)
 	return null;
 }
 
-
-class CAdminTabControlDrag extends CAdminTabControl
-{
-	function CAdminTabControlDrag($name, $tabs, $moduleId="", $bCanExpand = true, $bDenyAutosave = false)
-	{
-		parent::CAdminTabControl($name, $tabs, $bCanExpand, $bDenyAutosave);
-		$this->moduleId = $moduleId;
-		\Bitrix\Main\Page\Asset::getInstance()->addJs("/bitrix/js/main/admin_dd.js");
-	}
-
-	function BeginNextTab()
-	{
-		if ($this->AUTOSAVE)
-			$this->AUTOSAVE->Init();
-
-		//end previous tab
-		$this->EndTab();
-
-		if($this->tabIndex >= count($this->tabs))
-			return;
-
-		$css = '';
-		if ($this->tabs[$this->tabIndex]["DIV"] <> $this->selectedTab)
-			$css .= 'display:none; ';
-
-		echo '
-<div class="adm-detail-content" id="'.$this->tabs[$this->tabIndex]["DIV"].'"'.($css != '' ? ' style="'.$css.'"' : '').'>';
-
-		if (!empty($this->tabs[$this->tabIndex]["TITLE"]))
-			echo '
-	<div class="adm-detail-title">'.$this->tabs[$this->tabIndex]["TITLE"].'</div>';
-
-		if ($this->tabs[$this->tabIndex]["IS_DRAGGABLE"] == "Y")
-		{
-			$arJsParams = array(
-				"moduleId" => $this->moduleId,
-				"optionName" => $this->getCurrentTabOptionName($this->tabIndex),
-				"tabId" => $this->tabs[$this->tabIndex]["DIV"],
-				"hidden" => $this->getTabHiddenBlocks($this->tabIndex)
-			);
-			echo '
-			<script>
-				BX.ready(function(){
-					var orderObj = new BX.Admin.DraggableTab('.CUtil::PhpToJSObject($arJsParams).');
-				});
-			</script>';
-		}
-
-		$showWrap = $this->tabs[$this->tabIndex]["SHOW_WRAP"] == "N" ? false : true;
-		echo '
-	<div '.($showWrap ? 'class="adm-detail-content-item-block"' : '').'>
-		<table class="adm-detail-content-table edit-table" id="'.$this->tabs[$this->tabIndex]["DIV"].'_edit_table">
-			<tbody>
-';
-		if(array_key_exists("CUSTOM", $this->tabs[$this->tabIndex]) && $this->tabs[$this->tabIndex]["CUSTOM"] == "Y")
-		{
-			$this->customTabber->ShowTab($this->tabs[$this->tabIndex]["DIV"]);
-			$this->tabIndex++;
-			$this->BeginNextTab();
-		}
-		elseif(array_key_exists("CONTENT", $this->tabs[$this->tabIndex]))
-		{
-			echo $this->tabs[$this->tabIndex]["CONTENT"];
-			$this->tabIndex++;
-			$this->BeginNextTab();
-		}
-		else
-		{
-			$this->tabIndex++;
-		}
-	}
-
-	function ShowTabButtons()
-	{
-		$s = '';
-		if (!$this->bPublicMode)
-		{
-			if(count($this->tabs) > 1 && $this->bCanExpand/* || $this->AUTOSAVE*/)
-			{
-				$s .= '<div class="adm-detail-title-setting" onclick="'.$this->name.'.ToggleTabs();" title="'.GetMessage("admin_lib_expand_tabs").'" id="'.$this->name.'_expand_link"><span class="adm-detail-title-setting-btn adm-detail-title-expand"></span></div>';
-			}
-		}
-		return $s;
-	}
-
-	function getCurrentTabOptionName($tabIdx)
-	{
-		return $this->name."_".$this->tabs[$tabIdx]["DIV"];
-	}
-
-	function getTabSettings($tabIdx)
-	{
-		if (isset($this->tabs[$tabIdx]["SETTINGS"]))
-			return $this->tabs[$tabIdx]["SETTINGS"];
-
-		$tabSettings = CUserOptions::getOption($this->moduleId, $this->getCurrentTabOptionName($tabIdx));
-
-		$tabSettings["order"] = isset($tabSettings["order"]) ? $tabSettings["order"] : array();
-		if (!empty($tabSettings["order"]))
-			$tabSettings["order"] = explode(",", $tabSettings["order"]);
-
-		$tabSettings["hidden"] = isset($tabSettings["hidden"]) ? $tabSettings["hidden"] : array();
-		if (!empty($tabSettings["hidden"]))
-			$tabSettings["hidden"] = explode(",", $tabSettings["hidden"]);
-
-		$this->tabs[$tabIdx]["SETTINGS"] = $tabSettings;
-		return $tabSettings;
-	}
-
-	function getCurrentTabBlocksOrder($defaultBlocksOrder = array())
-	{
-		$tabSettings = $this->getTabSettings($this->tabIndex-1);
-		$blocksOrder = $tabSettings["order"];
-
-		if (is_array($defaultBlocksOrder) && !empty($defaultBlocksOrder))
-		{
-			if (empty($blocksOrder))
-			{
-				$blocksOrder = $defaultBlocksOrder;
-			}
-			else
-			{
-				foreach($blocksOrder as $key => $blockCode)
-				{
-					if (!in_array($blockCode, $defaultBlocksOrder))
-						unset($blocksOrder[$key]);
-				}
-				$blocksOrder = array_unique(array_merge($blocksOrder, $defaultBlocksOrder));
-			}
-		}
-
-		return $blocksOrder;
-	}
-
-	function getTabHiddenBlocks($tabIdx)
-	{
-		$tabSettings = $this->getTabSettings($tabIdx);
-		$hiddenBlocks = $tabSettings["hidden"];
-		return is_array($hiddenBlocks) ? $hiddenBlocks : array();
-	}
-
-	function DraggableBlocksStart()
-	{
-		echo '<div data-role="dragObj" data-onlydest="Y" style="height:5px;width:100%"></div>';
-	}
-
-	function DraggableBlockBegin($title, $dataId = "")
-	{
-		echo '
-		<div class="adm-container-draggable'.(in_array($dataId, $this->getTabHiddenBlocks($this->tabIndex-1)) ? ' hidden' : '').'" data-role="dragObj" data-id="'.$dataId.'">
-			<div class="adm-bus-statusorder">
-				<div class="adm-bus-component-container">
-					<div class="adm-bus-component-title-container draggable">
-						<div class="adm-bus-component-title-icon"></div>
-						<div class="adm-bus-component-title">'.$title.'</div>
-						<div class="adm-bus-component-title-icon-turn" data-role="toggleObj"></div>'.
-			//'<div class="adm-bus-component-title-icon-close"></div>'
-			'</div>
-					<div class="adm-bus-component-content-container">
-						<div class="adm-bus-table-container">';
-	}
-
-	function DraggableBlockEnd()
-	{
-		echo '			</div>
-					</div>
-				</div>
-			</div>
-		</div>';
-	}
-}

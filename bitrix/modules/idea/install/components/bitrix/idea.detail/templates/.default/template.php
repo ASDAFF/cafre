@@ -270,7 +270,7 @@ else
 	</div>
 	<div class="tag-tbl"><div class="tag-tbr"><div class="tag-tbb"></div></div></div>
 <?endif;?>
-<script type="application/javascript">
+<script type="text/javascript">
 	BX.viewElementBind(
 		'blog-post-<?=$arParams["ID"]?>',
 		{showTitle: true},

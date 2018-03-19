@@ -1,6 +1,7 @@
-<?
+<?php
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/statistic/prolog.php");
+/** @var CMain $APPLICATION */
 include($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/statistic/colors.php");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/img.php");
 $STAT_RIGHT = $APPLICATION->GetGroupRight("statistic");
@@ -311,22 +312,22 @@ $lAdmin->BeginPrologContent();?>
 			//$w = round(($arVal["COUNTER"]*100)/$max_relation);
 			$top_sum += $arVal["COUNTER"];
 
-			$str = '<a target="_blank" title="'.GetMessage("STAT_GO").'" href="'.$arVal["URL"].'">&raquo;</a>&nbsp;';
+			$str = '<a target="_blank" title="'.GetMessage("STAT_GO").'" href="'.htmlspecialcharsbx($arVal["URL"]).'">&raquo;</a>&nbsp;';
 			if ($arVal["DIR"]=="Y") :
-				$str .= '<a title="'.GetMessage("STAT_FILTER_PAGE_DIAGRAM_ALT").'" href="'.$APPLICATION->GetCurPage().'?lang='.LANG.GetFilterParams($arFilterFields).'&find_diagram_type='.$find_diagram_type.'&find_section='.urlencode($arVal["URL"]."% ~".$arVal["URL"]).'&find_show=F&find_section_exact_match=Y&set_filter=Y">';
+				$str .= '<a title="'.GetMessage("STAT_FILTER_PAGE_DIAGRAM_ALT").'" href="'.htmlspecialcharsbx($APPLICATION->GetCurPage().'?lang='.LANG.GetFilterParams($arFilterFields).'&find_diagram_type='.$find_diagram_type.'&find_section='.urlencode($arVal["URL"]."% ~".$arVal["URL"]).'&find_show=F&find_section_exact_match=Y&set_filter=Y').'">';
 				if ($arVal["URL_404"]=="Y") :
-					$str .= "<span class=\"stat_attention\">".TruncateText($arVal["URL"],45)."</span>";
-				else :
-					$str .= TruncateText($arVal["URL"],45);
+					$str .= "<span class=\"stat_attention\">".htmlspecialcharsEx(TruncateText($arVal["URL"],45))."</span>";
+				else:
+					$str .= htmlspecialcharsEx(TruncateText($arVal["URL"],45));
 				endif;
 			$str .= "</a>";
 			else :
 				if(substr($arVal["URL"], -1) == "/")
 					$arVal["URL"] .= "index.php";
 				if ($arVal["URL_404"]=="Y") :
-					$str .= "<span class=\"stat_attention\">".TruncateText($arVal["URL"],45)."</span>";
+					$str .= "<span class=\"stat_attention\">".htmlspecialcharsEx(TruncateText($arVal["URL"],45))."</span>";
 				else:
-					$str .= TruncateText($arVal["URL"],45);
+					$str .= htmlspecialcharsEx(TruncateText($arVal["URL"],45));
 				endif;
 			endif;
 			?>
@@ -336,7 +337,7 @@ $lAdmin->BeginPrologContent();?>
 					</td>
 					<td class="number"><?=$q?>%</td>
 					<td><?=$str?></td>
-					<td class="number"><?echo "<a href=\"hit_list.php?lang=".LANG."&find_url=".urlencode($arVal["URL"]."%")."&find_url_exact_match=Y&set_filter=Y\">".$arVal["COUNTER"]."</a>";?></td>
+					<td class="number"><a href="<?echo htmlspecialcharsbx("hit_list.php?lang=".LANG."&find_url=".urlencode($arVal["URL"]."%")."&find_url_exact_match=Y&set_filter=Y")?>"><?echo $arVal["COUNTER"]?></a></td>
 			</tr>
 			<?$i++;endforeach;?>
 			<?if ($total==11):?>
@@ -459,4 +460,4 @@ if ($message)
 	</tr>
 </table>
 <?echo EndNote();?>
-<?require_once ($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");?>
+<?require_once ($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");

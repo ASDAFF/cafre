@@ -1,5 +1,8 @@
 <?
 $MESS["IM_COLOR_ENABLE"] = "Включить цветовую схему для чатов и пользователей";
+$MESS["IM_OPEN_CHAT_ENABLE"] = "Включить открытые чаты";
+$MESS["IM_GENERAL_CHAT_MESSAGE_JOIN"] = "Включить автоматическое сообщение о новом сотруднике в общий чат";
+$MESS["IM_GENERAL_CHAT_MESSAGE_LEAVE"] = "Включить автоматическое сообщение об увольнении сотрудника в общий чат";
 $MESS["IM_VIEW_OFFLINE"] = "Скрывать отсутствующих пользователей";
 $MESS["IM_VIEW_GROUP"] = "Скрывать группы пользователей";
 $MESS["IM_SEND_BY_ENTER"] = "Сочетание клавиш для отправки сообщения";
@@ -36,6 +39,7 @@ $MESS["IM_OPTIONS_CONVERT"] = "Конвертация истории сообщений";
 $MESS["IM_OPTIONS_CONVERT_TITLE"] = "Нажмите чтобы перейти на страницу конвертации истории сообщений";
 $MESS["IM_OPTIONS_NAME_TEMPLATE"] = "Формат отображения имени в списке контактов";
 $MESS["IM_OPTIONS_NAME_IN_SITE_FORMAT"] = "Формат сайта";
+$MESS["IM_OPTIONS_NAME_IN_IM_FORMAT"] = "Формат по умолчанию";
 $MESS["IM_OPTIONS_TURN_SERVER_SELF"] = "Использовать свой сервер видеозвонков";
 $MESS["IM_OPTIONS_TURN_SERVER"] = "Адрес сервера";
 $MESS["IM_OPTIONS_TURN_SERVER_FIREFOX"] = "Адрес сервера для Firefox";

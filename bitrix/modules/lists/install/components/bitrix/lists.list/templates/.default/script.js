@@ -1,304 +1,249 @@
-BX.ListClass = (function ()
+BX.namespace("BX.Lists");
+BX.Lists.ListClass = (function ()
 {
 	var ListClass = function (parameters)
 	{
-		this.ajaxUrl = '/bitrix/components/bitrix/lists.list/ajax.php';
 		this.iblockTypeId = parameters.iblockTypeId;
 		this.iblockId = parameters.iblockId;
 		this.sectionId = parameters.sectionId;
 		this.randomString = parameters.randomString;
+		this.socnetGroupId = parameters.socnetGroupId;
+		this.listAction = parameters.listAction;
+		this.listActionAdd = parameters.listActionAdd;
+		this.gridId = parameters.gridId;
+
+		this.init();
 	};
 
-	ListClass.prototype.removeElement = function (elem)
+	ListClass.prototype.init = function ()
 	{
-		return elem.parentNode ? elem.parentNode.removeChild(elem) : elem;
+		this.ajaxUrl = '/bitrix/components/bitrix/lists.list/ajax.php';
+		this.actionButton = BX('lists-title-action');
+		this.addButton = BX('lists-title-action-add');
+		this.selectAddButton = BX('lists-title-action-select-add');
+
+		this.addPopupItems = [];
+		this.addPopupObject = null;
+		this.addPopupId = 'lists-title-add';
+
+		this.actionPopupItems = [];
+		this.actionPopupObject = null;
+		this.actionPopupId = 'lists-title-action';
+		this.actionItemChanges = false;
+
+		BX.bind(this.actionButton, 'click', BX.delegate(this.showListAction, this));
+		BX.bind(this.selectAddButton, 'click', BX.delegate(this.showListAdd, this));
 	};
 
-	ListClass.prototype.addToLinkParam = function (link, name, value)
+	ListClass.prototype.showListAction = function ()
 	{
-		if (!link.length) {
-			return '?' + name + '=' + value;
-		}
-		link = BX.util.remove_url_param(link, name);
-		if (link.indexOf('?') != -1) {
-			return link + '&' + name + '=' + value;
-		}
-		return link + '?' + name + '=' + value;
-	};
-
-	ListClass.prototype.showModalWithStatusAction = function (response, action)
-	{
-		response = response || {};
-		if (!response.message) {
-			if (response.status == 'success') {
-				response.message = BX.message('LISTS_LCP_TEMPLATE_STATUS_ACTION_SUCCESS');
+		if(!this.actionPopupItems.length)
+		{
+			for(var k = 0; k < this.listAction.length; k++)
+			{
+				var popupItems = {
+					id: this.listAction[k].hasOwnProperty('id') ? this.listAction[k].id : '',
+					text : this.listAction[k].text,
+					onclick : this.listAction[k].action
+				};
+				if(this.listAction[k].hasOwnProperty('items'))
+				{
+					popupItems.items = [];
+					for(var i = 0; i < this.listAction[k].items.length; i++)
+					{
+						popupItems.items.push({
+							text: this.listAction[k].items[i].text,
+							onclick: this.listAction[k].items[i].action
+						});
+					}
+				}
+				this.actionPopupItems.push(popupItems);
 			}
-			else {
-				response.message = BX.message('LISTS_LCP_TEMPLATE_STATUS_ACTION_ERROR') + '. ' + this.getFirstErrorFromResponse(response);
+		}
+		if(this.actionItemChanges)
+		{
+			if(this.actionPopupObject)
+			{
+				this.actionPopupObject.popupWindow.destroy();
+				BX.PopupMenu.destroy(this.actionPopupId);
 			}
 		}
-		var messageBox = BX.create('div', {
-			props: {
-				className: 'bx-lists-alert'
+		if(!BX.PopupMenu.getMenuById(this.actionPopupId))
+		{
+			var buttonRect = this.actionButton.getBoundingClientRect();
+			this.actionPopupObject = BX.PopupMenu.create(
+				this.actionPopupId,
+				this.actionButton,
+				this.actionPopupItems,
+				{
+					closeByEsc : true,
+					angle: true,
+					offsetLeft: buttonRect.width/2,
+					events: {
+						onPopupShow: BX.proxy(function () {
+							BX.addClass(this.actionButton, 'webform-button-active');
+						}, this),
+						onPopupClose: BX.proxy(function () {
+							BX.removeClass(this.actionButton, 'webform-button-active');
+
+						}, this)
+					}
+				}
+			);
+			this.actionItemChanges = false;
+		}
+		if(this.actionPopupObject) this.actionPopupObject.popupWindow.show();
+	};
+
+	ListClass.prototype.showListAdd = function ()
+	{
+		if(!this.addPopupItems.length)
+		{
+			for(var k = 0; k < this.listActionAdd.length; k++)
+			{
+				this.addPopupItems.push({
+					text : this.listActionAdd[k].text,
+					onclick : this.listActionAdd[k].action
+				});
+			}
+		}
+		if(!BX.PopupMenu.getMenuById(this.addPopupId))
+		{
+			var buttonRect = this.addButton.getBoundingClientRect();
+			this.addPopupObject = BX.PopupMenu.create(
+				this.addPopupId,
+				this.addButton,
+				this.addPopupItems,
+				{
+					closeByEsc : true,
+					angle: true,
+					offsetLeft: buttonRect.width/2
+				}
+			);
+		}
+		if(this.addPopupObject) this.addPopupObject.popupWindow.show();
+	};
+
+	ListClass.prototype.addSection = function ()
+	{
+		BX.Lists.modalWindow({
+			modalId: 'bx-lists-add-section',
+			title: BX.message('CT_BLL_ADD_SECTION_POPUP_TITLE'),
+			draggable: true,
+			contentClassName: '',
+			contentStyle: {
+				width: '400px',
+				padding: '25px 25px 50px 25px'
 			},
-			children: [
+			events: {
+				onPopupClose : function() {
+					this.destroy();
+				}
+			},
+			content: [
 				BX.create('span', {
 					props: {
-						className: 'bx-lists-aligner'
+						id: 'lists-popup-error',
+						className: 'bx-lists-popup-error'
+					}
+				}),
+				BX.create('label', {
+					props: {
+						className: 'bx-lists-popup-label',
+						"for": 'lists-section-name-input'
+					},
+					children: [
+						BX.create('span', {
+							props: {
+								className: 'req'
+							},
+							text: '*'
+						}),
+						BX.message('CT_BLL_ADD_SECTION_POPUP_INPUT_NAME')
+					]
+				}),
+				BX.create('input', {
+					props: {
+						id: 'lists-section-name-input',
+						className: 'bx-lists-popup-input',
+						type: 'text',
+						value: ''
+					},
+					style: {
+						fontSize: '16px',
+						marginTop: '10px'
+					}
+				})
+			],
+			buttons: [
+				BX.create('span', {
+					text : BX.message("CT_BLL_ADD_SECTION_POPUP_BUTTON_ADD"),
+					props: {
+						className: 'webform-small-button webform-small-button-accept'
+					},
+					events : {
+						click : BX.delegate(function() {
+							if(!BX('lists-section-name-input').value)
+							{
+								BX('lists-popup-error').innerHTML = BX.message("CT_BLL_ADD_SECTION_POPUP_ERROR_NAME");
+								BX.show(BX('lists-popup-error'));
+								return false;
+							}
+							BX.hide(BX('lists-popup-error'));
+							BX.Lists.ajax({
+								method: 'POST',
+								dataType: 'json',
+								url: BX.Lists.addToLinkParam(this.ajaxUrl, 'action', 'addSection'),
+								data: {
+									iblockTypeId: this.iblockTypeId,
+									iblockId: this.iblockId,
+									sectionId: this.sectionId,
+									sectionName: BX('lists-section-name-input').value,
+									socnetGroupId: this.socnetGroupId
+								},
+								onsuccess: BX.delegate(function(result) {
+									if(result.status == 'success')
+									{
+										BX.PopupWindowManager.getCurrentPopup().close();
+										var reloadParams = {}, gridObject;
+										gridObject = BX.Main.gridManager.getById(this.gridId);
+										if(gridObject.hasOwnProperty('instance'))
+											gridObject.instance.reloadTable('POST', reloadParams);
+									}
+									else
+									{
+										result.errors = result.errors || [{}];
+										BX.Lists.showModalWithStatusAction({
+											status: 'error',
+											message: result.errors.pop().message
+										});
+									}
+								}, this)
+							});
+						}, this)
 					}
 				}),
 				BX.create('span', {
+					text : BX.message("CT_BLL_ADD_SECTION_POPUP_BUTTON_CLOSE"),
 					props: {
-						className: 'bx-lists-alert-text'
+						className: 'webform-small-button webform-button-cancel'
 					},
-					text: response.message
-				}),
-				BX.create('div', {
-					props: {
-						className: 'bx-lists-alert-footer'
+					events : {
+						click : BX.delegate(function() {
+							BX.PopupWindowManager.getCurrentPopup().close();
+						}, this)
 					}
 				})
 			]
 		});
-
-		var currentPopup = BX.PopupWindowManager.getCurrentPopup();
-		if(currentPopup)
-		{
-			currentPopup.destroy();
-		}
-
-		var idTimeout = setTimeout(function ()
-		{
-			var w = BX.PopupWindowManager.getCurrentPopup();
-			if (!w || w.uniquePopupId != 'bx-lists-status-action') {
-				return;
-			}
-			w.close();
-			w.destroy();
-		}, 2000);
-		var popupConfirm = BX.PopupWindowManager.create('bx-lists-status-action', null, {
-			content: messageBox,
-			onPopupClose: function ()
-			{
-				this.destroy();
-				clearTimeout(idTimeout);
-			},
-			autoHide: true,
-			zIndex: 2000,
-			className: 'bx-lists-alert-popup'
-		});
-		popupConfirm.show();
-
-		BX('bx-lists-status-action').onmouseover = function (e)
-		{
-			clearTimeout(idTimeout);
-		};
-
-		BX('bx-lists-status-action').onmouseout = function (e)
-		{
-			idTimeout = setTimeout(function ()
-			{
-				var w = BX.PopupWindowManager.getCurrentPopup();
-				if (!w || w.uniquePopupId != 'bx-lists-status-action') {
-					return;
-				}
-				w.close();
-				w.destroy();
-			}, 2000);
-		};
-	};
-
-	ListClass.prototype.show = function (el)
-	{
-		if (this.getRealDisplay(el) != 'none')
-			return;
-
-		var old = el.getAttribute("displayOld");
-		el.style.display = old || "";
-
-		if (this.getRealDisplay(el) === "none" ) {
-			var nodeName = el.nodeName, body = document.body, display;
-
-			if (displayCache[nodeName]) {
-				display = displayCache[nodeName];
-			} else {
-				var testElem = document.createElement(nodeName);
-				body.appendChild(testElem);
-				display = this.getRealDisplay(testElem);
-
-				if (display === "none" ) {
-					display = "block";
-				}
-
-				body.removeChild(testElem);
-				displayCache[nodeName] = display;
-			}
-
-			el.setAttribute('displayOld', display);
-			el.style.display = display;
-		}
-	};
-
-	ListClass.prototype.hide = function (el)
-	{
-		if (!el.getAttribute('displayOld'))
-		{
-			el.setAttribute("displayOld", el.style.display);
-		}
-		el.style.display = "none";
-	};
-
-	ListClass.prototype.getRealDisplay = function (elem) {
-		if (elem.currentStyle) {
-			return elem.currentStyle.display;
-		} else if (window.getComputedStyle) {
-			var computedStyle = window.getComputedStyle(elem, null );
-			return computedStyle.getPropertyValue('display');
-		}
-	};
-
-	ListClass.prototype.modalWindow = function (params)
-	{
-		params = params || {};
-		params.title = params.title || false;
-		params.bindElement = params.bindElement || null;
-		params.overlay = typeof params.overlay == "undefined" ? true : params.overlay;
-		params.autoHide = params.autoHide || false;
-		params.closeIcon = typeof params.closeIcon == "undefined"? {right: "20px", top: "10px"} : params.closeIcon;
-		params.modalId = params.modalId || 'lists_modal_window_' + (Math.random() * (200000 - 100) + 100);
-		params.withoutContentWrap = typeof params.withoutContentWrap == "undefined" ? false : params.withoutContentWrap;
-		params.contentClassName = params.contentClassName || '';
-		params.contentStyle = params.contentStyle || {};
-		params.content = params.content || [];
-		params.buttons = params.buttons || false;
-		params.events = params.events || {};
-		params.withoutWindowManager = !!params.withoutWindowManager || false;
-
-		var contentDialogChildren = [];
-		if (params.title) {
-			contentDialogChildren.push(BX.create('div', {
-				props: {
-					className: 'bx-lists-popup-title'
-				},
-				text: params.title
-			}));
-		}
-		if (params.withoutContentWrap) {
-			contentDialogChildren = contentDialogChildren.concat(params.content);
-		}
-		else {
-			contentDialogChildren.push(BX.create('div', {
-				props: {
-					className: 'bx-lists-popup-content ' + params.contentClassName
-				},
-				style: params.contentStyle,
-				children: params.content
-			}));
-		}
-		var buttons = [];
-		if (params.buttons) {
-			for (var i in params.buttons) {
-				if (!params.buttons.hasOwnProperty(i)) {
-					continue;
-				}
-				if (i > 0) {
-					buttons.push(BX.create('SPAN', {html: '&nbsp;'}));
-				}
-				buttons.push(params.buttons[i]);
-			}
-
-			contentDialogChildren.push(BX.create('div', {
-				props: {
-					className: 'bx-lists-popup-buttons'
-				},
-				children: buttons
-			}));
-		}
-
-		var contentDialog = BX.create('div', {
-			props: {
-				className: 'bx-lists-popup-container'
-			},
-			children: contentDialogChildren
-		});
-
-		params.events.onPopupShow = BX.delegate(function () {
-			if (buttons.length) {
-				firstButtonInModalWindow = buttons[0];
-				BX.bind(document, 'keydown', BX.proxy(this._keyPress, this));
-			}
-
-			if(params.events.onPopupShow)
-				BX.delegate(params.events.onPopupShow, BX.proxy_context);
-		}, this);
-		var closePopup = params.events.onPopupClose;
-		params.events.onPopupClose = BX.delegate(function () {
-
-			firstButtonInModalWindow = null;
-			try
-			{
-				BX.unbind(document, 'keydown', BX.proxy(this._keypress, this));
-			}
-			catch (e) { }
-
-			if(closePopup)
-			{
-				BX.delegate(closePopup, BX.proxy_context)();
-			}
-
-			if(params.withoutWindowManager)
-			{
-				delete windowsWithoutManager[params.modalId];
-			}
-
-			BX.proxy_context.destroy();
-		}, this);
-
-		var modalWindow;
-		if(params.withoutWindowManager)
-		{
-			if(!!windowsWithoutManager[params.modalId])
-			{
-				return windowsWithoutManager[params.modalId]
-			}
-			modalWindow = new BX.PopupWindow(params.modalId, params.bindElement, {
-				content: contentDialog,
-				closeByEsc: true,
-				closeIcon: params.closeIcon,
-				autoHide: params.autoHide,
-				overlay: params.overlay,
-				events: params.events,
-				buttons: [],
-				zIndex : isNaN(params["zIndex"]) ? 0 : params.zIndex
-			});
-			windowsWithoutManager[params.modalId] = modalWindow;
-		}
-		else
-		{
-			modalWindow = BX.PopupWindowManager.create(params.modalId, params.bindElement, {
-				content: contentDialog,
-				closeByEsc: true,
-				closeIcon: params.closeIcon,
-				autoHide: params.autoHide,
-				overlay: params.overlay,
-				events: params.events,
-				buttons: [],
-				zIndex : isNaN(params["zIndex"]) ? 0 : params.zIndex
-			});
-
-		}
-
-		modalWindow.show();
-
-		return modalWindow;
 	};
 
 	ListClass.prototype.performActionBp = function (workflowId, elementId, action)
 	{
-		BX.ajax({
+		BX.Lists.ajax({
 			method: 'POST',
 			dataType: 'json',
-			url: this.addToLinkParam(this.ajaxUrl, 'action', 'performActionBp'),
+			url: BX.Lists.addToLinkParam(this.ajaxUrl, 'action', 'performActionBp'),
 			data: {
 				iblockTypeId: this.iblockTypeId,
 				iblockId: this.iblockId,
@@ -306,22 +251,347 @@ BX.ListClass = (function ()
 				workflowId: workflowId,
 				elementId: elementId,
 				action: action,
+				socnetGroupId: this.socnetGroupId,
 				sessid: BX.bitrix_sessid()
 			},
 			onsuccess: BX.delegate(function (result)
 			{
 				if(result.status == 'success')
 				{
-					this.showModalWithStatusAction({
+					BX.Lists.showModalWithStatusAction({
 						status: 'success',
 						message: result.message
 					});
-					setTimeout('location.reload()', 2000)
+					setTimeout('location.reload()', 1000)
 				}
 				else
 				{
 					result.errors = result.errors || [{}];
-					this.showModalWithStatusAction({
+					BX.Lists.showModalWithStatusAction({
+						status: 'error',
+						message: result.errors.pop().message
+					});
+				}
+			}, this)
+		});
+	};
+
+	ListClass.prototype.editSection = function (currentSectionId)
+	{
+		if(!currentSectionId) return false;
+
+		BX.Lists.ajax({
+			method: 'POST',
+			dataType: 'json',
+			url: BX.Lists.addToLinkParam(this.ajaxUrl, 'action', 'getSection'),
+			data: {
+				iblockTypeId: this.iblockTypeId,
+				iblockId: this.iblockId,
+				sectionId: this.sectionId,
+				socnetGroupId: this.socnetGroupId,
+				currentSectionId: currentSectionId
+			},
+			onsuccess: BX.delegate(function(result) {
+				if(result.status == 'success')
+				{
+					var sectionData = result.data;
+					BX.Lists.modalWindow({
+						modalId: 'bx-lists-add-section',
+						title: BX.message('CT_BLL_EDIT_SECTION_POPUP_TITLE'),
+						draggable: true,
+						contentClassName: '',
+						contentStyle: {
+							width: '400px',
+							padding: '25px 25px 50px 25px'
+						},
+						events: {
+							onPopupClose : function() {
+								this.destroy();
+							}
+						},
+						content: [
+							BX.create('span', {
+								props: {
+									id: 'lists-popup-error',
+									className: 'bx-lists-popup-error'
+								}
+							}),
+							BX.create('label', {
+								props: {
+									className: 'bx-lists-popup-label',
+									"for": 'lists-section-name-input'
+								},
+								children: [
+									BX.create('span', {
+										props: {
+											className: 'req'
+										},
+										text: '*'
+									}),
+									BX.message('CT_BLL_ADD_SECTION_POPUP_INPUT_NAME')
+								]
+							}),
+							BX.create('input', {
+								props: {
+									id: 'lists-section-name-input',
+									className: 'bx-lists-popup-input',
+									type: 'text',
+									value: sectionData.NAME
+								},
+								style: {
+									fontSize: '16px',
+									marginTop: '10px'
+								}
+							})
+						],
+						buttons: [
+							BX.create('span', {
+								text : BX.message("CT_BLL_ADD_SECTION_POPUP_BUTTON_EDIT"),
+								props: {
+									className: 'webform-small-button webform-small-button-accept'
+								},
+								events : {
+									click : BX.delegate(function() {
+										if(!BX('lists-section-name-input').value)
+										{
+											BX('lists-popup-error').innerHTML =
+												BX.message("CT_BLL_ADD_SECTION_POPUP_ERROR_NAME");
+											BX.show(BX('lists-popup-error'));
+											return false;
+										}
+										BX.hide(BX('lists-popup-error'));
+										BX.Lists.ajax({
+											method: 'POST',
+											dataType: 'json',
+											url: BX.Lists.addToLinkParam(this.ajaxUrl, 'action', 'editSection'),
+											data: {
+												iblockTypeId: this.iblockTypeId,
+												iblockId: this.iblockId,
+												sectionId: this.sectionId,
+												sectionName: BX('lists-section-name-input').value,
+												socnetGroupId: this.socnetGroupId,
+												currentSectionId: currentSectionId
+											},
+											onsuccess: BX.delegate(function(result) {
+												if(result.status == 'success')
+												{
+													BX.PopupWindowManager.getCurrentPopup().close();
+													var reloadParams = {}, gridObject;
+													gridObject = BX.Main.gridManager.getById(this.gridId);
+													if(gridObject.hasOwnProperty('instance'))
+														gridObject.instance.reloadTable('POST', reloadParams);
+												}
+												else
+												{
+													result.errors = result.errors || [{}];
+													BX.Lists.showModalWithStatusAction({
+														status: 'error',
+														message: result.errors.pop().message
+													});
+												}
+											}, this)
+										});
+									}, this)
+								}
+							}),
+							BX.create('span', {
+								text : BX.message("CT_BLL_ADD_SECTION_POPUP_BUTTON_CLOSE"),
+								props: {
+									className: 'webform-small-button webform-button-cancel'
+								},
+								events : {
+									click : BX.delegate(function() {
+										BX.PopupWindowManager.getCurrentPopup().close();
+									}, this)
+								}
+							})
+						]
+					});
+				}
+				else
+				{
+					result.errors = result.errors || [{}];
+					BX.Lists.showModalWithStatusAction({
+						status: 'error',
+						message: result.errors.pop().message
+					});
+				}
+			}, this)
+		});
+	};
+
+	ListClass.prototype.deleteSection = function (gridId, sectionId)
+	{
+		BX.Lists.modalWindow({
+			modalId: 'bx-lists-migrate-list',
+			title: BX.message('CT_BLL_DELETE_POPUP_TITLE'),
+			draggable: true,
+			contentClassName: '',
+			contentStyle: {
+				width: '400px',
+				padding: '20px 20px 20px 20px'
+			},
+			events: {
+				onPopupClose : function() {
+					this.destroy();
+				}
+			},
+			content: BX.message('CT_BLL_TOOLBAR_SECTION_DELETE_WARNING'),
+			buttons: [
+				BX.create('span', {
+					text : BX.message("CT_BLL_DELETE_POPUP_ACCEPT_BUTTON"),
+					props: {
+						className: 'webform-small-button webform-small-button-accept'
+					},
+					events : {
+						click : BX.delegate(function() {
+							BX.Lists.ajax({
+								method: 'POST',
+								dataType: 'json',
+								url: BX.Lists.addToLinkParam(this.ajaxUrl, 'action', 'deleteSection'),
+								data: {
+									iblockTypeId: this.iblockTypeId,
+									iblockId: this.iblockId,
+									sectionId: this.sectionId,
+									socnetGroupId: this.socnetGroupId,
+									sectionIdForDelete: sectionId
+								},
+								onsuccess: BX.delegate(function(result) {
+									if(result.status == 'success')
+									{
+										BX.Lists.showModalWithStatusAction({
+											status: 'success',
+											message: result.message
+										});
+										var reloadParams = {}, gridObject;
+										gridObject = BX.Main.gridManager.getById(gridId);
+										if(gridObject.hasOwnProperty('instance'))
+										{
+											gridObject.instance.reloadTable('POST', reloadParams);
+											var rowObject = gridObject.instance.getRows().getById(sectionId);
+											if(rowObject) rowObject.closeActionsMenu();
+										}
+									}
+									else
+									{
+										result.errors = result.errors || [{}];
+										BX.Lists.showModalWithStatusAction({
+											status: 'error',
+											message: result.errors.pop().message
+										});
+									}
+								}, this)
+							});
+							BX.PopupWindowManager.getCurrentPopup().close();
+						}, this)
+					}
+				}),
+				BX.create('span', {
+					text : BX.message("CT_BLL_DELETE_POPUP_CANCEL_BUTTON"),
+					props: {
+						className: 'popup-window-button popup-window-button-link popup-window-button-link-cancel'
+					},
+					events : {
+						click : BX.delegate(function() {
+							BX.PopupWindowManager.getCurrentPopup().close();
+						}, this)
+					}
+				})
+			]
+		});
+	};
+
+	ListClass.prototype.deleteElement = function (gridId, elementId)
+	{
+		BX.Lists.modalWindow({
+			modalId: 'bx-lists-migrate-list',
+			title: BX.message('CT_BLL_DELETE_POPUP_TITLE'),
+			draggable: true,
+			contentClassName: '',
+			contentStyle: {
+				width: '400px',
+				padding: '20px 20px 20px 20px'
+			},
+			events: {
+				onPopupClose : function() {
+					this.destroy();
+				}
+			},
+			content: BX.message('CT_BLL_TOOLBAR_ELEMENT_DELETE_WARNING'),
+			buttons: [
+				BX.create('span', {
+					text : BX.message("CT_BLL_DELETE_POPUP_ACCEPT_BUTTON"),
+					props: {
+						className: 'webform-small-button webform-small-button-accept'
+					},
+					events : {
+						click : BX.delegate(function() {
+							var reloadParams = {}, gridObject;
+							reloadParams['action_button_'+gridId] = 'delete';
+							reloadParams['ID'] = [elementId];
+
+							gridObject = BX.Main.gridManager.getById(gridId);
+							if(gridObject.hasOwnProperty('instance'))
+							{
+								gridObject.instance.reloadTable('POST', reloadParams);
+								var rowObject = gridObject.instance.getRows().getById(elementId);
+								if(rowObject) rowObject.closeActionsMenu();
+							}
+							BX.PopupWindowManager.getCurrentPopup().close();
+						}, this)
+					}
+				}),
+				BX.create('span', {
+					text : BX.message("CT_BLL_DELETE_POPUP_CANCEL_BUTTON"),
+					props: {
+						className: 'popup-window-button popup-window-button-link popup-window-button-link-cancel'
+					},
+					events : {
+						click : BX.delegate(function() {
+							BX.PopupWindowManager.getCurrentPopup().close();
+						}, this)
+					}
+				})
+			]
+		});
+	};
+
+	ListClass.prototype.toogleSectionGrid = function()
+	{
+		BX.Lists.ajax({
+			method: 'POST',
+			dataType: 'json',
+			url: BX.Lists.addToLinkParam(this.ajaxUrl, 'action', 'toogleSectionGrid'),
+			data: {
+				gridId: this.gridId
+			},
+			onsuccess: BX.delegate(function(result) {
+				if(result.status == 'success')
+				{
+					var text = BX.message('CT_BLL_SHOW_SECTION_GRID');
+					if(result.currentValue == 'Y')
+					{
+						text = BX.message('CT_BLL_HIDE_SECTION_GRID');
+					}
+					for(var k = 0; k < this.actionPopupItems.length; k++)
+					{
+						if(this.actionPopupItems[k].hasOwnProperty('id') &&
+							this.actionPopupItems[k].id == 'showSectionGrid')
+						{
+							this.actionPopupItems[k].text = text;
+							this.actionItemChanges = true;
+						}
+					}
+					if(this.actionPopupObject) this.actionPopupObject.popupWindow.close();
+					if(BX.Main.gridManager.getById(this.gridId))
+					{
+						BX.Main.gridManager.getById(this.gridId).instance.reload();
+					}
+				}
+				else
+				{
+					result.errors = result.errors || [{}];
+					BX.Lists.showModalWithStatusAction({
 						status: 'error',
 						message: result.errors.pop().message
 					});

@@ -252,7 +252,7 @@ if ($arParams["mode"] == "edit" || $arParams["mode"] == "new")
 	}
 	if (!empty($arError))
 	{
-		$arResult["POST_VALUES"]["FOLDER_TITLE"] = htmlspecialcharsEx($_REQUEST["FOLDER_TITLE"]);
+		$arResult["POST_VALUES"]["FOLDER_TITLE"] = htmlspecialcharsbx($_REQUEST["FOLDER_TITLE"]);
 	}
 }
 else 

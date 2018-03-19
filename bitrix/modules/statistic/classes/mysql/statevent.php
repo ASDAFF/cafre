@@ -1,8 +1,9 @@
 <?
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/statistic/classes/general/statevent.php");
+
 class CStatEvent extends CAllStatEvent
 {
-	function GetListByGuest($GUEST_ID, $EVENT_ID=false, $EVENT3=false, $SEC=false)
+	public static function GetListByGuest($GUEST_ID, $EVENT_ID=false, $EVENT3=false, $SEC=false)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -29,7 +30,7 @@ class CStatEvent extends CAllStatEvent
 		return $res;
 	}
 
-	function Add($EVENT_ID, $EVENT3, $DATE_ENTER, $PARAM, $MONEY="", $CURRENCY="", $CHARGEBACK="N")
+	public static function Add($EVENT_ID, $EVENT3, $DATE_ENTER, $PARAM, $MONEY="", $CURRENCY="", $CHARGEBACK="N")
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -60,7 +61,7 @@ class CStatEvent extends CAllStatEvent
 			}
 			$MONEY = round($MONEY,2);
 
-			$arr = CStatEvent::DecodeGid($PARAM);
+			$arr = CStatEvent::DecodeGID($PARAM);
 			$SESSION_ID		= intval($arr["SESSION_ID"]);
 			$GUEST_ID		= intval($arr["GUEST_ID"]);
 			$COUNTRY_ID		= $arr["COUNTRY_ID"];
@@ -259,7 +260,7 @@ class CStatEvent extends CAllStatEvent
 		return intval($EVENT_LIST_ID);
 	}
 
-	function GetList(&$by, &$order, $arFilter=Array(), &$is_filtered)
+	public static function GetList(&$by, &$order, $arFilter=Array(), &$is_filtered)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -459,7 +460,7 @@ class CStatEvent extends CAllStatEvent
 		return $res;
 	}
 
-	function Delete($ID)
+	public static function Delete($ID)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -591,4 +592,3 @@ class CStatEvent extends CAllStatEvent
 		return false;
 	}
 }
-?>

@@ -10,7 +10,7 @@ require_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/classes/general/us
 
 class CUser extends CAllUser
 {
-	function err_mess()
+	public static function err_mess()
 	{
 		return "<br>Class: CUser<br>File: ".__FILE__;
 	}
@@ -45,9 +45,6 @@ class CUser extends CAllUser
 			$arFields["CHECKWORD"] = $salt.md5($salt.$checkword);
 
 			$arFields["~CHECKWORD_TIME"] = $DB->CurrentTimeFunction();
-
-			if(is_set($arFields,"EMAIL"))
-				$arFields["EMAIL"] = strtolower($arFields["EMAIL"]);
 
 			if(is_set($arFields, "WORK_COUNTRY"))
 				$arFields["WORK_COUNTRY"] = intval($arFields["WORK_COUNTRY"]);
@@ -100,7 +97,7 @@ class CUser extends CAllUser
 			$USER_FIELD_MANAGER->Update("USER", $ID, $arFields);
 
 			if(is_set($arFields, "GROUP_ID"))
-				CUser::SetUserGroup($ID, $arFields["GROUP_ID"]);
+				CUser::SetUserGroup($ID, $arFields["GROUP_ID"], true);
 
 			//update digest hash for http digest authorization
 			if(COption::GetOptionString('main', 'use_digest_auth', 'N') == 'Y')
@@ -118,16 +115,21 @@ class CUser extends CAllUser
 
 		if($ID > 0 && defined("BX_COMP_MANAGED_CACHE"))
 		{
+			$isRealUser = !$arFields['EXTERNAL_AUTH_ID'] || !in_array($arFields['EXTERNAL_AUTH_ID'], \Bitrix\Main\UserTable::getExternalUserTypes());
+
 			$CACHE_MANAGER->ClearByTag("USER_CARD_".intval($ID / TAGGED_user_card_size));
-			$CACHE_MANAGER->ClearByTag("USER_CARD");
+			$CACHE_MANAGER->ClearByTag($isRealUser? "USER_CARD": "EXTERNAL_USER_CARD");
+
 			$CACHE_MANAGER->ClearByTag("USER_NAME_".$ID);
-			$CACHE_MANAGER->ClearByTag("USER_NAME");
+			$CACHE_MANAGER->ClearByTag($isRealUser? "USER_NAME": "EXTERNAL_USER_NAME");
 		}
+
+		\Bitrix\Main\UserTable::indexRecord($ID);
 
 		return $Result;
 	}
 
-	function GetDropDownList($strSqlSearch="and ACTIVE='Y'", $strSqlOrder="ORDER BY ID, NAME, LAST_NAME")
+	public static function GetDropDownList($strSqlSearch="and ACTIVE='Y'", $strSqlOrder="ORDER BY ID, NAME, LAST_NAME")
 	{
 		global $DB;
 		$err_mess = (CUser::err_mess())."<br>Function: GetDropDownList<br>Line: ";
@@ -146,7 +148,7 @@ class CUser extends CAllUser
 		return $res;
 	}
 
-	function GetList(&$by, &$order, $arFilter=Array(), $arParams=Array())
+	public static function GetList(&$by, &$order, $arFilter=Array(), $arParams=Array())
 	{
 		/** @global CUserTypeManager $USER_FIELD_MANAGER */
 		global $DB, $USER_FIELD_MANAGER;
@@ -183,33 +185,31 @@ class CUser extends CAllUser
 		$obUserFieldsSql->SetFilter($arFilter);
 		$obUserFieldsSql->SetOrder($arOrder);
 
-		$arFields_m = array("ID", "ACTIVE", "LAST_LOGIN", "LOGIN", "EMAIL", "NAME", "LAST_NAME", "SECOND_NAME", "TIMESTAMP_X", "PERSONAL_BIRTHDAY", "IS_ONLINE");
+		$arFields_m = array("ID", "ACTIVE", "LAST_LOGIN", "LOGIN", "EMAIL", "NAME", "LAST_NAME", "SECOND_NAME", "TIMESTAMP_X", "PERSONAL_BIRTHDAY", "IS_ONLINE", "IS_REAL_USER");
 		$arFields = array(
 			"DATE_REGISTER", "PERSONAL_PROFESSION", "PERSONAL_WWW", "PERSONAL_ICQ", "PERSONAL_GENDER", "PERSONAL_PHOTO", "PERSONAL_PHONE", "PERSONAL_FAX",
 			"PERSONAL_MOBILE", "PERSONAL_PAGER", "PERSONAL_STREET", "PERSONAL_MAILBOX", "PERSONAL_CITY", "PERSONAL_STATE", "PERSONAL_ZIP", "PERSONAL_COUNTRY", "PERSONAL_NOTES",
 			"WORK_COMPANY", "WORK_DEPARTMENT", "WORK_POSITION", "WORK_WWW", "WORK_PHONE", "WORK_FAX", "WORK_PAGER", "WORK_STREET", "WORK_MAILBOX", "WORK_CITY", "WORK_STATE",
 			"WORK_ZIP", "WORK_COUNTRY", "WORK_PROFILE", "WORK_NOTES", "ADMIN_NOTES", "XML_ID", "LAST_NAME", "SECOND_NAME", "STORED_HASH", "CHECKWORD_TIME", "EXTERNAL_AUTH_ID",
-			"CONFIRM_CODE", "LOGIN_ATTEMPTS", "LAST_ACTIVITY_DATE", "AUTO_TIME_ZONE", "TIME_ZONE", "TIME_ZONE_OFFSET", "PASSWORD", "CHECKWORD", "LID", "TITLE",
+			"CONFIRM_CODE", "LOGIN_ATTEMPTS", "LAST_ACTIVITY_DATE", "AUTO_TIME_ZONE", "TIME_ZONE", "TIME_ZONE_OFFSET", "PASSWORD", "CHECKWORD", "LID", "LANGUAGE_ID", "TITLE",
 		);
 		$arFields_all = array_merge($arFields_m, $arFields);
 
 		$arSelectFields = array();
-		$online_interval = (array_key_exists("ONLINE_INTERVAL", $arParams) && intval($arParams["ONLINE_INTERVAL"]) > 0 ? $arParams["ONLINE_INTERVAL"] : 120);
+		$online_interval = (array_key_exists("ONLINE_INTERVAL", $arParams) && intval($arParams["ONLINE_INTERVAL"]) > 0 ? $arParams["ONLINE_INTERVAL"] : CUser::GetSecondsForLimitOnline());
 		if (isset($arParams['FIELDS']) && is_array($arParams['FIELDS']) && count($arParams['FIELDS']) > 0 && !in_array("*", $arParams['FIELDS']))
 		{
 			foreach ($arParams['FIELDS'] as $field)
 			{
 				$field = strtoupper($field);
-				if ($field == 'TIMESTAMP_X')
-					$arSelectFields[$field] =	$DB->DateToCharFunction("U.TIMESTAMP_X")." TIMESTAMP_X";
-				elseif ($field == 'IS_ONLINE')
-					$arSelectFields[$field] =	"IF(U.LAST_ACTIVITY_DATE > DATE_SUB(NOW(), INTERVAL ".$online_interval." SECOND), 'Y', 'N') IS_ONLINE";
-				elseif ($field == 'DATE_REGISTER')
-					$arSelectFields[$field] =	$DB->DateToCharFunction("U.DATE_REGISTER")." DATE_REGISTER";
-				elseif ($field == 'LAST_LOGIN')
-					$arSelectFields[$field] =	$DB->DateToCharFunction("U.LAST_LOGIN")." LAST_LOGIN";
+				if ($field == 'TIMESTAMP_X' || $field == 'DATE_REGISTER' || $field == 'LAST_LOGIN')
+					$arSelectFields[$field] = $DB->DateToCharFunction("U.".$field)." ".$field.", U.".$field." ".$field."_DATE";
 				elseif ($field == 'PERSONAL_BIRTHDAY')
-					$arSelectFields[$field] =	$DB->DateToCharFunction("U.PERSONAL_BIRTHDAY", "SHORT")." PERSONAL_BIRTHDAY";
+					$arSelectFields[$field] = $DB->DateToCharFunction("U.PERSONAL_BIRTHDAY", "SHORT")." PERSONAL_BIRTHDAY, U.PERSONAL_BIRTHDAY PERSONAL_BIRTHDAY_DATE";
+				elseif ($field == 'IS_ONLINE')
+					$arSelectFields[$field] = "IF(U.LAST_ACTIVITY_DATE > DATE_SUB(NOW(), INTERVAL ".$online_interval." SECOND), 'Y', 'N') IS_ONLINE";
+				elseif ($field == 'IS_REAL_USER')
+					$arSelectFields[$field] = "IF(U.EXTERNAL_AUTH_ID IN ('".join("', '", CUser::GetExternalUserTypes())."'), 'N', 'Y') IS_REAL_USER";
 				elseif (in_array($field, $arFields_all))
 					$arSelectFields[$field] = 'U.'.$field;
 			}
@@ -248,6 +248,7 @@ class CUser extends CAllUser
 					&& $key != "!LAST_LOGIN"
 					&& $key != "EXTERNAL_AUTH_ID"
 					&& $key != "!EXTERNAL_AUTH_ID"
+					&& $key != "IS_REAL_USER"
 				)
 				{
 					if(strlen($val) <= 0 || $val === "NOT_REF")
@@ -444,6 +445,16 @@ class CUser extends CAllUser
 				case "INTRANET_USERS":
 					$arSqlSearch[] = "U.ACTIVE = 'Y' AND U.LAST_LOGIN IS NOT NULL AND EXISTS(SELECT 'x' FROM b_utm_user UF1, b_user_field F1 WHERE F1.ENTITY_ID = 'USER' AND F1.FIELD_NAME = 'UF_DEPARTMENT' AND UF1.FIELD_ID = F1.ID AND UF1.VALUE_ID = U.ID AND UF1.VALUE_INT IS NOT NULL AND UF1.VALUE_INT <> 0)";
 					break;
+				case "IS_REAL_USER":
+					if($val === true || $val === 'Y')
+					{
+						$arSqlSearch[] = "U.EXTERNAL_AUTH_ID NOT IN ('".join("', '", CUser::GetExternalUserTypes())."') OR U.EXTERNAL_AUTH_ID IS NULL";
+					}
+					else
+					{
+						$arSqlSearch[] = "U.EXTERNAL_AUTH_ID IN ('".join("', '", CUser::GetExternalUserTypes())."')";
+					}
+					break;
 				default:
 					if(in_array($key, $arFields))
 						$arSqlSearch[] = GetFilterQuery('U.'.$key, $val, ($arFilter[$key."_EXACT_MATCH"]=="Y" && $match_value_set? "N" : "Y"));
@@ -465,7 +476,7 @@ class CUser extends CAllUser
 			if($field == "CURRENT_BIRTHDAY")
 			{
 				$cur_year = intval(date('Y'));
-				$arSqlOrder[$field] = "IF(ISNULL(PERSONAL_BIRTHDAY), '9999-99-99', IF (
+				$arSqlOrder[$field] = "IF(ISNULL(U.PERSONAL_BIRTHDAY), '9999-99-99', IF (
 					DATE_FORMAT(U.PERSONAL_BIRTHDAY, '".$cur_year."-%m-%d') < DATE_FORMAT(DATE_ADD(".$DB->CurrentTimeFunction().", INTERVAL ".CTimeZone::GetOffset()." SECOND), '%Y-%m-%d'),
 					DATE_FORMAT(U.PERSONAL_BIRTHDAY, '".($cur_year + 1)."-%m-%d'),
 					DATE_FORMAT(U.PERSONAL_BIRTHDAY, '".$cur_year."-%m-%d')
@@ -499,6 +510,18 @@ class CUser extends CAllUser
 					if ($bSingleBy)
 						$by = strtolower($field);
 				}
+			}
+			elseif ($field == 'FULL_NAME')
+			{
+				$arSqlOrder[$field] = sprintf(
+					"IF(U.LAST_NAME IS NULL OR U.LAST_NAME = '', 1, 0) %1\$s,
+					IF(U.LAST_NAME IS NULL OR U.LAST_NAME = '', 1, U.LAST_NAME) %1\$s,
+					IF(U.NAME IS NULL OR U.NAME = '', 1, 0) %1\$s,
+					IF(U.NAME IS NULL OR U.NAME = '', 1, U.NAME) %1\$s,
+					IF(U.SECOND_NAME IS NULL OR U.SECOND_NAME = '', 1, 0) %1\$s,
+					IF(U.SECOND_NAME IS NULL OR U.SECOND_NAME = '', 1, U.SECOND_NAME) %1\$s,
+					U.LOGIN %1\$s", $dir
+				);
 			}
 			else
 			{
@@ -589,34 +612,42 @@ class CUser extends CAllUser
 		return $res;
 	}
 
-	function IsOnLine($id, $interval = 120)
+	public static function IsOnLine($id, $interval = null)
 	{
 		global $DB;
 
 		$id = intval($id);
 		if ($id <= 0)
+		{
 			return false;
+		}
 
-		$interval = intval($interval);
-		if ($interval <= 0)
-			$interval = 120;
+		if (is_null($interval))
+		{
+			$interval = CUser::GetSecondsForLimitOnline();
+		}
+		else
+		{
+			$interval = intval($interval);
+			if ($interval <= 0)
+			{
+				$interval = CUser::GetSecondsForLimitOnline();
+			}
+		}
 
 		$dbRes = $DB->Query("SELECT 'x' FROM b_user WHERE ID = ".$id." AND LAST_ACTIVITY_DATE > DATE_SUB(NOW(), INTERVAL ".$interval." SECOND)");
-		if ($arRes = $dbRes->Fetch())
-			return true;
-		else
-			return false;
+		return $arRes = $dbRes->Fetch()? true: false;
 	}
 }
 
 class CGroup extends CAllGroup
 {
-	function err_mess()
+	public static function err_mess()
 	{
 		return "<br>Class: CGroup<br>File: ".__FILE__;
 	}
 
-	function Add($arFields)
+	public function Add($arFields)
 	{
 		/** @global CMain $APPLICATION */
 		global $DB, $APPLICATION;
@@ -699,7 +730,7 @@ class CGroup extends CAllGroup
 		return $ID;
 	}
 
-	function GetDropDownList($strSqlSearch="and ACTIVE='Y'", $strSqlOrder="ORDER BY C_SORT, NAME, ID")
+	public static function GetDropDownList($strSqlSearch="and ACTIVE='Y'", $strSqlOrder="ORDER BY C_SORT, NAME, ID")
 	{
 		global $DB;
 		$err_mess = (CGroup::err_mess())."<br>Function: GetDropDownList<br>Line: ";
@@ -718,7 +749,7 @@ class CGroup extends CAllGroup
 		return $res;
 	}
 
-	function GetList(&$by, &$order, $arFilter=Array(), $SHOW_USERS_AMOUNT="N")
+	public static function GetList(&$by, &$order, $arFilter=Array(), $SHOW_USERS_AMOUNT="N")
 	{
 		global $DB;
 
@@ -861,7 +892,7 @@ class CGroup extends CAllGroup
 	}
 
 	//*************** COMMON UTILS *********************/
-	function GetFilterOperation($key)
+	public static function GetFilterOperation($key)
 	{
 		$strNegative = "N";
 		if (substr($key, 0, 1)=="!")
@@ -920,7 +951,7 @@ class CGroup extends CAllGroup
 		return array("FIELD" => $key, "NEGATIVE" => $strNegative, "OPERATION" => $strOperation, "OR_NULL" => $strOrNull);
 	}
 
-	function PrepareSql(&$arFields, $arOrder, $arFilter, $arGroupBy, $arSelectFields)
+	public static function PrepareSql(&$arFields, $arOrder, $arFilter, $arGroupBy, $arSelectFields)
 	{
 		global $DB;
 
@@ -1209,7 +1240,7 @@ class CGroup extends CAllGroup
 			);
 	}
 
-	function GetListEx($arOrder = Array("ID" => "DESC"), $arFilter = Array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array())
+	public static function GetListEx($arOrder = Array("ID" => "DESC"), $arFilter = Array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array())
 	{
 		global $DB;
 
@@ -1303,7 +1334,7 @@ class CGroup extends CAllGroup
 		return $dbRes;
 	}
 
-	function GetByID($ID, $SHOW_USERS_AMOUNT = "N")
+	public static function GetByID($ID, $SHOW_USERS_AMOUNT = "N")
 	{
 		global $DB;
 

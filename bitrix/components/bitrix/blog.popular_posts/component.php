@@ -1,5 +1,14 @@
 <?
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
+/** @var CBitrixComponent $this */
+/** @var array $arParams */
+/** @var array $arResult */
+/** @var string $componentPath */
+/** @var string $componentName */
+/** @var string $componentTemplate */
+/** @global CDatabase $DB */
+/** @global CUser $USER */
+/** @global CMain $APPLICATION */
 
 if (!CModule::IncludeModule("blog"))
 {
@@ -118,7 +127,10 @@ else
 	}
 	$SORT = Array($arParams["SORT_BY1"]=>$arParams["SORT_ORDER1"], $arParams["SORT_BY2"]=>$arParams["SORT_ORDER2"]);
 
-	if(CModule::IncludeModule("socialnetwork") && $arParams["USE_SOCNET"] == "Y")
+	if (
+		CModule::IncludeModule("socialnetwork")
+		&& $arParams["USE_SOCNET"] == "Y"
+	)
 	{
 		unset($arFilter[">PERMS"]);
 		unset($arFilter[">VIEWS"]);
@@ -222,6 +234,7 @@ else
 			}
 			else
 			{
+				$arTmp["TITLE"] = ($arTmp["MICRO"] == "Y" ? htmlspecialcharsback($arPost["TITLE"]) : $arPost["TITLE"]);
 				$arTmp["TITLE"] = TruncateText($arTmp["TITLE"], $arParams["MESSAGE_LENGTH"]);
 			}
 

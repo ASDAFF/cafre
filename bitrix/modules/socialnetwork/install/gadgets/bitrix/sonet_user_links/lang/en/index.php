@@ -19,5 +19,6 @@ $MESS["GD_SONET_USER_SONET_ADMIN_ON"] = "Admin mode";
 $MESS["GD_SONET_USER_LINKS_EDIT_REQUESTS"] = "Invites and requests";
 $MESS["GD_SONET_USER_LINKS_SECURITY"] = "Security";
 $MESS["GD_SONET_USER_LINKS_PASSWORDS"] = "Application passwords";
+$MESS["GD_SONET_USER_LINKS_SYNCHRONIZE"] = "Synchronization";
 $MESS["GD_SONET_USER_LINKS_CODES"] = "Recovery codes";
 ?>

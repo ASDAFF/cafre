@@ -19,8 +19,6 @@ $APPLICATION->SetTitle("Social Network");
 	"CACHE_TIME_LONG" => "604800",
 	"PATH_TO_SMILE" => "/bitrix/images/socialnetwork/smile/",
 	"PATH_TO_BLOG_SMILE" => "/bitrix/images/blog/smile/",
-	"PATH_TO_FORUM_SMILE" => "/bitrix/images/forum/smile/",
-	"SONET_PATH_TO_FORUM_ICON" => "/bitrix/images/forum/icon/",
 	"SET_TITLE" => "Y",
 	"SET_NAV_CHAIN" => "Y",
 	"USER_FIELDS_MAIN" => array(

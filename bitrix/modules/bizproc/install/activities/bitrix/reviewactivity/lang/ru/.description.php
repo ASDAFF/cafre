@@ -7,4 +7,5 @@ $MESS ['BPAR_DESCR_TA1'] = "Автоматическое ознакомление";
 $MESS ['BPAA_DESCR_CM'] = "Комментарии";
 $MESS ['BPAR_DESCR_LR'] = "Последний ознакомившийся";
 $MESS ['BPAR_DESCR_LR_COMMENT'] = "Комментарий последнего ознакомившегося";
+$MESS ['BPAR_DESCR_TASKS'] = 'Задания';
 ?>

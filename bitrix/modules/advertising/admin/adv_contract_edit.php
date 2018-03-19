@@ -12,6 +12,8 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admi
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/advertising/prolog.php");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/advertising/include.php");
 
+use Bitrix\Main\Text\HtmlFilter;
+
 ClearVars();
 
 $isDemo = CAdvContract::IsDemo();
@@ -112,11 +114,14 @@ if ((strlen($save)>0 || strlen($apply)>0) && check_bitrix_sessid() && $REQUEST_M
 	$DB->PrepareFields("b_adv_contract");
 }
 
+$by = "sort";
+$order = "asc";
 $arrSites = array();
-$rs = CSite::GetList(($by="sort"), ($order="asc"));
+$rs = CSite::GetList($by, $order);
 while ($ar = $rs->Fetch())
+{
 	$arrSites[$ar["ID"]] = $ar;
-
+}
 
 $rsContract = CAdvContract::GetByID($ID);
 $arrKEYWORDS = null;
@@ -482,12 +487,20 @@ $tabControl->BeginNextTab();
 		<?
 		$rsType = CAdvType::GetList($v1="s_sort", $v2="asc", array("ACTIVE" => "Y"), $v3);
 		$i = 0;
-		while ($arType = $rsType->Fetch())
+		while ($arType = $rsType->GetNext())
 		{
 			?>
 			<div class="adm-list-item">
-				<div class="adm-list-control"><input <?if ($ID > 0 && in_array($arType["SID"], $arrTYPE)) echo "checked"?> type="checkbox" name="arrTYPE[]" value="<?=htmlspecialcharsbx($arType["SID"])?>" id="arType_<?=$i?>"></div>
-				<div class="adm-list-label"><?echo "[<a href='/bitrix/admin/adv_type_edit.php?lang=".LANGUAGE_ID."&SID=".$arType["SID"]."&action=view' title='".GetMessage("AD_TYPE_ALT")."'>".$arType["SID"]."</a>] "."<label for='arType_".$i."'>".$arType["NAME"]?></label></div>
+				<div class="adm-list-control">
+					<input <?if ($ID > 0 && in_array($arType["SID"], $arrTYPE)) echo "checked"?>
+						type="checkbox"
+						name="arrTYPE[]"
+						value="<?=$arType["SID"]?>"
+						id="arType_<?=$i?>">
+				</div>
+				<div class="adm-list-label">
+					<?="[<a href='/bitrix/admin/adv_type_edit.php?lang=".LANGUAGE_ID."&SID=".$arType["SID"]."&action=view' title='".GetMessage("AD_TYPE_ALT")."'>".$arType["SID"]."</a>] "."<label for='arType_".$i."'>".$arType["NAME"]."</label>"?>
+				</div>
 			</div>
 			<?
 			$i++;
@@ -513,7 +526,8 @@ $tabControl->BeginNextTab();
 			foreach ($arContractTypes as $sid => $name):
 				if ($sid == "ALL") continue;
 			?>
-				[<a href="/bitrix/admin/adv_type_edit.php?lang=<?=LANGUAGE_ID?>&SID=<?=$sid?>&action=view" title="<?=GetMessage("AD_TYPE_ALT")?>"><?=$sid?></a>] <?=$name?><br>
+				[<a href="/bitrix/admin/adv_type_edit.php?lang=<?=LANGUAGE_ID?>&SID=<?=$sid?>&action=view" title="<?=GetMessage("AD_TYPE_ALT")?>"><?=$sid?></a>]
+				<?=HtmlFilter::encode($name)?><br>
 			<?endforeach?>
 		</td>
 	</tr>

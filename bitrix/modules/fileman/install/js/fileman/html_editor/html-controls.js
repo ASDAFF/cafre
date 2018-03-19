@@ -354,6 +354,13 @@ function __run()
 				left = pos.left - this.pValuesCont.offsetWidth / 2 + this.pCont.offsetWidth / 2 + this.posOffset.left,
 				top = pos.bottom + this.posOffset.top;
 
+			if (left < 0)
+			{
+				var corner = this.pValuesCont.getElementsByClassName("bxhtmled-popup-corner")[0];
+				corner.style.transform = "translateX(" + left + "px)";
+				left = 0;
+			}
+
 			BX.bind(window, "keydown", BX.proxy(this.OnKeyDown, this));
 			BX.addClass(this.pCont, this.activeClassName);
 			pOverlay.onclick = function(){_this.Close()};
@@ -2792,7 +2799,7 @@ function __run()
 			blockWidth = Math.round(100 / setLength) + '%',
 			sliderWidth = (100 * setLength) + '%';
 
-		if (setLength > 0)
+		if (setLength > 1)
 		{
 			this.smileSetsIndex = {};
 			this.smileTabsWrap = this.pValuesCont.appendChild(BX.create('DIV', {props: {className: 'bxhtmled-smile-tabs-wrap'}}));
@@ -2803,9 +2810,11 @@ function __run()
 
 			for(i = 0; i < this.smileSets.length; i++)
 			{
-				this.smileSetsIndex[this.smileSets[i].id] = i;
+				if (!this.smileSets[i].ID && this.smileSets[i].id)
+					this.smileSets[i].ID = this.smileSets[i].id;
+				this.smileSetsIndex[this.smileSets[i].ID] = i;
 				this.smileSets[i].butWrap = this.smileTabsWrap.appendChild(BX.create('SPAN', {props: {className: 'bxhtmled-smile-tab'}}));
-				this.smileSets[i].butWrap.setAttribute('data-bx-smile-set', this.smileSets[i].id);
+				this.smileSets[i].butWrap.setAttribute('data-bx-smile-set', this.smileSets[i].ID);
 				this.smileSets[i].butWrapImage = false;
 				this.smileSets[i].smilesBlock = this.smileSlider.appendChild(BX.create('DIV', {props: {className: 'bxhtmled-smiles-wrap'}, style: {width: blockWidth}}));
 
@@ -2968,9 +2977,7 @@ function __run()
 
 		if ((this.editor.synchro.IsFocusedOnTextarea() || !this.editor.iframeView.isFocused || this.savedRange.collapsed) && range && !range.collapsed)
 		{
-			var tmpDiv = BX.create('DIV', {html: range.toHtml()}, this.editor.GetIframeDoc());
-			this.editor.action.actions.quote.setExternalSelection(this.editor.util.GetTextContentEx(tmpDiv));
-			BX.remove(tmpDiv);
+			this.editor.action.actions.quote.setExternalSelectionFromRange(range);
 		}
 
 		QuoteButton.superclass.OnMouseDown.apply(this, arguments);
@@ -3775,8 +3782,7 @@ function __run()
 			}
 		}
 
-		this.pSrc.value = params.src || '';
-
+		this.pSrc.value = this.editor.util.spaceUrlDecode(params.src || '');
 		if (this.pTitle)
 			this.pTitle.value = params.title || '';
 
@@ -4210,7 +4216,6 @@ function __run()
 		}
 
 		var
-			_this = this,
 			r,
 			cont = BX.create('DIV');
 
@@ -4471,7 +4476,8 @@ function __run()
 		else
 		{
 			// 1. Detect type
-			var href = values.href || '';
+
+			var href = this.editor.util.spaceUrlDecode(values.href || '');
 
 			if (this.editor.bbCode)
 			{
@@ -4729,6 +4735,7 @@ function __run()
 			values = {},
 			i, l, link, lastLink, linksCount = 0;
 
+		this.lastLink = false;
 		if (!this.readyToShow)
 		{
 			return setTimeout(function(){_this.Show(nodes, savedRange);}, 100);
@@ -4841,6 +4848,13 @@ function __run()
 					if (anchorPopup && anchorPopup.oPopup &&  anchorPopup.oPopup.popupContainer)
 					{
 						anchorPopup.oPopup.popupContainer.style.zIndex = 3010;
+
+						if (anchors.length > 20)
+						{
+							anchorPopup.oPopup.popupContainer.style.overflow = 'auto';
+							anchorPopup.oPopup.popupContainer.style.paddingRight = '20px';
+							anchorPopup.oPopup.popupContainer.style.maxHeight = '300px';
+						}
 					}
 				});
 			}
@@ -4924,6 +4938,11 @@ function __run()
 		BX.bind(this.pSource, 'change', BX.delegate(this.VideoSourceChanged, this));
 		BX.bind(this.pSource, 'mouseup', BX.delegate(this.VideoSourceChanged, this));
 		BX.bind(this.pSource, 'keyup', BX.delegate(this.VideoSourceChanged, this));
+
+		this.pErrorRow = pTableWrap.insertRow(-1);
+		this.pErrorRow.style.display = 'none';
+		c = BX.adjust(this.pErrorRow.insertCell(-1), {props:{className: 'bxhtmled-video-error-cell'}, attrs: {colSpan: 2}});
+		this.pError = c.appendChild(BX.create('SPAN', {props: {className: 'bxhtmled-video-error'}}));
 
 		r = pTableWrap.insertRow(-1);
 		c = BX.adjust(r.insertCell(-1), {props:{className: 'bxhtmled-video-params-wrap'}, attrs: {colSpan: 2}});
@@ -5013,7 +5032,7 @@ function __run()
 						_this.StopWaiting();
 						if (res.error !== '')
 						{
-							_this.ShowVideoParams(false);
+							_this.ShowVideoParams(false, res.error);
 						}
 					}
 				}
@@ -5062,13 +5081,35 @@ function __run()
 		}
 	};
 
-	VideoDialog.prototype.ShowVideoParams = function(data)
+	VideoDialog.prototype.ShowVideoParams = function(data, error)
 	{
 		this.data = data || {};
-		BX.removeClass(this.pCont, 'bxhtmled-video-local');
+		this.pErrorRow.style.display = 'none';
+		this.pPreviewCont.style.display = 'none';
+		this.pPreview.innerHTML = '';
+			BX.removeClass(this.pCont, 'bxhtmled-video-local');
 		if (data === false || typeof data != 'object')
 		{
 			BX.addClass(this.pCont, 'bxhtmled-video-empty');
+
+			if (error)
+			{
+				this.pErrorRow.style.display = '';
+				this.pError.innerHTML = BX.util.htmlspecialchars(error);
+			}
+		}
+		else if (data.remote && !this.bEdit)
+		{
+			BX.removeClass(this.pCont, 'bxhtmled-video-empty');
+			this.pTitle.value = data.title || '';
+			if(data.width && data.height)
+			{
+				this.SetSize(data.width, data.height);
+			}
+			else
+			{
+				this.SetSize(400, 300);
+			}
 		}
 		else if (data.local && !this.bEdit)
 		{
@@ -5211,7 +5252,8 @@ function __run()
 			_this = this,
 			title = this.pTitle.value,
 			width = parseInt(this.pWidth.value) || 100,
-			height = parseInt(this.pHeight.value) || 100;
+			height = parseInt(this.pHeight.value) || 100,
+			mimeType = this.data.mimeType || '';
 
 		if (this.pSize.value !== '')
 		{
@@ -5253,6 +5295,17 @@ function __run()
 			{
 				bbSource = this.data.html = '[VIDEO width=' + width + ' height=' + height + ']' + this.data.path + '[/VIDEO]';
 				html = this.editor.bbParser.GetVideoSourse(this.data.path, {type: false, width: width, height: height, html: this.data.html}, this.data.html);
+			}
+			else if (this.editor.bbCode && this.data.remote)
+			{
+				bbSource = '[VIDEO ';
+				if(mimeType)
+				{
+					bbSource += 'mimetype=\'' + mimeType + '\' ';
+				}
+				bbSource += 'width=' + width + ' height=' + height + ']' + this.data.path + '[/VIDEO]';
+				this.data.html = bbSource;
+				html = this.editor.bbParser.GetVideoSourse(this.data.path, {type: false, width: width, height: height, html: this.data.html, title: this.data.title}, this.data.html);
 			}
 			else if (this.data.html)
 			{
@@ -5895,6 +5948,8 @@ function __run()
 			nodes = [];
 		}
 
+		var isBody = nodes.length == 1 && nodes[0].nodeName == 'BODY';
+
 		if (nodes.length == 1 && BX.util.in_array(nodes[0].nodeName, ['TD', 'TH', 'TR', 'TABLE']))
 		{
 			this.colorRow.style.display = '';
@@ -5915,19 +5970,22 @@ function __run()
 //			this.heightRow.style.display = 'none';
 //		}
 
-		for (i = 0; i < nodes.length; i++)
+		if (!isBody)
 		{
-			if (style === undefined && className === undefined)
+			for (i = 0; i < nodes.length; i++)
 			{
-				style = nodes[i].style.cssText;
-				className = nodes[i].className;
+				if (style === undefined && className === undefined)
+				{
+					style = nodes[i].style.cssText;
+					className = nodes[i].className;
+				}
+				else
+				{
+					style = nodes[i].style.cssText === style ? style : false;
+					className = nodes[i].className === className ? className : false;
+				}
+				nodeNames.push(nodes[i].nodeName);
 			}
-			else
-			{
-				style = nodes[i].style.cssText === style ? style : false;
-				className = nodes[i].className === className ? className : false;
-			}
-			nodeNames.push(nodes[i].nodeName);
 		}
 
 		this.SetValues({
@@ -5937,7 +5995,10 @@ function __run()
 			className: className
 		});
 
-		this.SetTitle(BX.message('BXEdDefaultPropDialog').replace('#NODES_LIST#', nodeNames.join(', ')));
+		if (isBody)
+			this.SetTitle(BX.message('BXEdDefaultPropDialog').replace('#NODES_LIST#', BX.message('BXEdDefaultPropDialogTextNode')));
+		else
+			this.SetTitle(BX.message('BXEdDefaultPropDialog').replace('#NODES_LIST#', nodeNames.join(', ')));
 
 		// Call parrent Dialog.Show()
 		DefaultDialog.superclass.Show.apply(this, arguments);

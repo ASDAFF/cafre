@@ -1,16 +1,17 @@
-<?
+<?php
 class CReferer
 {
-	function GetList(&$by, &$order, $arFilter=Array(), &$is_filtered, &$total, &$grby, &$max)
+	public static function GetList(&$by, &$order, $arFilter=Array(), &$is_filtered, &$total, &$grby, &$max)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
-		global $grby, $total;
+
 		$DB = CDatabase::GetModuleConnection('statistic');
 		$group = false;
 		$strSqlGroup =  "GROUP BY L.PROTOCOL, L.SITE_NAME, L.URL_FROM, R.HITS, R.SESSIONS";
 		$url_from = $DB->Concat("L.PROTOCOL", "L.SITE_NAME", "L.URL_FROM");
 		$arSqlSearch = Array();
-		$strSqlSearch = "";
+		$find_group = "";
+
 		if (is_array($arFilter))
 		{
 			foreach ($arFilter as $key => $val)
@@ -86,7 +87,7 @@ class CReferer
 
 		$strSqlSearch = GetFilterSqlSearch($arSqlSearch);
 		$grby = ($find_group=="U" || $find_group=="S") ? $find_group : "";
-		$strSqlOrder = "";
+
 		if (strlen($grby)<=0)
 		{
 			if ($by == "s_id")					$strSqlOrder = " ORDER BY L.ID ";
@@ -172,7 +173,7 @@ class CReferer
 				".$strSqlOrder."
 			";
 		}
-		elseif($grby=="S")
+		else//if($grby=="S")
 		{
 			if ($by == "s_url_from")			$strSqlOrder = "ORDER BY URL_FROM";
 			elseif ($by == "s_quantity")		$strSqlOrder = "ORDER BY QUANTITY";
@@ -210,4 +211,3 @@ class CReferer
 		return $res;
 	}
 }
-?>

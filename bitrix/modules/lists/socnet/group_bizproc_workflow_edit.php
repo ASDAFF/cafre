@@ -21,8 +21,8 @@ include($_SERVER["DOCUMENT_ROOT"]."/bitrix/components/bitrix/socialnetwork_group
 	),
 	$component
 );?><?$APPLICATION->IncludeComponent("bitrix:bizproc.workflow.edit", ".default", array(
-	"MODULE_ID" => "iblock",
-	"ENTITY" => "CIBlockDocument",
+	"MODULE_ID" => "lists",
+	"ENTITY" => 'Bitrix\Lists\BizprocDocumentLists',
 	"DOCUMENT_TYPE" => "iblock_".$arResult["VARIABLES"]["list_id"],
 	"ID" => $arResult['VARIABLES']['ID'],
 	"EDIT_PAGE_TEMPLATE" => str_replace(

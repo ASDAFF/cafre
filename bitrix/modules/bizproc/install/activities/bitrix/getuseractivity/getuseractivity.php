@@ -15,6 +15,7 @@ class CBPGetUserActivity
 			"MaxLevel" => null,
 			"GetUser" => null,
 			"SkipAbsent" => "",
+			"SkipTimeman" => "",
 		);
 
 		$this->SetPropertiesTypes(array(
@@ -25,26 +26,43 @@ class CBPGetUserActivity
 		));
 	}
 
-	private function GetUsersList($arUsersList, $bSkipAbsent = true)
+	private function GetUsersList($arUsersList, $bSkipAbsent = true, $bSkipTimeman = false)
 	{
 		$rootActivity = $this->GetRootActivity();
 		$documentId = $rootActivity->GetDocumentId();
 
-		if (!CModule::IncludeModule("intranet"))
+		if ($bSkipAbsent && !CModule::IncludeModule("intranet"))
 			$bSkipAbsent = false;
+		if ($bSkipTimeman && !CModule::IncludeModule("timeman"))
+			$bSkipTimeman = false;
 
 		$arUsers = CBPHelper::ExtractUsers($arUsersList, $documentId, false);
-		if ($bSkipAbsent)
+		if ($bSkipAbsent || $bSkipTimeman)
 		{
 			$arKeys = array_keys($arUsers);
 			foreach ($arKeys as $key)
 			{
-				if (CIntranetUtils::IsUserAbsent($arUsers[$key]))
-					unset($arUsers[$key]);
+				if ($bSkipAbsent)
+				{
+					if (CIntranetUtils::IsUserAbsent($arUsers[$key]))
+					{
+						unset($arUsers[$key]);
+						continue;
+					}
+				}
+				if ($bSkipTimeman)
+				{
+					$tmUser = new CTimeManUser($arUsers[$key]);
+					if($tmUser->State() == 'CLOSED')
+					{
+						unset($arUsers[$key]);
+					}
+				}
+
 			}
 		}
 
-		return $arUsers;
+		return array_values($arUsers);
 	}
 
 	public function Execute()
@@ -54,15 +72,19 @@ class CBPGetUserActivity
 			$this->UserType = "random";
 			$this->SkipAbsent = "N";
 		}
+		if (!CModule::IncludeModule('timeman'))
+		{
+			$this->SkipTimeman = 'N';
+		}
+
+		$skipAbsent = ($this->SkipAbsent != 'N');
+		$skipTimeman = ($this->SkipTimeman == 'Y');
 
 		$this->GetUser = null;
 
 		$arUsers = array();
 		if ($this->UserType == "boss")
 		{
-			if ($this->SkipAbsent != "Y" && $this->SkipAbsent != "N")
-				$this->SkipAbsent = "N";
-
 			$arUsers = $this->GetUsersList($this->UserParameter, false);
 			if (count($arUsers) <= 0)
 			{
@@ -119,7 +141,7 @@ class CBPGetUserActivity
 					while ($arRes = $dbRes->Fetch())
 					{
 						if (($arRes["UF_HEAD"] == $userId) || (intval($arRes["UF_HEAD"]) <= 0)
-							|| (($this->SkipAbsent == "Y") && CIntranetUtils::IsUserAbsent($arRes["UF_HEAD"])))
+							|| ($skipAbsent && CIntranetUtils::IsUserAbsent($arRes["UF_HEAD"])))
 						{
 							$maxLevel++;
 							continue;
@@ -145,15 +167,9 @@ class CBPGetUserActivity
 				return CBPActivityExecutionStatus::Closed;
 			}
 		}
-		else
+		if ($this->UserType == "random")
 		{
-			if ($this->SkipAbsent != "Y" && $this->SkipAbsent != "N")
-				$this->SkipAbsent = "Y";
-
-			$arUsers = $this->GetUsersList($this->UserParameter, ($this->SkipAbsent == "Y"));
-
-			if ($this->SkipAbsent == "Y")
-				$arUsers = array_values($arUsers);
+			$arUsers = $this->GetUsersList($this->UserParameter, $skipAbsent, $skipTimeman);
 
 			if (count($arUsers) > 0)
 			{
@@ -164,7 +180,7 @@ class CBPGetUserActivity
 			}
 		}
 
-		$arReserveUsers = $this->GetUsersList($this->ReserveUserParameter, ($this->SkipAbsent == "Y"));
+		$arReserveUsers = $this->GetUsersList($this->ReserveUserParameter, $skipAbsent, $skipTimeman);
 		if (count($arReserveUsers) > 0)
 		{
 			if ($this->UserType == 'random')
@@ -192,7 +208,7 @@ class CBPGetUserActivity
 
 		if (!is_array($arCurrentValues))
 		{
-			$arCurrentValues = array("user_type" => "", "user_parameter" => "", "reserve_user_parameter" => "", "max_level" => 1, "skip_absent" => "Y");
+			$arCurrentValues = array("user_type" => "", "user_parameter" => "", "reserve_user_parameter" => "", "max_level" => 1, "skip_absent" => "Y", "skip_timeman" => "N");
 
 			$arCurrentActivity = &CBPWorkflowTemplateLoader::FindActivityByName($arWorkflowTemplate, $activityName);
 			if (is_array($arCurrentActivity["Properties"]))
@@ -202,6 +218,7 @@ class CBPGetUserActivity
 				$arCurrentValues["user_parameter"] = CBPHelper::UsersArrayToString($arCurrentActivity["Properties"]["UserParameter"], $arWorkflowTemplate, $documentType);
 				$arCurrentValues["reserve_user_parameter"] = CBPHelper::UsersArrayToString($arCurrentActivity["Properties"]["ReserveUserParameter"], $arWorkflowTemplate, $documentType);
 				$arCurrentValues["skip_absent"] = (array_key_exists("SkipAbsent", $arCurrentActivity["Properties"]) ? $arCurrentActivity["Properties"]["SkipAbsent"] : (($arCurrentActivity["Properties"]["UserType"] == "boss") ? "N" : "Y"));
+				$arCurrentValues["skip_timeman"] = (array_key_exists("SkipTimeman", $arCurrentActivity["Properties"])) ? $arCurrentActivity["Properties"]["SkipTimeman"] : 'N';
 			}
 		}
 
@@ -218,12 +235,9 @@ class CBPGetUserActivity
 	public static function GetPropertiesDialogValues($documentType, $activityName, &$arWorkflowTemplate, &$arWorkflowParameters, &$arWorkflowVariables, $arCurrentValues, &$arErrors)
 	{
 		$arErrors = array();
-
-		$runtime = CBPRuntime::GetRuntime();
-
 		$arProperties = array();
 
-		if (!isset($arCurrentValues["user_type"]) || !in_array($arCurrentValues["user_type"], array("boss", "random")))
+		if (!isset($arCurrentValues["user_type"]) || !in_array($arCurrentValues["user_type"], array("boss", "random", "sequent")))
 			$arCurrentValues["user_type"] = "random";
 		$arProperties["UserType"] = $arCurrentValues["user_type"];
 
@@ -242,6 +256,10 @@ class CBPGetUserActivity
 		if (!isset($arCurrentValues["skip_absent"]) || !in_array($arCurrentValues["skip_absent"], array("Y", "N")))
 			$arCurrentValues["skip_absent"] = "Y";
 		$arProperties["SkipAbsent"] = $arCurrentValues["skip_absent"];
+		
+		if (!isset($arCurrentValues["skip_timeman"]) || !in_array($arCurrentValues["skip_timeman"], array("Y", "N")))
+			$arCurrentValues["skip_timeman"] = "N";
+		$arProperties["SkipTimeman"] = $arCurrentValues["skip_timeman"];
 
 		$arErrors = self::ValidateProperties($arProperties, new CBPWorkflowTemplateUser(CBPWorkflowTemplateUser::CurrentUser));
 		if (count($arErrors) > 0)

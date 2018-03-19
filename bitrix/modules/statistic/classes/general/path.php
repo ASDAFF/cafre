@@ -1,15 +1,17 @@
-<?
+<?php
 class CPath
 {
-	function GetList($PARENT_ID="", $COUNTER_TYPE="COUNTER_FULL_PATH", &$by, &$order, $arFilter=Array(), &$is_filtered)
+	public static function GetList($PARENT_ID="", $COUNTER_TYPE="COUNTER_FULL_PATH", &$by, &$order, $arFilter=Array(), &$is_filtered)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
-		if ($COUNTER_TYPE!="COUNTER_FULL_PATH") $COUNTER_TYPE = "COUNTER";
+		if ($COUNTER_TYPE!="COUNTER_FULL_PATH")
+			$COUNTER_TYPE = "COUNTER";
 		$arSqlSearch = Array();
-		$strSqlSearch = "";
+
 		$counter = "P.".$COUNTER_TYPE;
 		$where_counter = "and P.".$COUNTER_TYPE.">0";
+
 		if (strlen($PARENT_ID)<=0 && $COUNTER_TYPE=="COUNTER")
 		{
 			$where_parent = "and (P.PARENT_PATH_ID is null or ".$DB->Length("P.PARENT_PATH_ID")."<=0)";
@@ -18,6 +20,15 @@ class CPath
 		{
 			$where_parent = "and P.PARENT_PATH_ID = '".$DB->ForSql($PARENT_ID)."'";
 		}
+		else
+		{
+			$where_parent = "";
+		}
+
+		$from_adv = "";
+		$where_adv = "";
+		$ADV_EXIST = "N";
+
 		if (is_array($arFilter))
 		{
 			if (strlen($arFilter["ADV"])>0)
@@ -40,12 +51,6 @@ class CPath
 					$counter = $DB->IsNull("A.".$COUNTER_TYPE,"0")." + ".$DB->IsNull("A.".$COUNTER_TYPE."_BACK","0");
 					$where_counter = "and (".$counter.")>0";
 				}
-			}
-			else
-			{
-				$from_adv = "";
-				$where_adv = "";
-				$ADV_EXIST = "N";
 			}
 
 			foreach ($arFilter as $key => $val)
@@ -120,6 +125,7 @@ class CPath
 				}
 			}
 		}
+
 		if ($COUNTER_TYPE=="COUNTER")
 		{
 			$select1 = "P.LAST_PAGE, P.LAST_PAGE_404, P.LAST_PAGE_SITE_ID";
@@ -128,6 +134,11 @@ class CPath
 		{
 			$select1 = "P.PAGES";
 		}
+		else
+		{
+			$select1 = "";
+		}
+
 		$strSqlSearch = GetFilterSqlSearch($arSqlSearch);
 		if ($by == "s_last_page" && $COUNTER_TYPE=="COUNTER")				$strSqlOrder = "ORDER BY P.LAST_PAGE";
 		elseif ($by == "s_pages" && $COUNTER_TYPE=="COUNTER_FULL_PATH")		$strSqlOrder = "ORDER BY P.PAGES";
@@ -164,11 +175,10 @@ class CPath
 		return $res;
 	}
 
-	function GetByID($ID)
+	public static function GetByID($ID)
 	{
 		$DB = CDatabase::GetModuleConnection('statistic');
 		$strSql = "SELECT /*TOP*/ * FROM b_stat_path WHERE PATH_ID = '".$DB->ForSql($ID)."'";
 		return $DB->Query(CStatistics::DBTopSql($strSql, 1), false, "File: ".__FILE__."<br>Line: ".__LINE__);
 	}
 }
-?>

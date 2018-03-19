@@ -4,6 +4,10 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
 
 $APPLICATION->SetTitle(GetMessage('REPORT_CONSTRUCT'));
 
+CJSCore::Init(array('report', 'socnetlogdest'));
+
+$jsClass = 'ReportConstructClass_'.$arResult['randomString'];
+
 if (!empty($arResult['ERROR']))
 {
 	echo $arResult['ERROR'];
@@ -40,6 +44,18 @@ $GLOBALS['APPLICATION']->AddHeadScript('/bitrix/js/report/construct.js');
 
 CJSCore::Init(array('date'));
 
+// filter fields selectors
+if (is_array($arResult['ufInfo']))
+{
+	$APPLICATION->IncludeComponent(
+		'bitrix:report.filter.field.selector',
+		'',
+		array('ufInfo' => $arResult['ufInfo']),
+		false,
+		array('HIDE_ICONS' => true)
+	);
+}
+
 ?>
 
 <script type="text/javascript">
@@ -58,6 +74,14 @@ BX.message({'REPORT_ADD': '<?=CUtil::JSEscape(GetMessage('REPORT_ADD'))?>'});
 BX.message({'REPORT_CANCEL': '<?=CUtil::JSEscape(GetMessage('REPORT_CANCEL'))?>'});
 BX.message({'REPORT_PRCNT_VIEW_IS_NOT_AVAILABLE': '<?=CUtil::JSEscape(GetMessage('REPORT_PRCNT_VIEW_IS_NOT_AVAILABLE'))?>'});
 BX.message({'REPORT_PRCNT_BUTTON_TITLE': '<?=CUtil::JSEscape(GetMessage('REPORT_PRCNT_BUTTON_TITLE'))?>'});
+BX.message({
+	REPORT_BTN_SAVE: '<?=GetMessageJS("REPORT_BTN_SAVE")?>',
+	REPORT_BTN_CLOSE: '<?=GetMessageJS("REPORT_BTN_CLOSE")?>',
+	REPORT_SHARING_TITLE_POPUP: '<?=GetMessageJS("REPORT_SHARING_TITLE_POPUP")?>',
+	REPORT_SHARING_NAME_RIGHTS_USER: '<?=GetMessageJS("REPORT_SHARING_NAME_RIGHTS_USER")?>',
+	REPORT_SHARING_NAME_RIGHTS: '<?=GetMessageJS("REPORT_SHARING_NAME_RIGHTS")?>',
+	REPORT_SHARING_NAME_ADD_RIGHTS_USER: '<?=GetMessageJS("REPORT_SHARING_NAME_ADD_RIGHTS_USER")?>'
+});
 
 initReportControls();
 </script>
@@ -749,6 +773,22 @@ initReportControls();
 	</script>
 <?php endif; // if ($arParams['USE_CHART']): ?>
 
+<!-- Sharing -->
+<? if(!empty($arResult['SHARING_DATA'])): ?>
+<div class="webform-additional-fields">
+	<div class="reports-content-block">
+		<span class="reports-title-sharing">
+			<span class="reports-lable-title"><?=GetMessage('REPORT_SHARING_TITLE')?></span>
+			<span id="report-title-sharing-help" class="report-options-help">
+				<?=GetMessage('REPORT_SHARING_ILLUSTRATION')?>
+			</span>
+		</span>
+		<div id="report-sharing-block" class="report-sharing-block"></div>
+		<div style="display: none;" id="report-sharing-form-data"></div>
+	</div>
+</div>
+<? endif ?>
+
 <!-- save -->
 <div class="webform-buttons task-buttons">
 	<a class="webform-button webform-button-create" href="" id="report-save-button">
@@ -757,7 +797,7 @@ initReportControls();
 		<span class="webform-button-right"></span>
 	</a>
 	<a class="webform-button-link webform-button-link-cancel"
-		href="<?=$arParams['ACTION']=='edit'?$_SERVER['HTTP_REFERER']:CComponentEngine::MakePathFromTemplate($arParams["PATH_TO_REPORT_LIST"], array());?>">
+		href="<?=$arParams['ACTION']=='edit'?htmlspecialcharsbx($_SERVER['HTTP_REFERER']):CComponentEngine::MakePathFromTemplate($arParams["PATH_TO_REPORT_LIST"], array());?>">
 		<?=GetMessage('REPORT_CANCEL')?>
 	</a>
 </div>
@@ -1034,29 +1074,36 @@ $name = $APPLICATION->IncludeComponent(
 
 ?>
 
+<!-- Connection js class -->
+<script type="text/javascript">
+	BX(function () {
 
-<!-- filter fields selectors -->
+		BX.Report['<?=$jsClass?>'] = new BX.Report.ReportConstructClass({
+			jsClass:'<?=$jsClass?>',
+			sharingData: <?= Bitrix\Main\Web\Json::encode($arResult['SHARING_DATA']) ?>,
+			sessionError: '<?= !empty($_SESSION['REPORT_LIST_ERROR']) ? true : false ?>'
+		});
 
-<?php
+	});
+</script>
 
-if (is_array($arResult['ufInfo']))
-{
-	$APPLICATION->IncludeComponent(
-		'bitrix:report.filter.field.selector',
-		'',
-		array('ufInfo' => $arResult['ufInfo']),
-		false,
-		array('HIDE_ICONS' => true)
-	);
-}
-
-?>
-
+<?if(!defined('REPORT_LIST_ERROR') && !empty($_SESSION['REPORT_LIST_ERROR'])):?>
+	<? define("REPORT_LIST_ERROR", true); ?>
+	<div id="report-list-error" style="display: none;"><?=$_SESSION['REPORT_LIST_ERROR']?></div>
+	<? unset($_SESSION['REPORT_LIST_ERROR']); ?>
+<? endif ?>
 
 <?php $this->SetViewTarget("pagetitle", 100);?>
-<div class="reports-title-buttons">
-	<a class="reports-title-button" href="<?=CComponentEngine::MakePathFromTemplate($arParams["PATH_TO_REPORT_LIST"], array());?>">
-		<i class="reports-title-button-back-icon"></i><span class="reports-link"><?=GetMessage('REPORT_RETURN_TO_LIST')?></span>
+	<? if($arParams['REPORT_ID'] && false): ?>
+	<a class="webform-small-button webform-small-button-blue"
+		onclick="BX.Report['<?=$jsClass?>'].export('<?=$arParams['REPORT_ID']?>')">
+		<span class="webform-small-button-text"><?=GetMessage('REPORT_TITLE_EXPORT')?></span>
 	</a>
-</div>
+	&nbsp;
+	<? endif ?>
+	<a class="webform-small-button webform-small-button-blue webform-small-button-back"
+		href="<?=CComponentEngine::MakePathFromTemplate($arParams["PATH_TO_REPORT_LIST"], array());?>">
+		<span class="webform-small-button-icon"></span>
+		<span class="webform-small-button-text"><?=GetMessage('REPORT_RETURN_TO_LIST')?></span>
+	</a>
 <?php $this->EndViewTarget();?>

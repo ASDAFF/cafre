@@ -299,7 +299,7 @@ if(count($arResult["POST"])>0)
 <?
 	}
 ?><?=$arResult["NAV_STRING"];?>
-<script type="application/javascript">
+<script type="text/javascript">
 BX.ready(function(){
 	var res = BX('idea-posts-content').firstChild;
 	do {

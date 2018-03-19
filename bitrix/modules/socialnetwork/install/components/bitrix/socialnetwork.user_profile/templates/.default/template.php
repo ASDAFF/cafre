@@ -19,19 +19,24 @@ else
 		<?
 	}
 
-	if (CModule::IncludeModule('extranet') && CExtranet::IsExtranetSite())
-		$sSiteID = "_extranet";
-	else
-		$sSiteID = "_".SITE_ID;
-		
-	$bCanEdit = false;		
-	if ($arParams['CAN_OWNER_EDIT_DESKTOP']	!= "N" || $GLOBALS["USER"]->IsAdmin() || CSocNetUser::IsCurrentUserModuleAdmin())
-		$bCanEdit = true;
+	$sSiteID = "_".(
+		CModule::IncludeModule('extranet')
+		&& CExtranet::IsExtranetSite()
+			? "extranet"
+			: SITE_ID
+	);
+
+	$bCanEdit = (
+		$arParams['CAN_OWNER_EDIT_DESKTOP']	!= "N"
+		|| $GLOBALS["USER"]->IsAdmin()
+		|| CSocNetUser::IsCurrentUserModuleAdmin()
+	);
 
 	$arDesktopParams = Array(
 			"MODE" => "SU",
 			"USER_ID" => $arResult["User"]["ID"],
 			"USER_ACTIVE" => $arResult["User"]["ACTIVE"],
+			"USER_TYPE" => $arResult["User"]["TYPE"],
 			"ID" => "sonet_user".$sSiteID."_".$arResult["User"]["ID"],
 			"DEFAULT_ID" => "sonet_user".$sSiteID,
 			"THUMBNAIL_LIST_SIZE" => $arParams["THUMBNAIL_LIST_SIZE"],
@@ -68,8 +73,13 @@ else
 			"G_SONET_USER_LINKS_IS_ABSENT" => $arResult['IS_ABSENT'],
 			"G_SONET_USER_LINKS_IS_HONOURED" => $arResult['IS_HONOURED'],
 			"G_SONET_USER_LINKS_IS_CURRENT_USER" => $arResult["CurrentUserPerms"]["IsCurrentUser"],
-			"G_SONET_USER_LINKS_RELATION" => $arResult["CurrentUserPerms"]["Relation"],			
-			"G_SONET_USER_LINKS_CAN_MESSAGE" => $arResult["CurrentUserPerms"]["Operations"]["message"],
+			"G_SONET_USER_LINKS_RELATION" => $arResult["CurrentUserPerms"]["Relation"],
+			"G_SONET_USER_LINKS_CAN_MESSAGE" => (
+				!IsModuleInstalled('mail')
+				|| $arResult["User"]["EXTERNAL_AUTH_ID"] != 'email'
+					? $arResult["CurrentUserPerms"]["Operations"]["message"]
+					: false
+			),
 			"G_SONET_USER_LINKS_CAN_INVITE_GROUP" => $arResult["CurrentUserPerms"]["Operations"]["invitegroup"],
 			"G_SONET_USER_LINKS_CAN_VIEW_PROFILE" => $arResult["CurrentUserPerms"]["Operations"]["viewprofile"],
 			"G_SONET_USER_LINKS_CAN_MODIFY_USER" => $arResult["CurrentUserPerms"]["Operations"]["modifyuser"],
@@ -91,6 +101,7 @@ else
 			"G_SONET_USER_LINKS_URL_VIDEOCALL" => htmlspecialcharsback($arResult["Urls"]["VideoCall"]),
 			"G_SONET_USER_LINKS_URL_SECURITY" => htmlspecialcharsback($arResult["Urls"]["Security"]),
 			"G_SONET_USER_LINKS_URL_PASSWORDS" => htmlspecialcharsback($arResult["Urls"]["Passwords"]),
+			"G_SONET_USER_LINKS_URL_SYNCHRONIZE" => htmlspecialcharsback($arResult["Urls"]["Synchronize"]),
 			"G_SONET_USER_LINKS_URL_CODES" => htmlspecialcharsback($arResult["Urls"]["Codes"]),
 			"G_SONET_USER_OTP" => $arResult["User"]["OTP"],
 
@@ -150,6 +161,7 @@ else
 		$arDesktopParams["G_SONET_USER_DESC_PROPERTIES_PERSONAL_SHOW"] = $arResult["UserPropertiesPersonal"]["SHOW"];
 		$arDesktopParams["G_SONET_USER_DESC_PROPERTIES_PERSONAL_DATA"] = $arResult["UserPropertiesPersonal"]["DATA"];
 		$arDesktopParams["G_SONET_USER_DESC_OTP"] = $arResult["User"]["OTP"];
+		$arDesktopParams["G_SONET_USER_DESC_EMAIL_FORWARD_TO"] = (isset($arResult["User"]["EMAIL_FORWARD_TO"]) ? $arResult["User"]["EMAIL_FORWARD_TO"] : array());
 
 		if (
 			array_key_exists("RATING_ID_ARR", $arParams)
@@ -175,6 +187,11 @@ else
 			$arDesktopParams["G_SONET_USER_DESC_DEPARTMENTS"] = $arResult["DEPARTMENTS"];
 		}
 
+		if (CModule::IncludeModule('mail'))
+		{
+			$arDesktopParams["G_SONET_USER_LINKS_EXTERNAL_AUTH_ID"] = $arResult["User"]["EXTERNAL_AUTH_ID"];
+		}
+
 		if($arResult["tasks"]["SHOW"])
 		{
 			$arDesktopParams["G_TASKS_TITLE"] = $arResult["ActiveFeatures"]["tasks"];
@@ -182,7 +199,6 @@ else
 			$arDesktopParams["G_TASKS_SHOW_TITLE"] = "N";
 			$arDesktopParams["G_TASKS_SHOW_FOOTER"] = "N";
 			$arDesktopParams["G_TASKS_TEMPLATE_NAME"] = ".default";
-			$arDesktopParams["G_TASKS_IBLOCK_ID"] = $arParams["TASK_IBLOCK_ID"];
 			$arDesktopParams["G_TASKS_OWNER_ID"] = $arResult["User"]["ID"];
 			$arDesktopParams["G_TASKS_TASK_TYPE"] = 'user';
 			$arDesktopParams["G_TASKS_ITEMS_COUNT"] = 10;
@@ -197,8 +213,7 @@ else
 			$arDesktopParams["G_TASKS_PATH_TO_USER_TASKS"] = $arParams["PATH_TO_USER_TASKS"];
 			$arDesktopParams["G_TASKS_PATH_TO_USER_TASKS_TASK"] = $arParams["PATH_TO_USER_TASKS_TASK"];
 			$arDesktopParams["G_TASKS_PATH_TO_USER_TASKS_VIEW"] = $arParams["PATH_TO_USER_TASKS_VIEW"];
-			$arDesktopParams["G_TASKS_TASKS_FIELDS_SHOW"] = $arParams["TASKS_FIELDS_SHOW"];
-			$arDesktopParams["G_TASKS_FORUM_ID"] = $arParams["TASK_FORUM_ID"];		
+			$arDesktopParams["G_TASKS_FORUM_ID"] = $arParams["TASK_FORUM_ID"];
 		}
 		else
 			$arDesktopParams["G_TASKS_SHOW"] = "N";

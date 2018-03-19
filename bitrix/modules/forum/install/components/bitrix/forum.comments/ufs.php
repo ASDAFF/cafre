@@ -18,7 +18,8 @@ class CCommentUFs
 	{
 		$arResult =& $this->component->arResult;
 		$arParams =& $this->component->arParams;
-		$arParams["USER_FIELDS"] = (is_array($arParams["USER_FIELDS"]) ? $arParams["USER_FIELDS"] : array("UF_FORUM_MESSAGE_DOC", "UF_FORUM_MESSAGE_VER"));
+		$arParams["USER_FIELDS_SETTINGS"] = (is_array($arParams["USER_FIELDS_SETTINGS"]) ? $arParams["USER_FIELDS_SETTINGS"] : array());
+		$arParams["USER_FIELDS"] = (is_array($arParams["USER_FIELDS"]) ? $arParams["USER_FIELDS"] : array("UF_FORUM_MESSAGE_DOC", "UF_FORUM_MESSAGE_VER", "UF_FORUM_MES_URL_PRV"));
 		$arResult["~USER_FIELDS"] = $GLOBALS["USER_FIELD_MANAGER"]->GetUserFields("FORUM_MESSAGE", 0, LANGUAGE_ID);
 		foreach($arResult["~USER_FIELDS"] as $key => $val)
 		{

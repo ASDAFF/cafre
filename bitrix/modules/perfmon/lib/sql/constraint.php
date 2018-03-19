@@ -61,7 +61,7 @@ class Constraint extends BaseObject
 		switch ($dbType)
 		{
 		case "MYSQL":
-			return "// ".get_class($this).":getCreateDdl for database type [".$dbType."] not implemented";
+			return "ALTER TABLE ".$this->parent->name." ADD CONSTRAINT ".$this->name." ".$this->body;
 		case "MSSQL":
 			return "ALTER TABLE ".$this->parent->name." ADD CONSTRAINT ".$this->name." ".$this->body;
 		case "ORACLE":

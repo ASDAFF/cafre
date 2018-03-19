@@ -62,7 +62,8 @@ $MESS["EC_PERIOD_COUNT"] = "Периодичность";
 $MESS["EC_EVENT_LENGTH"] = "Длительность";
 $MESS["EC_PERIOD_ADDITIONAL"] = "Дополнительно";
 $MESS["EC_REMIND_SETTINGS"] = "Параметры напоминания";
-$MESS["EC_EVENT_REMINDER"] = "Напоминание о событии [B]#DATE_FROM# - #EVENT_NAME#[/B]";
+$MESS["EC_EVENT_REMINDER_PUSH"] = "Напоминание о событии #EVENT_NAME#, #DATE_FROM#";
+$MESS["EC_EVENT_REMINDER"] = "Напоминание о событии [B]#EVENT_NAME#[/B], [B]#DATE_FROM#[/B]";
 $MESS["EC_EVENT_REMINDER_IN_GROUP"] = "отмеченного в календаре \"#CALENDAR_NAME#\" группы \"#GROUP_NAME#\"";
 $MESS["EC_EVENT_REMINDER_IN_USER"] = "отмеченного в календаре \"#CALENDAR_NAME#\" пользователя [B]#USER_NAME#[/B]";
 $MESS["EC_EVENT_REMINDER_IN_PERSONAL"] = "отмеченного в Вашем календаре \"#CALENDAR_NAME#\"";
@@ -96,6 +97,9 @@ $MESS["EC_T_REPEAT"] = "Повтор";
 $MESS["EC_T_REPEAT_CHECK_LABEL"] = "Повторять событие";
 $MESS["EC_T_REPEAT_NONE"] = "Не повторяется";
 $MESS["EC_T_REPEAT_DAILY"] = "Каждый день";
+$MESS["EC_T_REPEAT_WORK_DAILY"] = "Каждый рабочий день";
+$MESS["EC_T_REPEAT_TU_TH"] = "Вт,Чт";
+$MESS["EC_T_REPEAT_MO_WE_FR"] = "Пн,Ср,Пт";
 $MESS["EC_T_REPEAT_WEEKLY"] = "Каждую неделю";
 $MESS["EC_T_REPEAT_MONTHLY"] = "Каждый месяц";
 $MESS["EC_T_REPEAT_YEARLY"] = "Каждый год";
@@ -144,7 +148,7 @@ $MESS["EC_TAB_WEEK"] = "Неделя";
 $MESS["EC_TAB_DAY"] = "День";
 $MESS["EC_TAB_MONTH_TITLE"] = "Показать события на протяжении месяца";
 $MESS["EC_TAB_WEEK_TITLE"] = "Показать события на протяжении недели";
-$MESS["EC_TAB_DAY_TITLE"] = "Показать события в течении дня";
+$MESS["EC_TAB_DAY_TITLE"] = "Показать события в течение дня";
 $MESS["EC_EXT_DIAL"] = "редактировать";
 $MESS["EC_GO_TO_EXT_DIALOG"] = "Перейти в расширенный диалог добавления события";
 $MESS["EC_ADD_GUEST"] = "Добавить участника";
@@ -164,7 +168,7 @@ $MESS["EC_ATT_Q"] = "Еще думают";
 $MESS["EC_OPEN_MEETING"] = "Это открытая встреча";
 $MESS["EC_OPEN_MEETING_TITLE"] = "Участники могут присоединяться самостоятельно";
 $MESS["EC_NOTIFY_STATUS"] = "Оповещать о подтверждении/отказе участников";
-$MESS["EC_REINVITE"] = "Запросить повторное подтверждение участия";
+$MESS["EC_REINVITE"] = "Пригласить участников повторно";
 $MESS["EC_DECLINE_INFO"] = "Вы отказались от участия в этом событии";
 $MESS["EC_ACCEPTED_STATUS"] = "Вы участвуете в этом событии.";
 $MESS["EC_STATUS_COMMENT"] = "ваш комментарий";
@@ -232,6 +236,7 @@ $MESS["EC_RRULE_EVERY_YEAR"] = "ежегодно, #DAY# числа, #MONTH# месяца";
 $MESS["EC_RRULE_EVERY_YEAR_1"] = "каждый #YEAR#-й год, #DAY# числа, #MONTH# месяца";
 $MESS["EC_RRULE_UNTIL"] = "до #UNTIL_DATE#";
 $MESS["EC_RRULE_FROM"] = "от #FROM_DATE#";
+$MESS["EC_RRULE_COUNT"] = "#COUNT# раз(а)";
 $MESS["EC_JS_EVERY_M"] = "каждый";
 $MESS["EC_JS_EVERY_F"] = "каждую";
 $MESS["EC_JS_EVERY_M_"] = "Каждый";
@@ -312,13 +317,21 @@ $MESS["EC_ALL_GUESTS"] = "Все участники";
 $MESS["EC_ALL_GUESTS_TITLE"] = "Показать всех участников";
 $MESS["EC_DEL_ENCOUNTER"] = "Отказаться от участия";
 $MESS["EC_EDEV_CONFIRMED"] = "Подтверждено";
-$MESS["EC_ACCEPT_MEETING"] = "Принять участие";
-$MESS["EC_ACCEPT_MEETING_2"] = "Передумать и принять участие";
+$MESS["EC_ACCEPT_MEETING"] = "Буду участвовать";
+$MESS["EC_ACCEPT_MAYBE_MEETING"] = "Возможно";
+$MESS["EC_ACCEPT_MAYBE_MEETING_2"] = "Возможно";
+$MESS["EC_ACCEPT_MEETING_2"] = "Передумать и участвовать";
 $MESS["EC_EDEV_CONF_Y_TITLE"] = "Подтвердить свое участие";
 $MESS["EC_EDEV_CONF_N"] = "Отказаться";
 $MESS["EC_EDEV_CONF_N_TITLE"] = "Отказаться от участия (Событие будет удалено из Вашего календаря)";
 $MESS["EC_NOT_CONFIRMED"] = "Участие не подтверждено";
 $MESS["EC_T_DIALOG_NEVER"] = "не ограничивать";
+$MESS["EC_ENDS_ON_LABEL"] = "Окончание";
+$MESS["EC_ENDS_ON_NEVER"] = "Никогда";
+$MESS["EC_ENDS_ON_COUNT"] = "После #COUNT# повторений";
+$MESS["EC_ENDS_ON_COUNT_PLACEHOLDER"] = "10";
+$MESS["EC_ENDS_ON_UNTIL"] = "#UNTIL_DATE#";
+$MESS["EC_ENDS_ON_UNTIL_PLACEHOLDER"] = "дата";
 $MESS["EC_ACCESSIBILITY_B"] = "Занят";
 $MESS["EC_ACCESSIBILITY_Q"] = "Под вопросом";
 $MESS["EC_ACCESSIBILITY_F"] = "Свободен";
@@ -331,10 +344,16 @@ $MESS["EC_USER_BUSY"] = "Пользователь #USER# занят или отсутствует в указанный п
 $MESS["EC_USERS_NOT_AVAILABLE"] = "Не все приглашенные участники доступны в указанный период";
 $MESS["EC_MESS_INVITE"] = "Пользователь #OWNER_NAME# приглашает вас принять участие во встрече \"#TITLE#\", которая состоится #ACTIVE_FROM#";
 $MESS["EC_MESS_INVITE_SITE"] = "Приглашаю вас принять участие во встрече \"[B]#TITLE#[/B]\", которая состоится [B]#ACTIVE_FROM#[/B]";
+$MESS["EC_MESS_REC_INVITE"] = "Пользователь #OWNER_NAME# приглашает вас принять участие в повторяемой встрече \"#TITLE#\" #ACTIVE_FROM#, #RRULE#";
+$MESS["EC_MESS_REC_INVITE_SITE"] = "Приглашаю вас принять участие в повторяемой  встрече \"[B]#TITLE#[/B]\" [B]#ACTIVE_FROM#, #RRULE#[/B]";
 $MESS["EC_MESS_INVITE_CHANGED"] = "Пользователь #OWNER_NAME# изменил встречу \"#TITLE#\" с Вашим участием, которая состоится #ACTIVE_FROM#";
 $MESS["EC_MESS_INVITE_CHANGED_SITE"] = "Изменена встреча \"[B]#TITLE#[/B]\" с Вашим участием, которая состоится [B]#ACTIVE_FROM#[/B]";
 $MESS["EC_MESS_INVITE_CANCEL"] = "Пользователь #OWNER_NAME# отменил встречу \"#TITLE#\" с Вашим участием, которая должна была состояться #ACTIVE_FROM#";
 $MESS["EC_MESS_INVITE_CANCEL_SITE"] = "Отменена встреча \"[B]#TITLE#[/B]\" с Вашим участием, которая должна была состояться [B]#ACTIVE_FROM#[/B]";
+$MESS["EC_MESS_REC_ALL_CANCEL"] = "Пользователь #OWNER_NAME# отменил все повторения встречи \"[B]#TITLE#[/B]\" с Вашим участием, от [B]#ACTIVE_FROM#[/B]";
+$MESS["EC_MESS_REC_ALL_CANCEL_SITE"] = "Отменены все повторения встречи \"[B]#TITLE#[/B]\" с Вашим участием, от [B]#ACTIVE_FROM#[/B]";
+$MESS["EC_MESS_REC_THIS_CANCEL"] = "Повторение встречи \"[B]#TITLE#[/B]\" ([B]#ACTIVE_FROM#[/B]) с Вашим участием было отменено #OWNER_NAME#";
+$MESS["EC_MESS_REC_THIS_CANCEL_SITE"] = "Повторение встречи \"[B]#TITLE#[/B]\" ([B]#ACTIVE_FROM#[/B]) с Вашим участием было отменено";
 $MESS["EC_MESS_MEETING_TEXT"] = "Текст приглашения: \"#MEETING_TEXT#\"";
 $MESS["EC_MESS_INVITE_DETAILS"] = "Детали встречи Вы можете посмотреть в своем календаре: #LINK#";
 $MESS["EC_MESS_INVITE_DETAILS_SITE"] = "Детали встречи Вы можете посмотреть в [url=#LINK#]своем календаре[/url]";
@@ -347,10 +366,10 @@ $MESS["EC_MESS_VIEW_OWN_CALENDAR_OUT"] = "Посмотреть другие события и встречи Вы
 $MESS["EC_MESS_INVITE_TITLE"] = "Приглашение на встречу \"#TITLE#\" от пользователя #OWNER_NAME#";
 $MESS["EC_MESS_INVITE_CHANGED_TITLE"] = "Изменение встречи \"#TITLE#\" с Вашим участием";
 $MESS["EC_MESS_INVITE_CANCEL_TITLE"] = "Встреча \"#TITLE#\" отменена";
-$MESS["EC_MESS_INVITE_ACCEPTED"] = "Пользователь #GUEST_NAME# примет участие во встрече \"#TITLE#\", организованной вами, которая состоится #ACTIVE_FROM#";
-$MESS["EC_MESS_INVITE_ACCEPTED_SITE"] = "Я приму участие во встрече \"[B]#TITLE#[/B]\", организованной вами, которая состоится [B]#ACTIVE_FROM#[/B]";
-$MESS["EC_MESS_INVITE_DECLINED"] = "Пользователь #GUEST_NAME# не примет участие во встрече \"#TITLE#\", организованной вами, которая состоится #ACTIVE_FROM#";
-$MESS["EC_MESS_INVITE_DECLINED_SITE"] = "Я не приму участие во встрече \"[B]#TITLE#[/B]\", организованной вами, которая состоится [B]#ACTIVE_FROM#[/B]";
+$MESS["EC_MESS_INVITE_ACCEPTED"] = "Пользователь #GUEST_NAME# примет участие в организованной вами встрече \"#TITLE#\"";
+$MESS["EC_MESS_INVITE_ACCEPTED_SITE"] = "Я приму участие в организованной вами встрече \"[B]#TITLE#[/B]\"";
+$MESS["EC_MESS_INVITE_DECLINED"] = "Пользователь #GUEST_NAME# не примет участие в организованной вами встрече \"#TITLE#\"";
+$MESS["EC_MESS_INVITE_DECLINED_SITE"] = "Я не приму участие в организованной вами встрече \"[B]#TITLE#[/B]\"";
 $MESS["EC_MESS_INVITE_ACC_COMMENT"] = "Комментарий: \"#COMMENT#\"";
 $MESS["EC_IS_MEETING"] = "Встреча";
 $MESS["EC_HOST_IS_ABSENT"] = "Организатор отсутствует";
@@ -407,6 +426,7 @@ $MESS["EC_MR_RESERVE_ERR_BUSY"] = "Выбранная переговорная не может быть забронир
 $MESS["EC_MR_RESERVE_ERR"] = "При бронировании переговорной произошла ошибка.";
 $MESS["EC_BUT_SET"] = "Настройки";
 $MESS["EC_ADV_MEETING_CAL"] = "Календарь для приглашений";
+$MESS["EC_CRM_SECTION"] = "Календарь CRM";
 $MESS["EC_FIRST_IN_LIST"] = "Первый в списке";
 $MESS["EC_BLINK_SET"] = "Использовать визуальное выделение (мигание) неподтвержденных событий";
 $MESS["EC_ACC_EX"] = "Занести в график отсутствий";
@@ -417,7 +437,6 @@ $MESS["EC_DEF_MEETING_NAME"] = "Собрание";
 $MESS["EC_NO_GUESTS_ERR"] = "Не выбрано ни одного участника";
 $MESS["EC_NO_FROM_TO_ERR"] = "Не указанно время начала и окончания события";
 $MESS["EC_JS_DEL_MEETING_CONFIRM"] = "Вы пытаетесь удалить событие с другими участниками. Вы действительно хотите отменить событие?";
-$MESS["EC_JS_DEL_MEETING_GUEST_CONFIRM"] = "Вы действительно хотите отказаться от участия?";
 $MESS["EC_MR_EXPIRE_ERR_BUSY"] = "Выбранная видео-переговорная не может быть забронирована на прошедшее время.";
 $MESS["EC_MR_MAX_USERS_ERR_BUSY"] = "В видео-переговорной не может быть больше #max_users# пользователей.";
 $MESS["EC_BAN_CONNECT_OUTL"] = "Соединить с Outlook";
@@ -427,7 +446,7 @@ $MESS["EC_BAN_CONNECT_EXCH_TITLE"] = "Ваши календари соединены с Microsoft Excha
 $MESS["EC_BAN_NOT_CONNECT_EXCH"] = "Не соединено с Exchange";
 $MESS["EC_BAN_NOT_CONNECT_EXCH_TITLE"] = "Не соединено с Microsoft Exchange Server. Обратитесь к администратору за помощью.";
 $MESS["EC_MANAGE_CALDAV"] = "Настроить внешние календари (CalDAV)";
-$MESS["EC_MANAGE_CALDAV_TITLE"] = "Управляйте подключением внешних календарей. Например Google.";
+$MESS["EC_MANAGE_CALDAV_TITLE"] = "Управляйте подключением внешних календарей.";
 $MESS["EC_CALDAV_TITLE"] = "Список подключений внешних календарей";
 $MESS["EC_CALDAV_CONNECTION_ERROR"] = "При проверке подключения \"#CONNECTION_NAME#\" сервер CalDav вернул ошибку:
 \"#ERROR_STR#\". Пожалуйста проверьте параметры подключения, и повторите попытку.";
@@ -435,6 +454,7 @@ $MESS["EC_ADD_CALDAV_LINK"] = "Адрес";
 $MESS["EC_ADD_CALDAV_USER_NAME"] = "Имя пользователя";
 $MESS["EC_ADD_CALDAV_PASS"] = "Пароль";
 $MESS["EC_ADD_CALDAV_NAME"] = "Название";
+$MESS["EC_ADD_CALDAV_SECTIONS"] = "Доступные календари";
 $MESS["EC_CALDAV_EDIT"] = "изменить";
 $MESS["EC_CALDAV_DEL"] = "удалить";
 $MESS["EC_CALDAV_COLLAPSE"] = "свернуть";
@@ -448,58 +468,58 @@ $MESS["EC_CALDAV_SYNC_ERROR"] = "Последняя синхронизация была выполнена с ошибка
 $MESS["EC_CALDAV_NOTICE"] = "Синхронизация подключаемых календарей происходит автоматически.";
 $MESS["EC_CALDAV_NOTICE_GOOGLE"] = "Для подключения календарей <b>Google</b> введите ссылку вида <span class=\"bxec-link\">https://www.google.com/calendar/dav/YOUREMAIL@DOMAIN.COM/user</span> в поле адрес, а также свой логин и пароль. <br/> Более подробную информацию можно посмотреть <a href=\"http://www.google.com/support/calendar/bin/answer.py?answer=99358&&hl=en#ical\">здесь</a>";
 $MESS["EC_ALL_CALENDARS"] = "Все календари";
-$MESS["EC_MOBILE_HELP_TITLE"] = "Подключение к мобильным устройствам";
-$MESS["EC_MOBILE_HELP_HEADER"] = "Подключение по протоколу CalDav";
+$MESS["EC_MOBILE_SYNC_TITLE_MACOSX"] = "Настройка синхронизации для Mac OSX";
+$MESS["EC_MOBILE_SYNC_TITLE_IPHONE"] = "Настройка синхронизации для Apple iPhone/iPad";
+$MESS["EC_MOBILE_SYNC_TITLE_ANDROID"] = "Настройка синхронизации для Android";
 $MESS["EC_MOBILE_MAC_OS"] = "Программа iCal для MAC OS";
 $MESS["EC_MOBILE_APPLE"] = "Устройства Apple: iPhone, iPad";
 $MESS["EC_MOBILE_SUNBIRD"] = "Mozilla Thunderbird / Sunbird, приложения Android";
 $MESS["EC_CALENDAR_TO_EXCH"] = "Синхронизировать календарь с Microsoft Exchange";
-$MESS["EC_MOBILE_HELP_IPHONE_ALL_HELP"] = "<p>Для того, чтобы настроить поддержку CalDAV в устройствах Apple, выполните следующие действия:</p>
+$MESS["EC_MOBILE_HELP_IPHONE"] = "<p>Для того, чтобы настроить поддержку CalDAV в устройствах Apple, выполните следующие действия:</p>
 <ol>
-		<li>На устройстве Apple, зайдите в меню Настройки -> Почта, адреса, календари.</li>
-		<li>Под списком учетных записей нажмите на кнопку \"добавить\".</li>
-		<li>Выберите тип учетной записи CalDAV (Другое -> Учетная запись CalDav).</li>
-		<li>В настройках параметров учетной записи задайте адрес этого сайта (<span class=\"bxec-link\">#CALENDAR_LINK#</span>) в качестве сервера, а так же ваши логин и пароль.</li>
-		<li>В качестве типа авторизации следует использовать базовую авторизацию (Basic Authorization).</li>
-		#POINT_SET_PORT#
+	<li>На устройстве Apple, зайдите в меню Настройки -> Почта, адреса, календари.</li>
+	<li>Под списком учетных записей нажмите на кнопку \"добавить\".</li>
+	<li>Выберите тип учетной записи CalDAV (Другое -> Учетная запись CalDav).</li>
+	<li>В настройках параметров учетной записи задайте адрес этого сайта (<span class=\"bxec-link\">#CALENDAR_LINK#</span>) в качестве сервера, а так же ваши логин и пароль.</li>
+	<li>Если у вас включена двухэтапная авторизация, то в качестве пароля следует специальный пароль, из раздела \"Пароли
+	приложений\" в своем профиле.</li>
+	<li>При необходимости после сохранения записи можно зайти в ее редактирование и задать порт сайта.</li>
 </ol>
 <p>Ваши календари автоматически появятся в приложении \"Календарь\".</p>";
-$MESS["EC_MOBILE_HELP_MAC_1"] = "<p>Для того, чтобы подключить календари в приложении iCal:</p>
+$MESS["EC_MOBILE_HELP_MAC"] = "<p>Для того, чтобы подключить календари в приложении iCal:</p>
 <ol>
 		<li>Зайдите в меню Календарь -> Настройки и перейдите на вкладку Учетные записи.</li>
 		<li>Нажмите на кнопку добавления новой учетной записи.</li>
 		<li>Далее выберите - CalDAV.</li>
 		<li>Выберите тип учетной записи Вручную.</li>
 		<li>В настройках параметров учетной записи задайте адрес этого сайта (<span class=\"bxec-link\">#CALENDAR_LINK#</span>) в качестве сервера, а так же ваши логин и пароль.</li>
-		#POINT_SET_PORT#
+		<li>Если у вас включена двухэтапная авторизация, то в качестве пароля следует специальный пароль, из раздела \"Пароли
+		приложений\" в своем профиле.</li>
+		<li>При необходимости после сохранения записи можно зайти в ее редактирование и задать порт сайта.</li>
 </ol>
 <p>Ваши календари автоматически появятся в приложении \"iCal\".</p>";
-$MESS["EC_MOBILE_HELP_IPHONE_ONE_HELP"] = "<p>Для того, чтобы добавить выбранный календарь в устройство Apple, выполните следующие действия:</p>
+$MESS["EC_MOBILE_HELP_ANDROID"] = "<p>Для того, чтобы подключить календари выполните несколько шагов на вашем мобильном устройстве:
 <ol>
-		<li>На устройстве Apple, зайдите в Настройки и перейдите на вкладку Учетные записи.</li>
-		<li>Нажмите на кнопку добавления новой учетной записи.</li>
-		<li>Выберите тип учетной записи CalDAV.</li>
-		<li>В настройках параметров учетной записи введите в качестве сервера ссылку: <span class=\"bxec-link\">#CALENDAR_LINK#</span>, а так же ваши логин и пароль.</li>
-		<li>В качестве типа авторизации следует использовать базовую авторизацию (Basic Authorization).</li>
-		#POINT_SET_PORT#
-</ol>";
-$MESS["EC_MOBILE_HELP_SUNBIRD_ALL_HELP"] = "<p>К сожалению Mozilla Thunderbird и большинство приложений для Android не поддерживает автоматическое подключение сразу всех календарей.</p>";
-$MESS["EC_MOBILE_HELP_SUNBIRD_ONE_HELP"] = "<p>Чтобы настроить поддержку CalDAV в Mozilla Thunderbird, выполните следующие действия:</p>
-<ol>
-	<li>Запустите приложение Thunderbird, убедитесь что у вас установлено дополнение Lightning (Mozilla Calendar Project).</li>
-	<li>Выберите в меню Файл > Создать > Календарь... (или Файл > Новый календарь)</li>
-	<li>Выберите пункт В сети (On the Network) и нажмите кнопку Далее.</li>
-	<li>Выберите формат CalDAV.</li>
-	<li>В поле Адрес (Location) введите <span class=\"bxec-link\">#CALENDAR_LINK#</span> и нажмите кнопку
-	Далее.</li>
-	<li>Задайте имя и выберите цвет для вашего календаря.</li>
-	<li>Во всплывающем окне введите ваше имя пользователя и пароль.</li>
-</ol>";
-$MESS["EC_SET_PORT"] = "<li>При необходимости после сохранения записи можно зайти в ее редактирование и задать порт сайта.</li>";
+<li>Установите приложение Битрикс24 с GooglePlay </li>
+<li>Войдите в меню Настройки > Учетные записи (аккаунты) > «Битрикс 24»
+Если такой записи еще нет, добавьте новую и выберите Битрикс24 из списка.
+<ul>
+	<li>Укажите адрес вашего Битрикс24 вида <i>company.bitrix24.ru</i></li>
+	<li>Ваш логин (e-mail)</li>
+	<li>Пароль</li>
+</ul>
+<li>Если у вас включена двухэтапная авторизация, то в качестве пароля следует специальный пароль, из раздела \"Пароли
+приложений\" в своем профиле.</li>
+</li>
+<li>Кликните на учетную запись и отметьте галочкой календарь, а при желании и контакты, чтобы синхронизировать все рабочие контакты на свой телефон</li>
+
+<li>Нажмите синхронизировать</li>
+</ol>
+Готово! Ваш календарь «Битрикс 24» появится в календаре на мобильном и все события будут автоматически синхронизированы.
+</p>";
 $MESS["EC_EVENT_NOT_FOUND"] = "Ошибка! Элемент не найден.";
 $MESS["EC_EVENT_ERROR_DEL"] = "Ошибка при удалении элемента!";
 $MESS["DEL_CON_CALENDARS"] = "Удалить календари";
-$MESS["EC_CLOSE_BANNER_NOTIFY"] = "Восстановить информационную панель можно сбросив пользовательские настройки в персональном календаре.";
 $MESS["EC_CALDAV_URL_ERROR"] = "Введены некорректные параметры подключения CalDAV";
 $MESS["EC_BAN_EXCH_SYNC"] = "Синхронизировать";
 $MESS["EC_BAN_EXCH_SYNC_TITLE"] = "Синхронизация с Exchange происходит автоматически, но вы можете запустить ее вручную.";
@@ -539,13 +559,15 @@ $MESS["EC_MANAGE_CALENDAR_TYPES_TITLE"] = "Настроить типы календарей в настройка
 $MESS["EC_WORK_TIME"] = "Параметры рабочего времени";
 $MESS["EC_WEEK_START"] = "Первый день недели";
 $MESS["EC_CLEAR_PERS_SETTINGS"] = "Очистить персональные настройки";
-$MESS["EC_SHOW_BANNER"] = "Отображать панель внешних соединений (#DAV_EXAMPLE#)";
 $MESS["EC_ADD_GUESTS_DEF"] = "Выбрать из структуры";
 $MESS["EC_ADD_GUESTS_EMAIL"] = "Пригласить по E-mail";
 $MESS["EC_ADD_ATTENDEES"] = "Добавить участников";
 $MESS["EC_USER_EMAIL"] = "E-mail пользователя";
 $MESS["EC_OPTION_SHOW_DECLINED"] = "Показывать события, в которых вы отказались принять участие";
-$MESS["EC_OPTION_SHOW_MUTED"] = "Отображать прошедшие события приглушенными";
+$MESS["EC_OPTION_SHOW_TASKS"] = "Отображать задачи";
+$MESS["EC_OPTION_SHOW_COMPLETED_TASKS"] = "Отображать завершенные задачи";
+$MESS["EC_DENY_BUSY_INVITATION"] = "Запрещать приглашать в события, если время занято";
+$MESS["EC_SHOW_WEEK_NUMBERS"] = "Показывать номера недель";
 $MESS["EC_EDIT_MEETING_NOTE"] = "Изменения относятся только к вашему участию в событии, и не влияют на основные параметры встречи или других участников.";
 $MESS["EC_IT_IS_YOU"] = "это вы";
 $MESS["EC_PAST_MEETING_NOTICE"] = "Вы не можете создать событие с участниками в прошлом";
@@ -576,7 +598,7 @@ $MESS["MPF_DESTINATION_4"] = "Всем пользователям";
 $MESS["EC_DATE"] = "Дата";
 $MESS["EC_VIEW_FULL_DAY"] = "весь день";
 $MESS["EC_VIEW_DATE_FROM_TO"] = "С #DATE_FROM# по #DATE_TO#";
-$MESS["EC_VIEW_TIME_FROM_TO_TIME"] = "c #TIME_FROM# до #TIME_TO#";
+$MESS["EC_VIEW_TIME_FROM_TO_TIME"] = "#TIME_FROM# &ndash; #TIME_TO#";
 $MESS["EC_DESTINATION_1"] = "Добавить сотрудников, группы или отделы";
 $MESS["EC_DESTINATION_2"] = "Добавить еще";
 $MESS["EC_MPF_FILE_INSERT_IN_TEXT"] = "Вставить";
@@ -599,7 +621,75 @@ $MESS["EC_ATTENDEE_7"] = "#NUM# участников";
 $MESS["EC_ATTENDEE_8"] = "#NUM# участников";
 $MESS["EC_ATTENDEE_9"] = "#NUM# участников";
 $MESS["EC_ATTENDEE_0"] = "#NUM# участников";
-$MESS["EC_DD_DENY_REPEATED"] = "Повторяемое событие нельзя перетаскивать";
 $MESS["EC_DD_DENY_TASK"] = "Задачу нельзя перетаскивать";
 $MESS["EC_DD_DENY_EVENT"] = "Это событие нельзя перетаскивать";
+$MESS["EC_EVENT_TZ_BUT_OPEN"] = "Указать часовой пояс";
+$MESS["EC_EVENT_TZ_BUT_CLOSE"] = "Скрыть часовой пояс";
+$MESS["EC_EVENT_TYPE"] = "Тип события";
+$MESS["EC_EVENT_ASK_TZ"] = "Укажите ваш часовой пояс:";
+$MESS["EC_EVENT_ASK_TZ_CHANGE"] = "Похоже что ваш часовой пояс изменился:";
+$MESS["EC_EVENT_TZ_DIFFERENT"] = "Разные часовые пояса начала и окончания события";
+$MESS["EC_EVENT_TZ_DEF_HINT"] = "Укажите часовой пояс, в котором вы находитесь. Мы его запомним и больше спрашивать не будем.";
+$MESS["EC_EVENT_TZ_HINT"] = "Если событие планируется в другом часовом поясе, укажите его, выбрав нужное значение из списка. Возможно, указать разные часовые пояса начала и окончания мероприятия.";
+$MESS["EC_TIMEZONE"] = "Ваш часовой пояс";
+$MESS["EC_RESERVE_PERIOD_WARN"] = "Бронирование переговорной периодическим событием недоступно.";
+$MESS["EC_CAL_OPEN_LINK"] = "Перейти в календарь";
+$MESS["EC_CAL_ACCESS_SETTINGS"] = "Настроить права доступа";
+$MESS["EC_CAL_ACCESS_SETTINGS_WARN"] = "Обратитесь к администратору для настройки прав доступа";
+$MESS["EC_CAL_GOOGLE_HIDE"] = "Отключить и скрыть";
+
+$MESS["EC_CAL_GOOGLE_HIDE_CONFIRM"] = "Вы действительно хотите отключить синхронизацию этого календаря и скрыть его?";
+$MESS["EC_CAL_SYNC_OK"] = "Синхронизировано";
+$MESS["EC_CAL_LAST_SYNC_DATE"] = "Дата последней успешной синхронизации";
+$MESS["EC_CAL_REMOVE_GOOGLE_SYNC_CONFIRM"] = "Вы действительно хотите отключить синхронизацию календарей Google и удалить их?";
+$MESS["EC_CAL_SYNC_CONNECT"] = "Подключить";
+$MESS["EC_CAL_SYNC_DISCONNECT"] = "отключить";
+$MESS["EC_CAL_SYNC_MAC"] = "Mac OSX";
+$MESS["EC_CAL_SYNC_IPHONE"] = "iPhone";
+$MESS["EC_CAL_SYNC_ANDROID"] = "Android";
+$MESS["EC_CAL_SYNC_OUTLOOK"] = "MS Outlook";
+$MESS["EC_CAL_SYNC_OFFICE_365"] = "Office 365";
+$MESS["EC_CAL_SYNC_GOOGLE"] = "Google календарь";
+$MESS["EC_CAL_SYNC_EXCHANGE"] = "MS Exchange";
+$MESS["EC_CAL_CONNECT_MORE"] = "подключите ещё #COUNT#";
+$MESS["EC_CAL_SYNC_TITLE"] = "Синхронизация";
+
+$MESS["EC_CAL_SHOW_LESS"] = "свернуть синхронизации";
+$MESS["EC_CAL_DISCONNECT_OUTLOOK"] = "<p>Откройте программу MS Outlook и удалите ненужные календари из списка.</p>";
+$MESS["EC_CAL_DISCONNECT_IPHONE"] = "<p>Удалите учетную запись Битрикс24 со своего iPhone, чтобы отключить синхронизацию календарей</p>";
+$MESS["EC_CAL_DISCONNECT_MAC"] = "<p>Удалите учетную запись Битрикс24 в программе iCal на своем Mac, чтобы отключить синхронизацию календарей</p>";
+$MESS["EC_CAL_DISCONNECT_ANDROID"] = "<p>Удалите учетную запись Битрикс24 в настройках устройства, чтобы отключить синхронизацию календарей</p>";
+$MESS["EC_CAL_CONNECT_EXCHANGE"] = "<p>Microsoft Exchange Server подключен, но ваш календарь не синхронизирован. Обратитесь к администратору вашего Битрикс24 за
+помощью</p>";
+$MESS["EC_CAL_DISCONNECT_EXCHANGE"] = "<p>Обратитесь к администратору вашего Битрикс24 за помощью</p>";
+$MESS["EC_COMPANY_CALENDAR"] = "Календарь компании";
+$MESS["EC_MESS_STATUS_NOTIFY_Y_SITE"] = "Вы согласились принять участие во встрече \"[B]#TITLE#[/B]\", которая состоится [B]#ACTIVE_FROM#[/B]";
+$MESS["EC_MESS_STATUS_NOTIFY_N_SITE"] = "Вы отказались принять участие во встрече \"[B]#TITLE#[/B]\", которая состоится [B]#ACTIVE_FROM#[/B]";
+$MESS["EC_MESS_STATUS_NOTIFY_Y"] = "Вы согласились принять участие во встрече \"#TITLE#\", которая состоится #ACTIVE_FROM#";
+$MESS["EC_MESS_STATUS_NOTIFY_N"] = "Вы отказались принять участие во встрече \"#TITLE#\", которая состоится #ACTIVE_FROM#";
+$MESS["EC_DEL_REC_EVENT"] = "Удалить повторяющееся событие";
+$MESS["EC_EDIT_REC_EVENT"] = "Изменить повторяющееся событие";
+$MESS["EC_REC_EV_ONLY_THIS_EVENT"] = "Только это";
+$MESS["EC_REC_EV_NEXT"] = "Это и все следующие";
+$MESS["EC_REC_EV_ALL"] = "Все повторения";
+$MESS["EC_DECLINE_MEETING_CONFIRM"] = "Вы действительно хотите отказаться от участия?";
+$MESS["EC_DECLINE_REC_EVENT"] = "Отказаться от участия в повторяющемся событии?";
+$MESS["EC_D_REC_EV_ONLY_THIS_EVENT"] = "Только в этом";
+$MESS["EC_D_REC_EV_NEXT"] = "В этом и следующих";
+$MESS["EC_D_REC_EV_ALL"] = "Во всех";
+$MESS["EC_BUSY_ALERT"] = "Один или несколько участников заняты в указанное время и не могут быть приглашены.";
+
+
+$MESS["EC_REMIND_VIEW_0"] = "В момент события";
+$MESS["EC_REMIND_VIEW_5"] = "За 5 минут до начала";
+$MESS["EC_REMIND_VIEW_10"] = "За 10 минут до начала";
+$MESS["EC_REMIND_VIEW_15"] = "За 15 минут до начала";
+$MESS["EC_REMIND_VIEW_30"] = "За 30 минут до начала";
+$MESS["EC_REMIND_VIEW_60"] = "За 1 час до начала";
+$MESS["EC_REMIND_VIEW_120"] = "За 2 часа до начала";
+$MESS["EC_REMIND_VIEW_1440"] = "За день до начала";
+$MESS["EC_REMIND_VIEW_2880"] = "За 2 дня до начала";
+$MESS["EC_REMIND_VIEW_MIN_COUNT"] = "За #COUNT# минут(-ы) до начала";
+$MESS["EC_REMIND_VIEW_HOUR_COUNT"] = "За #COUNT# час(-а) до начала";
+$MESS["EC_REMIND_VIEW_DAY_COUNT"] = "За #COUNT# дня(дней) до начала";
 ?>

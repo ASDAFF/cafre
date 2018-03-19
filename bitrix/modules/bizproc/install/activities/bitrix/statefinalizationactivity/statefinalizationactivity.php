@@ -22,4 +22,3 @@ class CBPStateFinalizationActivity
 		return true;
 	}
 }
-?>

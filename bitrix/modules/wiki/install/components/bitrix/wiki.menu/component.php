@@ -177,7 +177,7 @@ if ($bNotEl && !empty($arResult['TOPLINKS']))
 	$arResult['TOPLINKS']['add']['LINK'] = CHTTP::urlAddParams(
 		CComponentEngine::MakePathFromTemplate($arParams['PATH_TO_POST_EDIT'],
 			array(
-				'wiki_name' => urlencode($arResult['ELEMENT']['NAME']),
+				'wiki_name' => rawurlencode($arResult['ELEMENT']['NAME']),
 				'group_id' => CWikiSocnet::$iSocNetId
 			)
 		),

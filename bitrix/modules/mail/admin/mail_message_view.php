@@ -271,7 +271,7 @@ if($dbr_arr = $dbr->ExtractFields("str_")):
 		<?
 		$res = CMailFilter::GetList(Array("NAME"=>"ASC"), Array("ACTIVE"=>"Y", "WHEN_MANUALLY_RUN"=>"Y", "MAILBOX_ID"=>$dbr_arr["MAILBOX_ID"]));
 		while($flt_arr = $res->Fetch()):
-		?><option value="<?=$flt_arr["ID"]?>"><?=htmlspecialcharsbx($flt_arr["NAME"])?> [<?=htmlspecialcharsbx($flt_arr["ID"])?>]</option><?
+		?><option value="<?=htmlspecialcharsbx($flt_arr['ID']) ?>"><?=htmlspecialcharsbx($flt_arr["NAME"])?> [<?=htmlspecialcharsbx($flt_arr["ID"])?>]</option><?
 		endwhile?>
 		</select>
 		</td>

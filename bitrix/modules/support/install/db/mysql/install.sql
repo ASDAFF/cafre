@@ -93,7 +93,8 @@ create table if not exists b_ticket_message_2_file (
    EXTENSION_SUFFIX varchar(255),
    primary key (ID),
    unique IX_HASH (HASH),
-   index IX_MESSAGE_ID (MESSAGE_ID));
+   index IX_MESSAGE_ID (MESSAGE_ID),
+   index IX_TICKET_ID (TICKET_ID));
 
 create table if not exists b_ticket_dictionary (
    ID int(11) not null auto_increment,

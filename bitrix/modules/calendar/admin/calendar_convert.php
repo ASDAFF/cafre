@@ -705,7 +705,7 @@ class CCalendarConvert
 					'arFields' => $arFields,
 					'bAffectToDav' => false,
 					'attendeesStatuses' => $attendeesStatuses,
-					'bSendInvitations' => false
+					'sendInvitations' => false
 				)
 			);
 			$eventsCount++;
@@ -1007,13 +1007,13 @@ if (CModule::IncludeModule("intranet") && CModule::IncludeModule("calendar"))
 			$SET[$key] = $value;
 	}
 
-$arDays = Array('MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU');
-$arWorTimeList = array();
-for ($i = 0; $i < 24; $i++)
-{
-	$arWorTimeList[strval($i)] = strval($i).'.00';
-	$arWorTimeList[strval($i).'.30'] = strval($i).'.30';
-}
+	$arDays = Array('MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU');
+	$arWorTimeList = array();
+	for ($i = 0; $i < 24; $i++)
+	{
+		$arWorTimeList[strval($i)] = strval($i).'.00';
+		$arWorTimeList[strval($i).'.30'] = strval($i).'.30';
+	}
 }
 	?>
 	<form style="border: 2px solid #B8C1DD; padding: 10px; background: #F8F8F8;" method="post" name="calendar_form" action="/bitrix/admin/calendar_convert.php" enctype="multipart/form-data" encoding="multipart/form-data">
@@ -1159,7 +1159,7 @@ for ($i = 0; $i < 24; $i++)
 						<select name="rm_iblock_type" onchange="changeIblockList(this.value, [BX('cal_rm_iblock_id'), BX('cal_vr_iblock_id')])">
 							<option value=""><?= GetMessage('CAL_NOT_SET')?></option>
 						<?foreach ($IB['types'] as $ibtype_id => $ibtype_name):?>
-							<option value="<?= $ibtype_id?>" <?if($ibtype_id == $SET['rm_iblock_type']){echo ' selected="selected"';}?>><?= $ibtype_name?></option>
+							<option value="<?= $ibtype_id?>" <?if($ibtype_id == $SET['rm_iblock_type']){echo ' selected="selected"';}?>><?= htmlspecialcharsbx($ibtype_name)?></option>
 						<?endforeach;?>
 						</select>
 					</td>
@@ -1311,7 +1311,6 @@ function changeIblockList(value, arControls)
 }
 </script>
 
-	<?
-}
+<?
 require($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/include/epilog_admin.php");
 ?>

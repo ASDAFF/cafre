@@ -16,6 +16,19 @@ class HmacAlgorithm
 	// Default hashing algorithm used by HMAC
 	protected $hashAlgorithm = 'sha256';
 
+
+	/**
+	 * Creates signing algorithm based on HMAC.
+	 *
+	 * @since 16.0.0
+	 * @param string|null $hashAlgorithm Hashing algorithm (optional). See registered algorithms in hash_algos().
+	 */
+	public function __construct($hashAlgorithm = null)
+	{
+		if ($hashAlgorithm)
+			$this->setHashAlgorithm($hashAlgorithm);
+	}
+
 	/**
 	 * Set hashing algorithm for using in HMAC
 	 *

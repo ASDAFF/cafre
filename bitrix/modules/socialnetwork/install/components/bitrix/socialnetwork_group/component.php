@@ -21,7 +21,9 @@ $arDefaultUrlTemplates404 = array(
 
 	"search" => "search.php",
 	"group" => "group/#group_id#/",
+	"group_general" => "group/#group_id#/general/",
 	"group_edit" => "group/#group_id#/edit/",
+	"group_tempate/edit" => "group/#group_id#/template/edit/",
 	"group_requests" => "group/#group_id#/requests/",
 	"group_requests_out" => "group/#group_id#/requests_out/",
 	"group_mods" => "group/#group_id#/moderators/",
@@ -100,11 +102,14 @@ $arDefaultUrlTemplates404 = array(
 	"group_forum_message_edit" => "group/#group_id#/forum/message/#action#/#topic_id#/#message_id#/",
 
 	"group_tasks" => "group/#group_id#/tasks/",
+	"group_tasks_board" => "group/#group_id#/tasks/board/",
 	"group_tasks_task" => "group/#group_id#/tasks/task/#action#/#task_id#/",
 	"group_tasks_view" => "group/#group_id#/tasks/view/#action#/#view_id#/",
 	"group_tasks_report" => "group/#group_id#/tasks/report/",
 	"group_tasks_report_construct" => "group/#group_id#/tasks/report/construct/#report_id#/#action#/",
 	"group_tasks_report_view" => "group/#group_id#/tasks/report/view/#report_id#/",
+
+	//"group_tasks_import" => "group/#group_id#/tasks/import/",
 
 	"group_log" => "group/#group_id#/log/",
 	"group_log_rss" => "group/#group_id#/log/rss/?bx_hit_hash=#sign#&events=#events#",
@@ -154,6 +159,8 @@ $arDefaultUrlTemplatesN404 = array(
 	"group_create" => "page=group_create&user_id=#group_id#",
 
 	"group" => "page=group&group_id=#group_id#",
+	"group_general" => "page=group_general&group_id=#group_id#",
+
 	"group_edit" => "page=group_edit&group_id=#group_id#",
 	"group_requests" => "page=group_requests&group_id=#group_id#",
 	"group_requests_out" => "page=group_requests_out&group_id=#group_id#",
@@ -455,86 +462,114 @@ if ($arParams["SEF_MODE"] == "Y")
 	CComponentEngine::InitComponentVariables($componentPage, $arComponentVariables, $arVariableAliases, $arVariables);
 
 	foreach ($arUrlTemplates as $url => $value)
+	{
 		$arResult["PATH_TO_".strToUpper($url)] = $arParams["SEF_FOLDER"].$value;
+	}
 
 	if ($_REQUEST["auth"] == "Y")
+	{
 		$componentPage = "auth";
+	}
+
+	$userPage = COption::GetOptionString(
+		"socialnetwork",
+		"user_page",
+		(
+		IsModuleInstalled('extranet')
+		&& SITE_ID == COption::GetOptionString("extranet", "extranet_site")
+			? "/extranet/contacts/personal/"
+			: "/company/personal/"
+		),
+		SITE_ID
+	);
 
 	if(!isset($arParams["PATH_TO_MESSAGES_CHAT"]))
-		$arParams["PATH_TO_MESSAGES_CHAT"] = "/company/personal/messages/chat/#user_id#/";
+	{
+		$arParams["PATH_TO_MESSAGES_CHAT"] = $userPage."messages/chat/#user_id#/";
+	}
+
 	if(!isset($arParams["PATH_TO_MESSAGE_FORM_MESS"]))
-		$arParams["PATH_TO_MESSAGE_FORM_MESS"] = "/company/personal/messages/form/#user_id#/#message_id#/";
+	{
+		$arParams["PATH_TO_MESSAGE_FORM_MESS"] = $userPage."messages/form/#user_id#/#message_id#/";
+	}
 
 	if(!isset($arParams["PATH_TO_USER_TASKS_TEMPLATES"]))
 	{
-		$arParams["PATH_TO_USER_TASKS_TEMPLATES"] = "/company/personal/user/#user_id#/tasks/templates/";
+		$arParams["PATH_TO_USER_TASKS_TEMPLATES"] = $userPage."user/#user_id#/tasks/templates/";
 	}
 
 	if(!isset($arParams["PATH_TO_USER_TEMPLATES_TEMPLATE"]))
 	{
-		$arParams["PATH_TO_USER_TEMPLATES_TEMPLATE"] = "/company/personal/user/#user_id#/tasks/templates/template/#action#/#template_id#/";
+		$arParams["PATH_TO_USER_TEMPLATES_TEMPLATE"] = $userPage."user/#user_id#/tasks/templates/template/#action#/#template_id#/";
 	}
 
 	if(!isset($arParams["PATH_TO_USER_BLOG_POST_IMPORTANT"]))
-		$arParams["PATH_TO_USER_BLOG_POST_IMPORTANT"] = "/company/personal/user/#user_id#/blog/important/";
-
-	if (IsModuleInstalled("video"))
-		if(!isset($arParams["PATH_TO_VIDEO_CALL"]))
-			$arParams["PATH_TO_VIDEO_CALL"] = "/company/personal/video/#user_id#/";
-
-	$tmpVal = COption::GetOptionString("socialnetwork", "workgroups_page", false, SITE_ID);
-	if (
-		$arParams["SEF_FOLDER"] 
-		&& (
-			!$tmpVal
-			|| substr($tmpVal, 0, strlen($arParams["SEF_FOLDER"])) !== $arParams["SEF_FOLDER"]
-		)
-	)
-		COption::SetOptionString("socialnetwork", "workgroups_page", $arParams["SEF_FOLDER"], false, SITE_ID);
-
-	$tmpVal = COption::GetOptionString("socialnetwork", "workgroups_list_page", false, SITE_ID);
-	if (
-		$arParams["SEF_FOLDER"] 
-		&& (
-			!$tmpVal
-			|| substr($tmpVal, 0, strlen($arParams["SEF_FOLDER"])) !== $arParams["SEF_FOLDER"]
-		)
-	)
 	{
-		COption::SetOptionString("socialnetwork", "workgroups_list_page", $arResult["PATH_TO_GROUP_SEARCH"], false, SITE_ID);
+		$arParams["PATH_TO_USER_BLOG_POST_IMPORTANT"] = $userPage."user/#user_id#/blog/important/";
 	}
 
-	$tmpVal = COption::GetOptionString("socialnetwork", "subject_path_template", false, SITE_ID);
 	if (
-		$arParams["SEF_FOLDER"]
-		&& (
-			!$tmpVal
-			|| substr($tmpVal, 0, strlen($arParams["SEF_FOLDER"])) !== $arParams["SEF_FOLDER"]
-		)
+		IsModuleInstalled("video")
+		&& !isset($arParams["PATH_TO_VIDEO_CALL"])
 	)
 	{
-		COption::SetOptionString("socialnetwork", "subject_path_template", $arResult["PATH_TO_GROUP_SEARCH_SUBJECT"], false, SITE_ID);
+		$arParams["PATH_TO_VIDEO_CALL"] = $userPage."video/#user_id#/";
 	}
+
+	\Bitrix\Socialnetwork\ComponentHelper::setComponentOption(
+		array(
+			array(
+				'CHECK_SEF_FOLDER' => true,
+				'OPTION' => array('MODULE_ID' => 'socialnetwork', 'NAME' => 'workgroups_page'),
+				'VALUE' => $arParams["SEF_FOLDER"]
+			),
+			array(
+				'CHECK_SEF_FOLDER' => true,
+				'OPTION' => array('MODULE_ID' => 'socialnetwork', 'NAME' => 'workgroups_list_page'),
+				'VALUE' => $arResult["PATH_TO_GROUP_SEARCH"]
+			),
+			array(
+				'CHECK_SEF_FOLDER' => true,
+				'OPTION' => array('MODULE_ID' => 'socialnetwork', 'NAME' => 'subject_path_template'),
+				'VALUE' => $arResult["PATH_TO_GROUP_SEARCH_SUBJECT"]
+			),
+		),
+		array(
+			'SEF_FOLDER' => $arParams["SEF_FOLDER"],
+			'SITE_ID' => SITE_ID
+		)
+	);
 }
 else
 {
 	if(is_array($arParams["VARIABLE_ALIASES"]))
+	{
 		foreach ($arParams["VARIABLE_ALIASES"] as $key => $val)
+		{
 			$arParams["VARIABLE_ALIASES"][$key] = (!empty($val) ? $val : $key);
+		}
+	}
 
 	$events = GetModuleEvents("socialnetwork", "OnParseSocNetComponentPath");
 	while ($arEvent = $events->Fetch())
+	{
 		ExecuteModuleEventEx($arEvent, array(&$arDefaultUrlTemplatesN404, &$arCustomPagesPath, $arParams));
+	}
 
 	$arVariables = array();
 	$arVariableAliases = CComponentEngine::MakeComponentVariableAliases($arDefaultVariableAliases, $arParams["VARIABLE_ALIASES"]);
 
 	$events = GetModuleEvents("socialnetwork", "OnInitSocNetComponentVariables");
 	while ($arEvent = $events->Fetch())
+	{
 		ExecuteModuleEventEx($arEvent, array(&$arVariableAliases, &$arCustomPagesPath));
+	}
 
 	CComponentEngine::InitComponentVariables(false, $arComponentVariables, $arVariableAliases, $arVariables);
-	if (!empty($arDefaultUrlTemplatesN404) && !empty($arParams["VARIABLE_ALIASES"]))
+	if (
+		!empty($arDefaultUrlTemplatesN404)
+		&& !empty($arParams["VARIABLE_ALIASES"])
+	)
 	{
 		foreach ($arDefaultUrlTemplatesN404 as $url => $value)
 		{
@@ -558,14 +593,17 @@ else
 	foreach ($arDefaultUrlTemplatesN404 as $url => $value)
 	{
 		$arParamsKill = array("page", "path",
-				"section_id", "element_id", "action", "user_id", "group_id", "action", "use_light_view", "AJAX_CALL", "MUL_MODE",
-				"edit_section", "sessid", "post_id", "category", "topic_id", "result", "MESSAGE_TYPE", "q", "how", "tags", "where");
+			"section_id", "element_id", "action", "user_id", "group_id", "action", "use_light_view", "AJAX_CALL", "MUL_MODE",
+			"edit_section", "sessid", "post_id", "category", "topic_id", "result", "MESSAGE_TYPE", "q", "how", "tags", "where"
+		);
 		$arParamsKill = array_merge($arParamsKill, $arParams["VARIABLE_ALIASES"], array_values($arVariableAliases));
 		$arResult["PATH_TO_".strToUpper($url)] = $GLOBALS["APPLICATION"]->GetCurPageParam($value, $arParamsKill);
 	}
 
 	if (array_key_exists($arVariables["page"], $arDefaultUrlTemplatesN404))
+	{
 		$componentPage = $arVariables["page"];
+	}
 
 	if (empty($componentPage) || (!array_key_exists($componentPage, $arDefaultUrlTemplatesN404)))
 	{
@@ -601,14 +639,6 @@ if (
 	}
 
 	CSocNetLogComponent::redirectExtranetSite($arRedirectSite, $componentPage, $arVariables, $arDefaultUrlTemplates404, "workgroup");
-}
-
-if (
-	$bExtranetEnabled
-	&& CModule::IncludeModule("extranet")
-)
-{
-	CExtranet::ExtranetRedirect();
 }
 
 $arResult = array_merge(
@@ -715,7 +745,7 @@ if(check_bitrix_sessid() || $_SERVER['REQUEST_METHOD'] == "PUT")
 			"BLOG_GROUP_ID" => $arParams["BLOG_GROUP_ID"],
 			"PATH_TO_GROUP_BLOG" => $arResult["PATH_TO_GROUP_BLOG"],
 			"PATH_TO_GROUP_BLOG_POST" => $arResult["PATH_TO_GROUP_BLOG_POST"],
-			"PATH_TO_GROUP_BLOG_COMMENT" => $arResult["PATH_TO_GROUP_BLOG_POST"]."?commentId=#comment_id###comment_id#",
+			"PATH_TO_GROUP_BLOG_COMMENT" => $arResult["PATH_TO_GROUP_BLOG_POST"]."?commentId=#comment_id##com#comment_id#",
 			"PATH_TO_USER_BLOG" => "",
 			"PATH_TO_USER_BLOG_POST" => "",
 			"PATH_TO_USER_BLOG_COMMENT" => "",
@@ -733,7 +763,6 @@ if(check_bitrix_sessid() || $_SERVER['REQUEST_METHOD'] == "PUT")
 			"CALENDAR_GROUP_IBLOCK_ID" => $arParams["CALENDAR_GROUP_IBLOCK_ID"],
 			"PATH_TO_GROUP_CALENDAR_ELEMENT" => $arResult["PATH_TO_GROUP_CALENDAR"]."?EVENT_ID=#element_id#",
 
-			"TASK_IBLOCK_ID" => $arParams["TASK_IBLOCK_ID"],
 			"PATH_TO_GROUP_TASK_ELEMENT" => $arResult["PATH_TO_GROUP_TASKS_TASK"],
 			"PATH_TO_USER_TASK_ELEMENT" => "",
 			"TASK_FORUM_ID" => ($tasksForumId > 0 ? $tasksForumId : $arParams["TASK_FORUM_ID"]),
@@ -1109,6 +1138,23 @@ elseif (strPos($componentPage, "user_content_search")!== false || strPos($compon
 /********************************************************************
 				/Content search
 ********************************************************************/
+
+//registering routes for building preview
+if(\Bitrix\Main\ModuleManager::isModuleInstalled('tasks'))
+{
+	Bitrix\Main\UrlPreview\Router::setRouteHandler(
+			$arParams['SEF_FOLDER'].$arUrlTemplates['group_tasks_task'],
+			'tasks',
+			'\Bitrix\Tasks\Ui\Preview\Task',
+			array(
+					'taskId' => '$task_id',
+					'groupId' => '$group_id',
+					'action' => '$action',
+					'PATH_TO_USER_PROFILE' => $arParams['SEF_FOLDER'].$arUrlTemplates['user'],
+			)
+	);
+}
+
 CUtil::InitJSCore(array("window", "ajax"));
 
 $this->IncludeComponentTemplate($componentPage, array_key_exists($componentPage, $arCustomPagesPath) ? $arCustomPagesPath[$componentPage] : "");

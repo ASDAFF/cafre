@@ -47,9 +47,12 @@ class Importer
 	const DIRECTION_EXPORT = 0;
 	const DIRECTION_IMPORT = 1;
 
- 	/**
+	private static $listRuLanguage = array('ua', 'by', 'kz');
+
+	/**
 	 * @param int $iblockId This variable is the id iblock.
 	 * @return string
+	 * @throws Main\ArgumentException
 	 * @throws Main\ArgumentNullException
 	 * @throws Main\ArgumentOutOfRangeException
 	 */
@@ -67,6 +70,9 @@ class Importer
 		if(!$iblock["CODE"])
 			throw new Main\ArgumentException("Parameter 'CODE' is required.", "matches");
 
+		foreach(\CIBlock::getMessages($iblockId) as $messageKey => $message)
+			$iblock[$messageKey] = $message;
+
 		$list = new \CList($iblockId);
 		$fields = $list->getFields();
 		foreach($fields as $fieldId => $field)
@@ -75,7 +81,7 @@ class Importer
 			{
 				$iblock["~NAME_FIELD"] = array(
 					"NAME" => $field["NAME"],
-					"SETTINGS" => $field["SETTINGS"],
+					"SETTINGS" => $field["SETTlINGS"],
 					"DEFAULT_VALUE" => $field["DEFAULT_VALUE"],
 					"SORT" => $field["SORT"],
 				);
@@ -85,7 +91,7 @@ class Importer
 
 		$iblockUtf8 = Main\Text\Encoding::convertEncodingArray($iblock, LANG_CHARSET, "UTF-8");
 		$iblockUtf8 = serialize($iblockUtf8);
-		$iblockUtf8Length = Main\Text\String::getBinaryLength($iblockUtf8);
+		$iblockUtf8Length = Main\Text\BinaryString::getLength($iblockUtf8);
 		$datum = str_pad($iblockUtf8Length, 10, "0", STR_PAD_LEFT).$iblockUtf8;
 
 		if (intval($iblock["PICTURE"]) > 0)
@@ -97,8 +103,8 @@ class Importer
 				$pictureData = fread($f, filesize($picture["tmp_name"]));
 				fclose($f);
 
-				$pictureTypeLength = Main\Text\String::getBinaryLength($picture["type"]);
-				$pictureLength = Main\Text\String::getBinaryLength($pictureData);
+				$pictureTypeLength = Main\Text\BinaryString::getLength($picture["type"]);
+				$pictureLength = Main\Text\BinaryString::getLength($pictureData);
 				$datum .= "P".str_pad($pictureTypeLength, 10, "0", STR_PAD_LEFT).$picture["type"].str_pad($pictureLength, 10, "0", STR_PAD_LEFT).$pictureData;
 			}
 		}
@@ -116,11 +122,11 @@ class Importer
 		{
 			$bpDescrUtf8 = Main\Text\Encoding::convertEncodingArray($templatesListItem, LANG_CHARSET, "UTF-8");
 			$bpDescrUtf8 = serialize($bpDescrUtf8);
-			$bpDescrUtf8Length = Main\Text\String::getBinaryLength($bpDescrUtf8);
+			$bpDescrUtf8Length = Main\Text\BinaryString::getLength($bpDescrUtf8);
 			$datum .= "B".str_pad($bpDescrUtf8Length, 10, "0", STR_PAD_LEFT).$bpDescrUtf8;
 
 			$bp = \CBPWorkflowTemplateLoader::ExportTemplate($templatesListItem["ID"], false);
-			$bpLength = Main\Text\String::getBinaryLength($bp);
+			$bpLength = Main\Text\BinaryString::getLength($bp);
 			$datum .= str_pad($bpLength, 10, "0", STR_PAD_LEFT).$bp;
 		}
 
@@ -141,10 +147,10 @@ class Importer
 		fclose($f);
 
 		if (substr($datum, 0, 10) === "compressed")
-			$datum = gzuncompress(Main\Text\String::getBinarySubstring($datum, 10));
+			$datum = gzuncompress(Main\Text\BinaryString::getSubstring($datum, 10));
 
-		$len = intval(Main\Text\String::getBinarySubstring($datum, 0, 10));
-		$dataSerialized = Main\Text\String::getBinarySubstring($datum, 10, $len);
+		$len = intval(Main\Text\BinaryString::getSubstring($datum, 0, 10));
+		$dataSerialized = Main\Text\BinaryString::getSubstring($datum, 10, $len);
 
 		$data = CheckSerializedData($dataSerialized) ? unserialize($dataSerialized) : array();
 		$data = Main\Text\Encoding::convertEncodingArray($data, "UTF-8", LANG_CHARSET);
@@ -164,26 +170,26 @@ class Importer
 			throw new Main\ArgumentNullException("datum");
 
 		if (substr($datum, 0, 10) === "compressed")
-			$datum = gzuncompress(Main\Text\String::getBinarySubstring($datum, 10));
+			$datum = gzuncompress(Main\Text\BinaryString::getSubstring($datum, 10));
 
-		$len = intval(Main\Text\String::getBinarySubstring($datum, 0, 10));
-		$iblockSerialized = Main\Text\String::getBinarySubstring($datum, 10, $len);
-		$datum = Main\Text\String::getBinarySubstring($datum, $len + 10);
+		$len = intval(Main\Text\BinaryString::getSubstring($datum, 0, 10));
+		$iblockSerialized = Main\Text\BinaryString::getSubstring($datum, 10, $len);
+		$datum = Main\Text\BinaryString::getSubstring($datum, $len + 10);
 
-		$marker = Main\Text\String::getBinarySubstring($datum, 0, 1);
+		$marker = Main\Text\BinaryString::getSubstring($datum, 0, 1);
 		$picture = null;
 		$pictureType = null;
 		if ($marker == "P")
 		{
-			$len = intval(Main\Text\String::getBinarySubstring($datum, 1, 10));
-			$pictureType = Main\Text\String::getBinarySubstring($datum, 11, $len);
-			$datum = Main\Text\String::getBinarySubstring($datum, $len + 11);
+			$len = intval(Main\Text\BinaryString::getSubstring($datum, 1, 10));
+			$pictureType = Main\Text\BinaryString::getSubstring($datum, 11, $len);
+			$datum = Main\Text\BinaryString::getSubstring($datum, $len + 11);
 
-			$len = intval(Main\Text\String::getBinarySubstring($datum, 0, 10));
-			$picture = Main\Text\String::getBinarySubstring($datum, 10, $len);
-			$datum = Main\Text\String::getBinarySubstring($datum, $len + 10);
+			$len = intval(Main\Text\BinaryString::getSubstring($datum, 0, 10));
+			$picture = Main\Text\BinaryString::getSubstring($datum, 10, $len);
+			$datum = Main\Text\BinaryString::getSubstring($datum, $len + 10);
 
-			$marker = Main\Text\String::getBinarySubstring($datum, 0, 1);
+			$marker = Main\Text\BinaryString::getSubstring($datum, 0, 1);
 		}
 
 		$iblock = CheckSerializedData($iblockSerialized) ? unserialize($iblockSerialized) : array();
@@ -198,16 +204,16 @@ class Importer
 			{
 				if ($marker == "B")
 				{
-					$len = intval(Main\Text\String::getBinarySubstring($datum, 1, 10));
-					$bpDescr = Main\Text\String::getBinarySubstring($datum, 11, $len);
-					$datum = Main\Text\String::getBinarySubstring($datum, $len + 11);
+					$len = intval(Main\Text\BinaryString::getSubstring($datum, 1, 10));
+					$bpDescr = Main\Text\BinaryString::getSubstring($datum, 11, $len);
+					$datum = Main\Text\BinaryString::getSubstring($datum, $len + 11);
 
 					$bpDescr = CheckSerializedData($bpDescr) ? unserialize($bpDescr) : array();
 					$bpDescr = Main\Text\Encoding::convertEncodingArray($bpDescr, "UTF-8", LANG_CHARSET);
 
-					$len = intval(Main\Text\String::getBinarySubstring($datum, 0, 10));
-					$bp = Main\Text\String::getBinarySubstring($datum, 10, $len);
-					$datum = Main\Text\String::getBinarySubstring($datum, $len + 10);
+					$len = intval(Main\Text\BinaryString::getSubstring($datum, 0, 10));
+					$bp = Main\Text\BinaryString::getSubstring($datum, 10, $len);
+					$datum = Main\Text\BinaryString::getSubstring($datum, $len + 10);
 
 					static::importTemplate($documentType, $bpDescr, $bp);
 				}
@@ -219,7 +225,7 @@ class Importer
 				if (empty($datum))
 					break;
 
-				$marker = Main\Text\String::getBinarySubstring($datum, 0, 1);
+				$marker = Main\Text\BinaryString::getSubstring($datum, 0, 1);
 			}
 		}
 	}
@@ -352,7 +358,7 @@ class Importer
 		if ($iblockType == static::getIBlockType())
 			$documentType = array('lists', 'BizprocDocument', 'iblock_'.$iblockId);
 		else
-			$documentType = array('iblock', 'CIBlockDocument', 'iblock_'.$iblockId);
+			$documentType = array('lists', 'Bitrix\Lists\BizprocDocumentLists', 'iblock_'.$iblockId);
 
 		return $documentType;
 	}
@@ -400,7 +406,13 @@ class Importer
 		if (!$res)
 			static::createIBlockType();
 
+		if(in_array($lang, self::$listRuLanguage))
+			$lang = 'ru';
+
 		$dir = new Main\IO\Directory(Main\Loader::getDocumentRoot() . static::PATH . $lang . "/");
+		if(!$dir->isExists())
+			$dir = new Main\IO\Directory(Main\Loader::getDocumentRoot() . static::PATH . "en/");
+
 		if ($dir->isExists())
 		{
 			$children = $dir->getChildren();
@@ -456,6 +468,9 @@ class Importer
 	{
 		if (empty($lang))
 			throw new Main\ArgumentNullException("lang");
+
+		if(in_array($lang, self::$listRuLanguage))
+			$lang = 'ru';
 
 		if(!empty($path))
 		{
@@ -547,8 +562,15 @@ class Importer
 	 */
 	public static function onAgent($lang)
 	{
-		self::installProcesses($lang);
-		return "";
+		if(Main\Loader::includeModule("iblock") && Main\Loader::includeModule("bizproc"))
+		{
+			self::installProcesses($lang);
+			return "";
+		}
+		else
+		{
+			return '\Bitrix\Lists\Importer::onAgent("'.$lang.'");';
+		}
 	}
 
 	public static function migrateList($id)
@@ -575,7 +597,7 @@ class Importer
 		}
 
 		\CBPDocument::MigrateDocumentType(
-			array("iblock", "CIBlockDocument", "iblock_".$id),
+			array("lists", 'Bitrix\Lists\BizprocDocumentLists', "iblock_".$id),
 			array("lists", "BizprocDocument", "iblock_".$id)
 		);
 	}

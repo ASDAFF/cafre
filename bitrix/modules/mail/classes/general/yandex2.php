@@ -9,6 +9,15 @@ class CMailYandex2
 	{
 	}
 
+	public static function getImapData()
+	{
+		return array(
+			'server' => 'imap.yandex.ru',
+			'port'   => 993,
+			'secure' => true,
+		);
+	}
+
 	/**
 	 * https://pddimp.yandex.ru/api2/admin/domain/register
 	 *
@@ -106,7 +115,7 @@ class CMailYandex2
 	 */
 	public static function deleteDomain($token, $domain, &$error)
 	{
-		$result = self::post('https://pddimp.yandex.ru/api2/domain/delete', array(
+		$result = self::post('https://pddimp.yandex.ru/api2/admin/domain/delete', array(
 			'token'  => $token,
 			'domain' => $domain
 		));

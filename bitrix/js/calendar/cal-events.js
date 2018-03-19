@@ -72,10 +72,47 @@ JSECEvent.prototype = {
 		}
 	},
 
-	Delete: function(oEvent)
+	DeleteAllReccurent: function(oEvent, bConfirmed)
+	{
+		if (this.IsRecursive(oEvent) || oEvent.RECURRENCE_ID)
+		{
+			var
+				event, arLoadedEventsId = {},
+				i, arEvents = [];
+
+			for (i = 0; i < this.oEC.arEvents.length; i++)
+			{
+				event = this.oEC.arEvents[i];
+				if (event.ID != oEvent.ID &&
+					event.RECURRENCE_ID != oEvent.ID &&
+					event.ID != oEvent.RECURRENCE_ID &&
+					(event.RECURRENCE_ID != oEvent.RECURRENCE_ID || !event.RECURRENCE_ID)
+				)
+				{
+					arLoadedEventsId[this.SmartId(event)] = true;
+					arEvents.push(event);
+				}
+				else
+				{
+					this.Blink(this.oEC.arEvents[i], false);
+				}
+			}
+			this.oEC.arEvents = arEvents;
+			this.oEC.arLoadedEventsId = arLoadedEventsId;
+		}
+
+		this.Display();
+
+		return this.Delete(oEvent, bConfirmed, {recursionMode: 'all'});
+	},
+
+	Delete: function(oEvent, bConfirmed, params)
 	{
 		if (oEvent)
 			this.oEC.HighlightEvent_M(oEvent, false, true);
+
+		if (!params)
+			params = {};
 
 		if (!oEvent || !oEvent.ID)
 			return false;
@@ -93,51 +130,61 @@ JSECEvent.prototype = {
 			}
 			else
 			{
-				var bConfirmed = false;
-				if (this.IsAttendee(oEvent) &&  !this.IsHost(oEvent))
+				if ((this.IsRecursive(oEvent) || oEvent.RECURRENCE_ID) && !bConfirmed)
 				{
-					bConfirmed = true;
-					if (!confirm(EC_MESS.DelMeetingGuestConfirm))
-						return false;
-				}
-
-				if (this.IsHost(oEvent) && !bConfirmed)
-				{
-					bConfirmed = true;
-					if (!confirm(EC_MESS.DelMeetingConfirm))
-						return false;
-				}
-
-				if ((!oEvent.IS_MEETING || this.IsHost(oEvent)) && !bConfirmed)
-				{
-					bConfirmed = true;
-					if (!confirm(EC_MESS.DelEventConfirm))
-						return false;
-				}
-
-				var _this = this;
-				if (this.IsAttendee(oEvent) && !this.IsHost(oEvent))
-				{
-					return this.SetMeetingStatus(true, {eventId: bxInt(oEvent.ID), comment: ''});
+					this.oEC.ShowConfirmDeleteDialog(oEvent);
+					return false;
 				}
 				else
 				{
-					this.oEC.Request({
-						postData: this.oEC.GetReqData('delete', {
-							id : bxInt(oEvent.ID),
-							name : oEvent.NAME,
-							calendar : bxInt(oEvent.SECT_ID)
-						}),
-						errorText: EC_MESS.DelEventError,
-						handler: function(oRes)
-						{
-							if (oRes)
-								_this.UnDisplay(oEvent);
-						}
-					});
+					bConfirmed = !!bConfirmed;
+					if (this.IsAttendee(oEvent) && !this.IsHost(oEvent))
+					{
+						bConfirmed = true;
+						if (!confirm(EC_MESS.DeclineConfirm))
+							return false;
+					}
+
+					if (this.IsHost(oEvent) && !bConfirmed)
+					{
+						bConfirmed = true;
+						if (!confirm(EC_MESS.DelMeetingConfirm))
+							return false;
+					}
+
+					if ((!oEvent.IS_MEETING || this.IsHost(oEvent)) && !bConfirmed)
+					{
+						if (!confirm(EC_MESS.DelEventConfirm))
+							return false;
+					}
+
+					var _this = this;
+					if (this.IsAttendee(oEvent) && !this.IsHost(oEvent))
+					{
+						return this.SetMeetingStatus(true, {eventId: bxInt(oEvent.ID), comment: ''});
+					}
+					else
+					{
+						this.oEC.Request({
+							postData: this.oEC.GetReqData('delete', {
+								id : bxInt(oEvent.ID),
+								name : oEvent.NAME,
+								calendar : bxInt(oEvent.SECT_ID),
+								rec_mode : params.recursionMode || false
+							}),
+							errorText: EC_MESS.DelEventError,
+							handler: function(oRes)
+							{
+								if (oRes)
+								{
+									_this.UnDisplay(oEvent);
+								}
+							}
+						});
+					}
+					BX.onCustomEvent(this.oEC, 'onAfterCalendarEventDelete', [this.oEC]);
 				}
 			}
-			BX.onCustomEvent(this.oEC, 'onAfterCalendarEventDelete', [this.oEC]);
 		}
 		return true;
 	},
@@ -266,7 +313,7 @@ JSECEvent.prototype = {
 	{
 		if (!userId)
 			userId = this.oEC.userId;
-		return !!(oEvent.IS_MEETING && oEvent.MEETING_HOST == userId);
+		return (oEvent.IS_MEETING && (oEvent.MEETING_STATUS == 'H' || oEvent.ID == oEvent.PARENT_ID && userId == oEvent.MEETING_HOST));
 	},
 
 	IsAttendee: function(oEvent, userId)
@@ -274,10 +321,11 @@ JSECEvent.prototype = {
 		if (!userId)
 			userId = this.oEC.userId;
 
-		if (oEvent.IS_MEETING && oEvent.USER_MEETING)
+		//if (oEvent.IS_MEETING && oEvent.USER_MEETING)
+		if (oEvent.IS_MEETING)
 		{
-			if (oEvent.USER_MEETING.ATTENDEE_ID != userId)
-				return false;
+			//if (oEvent.USER_MEETING.ATTENDEE_ID != userId)
+			//	return false;
 			return true;
 		}
 		return false;
@@ -290,68 +338,72 @@ JSECEvent.prototype = {
 
 	IsBlinked: function(oEvent)
 	{
-		return oEvent.USER_MEETING && oEvent.USER_MEETING.STATUS == 'Q';
+		return oEvent.IS_MEETING && oEvent.MEETING_STATUS == 'Q';
 	},
 
 	IsRecursive: function(oEvent)
 	{
-		return !!(oEvent.RRULE && oEvent.RRULE.FREQ && oEvent.RRULE.FREQ != 'NONE');
+		return !!oEvent.RRULE;
 	},
 
 	Blink: function(oEvent, bBlink, bCheck)
 	{
-		if (!this.IsAttendee(oEvent) || this.IsHost(oEvent))
-			return;
-
-		if (!oEvent || !oEvent.display)
-			return;
-
-		if (bCheck)
-			bBlink = this.IsBlinked(oEvent);
-
-		if (bBlink && this.oEC.userSettings.blink) // Set blinked
+		if (oEvent && oEvent.display && oEvent.OWNER_ID == this.oEC.userId)
 		{
-			var _this = this;
-			oEvent._blinkInterval = setInterval(function(){_this.BlinkInterval(oEvent);}, 550);
-		}
-		else if(!bBlink && oEvent._blinkInterval) // Clear blinking
-		{
-			oEvent._blinkInterval = !!clearInterval(oEvent._blinkInterval);
+			if (bCheck)
+				bBlink = this.IsBlinked(oEvent);
 
-			var i, len, cn = "bxec-event-blink";
-			if (oEvent.oParts)
+			if (oEvent._blinkInterval)
+				oEvent._blinkInterval = !!clearInterval(oEvent._blinkInterval);
+
+			if (bBlink && this.oEC.userSettings.blink) // Set blinked
 			{
-				len = oEvent.oParts.length;
-				for (i = 0; i < len; i++)
-					if (oEvent.oParts[i])
-						BX.removeClass(oEvent.oParts[i], cn);
-			}
-
-			if (oEvent.oDaysT)
-			{
-				if (oEvent.oDaysT.week)
-					BX.removeClass(oEvent.oDaysT.week, cn);
-
-				if (oEvent.oDaysT.day)
-					BX.removeClass(oEvent.oDaysT.day, cn);
-			}
-
-			if (oEvent.oTLParts)
-			{
-				if (oEvent.oTLParts.week)
+				var _this = this;
+				oEvent._blinkInterval = setInterval(function ()
 				{
-					len2 = oEvent.oTLParts.week.length;
-					for (i = 0; i < len2; i++)
-						if (oEvent.oTLParts.week[i])
-							BX.removeClass(oEvent.oTLParts.week[i], cn);
+					_this.BlinkInterval(oEvent);
+				}, 600);
+			}
+			else if (!bBlink) // Clear blinking
+			{
+				var i, cn = "bxec-event-blink";
+				if (oEvent.oParts)
+				{
+					for (i = 0; i < oEvent.oParts.length; i++)
+					{
+						if (oEvent.oParts[i])
+							BX.removeClass(oEvent.oParts[i], cn);
+					}
 				}
 
-				if (oEvent.oTLParts.day)
+				if (oEvent.oDaysT)
 				{
-					len2 = oEvent.oTLParts.day.length;
-					for (i = 0; i < len2; i++)
-						if (oEvent.oTLParts.day[i])
-							BX.removeClass(oEvent.oTLParts.day[i], cn);
+					if (oEvent.oDaysT.week)
+						BX.removeClass(oEvent.oDaysT.week, cn);
+
+					if (oEvent.oDaysT.day)
+						BX.removeClass(oEvent.oDaysT.day, cn);
+				}
+
+				if (oEvent.oTLParts)
+				{
+					if (oEvent.oTLParts.week)
+					{
+						for (i = 0; i < oEvent.oTLParts.week.length; i++)
+						{
+							if (oEvent.oTLParts.week[i])
+								BX.removeClass(oEvent.oTLParts.week[i], cn);
+						}
+					}
+
+					if (oEvent.oTLParts.day)
+					{
+						for (i = 0; i < oEvent.oTLParts.day.length; i++)
+						{
+							if (oEvent.oTLParts.day[i])
+								BX.removeClass(oEvent.oTLParts.day[i], cn);
+						}
+					}
 				}
 			}
 		}
@@ -391,48 +443,63 @@ JSECEvent.prototype = {
 		}
 	},
 
-	SetMeetingStatus: function(bAccept, Params) // Confirm
+	SetMeetingStatus: function(bAccept, params) // Confirm
 	{
-		if (!bAccept && !confirm(EC_MESS.DelMeetingGuestConfirm))
-			return false;
-
 		var
-			oEvent = {},
-			eventId = Params ? Params.eventId : 0;
+			event = {},
+			parentId,
+			eventId = params && params.eventId ? params.eventId : 0;
+
+		if (typeof params == 'undefined')
+			params = {};
 
 		if (!eventId && this.oEC.oViewEventDialog)
 		{
-			oEvent = this.oEC.oViewEventDialog.CAL.oEvent;
-			eventId = this.oEC.oViewEventDialog.CAL.oEvent.ID;
+			event = this.oEC.oViewEventDialog.CAL.oEvent;
+			eventId = event.ID;
 		}
+		parentId = parseInt(params.parentId || event.PARENT_ID);
 
-		if (typeof Params == 'undefined')
+		if (!params.eventId)
+			params.eventId = eventId;
+
+		if (!bAccept && !params.confirmed)
 		{
-			Params = {
-				eventId: eventId,
-				comment: '' //this.oEC.oViewEventDialog.CAL.DOM.StatusComInp.value
-			};
-			//if (Params.comment == this.oEC.oViewEventDialog.CAL.defStatValue)
-			//	Params.comment = '';
+			if (this.IsRecursive(event))
+			{
+				this.oEC.ShowConfirmDeclineDialog(event);
+				return false;
+			}
+			else if (!confirm(EC_MESS.DeclineConfirm))
+			{
+				return false;
+			}
 		}
 
 		var _this = this;
 		this.oEC.Request({
 			postData: this.oEC.GetReqData('set_meeting_status',
 			{
-				event_id: parseInt(Params.eventId),
+				event_id: parseInt(params.eventId),
+				parent_id: parentId,
 				status: bAccept ? 'Y' : 'N',
-				status_comment: Params.comment || ''
+				reccurent_mode: params.reccurentMode || false,
+				current_date_from: params.currentDateFrom || false
 			}),
 			handler: function(oRes)
 			{
 				if (oRes)
 				{
-					if (!_this.oEC.userSettings.showDeclined && !_this.IsHost(oEvent) && !bAccept)
+					if (!_this.oEC.userSettings.showDeclined &&
+						!_this.IsHost(event) &&
+						!bAccept &&
+						!params.reccurentMode
+					)
 					{
-						_this.UnDisplay(_this.Get(Params.eventId));
+						_this.UnDisplay(_this.Get(params.eventId));
 					}
-					else if (bAccept)
+
+					if (bAccept || params.reccurentMode)
 					{
 						_this.ReloadAll(false);
 					}
@@ -445,11 +512,13 @@ JSECEvent.prototype = {
 
 	SmartId : function(e)
 	{
-		var sid = e.ID;
+		var sid = e.PARENT_ID || e.ID;
 		if (this.IsRecursive(e))
-			sid += e.DT_FROM_TS;
+			sid += '|' + e.DT_FROM_TS;
+
 		if (e['~TYPE'] == 'tasks')
-			sid += 'task';
+			sid += '|' + 'task';
+
 		return sid;
 	},
 
@@ -463,6 +532,9 @@ JSECEvent.prototype = {
 		this.oEC.arLoadedParentId = {};
 		this.oEC.arLoadedMonth = {};
 		this.oEC.arEvents = [];
+		this.oEC.SetTabNeedRefresh('month', true);
+		this.oEC.SetTabNeedRefresh('week', true);
+		this.oEC.SetTabNeedRefresh('day', true);
 
 		if (bTimeout === false)
 			this.oEC.LoadEvents();
@@ -481,8 +553,9 @@ JSECEvent.prototype = {
 				id: P.id || 0,
 				name: P.name,
 				desc: P.desc || '',
-				from_ts: parseInt(P.from, 10), // timestamp here
-				to_ts: parseInt(P.to, 10),
+				date_from: P.date_from,
+				date_to: P.date_to,
+				default_tz: P.default_tz,
 				sections: [P.calendar],
 				location: P.location || {OLD: '', NEW: '', CHANGED: ''},
 				month: month + 1,
@@ -531,12 +604,16 @@ JSECEvent.prototype = {
 				if (oRes.id && P.UFForm)
 					_this.SaveUserFields(P.UFForm, oRes.id);
 
-				_this.UnDisplay(oRes.id, false);
+				if (oRes.eventIds && oRes.eventIds.length > 0)
+				{
+					for (var i = 0; i < oRes.eventIds.length; i++)
+					{
+						_this.UnDisplay(oRes.eventIds[i], false);
+					}
+				}
+
 				_this.oEC.HandleEvents(oRes.events, oRes.attendees);
 				_this.oEC.arLoadedMonth[month + '.' + year] = true;
-
-				if (oRes.deletedEventId > 0)
-					_this.UnDisplay(oRes.deletedEventId, false);
 
 				_this.Display();
 				return true;
@@ -637,13 +714,25 @@ JSECEvent.prototype = {
 			if (this.bReadOnly)
 				return false;
 
+			if (!oEvent['IS_MEETING'] && oEvent.MEETING && oEvent.MEETING.ORGANIZER)
+				return false;
+
 			if (oEvent.SECT_ID)
 			{
 				var oSect = this.oEC.oSections[oEvent.SECT_ID];
 				if(oSect)
 				{
-					if (oSect.SUPERPOSED && (oSect.OWNER_ID != this.oEC.ownerId || oSect.CAL_TYPE != this.oEC.type))
+					if (oSect.SUPERPOSED &&
+						(oSect.OWNER_ID != this.oEC.ownerId || oSect.CAL_TYPE != this.oEC.type))
+					{
 						return false;
+					}
+
+					if (oSect.CAL_DAV_CAL && oSect.CAL_DAV_CAL.indexOf('@virtual/events/') !== -1)
+					{
+						return false;
+					}
+
 					if (oSect.PERM)
 						return !!oSect.PERM.edit;
 				}
@@ -662,7 +751,9 @@ JSECEvent.prototype = {
 			oDiv = BX.create('DIV', {props:{className : 'bxec-event-actions'}}),
 			oDiv_ = oDiv.appendChild(BX.create('DIV', {props: {className : P.bTimeline ? 'bxec-icon-cont-tl' : 'bxec-icon-cont'}}));
 
-		if (this.CanDo(oEvent, 'edit') || (isTask && oEvent.CAN_EDIT))
+		if ((!this.IsMeeting(oEvent) || (this.IsMeeting(oEvent) && this.IsHost(oEvent))) &&
+			(this.CanDo(oEvent, 'edit') || (isTask && oEvent.CAN_EDIT)) &&
+			(!oEvent.PRIVATE_EVENT || this.oEC.Personal()))
 		{
 			ic = oDiv_.appendChild(BX.create('I', {props: {className : 'bxec-event-but bxec-ev-edit-icon', title: isTask ? EC_MESS.TaskEdit : EC_MESS.EditEvent}}));
 			ic.setAttribute('data-bx-event-action', 'edit');
@@ -671,7 +762,7 @@ JSECEvent.prototype = {
 			// Add del button
 			if (this.IsAttendee(oEvent) && !this.IsHost(oEvent))
 			{
-				if (oEvent.USER_MEETING.STATUS != 'N')
+				if (oEvent.MEETING_STATUS != 'N')
 				{
 					ic = oDiv_.appendChild(BX.create('I', {props: {className : 'bxec-event-but bxec-ev-del-icon', title: EC_MESS.DelEncounter}}));
 					ic.setAttribute('data-bx-event-action', 'del');
@@ -699,7 +790,7 @@ JSECEvent.prototype = {
 	GetLabelStyle: function(oEvent)
 	{
 		var
-			labelStyle = ''
+			labelStyle = '',
 			imp = oEvent.IMPORTANCE;
 		if (imp && imp != 'normal')
 			labelStyle = ' style="' + (imp == 'high' ? 'font-weight: bold;' : 'color: #535353;') + '"';
@@ -708,37 +799,140 @@ JSECEvent.prototype = {
 
 	PreHandle: function(oEvent)
 	{
-		oEvent.DT_FROM_TS = BX.date.getBrowserTimestamp(oEvent.DT_FROM_TS);
-		oEvent.DT_TO_TS = BX.date.getBrowserTimestamp(oEvent.DT_TO_TS);
+		if (oEvent.DATE_FROM && oEvent.DATE_TO)
+		{
+			oEvent.dateFrom = BX.parseDate(oEvent.DATE_FROM);
+			oEvent.dateTo = BX.parseDate(oEvent.DATE_TO);
 
-		if (oEvent.DT_FROM_TS > oEvent.DT_TO_TS)
-			oEvent.DT_FROM_TS = oEvent.DT_TO_TS;
+			if (oEvent.dateFrom && oEvent.dateTo)
+			{
+				oEvent.DT_FROM_TS = Math.floor(oEvent.dateFrom.getTime() / 1000) * 1000;
+				oEvent.DT_TO_TS = Math.floor(oEvent.dateTo.getTime() / 1000) * 1000;
+
+				if (oEvent.DT_SKIP_TIME !== "Y")
+				{
+					oEvent.DT_FROM_TS -= (oEvent['~USER_OFFSET_FROM'] || 0) * 1000;
+					oEvent.DT_TO_TS -= (oEvent['~USER_OFFSET_TO'] || 0) * 1000;
+				}
+			}
+		}
+		return oEvent;
+	},
+
+	CutOffRecursiveEvent: function(oEvent, untilDate)
+	{
+		var _this = this;
+		// Change event
+		var untilDateTs = Math.floor(this.oEC.ParseDate(untilDate).getTime() / 1000) * 1000;
+		untilDate = this.oEC.FormatDate(new Date(untilDateTs - this.oEC.dayLength));
+
+		if (oEvent.RRULE)
+		{
+			oEvent.RRULE.UNTIL = untilDate;
+			oEvent.RRULE['~UNTIL'] = untilDate;
+		}
+
+		// Clean events
+		var
+			ev, arLoadedEventsId = {},
+			i, arEvents = [];
 
 		if (this.IsRecursive(oEvent))
 		{
-			oEvent['~DT_FROM_TS'] = BX.date.getBrowserTimestamp(oEvent['~DT_FROM_TS']);
-			oEvent['~DT_TO_TS'] = BX.date.getBrowserTimestamp(oEvent['~DT_TO_TS']);
-
-			if (oEvent.RRULE && oEvent.RRULE.UNTIL)
-				oEvent.RRULE.UNTIL = BX.date.getBrowserTimestamp(oEvent.RRULE.UNTIL);
+			for (i = 0; i < this.oEC.arEvents.length; i++)
+			{
+				ev = this.oEC.arEvents[i];
+				if (ev && (ev.ID !== oEvent.ID || ev.DT_FROM_TS < untilDateTs || ev['~TYPE'] == 'tasks'))
+				{
+					arLoadedEventsId[this.SmartId(ev)] = true;
+					arEvents.push(ev);
+				}
+				else
+				{
+					this.Blink(this.oEC.arEvents[i], false);
+				}
+			}
+			this.oEC.arEvents = arEvents;
+			this.oEC.arLoadedEventsId = arLoadedEventsId;
+		}
+		else
+		{
+			for (i = 0; i < this.oEC.arEvents.length; i++)
+			{
+				ev = this.oEC.arEvents[i];
+				if (ev && (ev.ID !== oEvent.ID || ev.DT_FROM_TS < untilDateTs || ev['~TYPE'] == 'tasks'))
+				{
+					arLoadedEventsId[this.SmartId(ev)] = true;
+					arEvents.push(ev);
+				}
+				else
+				{
+					this.Blink(this.oEC.arEvents[i], false);
+				}
+			}
+			this.oEC.arEvents = arEvents;
+			this.oEC.arLoadedEventsId = arLoadedEventsId;
 		}
 
-		return oEvent;
+		this.oEC.Request({
+			postData: this.oEC.GetReqData('change_recurcive_event_until',
+				{
+					event_id: parseInt(oEvent.ID),
+					until_date: untilDate
+				}),
+			handler: function()
+			{
+				_this.ReloadAll(false);
+				return true;
+			}
+		});
+
+		this.Display();
+	},
+
+	ExcludeRecursionDate: function(oEvent, date)
+	{
+		var _this = this;
+		var dateTs = Math.floor(this.oEC.ParseDate(date).getTime() / 1000) * 1000;
+
+		// Clean events
+		var
+			e, arLoadedEventsId = {},
+			i, arEvents = [];
+
+		for (i = 0; i < this.oEC.arEvents.length; i++)
+		{
+			e = this.oEC.arEvents[i];
+			if (e &&
+					(e.ID !== oEvent.ID ||
+					e.DT_FROM_TS != dateTs ||
+					e['~TYPE'] == 'tasks'))
+			{
+				arLoadedEventsId[this.SmartId(e)] = true;
+				arEvents.push(e);
+			}
+			else
+			{
+				this.Blink(this.oEC.arEvents[i], false);
+			}
+		}
+		this.oEC.arEvents = arEvents;
+		this.oEC.arLoadedEventsId = arLoadedEventsId;
+
+		this.oEC.Request({
+			postData: this.oEC.GetReqData('exclude_recursion_date',
+				{
+					event_id: parseInt(oEvent.ID),
+					exclude_date: date
+				}),
+			handler: function()
+			{
+				_this.ReloadAll(false);
+				return true;
+			}
+		});
+
+		this.Display();
 	}
 };
 })(window);
-
-
-
-// BX.addCustomEvent(this, 'onCalendarEventView', function(oEC, oEvent)
-// {
-	// if (oEvent && oEvent['~TYPE'] == 'tasks')
-	// {
-		// if (window.taskIFramePopup && parseInt(oEvent['ID']) > 0)
-		// {
-			// taskIFramePopup.view(parseInt(oEvent['ID']));
-			// oEC.DefaultAction(false);
-		// }
-	// }
-// });
-

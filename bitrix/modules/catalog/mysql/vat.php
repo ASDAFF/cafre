@@ -3,7 +3,7 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/catalog/general/vat.php"
 
 class CCatalogVat extends CAllCatalogVat
 {
-	function Add($arFields)
+	public static function Add($arFields)
 	{
 		global $DB;
 
@@ -19,7 +19,7 @@ class CCatalogVat extends CAllCatalogVat
 		return $ID;
 	}
 
-	function Update($ID, $arFields)
+	public static function Update($ID, $arFields)
 	{
 		global $DB;
 
@@ -40,7 +40,7 @@ class CCatalogVat extends CAllCatalogVat
 		return $ID;
 	}
 
-	function Delete($ID)
+	public static function Delete($ID)
 	{
 		global $DB;
 		$ID = intval($ID);
@@ -50,7 +50,7 @@ class CCatalogVat extends CAllCatalogVat
 		return true;
 	}
 
-	function GetListEx($arOrder = array(), $arFilter = array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array())
+	public static function GetListEx($arOrder = array(), $arFilter = array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array())
 	{
 		global $DB;
 
@@ -136,4 +136,3 @@ class CCatalogVat extends CAllCatalogVat
 		return $dbRes;
 	}
 }
-?>

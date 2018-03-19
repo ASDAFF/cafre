@@ -1,4 +1,4 @@
-<?
+<?php
 IncludeModuleLangFile(__FILE__);
 
 class CClusterMemcache
@@ -6,7 +6,7 @@ class CClusterMemcache
 	public static $systemConfigurationUpdate = null;
 	private static $arList = false;
 
-	function LoadConfig()
+	public static function LoadConfig()
 	{
 		if(self::$arList === false)
 		{
@@ -23,7 +23,7 @@ class CClusterMemcache
 		return self::$arList;
 	}
 
-	function SaveConfig($arServerList)
+	public static function SaveConfig($arServerList)
 	{
 		self::$arList = false;
 		$isOnline = false;
@@ -107,16 +107,15 @@ $arList = array(
 		}
 	}
 
-	function GetList()
+	public static function GetList()
 	{
 		$res = new CDBResult;
 		$res->InitFromArray(CClusterMemcache::LoadConfig());
 		return $res;
 	}
 
-	public function getServerList()
+	public static function getServerList()
 	{
-		global $DB;
 		$result = array();
 		foreach (CClusterMemcache::LoadConfig() as $arData)
 		{
@@ -133,7 +132,7 @@ $arList = array(
 		return $result;
 	}
 
-	function GetByID($id)
+	public static function GetByID($id)
 	{
 		$ar = CClusterMemcache::LoadConfig();
 		return $ar[$id];
@@ -141,8 +140,6 @@ $arList = array(
 
 	function Add($arFields)
 	{
-		global $DB, $CACHE_MANAGER;
-
 		if(!$this->CheckFields($arFields, false))
 			return false;
 
@@ -166,7 +163,7 @@ $arList = array(
 		return $ID;
 	}
 
-	function Delete($ID)
+	public static function Delete($ID)
 	{
 		$arServerList = CClusterMemcache::LoadConfig();
 		if(array_key_exists($ID, $arServerList))
@@ -235,7 +232,7 @@ $arList = array(
 		return true;
 	}
 
-	function Pause($ID)
+	public static function Pause($ID)
 	{
 		$arServer = CClusterMemcache::GetByID($ID);
 		if(is_array($arServer) && $arServer["STATUS"] != "READY")
@@ -245,7 +242,7 @@ $arList = array(
 		}
 	}
 
-	function Resume($ID)
+	public static function Resume($ID)
 	{
 		$arServer = CClusterMemcache::GetByID($ID);
 		if(is_array($arServer) && $arServer["STATUS"] == "READY")
@@ -255,7 +252,7 @@ $arList = array(
 		}
 	}
 
-	function GetStatus($id)
+	public static function GetStatus($id)
 	{
 		$arStats = array();
 
@@ -272,12 +269,13 @@ $arList = array(
 					'cmd_set' => null,
 					'get_misses' => null,
 					'get_hits' => null,
+					'evictions' => null,
 					'limit_maxbytes' => null,
 					'bytes' => null,
 					'curr_items' => null,
 					'listen_disabled_num' => null,
 				);
-				$ar = $ob->getStats();
+				$ar = $ob->getstats();
 				foreach($arStats as $key => $value)
 					$arStats[$key] = $ar[$key];
 			}
@@ -285,6 +283,4 @@ $arList = array(
 
 		return $arStats;
 	}
-
 }
-?>

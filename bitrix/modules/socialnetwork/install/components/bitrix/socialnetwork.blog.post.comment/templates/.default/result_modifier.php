@@ -15,6 +15,7 @@ $arResult["newCount"] = $arResult["~newCount"];
 include_once(__DIR__."/functions.php");
 include_once(__DIR__."/../mobile_app/functions.php");
 $arResult["PUSH&PULL"] = false;
+
 if(!empty($arResult["CommentsResult"]) && is_array($arResult["CommentsResult"]))
 {
 	$arResult["~CommentsResult"] = $arResult["CommentsResult"] = array_reverse($arResult["CommentsResult"]);
@@ -54,7 +55,16 @@ if(!empty($arResult["CommentsResult"]) && is_array($arResult["CommentsResult"]))
 		else
 		{
 			if (count($arResult["CommentsResult"]) > $arResult["newCount"])
+			{
 				$arResult["newCount"] = count($arResult["CommentsResult"]);
+				if (
+					$filter == ">=ID"
+					&& $commentId > 0
+				) // commentId in $_REQUEST
+				{
+					$arParams["PAGE_SIZE"] = $arResult["newCount"];
+				}
+			}
 			$arResult["CommentsResult"] = $arResult["~CommentsResult"];
 		}
 	}
@@ -63,7 +73,6 @@ if(!empty($arResult["CommentsResult"]) && is_array($arResult["CommentsResult"]))
 		|| $filter == ">=ID"
 	)
 	{
-		$arParams["PAGE_SIZE"] = ($arResult["newCount"] > $arParams["PAGE_SIZE"] ? $arResult["newCount"] : $arParams["PAGE_SIZE"]);
 		unset($_GET["commentId"]);
 	}
 
@@ -71,9 +80,10 @@ if(!empty($arResult["CommentsResult"]) && is_array($arResult["CommentsResult"]))
 	$arResult["NAV_RESULT"]->InitFromArray($arResult["CommentsResult"]);
 	$arResult["NAV_RESULT"]->NavStart($arParams["PAGE_SIZE"], false);
 	$arResult["NAV_STRING"] = str_replace(
-		array("#source_post_id#", "#post_id#", "#comment_id#", "&IFRAME=Y"),
-		array($arResult["Post"]["ID"], $arResult["Post"]["ID"], 0, ""),
-		$arResult["urlToMore"]);
+		array("#source_post_id#", "#post_id#", "#comment_id#", "&IFRAME=Y", "#LAST_LOG_TS#"),
+		array($arResult["Post"]["ID"], $arResult["Post"]["ID"], 0, "", intval($arParams["LAST_LOG_TS"])),
+		$arResult["urlToMore"]
+	);
 
 	while($comment = $arResult["NAV_RESULT"]->Fetch())
 	{

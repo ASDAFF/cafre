@@ -797,6 +797,8 @@ class CLearnLesson implements ILearnLesson
 
 		foreach(GetModuleEvents('learning', 'OnAfterLessonUpdate', true) as $arEvent)
 			ExecuteModuleEventEx($arEvent, array(&$arFields, $id));
+
+		return true;
 	}
 
 
@@ -1790,7 +1792,7 @@ class CLearnLesson implements ILearnLesson
 			if ($s = $obUserFieldsSql->getOrder(strtolower($by)))
 				$arSqlOrder[] = ' ' . $s . ' ' . $order . ' ';
 
-			if (substr($by, 0, 3) !== 'UF_')
+			if (substr($by, 0, 3) !== 'uf_')
 			{
 				if ( ! isset($arMap[$by]) )
 				{

@@ -13,3 +13,24 @@ td.delete-action {width: 20px;}
 	height: 21px;width: 28px;overflow: hidden;cursor: move;}
 .sort-td:hover {background-image: url(images/move_hover.gif) !important;}
 .lists-field-drag-tr {background: #dce4e6;}
+
+.bx-edit-tab-inner .wd-fa-add-file-light-cell
+{
+	background: #f8fafa;
+	border: none;
+	height: 76px;
+	padding: 10px 0;
+	vertical-align: middle;
+	width: 50%;
+}
+
+.bx-edit-tab-inner .files-list tr td {
+	color: #5c6470;
+	font-size: 13px;
+	line-height: 16px;
+	padding: 8px 0;
+	white-space: nowrap;
+	overflow: hidden;
+	vertical-align: top;
+	text-overflow: ellipsis;
+}

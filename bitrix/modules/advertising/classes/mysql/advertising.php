@@ -7,14 +7,14 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/advertising/classes/gene
 
 class CAdvContract extends CAdvContract_all
 {
-	function err_mess()
+	public static function err_mess()
 	{
 		$module_id = "advertising";
 		return "<br>Module: ".$module_id."<br>Class: CAdvContract<br>File: ".__FILE__;
 	}
 
 	// получаем список контрактов
-	function GetList(&$by, &$order, $arFilter=Array(), &$is_filtered, $CHECK_RIGHTS="Y")
+	public static function GetList(&$by, &$order, $arFilter=Array(), &$is_filtered, $CHECK_RIGHTS="Y")
 	{
 		$err_mess = (CAdvContract::err_mess())."<br>Function: GetList<br>Line: ";
 		global $DB, $USER, $APPLICATION, $strError;
@@ -243,13 +243,13 @@ class CAdvContract extends CAdvContract_all
 
 class CAdvBanner extends CAdvBanner_all
 {
-	function err_mess()
+	public static function err_mess()
 	{
 		$module_id = "advertising";
 		return "<br>Module: ".$module_id."<br>Class: CAdvBanner<br>File: ".__FILE__;
 	}
 
-	function Update($arFields, $BANNER_ID)
+	public static function Update($arFields, $BANNER_ID)
 	{
 		$err_mess = (CAdvBanner::err_mess())."<br>Function: Update<br>Line: ";
 		global $DB;
@@ -261,12 +261,27 @@ class CAdvBanner extends CAdvBanner_all
 		$DB->Update("b_adv_banner",$arFields,"WHERE ID='".intval($BANNER_ID)."'",$err_mess.__LINE__);
 	}
 
-	function getCTRSQL()
+	public static function getCTRSQL()
 	{
 		return 'IF (SUM(D.SHOW_COUNT) > 0, round((SUM(D.CLICK_COUNT)*100)/SUM(D.SHOW_COUNT),2), 0)	CTR';
 	}
 
-	function Add($arFields)
+	public static function addBindField($field, $bannerField, &$modifyStatus)
+	{
+		global $DB;
+		
+		$field = "'".$DB->ForSql($field)."'";
+		$bannerField = "'".$DB->ForSql($bannerField)."'";
+		
+		if ($bannerField != $field)
+		{
+			$modify_status = "Y";
+		}
+
+		return $field;
+	}
+
+	public static function Add($arFields)
 	{
 		$err_mess = (CAdvBanner::err_mess())."<br>Function: Add<br>Line: ";
 		global $DB;
@@ -279,7 +294,7 @@ class CAdvBanner extends CAdvBanner_all
 		return $BANNER_ID;
 	}
 
-	function GetList(&$by, &$order, $arFilter=Array(), &$is_filtered, $CHECK_RIGHTS="Y")
+	public static function GetList(&$by, &$order, $arFilter=Array(), &$is_filtered, $CHECK_RIGHTS="Y")
 	{
 		$err_mess = (CAdvBanner::err_mess())."<br>Function: GetList<br>Line: ";
 		global $DB, $USER, $APPLICATION;
@@ -601,7 +616,7 @@ class CAdvBanner extends CAdvBanner_all
 	}
 
 	// фиксируем клик по изображению баннера
-	function Click($BANNER_ID)
+	public static function Click($BANNER_ID)
 	{
 		$err_mess = (CAdvBanner::err_mess())."<br>Function: Click<br>Line: ";
 		global $DB;
@@ -690,7 +705,7 @@ class CAdvBanner extends CAdvBanner_all
 	}
 
 	// формирует массив весов всех возможных баннеров для текущей страницы
-	function GetPageWeights_RS()
+	public static function GetPageWeights_RS()
 	{
 		$err_mess = (CAdvBanner::err_mess())."<br>Function: GetPageWeights_RS<br>Line: ";
 		global $APPLICATION, $DB, $USER;
@@ -930,7 +945,7 @@ class CAdvBanner extends CAdvBanner_all
 	}
 
 	// периодически вызываемая функция очищающая устаревшие данные по динамике баннера по дням
-	function CleanUpDynamics()
+	public static function CleanUpDynamics()
 	{
 		set_time_limit(0);
 		ignore_user_abort(true);
@@ -944,7 +959,20 @@ class CAdvBanner extends CAdvBanner_all
 		return "CAdvBanner::CleanUpDynamics();";
 	}
 
-	function GetDynamicList_SQL($strSqlSearch)
+	public static function CleanUpAllDynamics()
+	{
+		set_time_limit(0);
+		ignore_user_abort(true);
+		$err_mess = CAdvBanner::err_mess()."<br>Function: CleanUpAllDynamics<br>Line: ";
+		global $DB;
+		$strSql = "DELETE FROM b_adv_banner_2_day WHERE 1 = 1";
+		$DB->Query($strSql, false, $err_mess.__LINE__);
+		$strSql = "OPTIMIZE TABLE b_adv_banner_2_day";
+		$DB->Query($strSql, false, $err_mess.__LINE__);
+		return "CAdvBanner::CleanUpAllDynamics();";
+	}
+
+	public static function GetDynamicList_SQL($strSqlSearch)
 	{
 		global $DB;
 		$strSql = "
@@ -982,7 +1010,7 @@ class CAdvBanner extends CAdvBanner_all
 
 class CAdvType extends CAdvType_all
 {
-	function err_mess()
+	public static function err_mess()
 	{
 		$module_id = "advertising";
 		return "<br>Module: ".$module_id."<br>Class: CAdvType<br>File: ".__FILE__;

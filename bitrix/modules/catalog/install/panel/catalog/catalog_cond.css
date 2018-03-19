@@ -1,13 +1,13 @@
 div.condition-border
 {
 	padding: 10px 8px 5px 70px;
-	
+
 	box-shadow: 0 1px 0 #eeeeee;
 	-webkit-box-shadow: 0 1px 0 #eeeeee;
 	border: 1px solid #caced7;
 	border-radius: 4px;
 	background-color: #fdfefe;
-	
+
 	font-weight: bold;
 	font-size: 13px;
 	line-height: 16px;
@@ -68,7 +68,7 @@ div.condition-container div.condition-container
 	border: 1px solid #bcc6d0;
 	border-radius: 4px;
 	background-color: #ddeaec;
-	
+
 	margin-top: 10px;
 	position: relative;
 }
@@ -80,7 +80,7 @@ div.condition-container div.condition-container div.condition-container
 	border: 1px solid #caced7;
 	border-radius: 4px;
 	background-color: #fdfefe;
-	
+
 	margin-top: 10px;
 	position: relative;
 }
@@ -92,6 +92,71 @@ div.condition-container span.control-string
 {
 	white-space: nowrap;
 	line-height: 16px;
+}
+
+.condition-list-wrap {
+	display: inline-block;
+	vertical-align: top;
+	padding-top: 2px;
+}
+
+.condition-item {
+	display: block;
+	height: 25px;
+	line-height: 25px;
+	position: relative;
+	font-size: 0;
+}
+
+.condition-item:first-child {
+	margin-top: -2px;
+}
+
+.condition-item-text {
+	border-bottom: 1px dashed #000;
+	cursor: pointer;
+	display: inline-block;
+	line-height: 17px;
+	vertical-align: middle;
+	font-size: 13px;
+}
+
+.condition-item-del {
+	cursor: pointer;
+	display: inline-block;
+	height: 20px;
+	line-height: 21px;
+	vertical-align: middle;
+	opacity: 0;
+	text-align: center;
+	width: 20px;
+}
+
+.condition-item-del:before {
+	background: url("images/cond-delete.png") no-repeat left top;
+	content: '';
+	display: inline-block;
+	height: 7px;
+	vertical-align: middle;
+	width: 7px;
+}
+
+.condition-item:hover .condition-item-del {
+	opacity: 0.7;
+}
+
+.condition-item-del:hover:before {
+	background: url("images/cond-delete.png") no-repeat left bottom;
+}
+
+.condition-dots {
+	cursor: pointer;
+	display: block;
+	width: 20px;
+}
+
+.condition-dots:first-child {
+	margin-top: 3px;
 }
 
 div.condition-border div.condition-simple-control
@@ -107,9 +172,9 @@ div.condition-border div.condition-simple-control
 	background-image: -moz-linear-gradient(top, #fafbfc, #f8f9fa);
 	background-image: -o-linear-gradient(top, #fafbfc, #f8f9fa);
 	background-image: linear-gradient(top, #fafbfc, #f8f9fa);
-	
+
 	font-weight: bold;
-	
+
 	margin-top: 10px;
 	position: relative;
 }
@@ -127,9 +192,9 @@ div.condition-container div.condition-simple-control
 	background-image: -moz-linear-gradient(top, #fafbfc, #f8f9fa);
 	background-image: -o-linear-gradient(top, #fafbfc, #f8f9fa);
 	background-image: linear-gradient(top, #fafbfc, #f8f9fa);
-	
+
 	font-weight: bold;
-	
+
 	margin-top: 10px;
 	position: relative;
 }
@@ -150,17 +215,18 @@ div.condition-container div.condition-container div.condition-simple-control
 
 div.condition-simple-control a,
 div.condition-simple-control a:link,
+div.condition-simple-control a:visited,
+div.condition-simple-control a,
+div.condition-simple-control a:link,
 div.condition-simple-control a:visited
 {
 	color: #000000; text-decoration: none; cursor: pointer; border-bottom: 1px dashed #000000;
 }
 
-div.condition-simple-control a:hover
-{
-	color: #2c4b90; text-decoration: none; cursor: pointer; border-bottom: 1px solid transparent;
-}
-
-div.condition-simple-control a:active
+div.condition-simple-control a:hover,
+div.condition-simple-control a:active,
+.condition-item-text:hover,
+.condition-item-text:active
 {
 	color: #2c4b90; text-decoration: none; cursor: pointer; border-bottom: 1px solid transparent;
 }
@@ -191,7 +257,7 @@ div.condition-add a,
 div.condition-add a:link,
 div.condition-add a:visited
 {
-	color: #113c7d; text-decoration: none; cursor: pointer; border-bottom: 1px dashed #113c7d; 
+	color: #113c7d; text-decoration: none; cursor: pointer; border-bottom: 1px dashed #113c7d;
 }
 
 div.condition-add a:hover
@@ -240,17 +306,17 @@ div.condition-logic
 	position: absolute;
 	left: -60px;
 	bottom: -20px;
-	width: 45px;
+	width: 55px;
 	height: 30px;
-	border-radius: 10px;
-	color: #ffffff;
-	font-weight: bold;
+	border-radius: 4px;
+	color: #fff !important;
+	font-weight: bold !important;
 	border: 0 none transparent;
-	line-height: 30px;
-	white-space: nowrap;
-	padding: 0 20px 0 10px;
+	line-height: 30px !important;
+	white-space: nowrap !important;
+	padding: 0 10px 0 5px;
 	cursor: pointer;
-	text-align: right;
+	text-align: center !important;
 }
 
 div.condition-logic-and
@@ -275,7 +341,8 @@ span.condition-separator
 	font-style: italic;
 }
 
-span.condition-alert
+span.condition-alert,
+span.list-alert
 {
 	display: inline-block;
 	width: 26px;
@@ -287,5 +354,5 @@ span.condition-alert
 
 span.condition-space
 {
-	margin-right: 10px;	
+	margin-right: 10px;
 }

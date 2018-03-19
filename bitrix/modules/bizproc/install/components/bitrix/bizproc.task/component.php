@@ -36,6 +36,7 @@ $arParams["USER_ID"] = intval(empty($arParams["USER_ID"]) ? $currentUserId : $ar
 $arResult["ShowMode"] = "Form";
 $arResult['ReadOnly'] = false;
 $arResult['IsComplete'] = false;
+$arResult['isAdmin'] = $isAdmin;
 
 if ($arParams["USER_ID"] != $currentUserId)
 {
@@ -44,7 +45,6 @@ if ($arParams["USER_ID"] != $currentUserId)
 		ShowError(GetMessage("BPAT_NO_ACCESS"));
 		return false;
 	}
-	$arResult["ShowMode"] = "Success";
 	$arResult['ReadOnly'] = true;
 }
 
@@ -81,7 +81,7 @@ if ($arParams["TASK_ID"] > 0)
 		array("ID" => $arParams["TASK_ID"], "USER_ID" => $arParams["USER_ID"]),
 		false,
 		false,
-		array("ID", "WORKFLOW_ID", "ACTIVITY", "ACTIVITY_NAME", "MODIFIED", "OVERDUE_DATE", "NAME", "DESCRIPTION", "PARAMETERS", 'IS_INLINE', 'STATUS', 'USER_STATUS', 'DOCUMENT_NAME')
+		array("ID", "WORKFLOW_ID", "ACTIVITY", "ACTIVITY_NAME", "MODIFIED", "OVERDUE_DATE", "NAME", "DESCRIPTION", "PARAMETERS", 'IS_INLINE', 'STATUS', 'USER_STATUS', 'DOCUMENT_NAME', 'DELEGATION_TYPE')
 	);
 	$arResult["TASK"] = $dbTask->GetNext();
 }
@@ -93,7 +93,7 @@ if (!$arResult["TASK"] && strlen($arParams["WORKFLOW_ID"]) > 0)
 		array("WORKFLOW_ID" => $arParams["WORKFLOW_ID"], "USER_ID" => $arParams["USER_ID"], 'USER_STATUS' => CBPTaskUserStatus::Waiting),
 		false,
 		false,
-		array("ID", "WORKFLOW_ID", "ACTIVITY", "ACTIVITY_NAME", "MODIFIED", "OVERDUE_DATE", "NAME", "DESCRIPTION", "PARAMETERS", 'IS_INLINE', 'STATUS', 'USER_STATUS', 'DOCUMENT_NAME')
+		array("ID", "WORKFLOW_ID", "ACTIVITY", "ACTIVITY_NAME", "MODIFIED", "OVERDUE_DATE", "NAME", "DESCRIPTION", "PARAMETERS", 'IS_INLINE', 'STATUS', 'USER_STATUS', 'DOCUMENT_NAME', 'DELEGATION_TYPE')
 	);
 	$arResult["TASK"] = $dbTask->GetNext();
 }
@@ -202,6 +202,7 @@ $arResult['WORKFLOW_TEMPLATE_NAME'] = $arState["TEMPLATE_NAME"];
 
 $runtime = CBPRuntime::GetRuntime();
 $runtime->StartRuntime();
+/** @var CBPDocumentService $documentService */
 $documentService = $runtime->GetService("DocumentService");
 
 $arResult['DOCUMENT_ICON'] = $documentService->getDocumentIcon($arResult['TASK']['PARAMETERS']['DOCUMENT_ID']);
@@ -210,15 +211,14 @@ if (empty($arResult['TASK']['DOCUMENT_NAME']))
 	$arResult['TASK']['DOCUMENT_NAME'] = htmlspecialcharsbx($documentService->getDocumentName($arResult['TASK']['PARAMETERS']['DOCUMENT_ID']));
 }
 
-if ($arResult["ShowMode"] != "Success")
+if ($arResult["ShowMode"] != "Success" && !$arResult['ReadOnly'])
 {
 	try
 	{
 		$documentType = $documentService->GetDocumentType($arResult["TASK"]["PARAMETERS"]["DOCUMENT_ID"]);
 		if (!array_key_exists("BP_AddShowParameterInit_".$documentType[0]."_".$documentType[1]."_".$documentType[2], $GLOBALS))
 		{
-			$GLOBALS["BP_AddShowParameterInit_".$documentType[0]."_".$documentType[1]."_".$documentType[2]] = 1;
-			CBPDocument::AddShowParameterInit($documentType[0], "only_users", $documentType[2], $documentType[1]);
+			CBPDocument::AddShowParameterInit($documentType[0], "only_users", $documentType[2], $documentType[1], $arResult["TASK"]["PARAMETERS"]["DOCUMENT_ID"][2]);
 		}
 
 		// deprecated old style
@@ -231,6 +231,9 @@ if ($arResult["ShowMode"] != "Success")
 
 		// new style
 		$arResult['TaskControls'] = CBPDocument::getTaskControls($arResult["TASK"]);
+
+		if ($documentType)
+			$arResult['TypesMap'] = $documentService->getTypesMap($documentType);
 	}
 	catch (Exception $e)
 	{

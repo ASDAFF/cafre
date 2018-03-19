@@ -1,26 +1,36 @@
 <?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
 
-if (!CModule::IncludeModule('bizproc'))
+if (!CModule::IncludeModule('bizproc') || !CBPRuntime::isFeatureEnabled())
 {
 	ShowError(GetMessage('BIZPROC_MODULE_NOT_INSTALLED'));
 	return;
 }
 
-$dir = trim(preg_replace("'[\\\\/]+'", "/", (dirname(__FILE__)."/")));
-__IncludeLang($dir."lang/".LANGUAGE_ID."/bizproc_workflow_admin.php");
-$APPLICATION->IncludeComponent("bitrix:lists.element.navchain", ".default", array(
-	"IBLOCK_TYPE_ID" => $arParams["IBLOCK_TYPE_ID"],
-	"IBLOCK_ID" => $arResult["VARIABLES"]["list_id"],
-	"LISTS_URL" => $arResult["FOLDER"].$arResult["URL_TEMPLATES"]["lists"],
-	"LIST_URL" => $arResult["FOLDER"].$arResult["URL_TEMPLATES"]["list"],
-	"ADD_NAVCHAIN_SECTIONS" => "N",
-	"ADD_NAVCHAIN_ELEMENT" => "N",
-	"CACHE_TYPE" => $arParams["CACHE_TYPE"],
-	"CACHE_TIME" => $arParams["CACHE_TIME"],
-	),
-	$component,
-	array("HIDE_ICONS" => "Y")
-);
+CJSCore::Init(array('lists'));
+
+$listElementUrl = CHTTP::urlAddParams(str_replace(
+	array("#list_id#", "#section_id#"),
+	array($arResult["VARIABLES"]["list_id"], 0),
+	$arResult["FOLDER"].$arResult["URL_TEMPLATES"]["list"]
+), array("list_section_id" => ""));
+
+$isBitrix24Template = (SITE_TEMPLATE_ID == "bitrix24");
+if($isBitrix24Template)
+{
+	$this->SetViewTarget("pagetitle", 100);
+}
+?>
+<div class="pagetitle-container pagetitle-align-right-container">
+	<a href="<?=$listElementUrl?>" class="lists-list-back">
+		<?=GetMessage("CT_BL_TOOLBAR_RETURN_LIST_ELEMENT")?>
+	</a>
+</div>
+<?
+if($isBitrix24Template)
+{
+	$this->EndViewTarget();
+}
+
 $APPLICATION->IncludeComponent(
 	"bitrix:main.interface.toolbar",
 	"",
@@ -46,18 +56,6 @@ $APPLICATION->IncludeComponent(
 				),
 				"ICON" => "btn-new",
 			),
-			array(
-				"SEPARATOR" => "Y",
-			),
-			array(
-				"TEXT" => htmlspecialcharsbx(CIBlock::GetArrayByID($arResult["VARIABLES"]["list_id"], "ELEMENTS_NAME")),
-				"TITLE" => GetMessage("CT_BL_ELEMENTS_TITLE"),
-				"LINK" => CHTTP::urlAddParams(str_replace(
-					array("#list_id#", "#section_id#"),
-					array($arResult["VARIABLES"]["list_id"], 0),
-					$arResult["FOLDER"].$arResult["URL_TEMPLATES"]["list"]
-				), array("list_section_id" => ""))
-			),
 		),
 	),
 	$component, array("HIDE_ICONS" => "Y")
@@ -70,8 +68,8 @@ if($arParams["IBLOCK_TYPE_ID"] == COption::GetOptionString("lists", "livefeed_ib
 }
 else
 {
-	$moduleId = "iblock";
-	$entity = "CIBlockDocument";
+	$moduleId = "lists";
+	$entity = 'Bitrix\Lists\BizprocDocumentLists';
 	$createDefaultTemplate = 'Y';
 }
 $APPLICATION->IncludeComponent("bitrix:bizproc.workflow.list", ".default", Array(

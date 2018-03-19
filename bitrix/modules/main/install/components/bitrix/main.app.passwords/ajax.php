@@ -37,7 +37,7 @@ if($request->isPost())
 {
 	$post = $request->getPostList()->toArray();
 
-	$post = Main\Text\Encoding::convertEncodingArray($post, "UTF-8", $context->getCulture()->getCharset());
+	$post = Main\Text\Encoding::convertEncoding($post, "UTF-8", $context->getCulture()->getCharset());
 
 	if($post["action"] == "delete" && ($id = intval($post["ID"])) > 0)
 	{

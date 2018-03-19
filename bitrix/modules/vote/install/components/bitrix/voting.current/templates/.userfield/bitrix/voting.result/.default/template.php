@@ -1,6 +1,5 @@
 <?if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
-$uid = randString(5);
-$controller = "BX('vote-".$uid."')";
+$uid = $arParams["UID"];
 
 if (!empty($arResult["ERROR_MESSAGE"])):?>
 <div class="vote-note-box vote-note-error">
@@ -44,7 +43,5 @@ endif;
 	</ol>
 <?
 $this->__component->arParams["RETURN"] = array(
-	"uid" => $uid,
-	"controller" => $controller,
 	"lastVote" => $arResult["LAST_VOTE"]);
 ?>

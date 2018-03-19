@@ -1,8 +1,9 @@
-<?
+<?php
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/statistic/classes/general/stateventtype.php");
+
 class CStatEventType extends CAllStatEventType
 {
-	function GetByID($ID)
+	public static function GetByID($ID)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -22,7 +23,7 @@ class CStatEventType extends CAllStatEventType
 		return $res;
 	}
 
-	function GetList(&$by, &$order, $arFilter=Array(), &$is_filtered, $LIMIT=false)
+	public static function GetList(&$by, &$order, $arFilter=Array(), &$is_filtered, $LIMIT=false)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -376,7 +377,7 @@ class CStatEventType extends CAllStatEventType
 		return $res;
 	}
 
-	function GetSimpleList(&$by, &$order, $arFilter=Array(), &$is_filtered)
+	public static function GetSimpleList(&$by, &$order, $arFilter=Array(), &$is_filtered)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -456,7 +457,7 @@ class CStatEventType extends CAllStatEventType
 		return $res;
 	}
 
-	function GetDropDownList($strSqlOrder="ORDER BY EVENT1, EVENT2")
+	public static function GetDropDownList($strSqlOrder="ORDER BY EVENT1, EVENT2")
 	{
 		$DB = CDatabase::GetModuleConnection('statistic');
 		$err_mess = "File: ".__FILE__."<br>Line: ";
@@ -472,7 +473,7 @@ class CStatEventType extends CAllStatEventType
 		return $res;
 	}
 
-	function GetDynamicList($EVENT_ID, &$by, &$order, &$arMaxMin, $arFilter=Array())
+	public static function GetDynamicList($EVENT_ID, &$by, &$order, &$arMaxMin, $arFilter=Array())
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -570,7 +571,7 @@ class CStatEventType extends CAllStatEventType
 		return $res;
 	}
 
-	function GetGraphArray_SQL($strSqlSearch)
+	public static function GetGraphArray_SQL($strSqlSearch)
 	{
 		$DB = CDatabase::GetModuleConnection('statistic');
 		$strSql = "
@@ -596,4 +597,3 @@ class CStatEventType extends CAllStatEventType
 		return $strSql;
 	}
 }
-?>

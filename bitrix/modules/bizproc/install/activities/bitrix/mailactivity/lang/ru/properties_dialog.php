@@ -11,4 +11,7 @@ $MESS ['BPMA_PD_DIRRECT_MAIL_Y'] = "Прямая отправка";
 $MESS ['BPMA_PD_DIRRECT_MAIL_N'] = "Отправка через систему сообщений";
 $MESS ['BPMA_PD_MAIL_SITE'] = "Сайт шаблона сообщения";
 $MESS ['BPMA_PD_MAIL_SITE_OTHER'] = "другой";
+$MESS ['BPMA_PD_MAIL_SEPARATOR'] = "Разделитель почтовых адресов";
+$MESS ['BPMA_PD_FILE'] = "Вложения";
+$MESS ['BPMA_PD_FILE_DESCRIPTION'] = "Только для отправки через систему сообщений";
 ?>

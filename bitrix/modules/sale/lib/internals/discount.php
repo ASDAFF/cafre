@@ -7,9 +7,14 @@
  */
 namespace Bitrix\Sale\Internals;
 
-use Bitrix\Main;
-use Bitrix\Main\Application;
-use Bitrix\Main\Localization\Loc;
+use Bitrix\Main,
+	Bitrix\Main\Application,
+	Bitrix\Main\Config,
+	Bitrix\Main\Localization\Loc,
+	Bitrix\Sale\Discount\Actions,
+	Bitrix\Sale\Discount\Gift,
+	Bitrix\Sale\Discount\Index;
+use Bitrix\Sale\Discount\Analyzer;
 
 Loc::loadMessages(__FILE__);
 
@@ -37,15 +42,21 @@ Loc::loadMessages(__FILE__);
  * <li> CREATED_BY int optional
  * <li> PRIORITY int optional default 1
  * <li> LAST_DISCOUNT bool optional default 'Y'
- * <li> VERSION int optional default 1
+ * <li> VERSION int optional default 3
  * <li> CONDITIONS text optional
  * <li> CONDITIONS_LIST text optional
  * <li> UNPACK text optional
  * <li> ACTIONS text optional
  * <li> ACTIONS_LIST text optional
  * <li> APPLICATION text optional
+ * <li> PREDICTION_TEXT text optional
+ * <li> PREDICTIONS text optional
+ * <li> PREDICTIONS_APP text optional
  * <li> USE_COUPONS bool optional default 'N'
+ * <li> USE_INDEX bool optional default 'N'
+ * <li> PRESET_ID string optional
  * <li> EXECUTE_MODULE string(50) mandatory default 'all'
+ * <li> EXECUTE_MODE int default 0
  * <li> CREATED_BY_USER reference to {@link \Bitrix\Main\UserTable}
  * <li> MODIFIED_BY_USER reference to {@link \Bitrix\Main\UserTable}
  * </ul>
@@ -56,6 +67,10 @@ class DiscountTable extends Main\Entity\DataManager
 {
 	const VERSION_OLD = 0x0001;
 	const VERSION_NEW = 0x0002;
+	const VERSION_15 = 0x0003;
+
+	const EXECUTE_MODE_GENERAL = 0;
+	const EXECUTE_MODE_SEPARATELY = 2;
 
 	protected static $deleteCoupons = false;
 
@@ -147,9 +162,13 @@ class DiscountTable extends Main\Entity\DataManager
 				'default_value' => 'Y',
 				'title' => Loc::getMessage('DISCOUNT_ENTITY_LAST_DISCOUNT_FIELD')
 			)),
+			'LAST_LEVEL_DISCOUNT' => new Main\Entity\BooleanField('LAST_LEVEL_DISCOUNT', array(
+				'values' => array('N', 'Y'),
+				'default_value' => 'N',
+			)),
 			'VERSION' => new Main\Entity\EnumField('VERSION', array(
-				'values' => array(self::VERSION_OLD, self::VERSION_NEW),
-				'default_value' => self::VERSION_NEW,
+				'values' => array(self::VERSION_OLD, self::VERSION_NEW, self::VERSION_15),
+				'default_value' => self::VERSION_15,
 				'title' => Loc::getMessage('DISCOUNT_ENTITY_VERSION_FIELD')
 			)),
 			'CONDITIONS_LIST' => new Main\Entity\TextField('CONDITIONS_LIST', array(
@@ -166,6 +185,13 @@ class DiscountTable extends Main\Entity\DataManager
 			)),
 			'ACTIONS' => new Main\Entity\ExpressionField('ACTIONS', '%s', 'ACTIONS_LIST'),
 			'APPLICATION' => new Main\Entity\TextField('APPLICATION', array()),
+			'PREDICTION_TEXT' => new Main\Entity\TextField('PREDICTION_TEXT', array()),
+			'PREDICTIONS_APP' => new Main\Entity\TextField('PREDICTIONS_APP', array()),
+			'PREDICTIONS_LIST' => new Main\Entity\TextField('PREDICTIONS_LIST', array(
+				'serialized' => true,
+				'column_name' => 'PREDICTIONS',
+			)),
+			'PREDICTIONS' => new Main\Entity\ExpressionField('PREDICTIONS', '%s', 'PREDICTIONS_LIST'),
 			'USE_COUPONS' => new Main\Entity\BooleanField('USE_COUPONS', array(
 				'values' => array('N', 'Y'),
 				'default_value' => 'N',
@@ -175,6 +201,21 @@ class DiscountTable extends Main\Entity\DataManager
 				'validation' => array(__CLASS__, 'validateExecuteModule'),
 				'title' => Loc::getMessage('DISCOUNT_ENTITY_EXECUTE_MODULE_FIELD')
 			)),
+			'EXECUTE_MODE' => new Main\Entity\IntegerField('EXECUTE_MODE', array(
+				'default_value' => self::EXECUTE_MODE_GENERAL,
+			)),
+			'HAS_INDEX' => new Main\Entity\BooleanField('HAS_INDEX', array(
+				'values' => array('N', 'Y'),
+				'default_value' => 'N',
+			)),
+			'PRESET_ID' => new Main\Entity\StringField('PRESET_ID', array(
+				'validation' => array(__CLASS__, 'validatePresetId'),
+			)),
+			'SHORT_DESCRIPTION_STRUCTURE' => new Main\Entity\TextField('SHORT_DESCRIPTION_STRUCTURE', array(
+				'serialized' => true,
+				'column_name' => 'SHORT_DESCRIPTION',
+			)),
+			'SHORT_DESCRIPTION' => new Main\Entity\ExpressionField('SHORT_DESCRIPTION', '%s', 'SHORT_DESCRIPTION_STRUCTURE'),
 			'CREATED_BY_USER' => new Main\Entity\ReferenceField(
 				'CREATED_BY_USER',
 				'Bitrix\Main\User',
@@ -190,6 +231,12 @@ class DiscountTable extends Main\Entity\DataManager
 			'COUPON' => new Main\Entity\ReferenceField(
 				'COUPON',
 				'Bitrix\Sale\Internals\DiscountCoupon',
+				array('=this.ID' => 'ref.DISCOUNT_ID'),
+				array('join_type' => 'LEFT')
+			),
+			'DISCOUNT_ENTITY' => new Main\Entity\ReferenceField(
+				'DISCOUNT_ENTITY',
+				'Bitrix\Sale\Internals\DiscountEntities',
 				array('=this.ID' => 'ref.DISCOUNT_ID'),
 				array('join_type' => 'LEFT')
 			)
@@ -264,6 +311,18 @@ class DiscountTable extends Main\Entity\DataManager
 	}
 
 	/**
+	 * Returns validators for PRESET_ID field.
+	 *
+	 * @return array
+	 */
+	public static function validatePresetId()
+	{
+		return array(
+			new Main\Entity\Validator\Length(null, 255),
+		);
+	}
+
+	/**
 	 * Default onBeforeAdd handler. Absolutely necessary.
 	 *
 	 * @param Main\Entity\Event $event		Event object.
@@ -272,18 +331,19 @@ class DiscountTable extends Main\Entity\DataManager
 	public static function onBeforeAdd(Main\Entity\Event $event)
 	{
 		$result = new Main\Entity\EventResult;
-		$data = $event->getParameter('fields');
+		$fields = $event->getParameter('fields');
 
 		$modifyFieldList = array(
 			'DISCOUNT_VALUE' => 0,
 			'DISCOUNT_TYPE' => 'P',
 		);
-		if (isset($data['LID']))
-			$modifyFieldList['CURRENCY'] = SiteCurrencyTable::getSiteCurrency($data['LID']);
-		self::setUserID($modifyFieldList, $data, array('CREATED_BY', 'MODIFIED_BY'));
-		self::setTimestamp($modifyFieldList, $data, array('DATE_CREATE', 'TIMESTAMP_X'));
+		if (isset($fields['LID']))
+			$modifyFieldList['CURRENCY'] = SiteCurrencyTable::getSiteCurrency($fields['LID']);
+		self::setUserID($modifyFieldList, $fields, array('CREATED_BY', 'MODIFIED_BY'));
+		self::setTimestamp($modifyFieldList, $fields, array('DATE_CREATE', 'TIMESTAMP_X'));
+		self::setShortDescription($modifyFieldList, $fields);
 
-		self::copyOldFields($modifyFieldList, $data);
+		self::copyOldFields($modifyFieldList, $fields);
 		$result->unsetField('CONDITIONS');
 		$result->unsetField('ACTIONS');
 
@@ -295,6 +355,109 @@ class DiscountTable extends Main\Entity\DataManager
 	}
 
 	/**
+	 * Default onAfterAdd handler. Absolutely necessary.
+	 *
+	 * @param Main\Entity\Event $event		Event object.
+	 * @return void
+	 */
+	public static function onAfterAdd(Main\Entity\Event $event)
+	{
+		$id = $event->getParameter('primary');
+		$fields = $event->getParameter('fields');
+		if (isset($fields['ACTIONS_LIST']))
+		{
+			if (!is_array($fields['ACTIONS_LIST']) && \CheckSerializedData($fields['ACTIONS_LIST']))
+				$fields['ACTIONS_LIST'] = unserialize($fields['ACTIONS_LIST']);
+			if (is_array($fields['ACTIONS_LIST']))
+			{
+				$giftManager = Gift\Manager::getInstance();
+				if ($giftManager->isContainGiftAction($fields))
+				{
+					if (!$giftManager->existsDiscountsWithGift())
+						$giftManager->enableExistenceDiscountsWithGift();
+					Gift\RelatedDataTable::fillByDiscount($fields + $id);
+				}
+				unset($giftManager);
+			}
+		}
+
+		$specificFields = array(
+			'EXECUTE_MODE' => static::resolveExecuteModeByDiscountId($id),
+		);
+
+		if (isset($fields['CONDITIONS_LIST']))
+		{
+			$specificFields['HAS_INDEX'] = Index\Manager::getInstance()->indexDiscount($fields + $id) ? 'Y' : 'N';
+		}
+
+		static::updateSpecificFields($id['ID'], $specificFields);
+		static::updateConfigurationIfNeeded($fields, $specificFields);
+	}
+
+	/**
+	 * Resolves execute mode of discount. Yes, we are getting whole discount by id. But id is necessary to know and
+	 * we can do analyze only whole discount.
+	 * @param $discountId
+	 *
+	 * @return int
+	 */
+	protected static function resolveExecuteModeByDiscountId($discountId)
+	{
+		$fields = static::getRowById($discountId);
+
+		return Analyzer::getInstance()->canCalculateSeparately($fields) ?
+			self::EXECUTE_MODE_SEPARATELY : self::EXECUTE_MODE_GENERAL;
+	}
+
+	/**
+	 * Updates discount configuration. For example the method sets possibility of separately discount calculation.
+	 *
+	 * @param array $fields Fields.
+	 * @param array $specificFields Specific fields which based on fields and calculated.
+	 * @return void
+	 */
+	protected static function updateConfigurationIfNeeded(array $fields, array $specificFields)
+	{
+		if (
+			isset($specificFields['EXECUTE_MODE']) &&
+			$specificFields['EXECUTE_MODE'] == self::EXECUTE_MODE_GENERAL &&
+			isset($fields['ACTIVE']) &&
+			$fields['ACTIVE'] === 'Y'
+		)
+		{
+			Config\Option::set('sale', 'discount_separately_calculation', 'N');
+		}
+		else
+		{
+			$canCalculateSeparately = Analyzer::getInstance()->canCalculateSeparatelyAllDiscount();
+			Config\Option::set('sale', 'discount_separately_calculation', $canCalculateSeparately? 'Y' : 'N');
+		}
+	}
+
+	/**
+	 * Updates fields without ORM logic.
+	 * @param $id
+	 * @param array $fields
+	 */
+	protected static function updateSpecificFields($id, array $fields)
+	{
+		if (!$fields)
+		{
+			return;
+		}
+
+		$connection = Main\Application::getConnection();
+		$sqlHelper = $connection->getSqlHelper();
+
+		$tableName = static::getTableName();
+		$update = $sqlHelper->prepareUpdate($tableName, $fields);
+
+		$connection->queryExecute(
+			"UPDATE {$tableName} SET {$update[0]} WHERE ID={$id}"
+		);
+	}
+
+	/**
 	 * Default onBeforeUpdate handler. Absolutely necessary.
 	 *
 	 * @param Main\Entity\Event $event		Event object.
@@ -303,13 +466,14 @@ class DiscountTable extends Main\Entity\DataManager
 	public static function onBeforeUpdate(Main\Entity\Event $event)
 	{
 		$result = new Main\Entity\EventResult;
-		$data = $event->getParameter('fields');
+		$fields = $event->getParameter('fields');
 
 		$modifyFieldList = array();
-		self::setUserID($modifyFieldList, $data, array('MODIFIED_BY'));
-		self::setTimestamp($modifyFieldList, $data, array('TIMESTAMP_X'));
+		self::setUserID($modifyFieldList, $fields, array('MODIFIED_BY'));
+		self::setTimestamp($modifyFieldList, $fields, array('TIMESTAMP_X'));
+		self::setShortDescription($modifyFieldList, $fields);
 
-		self::copyOldFields($modifyFieldList, $data);
+		self::copyOldFields($modifyFieldList, $fields);
 		$result->unsetField('CONDITIONS');
 		$result->unsetField('ACTIONS');
 
@@ -328,12 +492,39 @@ class DiscountTable extends Main\Entity\DataManager
 	 */
 	public static function onAfterUpdate(Main\Entity\Event $event)
 	{
-		$id = $event->getParameter('id');
-		$id = end($id);
-		$data = $event->getParameter('fields');
-		if (isset($data['ACTIVE']))
-			DiscountGroupTable::changeActiveByDiscount($id, $data['ACTIVE']);
-		unset($data, $id);
+		$id = $event->getParameter('primary');
+		$fields = $event->getParameter('fields');
+		if (isset($fields['ACTIVE']))
+			DiscountGroupTable::changeActiveByDiscount($id['ID'], $fields['ACTIVE']);
+
+		if (isset($fields['ACTIONS_LIST']))
+		{
+			if (!is_array($fields['ACTIONS_LIST']) && \CheckSerializedData($fields['ACTIONS_LIST']))
+				$fields['ACTIONS_LIST'] = unserialize($fields['ACTIONS_LIST']);
+			if (is_array($fields['ACTIONS_LIST']))
+			{
+				Gift\RelatedDataTable::deleteByDiscount($id['ID']);
+				$giftManager = Gift\Manager::getInstance();
+				if ($giftManager->isContainGiftAction($fields))
+				{
+					if (!$giftManager->existsDiscountsWithGift())
+						$giftManager->enableExistenceDiscountsWithGift();
+					Gift\RelatedDataTable::fillByDiscount($fields + $id);
+				}
+			}
+		}
+
+		$specificFields = array(
+			'EXECUTE_MODE' => static::resolveExecuteModeByDiscountId($id),
+		);
+
+		if (isset($fields['CONDITIONS_LIST']))
+		{
+			$specificFields['HAS_INDEX'] = Index\Manager::getInstance()->indexDiscount($fields + $id) ? 'Y' : 'N';
+		}
+
+		static::updateSpecificFields($id['ID'], $specificFields);
+		static::updateConfigurationIfNeeded($fields, $specificFields);
 	}
 
 	/**
@@ -344,17 +535,18 @@ class DiscountTable extends Main\Entity\DataManager
 	 */
 	public static function onDelete(Main\Entity\Event $event)
 	{
-		$id = $event->getParameter('id');
-		$discountIterator = self::getList(array(
+		$id = $event->getParameter('primary');
+		$id = $id['ID'];
+		$discount = self::getList(array(
 			'select' => array('ID', 'USE_COUPONS'),
 			'filter' => array('=ID' => $id)
-		));
-		if ($discount = $discountIterator->fetch())
+		))->fetch();
+		if (!empty($discount))
 		{
 			if ((string)$discount['USE_COUPONS'] === 'Y')
 				self::$deleteCoupons = $discount['ID'];
 		}
-		unset($discount, $discountIterator, $id);
+		unset($discount, $id);
 	}
 
 	/**
@@ -365,8 +557,8 @@ class DiscountTable extends Main\Entity\DataManager
 	 */
 	public static function onAfterDelete(Main\Entity\Event $event)
 	{
-		$id = $event->getParameter('id');
-		$id = end($id);
+		$id = $event->getParameter('primary');
+		$id = $id['ID'];
 		DiscountEntitiesTable::deleteByDiscount($id);
 		DiscountModuleTable::deleteByDiscount($id);
 		DiscountGroupTable::deleteByDiscount($id);
@@ -375,6 +567,9 @@ class DiscountTable extends Main\Entity\DataManager
 			DiscountCouponTable::deleteByDiscount(self::$deleteCoupons);
 			self::$deleteCoupons = false;
 		}
+		Gift\RelatedDataTable::deleteByDiscount($id);
+		Index\Manager::getInstance()->dropIndex($id);
+
 		unset($id);
 	}
 
@@ -402,6 +597,12 @@ class DiscountTable extends Main\Entity\DataManager
 			' set '.$helper->quote('USE_COUPONS').' = \''.$use.'\' where '.
 			$helper->quote('ID').' in ('.implode(',', $discountList).')'
 		);
+		unset($helper, $conn);
+
+		if($use === 'Y')
+		{
+			Gift\RelatedDataTable::deleteByDiscounts($discountList);
+		}
 	}
 
 	/**
@@ -420,6 +621,7 @@ class DiscountTable extends Main\Entity\DataManager
 		$conn->queryExecute(
 			'update '.$helper->quote(self::getTableName()).' set '.$helper->quote('USE_COUPONS').' = \''.$use.'\''
 		);
+		unset($helper, $conn);
 	}
 
 	/**
@@ -438,7 +640,7 @@ class DiscountTable extends Main\Entity\DataManager
 			global $USER;
 			$currentUserID = (isset($USER) && $USER instanceof \CUser ? (int)$USER->getID() : null);
 		}
-		foreach ($keys as &$oneKey)
+		foreach ($keys as $oneKey)
 		{
 			$setField = true;
 			if (array_key_exists($oneKey, $data))
@@ -448,6 +650,22 @@ class DiscountTable extends Main\Entity\DataManager
 				$result[$oneKey] = $currentUserID;
 		}
 		unset($oneKey);
+	}
+
+	protected static function setShortDescription(&$result, array $data)
+	{
+		if(!empty($data['SHORT_DESCRIPTION_STRUCTURE']) || empty($data['ACTIONS']))
+		{
+			return;
+		}
+
+		$actionConfiguration = Actions::getActionConfiguration($data);
+		if(!$actionConfiguration)
+		{
+			return;
+		}
+
+		$result['SHORT_DESCRIPTION_STRUCTURE'] = $actionConfiguration;
 	}
 
 	/**
@@ -460,7 +678,7 @@ class DiscountTable extends Main\Entity\DataManager
 	 */
 	protected static function setTimestamp(&$result, $data, $keys)
 	{
-		foreach ($keys as &$oneKey)
+		foreach ($keys as $oneKey)
 		{
 			$setField = true;
 			if (array_key_exists($oneKey, $data))

@@ -1,8 +1,21 @@
-<?if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();?>
-<?if(strlen($arResult["ERROR_MESSAGE"])>0)
+<?if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
+/** @var array $arParams */
+/** @var array $arResult */
+/** @global CMain $APPLICATION */
+/** @global CUser $USER */
+/** @global CDatabase $DB */
+/** @var CBitrixComponentTemplate $this */
+/** @var string $templateName */
+/** @var string $templateFile */
+/** @var string $templateFolder */
+/** @var string $componentPath */
+/** @var CBitrixComponent $component */
+if(strlen($arResult["ERROR_MESSAGE"])>0)
 	ShowError($arResult["ERROR_MESSAGE"]);
+$arPlacemarks = array();
+$gpsN = '';
+$gpsS = '';
 ?>
-<?$arPlacemarks=array();?>
 <div class="catalog-detail-properties_sam">
 	<div class="catalog-detail-line"></div>
 	<?if(is_array($arResult["STORES"]) && !empty($arResult["STORES"])):?>
@@ -25,7 +38,6 @@
 			$arPlacemarks[]=array("LON"=>$gpsS,"LAT"=>$gpsN,"TEXT"=>$arProperty["TITLE"]);
 		}
 		?>
-		<b></b>
 	</div>
 		<br>
 	<?endforeach;?>
@@ -51,7 +63,8 @@ if ($arResult['VIEW_MAP'])
 				),
 				"MAP_ID" => ""
 			),
-			false
+			$component,
+			array("HIDE_ICONS" => "Y")
 		);
 	}
 	else
@@ -71,7 +84,8 @@ if ($arResult['VIEW_MAP'])
 				),
 				"MAP_ID" => ""
 			),
-			false
+			$component,
+			array("HIDE_ICONS" => "Y")
 		);
 	}
 }

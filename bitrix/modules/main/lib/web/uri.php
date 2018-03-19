@@ -7,7 +7,7 @@
  */
 namespace Bitrix\Main\Web;
 
-class Uri
+class Uri implements \JsonSerializable
 {
 	protected $scheme;
 	protected $host;
@@ -116,12 +116,34 @@ class Uri
 	}
 
 	/**
+	 * Sets the host
+	 * @param string $host Host name.
+	 * @return $this
+	 */
+	public function setHost($host)
+	{
+		$this->host = $host;
+		return $this;
+	}
+
+	/**
 	 * Returns the password.
 	 * @return string
 	 */
 	public function getPass()
 	{
 		return $this->pass;
+	}
+
+	/**
+	 * Sets the password.
+	 * @param string $pass Password,
+	 * @return $this
+	 */
+	public function setPass($pass)
+	{
+		$this->pass = $pass;
+		return $this;
 	}
 
 	/**
@@ -195,6 +217,17 @@ class Uri
 	}
 
 	/**
+	 * Sets the user.
+	 * @param string $user User.
+	 * @return $this
+	 */
+	public function setUser($user)
+	{
+		$this->user = $user;
+		return $this;
+	}
+
+	/**
 	 * Deletes parameters from the query.
 	 * @param array $params Parameters to delete.
 	 * @return $this
@@ -229,10 +262,27 @@ class Uri
 			parse_str($this->query, $currentParams);
 		}
 
-		$currentParams = array_merge($currentParams, $params);
+		$currentParams = array_replace($currentParams, $params);
 
 		$this->query = http_build_query($currentParams, "", "&");
 
 		return $this;
+	}
+
+	public function __toString()
+	{
+		return $this->getUri();
+	}
+
+	/**
+	 * Specify data which should be serialized to JSON
+	 * @link http://php.net/manual/en/jsonserializable.jsonserialize.php
+	 * @return mixed data which can be serialized by <b>json_encode</b>,
+	 * which is a value of any type other than a resource.
+	 * @since 5.4.0
+	 */
+	public function jsonSerialize()
+	{
+		return $this->getLocator();
 	}
 }

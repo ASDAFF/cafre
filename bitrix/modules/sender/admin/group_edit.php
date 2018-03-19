@@ -211,7 +211,7 @@ if($ID>0)
 	$aMenu[] = array(
 		"TEXT"=>GetMessage("sender_group_add"),
 		"TITLE"=>GetMessage("sender_group_add_title"),
-		"LINK"=>"group_edit.php?lang=".LANG,
+		"LINK"=>"sender_group_edit.php?lang=".LANG,
 		"ICON"=>"btn_new",
 	);
 	$aMenu[] = array(

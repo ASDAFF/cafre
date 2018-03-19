@@ -62,4 +62,9 @@ $MESS["sender_chain_edit_maintext"] = "Triggered E-mails is a sequence of messag
 $MESS["sender_chain_edit_field_time_letter"] = "last message";
 $MESS["SENDER_MAILING_TRIG_ERROR_NOT_FOUND"] = "Triggered e-mail was not found";
 $MESS["sender_chain_edit_state1"] = "Status";
+$MESS["sender_chain_edit_field_priority"] = "Priority:";
+$MESS["sender_chain_edit_field_priority_1"] = "High";
+$MESS["sender_chain_edit_field_priority_3"] = "Normal";
+$MESS["sender_chain_edit_field_priority_5"] = "Low";
+$MESS["sender_chain_edit_field_linkparams"] = "Add parameters to all links:";
 ?>

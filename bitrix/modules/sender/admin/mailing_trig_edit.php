@@ -119,11 +119,29 @@ function getSenderItemContainer($id, array $chain = array())
 							</td>
 						</tr>
 						<tr>
+							<td style="font-weight: normal;"><?echo GetMessage("sender_chain_edit_field_priority")?></td>
+							<td>
+								<input type="text" id="CHAIN_<?=$i?>_PRIORITY" name="CHAIN[<?=$i?>][PRIORITY]" value="<?=htmlspecialcharsbx($chain['PRIORITY'])?>">
+								<select onchange="document.getElementById('CHAIN_<?=$i?>_PRIORITY').value=this.value">
+									<option value=""></option>
+									<option value="1 (Highest)"<?if($str_PRIORITY=='1 (Highest)')echo ' selected'?>><?echo GetMessage("sender_chain_edit_field_priority_1")?></option>
+									<option value="3 (Normal)"<?if($str_PRIORITY=='3 (Normal)')echo ' selected'?>><?echo GetMessage("sender_chain_edit_field_priority_3")?></option>
+									<option value="5 (Lowest)"<?if($str_PRIORITY=='5 (Lowest)')echo ' selected'?>><?echo GetMessage("sender_chain_edit_field_priority_5")?></option>
+								</select>
+							</td>
+						</tr>
+						<tr>
 							<td colspan="2">
 								<b><?echo GetMessage("sender_chain_edit_field_message")?></b>
 								<br>
 								<br>
 								%SENDER_LETTER_TEMPLATE_MESSAGE%
+							</td>
+						</tr>
+						<tr>
+							<td style="font-weight: normal;"><?echo GetMessage("sender_chain_edit_field_linkparams")?></td>
+							<td>
+								<input class="sender_letter_container_subject" type="text" id="CHAIN_<?=$i?>_LINK_PARAMS" name="CHAIN[<?=$i?>][LINK_PARAMS]" value="<?=htmlspecialcharsbx($chain['LINK_PARAMS'])?>">
 							</td>
 						</tr>
 					</table>
@@ -136,8 +154,8 @@ function getSenderItemContainer($id, array $chain = array())
 	return ob_get_clean();
 }
 
-
 $personalizeList = \Bitrix\Sender\MailingTable::getChainPersonalizeList($ID);
+\Bitrix\Sender\PostingRecipientTable::setPersonalizeList($personalizeList);
 if($_REQUEST["action"]=="get_vr" && check_bitrix_sessid())
 {
 	$letterTemplate = array(
@@ -146,9 +164,12 @@ if($_REQUEST["action"]=="get_vr" && check_bitrix_sessid())
 			'MESSAGE' =>  \Bitrix\Sender\TemplateTable::initEditor(array(
 				'FIELD_NAME' => 'SENDER_LETTER_TEMPLATE_MESSAGE',
 				'FIELD_VALUE' => '',
+				'TEMPLATE_TYPE_INPUT' => 'CHAIN[%SENDER_LETTER_TEMPLATE_BODY_NUM%][TEMPLATE_TYPE]',
+				'TEMPLATE_TYPE' => '',
+				'TEMPLATE_ID_INPUT' => 'CHAIN[%SENDER_LETTER_TEMPLATE_BODY_NUM%][TEMPLATE_ID]',
+				'TEMPLATE_ID' => '',
 				'HAVE_USER_ACCESS' => !$isUserHavePhpAccess,
 				'SHOW_SAVE_TEMPLATE' => false,
-				'PERSONALIZE_LIST' => $personalizeList
 			)),
 		)
 	);
@@ -375,14 +396,14 @@ $tabControl->BeginNextTab();
 				<span>
 					<?if($POST_RIGHT>="W" && $mailing['ACTIVE'] != 'Y'):?>
 						<input style="margin-left: 80px;" type="button"
-						       value="<?echo GetMessage("sender_chain_edit_field_status_btn_y")?>"
-						       onclick="window.location='/bitrix/admin/sender_mailing_trig_edit.php?ID=<?=$ID?>&<?=bitrix_sessid_get()?>&action=activate&lang=<?=LANGUAGE_ID?>'"
-						       title="<?echo GetMessage("sender_chain_edit_btn_send_desc")?>" />
+							value="<?echo GetMessage("sender_chain_edit_field_status_btn_y")?>"
+							onclick="window.location='/bitrix/admin/sender_mailing_trig_edit.php?ID=<?=$ID?>&<?=bitrix_sessid_get()?>&action=activate&lang=<?=LANGUAGE_ID?>'"
+							title="<?echo GetMessage("sender_chain_edit_btn_send_desc")?>" />
 					<?elseif($POST_RIGHT>="W"):?>
 						<input style="margin-left: 80px;" type="button"
-						       value="<?echo GetMessage("sender_chain_edit_field_status_btn_n")?>"
-						       onclick="window.location='/bitrix/admin/sender_mailing_trig_edit.php?ID=<?=$ID?>&<?=bitrix_sessid_get()?>&action=deactivate&lang=<?=LANGUAGE_ID?>'"
-						       title="<?echo GetMessage("sender_chain_edit_btn_send_desc")?>" />
+							value="<?echo GetMessage("sender_chain_edit_field_status_btn_n")?>"
+							onclick="window.location='/bitrix/admin/sender_mailing_trig_edit.php?ID=<?=$ID?>&<?=bitrix_sessid_get()?>&action=deactivate&lang=<?=LANGUAGE_ID?>'"
+							title="<?echo GetMessage("sender_chain_edit_btn_send_desc")?>" />
 					<?endif;?>
 				</span>
 			</div>
@@ -513,16 +534,20 @@ $tabControl->BeginNextTab();
 					echo str_replace(
 						array(
 							'%SENDER_LETTER_TEMPLATE_BODY_NUM%',
-							'%SENDER_LETTER_TEMPLATE_MESSAGE%'
+							'%SENDER_LETTER_TEMPLATE_MESSAGE%',
+							'%sender_letter_template_message%'
 						),
 						array(
 							$i,
 							\Bitrix\Sender\TemplateTable::initEditor(array(
 								'FIELD_NAME' => 'CHAIN_MESSAGE_'.$i,
 								'FIELD_VALUE' => $chain['MESSAGE'],
+								'TEMPLATE_TYPE_INPUT' => 'CHAIN['.$i.'][TEMPLATE_TYPE]',
+								'TEMPLATE_TYPE' => $chain['TEMPLATE_TYPE'],
+								'TEMPLATE_ID_INPUT' => 'CHAIN['.$i.'][TEMPLATE_ID]',
+								'TEMPLATE_ID' => $chain['TEMPLATE_ID'],
 								'HAVE_USER_ACCESS' => !$isUserHavePhpAccess,
 								'SHOW_SAVE_TEMPLATE' => false,
-								'PERSONALIZE_LIST' => $personalizeList
 							))
 						),
 						getSenderItemContainer($ID, $chain)
@@ -538,7 +563,6 @@ $tabControl->BeginNextTab();
 						'FIELD_VALUE' => '',
 						'HAVE_USER_ACCESS' => !$isUserHavePhpAccess,
 						'SHOW_SAVE_TEMPLATE' => false,
-						'PERSONALIZE_LIST' => $personalizeList
 					));
 				}
 				?>
@@ -583,10 +607,8 @@ $tabControl->BeginNextTab();
 					ShowTemplateListL(this);
 				});
 
-				letterManager.onShowTemplateList(function()
-				{
-					ShowTemplateListL(this, true);
-				});
+				letterManager.onShowTemplateList(function(){ ShowTemplateListL(this, true); });
+				letterManager.onHideTemplateList(function(){ ShowTemplateListL(this, false); });
 			</script>
 
 			<script>

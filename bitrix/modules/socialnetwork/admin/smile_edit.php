@@ -1,5 +1,11 @@
 <?
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
+/** @global CMain $APPLICATION */
+/** @global CDatabase $DB */
+
+use Bitrix\Main\Loader;
+
+Loader::includeModule('socialnetwork');
 
 $sonetPermissions = $APPLICATION->GetGroupRight("socialnetwork");
 if ($sonetPermissions < "R")
@@ -202,7 +208,7 @@ if ($ID > 0)
 }
 
 if ($bInitVars)
-	$DB->InitTableVarsForEdit("b_socnet_smile", "", "str_");
+	$DB->InitTableVarsForEdit("b_sonet_smile", "", "str_");
 
 $sDocTitle = ($ID>0) ? GetMessage("SONET_EDIT_RECORD", array("#ID#" => $ID)) : GetMessage("SONET_NEW_RECORD");
 $APPLICATION->SetTitle($sDocTitle);

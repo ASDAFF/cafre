@@ -54,5 +54,5 @@ endif;
 	</div>
 </div>
 <script type="text/javascript">
-BX.adminLogin.registerForm(new BX.authFormOtp('otp', {url: '<?echo CUtil::JSEscape($authUrl.(($s=DeleteParam(array("logout", "login"))) == ""? "":"&".$s));?>'}));
+BX.adminLogin.registerForm(new BX.authFormOtp('otp', {url: '<?echo CUtil::JSEscape($authUrl.(($s=DeleteParam(array("logout", "login"))) == ""? "":"?".$s));?>'}));
 </script>

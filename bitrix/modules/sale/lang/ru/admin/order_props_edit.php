@@ -23,8 +23,8 @@ $MESS ['F_IS_PAYER_DESCR'] = "Значением свойства будет являться имя плательщика"
 $MESS ['F_PROPS_GROUP_ID'] = "Группа свойств";
 
 $MESS ['F_DESCRIPTION'] = "Описание свойства";
-$MESS ['ERROR_EDIT_PROP'] = "ошибка изменения свойства";
-$MESS ['ERROR_ADD_PROP'] = "ошибка добавления свойства";
+$MESS ['ERROR_EDIT_PROP'] = "Ошибка изменения свойства";
+$MESS ['ERROR_ADD_PROP'] = "Ошибка добавления свойства";
 $MESS ['ERROR_ADD_VARIANT'] = "Ошибка добавления варианта перечисления";
 $MESS ['ERROR_EDIT_VARIANT'] = "Ошибка изменения варианта перечисления";
 

@@ -20,4 +20,5 @@ $MESS["MYMS_PARAM_DATA"] = "Начальная позиция карты";
 $MESS["MYMS_PARAM_DATA_SET"] = "изменить";
 $MESS["MYMS_PARAM_DATA_DEFAULT_LAT"] = "55.7383";
 $MESS["MYMS_PARAM_DATA_DEFAULT_LON"] = "37.5946";
+$MESS["MYMS_PARAM_API_KEY"] = "Ключ JavaScript API";
 ?>

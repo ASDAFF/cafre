@@ -3,6 +3,7 @@ IncludeTemplateLangFile(__FILE__);
 $arTemplate = Array(
 	"NAME"=>"#mobile_template_name#",
 	"DESCRIPTION"=>GetMessage("M_TEMPLATE_DESC"),
+	"MOBILE"=>"Y"
 );
 
 ?>

@@ -125,4 +125,10 @@ class Helper
 
 		return $result;
 	}
+
+	public static function additionalHandlerCacheClean()
+	{
+		require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/sale/handlers/delivery/additional/cache.php");
+		\Sale\Handlers\Delivery\Additional\CacheManager::cleanAll();
+	}
 }

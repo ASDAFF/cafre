@@ -4,16 +4,10 @@
 	background: url(../images/access/wait.gif) no-repeat 0 0;
 }
 
-.access-title-bar {
-	color: black;
-	font: normal normal normal 12px/normal Arial, Helvetica, sans-serif;
-	font-weight: bold;
-	padding-left: 4px
-}
-
 .access-container {
+	border-bottom: 1px solid #DCDCDC;
 	height: 393px;
-	margin-bottom: -9px;
+	padding: 0 10px;
 	overflow: hidden;
 	font-family: Arial, Verdana, Helvetica, sans-serif;
 	white-space: nowrap;
@@ -96,7 +90,7 @@ a.access-provider-button:hover {
 	box-sizing: border-box;
 	-moz-box-sizing: border-box;
 	-webkit-box-sizing: border-box;
-	padding: 0px;
+	padding: 0;
 }
 
 .access-delete {

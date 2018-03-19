@@ -1,22 +1,22 @@
-<?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();?>
+<?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
+/** @var CBitrixComponentTemplate $this */
+/** @var array $arParams */
+/** @var array $arResult */
+/** @global CDatabase $DB */
+/** @global CUser $USER */
+/** @global CMain $APPLICATION */
 
-<?
 $pageId = "";
 include("util_menu.php");
-?>
-<?
 
-if ($_GET["IFRAME"] == "Y")
-	$component_tmp = "bitrix:socialnetwork.group_create.ex";
-else
-	$component_tmp = "bitrix:socialnetwork.group_create";
 
 $APPLICATION->IncludeComponent(
-	$component_tmp, 
+	"bitrix:socialnetwork.group_create.ex",
 	"", 
 	Array(
 		"PATH_TO_USER" => $arResult["PATH_TO_USER"],
 		"PATH_TO_GROUP" => $arParams["PATH_TO_GROUP"],
+		"PATH_TO_GROUP_GENERAL" => $arParams["PATH_TO_GROUP_GENERAL"],
 		"PATH_TO_GROUP_CREATE" => $arResult["PATH_TO_GROUP_CREATE"],
 		"PAGE_VAR" => $arResult["ALIASES"]["page"],
 		"USER_VAR" => $arResult["ALIASES"]["user_id"],
@@ -29,7 +29,8 @@ $APPLICATION->IncludeComponent(
 		"SHOW_LOGIN" => $arParams["SHOW_LOGIN"],
 		"USE_KEYWORDS" => $arParams["GROUP_USE_KEYWORDS"],
 		"USE_AUTOSUBSCRIBE" => "N",
+		"FIRST_ROW" => ($_GET["firstRow"] == "project" ? "project" : ""),
 	),
-	$component 
+	$this->getComponent()
 );
 ?>

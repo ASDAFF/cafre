@@ -10,4 +10,6 @@ $MESS["BT_MOD_CURR_ERR_RATE_RATE_ABSENT"] = "The currency exchange rate is not s
 $MESS["BT_MOD_CURR_ERR_RATE_RATE_BAD"] = "The currency exchange rate is incorrect.";
 $MESS["BT_MOD_CURR_ERR_RATE_ID_BAD"] = "Invalid rate ID.";
 $MESS["BT_MOD_CURR_ERR_RATE_CANT_DELETE_ABSENT_ID"] = "Cannot delete the rate because the rate ID is incorrect.";
+$MESS["BT_MOD_CURR_ERR_RATE_FOR_BASE_CURRENCY"] = "Cannot create exchange rate for the base currency";
+$MESS["BT_MOD_CURR_ERR_RATE_FOR_SELF_CURRENCY"] = "A currency cannot have exchange rate for itself.";
 ?>

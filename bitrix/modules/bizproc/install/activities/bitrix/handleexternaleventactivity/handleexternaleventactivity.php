@@ -3,7 +3,7 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
 
 class CBPHandleExternalEventActivity
 	extends CBPActivity
-	implements IBPEventActivity, IBPActivityExternalEventListener
+	implements IBPEventActivity, IBPActivityExternalEventListener, IBPEventDrivenActivity
 {
 	private $isInEventActivityMode = false;
 

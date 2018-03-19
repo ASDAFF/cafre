@@ -16,22 +16,7 @@ div.soc-serv-main tr.soc-serv-personal td.bx-ss-icons { padding: 9px !important;
 i.soc-serv-photo { width: 30px; height: 30px; display: inline-block; vertical-align: middle;}
 i.soc-serv-text { font-style: normal; vertical-align: middle;}
 td.bx-ss-icons i.bx-ss-icon { width: 16px; height: 16px;  display: inline-block; vertical-align: middle; }
-.bx-ss-icon {background-image:url('/bitrix/js/socialservices/css/icons_v4.png'); width:16px; height:16px; background-repeat:no-repeat; }
-.openid {background-position: 0px -192px;}
-.yandex {background-position: 0px 0px;}
-.openid-mail-ru {background-position: 0px -48px;}
-.livejournal {background-position: 0px -16px;}
-.liveinternet {background-position: 0px -128px;}
-.blogger {background-position: 0px -144px;}
-.rambler {background-position: 0px -160px;}
-.liveid {background-position: 0px -176px;}
-.facebook {background-position: 0px -32px;}
-.twitter {background-position: 0px -96px;}
-.vkontakte {background-position: 0px -80px;}
-.mymailru {background-position: 0px -64px;}
-.google {background-position: 0px -112px;}
-.odnoklassniki {background-position: 0px -208px;}
-.bitrix24 {background-position:0px -378px}
+.bx-ss-icon {background-image:url('/bitrix/js/socialservices/css/icons_v5.png'); width:16px; height:16px; background-repeat:no-repeat; }
 
 .feed-add-post-form-but-wrap {padding:0 7px 2px; position:relative; display: none;}
 .feed-add-post-text {color:#bfbfbf; font-size:17px; display: none; /*height:75px; padding:10px 7px 0;*/}

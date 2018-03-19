@@ -1,14 +1,6 @@
-<?
-/*
-##############################################
-# Bitrix: SiteManager                        #
-# Copyright (c) 2004 Bitrix                  #
-# http://www.bitrix.ru                       #
-# mailto:admin@bitrix.ru                     #
-##############################################
-*/
+<?php
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
-
+/** @var CMain $APPLICATION */
 $STAT_RIGHT = $APPLICATION->GetGroupRight("statistic");
 if($STAT_RIGHT=="D")
 	$APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
@@ -506,7 +498,7 @@ $lAdmin->CheckListMode();
 
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_popup_admin.php");
 
-echo ShowError($strError);
+ShowError($strError);
 ?>
 <?if($list_mode!="period"):?>
 <table cellspacing="0" cellpadding="0" width="100%" border="0" class="edit-table"><tr><td>
@@ -537,13 +529,13 @@ $tabControl->BeginNextTab();
 		<td width="15%" colspan="2" nowrap><?echo GetMessage("STAT_YESTERDAY")?><br><?=$yesterday_date?></td>
 		<td width="15%" colspan="2" nowrap><?echo GetMessage("STAT_BEFYESTERDAY")?><br><?=$bef_yesterday_date?></td>
 		<?if ((strlen($find_date1_period)>0 || strlen($find_date2_period)>0) && $is_filtered):?>
-		<td width="15%" colspan="2"><?echo GetMessage("STAT_PERIOD")?><br><?=htmlspecialcharsex($arFilter["DATE1_PERIOD"])?>&nbsp;- <?=htmlspecialcharsex($arFilter["DATE2_PERIOD"])?></td>
+		<td width="15%" colspan="2"><?echo GetMessage("STAT_PERIOD")?><br><?=htmlspecialcharsEx($arFilter["DATE1_PERIOD"])?>&nbsp;- <?=htmlspecialcharsEx($arFilter["DATE2_PERIOD"])?></td>
 		<?endif;?>
 		<td width="25%" colspan="2" nowrap><?echo GetMessage("STAT_TOTAL")?><br><?
-			$days = IntVal($f_ADV_TIME/86400);
+			$days = intval($f_ADV_TIME/86400);
 			echo $days."&nbsp;".GetMessage("STAT_DAYS")."&nbsp;";
 			$f_ADV_TIME = $f_ADV_TIME - $days*86400;
-			$hours = IntVal($f_ADV_TIME/3600);
+			$hours = intval($f_ADV_TIME/3600);
 			echo $hours."&nbsp;".GetMessage("STAT_HOURS");
 			?></td>
 	</tr>
@@ -642,7 +634,7 @@ $tabControl->BeginNextTab();
 		<?if ((strlen($find_date1_period)>0 || strlen($find_date2_period)>0) && $is_filtered):?>
 		<td align="right"><?
 			if (intval($f_SESSIONS_PERIOD)>0):
-				?><a target="_blank" title="<?echo GetMessage("STAT_SESSIONS_LIST")?>" href="session_list.php?lang=<?=LAN?>&amp;find_date1=<?=urlencode($find_date1_period); ?>&amp;find_date2=<?=urlencode($find_date2_period)?>&amp;<?
+				?><a target="_blank" title="<?echo GetMessage("STAT_SESSIONS_LIST")?>" href="session_list.php?lang=<?=LANGUAGE_ID?>&amp;find_date1=<?=urlencode($find_date1_period); ?>&amp;find_date2=<?=urlencode($find_date2_period)?>&amp;<?
 				if ($find_group=="referer1") :
 					echo "find_referer1=".urlencode("\"".$f_REFERER1."\"");
 				elseif ($find_group=="referer2") :
@@ -880,4 +872,4 @@ $oFilter->End();
 endif;//if($full_list)
 $lAdmin->DisplayList();
 
-require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_popup_admin.php")?>
+require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_popup_admin.php");

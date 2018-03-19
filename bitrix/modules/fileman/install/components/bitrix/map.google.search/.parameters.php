@@ -5,6 +5,14 @@ $arComponentParameters = array(
 	'GROUPS' => array(
 	),
 	'PARAMETERS' => array(
+
+		'API_KEY' => array(
+			'NAME' => GetMessage('MYMS_PARAM_API_KEY').' https://developers.google.com/maps/documentation/javascript/get-api-key',
+			'TYPE' => 'STRING',
+			'DEFAULT' => '',
+			'PARENT' => 'BASE',
+		),
+
 		'INIT_MAP_TYPE' => array(
 			'NAME' => GetMessage('MYMS_PARAM_INIT_MAP_TYPE'),
 			'TYPE' => 'LIST',

@@ -72,6 +72,14 @@ elseif(
 	return;
 }
 
+$canFullEdit = (
+	$ELEMENT_ID > 0
+	&& (
+		$lists_perm >= CListPermissions::IS_ADMIN
+		|| CIBlockRights::UserHasRightTo($IBLOCK_ID, $IBLOCK_ID, "iblock_edit")
+	)
+);
+
 $arIBlock = CIBlock::GetArrayByID(intval($arParams["~IBLOCK_ID"]));
 
 $arResult["FILES"] = array();
@@ -86,6 +94,7 @@ if($ELEMENT_ID > 0)
 			"IBLOCK_ID" => $arIBlock["ID"],
 			"=ID" => $ELEMENT_ID,
 			"CHECK_PERMISSIONS" => "N",
+			"SHOW_NEW" => ($canFullEdit ? "Y" : "N")
 		),
 		false,
 		false,

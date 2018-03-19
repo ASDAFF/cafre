@@ -36,5 +36,5 @@ $arParams["ATTACH_SIZE"] = $arParams["IMAGE_SIZE"];
 				/Input params
 ********************************************************************/
 include(str_replace(array("\\", "//"), "/", dirname(__FILE__)."/template_message.php"));
-CUtil::InitJSCore(array("ajax", "fx"));
+CUtil::InitJSCore(array("ajax", "fx", "viewer"));
 ?>

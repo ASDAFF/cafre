@@ -11,7 +11,7 @@ Loc::loadMessages(__FILE__);
 
 class CAllAgent
 {
-	function AddAgent(
+	public static function AddAgent(
 		$name, // PHP function name
 		$module = "", // module
 		$period = "N", // check for agent execution count in period of time
@@ -29,7 +29,7 @@ class CAllAgent
 		$z = $DB->Query("
 			SELECT ID
 			FROM b_agent
-			WHERE NAME = '".$DB->ForSql($name, 2000)."'
+			WHERE NAME = '".$DB->ForSql($name)."'
 			AND USER_ID".($user_id? " = ".(int)$user_id: " IS NULL")
 		);
 		if (!($agent = $z->Fetch()))
@@ -69,7 +69,7 @@ class CAllAgent
 		}
 	}
 
-	function Add($arFields)
+	public static function Add($arFields)
 	{
 		global $DB, $CACHE_MANAGER;
 
@@ -92,7 +92,7 @@ class CAllAgent
 		return false;
 	}
 
-	function RemoveAgent($name, $module = "", $user_id = false)
+	public static function RemoveAgent($name, $module = "", $user_id = false)
 	{
 		global $DB;
 
@@ -103,14 +103,14 @@ class CAllAgent
 
 		$strSql = "
 				DELETE FROM b_agent
-				WHERE NAME = '".$DB->ForSql($name, 2000)."'
+				WHERE NAME = '".$DB->ForSql($name)."'
 				".$module."
 				AND  USER_ID".($user_id ? " = ".(int)$user_id : " IS NULL");
 
 		$DB->Query($strSql, false, "FILE: ".__FILE__."<br> LINE: ".__LINE__);
 	}
 
-	function Delete($id)
+	public static function Delete($id)
 	{
 		global $DB;
 		$id = intval($id);
@@ -123,7 +123,7 @@ class CAllAgent
 		return true;
 	}
 
-	function RemoveModuleAgents($module)
+	public static function RemoveModuleAgents($module)
 	{
 		global $DB;
 
@@ -134,7 +134,7 @@ class CAllAgent
 		}
 	}
 
-	function Update($ID, $arFields)
+	public static function Update($ID, $arFields)
 	{
 		global $DB, $CACHE_MANAGER;
 		$ign_name = false;
@@ -162,12 +162,12 @@ class CAllAgent
 		return false;
 	}
 
-	function GetById($ID)
+	public static function GetById($ID)
 	{
 		return CAgent::GetList(Array(), Array("ID"=>IntVal($ID)));
 	}
 
-	function GetList($arOrder = Array("ID" => "DESC"), $arFilter = array())
+	public static function GetList($arOrder = Array("ID" => "DESC"), $arFilter = array())
 	{
 		global $DB;
 		$err_mess = "FILE: ".__FILE__."<br>LINE: ";
@@ -185,6 +185,7 @@ class CAllAgent
 			"LAST_EXEC" => "A.LAST_EXEC",
 			"AGENT_INTERVAL" => "A.AGENT_INTERVAL",
 			"NEXT_EXEC" => "A.NEXT_EXEC",
+			"DATE_CHECK" => "A.DATE_CHECK",
 			"SORT" => "A.SORT"
 		);
 
@@ -261,9 +262,10 @@ class CAllAgent
 		}
 
 		$strSql = "SELECT A.ID, A.MODULE_ID, A.USER_ID, B.LOGIN, B.NAME as USER_NAME, B.LAST_NAME, A.SORT, ".
-			"A.NAME, A.ACTIVE, ".
+			"A.NAME, A.ACTIVE, A.RUNNING, ".
 			$DB->DateToCharFunction("A.LAST_EXEC")." as LAST_EXEC, ".
 			$DB->DateToCharFunction("A.NEXT_EXEC")." as NEXT_EXEC, ".
+			$DB->DateToCharFunction("A.DATE_CHECK")." as DATE_CHECK, ".
 			"A.AGENT_INTERVAL, A.IS_PERIOD ".
 			"FROM b_agent A LEFT JOIN b_user B ON(A.USER_ID = B.ID)";
 		$strSql .= (count($arSqlSearch)>0) ? " WHERE ".implode(" AND ", $arSqlSearch) : "";
@@ -274,7 +276,7 @@ class CAllAgent
 		return $res;
 	}
 
-	function CheckFields(&$arFields, $ign_name = false)
+	public static function CheckFields(&$arFields, $ign_name = false)
 	{
 		global $DB, $APPLICATION;
 

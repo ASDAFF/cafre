@@ -10,22 +10,23 @@
  * Bitrix vars
  * @global CUser $USER
  * @global CMain $APPLICATION
- * @param array $arParams
- * @param array $arResult
- * @param CBitrixComponentTemplate $this
+ * @var array $arParams
+ * @var array $arResult
+ * @var CBitrixComponentTemplate $this
  */
 
 if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
 
+global $USER_FIELD_MANAGER;
+
 $name = $arParams["arUserField"]["~FIELD_NAME"];
-$namex = preg_replace("/([^a-z0-9])/is", "x", $name);
 ?>
 <table id="table_<?=$name?>" width="100%" cellpadding="0" cellspacing="0">
 <?
 foreach ($arResult["VALUE"] as $i => $ID)
 {
 	$name_c = ($arParams["arUserField"]["MULTIPLE"] == "Y"? $name.'['.$i.']' : $name);
-	$name_x = preg_replace("/([^a-z0-9])/is", "x", $name_c);
+	$name_x = preg_replace("/[\\[\\]]/is", "_", $name_c);
 ?>
 	<tr>
 		<td>
@@ -46,7 +47,7 @@ foreach ($arResult["VALUE"] as $i => $ID)
 		<IFRAME style="width:0; height:0; border: 0; display: none;" src="javascript:void(0)" name="hiddenframe<?=$name_c?>" id="hiddenframe<?=$name_x?>"></IFRAME>
 		<br /><span id="div_<?=$name_x?>"></span>
 
-		<script>
+		<script data-skip-moving="true">
 		var value_<?=$name_x?> = '';
 		function Ch<?=$name_x?>()
 		{
@@ -54,7 +55,7 @@ foreach ($arResult["VALUE"] as $i => $ID)
 			if (document.getElementById('<?echo $name_x?>'))
 			{
 				var old_value = value_<?=$name_x?>;
-				value_<?=$name_x?>=parseInt(document.getElementById('<?echo $name_x?>').value);
+				value_<?=$name_x?> = parseInt(document.getElementById('<?echo $name_x?>').value);
 				if (value_<?=$name_x?> > 0)
 				{
 					if (old_value != value_<?=$name_x?>)
@@ -72,7 +73,6 @@ foreach ($arResult["VALUE"] as $i => $ID)
 			setTimeout(function(){Ch<?=$name_x?>()},1000);
 		}
 		Ch<?=$name_x?>();
-		//-->
 		</script>
 		</td>
 	</tr>
@@ -84,8 +84,8 @@ if($arParams["arUserField"]["MULTIPLE"] == "Y"):
 ?>
 <tr>
 	<td>
-		<?echo CAllUserTypeManager::ShowScript();?>
-		<input type="button" value="<?=GetMessage("USER_TYPE_PROP_ADD")?>" onClick="addNewRow('table_<?=$name?>', /(<?=$name?>|<?=$name?>_old_id|<?=$namex?>)[x\[]([0-9]*)[x\]]/gi, 2)">
+		<?echo $USER_FIELD_MANAGER->ShowScript();?>
+		<input type="button" value="<?=GetMessage("USER_TYPE_PROP_ADD")?>" onclick="addNewRow('table_<?=$name?>', '<?=$name?>')">
 	</td>
 </tr>
 <?
@@ -99,7 +99,7 @@ endif; //multiple
 		{
 			if (i.substring(0,<?=(strlen($name)+1)?>)=='<?=CUtil::JSEscape($name)?>[')
 			{
-				addNewRow('table_<?=$name?>', /(<?=$name?>|<?=$name?>_old_id|<?=$name_x?>)\[([0-9]*)\]/g, 2)
+				addNewRow('table_<?=$name?>', '<?=$name?>');
 			}
 		}
 	})

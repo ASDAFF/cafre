@@ -53,16 +53,21 @@ if ($GLOBALS["USER"]->IsAuthorized()):
 			if ($arGadgetParams["CAN_MODIFY_USER_MAIN"]):
 				?><li class="bx-icon-action bx-icon-profile"><a href="<?= $arGadgetParams["URL_EDIT"] ?>"><?= GetMessage("GD_SONET_USER_LINKS_EDIT_PROFILE") ?></a></li><?
 			endif;
-			if (!CModule::IncludeModule('extranet') || !CExtranet::IsExtranetSite()):
-				?><li class="bx-icon-action bx-icon-privacy"><a href="<?= $arGadgetParams["URL_SETTINGS"] ?>"><?= GetMessage("GD_SONET_USER_LINKS_EDIT_SETTINGS") ?></a></li><?
-			endif;
-			if ($arGadgetParams["SHOW_FEATURES"] == "Y"):
-				?><li class="bx-icon-action bx-icon-settings"><a href="<?= $arGadgetParams["URL_FEATURES"] ?>"><?= GetMessage("GD_SONET_USER_LINKS_EDIT_FEATURES") ?></a></li><?
-			endif;
-			if (CModule::IncludeModule("intranet") && CIntranetUtils::IsExternalMailAvailable()):
-				?><li class="bx-icon-action bx-icon-subscribe"><a href="<?= $arGadgetParams["URL_EXTMAIL"] ?>"><?= GetMessage("GD_SONET_USER_LINKS_EDIT_EXTMAIL") ?></a></li><?
-			endif;
+			if (
+				!isset($arParams["USER_TYPE"])
+				|| !in_array($arParams["USER_TYPE"], array('bot', 'email', 'imconnector'))
+			):
+				if (!CModule::IncludeModule('extranet') || !CExtranet::IsExtranetSite()):
+					?><li class="bx-icon-action bx-icon-privacy"><a href="<?= $arGadgetParams["URL_SETTINGS"] ?>"><?= GetMessage("GD_SONET_USER_LINKS_EDIT_SETTINGS") ?></a></li><?
+				endif;
+				if ($arGadgetParams["SHOW_FEATURES"] == "Y"):
+					?><li class="bx-icon-action bx-icon-settings"><a href="<?= $arGadgetParams["URL_FEATURES"] ?>"><?= GetMessage("GD_SONET_USER_LINKS_EDIT_FEATURES") ?></a></li><?
+				endif;
+				if (CModule::IncludeModule("intranet") && CIntranetUtils::IsExternalMailAvailable()):
+					?><li class="bx-icon-action bx-icon-subscribe"><a href="<?= $arGadgetParams["URL_EXTMAIL"] ?>"><?= GetMessage("GD_SONET_USER_LINKS_EDIT_EXTMAIL") ?></a></li><?
+				endif;
 				?><li class="bx-icon-action bx-icon-requests"><a href="<?= $arGadgetParams["URL_REQUESTS"] ?>"><?= GetMessage("GD_SONET_USER_LINKS_EDIT_REQUESTS") ?></a></li><?
+			endif;
 		?></ul>
 		</div><?
 	endif;
@@ -77,6 +82,9 @@ if ($GLOBALS["USER"]->IsAuthorized()):
 				endif;?>
 				<?if ($arGadgetParams["URL_PASSWORDS"]):
 					?><li class="bx-icon-action bx-icon-passwords"><a href="<?=$arGadgetParams["URL_PASSWORDS"]?>"><?= GetMessage("GD_SONET_USER_LINKS_PASSWORDS") ?></a></li><?
+				endif;?>
+				<?if ($arGadgetParams["URL_SYNCHRONIZE"]):
+					?><li class="bx-icon-action bx-icon-synchronize"><a href="<?=$arGadgetParams["URL_SYNCHRONIZE"]?>"><?= GetMessage("GD_SONET_USER_LINKS_SYNCHRONIZE") ?></a></li><?
 				endif;?>
 				<?if ($arParams["G_SONET_USER_OTP"]["IS_ACTIVE"] && $arParams["G_SONET_USER_OTP"]["ARE_RECOVERY_CODES_ENABLED"]):
 					?><li class="bx-icon-action bx-icon-codes"><a href="<?=$arGadgetParams["URL_CODES"]?>"><?= GetMessage("GD_SONET_USER_LINKS_CODES") ?></a></li><?

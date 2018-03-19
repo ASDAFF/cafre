@@ -32,6 +32,8 @@ $MESS["F_PM_SETTINGS"] = "Настройки персональных сообщений:";
 $MESS["UsePMVersion"] = "Версия персональных сообщений";
 $MESS["FORUM_PRIVATE_MESSAGE"] = "Размер ящика (сообщений)";
 $MESS["FORUM_USER_EDIT_OWN_POST"] = "Разрешить редактировать свои сообщения:";
+$MESS["FORUM_USER_EDIT_OWN_POST_Y"] = "все свои сообщения";
+$MESS["FORUM_USER_EDIT_OWN_POST_N"] = "последнее сообщение в теме";
 $MESS["FORUM_USE_COOKIE"] = "Разрешить хранение в куках:";
 $MESS["FORUM_USER_SHOW_NAME"] = "Показывать имя пользователя (по-умолчанию для новых пользователей):";
 $MESS["FORUM_LOGS_TITLE"] = "Журналировать действия пользователей";
@@ -47,7 +49,6 @@ $MESS["FR_ADMIN"] = "Администратор";
 $MESS["FR_ADMINISTRATOR"] = "Администратор";
 $MESS["FR_USER"] = "Пользователь";
 $MESS["FR_GUEST"] = "Гость";
-$MESS["FORUM_OPTIONS_SMILE_GALLERY_ID"] = "Галерея смайлов для парсера";
 $MESS["FORUM_OPTIONS_SMILE_SET_ID"] = "Набор смайлов форума";
 $MESS["FORUM_OPTIONS_SMILE_GALLERY_ID"] = "Галерея смайлов форума";
 ?>

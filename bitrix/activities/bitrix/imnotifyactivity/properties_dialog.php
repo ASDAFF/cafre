@@ -5,17 +5,13 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
 	<td align="right" width="40%"><span class="adm-required-field"><?= GetMessage("BPIMNA_PD_TO") ?>:</span></td>
 	<td width="60%">
 		<?
-		global $USER;
-		if ($USER->IsAdmin() || (CModule::IncludeModule("bitrix24") && CBitrix24::IsPortalAdmin($USER->GetID())))
+		if ($user->isAdmin())
 		{
-			?>
-			<input type="text" name="from_user_id" id="id_from_user_id" value="<?= htmlspecialcharsbx($arCurrentValues["from_user_id"]) ?>" size="50">
-			<input type="button" value="..." onclick="BPAShowSelector('id_from_user_id', 'user');">
-			<?
+			echo CBPDocument::ShowParameterField("user", 'from_user_id', $arCurrentValues['from_user_id'], Array('rows'=> 1));
 		}
 		else
 		{
-			echo $USER->GetFullName();
+			echo $user->GetFullName();
 		}
 		?>
 	</td>

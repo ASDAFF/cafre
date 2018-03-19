@@ -18,7 +18,11 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/vote/include.php");
 
 IncludeModuleLangFile(__FILE__);
 $err_mess = "File: ".__FILE__."<br>Line: ";
-
+if ($_GET["find_vote_id"] > 0 && $_GET["export"] == "xls")
+{
+	CModule::IncludeModule("vote");
+	\Bitrix\Vote\Vote::loadFromId($_GET["find_vote_id"])->exportExcel();
+}
 /********************************************************************
 				Functions
 ********************************************************************/
@@ -166,7 +170,7 @@ $lAdmin->NavText($rsData->GetNavPrint(GetMessage("VOTE_PAGES")));
 
 $lAdmin->AddHeaders(array(
 				array("id"=>"ID", "content"=>"ID", "sort"=>"s_id", "default"=>true),
-				array("id"=>"VOTE_USER_ID", "content"=>GetMessage("VOTE_USER"), "sort"=>"s_vote_user", "default"=>true),
+				array("id"=>"VOTE_USER_ID", "content"=>GetMessage("VOTE_VISITOR"), "sort"=>"s_vote_user", "default"=>true),
 				array("id"=>"STAT_SESSION_ID", "content"=>GetMessage("VOTE_SESSION"), "sort"=>"s_session", "default"=>true),
 				array("id"=>"IP", "content"=>"IP", "sort"=>"s_ip", "default"=>true),
 				array("id"=>"DATE_VOTE", "content"=>GetMessage("VOTE_DATE"), "sort"=>"s_date", "default"=>true),

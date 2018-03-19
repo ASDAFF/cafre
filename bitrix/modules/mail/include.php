@@ -9,38 +9,38 @@
 global $DB;
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/mail/constants.php");
 
-CModule::AddAutoloadClasses(
-	"mail",
+\Bitrix\Main\Loader::registerAutoloadClasses(
+	'mail',
 	array(
-		"CMail" => "classes/general/mail.php",
-		"CMailError" => "classes/general/mail.php",
-		"CMailHeader" => "classes/general/mail.php",
-		"CMailAttachment" => "classes/general/mail.php",
-		"CMailFilter" => "classes/general/mail.php",
-		"CMailFilterCondition" => "classes/general/mail.php",
-		"CMailLog" => "classes/general/mail.php",
+		'CMail'                => 'classes/general/mail.php',
+		'CMailError'           => 'classes/general/mail.php',
+		'CMailHeader'          => 'classes/general/mail.php',
+		'CMailAttachment'      => 'classes/general/mail.php',
+		'CMailFilter'          => 'classes/general/mail.php',
+		'CMailFilterCondition' => 'classes/general/mail.php',
+		'CMailLog'             => 'classes/general/mail.php',
 
-		"CMailbox" => "classes/".strtolower($DB->type)."/mail.php",
-		"CMailUtil" => "classes/".strtolower($DB->type)."/mail.php",
-		"CMailMessage" => "classes/".strtolower($DB->type)."/mail.php",
-			
-		"CSMTPServer" => "classes/general/smtp.php",
-		"CSMTPServerHost" => "classes/general/smtp.php",
-		"CSMTPConnection" => "classes/general/smtp.php",
+		'CMailbox'             => 'classes/'.strtolower($DB->type).'/mail.php',
+		'CMailUtil'            => 'classes/'.strtolower($DB->type).'/mail.php',
+		'CMailMessage'         => 'classes/'.strtolower($DB->type).'/mail.php',
 
-		"CMailImap" => "classes/general/imap.php",
+		'CSMTPServer'          => 'classes/general/smtp.php',
+		'CSMTPServerHost'      => 'classes/general/smtp.php',
+		'CSMTPConnection'      => 'classes/general/smtp.php',
 
-		"CMailRestService" => "classes/general/rest.php",
+		'CMailImap'            => 'classes/general/imap.php',
 
-		"CMailDomain" => "classes/general/domain.php",
-		"CMailYandex" => "classes/general/yandex.php",
-		"CMailDomain2" => "classes/general/domain2.php",
-		"CMailYandex2" => "classes/general/yandex2.php",
+		'CMailRestService'     => 'classes/general/rest.php',
 
-		"CMailDomainRegistrar" => "classes/general/domain_registrar.php",
-		"CMailRegru" => "classes/general/regru.php"
+		'CMailDomain'          => 'classes/general/domain.php',
+		'CMailYandex'          => 'classes/general/yandex.php',
+		'CMailDomain2'         => 'classes/general/domain2.php',
+		'CMailYandex2'         => 'classes/general/yandex2.php',
+
+		'CMailDomainRegistrar' => 'classes/general/domain_registrar.php',
+		'CMailRegru'           => 'classes/general/regru.php',
+
+		'Bitrix\Mail\BaseException'     => 'lib/exception.php',
+		'Bitrix\Mail\ReceiverException' => 'lib/exception.php',
 	)
 );
-
-
-?>

@@ -38,11 +38,13 @@ class Result
 	 * Adds the error.
 	 *
 	 * @param Error $error
+	 * @return $this
 	 */
 	public function addError(Error $error)
 	{
 		$this->isSuccess = false;
 		$this->errors[] = $error;
+		return $this;
 	}
 
 	/**
@@ -84,20 +86,24 @@ class Result
 	 * Adds array of Error objects
 	 *
 	 * @param Error[] $errors
+	 * @return $this
 	 */
 	public function addErrors(array $errors)
 	{
 		$this->isSuccess = false;
 		$this->errors->add($errors);
+		return $this;
 	}
 
 	/**
 	 * Sets data of the result.
 	 * @param array $data
+	 * @return $this
 	 */
 	public function setData(array $data)
 	{
 		$this->data = $data;
+		return $this;
 	}
 
 	/**

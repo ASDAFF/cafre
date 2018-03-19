@@ -24,4 +24,5 @@ $MESS["BIZPROC_WFEDIT_MENU_IMPORT_PROMT"] = "Current business process template w
 $MESS["BIZPROC_EMPTY_EXPORT"] = "Please save the template before exporting it.";
 $MESS["BIZPROC_WFEDIT_CHECK_ERROR"] = "Error opening the template: not all of the actions present in the template are installed on the portal.";
 $MESS["BIZPROC_WFEDIT_BEFOREUNLOAD"] = "Attention! All the unsaved data will be lost. Are you sure you want to leave this page?";
+$MESS["BIZPROC_WFEDIT_SAVE_ERROR"] = "Error saving template.";
 ?>

@@ -20,7 +20,7 @@ if(CModule::IncludeModule("compression"))
 $action = isset($_REQUEST['action']) ? $_REQUEST['action'] : false;
 
 if (!check_bitrix_sessid())
-	die('<!--BX_EDITOR_DUBLICATE_ACTION_REQUEST'.bitrix_sessid().'-->');	
+	die('<!--BX_EDITOR_DUBLICATE_ACTION_REQUEST'.bitrix_sessid().'-->');
 
 if ($action == 'sitetemplateparams')
 {

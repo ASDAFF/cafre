@@ -41,7 +41,7 @@ if($this->StartResultCache(false, $arUserGroups))
 			$arFilter = array(
 				"ACTIVE" => "Y",
 				"SITE_ID" => SITE_ID,
-				"TYPE" => $arParams["~IBLOCK_TYPE_ID"],
+				"=TYPE" => $arParams["~IBLOCK_TYPE_ID"],
 				"CHECK_PERMISSIONS" => ($CAN_EDIT? "N": "Y"), //This cancels iblock permissions for trusted users
 			);
 
@@ -99,7 +99,7 @@ $aMenuLinksNew = array();
 foreach($arResult["LISTS"] as $i => $arList)
 {
 	$aMenuLinksNew[] = array(
-		htmlspecialcharsbx($arList["~NAME"]),
+		$arList["~NAME"],
 		$arList["LIST_URL"],
 		$arList["LINKS"],
 	);

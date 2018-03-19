@@ -2,7 +2,7 @@
 if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true)
 	die();
 
-use Bitrix\Main\Text\String;
+use Bitrix\Main\Text\HtmlFilter;
 
 /**
  * @var array $arParams
@@ -39,10 +39,14 @@ var bx_app_pass_mess = {
 
 	<?
 	foreach($arResult["APPLICATIONS"] as $app_id => $app):
+		if(isset($app["VISIBLE"]) && $app["VISIBLE"] === false)
+		{
+			continue;
+		}
 	?>
 		<div class="bx-otp-accordion-container <?=(!empty($arResult["ROWS"][$app_id])? "open" : "close")?>" id="bx_app_pass_container_<?=$app_id?>">
 			<div class="bx-otp-accordion-head-block" onclick="return bx_app_pass_toggle('bx_app_pass_container_<?=$app_id?>')">
-				<div class="bx-otp-accordion-head-title"><?=String::htmlEncode($app["NAME"])?></div>
+				<div class="bx-otp-accordion-head-title"><?=HtmlFilter::encode($app["NAME"])?></div>
 				<div class="bx-otp-accordion-head-description"><?=$app["DESCRIPTION"]?></div>
 				<div class="bx-otp-accordion-action"></div>
 			</div>
@@ -66,8 +70,8 @@ var bx_app_pass_mess = {
 					?>
 						<tr id="bx_app_pass_row_<?=$pass["ID"]?>">
 							<td class="bx-otp-access-table-param">
-								<?=String::htmlEncode($pass["SYSCOMMENT"])?>
-								<small><?=String::htmlEncode($pass["COMMENT"])?></small>
+								<?=HtmlFilter::encode($pass["SYSCOMMENT"])?>
+								<small><?=HtmlFilter::encode($pass["COMMENT"])?></small>
 							</td>
 							<td class="bx-otp-access-table-value">
 								<?=$pass["DATE_CREATE"]?>
@@ -93,7 +97,7 @@ var bx_app_pass_mess = {
 									<table>
 										<thead>
 											<tr>
-												<td class="tal" style="padding: 0 30px 0 0;"><small class="fwn ttn m0"><?=($app["OPTIONS_CAPTION"] <> ''? String::htmlEncode($app["OPTIONS_CAPTION"]) : GetMessage("main_app_pass_link"))?></small></td>
+												<td class="tal" style="padding: 0 30px 0 0;"><small class="fwn ttn m0"><?=($app["OPTIONS_CAPTION"] <> ''? HtmlFilter::encode($app["OPTIONS_CAPTION"]) : GetMessage("main_app_pass_link"))?></small></td>
 												<td class="tal" style="padding: 0;"><small class="fwn ttn m0"><?echo GetMessage("main_app_pass_comment")?></small></td>
 											</tr>
 										</thead>
@@ -103,11 +107,11 @@ var bx_app_pass_mess = {
 													<select name="SYSCOMMENT" id="" class="bx-otp-slt medium">
 													<?if(!empty($app["OPTIONS"]) && is_array($app["OPTIONS"])):?>
 														<?foreach($app["OPTIONS"] as $opt):?>
-														<option value="<?=String::htmlEncode($opt)?>"><?=String::htmlEncode($opt)?></option>
+														<option value="<?=HtmlFilter::encode($opt)?>"><?=HtmlFilter::encode($opt)?></option>
 														<?endforeach?>
 														<option value="<?echo GetMessage("main_app_pass_other")?>"><?echo GetMessage("main_app_pass_other")?></option>
 													<?else:?>
-														<option value="<?=String::htmlEncode($app["NAME"])?>"><?=String::htmlEncode($app["NAME"])?></option>
+														<option value="<?=HtmlFilter::encode($app["NAME"])?>"><?=HtmlFilter::encode($app["NAME"])?></option>
 													<?endif?>
 													</select>
 												</td>
@@ -141,8 +145,7 @@ var bx_app_pass_mess = {
 			<div class="bx-otp-popup-lottery-container">
 
 			<p><?echo GetMessage("main_app_pass_create_pass_text")?> </p>
-			<div class="bx-otp-popup-lottery">
-				<div class="bx-otp-popup-lottery-animate" id="bx_app_pass_lottery"></div>
+			<div class="bx-otp-popup-lottery bx-otp-popup-lottery-black" id="bx_app_pass_lottery">
 				<span id="bx_app_pass_password"></span>
 			</div>
 		</div>

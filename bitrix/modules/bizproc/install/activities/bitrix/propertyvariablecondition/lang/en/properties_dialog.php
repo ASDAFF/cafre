@@ -17,4 +17,6 @@ $MESS["BPFC_PD_YES"] = "Yes";
 $MESS["BPFC_PD_IN"] = "is in";
 $MESS["BPFC_PD_CONTAIN"] = "contains";
 $MESS["BPFC_PD_OR"] = "OR";
+$MESS["BPFC_PD_PARAMS"] = "Parameters";
+$MESS["BPFC_PD_VARS"] = "Variables";
 ?>

@@ -14,6 +14,7 @@ class CBPCalendar2Activity
 			"CalendarDesrc" => "",
 			"CalendarFrom" => "",
 			"CalendarTo" => "",
+			"CalendarTimezone" => "",
 			"CalendarType" => "",
 			"CalendarOwnerId" => "",
 			"CalendarSection" => ""
@@ -27,7 +28,6 @@ class CBPCalendar2Activity
 
 		$rootActivity = $this->GetRootActivity();
 		$documentId = $rootActivity->GetDocumentId();
-
 		$documentService = $this->workflow->GetService("DocumentService");
 
 		$fromTs = CCalendar::Timestamp($this->CalendarFrom);
@@ -39,14 +39,16 @@ class CBPCalendar2Activity
 			"DESCRIPTION" => $this->CalendarDesrc,
 			"SKIP_TIME" => date('H:i', $fromTs) == '00:00' && date('H:i', $toTs) == '00:00',
 			"IS_MEETING" => false,
-			"RRULE" => false
+			"RRULE" => false,
+			"TZ_FROM" => $this->CalendarTimezone,
+			"TZ_TO" => $this->CalendarTimezone
 		);
 
 		if ($fromTs == $toTs && !$arFields["SKIP_TIME"])
 			$toTs += 3600 /* HOUR LENGTH*/;
 
-		$arFields['DT_FROM_TS'] = $fromTs;
-		$arFields['DT_TO_TS'] = $toTs;
+		$arFields['DATE_FROM'] = CCalendar::Date($fromTs);
+		$arFields['DATE_TO'] = CCalendar::Date($toTs);
 
 		if ($this->CalendarSection && intVal($this->CalendarSection) > 0)
 		{
@@ -56,10 +58,15 @@ class CBPCalendar2Activity
 		if ($this->CalendarOwnerId || ($arFields["CAL_TYPE"] != "user" && $arFields["CAL_TYPE"] != "group"))
 		{
 			$arFields["OWNER_ID"] = $this->CalendarOwnerId;
-			$eventId = CCalendar::SaveEvent(
+			if (!$arFields['SKIP_TIME'] && !$this->CalendarTimezone)
+			{
+				unset($arFields["TZ_FROM"], $arFields["TZ_TO"]);
+			}
+			CCalendar::SaveEvent(
 				array(
 					'arFields' => $arFields,
-					'autoDetectSection' => true
+					'autoDetectSection' => true,
+					'autoCreateSection' => true
 				)
 			);
 		}
@@ -70,7 +77,16 @@ class CBPCalendar2Activity
 			{
 				$arFields["CAL_TYPE"] = "user";
 				$arFields["OWNER_ID"] = $calendarUser;
-				$eventId = CCalendar::SaveEvent(
+
+				if (!$arFields['SKIP_TIME'] && !$this->CalendarTimezone)
+				{
+					$tzName = CCalendar::GetUserTimezoneName($calendarUser);
+					if(!$tzName)
+						$tzName = CCalendar::GetGoodTimezoneForOffset(CCalendar::GetCurrentOffsetUTC($calendarUser));
+					$arFields["TZ_FROM"] = $arFields["TZ_TO"] = $tzName;
+				}
+
+				CCalendar::SaveEvent(
 					array(
 						'arFields' => $arFields,
 						'autoDetectSection' => true
@@ -98,6 +114,8 @@ class CBPCalendar2Activity
 
 	public static function GetPropertiesDialog($documentType, $activityName, $arWorkflowTemplate, $arWorkflowParameters, $arWorkflowVariables, $arCurrentValues = null, $formName = "")
 	{
+		global $USER;
+		CModule::IncludeModule("calendar");
 		$runtime = CBPRuntime::GetRuntime();
 
 		$arMap = array(
@@ -109,6 +127,7 @@ class CBPCalendar2Activity
 			"CalendarDesrc" => "calendar_desrc",
 			"CalendarFrom" => "calendar_from",
 			"CalendarTo" => "calendar_to",
+			"CalendarTimezone" => "calendar_timezone"
 		);
 
 		if (!is_array($arWorkflowParameters))
@@ -143,12 +162,24 @@ class CBPCalendar2Activity
 			}
 		}
 
+		if (!$arCurrentValues["calendar_timezone"])
+		{
+			$userId = $USER->GetId();
+			$tzName = CCalendar::GetUserTimezoneName($userId);
+			if (!$tzName)
+			{
+				$tzName = CCalendar::GetGoodTimezoneForOffset(CCalendar::GetCurrentOffsetUTC($userId));
+			}
+			$arCurrentValues["calendar_timezone"] = $tzName;
+		}
+
 		return $runtime->ExecuteResourceFile(
 			__FILE__,
 			"properties_dialog.php",
 			array(
 				"arCurrentValues" => $arCurrentValues,
 				"formName" => $formName,
+				"timezoneList" => CCalendar::GetTimezoneList()
 			)
 		);
 	}
@@ -167,7 +198,8 @@ class CBPCalendar2Activity
 			"calendar_to" => "CalendarTo",
 			"calendar_type" => "CalendarType",
 			"calendar_owner_id" => "CalendarOwnerId",
-			"calendar_section" => "CalendarSection"
+			"calendar_section" => "CalendarSection",
+			"calendar_timezone" => "CalendarTimezone"
 		);
 
 		$arProperties = array();

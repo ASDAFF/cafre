@@ -83,6 +83,17 @@ class Context
 	}
 
 	/**
+	 * Sets response of the context.
+	 *
+	 * @param Response $response Response.
+	 * @return void
+	 */
+	public function setResponse(Response $response)
+	{
+		$this->response = $response;
+	}
+
+	/**
 	 * Returns request object of the context.
 	 *
 	 * @return HttpRequest

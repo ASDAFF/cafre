@@ -78,4 +78,5 @@ $MESS ['IBLOCK_PROP_VIDEO_SIZE_ERROR'] = "Maximum file size exceeded: \"#FILE_NA
 $MESS ['IBLOCK_PROP_VIDEO_TITLE'] = "Title";
 $MESS ['IBLOCK_PROP_VIDEO_UPLOAD_ERROR'] = "File upload error.";
 $MESS ['IBLOCK_PROP_VIDEO_WMV_SET'] = "WMV Player Settings";
+$MESS ['IBLOCK_PROP_G_MAP_API_KEY'] = "JavaScript API key";
 ?>

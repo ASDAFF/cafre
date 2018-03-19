@@ -656,7 +656,7 @@ BXWikiEditor.prototype.saveWikiCodes = function(text)
 	var retText = '';
 	var _this = this;
 
-	retText = text.replace(/({{{.*?}}}|\[CODE\].*?\[\/CODE\])/igm, function(code, offset, text)
+	retText = text.replace(/({{{[\s\S]*?}}}|\[CODE\][\s\S]*?\[\/CODE\])/igm, function(code, offset, text)
 	{
 		var i = _this.arWikiCodeStorage.push(code) - 1;
 		return "##CODE"+i+"##";

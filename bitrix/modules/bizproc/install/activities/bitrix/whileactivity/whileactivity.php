@@ -86,8 +86,9 @@ class CBPWhileActivity
 	{
 		$this->cycleCounter++;
 		if ($this->cycleCounter > self::CYCLE_LIMIT)
-			throw new Exception('Cycle limit exceed');
-
+		{
+			throw new Exception(GetMessage("BPWA_CYCLE_LIMIT"));
+		}
 		if (($this->executionStatus == CBPActivityExecutionStatus::Canceling) || ($this->executionStatus == CBPActivityExecutionStatus::Faulting))
 			return false;
 
@@ -179,6 +180,7 @@ class CBPWhileActivity
 
 		$runtime = CBPRuntime::GetRuntime();
 		$arActivities = $runtime->SearchActivitiesByType("condition");
+		$conditionFound = false;
 
 		foreach ($arTestProperties as $key => $value)
 		{
@@ -194,7 +196,16 @@ class CBPWhileActivity
 					),
 					$arErrors
 				);
+				$conditionFound = true;
 			}
+		}
+
+		if (!$conditionFound)
+		{
+			$arErrors[] = array(
+				"code" => "condition",
+				"message" => GetMessage("BPWA_CONDITION_NOT_SET"),
+			);
 		}
 
 		return array_merge($arErrors, parent::ValidateProperties($arTestProperties, $user));

@@ -2,22 +2,25 @@
 <script>
 function onLightEditorShow(content)
 {
+//	todo: need?
 	if (!window.oBlogComLHE)
 		return BX.addCustomEvent(window, 'LHE_OnInit', function(){setTimeout(function(){onLightEditorShow(content);},	500);});
 
-	oBlogComLHE.SetContent(content || '');
-	oBlogComLHE.CreateFrame(); // We need to recreate editable frame after reappending editor container
-	oBlogComLHE.SetEditorContent(oBlogComLHE.content);
+	window.LHEPostForm.reinitData('LHEBlogCom', content);
 }
 
 function showComment(key, subject, error, comment, userName, userEmail)
 {
 	<?
-	if($arResult["use_captcha"]===true)
+	if ($arResult["use_captcha"]===true)
 	{
 		?>
-		var im = BX('captcha');
-		BX('captcha_del').appendChild(im);
+		BX.ajax.getCaptcha(function(data) {
+			BX("captcha_word").value = "";
+			BX("captcha_code").value = data["captcha_sid"];
+			BX("captcha").src = '/bitrix/tools/captcha.php?captcha_code=' + data["captcha_sid"];
+			BX("captcha").style.display = "";
+		});
 		<?
 	}
 	?>
@@ -31,17 +34,6 @@ function showComment(key, subject, error, comment, userName, userEmail)
 	document.form_comment.act.value = 'add';
 	document.form_comment.post.value = '<?=GetMessage("B_B_MS_SEND")?>';
 	document.form_comment.action = document.form_comment.action + "#" + key;
-
-	<?
-	if($arResult["use_captcha"]===true)
-	{
-		?>
-		var im = BX('captcha');
-		BX('div_captcha').appendChild(im);
-		im.style.display = "block";
-		<?
-	}
-	?>
 
 	if(error == "Y")
 	{

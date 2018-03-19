@@ -115,7 +115,7 @@ require($_SERVER["DOCUMENT_ROOT"]."/bitrix/header.php");
 	"MIN_AMOUNT" => "10",
 	"STORE_PATH" => "/store/#store_id#",
 	"MAIN_TITLE" => "Наличие на складах",
-	"DISPLAY_TOP_PAGER" => "N",
+	"DISPLAY_TOP_PAGER" => "Y",
 	"DISPLAY_BOTTOM_PAGER" => "N",
 	"PAGER_TITLE" => "Товары",
 	"PAGER_SHOW_ALWAYS" => "N",

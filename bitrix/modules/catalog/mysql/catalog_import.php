@@ -3,7 +3,7 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/catalog/general/catalog_
 
 class CCatalogImport extends CAllCatalogImport
 {
-	function Add($arFields)
+	public static function Add($arFields)
 	{
 		global $DB;
 
@@ -15,17 +15,17 @@ class CCatalogImport extends CAllCatalogImport
 		$strSql = "insert into b_catalog_export(".$arInsert[0].") values(".$arInsert[1].")";
 		$DB->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
 
-		$ID = intval($DB->LastID());
+		$ID = (int)$DB->LastID();
 
 		return $ID;
 	}
 
-	function Update($ID, $arFields)
+	public static function Update($ID, $arFields)
 	{
 		global $DB;
 
-		$ID = intval($ID);
-		if (0 >= $ID)
+		$ID = (int)$ID;
+		if ($ID <= 0)
 			return false;
 
 		if (!CCatalogImport::CheckFields("UPDATE", $arFields))
@@ -42,4 +42,3 @@ class CCatalogImport extends CAllCatalogImport
 		return $ID;
 	}
 }
-?>

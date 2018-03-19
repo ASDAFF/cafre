@@ -97,7 +97,7 @@ waiting for integration lists into events_user_view
 				"group_bizproc_task" => "page=group_bizproc_task&group_id=#group_id#&list_id=#list_id#&section_id=#section_id#&element_id=#element_id#&task_id=#task_id#",
 				"group_bizproc_workflow_admin" => "page=group_bizproc_workflow_admin&group_id=#group_id#&list_id=#list_id#",
 				"group_bizproc_workflow_edit" => "page=group_bizproc_workflow_admin&group_id=#group_id#&list_id=#list_id#&ID=#ID#",
-				"group_bizproc_workflow_delete" => "page=group_bizproc_workflow_delete&group_id=#group_id#&list_id=#list_id#&section_id=#section_id#&element_id=#element_id#"
+				"group_list_export_excel" => "page=group_list_export_excel&group_id=#group_id#&list_id=#list_id#",
 			);
 		}
 		else
@@ -116,7 +116,6 @@ waiting for integration lists into events_user_view
 				"group_bizproc_task" => "group/#group_id#/lists/#list_id#/bp_task/#section_id#/#element_id#/#task_id#/",
 				"group_bizproc_workflow_admin" => "group/#group_id#/lists/#list_id#/bp_admin/",
 				"group_bizproc_workflow_edit" => "group/#group_id#/lists/#list_id#/bp_edit/#ID#/",
-				"group_bizproc_workflow_delete" => "group/#group_id#/lists/#list_id#/bp_delete/#element_id#/",
 				"group_list_export_excel" => "group/#group_id#/lists/#list_id#/excel/",
 			);
 		}
@@ -137,6 +136,18 @@ waiting for integration lists into events_user_view
 			$arUrlTemplates[$page] = $url;
 			$arCustomPagesPath[$page] = $base_path;
 		}
+
+		Bitrix\Main\UrlPreview\Router::setRouteHandler(
+				$arParams['SEF_FOLDER'].$arUrlTemplates['group_list_element_edit'],
+				'lists',
+				'\Bitrix\Lists\Preview\Element',
+				array(
+						'listId' => '$list_id',
+						'sectionId' => '$section_id',
+						'elementId' => '$element_id',
+						'IBLOCK_TYPE_ID' => COption::GetOptionString("lists", "socnet_iblock_type_id")
+				)
+		);
 	}
 
 	function OnInitSocNetComponentVariables(&$arVariableAliases, &$arCustomPagesPath)
@@ -151,100 +162,5 @@ waiting for integration lists into events_user_view
 		$arVariableAliases['mode'] = 'mode';
 		$arVariableAliases['ID'] = 'ID';
 	}
-
-/*
-waiting for integration lists into events_user_view
-
-	function FormatEvent_Lists($arFields, $arParams, $bMail = false)
-	{
-		$arResult = array(
-				"EVENT"				=> $arFields,
-				"CREATED_BY"		=> array(),
-				"ENTITY"			=> array(),
-				"EVENT_FORMATTED"	=> array(),
-			);
-
-		if (intval($arFields["USER_ID"]) > 0)
-		{
-			if ($bMail)
-				$arResult["CREATED_BY"]["FORMATTED"] = $arFields["CREATED_BY_NAME"]." ".$arFields["CREATED_BY_LAST_NAME"];
-			else
-			{
-				$arFieldsTooltip = array(
-					"ID" 			=> $arFields["USER_ID"],
-					"NAME" 			=> $arFields["~CREATED_BY_NAME"],
-					"LAST_NAME" 	=> $arFields["~CREATED_BY_LAST_NAME"],
-					"SECOND_NAME" 	=> $arFields["~CREATED_BY_SECOND_NAME"],
-					"LOGIN" 		=> $arFields["~CREATED_BY_LOGIN"],
-				);
-				$arResult["CREATED_BY"]["TOOLTIP_FIELDS"] = CSocNetLog::FormatEvent_FillTooltip($arFieldsTooltip, $arParams);
-			}
-		}
-
-		if (
-			$arFields["ENTITY_TYPE"] == SONET_SUBSCRIBE_ENTITY_GROUP
-			&& intval($arFields["ENTITY_ID"]) > 0
-		)
-		{
-			if ($bMail)
-				$arResult["ENTITY"]["FORMATTED"] = $arFields["GROUP_NAME"];
-			else
-			{
-				$url = CComponentEngine::MakePathFromTemplate($arParams["PATH_TO_GROUP"], array("group_id" => $arFields["ENTITY_ID"]));
-				$arResult["ENTITY"]["FORMATTED"] = '<a href="'.$url.'">'.$arFields["GROUP_NAME"].'</a>';
-			}
-		}
-
-		if (
-			!$bMail
-			&& array_key_exists("URL", $arFields)
-			&& strlen($arFields["URL"]) > 0
-		)
-			$lists_tmp = '<a href="'.$arFields["URL"].'">'.$arFields["TITLE"].'</a>';
-		else
-			$lists_tmp = $arFields["TITLE"];
-
-		if ($arFields["EVENT_ID"] == "lists")
-			$title_tmp = ($bMail ? GetMessage("LISTS_SOCNET_LOG_TITLE_MAIL") : GetMessage("LISTS_SOCNET_LOG_TITLE"));
-		elseif ($arFields["EVENT_ID"] == "lists_del")
-			$title_tmp = ($bMail ? GetMessage("LISTS_DEL_SOCNET_LOG_TITLE_MAIL") : GetMessage("LISTS_DEL_SOCNET_LOG_TITLE"));
-
-		$title = str_replace(
-						array("#TITLE#", "#ENTITY#"),
-						array($lists_tmp, $arResult["ENTITY"]["FORMATTED"]),
-						$title_tmp
-					);
-
-		$arResult["EVENT_FORMATTED"] = array(
-				"TITLE"		=> $title,
-				"MESSAGE"	=> ""
-			);
-
-		$url = false;
-
-		if (
-			$bMail
-			&& strlen($arFields["URL"]) > 0
-			&& strlen($arFields["SITE_ID"]) > 0
-		)
-		{
-			$rsSites = CSite::GetByID($arFields["SITE_ID"]);
-			$arSite = $rsSites->Fetch();
-
-			if (strlen($arSite["SERVER_NAME"]) > 0)
-				$server_name = $arSite["SERVER_NAME"];
-			else
-				$server_name = COption::GetOptionString("main", "server_name", $GLOBALS["SERVER_NAME"]);
-
-			$protocol = (CMain::IsHTTPS() ? "https" : "http");
-			$url = $protocol."://".$server_name.$arFields["URL"];
-		}
-
-		if (strlen($url) > 0)
-			$arResult["EVENT_FORMATTED"]["URL"] = $url;
-
-		return $arResult;
-	}
-*/
 }
 ?>

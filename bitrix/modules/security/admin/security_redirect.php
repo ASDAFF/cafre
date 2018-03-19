@@ -47,9 +47,9 @@ if(
 	COption::SetOptionString("security", "redirect_referer_check", $_POST["redirect_referer_check"]==="Y"? "Y": "N");
 	COption::SetOptionString("security", "redirect_referer_site_check", $_POST["redirect_referer_site_check"]==="Y"? "Y": "N");
 	COption::SetOptionString("security", "redirect_href_sign", $_POST["redirect_href_sign"]==="Y"? "Y": "N");
-	if($_POST["redirect_action"] === "show_message")
+	if ($_POST["redirect_action"] === "show_message" || $_POST["redirect_action"] === "show_message_and_stay")
 	{
-		COption::SetOptionString("security", "redirect_action", "show_message");
+		COption::SetOptionString("security", "redirect_action", $_POST["redirect_action"]);
 		COption::RemoveOption("security", "redirect_message_warning");
 		$l = CLanguage::GetList($lby="sort", $lorder="asc");
 		while($ar = $l->Fetch())
@@ -61,7 +61,9 @@ if(
 				COption::RemoveOption("security", "redirect_message_warning_".$ar["LID"]);
 		}
 		COption::SetOptionString("security", "redirect_message_charset", LANG_CHARSET);
-		COption::SetOptionInt("security", "redirect_message_timeout", $_POST["redirect_message_timeout"]);
+		
+		if ($_POST["redirect_action"] === "show_message")
+			COption::SetOptionInt("security", "redirect_message_timeout", $_POST["redirect_message_timeout"]);
 	}
 	else
 	{
@@ -207,20 +209,31 @@ while($ar = $rs->Fetch())
 		<script>
 		function Toggle(input)
 		{
-			var flag = true;
-			if(input.id == 'redirect_show_message')
-				flag = true;
-			if(input.id == 'redirect_force_url')
-				flag = false;
-
-			document.getElementById('redirect_url').disabled = flag;
-			document.getElementById('redirect_message_timeout').disabled = !flag;
+			BX('redirect_url').disabled = !BX('redirect_force_url').checked;
+			BX('redirect_message_timeout').disabled = !BX('redirect_show_message').checked;
 			var c = arLangs.length;
-			for(var i = 0; i < c; i++)
-				document.getElementById('redirect_message_warning_'+arLangs[i]).disabled = !flag;
+			for (var i = 0; i < c; i++)
+			{
+				BX('redirect_message_warning_'+arLangs[i]).disabled = BX('redirect_force_url').checked;
+			}
 		}
 		</script>
-		<label><input type="radio" name="redirect_action" id="redirect_show_message" value="show_message" <?if(COption::GetOptionString("security", "redirect_action") == "show_message") echo "checked";?> onClick="Toggle(this);"><?echo GetMessage("SEC_REDIRECT_ACTION_SHOW_MESSAGE")?></label><br>
+		<label><input
+			type="radio"
+			name="redirect_action"
+			id="redirect_show_message_and_stay"
+			value="show_message_and_stay"
+			<?if(COption::GetOptionString("security", "redirect_action") == "show_message_and_stay") echo "checked";?>
+			onClick="Toggle(this);"
+		><?echo GetMessage("SEC_REDIRECT_SHOW_MESSAGE_AND_STAY")?></label><br>
+		<label><input
+			type="radio"
+			name="redirect_action"
+			id="redirect_show_message"
+			value="show_message"
+			<?if(COption::GetOptionString("security", "redirect_action") == "show_message") echo "checked";?>
+			onClick="Toggle(this);"
+		><?echo GetMessage("SEC_REDIRECT_ACTION_SHOW_MESSAGE")?></label><br>
 		<table style="margin-left:24px">
 		<?
 		$disabled = COption::GetOptionString("security", "redirect_action") == "force_url";
@@ -229,7 +242,12 @@ while($ar = $rs->Fetch())
 		while($ar = $l->GetNext()):?>
 			<tr class="adm-detail-valign-top">
 				<td><?echo GetMessage("SEC_REDIRECT_MESSAGE")."(".$ar["LID"].")"?></td>
-				<td><textarea name="redirect_message_warning_<?echo $ar["LID"]?>" id="redirect_message_warning_<?echo $ar["LID"]?>" cols=40 rows=5 <?if($disabled) echo "disabled";?>
+				<td><textarea
+					name="redirect_message_warning_<?echo $ar["LID"]?>"
+					id="redirect_message_warning_<?echo $ar["LID"]?>"
+					cols=40
+					rows=5
+					<?if($disabled) echo "disabled";?>
 				><?
 				$mess = trim(COption::GetOptionString("security", "redirect_message_warning_".$ar["LID"]));
 				if(strlen($mess) <= 0)
@@ -249,14 +267,32 @@ while($ar = $rs->Fetch())
 				<?echo GetMessage("SEC_REDIRECT_TIMEOUT")?>
 			</td>
 			<td>
-				<input type="text" name="redirect_message_timeout" id="redirect_message_timeout" value="<?echo COption::GetOptionInt("security", "redirect_message_timeout")?>" size="4" <?if(COption::GetOptionString("security", "redirect_action") == "force_url") echo "disabled";?>><?echo GetMessage("SEC_REDIRECT_TIMEOUT_SEC")?>
+				<input
+					type="text"
+					name="redirect_message_timeout"
+					id="redirect_message_timeout"
+					value="<?echo COption::GetOptionInt("security", "redirect_message_timeout")?>"
+					size="4"
+					<?if(COption::GetOptionString("security", "redirect_action") != "show_message") echo "disabled";?>
+				><?echo GetMessage("SEC_REDIRECT_TIMEOUT_SEC")?>
 			</td>
 		</tr>
 		</table>
 		<label><input type="radio" name="redirect_action" id="redirect_force_url" value="force_url" <?if(COption::GetOptionString("security", "redirect_action") == "force_url") echo "checked";?> onClick="Toggle(this);"><?echo GetMessage("SEC_REDIRECT_ACTION_REDIRECT")?></label><br>
 		<table style="margin-left:24px">
-		<tr><td>
-		<?echo GetMessage("SEC_REDIRECT_ACTION_REDIRECT_URL")?></td><td><input type="text" name="redirect_url" id="redirect_url" value="<?echo htmlspecialcharsbx(COption::GetOptionString("security", "redirect_url"))?>" size="45" <?if(COption::GetOptionString("security", "redirect_action") == "show_message") echo "disabled";?>>
+		<tr>
+			<td>
+				<?echo GetMessage("SEC_REDIRECT_ACTION_REDIRECT_URL")?>
+			</td>
+			<td>
+				<input
+					type="text"
+					name="redirect_url"
+					id="redirect_url"
+					value="<?echo htmlspecialcharsbx(COption::GetOptionString("security", "redirect_url"))?>"
+					size="45"
+					<?if(COption::GetOptionString("security", "redirect_action") != "force_url") echo "disabled";?>
+				>
 		</td></tr>
 		</table>
 	</td>

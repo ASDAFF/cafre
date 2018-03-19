@@ -32,8 +32,6 @@ include("util_profile.php");
 
 		"MESSAGES_PER_PAGE"	=>	$arParams["MESSAGES_PER_PAGE"],
 
-		"PATH_TO_ICON"	=> $arParams["PATH_TO_FORUM_ICON"],
-		"PATH_TO_SMILE"	=> $arParams["PATH_TO_FORUM_SMILE"],
 		"WORD_LENGTH"	=>	$arParams["WORD_LENGTH"],
 		"IMAGE_SIZE"	=>	$arParams["IMAGE_SIZE"],
 		"DATE_FORMAT"	=>	$arParams["DATE_FORMAT"],
@@ -80,9 +78,6 @@ if (!empty($arInfo) && $arInfo["PERMISSION"] > "E"):
 		"MESSAGE" => $arInfo["MESSAGE"],
 		"ERROR_MESSAGE" => $arInfo["ERROR_MESSAGE"],
 
-		"PATH_TO_SMILE"	=>	$arParams["PATH_TO_FORUM_SMILE"],
-		"PATH_TO_ICON"	=>	$arParams["PATH_TO_FORUM_ICON"],
-		"SMILE_TABLE_COLS" => $arParams["SMILE_TABLE_COLS"],
 		"AJAX_TYPE" => $arParams["AJAX_TYPE"],
 		"AJAX_POST" => $arParams["FORUM_AJAX_POST"],
 

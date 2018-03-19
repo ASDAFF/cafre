@@ -8,11 +8,11 @@ class CAllSocNetGroupSubject
 	/***************************************/
 	function CheckFields($ACTION, &$arFields, $ID = 0)
 	{
-		global $DB;
+		global $APPLICATION;
 
 		if ($ACTION != "ADD" && IntVal($ID) <= 0)
 		{
-			$GLOBALS["APPLICATION"]->ThrowException("System error 870164", "ERROR");
+			$APPLICATION->ThrowException("System error 870164", "ERROR");
 			return false;
 		}
 
@@ -24,7 +24,7 @@ class CAllSocNetGroupSubject
 			)
 		)
 		{
-			$GLOBALS["APPLICATION"]->ThrowException(GetMessage("SONET_GS_EMPTY_SITE_ID"), "EMPTY_SITE_ID");
+			$APPLICATION->ThrowException(GetMessage("SONET_GS_EMPTY_SITE_ID"), "EMPTY_SITE_ID");
 			return false;
 		}
 		elseif (is_set($arFields, "SITE_ID"))
@@ -37,7 +37,7 @@ class CAllSocNetGroupSubject
 				$dbResult = CSite::GetByID($v);
 				if (!$dbResult->Fetch())
 				{
-					$GLOBALS["APPLICATION"]->ThrowException(str_replace("#ID#", $v, GetMessage("SONET_GS_ERROR_NO_SITE")), "ERROR_NO_SITE");
+					$APPLICATION->ThrowException(str_replace("#ID#", $v, GetMessage("SONET_GS_ERROR_NO_SITE")), "ERROR_NO_SITE");
 					return false;
 				}
 			}
@@ -45,7 +45,7 @@ class CAllSocNetGroupSubject
 
 		if ((is_set($arFields, "NAME") || $ACTION=="ADD") && strlen($arFields["NAME"]) <= 0)
 		{
-			$GLOBALS["APPLICATION"]->ThrowException(GetMessage("SONET_GS_EMPTY_NAME"), "EMPTY_NAME");
+			$APPLICATION->ThrowException(GetMessage("SONET_GS_EMPTY_NAME"), "EMPTY_NAME");
 			return false;
 		}
 
@@ -57,13 +57,12 @@ class CAllSocNetGroupSubject
 
 	function Delete($ID)
 	{
-		global $DB, $CACHE_MANAGER;
+		global $DB, $CACHE_MANAGER, $APPLICATION;
 
 		if (!CSocNetGroup::__ValidateID($ID))
 			return false;
 
 		$ID = IntVal($ID);
-		$bSuccess = True;
 
 		$bCanDelete = true;
 		$dbResult = CSocNetGroup::GetList(
@@ -75,7 +74,7 @@ class CAllSocNetGroupSubject
 
 		if (!$bCanDelete)
 		{
-			$GLOBALS["APPLICATION"]->ThrowException(GetMessage("SONET_GS_NOT_EMPTY_SUBJECT"), "NOT_EMPTY_SUBJECT");
+			$APPLICATION->ThrowException(GetMessage("SONET_GS_NOT_EMPTY_SUBJECT"), "NOT_EMPTY_SUBJECT");
 			return false;
 		}
 
@@ -89,8 +88,8 @@ class CAllSocNetGroupSubject
 
 		return $bSuccess;
 	}
-	
-	function Update($ID, $arFields)
+
+	public static function Update($ID, $arFields)
 	{
 		global $DB, $CACHE_MANAGER;
 
@@ -99,15 +98,7 @@ class CAllSocNetGroupSubject
 
 		$ID = IntVal($ID);
 
-		$arFields1 = array();
-		foreach ($arFields as $key => $value)
-		{
-			if (substr($key, 0, 1) == "=")
-			{
-				$arFields1[substr($key, 1)] = $value;
-				unset($arFields[$key]);
-			}
-		}
+		$arFields1 = \Bitrix\Socialnetwork\Util::getEqualityFields($arFields);
 
 		if (!CSocNetGroupSubject::CheckFields("UPDATE", $arFields, $ID))
 			return false;
@@ -132,13 +123,7 @@ class CAllSocNetGroupSubject
 		}
 
 		$strUpdate = $DB->PrepareUpdate("b_sonet_group_subject", $arFields);
-
-		foreach ($arFields1 as $key => $value)
-		{
-			if (strlen($strUpdate) > 0)
-				$strUpdate .= ", ";
-			$strUpdate .= $key."=".$value." ";
-		}
+		\Bitrix\Socialnetwork\Util::processEqualityFieldsToUpdate($arFields1, $strUpdate);
 
 		if (strlen($strUpdate) > 0)
 		{
@@ -173,10 +158,8 @@ class CAllSocNetGroupSubject
 	/***************************************/
 	/**********  DATA SELECTION  ***********/
 	/***************************************/
-	function GetByID($ID)
+	public static function GetByID($ID)
 	{
-		global $DB;
-
 		if (!CSocNetGroup::__ValidateID($ID))
 			return false;
 
@@ -189,7 +172,7 @@ class CAllSocNetGroupSubject
 		return False;
 	}
 
-	function GetSite($subject_id)
+	public static function GetSite($subject_id)
 	{
 		global $DB;
 		$strSql = "SELECT L.*, SGSS.* FROM b_sonet_group_subject_site SGSS, b_lang L WHERE L.LID=SGSS.SITE_ID AND SGSS.SUBJECT_ID=".IntVal($subject_id);

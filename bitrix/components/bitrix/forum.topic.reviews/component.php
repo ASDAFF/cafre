@@ -283,7 +283,7 @@ elseif (empty($arParams["~URL_TEMPLATES_READ"]))
 	$arParams["~URL_TEMPLATES_READ"] = $APPLICATION->GetCurPage()."?PAGE_NAME=read&FID=#FID#&TID=#TID#&MID=#MID#";
 $arParams["~URL_TEMPLATES_READ"] = str_replace(array("#FORUM_ID#", "#TOPIC_ID#", "#MESSAGE_ID#"),
 		array("#FID#", "#TID#", "#MID#"), $arParams["~URL_TEMPLATES_READ"]);
-$arParams["URL_TEMPLATES_READ"] = htmlspecialcharsEx($arParams["~URL_TEMPLATES_READ"]);
+$arParams["URL_TEMPLATES_READ"] = htmlspecialcharsbx($arParams["~URL_TEMPLATES_READ"]);
 /************** ADDITIONAL *****************************************/
 $arParams["USE_CAPTCHA"] = $arResult["FORUM"]["USE_CAPTCHA"] == "Y" ? "Y" : $arParams["USE_CAPTCHA"];
 /********************************************************************
@@ -567,15 +567,17 @@ if ($arResult["SHOW_POST_FORM"] == "Y")
 		$arResult["~REVIEW_TEXT"] = $_POST["REVIEW_TEXT"];
 		$arResult["~REVIEW_USE_SMILES"] = ($_POST["REVIEW_USE_SMILES"] == "Y" ? "Y" : "N");
 	}
-	$arResult["REVIEW_AUTHOR"] = htmlspecialcharsEx($arResult["~REVIEW_AUTHOR"]);
-	$arResult["REVIEW_EMAIL"] = htmlspecialcharsEx($arResult["~REVIEW_EMAIL"]);
-	$arResult["REVIEW_TEXT"] = htmlspecialcharsEx($arResult["~REVIEW_TEXT"]);
+	$arResult["REVIEW_AUTHOR"] = htmlspecialcharsbx($arResult["~REVIEW_AUTHOR"]);
+	$arResult["REVIEW_EMAIL"] = htmlspecialcharsbx($arResult["~REVIEW_EMAIL"]);
+	$arResult["REVIEW_TEXT"] = htmlspecialcharsbx($arResult["~REVIEW_TEXT"]);
 	$arResult["REVIEW_USE_SMILES"] = $arResult["~REVIEW_USE_SMILES"];
 	$arResult["REVIEW_FILES"] = array();
 	foreach ($_REQUEST["FILES"] as $key => $val):
-		if (intVal($val) <= 0)
-			return false;
-		$arResult["REVIEW_FILES"][$val] = CFile::GetFileArray($val);
+		$val = intval($val);
+		if ($val <= 0)
+			continue;
+		if (($file = CFile::GetFileArray($val)) && is_array($file))
+			$arResult["REVIEW_FILES"][$val] = htmlspecialcharsEx($file);
 	endforeach;
 
 	// Form Info

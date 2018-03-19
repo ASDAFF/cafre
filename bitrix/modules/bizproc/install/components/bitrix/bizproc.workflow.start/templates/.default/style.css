@@ -38,3 +38,8 @@ span.bizproc-field-value-int input, span.bizproc-field-value-double input, span.
 /*span.bizproc-field-value-text textarea,*/ span.bizproc-field-value-select select, /*span.bizproc-field-value-bool select, */
 span.bizproc-field-value-date input, span.bizproc-field-value-datetime input/*, span.bizproc-field-value-user textarea*/ {
  	width:20em;}
+
+.bizproc-workflow-template-parameters + .bizproc-workflow-template-parameters
+{
+	margin-top: 10px;
+}

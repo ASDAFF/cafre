@@ -80,7 +80,7 @@ else
 		$navString = GetMessage('BPWIT_PAGES') . ": {$prevNavString} {$innerNavString} <span>{$arResult['CURRENT_PAGE']}</span> {$nextNavString}";
 	}
 
-	foreach ($arResult["RECORDS"] as &$record)
+	foreach ($arResult["RECORDS"] as $key => $record)
 	{
 		if ($record['data']['IS_LOCKED'])
 			$record['rowClass'] = 'bp-row-warning';
@@ -94,7 +94,12 @@ else
 		{
 			if (empty($record['data'][$field]))
 				$record['data'][$field] = '<span class="bp-warning">'.getMessage('BPWIT_UNKNOWN').'</span>';
+			elseif ($field === 'WS_DOCUMENT_NAME')
+			{
+				$record['data'][$field] = htmlspecialcharsbx($record['data'][$field]);
+			}
 		}
+		$arResult["RECORDS"][$key] = $record;
 	}
 
 	$gridParams = array(

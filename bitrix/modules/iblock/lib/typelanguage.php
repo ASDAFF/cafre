@@ -14,7 +14,7 @@ Loc::loadMessages(__FILE__);
  * <li> LANGUAGE_ID char(2) mandatory
  * <li> NAME string(100) mandatory
  * <li> SECTIONS_NAME string(100) optional
- * <li> ELEMENTS_NAME string(100) mandatory
+ * <li> ELEMENTS_NAME string(100) optional
  * <li> LANGUAGE reference to {@link \Bitrix\Main\Localization\LanguageTable}
  * </ul>
  *
@@ -22,16 +22,6 @@ Loc::loadMessages(__FILE__);
  */
 class TypeLanguageTable extends Entity\DataManager
 {
-	/**
-	 * Returns path to the file which contains definition of the class.
-	 *
-	 * @return string
-	 */
-	public static function getFilePath()
-	{
-		return __FILE__;
-	}
-
 	/**
 	 * Returns DB table name for entity
 	 *
@@ -77,7 +67,6 @@ class TypeLanguageTable extends Entity\DataManager
 			),
 			'ELEMENTS_NAME' => array(
 				'data_type' => 'string',
-				'required' => true,
 				'column_name' => 'ELEMENT_NAME',
 				'validation' => array(__CLASS__, 'validateElementsName'),
 				'title' => Loc::getMessage('IBLOCK_TYPE_LANG_ENTITY_ELEMENT_NAME_FIELD'),

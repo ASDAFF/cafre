@@ -27,6 +27,7 @@ IfElseBranchActivity = function()
 		d.style.margin = '5px';
 		d.innerHTML = '<div style="background: url(/bitrix/images/bizproc/cond_bg.gif);"><div style="background: url(/bitrix/images/bizproc/cond_r.gif) right top no-repeat;"><div style="background: url(/bitrix/images/bizproc/cond_l.gif) left top no-repeat; height: 23px; overflow-y: hidden;"><div style="padding-top: 5px; font-size: 12px; height: 23px; overflow-y: hidden; padding-right: 5px;"></div></div></div></div>';
 
+		d.ondblclick = ob.OnSettingsClick;
 	/*
 		var d = ob.childsContainer.rows[0].cells[0].appendChild(document.createElement('DIV'));
 		d.style.width = '100px';
@@ -36,7 +37,8 @@ IfElseBranchActivity = function()
 		*/
 
 		var t = d.childNodes[0].childNodes[0].childNodes[0].childNodes[0].appendChild(_crt(1, 2));
-		t.rows[0].cells[0].innerHTML = ob.Properties['Title'];
+		t.rows[0].cells[0].innerHTML = BX.util.htmlspecialchars(ob.Properties['Title']);
+		t.rows[0].cells[0].title = ob.Properties['Title'];
 		t.rows[0].cells[0].width = '100%';
 		t.rows[0].cells[0].style.fontSize = '11px';
 		var setimg = t.rows[0].cells[1].appendChild(document.createElement('IMG'));

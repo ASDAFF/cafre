@@ -2,12 +2,11 @@
 <script>
 function onLightEditorShow(content)
 {
+//	todo: need?
 	if (!window.oBlogComLHE)
 		return BX.addCustomEvent(window, 'LHE_OnInit', function(){setTimeout(function(){onLightEditorShow(content);},	500);});
 
-	oBlogComLHE.SetContent(content || '');
-	oBlogComLHE.CreateFrame(); // We need to recreate editable frame after reappending editor container
-	oBlogComLHE.SetEditorContent(oBlogComLHE.content);
+	window.LHEPostForm.reinitData('LHEBlogCom', content);
 }
 
 function showComment(key, subject, error, comment, userName, userEmail)

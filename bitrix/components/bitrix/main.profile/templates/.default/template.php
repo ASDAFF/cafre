@@ -1,8 +1,8 @@
 <?
 /**
  * @global CMain $APPLICATION
- * @param array $arParams
- * @param array $arResult
+ * @var array $arParams
+ * @var array $arResult
  */
 if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true)
 	die();
@@ -90,7 +90,7 @@ var cookie_prefix = '<?=$arResult["COOKIE_PREFIX"]?>';
 		<td><input type="text" name="LAST_NAME" maxlength="50" value="<?=$arResult["arUser"]["LAST_NAME"]?>" /></td>
 	</tr>
 	<tr>
-		<td><?=GetMessage('SECOND_NAME')?></font></td>
+		<td><?=GetMessage('SECOND_NAME')?></td>
 		<td><input type="text" name="SECOND_NAME" maxlength="50" value="<?=$arResult["arUser"]["SECOND_NAME"]?>" /></td>
 	</tr>
 	<tr>
@@ -319,11 +319,11 @@ document.getElementById('bx_auth_secure').style.display = 'inline-block';
 			<td><input type="text" name="WORK_PHONE" maxlength="255" value="<?=$arResult["arUser"]["WORK_PHONE"]?>" /></td>
 		</tr>
 		<tr>
-			<td><?=GetMessage('USER_FAX')?></font></td>
+			<td><?=GetMessage('USER_FAX')?></td>
 			<td><input type="text" name="WORK_FAX" maxlength="255" value="<?=$arResult["arUser"]["WORK_FAX"]?>" /></td>
 		</tr>
 		<tr>
-			<td><?=GetMessage('USER_PAGER')?></font></td>
+			<td><?=GetMessage('USER_PAGER')?></td>
 			<td><input type="text" name="WORK_PAGER" maxlength="255" value="<?=$arResult["arUser"]["WORK_PAGER"]?>" /></td>
 		</tr>
 		<tr>
@@ -376,7 +376,7 @@ document.getElementById('bx_auth_secure').style.display = 'inline-block';
 	<tbody>
 		<tr>
 			<td><?=GetMessage("forum_SHOW_NAME")?></td>
-			<td><input type="checkbox" name="forum_SHOW_NAME" value="Y" <?if ($arResult["arForumUser"]["SHOW_NAME"]=="Y") echo "checked=\"checked\"";?> /></td>
+			<td><input type="hidden" name="forum_SHOW_NAME" value="N" /><input type="checkbox" name="forum_SHOW_NAME" value="Y" <?if ($arResult["arForumUser"]["SHOW_NAME"]=="Y") echo "checked=\"checked\"";?> /></td>
 		</tr>
 		<tr>
 			<td><?=GetMessage('forum_DESCRIPTION')?></td>
@@ -464,7 +464,7 @@ document.getElementById('bx_auth_secure').style.display = 'inline-block';
 		<tbody>
 			<tr>
 				<td><?=GetMessage("learning_PUBLIC_PROFILE");?>:</td>
-				<td><input type="checkbox" name="student_PUBLIC_PROFILE" value="Y" <?if ($arResult["arStudent"]["PUBLIC_PROFILE"]=="Y") echo "checked=\"checked\"";?> /></td>
+				<td><input type="hidden" name="student_PUBLIC_PROFILE" value="N" /><input type="checkbox" name="student_PUBLIC_PROFILE" value="Y" <?if ($arResult["arStudent"]["PUBLIC_PROFILE"]=="Y") echo "checked=\"checked\"";?> /></td>
 			</tr>
 			<tr>
 				<td><?=GetMessage("learning_RESUME");?>:</td>

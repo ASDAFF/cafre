@@ -31,4 +31,12 @@ $MESS ['BLBE_SEARCH_INDEX'] = "Индексировать блог модулем поиска";
 $MESS ['BLBE_SEARCH_INDEX_HINT'] = "При включении индексации блога не забудьте переиндекcировать модуль.";
 $MESS ['BLBE_SOCNET_GROUP_ID'] = "Группа-владелец блога";
 $MESS ['BLBE_USE_SOCNET'] = "Блог используется в рамках cоциальной сети";
+$MESS ['BLBE_EDITOR_SETTINGS'] = "Параметры текстового редактора";
+$MESS ['BLBE_EDITOR_USE_FONT'] = "Разрешить настройки шрифтов";
+$MESS ['BLBE_EDITOR_USE_LINK'] = "Разрешить добавление ссылок";
+$MESS ['BLBE_EDITOR_USE_FORMAT'] = "Включить расширенные настройки форматирование";
+$MESS ['BLBE_EDITOR_USE_FORMAT_HINT'] = "Вставка таблиц, настройка выравнивания и т.п.";
+$MESS ['BLBE_EDITOR_USE_IMAGE'] = "Разрешить вставку изображений";
+$MESS ['BLBE_EDITOR_USE_VIDEO'] = "Разрешить вставку видео";
+$MESS ['BLBE_EDITOR_USE_VIDEO_HINT'] = "Должна быть включена аналогичная опция в настройках модуля \"Блог\"";
 ?>

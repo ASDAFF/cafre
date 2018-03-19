@@ -8,4 +8,4 @@ StateInitializationActivity = function()
 
 
 	return ob;
-}
+};

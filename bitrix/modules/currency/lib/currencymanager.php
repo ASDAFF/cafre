@@ -26,7 +26,6 @@ class CurrencyManager
 	const EVENT_ON_AFTER_UPDATE_BASE_CURRENCY = 'onAfterUpdateBaseCurrency';
 
 	protected static $baseCurrency = '';
-	protected static $datetimeTemplate = null;
 
 	/**
 	 * Check currency id.
@@ -80,7 +79,7 @@ class CurrencyManager
 			{
 				$currencyIterator = CurrencyTable::getList(array(
 					'select' => array('CURRENCY'),
-					'filter' => array('=BASE' => 'Y', 'AMOUNT' => 1)
+					'filter' => array('=BASE' => 'Y', '=AMOUNT' => 1)
 				));
 				if ($currency = $currencyIterator->fetch())
 				{
@@ -119,7 +118,7 @@ class CurrencyManager
 		{
 			$currencyList = array();
 			$currencyIterator = CurrencyTable::getList(array(
-				'select' => array('CURRENCY', 'FULL_NAME' => 'CURRENT_LANG_FORMAT.FULL_NAME'),
+				'select' => array('CURRENCY', 'FULL_NAME' => 'CURRENT_LANG_FORMAT.FULL_NAME', 'SORT'),
 				'order' => array('SORT' => 'ASC', 'CURRENCY' => 'ASC')
 			));
 			while ($currency = $currencyIterator->fetch())
@@ -131,6 +130,21 @@ class CurrencyManager
 			$managedCache->set($cacheId, $currencyList);
 		}
 		return $currencyList;
+	}
+
+	/**
+	 * Verifying the existence of the currency by its code.
+	 *
+	 * @param string $currency		Currency code.
+	 * @return bool
+	 */
+	public static function isCurrencyExist($currency)
+	{
+		$currency = static::checkCurrencyID($currency);
+		if ($currency === false)
+			return false;
+		$currencyList = static::getCurrencyList();
+		return isset($currencyList[$currency]);
 	}
 
 	/**
@@ -159,34 +173,29 @@ class CurrencyManager
 
 			if (!$bitrix24 && $languageID == 'ru')
 			{
-				$searched = false;
+				$languageList = array();
 				$languageIterator = LanguageTable::getList(array(
 					'select' => array('ID'),
-					'filter' => array('=ID' => 'kz')
+					'filter' => array('@ID' => array('kz', 'by', 'ua'), '=ACTIVE' => 'Y')
 				));
-				if ($oneLanguage = $languageIterator->fetch())
-				{
-					$searched = true;
+				while ($language = $languageIterator->fetch())
+					$languageList[$language['ID']] = $language['ID'];
+				unset($language, $languageIterator);
+				if (isset($languageList['kz']))
 					$languageID = 'kz';
-				}
-				unset($oneLanguage, $languageIterator);
-				if (!$searched)
-				{
-					$languageIterator = LanguageTable::getList(array(
-						'select' => array('ID'),
-						'filter' => array('=ID' => 'ua')
-					));
-					if ($oneLanguage = $languageIterator->fetch())
-					{
-						$languageID = 'ua';
-					}
-					unset($oneLanguage, $languageIterator);
-				}
+				elseif (isset($languageList['by']))
+					$languageID = 'by';
+				elseif (isset($languageList['ua']))
+					$languageID = 'ua';
+				unset($languageList);
 			}
 			unset($bitrix24);
 
 			switch ($languageID)
 			{
+				case 'br':
+					$currencyList = array('BYN', 'RUB', 'USD', 'EUR');
+					break;
 				case 'ua':
 					$currencyList = array('UAH', 'RUB', 'USD', 'EUR');
 					break;
@@ -194,7 +203,7 @@ class CurrencyManager
 					$currencyList = array('KZT', 'RUB', 'USD', 'EUR');
 					break;
 				case 'ru':
-					$currencyList = array('RUB', 'USD', 'EUR', 'UAH', 'BYR');
+					$currencyList = array('RUB', 'USD', 'EUR', 'UAH', 'BYN');
 					break;
 				case 'de':
 				case 'en':
@@ -261,45 +270,12 @@ class CurrencyManager
 	 */
 	public static function clearTagCache($currency)
 	{
-		if (defined('BX_COMP_MANAGED_CACHE'))
-		{
-			$currency = (string)$currency;
-			if ($currency !== '')
-			{
-				$taggedCache = Application::getInstance()->getTaggedCache();
-				$taggedCache->clearByTag('currency_id_'.$currency);
-			}
-		}
-	}
-
-	/**
-	 * Return datetime template for old api emulation.
-	 *
-	 * @return string
-	 */
-	public static function getDatetimeExpressionTemplate()
-	{
-		if (self::$datetimeTemplate === null)
-		{
-			$helper = Application::getConnection()->getSqlHelper();
-			$format = Context::getCurrent()->getCulture()->getDateTimeFormat();
-			$datetimeFieldName = '#FIELD#';
-			$datetimeField = $datetimeFieldName;
-			if (\CTimeZone::enabled())
-			{
-				$diff = \CTimeZone::getOffset();
-				if ($diff <> 0)
-					$datetimeField = $helper->addSecondsToDateTime($diff, $datetimeField);
-				unset($diff);
-			}
-			self::$datetimeTemplate = str_replace(
-				array('%', $datetimeFieldName),
-				array('%%', '%1$s'),
-				$helper->formatDate($format, $datetimeField)
-			);
-			unset($datetimeField, $datetimeFieldName, $format, $helper);
-		}
-		return self::$datetimeTemplate;
+		if (!defined('BX_COMP_MANAGED_CACHE'))
+			return;
+		$currency = static::checkCurrencyID($currency);
+		if ($currency === false)
+			return;
+		Application::getInstance()->getTaggedCache()->clearByTag('currency_id_'.$currency);
 	}
 
 	/**

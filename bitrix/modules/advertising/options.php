@@ -20,7 +20,7 @@ $arAllOptions = array(
 	array("DONT_FIX_BANNER_SHOWS", GetMessage("AD_OPT_DONT_FIX_BANNER_SHOWS"), Array("checkbox", "Y")),
 	array("USE_HTML_EDIT", GetMessage("AD_USE_HTML_EDIT"), Array("checkbox", "Y")),
 	Array("SHOW_COMPONENT_PREVIEW", GetMessage("AD_SHOW_COMPONENT_PREVIEW"), Array("checkbox", "Y")),
-	Array("BANNER_DAYS", GetMessage("AD_BANNER_DAYS"), Array("text", 5), "CAdvBanner::CleanUpDynamics();","b_adv_banner_2_day"),
+	Array("BANNER_DAYS", GetMessage("AD_BANNER_DAYS"), Array("text", 5), "CAdvBanner::CleanUpAllDynamics", "b_adv_banner_2_day"),
 	Array("BANNER_GRAPH_WEIGHT", GetMessage("AD_BANNER_GRAPH_WEIGHT"), Array("text", 5)),
 	Array("BANNER_GRAPH_HEIGHT", GetMessage("AD_BANNER_GRAPH_HEIGHT"), Array("text", 5)),
 	Array("BANNER_DIAGRAM_DIAMETER", GetMessage("AD_BANNER_DIAGRAM_DIAMETER"), Array("text", 5)),
@@ -38,18 +38,31 @@ if($REQUEST_METHOD=="POST" && strlen($Update.$Apply)>0 && $ADV_RIGHT>="W" && che
 {
 	// смена подкаталога для хранения баннеров
 	$old_subdir = COption::GetOptionString($module_id, "UPLOAD_SUBDIR");
-	$new_subdir = $HTTP_POST_VARS["UPLOAD_SUBDIR"];
+	$new_subdir = $_POST["UPLOAD_SUBDIR"];
 	
 	if($old_subdir != $new_subdir)
 	{
 		COption::SetOptionString($module_id, "UPLOAD_SUBDIR", $UPLOAD_SUBDIR);
 	}
 
-	for($i=0, $cnt = count($arAllOptions); $i < $cnt; $i++)
+	for ($i = 0, $cnt = count($arAllOptions); $i < $cnt; $i++)
 	{
-		$name=$arAllOptions[$i][0];
-		$val=$$name;
-		if($arAllOptions[$i][2][0]=="checkbox" && $val!="Y") $val="N";
+		$name = $arAllOptions[$i][0];
+		$val = ${$name};
+
+		if (strlen($arAllOptions[$i][3]) > 0 && $_POST[$name.'_clear'] === "Y")
+		{
+			if (is_callable($arAllOptions[$i][3]))
+			{
+				call_user_func($arAllOptions[$i][3]);
+			}
+		}
+
+		if ($arAllOptions[$i][2][0] == "checkbox" && $val != "Y")
+		{
+			$val = "N";
+		}
+
 		COption::SetOptionString($module_id, $name, $val);
 	}
 
@@ -100,15 +113,23 @@ $tabControl->BeginNextTab();
 								$count += $zr["COUNT"];
 							}
 						}
-					?>
-						<input type="text" size="<?echo $type[1]?>" maxlength="255" value="<?echo htmlspecialcharsbx($val)?>" name="<?echo htmlspecialcharsbx($Option[0])?>"><?
-						if (strlen($Option[3])>0) :
-						?>&nbsp;<label for="<?echo htmlspecialcharsbx($Option[0])?>_clear"><?=GetMessage("AD_CLEAR")?>:</label><input type="checkbox" name="<?echo htmlspecialcharsbx($Option[0])?>_clear" id="<?echo htmlspecialcharsbx($Option[0])?>_clear" value="Y"><?
-						endif;
-						?><?
-						if (strlen($Option[4])>0) :
-						?>&nbsp;&nbsp;(<?echo GetMessage("AD_RECORDS")?>&nbsp;<?echo $count?>)<?
-						endif;
+						?>
+						<input type="text" size="<?=$type[1]?>" maxlength="255" value="<?=htmlspecialcharsbx($val)?>" name="<?=htmlspecialcharsbx($Option[0])?>">
+						<?
+						if (strlen($Option[3]) > 0)
+						{
+							?>
+							<label for="<?=htmlspecialcharsbx($Option[0])?>_clear">
+								<?=GetMessage("AD_DELETE_ALL")?>:
+							</label>
+							<input type="checkbox" name="<?=htmlspecialcharsbx($Option[0])?>_clear" id="<?=htmlspecialcharsbx($Option[0])?>_clear" value="Y">
+							<?
+						};
+
+						if (strlen($Option[4]) > 0)
+						{
+							echo '('.GetMessage("AD_RECORDS").' '.$count.')';
+						}
 						?>
 					<?elseif($type[0]=="textarea"):?>
 						<textarea rows="<?echo $type[1]?>" cols="<?echo $type[2]?>" name="<?echo htmlspecialcharsbx($Option[0])?>"><?echo htmlspecialcharsbx($val)?></textarea>

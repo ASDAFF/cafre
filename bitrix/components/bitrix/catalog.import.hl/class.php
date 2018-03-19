@@ -55,7 +55,10 @@ class CBitrixCatalogImportHl extends CBitrixComponent
 				}
 				else
 				{
-					$this->error = GetMessage("CC_BCIH_XML_PARSE_ERROR", array("#CODE#" => 30));
+					if (!$this->error)
+					{
+						$this->error = GetMessage("CC_BCIH_XML_PARSE_ERROR", array("#CODE#" => 30));
+					}
 				}
 			}
 			else
@@ -72,14 +75,14 @@ class CBitrixCatalogImportHl extends CBitrixComponent
 		if (!is_string($highBlockName) || $highBlockName === "")
 		{
 			$this->error = GetMessage("CC_BCIH_XML_PARSE_ERROR", array("#CODE#" => 110));
-			return;
+			return 0;
 		}
 
 		$name = $xmlArray[GetMessage("CC_BCIH_XML_REFERENCE")]["#"][GetMessage("CC_BCIH_XML_NAME")][0]["#"];
 		if (!is_string($name) || $name === "")
 		{
 			$this->error = GetMessage("CC_BCIH_XML_PARSE_ERROR", array("#CODE#" => 120));
-			return;
+			return 0;
 		}
 
 		$hlblock = Bitrix\Highloadblock\HighloadBlockTable::getList(array(
@@ -98,6 +101,12 @@ class CBitrixCatalogImportHl extends CBitrixComponent
 				'NAME' => $highBlockName,
 				'TABLE_NAME' => 'b_'.strtolower($highBlockName),
 			));
+			if (!$result->isSuccess())
+			{
+				$this->error = GetMessage("CC_BCIH_REFERENCE_ERROR", array("#MESSAGE#" => implode($result->getErrorMessages())));
+				return 0;
+			}
+
 			$highBlockID = $result->getId();
 
 			$arFieldsName = array(
@@ -156,7 +165,7 @@ class CBitrixCatalogImportHl extends CBitrixComponent
 		if ($this->NS["HL"] <= 0)
 		{
 			$this->error = GetMessage("CC_BCIH_XML_PARSE_ERROR", array("#CODE#" => 210));
-			return;
+			return 0;
 		}
 		$entity_id = "HLBLOCK_".$this->NS["HL"];
 		$xmlArray = $xmlObject->GetArray();
@@ -171,7 +180,7 @@ class CBitrixCatalogImportHl extends CBitrixComponent
 		if (!is_string($id) || $id === "")
 		{
 			$this->error = GetMessage("CC_BCIH_XML_PARSE_ERROR", array("#CODE#" => 220));
-			return;
+			return 0;
 		}
 		$id = substr("UF_".strtoupper($id), 0, 20);
 
@@ -179,7 +188,7 @@ class CBitrixCatalogImportHl extends CBitrixComponent
 		if (!is_string($name) || $name === "")
 		{
 			$this->error = GetMessage("CC_BCIH_XML_PARSE_ERROR", array("#CODE#" => 230));
-			return;
+			return 0;
 		}
 
 		$type = $xmlArray[GetMessage("CC_BCIH_XML_FIELD")]["#"][GetMessage("CC_BCIH_XML_FIELD_TYPE")][0]["#"];
@@ -194,7 +203,7 @@ class CBitrixCatalogImportHl extends CBitrixComponent
 		else
 		{
 			$this->error = GetMessage("CC_BCIH_XML_PARSE_ERROR", array("#CODE#" => 240));
-			return;
+			return 0;
 		}
 
 		$rsUserFields = CUserTypeEntity::GetList(array(), array(

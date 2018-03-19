@@ -186,14 +186,15 @@ class CSaleProduct extends CALLSaleProduct
 		if ($orderFilter != '')
 			$strSql .= " AND ".$orderFilter."\n";
 
-		$strSql .= " GROUP BY b.PRODUCT_ID, ifnull(b.CATALOG_XML_ID, ''), b.PRODUCT_XML_ID, b.CURRENCY \n";
+		$strSql .= " GROUP BY b.PRODUCT_ID, b.NAME, ifnull(b.CATALOG_XML_ID, ''), b.PRODUCT_XML_ID, b.CURRENCY \n";
 		if($byQuantity)
 			$strSql .= " ORDER BY QUANTITY DESC\n";
 		else
 			$strSql .= " ORDER BY PRICE DESC\n";
 
-		if(IntVal($limit) > 0)
-			$strSql .= "LIMIT ".IntVal($limit);
+		$limit = (int)$limit;
+		if($limit > 0)
+			$strSql .= "LIMIT ".$limit;
 		// echo htmlspecialcharsbx($strSql);
 
 		$dbRes = $DB->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
@@ -399,7 +400,20 @@ class CSaleViewedProduct extends CAllSaleViewedProduct
 					}
 				}
 
-				$strSql = "INSERT INTO b_sale_viewed_product (".$arInsert[0].", DATE_VISIT) VALUES(".$arInsert[1].", ".$DB->GetNowFunction().")";
+				
+				$sqlInsertNames = $arInsert[0];
+				if (strval(trim($sqlInsertNames)) != '')
+				{
+					$sqlInsertNames .= ', ';
+				}
+
+				$sqlInsertValues = $arInsert[1];
+				if (strval(trim($sqlInsertValues)) != '')
+				{
+					$sqlInsertValues .= ', ';
+				}
+
+				$strSql = "INSERT INTO b_sale_viewed_product (".$sqlInsertNames." DATE_VISIT) VALUES(".$sqlInsertValues." ".$DB->GetNowFunction().")";
 				$DB->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
 
 				$ID = IntVal($DB->LastID());
@@ -685,7 +699,7 @@ class CSaleViewedProduct extends CAllSaleViewedProduct
 	{
 		global $DB;
 
-		$FUSER_ID = IntVal($FUSER_ID);
+		$FUSER_ID = (int)$FUSER_ID;
 		if ($FUSER_ID <= 0)
 			return false;
 
@@ -694,8 +708,8 @@ class CSaleViewedProduct extends CAllSaleViewedProduct
 				return false;
 
 		$strSqlLimit = "";
-		if (!empty($LIMIT) && IntVal($LIMIT) > 0)
-			$strSqlLimit = " ORDER BY DATE_VISIT DESC LIMIT ".IntVal($LIMIT);
+		if (!empty($LIMIT) && (int)$LIMIT > 0)
+			$strSqlLimit = " ORDER BY DATE_VISIT DESC LIMIT ".(int)$LIMIT;
 
 		$DB->Query("DELETE FROM b_sale_viewed_product WHERE FUSER_ID = '".$FUSER_ID."' ".$strSqlLimit, true);
 

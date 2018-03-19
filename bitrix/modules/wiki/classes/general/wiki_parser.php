@@ -130,7 +130,7 @@ class CWikiParser
 		return $ret;
 	}
 
-	function Clear($text)
+	static function Clear($text)
 	{
 		$arWhiteTags = array(
 			'a'			=> array('href', 'title','name','style','id','class','shape','coords','alt','target'),
@@ -356,7 +356,7 @@ class CWikiParser
 		{
 			$sURL = CComponentEngine::MakePathFromTemplate($arParams['PATH_TO_POST'],
 				array(
-					'wiki_name' => urlencode($this->arLink[$matches[2]]),
+					'wiki_name' => rawurlencode($this->arLink[$matches[2]]),
 					'group_id' => CWikiSocnet::$iSocNetId
 				)
 			);
@@ -368,7 +368,7 @@ class CWikiParser
 				CComponentEngine::MakePathFromTemplate(
 					$arParams['PATH_TO_POST_EDIT'],
 					array(
-						'wiki_name' => urlencode($this->arLink[$matches[2]]),
+						'wiki_name' => rawurlencode($this->arLink[$matches[2]]),
 						'group_id' => CWikiSocnet::$iSocNetId
 					)
 				),
@@ -459,7 +459,7 @@ class CWikiParser
 					$iPrevItemTocLevel = $iItemTocLevel;
 					$bfirst = false;
 					$sNumToc = implode('.', $aNumToc);
-					$sItemTocId = str_replace(array('%', '+', '.F2', '..'), array('.', '.', '_', '.'), urlencode($sItemToc.$sNumToc));
+					$sItemTocId = str_replace(array('%', '+', '.F2', '..'), array('.', '.', '_', '.'), rawurlencode($sItemToc.$sNumToc));
 					$sToc .= '<li><a href="';
 
 					if($this->postUrl) //http://jabber.bx/view.php?id=28203

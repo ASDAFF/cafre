@@ -3,8 +3,10 @@ use Bitrix\Lists\Internals\Error\Error;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Loader;
 use Bitrix\Lists\Internals\Controller;
+use Bitrix\Main\Config\Option;
 
 define('STOP_STATISTICS', true);
+define('NO_AGENT_STATISTIC','Y');
 define('BX_SECURITY_SHOW_MESSAGE', true);
 
 require_once($_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/main/include/prolog_before.php');
@@ -18,16 +20,14 @@ Loc::loadMessages(__FILE__);
 
 class ListAjaxController extends Controller
 {
-	/** @var  string or int */
-	protected $listPerm;
+	/** @var  int */
+	protected $iblockId;
+	protected $elementId;
+	protected $socnetGroupId;
+	protected $sectionId = 0;
 	/** @var  string */
 	protected $iblockTypeId;
-	/** @var int */
-	protected $iblockId;
-	protected $socnetGroupId;
-	protected $sectionId;
-	/** @var array */
-	protected $documentStates;
+	protected $listPerm;
 
 	protected function listOfActions()
 	{
@@ -35,107 +35,224 @@ class ListAjaxController extends Controller
 			'performActionBp' => array(
 				'method' => array('POST'),
 			),
+			'addSection' => array(
+				'method' => array('POST'),
+			),
+			'deleteSection' => array(
+				'method' => array('POST'),
+			),
+			'editSection' => array(
+				'method' => array('POST'),
+			),
+			'getSection' => array(
+				'method' => array('POST'),
+			),
+			'toogleSectionGrid' => array(
+				'method' => array('POST'),
+			),
+			'rebuildSeachableContent' => array(
+				'method' => array('POST'),
+			),
 		);
+	}
+
+	protected function processActionAddSection()
+	{
+		$this->checkRequiredPostParams(array('iblockTypeId', 'iblockId', 'sectionId', 'sectionName', 'socnetGroupId'));
+		if($this->errorCollection->hasErrors())
+			$this->sendJsonErrorResponse();
+
+		$this->iblockTypeId = $this->request->getPost('iblockTypeId');
+		$this->iblockId = intval($this->request->getPost('iblockId'));
+		$this->socnetGroupId = intval($this->request->getPost('socnetGroupId'));
+		$this->sectionId = $this->request->getPost('sectionId');
+		$sectionName = trim($this->request->getPost('sectionName'), " \n\r\t");
+
+		$this->checkPermission();
+		if($this->listPerm < CListPermissions::CAN_WRITE
+			&& !CIBlockSectionRights::userHasRightTo($this->iblockId, $this->sectionId, 'section_section_bind'))
+		{
+			$this->errorCollection->add(array(new Error(Loc::getMessage('LISTS_LAC_ACCESS_DENIED'))));
+		}
+		if($this->errorCollection->hasErrors())
+			$this->sendJsonErrorResponse();
+
+
+		$sectionObject = new CIBlockSection;
+		$sectionId = $sectionObject->add(array(
+			'IBLOCK_ID' => $this->iblockId,
+			'NAME' => $sectionName,
+			'IBLOCK_SECTION_ID' => $this->sectionId,
+			'CHECK_PERMISSIONS' => 'N',
+		));
+
+		if($sectionId)
+		{
+			$this->sendJsonSuccessResponse(
+				array('id' => intval($sectionId), 'message' => Loc::getMessage('LISTS_LAC_MESSAGE_SUCCESS')));
+		}
+		else
+		{
+			$this->errorCollection->add(array(new Error(Loc::getMessage('LISTS_LAC_UNKNOWN_ERROR'))));
+			$this->sendJsonErrorResponse();
+		}
+	}
+
+	protected function processActionDeleteSection()
+	{
+		$this->checkRequiredPostParams(
+			array('iblockTypeId', 'iblockId', 'sectionId', 'socnetGroupId', 'sectionIdForDelete'));
+		if($this->errorCollection->hasErrors())
+			$this->sendJsonErrorResponse();
+
+		$this->iblockTypeId = $this->request->getPost('iblockTypeId');
+		$this->iblockId = intval($this->request->getPost('iblockId'));
+		$this->socnetGroupId = intval($this->request->getPost('socnetGroupId'));
+		$this->sectionId = $this->request->getPost('sectionId');
+		$sectionIdForDelete = intval($this->request->getPost('sectionIdForDelete'));
+
+		$this->checkPermission();
+		if($this->listPerm < CListPermissions::CAN_WRITE
+			&& !CIBlockSectionRights::userHasRightTo($this->iblockId, $sectionIdForDelete, 'section_delete'))
+		{
+			$this->errorCollection->add(array(new Error(Loc::getMessage('LISTS_LAC_ACCESS_DENIED'))));
+		}
+		if($this->errorCollection->hasErrors())
+			$this->sendJsonErrorResponse();
+
+		$sectionObject = new CIBlockSection;
+		if($sectionObject->delete($sectionIdForDelete, false))
+			$this->sendJsonSuccessResponse(array('message' => Loc::getMessage('LISTS_LAC_MESSAGE_SUCCESS')));
+		else
+		{
+			$this->errorCollection->add(array(new Error(Loc::getMessage('LISTS_LAC_UNKNOWN_ERROR'))));
+			$this->sendJsonErrorResponse();
+		}
+	}
+
+	protected function processActionEditSection()
+	{
+		$this->checkRequiredPostParams(array('iblockTypeId', 'iblockId', 'sectionId',
+			'sectionName', 'socnetGroupId', 'currentSectionId'));
+		if($this->errorCollection->hasErrors())
+			$this->sendJsonErrorResponse();
+
+		$this->iblockTypeId = $this->request->getPost('iblockTypeId');
+		$this->iblockId = intval($this->request->getPost('iblockId'));
+		$this->socnetGroupId = intval($this->request->getPost('socnetGroupId'));
+		$this->sectionId = intval($this->request->getPost('sectionId'));
+		$sectionName = trim($this->request->getPost('sectionName'), " \n\r\t");
+		$currentSectionId = intval($this->request->getPost('currentSectionId'));
+
+		$this->checkPermission();
+		if($this->listPerm < CListPermissions::CAN_WRITE
+			&& !CIBlockSectionRights::userHasRightTo($this->iblockId, $currentSectionId, 'section_edit'))
+		{
+			$this->errorCollection->add(array(new Error(Loc::getMessage('LISTS_LAC_ACCESS_DENIED'))));
+		}
+		if($this->errorCollection->hasErrors())
+			$this->sendJsonErrorResponse();
+
+		$sectionObject = new CIBlockSection;
+		$queryObject = CIBlockSection::getList(array(), array(
+			'IBLOCK_ID' => $this->iblockId,
+			'ID' => $currentSectionId,
+			'GLOBAL_ACTIVE' => 'Y',
+			'CHECK_PERMISSIONS' => 'N',
+		));
+		if($section = $queryObject->getNext())
+		{
+			$sectionObject->update($currentSectionId, array(
+				'IBLOCK_ID' => $this->iblockId,
+				'NAME' => $sectionName,
+			));
+			$this->sendJsonSuccessResponse(array('message' => Loc::getMessage('LISTS_LAC_MESSAGE_SUCCESS')));
+		}
+		else
+		{
+			$this->errorCollection->add(array(new Error(Loc::getMessage('LISTS_LAC_UNKNOWN_ERROR'))));
+			$this->sendJsonErrorResponse();
+		}
+	}
+
+	protected function processActionGetSection()
+	{
+		$this->checkRequiredPostParams(
+			array('iblockTypeId', 'iblockId', 'sectionId', 'socnetGroupId', 'currentSectionId'));
+		if($this->errorCollection->hasErrors())
+			$this->sendJsonErrorResponse();
+
+		$this->iblockTypeId = $this->request->getPost('iblockTypeId');
+		$this->iblockId = intval($this->request->getPost('iblockId'));
+		$this->socnetGroupId = intval($this->request->getPost('socnetGroupId'));
+		$this->sectionId = $this->request->getPost('sectionId');
+		$currentSectionId = intval($this->request->getPost('currentSectionId'));
+
+		$this->checkPermission();
+		if($this->listPerm < CListPermissions::CAN_WRITE
+			&& !CIBlockSectionRights::userHasRightTo($this->iblockId, $currentSectionId, 'section_read'))
+		{
+			$this->errorCollection->add(array(new Error(Loc::getMessage('LISTS_LAC_ACCESS_DENIED'))));
+		}
+		if($this->errorCollection->hasErrors())
+			$this->sendJsonErrorResponse();
+
+		$queryObject = CIBlockSection::getList(array(), array(
+			'IBLOCK_ID' => $this->iblockId,
+			'ID' => $currentSectionId,
+			'GLOBAL_ACTIVE' => 'Y',
+			'CHECK_PERMISSIONS' => 'N',
+		));
+		if($section = $queryObject->getNext())
+		{
+			$this->sendJsonSuccessResponse(array('data' => array('NAME' => $section['~NAME']),
+				'message' => Loc::getMessage('LISTS_LAC_MESSAGE_SUCCESS')));
+		}
+		else
+		{
+			$this->errorCollection->add(array(new Error(Loc::getMessage('LISTS_LAC_SECTION_NOT_GET_DATA'))));
+			$this->sendJsonErrorResponse();
+		}
 	}
 
 	protected function processActionPerformActionBp()
 	{
-		if(!Loader::includeModule('bizproc'))
-		{
-			$this->errorCollection->add(array(new Error(Loc::getMessage('LISTS_LAC_MODULE_NOT_INSTALLED'))));
-		}
-		$this->checkRequiredPostParams(array('iblockTypeId', 'iblockId', 'sectionId', 'workflowId', 'elementId', 'action'));
-		if($this->request->getPost('iblockTypeId') == COption::getOptionString('lists', 'livefeed_iblock_type_id'))
-		{
-			$this->errorCollection->add(array(new Error(Loc::getMessage('LISTS_LAC_UNKNOWN_ERROR'))));
-		}
+		$this->checkRequiredPostParams(
+			array('workflowId', 'iblockTypeId', 'elementId', 'iblockId', 'sectionId', 'socnetGroupId', 'action')
+		);
+
+		$this->iblockTypeId = $this->request->getPost('iblockTypeId');
+		$this->iblockId = intval($this->request->getPost('iblockId'));
+		$this->socnetGroupId = intval($this->request->getPost('socnetGroupId'));
+		$this->sectionId = $this->request->getPost('sectionId');
+
+		$this->checkPermission();
 		if($this->errorCollection->hasErrors())
 		{
 			$this->sendJsonErrorResponse();
 		}
 
-		$this->iblockTypeId = $this->request->getPost('iblockTypeId');
-		$this->iblockId = $this->request->getPost('iblockId');
-		$this->sectionId = $this->request->getPost('sectionId');
 		$workflowId = $this->request->getPost('workflowId');
-		$elementId = $this->request->getPost('elementId');
-		$action = $this->request->getPost('action');
-		$this->documentStates = CBPDocument::getDocumentStates(
-			BizProcDocument::generateDocumentComplexType($this->iblockTypeId, $this->iblockId),
-			BizProcDocument::getDocumentComplexId($this->iblockTypeId, $elementId)
+		$this->elementId = $this->request->getPost('elementId');
+
+		$listError = CLists::completeWorkflow(
+			$workflowId,
+			$this->iblockTypeId,
+			$this->elementId,
+			$this->iblockId,
+			$this->request->getPost('action')
 		);
 
-		if(isset($this->documentStates[$workflowId]['WORKFLOW_STATUS']) && $this->documentStates[$workflowId]['WORKFLOW_STATUS'] !== null)
+		if(!empty($listError))
 		{
-			$this->terminateWorkflow($workflowId, $elementId);
+			$this->errorCollection->add(array(new Error($listError)));
 		}
-
-		if($action == 'delete')
+		if($this->errorCollection->hasErrors())
 		{
-			if(CBPDocument::canUserOperateDocument(
-				CBPCanUserOperateOperation::CreateWorkflow,
-				$this->getUser(),
-				BizProcDocument::getDocumentComplexId($this->iblockTypeId, $elementId),
-				array("DocumentStates" => $this->documentStates)
-				)
-			)
-			{
-				CBPTaskService::DeleteByWorkflow($workflowId);
-				CBPTrackingService::DeleteByWorkflow($workflowId);
-				CBPStateService::DeleteWorkflow($workflowId);
-			}
-			else
-			{
-				$this->errorCollection->add(array(new Error(Loc::getMessage('LISTS_LAC_ACCESS_DENIED'))));
-			}
-			if($this->errorCollection->hasErrors())
-			{
-				$this->sendJsonErrorResponse();
-			}
+			$this->sendJsonErrorResponse();
 		}
 
 		$this->sendJsonSuccessResponse(array('message' => Loc::getMessage('LISTS_LAC_MESSAGE_SUCCESS')));
-	}
-
-	protected function terminateWorkflow($workflowId, $elementId)
-	{
-		$this->checkPermission();
-		if(!CBPDocument::canUserOperateDocument(
-			CBPCanUserOperateOperation::StartWorkflow,
-			$this->getUser(),
-			BizProcDocument::getDocumentComplexId($this->iblockTypeId, $elementId),
-			array("DocumentStates" => $this->documentStates)
-		)
-		)
-		{
-			$this->errorCollection->add(array(new Error(Loc::getMessage('LISTS_LAC_ACCESS_DENIED'))));
-		}
-		if($this->errorCollection->hasErrors())
-		{
-			$this->sendJsonErrorResponse();
-		}
-
-		if (CIBlockElementRights::userHasRightTo($this->iblockId, $elementId, "element_rights_edit"))
-		{
-			$errors = array();
-			CBPDocument::terminateWorkflow(
-				$workflowId,
-				BizProcDocument::getDocumentComplexId($this->iblockTypeId, $elementId),
-				$errors
-			);
-			foreach($errors as $error)
-			{
-				$this->errorCollection->add(array(new Error($error["message"])));
-			}
-		}
-		else
-		{
-			$this->errorCollection->add(array(new Error(Loc::getMessage('LISTS_LAC_ACCESS_DENIED'))));
-		}
-		if($this->errorCollection->hasErrors())
-		{
-			$this->sendJsonErrorResponse();
-		}
 	}
 
 	protected function checkPermission()
@@ -173,6 +290,67 @@ class ListAjaxController extends Controller
 		)
 		{
 			$this->errorCollection->add(array(new Error(Loc::getMessage('LISTS_LAC_ACCESS_DENIED'))));
+		}
+	}
+
+	protected function processActionToogleSectionGrid()
+	{
+		$this->checkRequiredPostParams(array('gridId'));
+		if($this->errorCollection->hasErrors())
+		{
+			$this->sendJsonErrorResponse();
+		}
+
+		$gridId = $this->request->getPost('gridId');
+		$showSectionGrid = CUserOptions::getOption('lists_show_section_grid', $gridId, 'N');
+		if($showSectionGrid == 'Y')
+		{
+			$currentValue = 'N';
+			CUserOptions::setOption('lists_show_section_grid', $gridId, 'N');
+		}
+		else
+		{
+			$currentValue = 'Y';
+			CUserOptions::setOption('lists_show_section_grid', $gridId, 'Y');
+		}
+
+		$this->sendJsonSuccessResponse(array("currentValue" => $currentValue));
+	}
+
+	protected function processActionRebuildSeachableContent()
+	{
+		$this->checkRequiredPostParams(array('iblockId'));
+
+		$this->iblockTypeId = $this->request->getPost('iblockTypeId');
+		$this->iblockId = intval($this->request->getPost('iblockId'));
+		$this->socnetGroupId = intval($this->request->getPost('socnetGroupId'));
+		$this->sectionId = $this->request->getPost('sectionId');
+
+		$this->checkPermission();
+		if($this->errorCollection->hasErrors())
+		{
+			$this->sendJsonErrorResponse();
+		}
+
+		$rebuildedData = Option::get('lists', 'rebuild_seachable_content');
+		$rebuildedData = unserialize($rebuildedData);
+		if(isset($rebuildedData[$this->iblockId]))
+		{
+			$agentName = 'CLists::runRebuildSeachableContent('.$this->iblockId.');';
+			$queryObject = CAgent::getList(array(), array('NAME' => $agentName));
+			if(!$queryObject->fetch())
+			{
+				CAgent::addAgent($agentName, 'lists', 'Y', 5, '', 'Y', ConvertTimeStamp(
+					time() + CTimeZone::getOffset(), 'FULL'));
+			}
+
+			$totalItems = $this->request->getPost('totalItems');
+			$this->sendJsonProcessingResponse(
+				array('processedItems' => $rebuildedData[$this->iblockId], 'totalItems' => $totalItems));
+		}
+		else
+		{
+			$this->sendJsonCompletedResponse();
 		}
 	}
 }

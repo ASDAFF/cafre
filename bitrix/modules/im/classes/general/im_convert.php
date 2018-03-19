@@ -13,10 +13,10 @@ class CIMConvert
 	{
 		global $DB, $USER;
 
-		$arRecent = CUserOptions::GetOption('IM', 'recentList2', null);
+		$arRecent = CUserOptions::GetOption('im', 'recentList2', null);
 		if (is_null($arRecent))
 		{
-			$arResult = CUserOptions::GetOption('IM', 'recentList', null);
+			$arResult = CUserOptions::GetOption('im', 'recentList', null);
 			if (!is_null($arResult))
 			{
 				unset($arResult[$GLOBALS['USER']->GetID()]);
@@ -64,7 +64,14 @@ class CIMConvert
 				foreach ($arInsert as $arAdd)
 					$DB->Add('b_im_recent', $arAdd);
 			}
-			if (isset($arRecent[IM_MESSAGE_CHAT]) && !empty($arRecent[IM_MESSAGE_CHAT]))
+
+			$massageType = null;
+			if(isset($arRecent[IM_MESSAGE_CHAT]) && !empty($arRecent[IM_MESSAGE_CHAT]))
+				$massageType = IM_MESSAGE_CHAT;
+			elseif(isset($arRecent[IM_MESSAGE_OPEN_LINE]) && !empty($arRecent[IM_MESSAGE_OPEN_LINE]))
+				$massageType = IM_MESSAGE_OPEN_LINE;
+
+			if (!empty($massageType))
 			{
 				$arChats = Array();
 				$arInsert = Array();
@@ -73,7 +80,7 @@ class CIMConvert
 					'HIDE_LINK' => 'Y'
 				));
 				$arMessagesGroup = $CIMChat->GetLastSendMessage(Array(
-					'ID' => array_keys($arRecent[IM_MESSAGE_CHAT]),
+					'ID' => array_keys($arRecent[$massageType]),
 					'ORDER' => 'ASC',
 					'LIMIT' => 30,
 					'USE_TIME_ZONE' => 'N'
@@ -83,7 +90,7 @@ class CIMConvert
 					$arChats[] = $chatId;
 					$arInsert[$chatId] = Array(
 						'USER_ID' => $USER->GetId(),
-						'ITEM_TYPE' => IM_MESSAGE_CHAT,
+						'ITEM_TYPE' => $massageType,
 						'ITEM_ID' => $chatId,
 						'ITEM_MID' => $arMessage['id'],
 					);
@@ -98,7 +105,7 @@ class CIMConvert
 							b_im_recent
 						WHERE
 							USER_ID = ".$USER->GetId()."
-							AND ITEM_TYPE = '".IM_MESSAGE_CHAT."'
+							AND ITEM_TYPE = '".$massageType."'
 							AND ITEM_ID IN (".implode(',', $arChats).")
 					";
 					$dbRes = $DB->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
@@ -109,11 +116,11 @@ class CIMConvert
 				foreach ($arInsert as $arAdd)
 					$DB->Add('b_im_recent', $arAdd);
 			}
-			CUserOptions::SetOption('IM', 'recentList2', Array());
+			CUserOptions::SetOption('im', 'recentList2', Array());
 		}
 		else
 		{
-			CUserOptions::SetOption('IM', 'recentList2', Array());
+			CUserOptions::SetOption('im', 'recentList2', Array());
 		}
 
 		return true;
@@ -164,7 +171,6 @@ class CIMConvert
 		else
 			self::$nextConvertPerStep = $step;
 	}
-
 
 	public static function UndeliveredMessageAgent()
 	{

@@ -25,8 +25,8 @@ include($_SERVER["DOCUMENT_ROOT"]."/bitrix/components/bitrix/socialnetwork_group
 	$component
 );?>
 <?$APPLICATION->IncludeComponent("bitrix:bizproc.log", ".default", array(
-	"MODULE_ID" => "iblock",
-	"ENTITY" => "CIBlockDocument",
+	"MODULE_ID" => "lists",
+	"ENTITY" => 'Bitrix\Lists\BizprocDocumentLists',
 	"COMPONENT_VERSION" => 2,
 	"ID" => $arResult["VARIABLES"]["document_state_id"],
 	),

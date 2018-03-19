@@ -115,30 +115,30 @@
 .adm-workarea a.adm-btn-active {height:18px!important; padding:7px 15px 4px !important;}
 
 .adm-workarea input.adm-btn-add {
-	background:url("images/bx-admin-sprite-small-1.png") no-repeat 10px -2420px, -webkit-linear-gradient(bottom, #d7e3e7, #fff) 0 0 !important;
-	background:url("images/bx-admin-sprite-small-1.png") no-repeat 10px -2420px, -moz-linear-gradient(bottom, #d7e3e7, #fff) 0 0 !important;
-	background:url("images/bx-admin-sprite-small-1.png") no-repeat 10px -2420px, -ms-linear-gradient(bottom, #d7e3e7, #fff) 0 0 !important;
-	background:url("images/bx-admin-sprite-small-1.png") no-repeat 10px -2420px, -o-linear-gradient(bottom, #d7e3e7, #fff) 0 0 !important;
-	background:url("images/bx-admin-sprite-small-1.png") no-repeat 10px -2420px, linear-gradient(bottom, #d7e3e7, #fff) 0 0 !important;
+	background:url("images/bx-admin-sprite-small-2.png") no-repeat 10px -2420px, -webkit-linear-gradient(bottom, #d7e3e7, #fff) 0 0 !important;
+	background:url("images/bx-admin-sprite-small-2.png") no-repeat 10px -2420px, -moz-linear-gradient(bottom, #d7e3e7, #fff) 0 0 !important;
+	background:url("images/bx-admin-sprite-small-2.png") no-repeat 10px -2420px, -ms-linear-gradient(bottom, #d7e3e7, #fff) 0 0 !important;
+	background:url("images/bx-admin-sprite-small-2.png") no-repeat 10px -2420px, -o-linear-gradient(bottom, #d7e3e7, #fff) 0 0 !important;
+	background:url("images/bx-admin-sprite-small-2.png") no-repeat 10px -2420px, linear-gradient(bottom, #d7e3e7, #fff) 0 0 !important;
 	padding-left:28px !important;
 }
 
 .adm-workarea input.adm-btn-add:hover {
 	background:#f3f6f7 !important;
-	background: url("images/bx-admin-sprite-small-1.png") no-repeat 10px -2420px, -webkit-linear-gradient(top, #f8f8f9, #f2f6f8) 0 0 !important;
-	background: url("images/bx-admin-sprite-small-1.png") no-repeat 10px -2420px, -moz-linear-gradient(top, #f8f8f9, #f2f6f8) 0 0 !important;
-	background: url("images/bx-admin-sprite-small-1.png") no-repeat 10px -2420px, -ms-linear-gradient(top, #f8f8f9, #f2f6f8) 0 0 !important;
-	background: url("images/bx-admin-sprite-small-1.png") no-repeat 10px -2420px, -o-linear-gradient(top, #f8f8f9, #f2f6f8) 0 0 !important;
-	background: url("images/bx-admin-sprite-small-1.png") no-repeat 10px -2420px, linear-gradient(top, #f8f8f9, #f2f6f8) 0 0 !important;
+	background: url("images/bx-admin-sprite-small-2.png") no-repeat 10px -2420px, -webkit-linear-gradient(top, #f8f8f9, #f2f6f8) 0 0 !important;
+	background: url("images/bx-admin-sprite-small-2.png") no-repeat 10px -2420px, -moz-linear-gradient(top, #f8f8f9, #f2f6f8) 0 0 !important;
+	background: url("images/bx-admin-sprite-small-2.png") no-repeat 10px -2420px, -ms-linear-gradient(top, #f8f8f9, #f2f6f8) 0 0 !important;
+	background: url("images/bx-admin-sprite-small-2.png") no-repeat 10px -2420px, -o-linear-gradient(top, #f8f8f9, #f2f6f8) 0 0 !important;
+	background: url("images/bx-admin-sprite-small-2.png") no-repeat 10px -2420px, linear-gradient(top, #f8f8f9, #f2f6f8) 0 0 !important;
 }
 
 .adm-workarea input.adm-btn-add:active {
 	background: #f3f6f7!important;
-	background: url("images/bx-admin-sprite-small-1.png") no-repeat 10px -2420px, -webkit-linear-gradient(top, rgba(179,194,200,.96), rgba(202,215,219,.96)) 0 0 !important;
-	background: url("images/bx-admin-sprite-small-1.png") no-repeat 10px -2420px, -moz-linear-gradient(top, rgba(179,194,200,.96), rgba(202,215,219,.96)) 0 0 !important;
-	background: url("images/bx-admin-sprite-small-1.png") no-repeat 10px -2420px, -ms-linear-gradient(top, rgba(179,194,200,.96), rgba(202,215,219,.96)) 0 0 !important;
-	background: url("images/bx-admin-sprite-small-1.png") no-repeat 10px -2420px, -o-linear-gradient(top, rgba(179,194,200,.96), rgba(202,215,219,.96)) 0 0 !important;
-	background: url("images/bx-admin-sprite-small-1.png") no-repeat 10px -2420px, linear-gradient(top, rgba(179,194,200,.96), rgba(202,215,219,.96)) 0 0 !important;
+	background: url("images/bx-admin-sprite-small-2.png") no-repeat 10px -2420px, -webkit-linear-gradient(top, rgba(179,194,200,.96), rgba(202,215,219,.96)) 0 0 !important;
+	background: url("images/bx-admin-sprite-small-2.png") no-repeat 10px -2420px, -moz-linear-gradient(top, rgba(179,194,200,.96), rgba(202,215,219,.96)) 0 0 !important;
+	background: url("images/bx-admin-sprite-small-2.png") no-repeat 10px -2420px, -ms-linear-gradient(top, rgba(179,194,200,.96), rgba(202,215,219,.96)) 0 0 !important;
+	background: url("images/bx-admin-sprite-small-2.png") no-repeat 10px -2420px, -o-linear-gradient(top, rgba(179,194,200,.96), rgba(202,215,219,.96)) 0 0 !important;
+	background: url("images/bx-admin-sprite-small-2.png") no-repeat 10px -2420px, linear-gradient(top, rgba(179,194,200,.96), rgba(202,215,219,.96)) 0 0 !important;
 }
 
 .bx-ie8 .adm-workarea input.adm-btn-add,
@@ -169,11 +169,11 @@
 .adm-workarea input[type="button"].adm-btn-add.adm-btn-green,
 .adm-workarea input[type="button"].adm-btn-add.adm-btn-save
 {
-	background-image:url("images/bx-admin-sprite-small-1.png"), -webkit-linear-gradient(bottom, #729e00, #97ba00) 0 0 !important;
-	background-image:url("images/bx-admin-sprite-small-1.png"), -moz-linear-gradient(bottom, #729e00, #97ba00) 0 0 !important;
-	background-image:url("images/bx-admin-sprite-small-1.png"), -ms-linear-gradient(bottom, #729e00, #97ba00) 0 0 !important;
-	background-image:url("images/bx-admin-sprite-small-1.png"), -o-linear-gradient(bottom, #729e00, #97ba00) 0 0 !important;
-	background-image:url("images/bx-admin-sprite-small-1.png"), linear-gradient(bottom, #729e00, #97ba00) 0 0 !important;
+	background-image:url("images/bx-admin-sprite-small-2.png"), -webkit-linear-gradient(bottom, #729e00, #97ba00) 0 0 !important;
+	background-image:url("images/bx-admin-sprite-small-2.png"), -moz-linear-gradient(bottom, #729e00, #97ba00) 0 0 !important;
+	background-image:url("images/bx-admin-sprite-small-2.png"), -ms-linear-gradient(bottom, #729e00, #97ba00) 0 0 !important;
+	background-image:url("images/bx-admin-sprite-small-2.png"), -o-linear-gradient(bottom, #729e00, #97ba00) 0 0 !important;
+	background-image:url("images/bx-admin-sprite-small-2.png"), linear-gradient(bottom, #729e00, #97ba00) 0 0 !important;
 	background-position:10px -665px, 0 0 !important;
 	background-repeat:no-repeat, repeat!important;
 	padding-left:28px!important;
@@ -196,7 +196,7 @@
 .bx-ie8 .adm-workarea input[type="button"].adm-btn-add.adm-btn-save,
 .bx-ie9 .adm-workarea input[type="button"].adm-btn-add.adm-btn-save {
 	padding-left:13px!important;
-	background:url("images/bx-admin-sprite-small-1.png") repeat-x 0 -3658px !important;
+	background:url("images/bx-admin-sprite-small-2.png") repeat-x 0 -3658px !important;
 }
 
 .bx-ie8 .adm-workarea input[type="button"].adm-btn-add.adm-btn-green:hover,
@@ -209,7 +209,7 @@
 .bx-ie9 .adm-workarea input[type="button"].adm-btn-add.adm-btn-green:active,
 .bx-ie8 .adm-workarea input[type="button"].adm-btn-add.adm-btn-save:active,
 .bx-ie9 .adm-workarea input[type="button"].adm-btn-add.adm-btn-save:active {
-	background:url("images/bx-admin-sprite-small-1.png") repeat-x 0 -3692px !important;
+	background:url("images/bx-admin-sprite-small-2.png") repeat-x 0 -3692px !important;
 }
 
 .adm-workarea input.adm-btn-green:hover,
@@ -232,11 +232,11 @@
 .adm-workarea input[type="button"].adm-btn-add.adm-btn-green:hover,
 .adm-workarea input[type="button"].adm-btn-add.adm-btn-save:hover
 {
-	background-image:url("images/bx-admin-sprite-small-1.png"), -webkit-linear-gradient(top, #acce11, #8abb0d) 0 0 !important;
-	background-image:url("images/bx-admin-sprite-small-1.png"), -moz-linear-gradient(top, #acce11, #8abb0d) 0 0 !important;
-	background-image:url("images/bx-admin-sprite-small-1.png"), -ms-linear-gradient(top, #acce11, #8abb0d) 0 0 !important;
-	background-image:url("images/bx-admin-sprite-small-1.png"), -o-linear-gradient(top, #acce11, #8abb0d) 0 0 !important;
-	background-image:url("images/bx-admin-sprite-small-1.png"), linear-gradient(top, #acce11, #8abb0d) 0 0 !important;
+	background-image:url("images/bx-admin-sprite-small-2.png"), -webkit-linear-gradient(top, #acce11, #8abb0d) 0 0 !important;
+	background-image:url("images/bx-admin-sprite-small-2.png"), -moz-linear-gradient(top, #acce11, #8abb0d) 0 0 !important;
+	background-image:url("images/bx-admin-sprite-small-2.png"), -ms-linear-gradient(top, #acce11, #8abb0d) 0 0 !important;
+	background-image:url("images/bx-admin-sprite-small-2.png"), -o-linear-gradient(top, #acce11, #8abb0d) 0 0 !important;
+	background-image:url("images/bx-admin-sprite-small-2.png"), linear-gradient(top, #acce11, #8abb0d) 0 0 !important;
 }
 
 .adm-workarea input.adm-btn-green:active,
@@ -258,7 +258,7 @@
 .adm-workarea input[type="button"].adm-btn-add.adm-btn-green:active,
 .adm-workarea input[type="button"].adm-btn-add.adm-btn-save:active
 {
-	background:url("images/bx-admin-sprite-small-1.png") no-repeat 10px -664px #698f00!important;
+	background:url("images/bx-admin-sprite-small-2.png") no-repeat 10px -664px #698f00!important;
 }
 
 .adm-workarea .adm-btn.adm-btn-green-active:hover,
@@ -281,7 +281,7 @@
 }
 
 .adm-workarea .adm-btn-menu.adm-btn:after {
-	background:url("images/bx-admin-sprite-small-1.png") no-repeat -11px -1501px;
+	background:url("images/bx-admin-sprite-small-2.png") no-repeat -11px -1501px;
 	content:"";
 	display:inline-block;
 	height:5px;
@@ -297,7 +297,7 @@
 .adm-workarea .adm-btn-add.adm-btn:before,
 .adm-workarea .adm-btn-copy.adm-btn:before,
 .adm-workarea .adm-btn-delete.adm-btn:before {
-	background:url("images/bx-admin-sprite-small-1.png") 0 -2428px;
+	background:url("images/bx-admin-sprite-small-2.png") 0 -2428px;
 	content:"";
 	display:inline-block;
 	height:17px;
@@ -387,6 +387,15 @@
 #bx-admin-prefix .adm-input-file-new {/*margin: 0 0 14px 0!important;*/}
 #bx-admin-prefix .adm-input-cont-bordered {border-bottom: 2px solid #edefef; padding: 0 0 14px 0; margin: 0 0 14px 0!important;}
 #bx-admin-prefix .adm-input-file-not-found{color: #2D3E4A !important;display: inline-block;vertical-align:top;margin-top: 7px;}
+#bx-admin-prefix .adm-input-fake-inp {
+	width: 0!important;
+	height: 0!important;
+	line-height: 0!important;
+	position: absolute!important;
+	color: #000!important;
+	top: 2px!important;
+	opacity: 0!important;
+}
 
 #bx-admin-prefix .adm-btn-load {
 	-webkit-border-radius: 4px;
@@ -447,7 +456,7 @@
 .bx-ie9 .adm-workarea input[type="reset"],
 .bx-ie9 .adm-workarea input[type="submit"] {
 	border-radius:4px;
-	background:url("images/bx-admin-sprite-small-1.png") repeat-x 0 -3554px;
+	background:url("images/bx-admin-sprite-small-2.png") repeat-x 0 -3554px;
 	box-shadow:0 0 0 1px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.5), 0 1px 0 #FFFFFF inset, 0 0 1px rgba(255, 255, 255, 0.5) inset !important;
 }
 
@@ -527,7 +536,7 @@
 .bx-ie9 .adm-workarea input.adm-btn-save,
 .bx-ie9 .adm-workarea .adm-btn-save
 {
-	background:url("images/bx-admin-sprite-small-1.png") repeat-x 0 -3658px!important;
+	background:url("images/bx-admin-sprite-small-2.png") repeat-x 0 -3658px!important;
 	border-top:1px solid #a4c926 !important;
 	border-bottom:1px solid #73991a !important;
 	border-left:1px solid #74991a !important;
@@ -555,7 +564,7 @@
 .bx-ie9 .adm-workarea input.adm-btn-save:hover,
 .bx-ie9 .adm-workarea .adm-btn-save:hover
 {
-	background:url("images/bx-admin-sprite-small-1.png") repeat-x 0 -3692px !important;
+	background:url("images/bx-admin-sprite-small-2.png") repeat-x 0 -3692px !important;
 	box-shadow: none!important;
 	border-top:1px solid #97c004 !important;
 	border-bottom:1px solid #648900 !important;
@@ -595,7 +604,7 @@
 .bx-ie9 .adm-workarea .adm-btn-save:active,
 .bx-ie9 .adm-workarea .adm-btn-save-active
 {
-	background:url("images/bx-admin-sprite-small-1.png") repeat-x 0 -3692px !important;
+	background:url("images/bx-admin-sprite-small-2.png") repeat-x 0 -3692px !important;
 	box-shadow: none!important;
 	border-top:1px solid #97c004 !important;
 	border-bottom:1px solid #648900 !important;
@@ -629,7 +638,7 @@
 }
 
 #bx-admin-prefix .adm-designed-checkbox-label {
-	background:url("images/bx-admin-sprite-small-1.png") no-repeat 0 -983px;
+	background:url("images/bx-admin-sprite-small-2.png") no-repeat 0 -983px;
 	cursor: pointer;
 	display: inline-block;
 	height: 15px;
@@ -752,7 +761,7 @@
 .bx-ie8 .adm-workarea a.adm-btn-disabled,
 .bx-ie9 .adm-workarea span.adm-btn-disabled,
 .bx-ie9 .adm-workarea a.adm-btn-disabled {
-	background:url("images/bx-admin-sprite-small-1.png") repeat-x 0 -3554px !important;
+	background:url("images/bx-admin-sprite-small-2.png") repeat-x 0 -3554px !important;
 	border: 1px solid #959c9d !important;
 	height: 17px !important;
 }
@@ -848,7 +857,7 @@
 .bx-ie8 .adm-workarea input[disabled][type="submit"],
 .bx-ie9 .adm-workarea input[disabled][type="button"],
 .bx-ie9 .adm-workarea input[disabled][type="submit"] {
-	background:url("images/bx-admin-sprite-small-1.png") repeat-x 0 -3554px !important;
+	background:url("images/bx-admin-sprite-small-2.png") repeat-x 0 -3554px !important;
 	border: 1px solid #959c9d !important;
 	height:31px!important;
 }
@@ -872,7 +881,11 @@
 	color: #b5cc80 !important;
 }
 
-.adm-workarea option {background: #fff; vertical-align:middle; padding:3px 5px 3px 3px;}
+.adm-workarea option {
+	background: #fff;
+	vertical-align:middle;
+	padding:3px 5px 3px 3px;
+}
 
 .adm-workarea textarea {
 	background:#fff;
@@ -918,16 +931,16 @@
 }
 
 .bx-ie9 .adm-workarea .adm-input-file {
-	background:url("images/bx-admin-sprite-small-1.png") repeat-x 0 -3554px;
+	background:url("images/bx-admin-sprite-small-2.png") repeat-x 0 -3554px;
 	/*border:1px solid #959c9d;*/
 	box-shadow:0 0 0 1px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.5), 0 1px 0 #FFFFFF inset, 0 0 1px rgba(255, 255, 255, 0.5) inset;
 }
-.bx-ie8 .adm-workarea .adm-input-file { background:url("images/bx-admin-sprite-small-1.png") repeat-x 0 -3554px; border:1px solid #959c9d; padding-top:5px;}
+.bx-ie8 .adm-workarea .adm-input-file { background:url("images/bx-admin-sprite-small-2.png") repeat-x 0 -3554px; border:1px solid #959c9d; padding-top:5px;}
 .bx-ie8 .adm-workarea .adm-input-file:hover { background:#f5f5f5!important;}
 
 
 .adm-workarea .adm-input-file:before {
-	background:url("images/bx-admin-sprite-small-1.png") no-repeat 0 -3361px;
+	background:url("images/bx-admin-sprite-small-2.png") no-repeat 0 -3361px;
 	content:"";
 	height:16px;
 	top:6px;
@@ -1056,12 +1069,12 @@
 #bx-admin-prefix .bx-core-popup-menu-item-opener:hover .bx-core-popup-menu-item-text,
 #bx-admin-prefix .bx-core-popup-menu-item-opened .bx-core-popup-menu-item-text
 {
-	background: url("images/popup_menu_sprite_2.png") no-repeat right -270px;
+	background: url("images/popup_menu_sprite_2.png?1") no-repeat right -270px;
 }
 
 #bx-admin-prefix .bx-core-popup-menu-item-checked .bx-core-popup-menu-item-text
 {
-	background: url("images/popup_menu_sprite_2.png") no-repeat left -600px;
+	background: url("images/popup_menu_sprite_2.png?1") no-repeat left -600px;
 }
 
 #bx-admin-prefix .adm-menu-edit{background-position: 6px -630px;}
@@ -1086,6 +1099,7 @@
 #bx-admin-prefix .adm-menu-add-desc {background-position:6px -1230px}
 #bx-admin-prefix .adm-menu-setting {background-position:6px -1260px}
 #bx-admin-prefix .adm-menu-excel {background-position:6px -1290px}
+#bx-admin-prefix .adm-menu-marketplace {background-position:6px -1505px}
 
 
 #bx-admin-prefix .bx-core-popup-menu-separator {
@@ -1167,7 +1181,7 @@
 {
 	position: absolute;
 	left: 15px;
-	background:url("images/bx-admin-sprite-small-1.png") no-repeat 0 -2865px;
+	background:url("images/bx-admin-sprite-small-2.png") no-repeat 0 -2865px;
 	height: 36px;
 	width: 20px;
 }
@@ -1200,7 +1214,7 @@
 #bx-admin-prefix .adm-warning-text a {color:#134889; font-weight:normal; margin-left:8px; text-decoration: none;}
 
 #bx-admin-prefix .adm-warning-close {
-	background:url("images/bx-admin-sprite-small-1.png") no-repeat 9px -2924px;
+	background:url("images/bx-admin-sprite-small-2.png") no-repeat 9px -2924px;
 	cursor:pointer;
 	height:36px;
 	right:0;
@@ -1258,7 +1272,7 @@
 }
 
 #bx-admin-prefix .adm-detail-subtabs {
-	background:url("images/bx-admin-sprite-small-1.png") repeat-x 0 -2728px;
+	background:url("images/bx-admin-sprite-small-2.png") repeat-x 0 -2728px;
 	border-radius:2px 2px 0 0;
 	display:inline-block;
 	cursor:pointer;
@@ -1732,7 +1746,7 @@
 }
 
 #bx-admin-prefix .adm-info-message-close {
-	background:url("images/bx-admin-sprite-small-1.png") no-repeat center -3168px;
+	background:url("images/bx-admin-sprite-small-2.png") no-repeat center -3168px;
 	cursor:pointer;
 	height:30px;
 	right:0;
@@ -1933,7 +1947,7 @@
 }
 
 #bx-admin-prefix .internal .heading td,
-#bx-admin-prefix .list-table .heading td
+#bx-admin-prefix .list-table .heading td,
 #bx-admin-prefix .adm-workarea-page > .internal .heading td,
 #bx-admin-prefix .adm-workarea-page > .list-table .heading td {
 	background-color:#e3ebee;
@@ -2041,7 +2055,7 @@
 
 
 #bx-admin-prefix .adm-calendar-icon {
-	background:url("images/bx-admin-sprite-small-1.png") no-repeat 0 -1934px;
+	background:url("images/bx-admin-sprite-small-2.png") no-repeat 0 -1934px;
 	border:none!important;
 	cursor:pointer;
 	height:15px;
@@ -2066,3 +2080,68 @@
 .adm-list-control { float: left; }
 .adm-list-label { display: block; overflow: hidden; padding: 0 0 0 4px; margin: 0; }
 .adm-list-radio .adm-list-label { padding-top: 2px;}
+
+/* ========================================== For new grid and filter ============================================ */
+.adm-toolbar-panel-container {
+	display: -webkit-box;
+	display: -ms-flexbox;
+	display: flex;
+	-webkit-box-align: center;
+	-ms-flex-align: center;
+	align-items: center;
+	-ms-flex-wrap: wrap;
+	flex-wrap: wrap;
+	-webkit-box-pack: justify;
+	-ms-flex-pack: justify;
+	justify-content: space-between;
+	overflow: hidden;
+	margin: 18px 0;
+}
+
+.adm-toolbar-panel-flexible-space {
+	-webkit-box-flex: 1;
+	-ms-flex: 1 0 auto;
+	flex: 1 0 auto;
+	margin: 0 19px 0 0;
+}
+
+.adm-toolbar-panel-container .main-ui-filter-search {
+	display: -webkit-box;
+	display: -ms-flexbox;
+	display: flex;
+	margin: auto 19px auto 0;
+	width: 100%;
+	max-width: 813px;
+	min-width: 300px;
+}
+
+.adm-toolbar-panel-container .webform-small-button-separate-wrap a:hover {
+	text-decoration: none;
+}
+
+.adm-toolbar-panel-button:last-child {
+	margin-right: 0 !important;
+}
+
+.main-grid-cell-content a {
+	color: #1c53a2;
+	text-decoration: none;
+}
+
+.adm-workarea input.main-ui-filter-search-filter {
+	position: relative;
+	padding: 0 50px 0 15px;
+	height: 30px;
+	width: 100%;
+	border: none;
+	border-radius: 2px;
+	margin: 4px 1px;
+	font: 15px/30px "Helvetica Neue", Arial, Helvetica, sans-serif;
+	-webkit-transition: background .3s;
+	transition: background .3s;
+	box-shadow: none;
+	-webkit-box-sizing: border-box;
+	box-sizing: border-box;
+	outline: none;
+	z-index: 1;
+}

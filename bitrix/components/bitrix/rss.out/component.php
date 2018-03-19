@@ -68,7 +68,7 @@ $bDesignMode = $APPLICATION->GetShowIncludeAreas() && is_object($USER) && $USER-
 if(!$bDesignMode)
 {
 	$APPLICATION->RestartBuffer();
-	header("Content-Type: text/xml; charset=".LANG_CHARSET);
+	header("Content-Type: application/rss+xml; charset=".LANG_CHARSET);
 	header("Pragma: no-cache");
 }
 else
@@ -354,7 +354,6 @@ if(!$bDesignMode)
 {
 	$r = $APPLICATION->EndBufferContentMan();
 	echo $r;
-	if(defined("HTML_PAGES_FILE") && !defined("ERROR_404")) CHTMLPagesCache::writeFile(HTML_PAGES_FILE, $r);
 	die();
 }
 else

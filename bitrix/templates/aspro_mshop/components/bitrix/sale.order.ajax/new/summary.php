@@ -469,7 +469,7 @@ $len = count($arResult["GRID"]["ROWS"]);
 						<td class="custom_t2" class="price"><?//=$arResult["ORDER_PRICE_FORMATED"]?></td>
 					</tr>-->
 					<?
-					if (doubleval($arResult["DISCOUNT_PRICE"]) > 0)
+					/*if (doubleval($arResult["DISCOUNT_PRICE"]) > 0)
 					{
 						?>
 						<tr>
@@ -477,7 +477,7 @@ $len = count($arResult["GRID"]["ROWS"]);
 							<td class="custom_t2" class="price"><?echo $arResult["DISCOUNT_PRICE_FORMATED"]?></td>
 						</tr>
 						<?
-					}
+					}*/
 					if(!empty($arResult["TAX_LIST"]))
 					{
 						foreach($arResult["TAX_LIST"] as $val)

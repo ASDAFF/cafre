@@ -10,13 +10,6 @@ class CSocServYandexAuth extends CSocServAuth
 	/** @var CYandexOAuthInterface null  */
 	protected $entityOAuth = null;
 
-	protected $userId = null;
-
-	function __construct($userId = null)
-	{
-		$this->userId = $userId;
-	}
-
 	/**
 	 * @param string $code=false
 	 * @return CYandexOAuthInterface
@@ -311,7 +304,7 @@ class CYandexOAuthInterface extends CSocServOAuthTransport
 
 	public function GetRedirectURI()
 	{
-		return CSocServUtil::ServerName()."/bitrix/tools/oauth/yandex.php";
+		return \CHTTP::URN2URI("/bitrix/tools/oauth/yandex.php");
 	}
 
 	public function getResult()

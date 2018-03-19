@@ -7,7 +7,7 @@ foreach ($arResult['ITEMS'] as $key => $arElement)
 		$arFilter = '';
 		if($arParams["SHARPEN"] != 0)
 		{
-			$arFilter = array("name" => "sharpen", "precision" => $arParams["SHARPEN"]);
+			$arFilter = array(array("name" => "sharpen", "precision" => $arParams["SHARPEN"]));
 		}
 		
 		$arFileTmp = CFile::ResizeImageGet(

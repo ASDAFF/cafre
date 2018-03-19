@@ -66,7 +66,7 @@ class CVoteEvent extends CAllVoteEvent
 					$str = ($strNegative=="Y"?"NOT":"")."(".$key." IS NULL OR ".$key."<=0)";
 					if (!empty($val))
 					{
-						$str = ($strNegative=="Y"?" ".$key." IS NULL OR NOT ":"")."(".$key." ".$strOperation." ".intVal($val).")";
+						$str = ($strNegative=="Y"?" ".$key." IS NULL OR NOT ":"")."(".$key." ".$strOperation." ".intval($val).")";
 						if ($strOperation == "IN")
 						{
 							$val = array_unique(array_map("intval", (is_array($val) ? $val : explode(",", $val))), SORT_NUMERIC);

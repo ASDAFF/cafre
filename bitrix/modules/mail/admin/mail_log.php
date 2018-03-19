@@ -13,7 +13,7 @@ require_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/mail/prolog.php");
 $MOD_RIGHT = $APPLICATION->GetGroupRight("mail");
 if($MOD_RIGHT<"R") $APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
 IncludeModuleLangFile(__FILE__);
-require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/mail/include.php");
+Bitrix\Main\Loader::includeModule('mail');
 
 $err_mess = "File: ".__FILE__."<br>Line: ";
 $APPLICATION->SetTitle(GetMessage("MAIL_LOG_TITLE"));
@@ -21,8 +21,6 @@ $APPLICATION->SetTitle(GetMessage("MAIL_LOG_TITLE"));
 $sTableID = "t_mail_log";
 $oSort = new CAdminSorting($sTableID, "date_insert", "desc");// инициализация сортировки
 $lAdmin = new CAdminList($sTableID, $oSort);// инициализация списка
-
-
 
 $filter = new CAdminFilter(
 	$sTableID."_f_id", 
@@ -32,7 +30,6 @@ $filter = new CAdminFilter(
 	)
 );
 
-
 $arFilterFields = Array(
 	"find_message_subject",
 	"find_show_mess",
@@ -41,10 +38,7 @@ $arFilterFields = Array(
 	"find_show_filt"
 );
 
-
-
 $lAdmin->InitFilter($arFilterFields);//инициализация фильтра
-
 
 if($find_filter_id>0 && $find_mailbox_id)
 {
@@ -55,8 +49,6 @@ if($find_filter_id>0 && $find_mailbox_id)
 	}
 }
 
-
-
 $arFilter = Array(
 	"ID"=>$find_id,
 	"MAILBOX_ID"=>$find_mailbox_id,
@@ -64,12 +56,22 @@ $arFilter = Array(
 	"MESSAGE_SUBJECT"=>$find_message_subject,
 );
 
-$rsData = CMailLog::GetList(Array($by=>$order), $arFilter);
-$rsData = new CAdminResult($rsData, $sTableID);
-$rsData->NavStart(50);
+$nav = new Bitrix\Main\UI\AdminPageNavigation('nav-mail-log');
 
-// установка строки навигации
-$lAdmin->NavText($rsData->GetNavPrint(GetMessage("MAIL_LOG_NAVIGATION")));
+$log = Bitrix\Mail\MailLogTable::getList(array(
+	'select'      => array(
+		'*', 'MAILBOX_NAME' => 'MAILBOX.NAME', 'FILTER_NAME' => 'FILTER.NAME', 'MESSAGE_SUBJECT' => 'MAIL_MESSAGE.SUBJECT'
+	),
+	'filter'      => array_filter($arFilter),
+	'order'       => array(strtoupper($by) => $order),
+	'offset'      => $nav->getOffset(),
+	'limit'       => $nav->getLimit(),
+	'count_total' => true,
+));
+
+$nav->setRecordCount($log->getCount());
+
+$lAdmin->setNavigation($nav, Bitrix\Main\Localization\Loc::getMessage("MAIL_LOG_NAVIGATION"));
 
 $arHeaders = Array();
 $arHeaders[] = Array("id"=>"DATE_INSERT", "content"=>GetMessage("MAIL_LOG_TIME"), "default"=>true, "sort" => "date_insert");
@@ -84,11 +86,13 @@ if($find_show_mess=="Y")
 $lAdmin->AddHeaders($arHeaders);
 
 // построение списка
-while($arRes = $rsData->GetNext(true, false))
+while($arRes = $log->fetch())
 {
 	$arRes = CMailLog::ConvertRow($arRes);
-	$row =& $lAdmin->AddRow($f_ID, $arRes);
-//print_r($arRes);
+	$row =& $lAdmin->AddRow($arRes['ID'], $arRes);
+
+	$arRes['MESSAGE_TEXT'] = htmlspecialcharsbx($arRes['MESSAGE_TEXT']);
+
 	if($arRes["STATUS_GOOD"]=="Y"):
 		if (strpos($arRes["MESSAGE_TEXT"], "&gt;")===0)
 			$str = '<span style="color:green">'.$arRes["MESSAGE_TEXT"].'</span>';
@@ -107,21 +111,12 @@ while($arRes = $rsData->GetNext(true, false))
 
 	if($find_show_mess=="Y")
 		$row->AddViewField("MESSAGE_SUBJECT", $arRes["MESSAGE_SUBJECT"]);
-
 }
-
-// "подвал" списка
-$lAdmin->AddFooter(
-	array(
-		array("title"=>GetMessage("MAIN_ADMIN_LIST_SELECTED"), "value"=>$rsData->SelectedRowsCount()),
-	)
-);
 
 $lAdmin->AddAdminContextMenu();
 $lAdmin->CheckListMode();
 
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_after.php");
-//$maillog = CMailLog::GetList(Array($by=>$order), $arFilter);
 ?>
 
 

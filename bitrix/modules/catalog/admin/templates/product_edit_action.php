@@ -1,8 +1,27 @@
 <?
+use Bitrix\Catalog;
 /** @global CUser $USER */
+/** @global CMain $APPLICATION */
 /** @var string $strWarning */
 /** @var int $IBLOCK_ID */
 /** @var int $ID */
+
+/** @global string $CAT_BASE_WEIGHT */
+/** @global string $CAT_BASE_WIDTH */
+/** @global string $CAT_BASE_LENGTH */
+/** @global string $CAT_BASE_HEIGHT */
+/** @global string $CAT_MEASURE */
+/** @global string $CAT_BASE_QUANTITY */
+/** @global string $CAT_PRICE_TYPE */
+/** @global string $CAT_RECUR_SCHEME_TYPE */
+/** @global string $CAT_RECUR_SCHEME_LENGTH */
+/** @global string $CAT_TRIAL_PRICE_ID */
+/** @global string $CAT_WITHOUT_ORDER */
+/** @global string $CAT_MEASURE_RATIO */
+/** @global array $arCatalogBaseGroup */
+/** @global array $arCatalogBasePrices */
+/** @global array $arCatalogPrices */
+
 if ($USER->CanDoOperation('catalog_price'))
 {
 	$IBLOCK_ID = (int)$IBLOCK_ID;
@@ -12,8 +31,8 @@ if ($USER->CanDoOperation('catalog_price'))
 	if (0 < $IBLOCK_ID && 0 < $ID)
 	{
 		$PRODUCT_ID = CIBlockElement::GetRealElement($ID);
-		$bUseStoreControl = (COption::GetOptionString('catalog','default_use_store_control','N') == "Y");
-		$bEnableReservation = ('N' != COption::GetOptionString('catalog', 'enable_reservation'));
+		$bUseStoreControl = (COption::GetOptionString('catalog','default_use_store_control') == "Y");
+		$bEnableReservation = (COption::GetOptionString('catalog', 'enable_reservation') != 'N');
 
 		if (CIBlockElementRights::UserHasRightTo($IBLOCK_ID, $PRODUCT_ID, "element_edit_price"))
 		{
@@ -24,24 +43,22 @@ if ($USER->CanDoOperation('catalog_price'))
 
 				$arCatalog = CCatalog::GetByID($IBLOCK_ID);
 
-				$arCatalogPrice_tmp = array();
 				$intBasePriceCount = count($arCatalogBasePrices);
 				$dbCatGroups = CCatalogGroup::GetList(array(), array("!BASE" => "Y"));
 				while ($arCatGroups = $dbCatGroups->Fetch())
 				{
-					unset($arCatalogPrice_tmp);
 					$arCatalogPrice_tmp = array();
 
 					for ($i = 0; $i < $intBasePriceCount; $i++)
 					{
 						${"CAT_PRICE_".$arCatGroups["ID"]."_".$arCatalogBasePrices[$i]["IND"]} = str_replace(",", ".", ${"CAT_PRICE_".$arCatGroups["ID"]."_".$arCatalogBasePrices[$i]["IND"]});
 						$arCatalogPrice_tmp[$i] = array(
-							"ID" => IntVal(${"CAT_ID_".$arCatGroups["ID"]}[$arCatalogBasePrices[$i]["IND"]]),
+							"ID" => (int)(${"CAT_ID_".$arCatGroups["ID"]}[$arCatalogBasePrices[$i]["IND"]]),
 							"EXTRA_ID" => ${"CAT_EXTRA_".$arCatGroups["ID"]."_".$arCatalogBasePrices[$i]["IND"]}
-								? IntVal(${"CAT_EXTRA_".$arCatGroups["ID"]."_".$arCatalogBasePrices[$i]["IND"]})
+								? (int)(${"CAT_EXTRA_".$arCatGroups["ID"]."_".$arCatalogBasePrices[$i]["IND"]})
 								: 0,
 							"PRICE" => ${"CAT_PRICE_".$arCatGroups["ID"]."_".$arCatalogBasePrices[$i]["IND"]},
-							"CURRENCY" => Trim(${"CAT_CURRENCY_".$arCatGroups["ID"]."_".$arCatalogBasePrices[$i]["IND"]}),
+							"CURRENCY" => trim(${"CAT_CURRENCY_".$arCatGroups["ID"]."_".$arCatalogBasePrices[$i]["IND"]}),
 							"QUANTITY_FROM" => $arCatalogBasePrices[$i]["QUANTITY_FROM"],
 							"QUANTITY_TO" => $arCatalogBasePrices[$i]["QUANTITY_TO"]
 						);
@@ -57,7 +74,7 @@ if ($USER->CanDoOperation('catalog_price'))
 							{
 								$arCatalogPrice_tmp[$i]["CURRENCY"] = $arCatalogBasePrices[$i]["CURRENCY"];
 								$arCatalogExtra = CExtra::GetByID($arCatalogPrice_tmp[$i]["EXTRA_ID"]);
-								$arCatalogPrice_tmp[$i]["PRICE"] = RoundEx($arCatalogBasePrices[$i]["PRICE"] * (1 + DoubleVal($arCatalogExtra["PERCENTAGE"]) / 100), CATALOG_VALUE_PRECISION);
+								$arCatalogPrice_tmp[$i]["PRICE"] = roundEx($arCatalogBasePrices[$i]["PRICE"] * (1 + (float)$arCatalogExtra["PERCENTAGE"] / 100), CATALOG_VALUE_PRECISION);
 							}
 							else
 							{
@@ -67,6 +84,7 @@ if ($USER->CanDoOperation('catalog_price'))
 					}
 
 					$arCatalogPrices[$arCatGroups["ID"]] = $arCatalogPrice_tmp;
+					unset($arCatalogPrice_tmp);
 				}
 
 				$arUpdatedIDs = array();
@@ -77,47 +95,43 @@ if ($USER->CanDoOperation('catalog_price'))
 				$useStore = $_POST['USE_STORE'];
 				if(!$useStore || $useStore == '')
 					$useStore = 'D';
-				if ('Y' == $useStore || ('D' == $useStore && 'Y' == $availCanBuyZero))
-				{
-					$negativeAmount = $useStore;
-				}
-				else
-				{
-					$negativeAmount = $_POST['NEGATIVE_AMOUNT'];
-					if(!$negativeAmount || $negativeAmount == '')
-						$negativeAmount = 'D';
-				}
+
 				$barcodeMultiply = $_POST["CAT_BARCODE_MULTIPLY"];
 				if(!$barcodeMultiply || $barcodeMultiply == '')
 					$barcodeMultiply = 'N';
 				if(isset($_REQUEST["AR_BARCODE_ID"]) && ($barcodeMultiply == 'Y'))
 				{
-					$countBarCode = 0;
-					$arBarCodeResult = array();
-					$dbAmount = CCatalogStoreControlUtil::getQuantityInformation($PRODUCT_ID);
-					if(is_object($dbAmount) && ($arAmount = $dbAmount->Fetch()))
+					$row = Catalog\ProductTable::getRowById($PRODUCT_ID);
+					if (!empty($row) && $row['BARCODE_MULTI'] == 'N')
 					{
-						$dbBarCode = CCatalogStoreBarCode::GetList(array(), array("PRODUCT_ID" => $PRODUCT_ID), false, false, array("ID", "BARCODE", "PRODUCT_ID", "STORE_ID"));
-						while($arBarCode = $dbBarCode->Fetch())
+						$countBarCode = 0;
+						$arBarCodeResult = array();
+						$dbAmount = CCatalogStoreControlUtil::getQuantityInformation($PRODUCT_ID);
+						if (is_object($dbAmount) && ($arAmount = $dbAmount->Fetch()))
 						{
-							$arBarCodeResult[] = $arBarCode;
-							if($arBarCode["STORE_ID"] != 0)
-								$countBarCode++;
-						}
-						if(($arAmount["SUM"] + $arAmount["RESERVED"] != 0) || ($countBarCode > 0))
-						{
-							$strWarning .= GetMessage("C2IT_ERROR_USE_MULTIBARCODE", array("#COUNT#" => ($arAmount["SUM"] - $countBarCode)));
-							$barcodeMultiply = 'N';
-							unset($_REQUEST["AR_BARCODE_ID"]);
-						}
-						else
-						{
-							foreach($arBarCodeResult as $barCode)
+							$dbBarCode = CCatalogStoreBarCode::GetList(array(), array("PRODUCT_ID" => $PRODUCT_ID), false, false, array("ID", "BARCODE", "PRODUCT_ID", "STORE_ID"));
+							while ($arBarCode = $dbBarCode->Fetch())
 							{
-								CCatalogStoreBarCode::Delete($barCode["ID"]);
+								$arBarCodeResult[] = $arBarCode;
+								if ($arBarCode["STORE_ID"] != 0)
+									$countBarCode++;
+							}
+							if (($arAmount["SUM"] + $arAmount["RESERVED"] != 0) || ($countBarCode > 0))
+							{
+								$strWarning .= GetMessage("C2IT_ERROR_USE_MULTIBARCODE", array("#COUNT#" => ($arAmount["SUM"] - $countBarCode)));
+								$barcodeMultiply = 'N';
+								unset($_REQUEST["AR_BARCODE_ID"]);
+							}
+							else
+							{
+								foreach ($arBarCodeResult as $barCode)
+								{
+									CCatalogStoreBarCode::Delete($barCode["ID"]);
+								}
 							}
 						}
 					}
+					unset($row);
 				}
 				elseif(isset($_REQUEST["AR_BARCODE_ID"]) && is_array($_REQUEST["AR_BARCODE_ID"]) && $barcodeMultiply != 'Y')
 				{
@@ -194,7 +208,6 @@ if ($USER->CanDoOperation('catalog_price'))
 					"VAT_ID" => $CAT_VAT_ID,
 					"VAT_INCLUDED" => $CAT_VAT_INCLUDED,
 					"CAN_BUY_ZERO" => $useStore,
-					"NEGATIVE_AMOUNT_TRACE" => $negativeAmount,
 					"PRICE_TYPE" => false,
 					"RECUR_SCHEME_TYPE" => false,
 					"RECUR_SCHEME_LENGTH" => false,
@@ -206,12 +219,20 @@ if ($USER->CanDoOperation('catalog_price'))
 				if ($USER->CanDoOperation('catalog_purchas_info') && !$bUseStoreControl)
 				{
 					if (
-						isset($_POST['CAT_PURCHASING_PRICE']) && trim($_POST['CAT_PURCHASING_PRICE']) != ''
-						&& isset($_POST['CAT_PURCHASING_CURRENCY']) && trim($_POST['CAT_PURCHASING_CURRENCY']) != ''
+						isset($_POST['CAT_PURCHASING_PRICE'])
+						&& isset($_POST['CAT_PURCHASING_CURRENCY'])
 					)
 					{
-						$arFields['PURCHASING_PRICE'] = $_POST['CAT_PURCHASING_PRICE'];
-						$arFields['PURCHASING_CURRENCY'] = $_POST['CAT_PURCHASING_CURRENCY'];
+						$price = trim($_POST['CAT_PURCHASING_PRICE']);
+						$currency = trim($_POST['CAT_PURCHASING_CURRENCY']);
+						if ($price == '' || $currency == '')
+						{
+							$price = false;
+							$currency = false;
+						}
+						$arFields['PURCHASING_PRICE'] = $price;
+						$arFields['PURCHASING_CURRENCY'] = $currency;
+						unset($currency, $price);
 					}
 				}
 
@@ -235,32 +256,46 @@ if ($USER->CanDoOperation('catalog_price'))
 					$arFields["TRIAL_PRICE_ID"] = $CAT_TRIAL_PRICE_ID;
 					$arFields["WITHOUT_ORDER"] = $CAT_WITHOUT_ORDER;
 				}
-				CCatalogProduct::Add($arFields);
+				$productResult = CCatalogProduct::Add($arFields);
+				if (!$productResult)
+				{
+					if ($ex = $APPLICATION->GetException())
+						$strWarning .= GetMessage(
+							'C2IT_ERROR_PRODUCT_SAVE_ERROR',
+							array('#ERROR#' => $ex->GetString())
+						).'<br>';
+					else
+						$strWarning .= GetMessage('C2IT_ERROR_PRODUCT_SAVE_UNKNOWN_ERROR').'<br>';
+					unset($ex);
+					return;
+				}
+				unset($productResult);
 
 				$arMeasureRatio = array('PRODUCT_ID' => $PRODUCT_ID, 'RATIO' => $CAT_MEASURE_RATIO);
 				$newRatio = true;
 				$currentRatioID = 0;
 				if (isset($_POST['CAT_MEASURE_RATIO_ID']))
-				{
 					$currentRatioID = (int)$_POST['CAT_MEASURE_RATIO_ID'];
-					if ($currentRatioID > 0)
-					{
-						$ratioIterator = CCatalogMeasureRatio::getList(
-							array(),
-							array('ID' => $currentRatioID, 'PRODUCT_ID' => $PRODUCT_ID),
-							false,
-							false,
-							array('ID', 'PRODUCT_ID')
-						);
-						if ($currentRatio = $ratioIterator->Fetch())
-						{
-							$newRatio = false;
-						}
-						unset($currentRatio, $ratioIterator);
-					}
+				$ratioFilter = array('PRODUCT_ID' => $PRODUCT_ID);
+				if ($currentRatioID > 0)
+					$ratioFilter['ID'] = $currentRatioID;
+				$ratioIterator = CCatalogMeasureRatio::getList(
+					array(),
+					$ratioFilter,
+					false,
+					false,
+					array('ID', 'PRODUCT_ID')
+				);
+				if ($currentRatio = $ratioIterator->Fetch())
+				{
+					if ($currentRatioID <= 0)
+						$currentRatioID = $currentRatio['ID'];
+					$newRatio = false;
 				}
+				unset($currentRatio, $ratioIterator, $ratioFilter);
 				if ($newRatio)
 				{
+					$arMeasureRatio['IS_DEFAULT'] = 'Y';
 					CCatalogMeasureRatio::add($arMeasureRatio);
 				}
 				else
@@ -278,7 +313,7 @@ if ($USER->CanDoOperation('catalog_price'))
 							"EXTRA_ID" => false,
 							"PRODUCT_ID" => $PRODUCT_ID,
 							"CATALOG_GROUP_ID" => $arCatalogBaseGroup["ID"],
-							"PRICE" => DoubleVal($arCatalogBasePrices[$i]["PRICE"]),
+							"PRICE" => (float)$arCatalogBasePrices[$i]["PRICE"],
 							"CURRENCY" => $arCatalogBasePrices[$i]["CURRENCY"],
 							"QUANTITY_FROM" => ($arCatalogBasePrices[$i]["QUANTITY_FROM"] > 0 ? $arCatalogBasePrices[$i]["QUANTITY_FROM"] : false),
 							"QUANTITY_TO" => ($arCatalogBasePrices[$i]["QUANTITY_TO"] > 0 ? $arCatalogBasePrices[$i]["QUANTITY_TO"] : false)
@@ -322,7 +357,7 @@ if ($USER->CanDoOperation('catalog_price'))
 								"EXTRA_ID" => ($arCatalogPrice_tmp[$i]["EXTRA_ID"] > 0 ? $arCatalogPrice_tmp[$i]["EXTRA_ID"] : false),
 								"PRODUCT_ID" => $PRODUCT_ID,
 								"CATALOG_GROUP_ID" => $catalogGroupID,
-								"PRICE" => DoubleVal($arCatalogPrice_tmp[$i]["PRICE"]),
+								"PRICE" => (float)$arCatalogPrice_tmp[$i]["PRICE"],
 								"CURRENCY" => $arCatalogPrice_tmp[$i]["CURRENCY"],
 								"QUANTITY_FROM" => ($arCatalogPrice_tmp[$i]["QUANTITY_FROM"] > 0 ? $arCatalogPrice_tmp[$i]["QUANTITY_FROM"] : false),
 								"QUANTITY_TO" => ($arCatalogPrice_tmp[$i]["QUANTITY_TO"] > 0 ? $arCatalogPrice_tmp[$i]["QUANTITY_TO"] : false)
@@ -372,7 +407,7 @@ if ($USER->CanDoOperation('catalog_price'))
 					);
 					while ($arProductGroup = $dbProductGroups->Fetch())
 					{
-						$arCurProductGroups[IntVal($arProductGroup["GROUP_ID"])] = $arProductGroup;
+						$arCurProductGroups[(int)$arProductGroup["GROUP_ID"]] = $arProductGroup;
 					}
 
 					$arAvailContentGroups = array();
@@ -402,11 +437,11 @@ if ($USER->CanDoOperation('catalog_price'))
 						{
 							if (isset(${"CAT_USER_GROUP_ID_".$arGroup["ID"]}) && ${"CAT_USER_GROUP_ID_".$arGroup["ID"]} == "Y")
 							{
-								if (IntVal(${"CAT_ACCESS_LENGTH_".$arGroup["ID"]}) != IntVal($arCurProductGroups[$arGroup["ID"]]["ACCESS_LENGTH"])
+								if ((int)(${"CAT_ACCESS_LENGTH_".$arGroup["ID"]}) != (int)($arCurProductGroups[$arGroup["ID"]]["ACCESS_LENGTH"])
 									|| ${"CAT_ACCESS_LENGTH_TYPE_".$arGroup["ID"]} != $arCurProductGroups[$arGroup["ID"]]["ACCESS_LENGTH_TYPE"])
 								{
 									$arCatalogFields = array(
-										"ACCESS_LENGTH" => IntVal(${"CAT_ACCESS_LENGTH_".$arGroup["ID"]}),
+										"ACCESS_LENGTH" => (int)(${"CAT_ACCESS_LENGTH_".$arGroup["ID"]}),
 										"ACCESS_LENGTH_TYPE" => ${"CAT_ACCESS_LENGTH_TYPE_".$arGroup["ID"]}
 									);
 									CCatalogProductGroups::Update($arCurProductGroups[$arGroup["ID"]]["ID"], $arCatalogFields);
@@ -424,7 +459,7 @@ if ($USER->CanDoOperation('catalog_price'))
 								$arCatalogFields = array(
 									"PRODUCT_ID" => $ID,
 									"GROUP_ID" => $arGroup["ID"],
-									"ACCESS_LENGTH" => IntVal(${"CAT_ACCESS_LENGTH_".$arGroup["ID"]}),
+									"ACCESS_LENGTH" => (int)(${"CAT_ACCESS_LENGTH_".$arGroup["ID"]}),
 									"ACCESS_LENGTH_TYPE" => ${"CAT_ACCESS_LENGTH_TYPE_".$arGroup["ID"]}
 								);
 								CCatalogProductGroups::Add($arCatalogFields);
@@ -433,22 +468,50 @@ if ($USER->CanDoOperation('catalog_price'))
 					}
 				}
 
-				if ($USER->CanDoOperation('catalog_store'))
+				if (!$bUseStoreControl && $USER->CanDoOperation('catalog_store'))
 				{
-					$rsStores = CCatalogStore::GetList(array(), array('ACTIVE' => 'Y'), false, false, array('ID'));
-					while ($arStore = $rsStores->Fetch())
+					$storeProducts = array();
+					$iterator = Catalog\StoreProductTable::getList(array(
+						'select' => array('ID', 'STORE_ID', 'AMOUNT'),
+						'filter' => array('=PRODUCT_ID' => $PRODUCT_ID, '=STORE.ACTIVE' => 'Y')
+					));
+					while ($row = $iterator->fetch())
+						$storeProducts[$row['STORE_ID']] = $row;
+					unset($row, $iterator);
+					$iterator = Catalog\StoreTable::getList(array(
+						'select' => array('ID'),
+						'filter' => array('=ACTIVE' => 'Y')
+					));
+					while ($row = $iterator->fetch())
 					{
-						if (isset($_POST['AR_AMOUNT'][$arStore['ID']]))
+						if (!isset($_POST['AR_AMOUNT'][$row['ID']]))
+							continue;
+						$amount = trim((string)$_POST['AR_AMOUNT'][$row['ID']]);
+						if ($amount === '' && !isset($storeProducts[$row['ID']]))
+							continue;
+						if ($amount === '')
 						{
-							$arStoreProductFields = array(
-								"PRODUCT_ID" => $ID,
-								"STORE_ID" => $arStore['ID'],
-								"AMOUNT" => $_POST['AR_AMOUNT'][$arStore['ID']],
+							$storeRes = CCatalogStoreProduct::Delete($storeProducts[$row['ID']]['ID']);
+						}
+						else
+						{
+							$fields = array(
+								'PRODUCT_ID' => $PRODUCT_ID,
+								'STORE_ID' => $row['ID'],
+								'AMOUNT' => $amount
 							);
-							if(!CCatalogStoreProduct::UpdateFromForm($arStoreProductFields))
-								$bVarsFromForm = true;
+							if (isset($storeProducts[$row['ID']]))
+								$storeRes = CCatalogStoreProduct::Update($storeProducts[$row['ID']]['ID'], $fields);
+							else
+								$storeRes = CCatalogStoreProduct::Add($fields);
+						}
+						if (!$storeRes)
+						{
+							$bVarsFromForm = true;
+							break;
 						}
 					}
+					unset($fields, $row, $iterator);
 				}
 			}
 		}

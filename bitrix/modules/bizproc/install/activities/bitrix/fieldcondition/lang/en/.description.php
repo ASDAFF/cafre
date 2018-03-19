@@ -1,4 +1,4 @@
 <?
-$MESS ['BPFC_DESCR_DESCR'] = "Document field";
-$MESS ['BPFC_DESCR_NAME'] = "Document Field";
+$MESS["BPFC_DESCR_DESCR"] = "Element field";
+$MESS["BPFC_DESCR_NAME"] = "Element Field";
 ?>

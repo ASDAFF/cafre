@@ -18,6 +18,7 @@ RewriteCond %{REQUEST_FILENAME} [\xF1-\xF3][\x80-\xBF]{3} [OR]
 RewriteCond %{REQUEST_FILENAME} \xF4[\x80-\x8F][\x80-\xBF]{2}
 RewriteRule ^(.*)$ /bitrix/virtual_file_system.php [L]
 */
+require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/lib/loader.php");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/tools.php");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/classes/general/virtual_io.php");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/bx_root.php");
@@ -39,8 +40,7 @@ if (!preg_match("#([\xC2-\xDF][\x80-\xBF]|\xE0[\xA0-\xBF][\x80-\xBF]|[\xE1-\xEC\
 
 if (!defined("BX_UTF"))
 {
-	include_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/classes/general/charset_converter.php");
-	$requestUri = CharsetConverter::ConvertCharset($requestUri, "utf-8", (defined("BX_DEFAULT_CHARSET")? BX_DEFAULT_CHARSET : "windows-1251"));
+	$requestUri = \Bitrix\Main\Text\Encoding::convertEncoding($requestUri, "utf-8", (defined("BX_DEFAULT_CHARSET")? BX_DEFAULT_CHARSET : "windows-1251"));
 }
 
 $requestUri = preg_replace("/(\\.)(\\.[\\\\\\/])/is", "\\1 \\2", $requestUri);

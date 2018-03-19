@@ -9,6 +9,12 @@
  */
 
 (function(global) {
+
+	if(window.rangy)
+	{
+		return;
+	}
+
     var amdSupported = (typeof global.define == "function" && global.define.amd);
 
     var OBJECT = "object", FUNCTION = "function", UNDEFINED = "undefined";
@@ -3389,7 +3395,7 @@ rangy.createCoreModule("WrappedSelection", ["DomRange", "WrappedRange"], functio
         refreshSelection = function(sel) {
             if (implementsControlRange && implementsDocSelection && sel.docSelection.type == CONTROL) {
                 updateControlSelection(sel);
-            } else {
+            } else if (sel && sel.nativeSelection) {
                 sel._ranges.length = sel.rangeCount = sel.nativeSelection.rangeCount;
                 if (sel.rangeCount) {
                     for (var i = 0, len = sel.rangeCount; i < len; ++i) {

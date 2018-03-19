@@ -26,15 +26,15 @@ if ($arParams["SEF_MODE"] == "Y")
 	$arVariables = array();
 
 	$arUrlTemplates =
-		CComponentEngine::MakeComponentUrlTemplates($arDefaultUrlTemplates404, $arParams["SEF_URL_TEMPLATES"]);
-	$arVariableAliases = CComponentEngine::MakeComponentVariableAliases($arDefaultVariableAliases404, $arParams["VARIABLE_ALIASES"]);
+		CComponentEngine::makeComponentUrlTemplates($arDefaultUrlTemplates404, $arParams["SEF_URL_TEMPLATES"]);
+	$arVariableAliases = CComponentEngine::makeComponentVariableAliases($arDefaultVariableAliases404, $arParams["VARIABLE_ALIASES"]);
 
-	$componentPage = CComponentEngine::ParseComponentPath($arParams["SEF_FOLDER"], $arUrlTemplates, $arVariables);
+	$componentPage = CComponentEngine::parseComponentPath($arParams["SEF_FOLDER"], $arUrlTemplates, $arVariables);
 
-	if (StrLen($componentPage) <= 0)
+	if (strlen($componentPage) <= 0)
 		$componentPage = "liststores";
 
-	CComponentEngine::InitComponentVariables($componentPage, $arComponentVariables,	$arVariableAliases,	$arVariables);
+	CComponentEngine::initComponentVariables($componentPage, $arComponentVariables,	$arVariableAliases,	$arVariables);
 
 	foreach ($arUrlTemplates as $url => $value)
 		$arResult["PATH_TO_".strtoupper($url)] = $arParams["SEF_FOLDER"].$value;
@@ -44,14 +44,14 @@ if ($arParams["SEF_MODE"] == "Y")
 else
 {
 	$arVariables = array();
-	$arVariableAliases = CComponentEngine::MakeComponentVariableAliases($arDefaultVariableAliases, $arParams["VARIABLE_ALIASES"]);
-	CComponentEngine::InitComponentVariables(false, $arComponentVariables, $arVariableAliases, $arVariables);
+	$arVariableAliases = CComponentEngine::makeComponentVariableAliases($arDefaultVariableAliases, $arParams["VARIABLE_ALIASES"]);
+	CComponentEngine::initComponentVariables(false, $arComponentVariables, $arVariableAliases, $arVariables);
 
 	foreach ($arDefaultUrlTemplatesN404 as $url => $value)
 		$arResult["PATH_TO_".strtoupper($url)] = $GLOBALS["APPLICATION"]->GetCurPageParam($value, $arComponentVariables);
 
 	$componentPage = "";
-	if (IntVal($arVariables["store_id"]) > 0)
+	if ((int)$arVariables["store_id"] > 0)
 		$componentPage = "element";
 	else
 		$componentPage = "liststores";
@@ -65,4 +65,3 @@ $arResult = array_merge(
 	), $arResult);
 
 $this->IncludeComponentTemplate($componentPage);
-?>

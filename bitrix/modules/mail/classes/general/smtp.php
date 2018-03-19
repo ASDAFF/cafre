@@ -809,7 +809,7 @@ class CSMTPConnection
 		if(strpos($this->readBuffer, "\r\n.\r\n")===false)
 			return false;
 
-		$this->readBuffer = substr($this->readBuffer, 0, -5);
+		$this->readBuffer = substr($this->readBuffer, 0, -3);
 
 		$this->readBuffer = str_replace("\r\n..", "\r\n.", $this->readBuffer);
 

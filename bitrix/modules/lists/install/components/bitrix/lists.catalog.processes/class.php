@@ -60,13 +60,24 @@ class ListsCatalogProcessesComponent extends CBitrixComponent
 		$this->arResult['USER_PROCESSES'] = array();
 		try
 		{
-			$defaultSiteId = CSite::getDefSite();
-			$iterator = CSite::getByID($defaultSiteId);
-			$site = $iterator->fetch();
-			$defaultLang = $site ? $site['LANGUAGE_ID'] : 'en';
-			if($defaultLang == 'ua')
-				$defaultLang = 'ru';
-
+			$defaultLang = "en";
+			if(IsModuleInstalled("bitrix24"))
+			{
+				$gr = COption::GetOptionString("main", "~controller_group_name", "");
+				if($gr != "")
+					$defaultLang = substr($gr, 0, 2);
+				if($defaultLang == "ua")
+					$defaultLang = "ru";
+			}
+			else
+			{
+				$defaultSiteId = CSite::GetDefSite();
+				$siteObject = CSite::GetByID($defaultSiteId);
+				$site = $siteObject->fetch();
+				$defaultLang = $site ? $site['LANGUAGE_ID'] : "en";
+				if($defaultLang == "ua")
+					$defaultLang = "ru";
+			}
 			\Bitrix\Lists\Importer::loadDataProcesses($defaultLang, true, $this->arResult['SYSTEM_PROCESSES']);
 			\Bitrix\Lists\Importer::loadDataProcesses($defaultLang, false, $this->arResult['USER_PROCESSES']);
 
@@ -101,7 +112,6 @@ class ListsCatalogProcessesComponent extends CBitrixComponent
 				array(
 					'IBLOCK_TYPE_ID' => $filter['IBLOCK_TYPE_ID'],
 					'CODE' => $filter['CODE'],
-					'NAME' => $filter['NAME'],
 					'CHECK_PERMISSIONS' => 'N',
 					'SITE_ID' => SITE_ID
 				)

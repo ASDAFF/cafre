@@ -14,7 +14,6 @@ var
 		use_google: false, // Yandex.Translator is really using here but we won't rename a setting name now
 		replace_dict: 'TRANS',
 		replace_way: 'LE', // LE - LANG->ENGLISH, EL - ENGLISH->LANG
-		replace_dict: 'TRANS',
 		skip_r_test: false
 	},
 	r = {

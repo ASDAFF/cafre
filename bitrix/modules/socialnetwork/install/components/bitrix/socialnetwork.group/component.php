@@ -1,5 +1,17 @@
 <?
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
+/** @var CBitrixComponent $this */
+/** @var array $arParams */
+/** @var array $arResult */
+/** @var string $componentPath */
+/** @var string $componentName */
+/** @var string $componentTemplate */
+/** @global CDatabase $DB */
+/** @global CUser $USER */
+/** @global CMain $APPLICATION */
+/** @global CCacheManager $CACHE_MANAGER */
+/** @global CUserTypeManager $USER_FIELD_MANAGER */
+global $CACHE_MANAGER, $USER_FIELD_MANAGER;
 
 if (!CModule::IncludeModule("socialnetwork"))
 {
@@ -90,6 +102,12 @@ $arParams["PATH_TO_GROUP_LOG"] = trim($arParams["PATH_TO_GROUP_LOG"]);
 if (strlen($arParams["PATH_TO_GROUP_LOG"]) <= 0)
 	$arParams["PATH_TO_GROUP_LOG"] = htmlspecialcharsbx($APPLICATION->GetCurPage()."?".$arParams["PAGE_VAR"]."=group-log&".$arParams["GROUP_VAR"]."=#group_id#");
 
+$arParams["PATH_TO_CONPANY_DEPARTMENT"] = trim($arParams["PATH_TO_CONPANY_DEPARTMENT"]);
+if (strlen($arParams["PATH_TO_CONPANY_DEPARTMENT"]) <= 0)
+{
+	$arParams["PATH_TO_CONPANY_DEPARTMENT"] = \Bitrix\Main\Config\Option::get('main', 'TOOLTIP_PATH_TO_CONPANY_DEPARTMENT', SITE_DIR."company/structure.php?set_filter_structure=Y&structure_UF_DEPARTMENT=#ID#");
+}
+
 $arParams["DATE_TIME_FORMAT"] = trim(empty($arParams["DATE_TIME_FORMAT"]) ? $DB->DateFormatToPHP(CSite::GetDateFormat("FULL")) : $arParams["DATE_TIME_FORMAT"]);
 $arParams["SHORT_FORM"] = ($arParams["SHORT_FORM"] == "Y");
 
@@ -160,21 +178,23 @@ if (strlen(trim($arParams["SEARCH_TAGS_COLOR_NEW"])) <= 0)
 if (strlen(trim($arParams["SEARCH_TAGS_COLOR_OLD"])) <= 0)
 	$arParams["SEARCH_TAGS_COLOR_OLD"] = "C0C0C0";
 
-if (IsModuleInstalled("intranet"))
-	$arParams['CAN_OWNER_EDIT_DESKTOP'] = $arParams['CAN_OWNER_EDIT_DESKTOP'] != "Y" ? "N" : "Y";
-else	
-	$arParams['CAN_OWNER_EDIT_DESKTOP'] = $arParams['CAN_OWNER_EDIT_DESKTOP'] != "N" ? "Y" : "N";
+$arParams['CAN_OWNER_EDIT_DESKTOP'] = (
+	IsModuleInstalled("intranet")
+		? ($arParams['CAN_OWNER_EDIT_DESKTOP'] != "Y" ? "N" : "Y")
+		: ($arParams['CAN_OWNER_EDIT_DESKTOP'] != "N" ? "Y" : "N")
+);
 
 $arParams["GROUP_USE_BAN"] = $arParams["GROUP_USE_BAN"] != "N" ? "Y" : "N";
 
 $arGroup = CSocNetGroup::GetByID($arParams["GROUP_ID"]);
-
 if (
 	!$arGroup 
 	|| !is_array($arGroup) 
 	|| $arGroup["ACTIVE"] != "Y" 
 )
+{
 	$arResult["FatalError"] = GetMessage("SONET_P_USER_NO_GROUP");
+}
 else
 {
 	$arResult["bExtranet"] = (CModule::IncludeModule("extranet") && CExtranet::IsExtranetSite());
@@ -214,13 +234,14 @@ else
 		}
 
 		$arResult["Group"] = $arGroup;
-		
-		if ($arResult["Group"]["CLOSED"] == "Y" && COption::GetOptionString("socialnetwork", "work_with_closed_groups", "N") != "Y")
-			$arResult["HideArchiveLinks"] = true;
 
-		$arResult["CurrentUserPerms"] = CSocNetUserToGroup::InitUserPerms($GLOBALS["USER"]->GetID(), $arResult["Group"], CSocNetUser::IsCurrentUserModuleAdmin());
+		$arResult["HideArchiveLinks"] =
+			$arResult["Group"]["CLOSED"] == "Y" &&
+			COption::GetOptionString("socialnetwork", "work_with_closed_groups", "N") != "Y";
+
+		$arResult["CurrentUserPerms"] = CSocNetUserToGroup::InitUserPerms($USER->GetID(), $arResult["Group"], CSocNetUser::IsCurrentUserModuleAdmin());
 		if (in_array($arResult["CurrentUserPerms"]["UserRole"], array(SONET_ROLES_OWNER, SONET_ROLES_MODERATOR, SONET_ROLES_USER)))
-			$arResult["bSubscribed"] = CSocNetSubscription::IsUserSubscribed($GLOBALS["USER"]->GetID(), "SG".$arParams["GROUP_ID"]);
+			$arResult["bSubscribed"] = CSocNetSubscription::IsUserSubscribed($USER->GetID(), "SG".$arParams["GROUP_ID"]);
 		else
 			$arResult["bSubscribed"] = false;
 
@@ -234,12 +255,12 @@ else
 			) 
 		)
 		{
-			$arResult["bUserCanRequestGroup"] = true;		
+			$arResult["bUserCanRequestGroup"] = true;
 			$arResult["bDescriptionOpen"] = true;
 		}
-		elseif ($GLOBALS["USER"]->IsAuthorized())
+		elseif ($USER->IsAuthorized())
 		{
-			$arUserOptions = CUserOptions::GetOption("socialnetwork", "sonet_group_description", array(), $GLOBALS["USER"]->GetID());
+			$arUserOptions = CUserOptions::GetOption("socialnetwork", "sonet_group_description", array(), $USER->GetID());
 			if (isset($arUserOptions["state"]))
 			{
 				$arResult["bDescriptionOpen"] = ($arUserOptions["state"] == "Y");
@@ -260,7 +281,7 @@ else
 		{
 			$arResult["Urls"]["Edit"] = CComponentEngine::MakePathFromTemplate($arParams["PATH_TO_GROUP_EDIT"], array("group_id" => $arResult["Group"]["ID"]));
 			$arResult["Urls"]["View"] = CComponentEngine::MakePathFromTemplate($arParams["PATH_TO_GROUP"], array("group_id" => $arResult["Group"]["ID"]));
-			$arResult["Urls"]["UserRequestGroup"] = CComponentEngine::MakePathFromTemplate($arParams["PATH_TO_USER_REQUEST_GROUP"], array("group_id" => $arResult["Group"]["ID"], "user_id" => $GLOBALS["USER"]->GetID()));
+			$arResult["Urls"]["UserRequestGroup"] = CComponentEngine::MakePathFromTemplate($arParams["PATH_TO_USER_REQUEST_GROUP"], array("group_id" => $arResult["Group"]["ID"], "user_id" => $USER->GetID()));
 			$arResult["Urls"]["GroupRequestSearch"] = CComponentEngine::MakePathFromTemplate($arParams["PATH_TO_GROUP_REQUEST_SEARCH"], array("group_id" => $arResult["Group"]["ID"]));
 			$arResult["Urls"]["GroupRequests"] = CComponentEngine::MakePathFromTemplate($arParams["PATH_TO_GROUP_REQUESTS"], array("group_id" => $arResult["Group"]["ID"]));
 			$arResult["Urls"]["GroupRequestsOut"] = CComponentEngine::MakePathFromTemplate($arParams["PATH_TO_GROUP_REQUESTS_OUT"], array("group_id" => $arResult["Group"]["ID"]));
@@ -296,11 +317,13 @@ else
 
 			if (count($arParams["GROUP_PROPERTY"]) > 0)
 			{
-				$arUserFields = $GLOBALS["USER_FIELD_MANAGER"]->GetUserFields("SONET_GROUP", $arResult["Group"]["ID"], LANGUAGE_ID);
+				$arUserFields = $USER_FIELD_MANAGER->GetUserFields("SONET_GROUP", $arResult["Group"]["ID"], LANGUAGE_ID);
 				foreach ($arUserFields as $fieldName => $arUserField)
 				{
 					if (!in_array($fieldName, $arParams["GROUP_PROPERTY"]))
+					{
 						continue;
+					}
 
 					$arUserField["EDIT_FORM_LABEL"] = StrLen($arUserField["EDIT_FORM_LABEL"]) > 0 ? $arUserField["EDIT_FORM_LABEL"] : $arUserField["FIELD_NAME"];
 					$arUserField["EDIT_FORM_LABEL"] = htmlspecialcharsEx($arUserField["EDIT_FORM_LABEL"]);
@@ -310,7 +333,9 @@ else
 					$arResult["GroupProperties"]["DATA"][$fieldName] = $arUserField;
 				}
 				if (count($arResult["GroupProperties"]["DATA"]) > 0)
+				{
 					$arResult["GroupProperties"]["SHOW"] = "Y";
+				}
 			}
 
 			if (!$arParams["SHORT_FORM"])
@@ -329,7 +354,7 @@ else
 					while ($arOwner = $dbOwners->GetNext())
 					{
 						$pu = CComponentEngine::MakePathFromTemplate($arParams["PATH_TO_USER"], array("user_id" => $arOwner["USER_ID"]));
-						$canViewProfile = CSocNetUserPerms::CanPerformOperation($GLOBALS["USER"]->GetID(), $arOwner["USER_ID"], "viewprofile", CSocNetUser::IsCurrentUserModuleAdmin());
+						$canViewProfile = CSocNetUserPerms::CanPerformOperation($USER->GetID(), $arOwner["USER_ID"], "viewprofile", CSocNetUser::IsCurrentUserModuleAdmin());
 
 						if (intval($arParams["THUMBNAIL_LIST_SIZE"]) > 0)
 						{
@@ -391,7 +416,7 @@ else
 							$arResult["Moderators"]["List"] = array();
 
 						$pu = CComponentEngine::MakePathFromTemplate($arParams["PATH_TO_USER"], array("user_id" => $arModerators["USER_ID"]));
-						$canViewProfile = CSocNetUserPerms::CanPerformOperation($GLOBALS["USER"]->GetID(), $arModerators["USER_ID"], "viewprofile", CSocNetUser::IsCurrentUserModuleAdmin());
+						$canViewProfile = CSocNetUserPerms::CanPerformOperation($USER->GetID(), $arModerators["USER_ID"], "viewprofile", CSocNetUser::IsCurrentUserModuleAdmin());
 
 						if (intval($arParams["THUMBNAIL_LIST_SIZE"]) > 0)
 						{
@@ -453,7 +478,7 @@ else
 							$arResult["Members"]["List"] = array();
 
 						$pu = CComponentEngine::MakePathFromTemplate($arParams["PATH_TO_USER"], array("user_id" => $arMembers["USER_ID"]));
-						$canViewProfile = CSocNetUserPerms::CanPerformOperation($GLOBALS["USER"]->GetID(), $arMembers["USER_ID"], "viewprofile", CSocNetUser::IsCurrentUserModuleAdmin());
+						$canViewProfile = CSocNetUserPerms::CanPerformOperation($USER->GetID(), $arMembers["USER_ID"], "viewprofile", CSocNetUser::IsCurrentUserModuleAdmin());
 
 						if (intval($arParams["THUMBNAIL_LIST_SIZE"]) > 0)
 						{
@@ -495,15 +520,39 @@ else
 					}
 				}
 
-				//Blog
-				$arResult["ActiveFeatures"] = CSocNetFeatures::GetActiveFeaturesNames(SONET_ENTITY_GROUP, $arResult["Group"]["ID"]);
+				// DEPARTMENTS
+				if (
+					!empty($arResult["Group"]["UF_SG_DEPT"])
+					&& is_array($arResult["Group"]["UF_SG_DEPT"])
+					&& \Bitrix\Main\Loader::includeModule('intranet')
+				)
+				{
+					$arDepartments = CIntranetUtils::GetDepartmentsData($arResult["Group"]["UF_SG_DEPT"]);
+					if (!empty($arDepartments))
+					{
+						$arResult["GroupDepartments"] = array();
+						foreach($arDepartments as $departmentId => $departmentName)
+						{
+							$arResult["GroupDepartments"][] = array(
+								"ID" => $departmentId,
+								"NAME" => $departmentName,
+								"URL" => str_replace('#ID#', $departmentId, $arParams["PATH_TO_CONPANY_DEPARTMENT"])
+							);
+						}
+					}
+				}
 
+				$arResult["ActiveFeatures"] = CSocNetFeatures::getActiveFeaturesNames(SONET_ENTITY_GROUP, $arResult["Group"]["ID"]);
+
+				//Blog
 				$arResult["BLOG"] = array("SHOW" => false, "TITLE" => GetMessage("SONET_C6_BLOG_T"));
 				if(array_key_exists("blog", $arResult["ActiveFeatures"]) && (CSocNetFeaturesPerms::CanPerformOperation($USER->GetID(), SONET_ENTITY_GROUP, $arResult["Group"]["ID"], "blog", "view_post", CSocNetUser::IsCurrentUserModuleAdmin()) || $APPLICATION->GetGroupRight("forum") >= "W") && CModule::IncludeModule("blog"))
 				{
 					$arResult["BLOG"]["SHOW"] = true;
 					if (StrLen($arResult["ActiveFeatures"]["blog"]) > 0)
+					{
 						$arResult["BLOG"]["TITLE"] = $arResult["ActiveFeatures"]["blog"];
+					}
 				}
 
 				$arResult["forum"] = array("SHOW" => false, "TITLE" => GetMessage("SONET_C6_FORUM_T"));

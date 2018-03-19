@@ -79,7 +79,7 @@ $arResult["CAN_ADD_SECTION"] = (
 	!$arResult["IS_SOCNET_GROUP_CLOSED"]
 	&& (
 		($lists_perm >= CListPermissions::CAN_WRITE) 
-		|| CIBlockSectionRights::UserHasRightTo($arIBlock["ID"], intval($arParams["~SECTION_ID"]), "section_section_bind")
+		|| CIBlockSectionRights::UserHasRightTo(intval($arParams["~IBLOCK_ID"]), intval($arParams["~SECTION_ID"]), "section_section_bind")
 	)
 );
 $arResult["IBLOCK_PERM"] = $lists_perm;

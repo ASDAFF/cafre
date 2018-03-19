@@ -40,7 +40,11 @@ if (check_bitrix_sessid())
 			&& IsModuleInstalled("intranet")
 		)
 			echo CUtil::PhpToJsObject(Array(
-				'USERS' => CSocNetLogDestination::GetUsers(Array('deportament_id' => $_POST['DEPARTMENT_ID'], "NAME_TEMPLATE" => $nameTemplate), false), 
+				'USERS' => CSocNetLogDestination::GetUsers(Array(
+					'deportament_id' => $_POST['DEPARTMENT_ID'],
+					"NAME_TEMPLATE" => $nameTemplate
+				),
+				false),
 			));
 		elseif(isset($_POST["bitrix_processes"]))
 		{

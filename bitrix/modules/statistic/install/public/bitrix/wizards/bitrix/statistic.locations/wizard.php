@@ -56,10 +56,9 @@ class Step1 extends CWizardStep
 			$this->content .= '</br>';
 		}
 		$this->content .= '</br>';
-		$this->content .= '<div id="country_note" style="display:'.($import_type=='country'? 'block': 'none').';">'.GetMessage("STATWIZ_STEP1_COUNTRY_NOTE", array(
+		$this->content .= '<div id="country_note" style="display:'.($import_type=='country'? 'block': 'none').';">'.GetMessage("STATWIZ_STEP1_COUNTRY_NOTE_V2", array(
 			"#GEOIP_HREF#" => "http://www.maxmind.com/app/country",
 			"#GEOIPLITE_HREF#" => "http://www.maxmind.com/app/geolitecountry",
-			"#IPTOCOUNTRY_HREF#" => "http://ip-to-country.webhosting.info/",
 		)).'</div>';
 		$this->content .= '<div id="city_note" style="display:'.($import_type=='city'? 'block': 'none').';">'.GetMessage("STATWIZ_STEP1_CITY_NOTE", array(
 			"#GEOIP_HREF#" => "http://www.maxmind.com/app/city",

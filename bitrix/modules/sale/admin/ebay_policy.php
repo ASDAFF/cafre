@@ -20,7 +20,7 @@ if (!\Bitrix\Main\Loader::includeModule('sale'))
 $ebay = \Bitrix\Sale\TradingPlatform\Ebay\Ebay::getInstance();
 
 if(!$ebay->isActive())
-	LocalRedirect("/bitrix/admin/sale_ebay.php?lang=".LANG."&back_url=".urlencode($APPLICATION->GetCurPageParam()));
+	LocalRedirect("/bitrix/admin/sale_ebay_general.php?lang=".LANG."&back_url=".urlencode($APPLICATION->GetCurPageParam()));
 
 $errorMsg = "";
 $bSaved = false;
@@ -47,9 +47,17 @@ $settings = $ebay->getSettings();
 
 if(isset($_POST["EBAY_SETTINGS"]) && is_array($_POST["EBAY_SETTINGS"]))
 {
-	$settings[$SITE_ID] = array_merge($settings[$SITE_ID], $_POST["EBAY_SETTINGS"]);
+	$site = !empty($_POST["SITE_ID_INITIAL"]) && $SITE_ID == $_POST["SITE_ID_INITIAL"] ? $SITE_ID : $_POST["SITE_ID_INITIAL"];
+
+	if(!is_array($settings[$site]))
+		$settings[$site] = array();
+
+	$settings[$site] = array_merge($settings[$site], $_POST["EBAY_SETTINGS"]);
 	$bSaved = $ebay->saveSettings($settings);
 }
+
+if(!isset($settings[$SITE_ID]))
+	LocalRedirect("/bitrix/admin/sale_ebay_general.php?lang=".LANG."&SITE_ID=".$SITE_ID."&back_url=".urlencode($APPLICATION->GetCurPageParam()));
 
 $siteSettings = $settings[$SITE_ID];
 $details = new \Bitrix\Sale\TradingPlatform\Ebay\Api\Details($SITE_ID);
@@ -96,13 +104,14 @@ if($bSaved)
 ?>
 <form method="post" action="<?=$APPLICATION->GetCurPage()?>?lang=<?=LANGUAGE_ID?>" name="ebay_policysettings_form">
 <?=bitrix_sessid_post();?>
+<input type="hidden" name="SITE_ID_INITIAL" value="<?=$SITE_ID?>">
 <table width="100%">
 	<tr>
 		<td align="left">
 			<?=Loc::getMessage("SALE_EBAY_SITE")?>: <?=CLang::SelectBox("SITE_ID", $SITE_ID, "", "this.form.submit();")?>
 		</td>
 		<td align="right">
-			<img alt="eBay logo" src="/bitrix/images/sale/ebay-logo.png" style="width: 100px; height: 67px;">
+			<img alt="eBay logo" src="/bitrix/images/sale/ebay/logo.png" style="width: 100px; height: 67px;">
 		</td>
 	</tr>
 </table>
@@ -193,7 +202,7 @@ $tabControl->BeginNextTab();
 					<select name="EBAY_SETTINGS[MAPS][SHIPMENT][<?=$service?>]">
 						<option value=""><?=Loc::getMessage("SALE_EBAY_NOT_MAPPED")?></option>
 						<?foreach($arDeliveryList as $deliveryId => $deliveryName):?>
-							<option value="<?=$deliveryId?>"<?=(isset($siteSettings["MAPS"]["SHIPMENT"][$service]) && $siteSettings["MAPS"]["SHIPMENT"][$service] ==  $deliveryId ? " selected" : "")?>><?=$deliveryName?></option>
+							<option value="<?=$deliveryId?>"<?=(isset($siteSettings["MAPS"]["SHIPMENT"][$service]) && $siteSettings["MAPS"]["SHIPMENT"][$service] ==  $deliveryId ? " selected" : "")?>><?=htmlspecialcharsbx($deliveryName)?></option>
 						<?endforeach;?>
 					</select>
 				</td>

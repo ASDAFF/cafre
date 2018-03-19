@@ -20,12 +20,19 @@ class CBPLockDocumentActivity
 
 		if (!($documentService->LockDocument($documentId, $this->GetWorkflowInstanceId())))
 		{
+			$this->WriteToTrackingService(GetMessage('BPLDA_SUBSCRIBE_ON_UNLOCK'));
 			$this->workflow->AddEventHandler($this->name, $this);
 			$documentService->SubscribeOnUnlockDocument($documentId, $this->GetWorkflowInstanceId(), $this->name);
 			return CBPActivityExecutionStatus::Executing;
 		}
 
 		return CBPActivityExecutionStatus::Closed;
+	}
+
+	public function Finalize()
+	{
+		$documentService = $this->workflow->GetService("DocumentService");
+		$documentService->UnlockDocument($this->GetDocumentId(), $this->GetWorkflowInstanceId());
 	}
 
 	public function OnExternalEvent($arEventParameters = array())
@@ -55,4 +62,3 @@ class CBPLockDocumentActivity
 		return true;
 	}
 }
-?>

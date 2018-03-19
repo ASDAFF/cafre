@@ -895,6 +895,7 @@
 	margin-left:-6px !important;
 	text-shadow:0 1px rgba(255,255,255,0.4) !important;
 	padding:10px 15px 10px 44px !important;
+	-webkit-user-select: text;
 }
 
 #bx-panel .adm-warning-block-red .adm-warning-text {
@@ -1283,6 +1284,7 @@ span.bx-context-toolbar-vertical-mode span.bx-context-toolbar-button-underlay
 	font: normal normal bold 12px/29px "Helvetica Neue", Helvetica, Arial, sans-serif !important;
 	color:#dde7e9 !important;
 	background: scroll transparent url(../images/panel/top-panel-sprite-2.png) right -1129px !important;
+	vertical-align: top !important;
 }
 
 #bx-panel.bx-panel-folded .adm-header-notif-block

@@ -1,7 +1,6 @@
 <?
 $MESS["FPF_CREATE"] = "Новая тема";
 $MESS["FPF_GUEST"] = "Гость";
-$MESS["FPF_NO_ICON"] = "без иконки";
 $MESS["FPF_SEND"] = "Отправить";
 $MESS["FPF_REPLY"] = "Ответить";
 $MESS["FPF_EDIT"] = "Изменить";

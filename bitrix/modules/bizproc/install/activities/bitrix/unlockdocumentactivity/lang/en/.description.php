@@ -1,4 +1,4 @@
 <?
-$MESS ['BPUDA_DESCR_NAME'] = "Unlock Document";
-$MESS ['BPUDA_DESCR_DESCR'] = "Unlocks a document";
+$MESS["BPUDA_DESCR_NAME"] = "Unlock Element";
+$MESS["BPUDA_DESCR_DESCR"] = "Unlocks an element";
 ?>

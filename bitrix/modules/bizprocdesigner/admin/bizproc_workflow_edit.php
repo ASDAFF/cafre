@@ -1,4 +1,4 @@
-<?
+<?php
 /*
 ##############################################
 # Bitrix: SiteManager                        #
@@ -96,47 +96,6 @@ $templateCheckStatus = CBPWorkflowTemplateLoader::checkTemplateActivities($arWor
 if(!$canWrite)
 	$APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
 
-function print_rrr($var)
-{
-	if(is_array($var))
-	{
-		if($var == array_values($var))
-		{
-			foreach($var as $key => $value)
-			{
-				$var[$key] = print_rrr($value);
-			}
-			return "Array(".implode(", ", $var).")";
-		}
-
-		$res = "\nArray(\n";
-		$first = true;
-		foreach($var as $key => $value)
-		{
-			if($first)
-				$first = false;
-			else
-				$res .= ",\n";
-			$res .= "'".CUtil::JSEscape($key)."' => ".print_rrr($value);
-		}
-		$res .= "\n)";
-
-		return $res;
-	}
-	elseif(is_bool($var))
-	{
-		if($var === true)
-			return 'true';
-		else
-			return 'false';
-	}
-	else
-		return "'".CUtil::JSEscape($var)."'";
-
-}
-//echo print_rrr($arTemplate);
-
-
 //////////////////////////////////////////
 // AJAX
 //////////////////////////////////////////
@@ -146,61 +105,20 @@ if(strlen($_REQUEST["back_url"])>0)
 
 if($_SERVER['REQUEST_METHOD']=='POST' && $_REQUEST['saveajax']=='Y' && check_bitrix_sessid())
 {
-	CUtil::DecodeUriComponent($_POST);
+	CBPHelper::decodeTemplatePostData($_POST);
 
 	if($_REQUEST['saveuserparams']=='Y')
 	{
-		if (!is_array($_POST['USER_PARAMS']))
-		{
-			$_POST['USER_PARAMS'] = (array) CUtil::JsObjectToPhp($_POST['USER_PARAMS']);
-		}
 		$d = serialize($_POST['USER_PARAMS']);
-		if (strlen($d) > 64000)
+		if (\Bitrix\Main\Text\BinaryString::getLength($d) > 64000)
 		{
-			?>
-			<script>
-			alert('<?=GetMessage("BIZPROC_USER_PARAMS_SAVE_ERROR")?>');
-			</script>
-			<?
+			?><!--SUCCESS--><script>
+			alert('<?=GetMessageJS("BIZPROC_USER_PARAMS_SAVE_ERROR")?>');
+			</script><?
 			die();
 		}
 		CUserOptions::SetOption("~bizprocdesigner", "activity_settings", $d);
-		die();
-	}
-
-	foreach (array('arWorkflowParameters', 'arWorkflowVariables', 'arWorkflowConstants') as $field)
-	{
-		if (!isset($_POST[$field]))
-		{
-			$_POST[$field] = array();
-			continue;
-		}
-		if (is_array($_POST[$field]))
-		{
-			if (LANG_CHARSET != "UTF-8")
-			{
-				foreach ($_POST[$field] as $name => $param)
-				{
-					if (is_array($_POST[$field][$name]["Options"]))
-					{
-						$newarr = array();
-						foreach ($_POST[$field][$name]["Options"] as $k => $v)
-							$newarr[$GLOBALS["APPLICATION"]->ConvertCharset($k, "UTF-8", LANG_CHARSET)] = $v;
-						$_POST[$field][$name]["Options"] = $newarr;
-					}
-				}
-			}
-		}
-		else
-		{
-			$_POST[$field] = CUtil::JsObjectToPhp($_POST[$field]);
-			if (!is_array($_POST[$field]))
-				$_POST[$field] = array();
-		}
-	}
-	if (!is_array($_POST['arWorkflowTemplate']))
-	{
-		$_POST['arWorkflowTemplate'] = CUtil::JsObjectToPhp($_POST['arWorkflowTemplate']);
+		die('<!--SUCCESS-->');
 	}
 
 	$arFields = Array(
@@ -217,18 +135,49 @@ if($_SERVER['REQUEST_METHOD']=='POST' && $_REQUEST['saveajax']=='Y' && check_bit
 		"MODIFIER_USER" => new CBPWorkflowTemplateUser(CBPWorkflowTemplateUser::CurrentUser),
 		);
 
+	/**
+	 * @param CBPWorkflowTemplateValidationException $e
+	 */
 	function wfeexception_handler($e)
 	{
-		// PHP 5.2.1 bug http://bugs.php.net/bug.php?id=40456
-		?>
-		<script>
-		alert('<?=GetMessage("BIZPROC_WFEDIT_SAVE_ERROR")?>\n<?=preg_replace('#\.\W?#', ".\\n", CUtil::JSEscape($e->getMessage()))?>');
-		</script>
-		<?
+		$errorMessages = array();
+		if (method_exists($e, 'getErrors'))
+		{
+			foreach($e->getErrors() as $error)
+			{
+				$errorMessages[] = CUtil::JSEscape($error['message']);
+			}
+		}
+		else
+		{
+			$errorMessages[] = CUtil::JSEscape($e->getMessage());
+		}
+		?><!--SUCCESS--><script>
+		alert('<?=GetMessageJS("BIZPROC_WFEDIT_SAVE_ERROR")?>\n<?=implode('\n', $errorMessages)?>');
+		(function(){
+			var i, setFocus = true, activity, error, errors = [];
+			errors = <?=\Bitrix\Main\Web\Json::encode($errors);?>;
+
+			for (i = 0; i < errors.length; ++i)
+			{
+				error = errors[i];
+				if (error.activityName)
+				{
+					activity = window.rootActivity.findChildById(error.activityName);
+					/** @var BizProcActivity activity */
+					if (activity)
+					{
+						activity.SetError(true, setFocus);
+						setFocus = false;
+					}
+				}
+			}
+		})();
+		</script><?
 		die();
 	}
 
-	set_exception_handler('wfeexception_handler');
+	//set_exception_handler('wfeexception_handler');
 	try
 	{
 		if($ID>0)
@@ -242,13 +191,11 @@ if($_SERVER['REQUEST_METHOD']=='POST' && $_REQUEST['saveajax']=='Y' && check_bit
 	{
 		wfeexception_handler($e);
 	}
-	restore_exception_handler();
-	?>
-	<script type="text/javascript">
+	//restore_exception_handler();
+	?><!--SUCCESS--><script type="text/javascript">
 		BPTemplateIsModified = false;
 		window.location = '<?=($_REQUEST["apply"]=="Y"?Cutil::JSEscape("/bitrix/admin/".MODULE_ID."_bizproc_workflow_edit.php?lang=".LANGUAGE_ID."&entity=".AddSlashes(ENTITY)."&ID=".$ID."&back_url_list=".urlencode($_REQUEST["back_url_list"])) : Cutil::JSEscape($back_url))?>';
-	</script>
-	<?
+	</script><?
 	die();
 }
 
@@ -305,12 +252,12 @@ if($_SERVER['REQUEST_METHOD']=='POST' && $_REQUEST['import_template']=='Y' && ch
 	?>
 	<script>
 	<?if (intval($r) <= 0):?>
-		alert('<?= GetMessage("BIZPROC_WFEDIT_IMPORT_ERROR").(strlen($errTmp) > 0 ? ": ".CUtil::JSEscape($errTmp) : "" ) ?>');
+		alert('<?= GetMessageJS("BIZPROC_WFEDIT_IMPORT_ERROR").(strlen($errTmp) > 0 ? ": ".CUtil::JSEscape($errTmp) : "" ) ?>');
 	<?else:?>
 		<?$ID = $r;?>
 	<?endif;?>
-	window.location = '/bitrix/admin/<?=MODULE_ID?>_bizproc_workflow_edit.php?<?=($ID>0?"ID=".$ID."&":"")?>'+
-		'entity=<?=AddSlashes(urlencode(ENTITY))?>&document_type=<?=AddSlashes(urlencode($document_type))?>&lang=<?=LANGUAGE_ID?>';
+	window.location = '<?=CUtil::JSEscape('/bitrix/admin/'.MODULE_ID.'_bizproc_workflow_edit.php?'.($ID>0?"ID=".$ID."&":"")
+		.'entity='.AddSlashes(urlencode(ENTITY)).'&document_type='.AddSlashes(urlencode($document_type)).'&lang='.LANGUAGE_ID)?>';
 	</script>
 	<?
 	die();
@@ -318,6 +265,7 @@ if($_SERVER['REQUEST_METHOD']=='POST' && $_REQUEST['import_template']=='Y' && ch
 
 $arAllActGroups = Array(
 		"document" => GetMessage("BIZPROC_WFEDIT_CATEGORY_DOC"),
+		'task' => GetMessage('BIZPROC_WFEDIT_CATEGORY_TASKS'),
 		"logic" => GetMessage("BIZPROC_WFEDIT_CATEGORY_CONSTR"),
 		"interaction" => GetMessage("BIZPROC_WFEDIT_CATEGORY_INTER"),
 		"rest" => GetMessage("BIZPROC_WFEDIT_CATEGORY_REST"),
@@ -354,13 +302,13 @@ $arSubMenu = Array();
 
 $arSubMenu[] = array(
 	"TEXT"	    => GetMessage("BIZPROC_WFEDIT_MENU_ADD_STATE"),
-	"ACTION"	=> "if(confirm('".GetMessage("BIZPROC_WFEDIT_MENU_ADD_WARN")."'))window.location='/bitrix/admin/".MODULE_ID."_bizproc_workflow_edit.php?lang=".LANGUAGE_ID."&init=statemachine&entity=".AddSlashes(ENTITY)."&document_type=".AddSlashes($document_type)."';",
+	"ACTION"	=> "if(confirm('".GetMessage("BIZPROC_WFEDIT_MENU_ADD_WARN")."'))window.location='".CUtil::JSEscape("/bitrix/admin/".MODULE_ID."_bizproc_workflow_edit.php?lang=".LANGUAGE_ID."&init=statemachine&entity=".AddSlashes(ENTITY)."&document_type=".AddSlashes($document_type))."';",
 	"TITLE"	    => GetMessage("BIZPROC_WFEDIT_MENU_ADD_STATE_TITLE"),
 );
 
 $arSubMenu[] = array(
 	"TEXT"	=> GetMessage("BIZPROC_WFEDIT_MENU_ADD_SEQ"),
-	"ACTION"	=> "if(confirm('".GetMessage("BIZPROC_WFEDIT_MENU_ADD_WARN")."'))window.location='/bitrix/admin/".MODULE_ID."_bizproc_workflow_edit.php?lang=".LANGUAGE_ID."&entity=".AddSlashes(ENTITY)."&document_type=".AddSlashes($document_type)."';",
+	"ACTION"	=> "if(confirm('".GetMessage("BIZPROC_WFEDIT_MENU_ADD_WARN")."'))window.location='".CUtil::JSEscape("/bitrix/admin/".MODULE_ID."_bizproc_workflow_edit.php?lang=".LANGUAGE_ID."&entity=".AddSlashes(ENTITY)."&document_type=".AddSlashes($document_type))."';",
 	"TITLE"	=> GetMessage("BIZPROC_WFEDIT_MENU_ADD_SEQ_TITLE"),
 );
 
@@ -407,8 +355,9 @@ function BCPProcessExport()
 		alert('<?= GetMessageJS("BIZPROC_EMPTY_EXPORT") ?>');
 		return false;
 	}
-	window.open('/bitrix/admin/<?=MODULE_ID?>_bizproc_workflow_edit.php?<?=($ID>0?"ID=".$ID."&":"")?>'+
-		'entity=<?=AddSlashes(urlencode(ENTITY))?>&document_type=<?=AddSlashes(urlencode($document_type))?>&lang=<?=LANGUAGE_ID?>&<?=bitrix_sessid_get()?>&export_template=Y');
+	window.open('<?=CUtil::JSEscape('/bitrix/admin/'.MODULE_ID.'_bizproc_workflow_edit.php?'.($ID>0?"ID=".$ID."&":"")
+			.'entity='.AddSlashes(urlencode(ENTITY)).'&document_type='.AddSlashes(urlencode($document_type))
+			.'&lang='.LANGUAGE_ID.'&'.bitrix_sessid_get().'&export_template=Y')?>');
 }
 
 function BCPProcessImport()
@@ -442,15 +391,21 @@ function BCPProcessImport()
 
 	new BX.CDialog({
 		title: '<?= GetMessageJS("BIZPROC_IMPORT_TITLE") ?>',
-		content: '<form action="/bitrix/admin/<?=MODULE_ID?>_bizproc_workflow_edit.php?<?=($ID>0?"ID=".$ID."&":"")?>entity=<?=AddSlashes(urlencode(ENTITY))?>&document_type=<?=AddSlashes(urlencode($document_type))?>&lang=<?=LANGUAGE_ID?>" method="POST" id="import_template_form" enctype="multipart/form-data"><table cellspacing="0" cellpadding="0" border="0" width="100%"><tr valign="top"><td width="50%" align="right"><?= GetMessageJS("BIZPROC_IMPORT_FILE") ?>:</td><td width="50%" align="left"><input type="file" size="35" name="import_template_file" value=""></td></tr></table><input type="hidden" name="import_template" value="Y"><input type="hidden" id="id_import_template_name" name="import_template_name" value=""><input type="hidden" name="import_template_description" id="id_import_template_description" value=""><input type="hidden" id="id_import_template_autostart" name="import_template_autostart" value=""><?= bitrix_sessid_post() ?></form>',
+		content: '<?=CUtil::JSEscape('<form action="/bitrix/admin/'.MODULE_ID.'_bizproc_workflow_edit.php?'.($ID>0?"ID=".$ID."&":"")
+			.'entity='.AddSlashes(urlencode(ENTITY)).'&document_type='.AddSlashes(urlencode($document_type)).'&lang='.LANGUAGE_ID.'" method="POST" id="import_template_form" enctype="multipart/form-data"><table cellspacing="0" cellpadding="0" border="0" width="100%"><tr valign="top"><td width="50%" align="right"><?= GetMessageJS("BIZPROC_IMPORT_FILE") ?>:</td><td width="50%" align="left"><input type="file" size="35" name="import_template_file" value=""></td></tr></table><input type="hidden" name="import_template" value="Y"><input type="hidden" id="id_import_template_name" name="import_template_name" value=""><input type="hidden" name="import_template_description" id="id_import_template_description" value=""><input type="hidden" id="id_import_template_autostart" name="import_template_autostart" value="">'.bitrix_sessid_post().'</form>')?>',
 		buttons: [btnOK, BX.CDialog.btnCancel],
 		width: 500,
 		height: 150
 	}).Show();
 }
 
-function BCPSaveTemplateComplete()
+function BCPSaveTemplateComplete(data)
 {
+	if (data != '<!--SUCCESS-->')
+	{
+		alert('<?=GetMessageJS('BIZPROC_WFEDIT_SAVE_ERROR')?>');
+		return;
+	}
 	BCPEmptyWorkflow = false;
 }
 
@@ -459,8 +414,9 @@ function BCPSaveUserParams()
 	var data = JSToPHP(arUserParams, 'USER_PARAMS');
 
 	jsExtLoader.onajaxfinish = BCPSaveTemplateComplete;
-	jsExtLoader.startPost('/bitrix/admin/<?=MODULE_ID?>_bizproc_workflow_edit.php?<?=($ID>0?"ID=".$ID."&":"")?>'+
-		'entity=<?=AddSlashes(urlencode(ENTITY))?>&document_type=<?=AddSlashes(urlencode($document_type))?>&lang=<?=LANGUAGE_ID?>&<?=bitrix_sessid_get()?>&saveajax=Y&saveuserparams=Y', data);
+	jsExtLoader.startPost('<?=CUtil::JSEscape('/bitrix/admin/'.MODULE_ID.'_bizproc_workflow_edit.php?'.($ID>0?"ID=".$ID."&":"")
+			.'entity='.AddSlashes(urlencode(ENTITY)).'&document_type='.AddSlashes(urlencode($document_type))
+			.'&lang='.LANGUAGE_ID.'&'.bitrix_sessid_get().'&saveajax=Y&saveuserparams=Y')?>', data);
 }
 
 function BCPSaveTemplate(save)
@@ -476,10 +432,10 @@ function BCPSaveTemplate(save)
 			JSToPHP(arWorkflowTemplate, 'arWorkflowTemplate');
 
 	jsExtLoader.onajaxfinish = BCPSaveTemplateComplete;
-	// TODO: add sessid
-	jsExtLoader.startPost('/bitrix/admin/<?=MODULE_ID?>_bizproc_workflow_edit.php?<?=($ID>0?"ID=".$ID."&":"")?>'+
-		'entity=<?=AddSlashes(urlencode(ENTITY))?>&document_type=<?=AddSlashes(urlencode($document_type))?>&lang=<?=LANGUAGE_ID?>&<?=bitrix_sessid_get()?>&saveajax=Y'+
-		(save ? '&back_url=<?=AddSlashes(urlencode($back_url))?>': '&apply=Y')
+	jsExtLoader.startPost('<?=CUtil::JSEscape('/bitrix/admin/'.MODULE_ID.'_bizproc_workflow_edit.php?'.($ID>0?"ID=".$ID."&":"")
+			.'entity='.AddSlashes(urlencode(ENTITY)).'&document_type='.AddSlashes(urlencode($document_type))
+			.'&lang='.LANGUAGE_ID.'&'.bitrix_sessid_get().'&saveajax=Y')?>'+
+		(save ? '&back_url=<?=CUtil::JSEscape(AddSlashes(urlencode($back_url)))?>': '&apply=Y')
 		, data);
 }
 
@@ -654,6 +610,7 @@ function ReDraw()
 		else
 		{
 			var d = rootActivity.Table.parentNode;
+			var modificationFlag = BPTemplateIsModified;
 
 			while(rootActivity.childActivities.length>0)
 				rootActivity.RemoveChild(rootActivity.childActivities[0]);
@@ -661,6 +618,8 @@ function ReDraw()
 			rootActivity.Init(arWorkflowTemplate);
 			rootActivity.RemoveResources();
 			rootActivity.Draw(d);
+
+			BPTemplateIsModified = modificationFlag;
 		}
 	}
 }

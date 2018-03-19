@@ -377,6 +377,23 @@ if(isset($navigationBar['BINDING']))
 $navigationBarOptions = CUserOptions::GetOption("main.interface.filter.navigation", $navigationBarID, array());
 $isHidden = isset($arParams['HIDE_FILTER']) ? $arParams['HIDE_FILTER'] : false;
 ?><form name="<?=htmlspecialcharsbx($formName)?>" action="" method="GET">
+<?
+foreach($arResult["GET_VARS"] as $var=>$value):
+	if(is_array($value)):
+		foreach($value as $k=>$v):
+			if(is_array($v))
+				continue;
+?>
+	<input type="hidden" name="<?=htmlspecialcharsbx($var)?>[<?=htmlspecialcharsbx($k)?>]" value="<?=htmlspecialcharsbx($v)?>">
+<?
+		endforeach;
+	else:
+?>
+	<input type="hidden" name="<?=htmlspecialcharsbx($var)?>" value="<?=htmlspecialcharsbx($value)?>">
+<?
+	endif;
+endforeach;
+?>
 	<div class="crm-main-wrap-flat"<?=$isHidden ? ' style="display:none;"' : ''?>>
 		<div id="<?=htmlspecialcharsbx($containerID)?>" class="bx-filter-wrap">
 			<div class="bx-filter-wrap<?=$isFilterApplied ? ' bx-current-filter' : ''?><?=$isFilterFolded ? ' bx-filter-folded' : ''?>"><?

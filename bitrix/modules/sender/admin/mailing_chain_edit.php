@@ -2,6 +2,8 @@
 define("ADMIN_MODULE_NAME", "sender");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 
+use \Bitrix\Main\Localization\Loc;
+
 if(!\Bitrix\Main\Loader::includeModule("sender"))
 	ShowError(\Bitrix\Main\Localization\Loc::getMessage("MAIN_MODULE_NOT_INSTALLED"));
 
@@ -42,15 +44,20 @@ if($_SERVER['REQUEST_METHOD'] == "POST" && ($save!="" || $apply!="") && $POST_RI
 			}
 		}
 
-		$MESSAGE = CMain::ProcessLPA($MESSAGE, $MESSAGE_OLD);
+		$MESSAGE = LPA::Process($MESSAGE, $MESSAGE_OLD);
 	}
 
 
 	$arFields = Array(
 		"MAILING_ID" => $MAILING_ID,
+		"TITLE" => $TITLE,
 		"SUBJECT" => $SUBJECT,
 		"EMAIL_FROM"	=> $EMAIL_FROM,
 		"MESSAGE" => $MESSAGE,
+		"TEMPLATE_TYPE" => $TEMPLATE_TYPE,
+		"TEMPLATE_ID" => $TEMPLATE_ID,
+		"PRIORITY" => $PRIORITY,
+		"LINK_PARAMS" => $LINK_PARAMS,
 		"CREATED_BY" => $USER->GetID(),
 
 		"REITERATE" => "N",
@@ -106,7 +113,7 @@ if($_SERVER['REQUEST_METHOD'] == "POST" && ($save!="" || $apply!="") && $POST_RI
 				$arMailingChainOld = \Bitrix\Sender\MailingChainTable::getRowById(array('ID' => $ID));
 				$arFields["AUTO_SEND_TIME"] = $arMailingChainOld["AUTO_SEND_TIME"];
 				if($arMailingChainOld['STATUS'] == \Bitrix\Sender\MailingChainTable::STATUS_NEW)
-					$arFields["STATUS"] = \Bitrix\Sender\MailingChainTable::STATUS_SEND;
+					$arFields["STATUS"] = \Bitrix\Sender\MailingChainTable::STATUS_WAIT;
 			}
 			break;
 		default:
@@ -213,11 +220,25 @@ if($_SERVER['REQUEST_METHOD'] == "POST" && ($save!="" || $apply!="") && $POST_RI
 
 					$isCheckedSuccess = false;
 					$io = CBXVirtualIo::GetInstance();
-					$normPath = $io->CombinePath("/", $filePath);
-					$absPath = $io->CombinePath($_SERVER["DOCUMENT_ROOT"], $normPath);
+					$docRoot = \Bitrix\Main\Application::getDocumentRoot();
+					if(strpos($filePath, CTempFile::GetAbsoluteRoot()) === 0)
+					{
+						$absPath = $filePath;
+					}
+					elseif(strpos($io->CombinePath($docRoot, $filePath), CTempFile::GetAbsoluteRoot()) === 0)
+					{
+						$absPath = $io->CombinePath($docRoot, $filePath);
+					}
+					else
+					{
+						$absPath = $io->CombinePath(CTempFile::GetAbsoluteRoot(), $filePath);
+					}
+
 					if ($io->ValidatePathString($absPath) && $io->FileExists($absPath))
 					{
-						$perm = $APPLICATION->GetFileAccessPermission($normPath);
+						$docRoot = $io->CombinePath($docRoot, '/');
+						$relPath = str_replace($docRoot, '', $absPath);
+						$perm = $APPLICATION->GetFileAccessPermission($relPath);
 						if ($perm >= "W")
 						{
 							$isCheckedSuccess = true;
@@ -269,10 +290,37 @@ if($_SERVER['REQUEST_METHOD'] == "POST" && ($save!="" || $apply!="") && $POST_RI
 		{
 			if(!empty($TEMPLATE_ACTION_SAVE_NAME) && !empty($MESSAGE))
 			{
-				\Bitrix\Sender\TemplateTable::add(array(
+				$CONTENT = $MESSAGE;
+				$useBlockEditor = false;
+
+				if($TEMPLATE_TYPE && $TEMPLATE_ID)
+				{
+					\Bitrix\Main\Loader::includeModule('fileman');
+					$chainTemplate = \Bitrix\Sender\Preset\Template::getById($TEMPLATE_TYPE, $TEMPLATE_ID);
+
+					if($chainTemplate && $chainTemplate['HTML'])
+					{
+						$CONTENT = \Bitrix\Fileman\Block\Editor::fillTemplateBySliceContent($chainTemplate['HTML'], $CONTENT);
+
+						if($CONTENT)
+						{
+							$useBlockEditor = true;
+						}
+					}
+				}
+
+				$addResult = \Bitrix\Sender\TemplateTable::add(array(
 					'NAME' => $TEMPLATE_ACTION_SAVE_NAME,
-					'CONTENT' => $MESSAGE
+					'CONTENT' => $CONTENT
 				));
+
+				if($useBlockEditor && $addResult->isSuccess())
+				{
+					\Bitrix\Sender\MailingChainTable::update(
+						array('ID' => $ID),
+						array('TEMPLATE_TYPE' => 'USER', 'TEMPLATE_ID' => $addResult->getId())
+					);
+				}
 			}
 		}
 
@@ -300,6 +348,7 @@ $str_SORT = 100;
 $str_ACTIVE = "Y";
 $str_VISIBLE = "Y";
 $arMailngChainAttachment = array();
+$recommendedSendTime = null;
 
 if($ID>0)
 {
@@ -333,8 +382,51 @@ if($ID>0)
 	}
 }
 
+$chainCharset = '';
+if($MAILING_ID>0)
+{
+	$mailingSiteDb = \Bitrix\Sender\MailingTable::getList(array('select' => array('SITE_ID'), 'filter' => array('ID' => $MAILING_ID)));
+	if($mailingSite = $mailingSiteDb->fetch())
+	{
+		$mailingSiteCharsetDb = \Bitrix\Main\SiteTable::getList(array(
+			'select'=>array('CULTURE_CHARSET'=>'CULTURE.CHARSET'),
+			'filter' => array('LID' => $mailingSite['SITE_ID'])
+		));
+		if($mailingSiteCharset = $mailingSiteCharsetDb->fetch())
+		{
+			$chainCharset = $mailingSiteCharset['CULTURE_CHARSET'];
+		}
+	}
+}
+
+
 if($bVarsFromForm)
 	$DB->InitTableVarsForEdit("b_sender_mailing_chain", "", "str_");
+
+if(!isset($SEND_TYPE))
+{
+	if ($str_REITERATE == 'Y')
+		$SEND_TYPE = 'REITERATE';
+	elseif (!empty($str_AUTO_SEND_TIME))
+		$SEND_TYPE = 'TIME';
+	else
+		$SEND_TYPE = 'MANUAL';
+}
+
+$templateListHtml = \Bitrix\Sender\Preset\Template::getTemplateListHtml('tabControl_layout');
+$templateName = '';
+$template = \Bitrix\Sender\Preset\Template::getById($str_TEMPLATE_TYPE, $str_TEMPLATE_ID);
+if($template)
+{
+	$templateName = $template['NAME'];
+}
+
+if ($MAILING_ID > 0 && ($ID <= 0 || $SEND_TYPE == 'MANUAL'))
+{
+	$statistics = \Bitrix\Sender\Stat\Statistics::create()->filter('mailingId', $MAILING_ID);
+	$recommendedSendTime = $statistics->getRecommendedSendTime();
+}
+
 
 \CJSCore::Init(array("sender_admin"));
 $APPLICATION->SetTitle(($ID>0? GetMessage("sender_chain_edit_title_edit").$ID : GetMessage("sender_chain_edit_title_add")));
@@ -358,6 +450,12 @@ if($ID>0 && $POST_RIGHT>="W")
 		"ICON"=>"btn_new",
 	);
 	$aMenu[] = array(
+		"TEXT"=>GetMessage("sender_chain_edit_action_copy"),
+		"TITLE"=>GetMessage("sender_chain_edit_action_copy_title"),
+		"LINK"=>"/bitrix/admin/sender_mailing_chain_admin.php?MAILING_ID=".$MAILING_ID."&ID=".$ID."&action=copy&lang=".LANG."&".bitrix_sessid_get(),
+		"ICON"=>"btn_copy",
+	);
+	$aMenu[] = array(
 		"TEXT"=>GetMessage("sender_chain_edit_action_del"),
 		"TITLE"=>GetMessage("sender_chain_edit_action_del_title"),
 		"LINK"=>"javascript:if(confirm('".GetMessage("sender_chain_edit_action_del_confirm")."'))window.location='/bitrix/admin/sender_mailing_chain_admin.php?MAILING_ID=".$MAILING_ID."&ID=".$ID."&action=delete&lang=".LANGUAGE_ID."&".bitrix_sessid_get()."';",
@@ -368,28 +466,17 @@ if($ID>0 && $POST_RIGHT>="W")
 $context = new CAdminContextMenu($aMenu);
 $context->Show();
 
+\Bitrix\Sender\PostingRecipientTable::setPersonalizeList(\Bitrix\Sender\MailingTable::getPersonalizeList($MAILING_ID));
 $arMailing = \Bitrix\Sender\MailingTable::getRowById($MAILING_ID);
-?>
 
-<?
 if($_REQUEST["mess"] == "ok" && $ID>0)
 	CAdminMessage::ShowMessage(array("MESSAGE"=>GetMessage("sender_chain_edit_saved"), "TYPE"=>"OK"));
 
+if($_REQUEST["mess"] == "copied" && $ID>0)
+	CAdminMessage::ShowMessage(array("MESSAGE"=>GetMessage("sender_chain_edit_copied"), "TYPE"=>"OK"));
+
 if($message)
 	echo $message->Show();
-
-
-if(!isset($SEND_TYPE))
-{
-	if ($str_REITERATE == 'Y')
-		$SEND_TYPE = 'REITERATE';
-	elseif (!empty($str_AUTO_SEND_TIME))
-		$SEND_TYPE = 'TIME';
-	elseif ($ID > 0)
-		$SEND_TYPE = 'MANUAL';
-}
-
-$templateListHtml = \Bitrix\Sender\Preset\Template::getTemplateListHtml('tabControl_layout');
 ?>
 
 
@@ -428,6 +515,21 @@ $tabControl->BeginNextTab();
 			<div class="adm-info-message"><?=GetMessage("sender_chain_edit_maintext");?></div>
 		</td>
 	</tr>
+	<tr>
+		<td>
+			<?echo GetMessage("sender_chain_edit_field_title")?>:
+		</td>
+		<td>
+			<input type="text" id="TITLE" name="TITLE" value="<?=$str_TITLE?>" style="width: 450px;">
+		</td>
+	</tr>
+	<tr>
+		<td>
+		</td>
+		<td>
+			<span class="sender-test-send-header-grey"><?echo GetMessage("sender_chain_edit_field_title_desc")?></span>
+		</td>
+	</tr>
 	<tr class="heading">
 		<td colspan="2"><?=GetMessage("sender_chain_edit_state");?></td>
 	</tr>
@@ -460,18 +562,90 @@ $tabControl->BeginNextTab();
 					<?endif;?>
 				</span>
 				<span>
-					<?if($ID>0 && $POST_RIGHT>="W" && \Bitrix\Sender\MailingChainTable::isReadyToSend($ID)):?>
-						<input style="margin-left: 80px;" type="button"
-							value="<?echo GetMessage("sender_chain_edit_btn_send")?>"
-							onclick="window.location='/bitrix/admin/sender_mailing_chain_admin.php?MAILING_ID=<?=$MAILING_ID?>&ID=<?=$ID?>&action=send&lang=<?=LANGUAGE_ID?>'"
-							title="<?echo GetMessage("sender_chain_edit_btn_send_desc")?>" />
-					<?endif;?>
-					<?if($ID>0 && $POST_RIGHT>="W" && \Bitrix\Sender\MailingChainTable::isManualSentPartly($ID)):?>
-						<input style="margin-left: 80px;" type="button"
-							value="<?echo GetMessage("sender_chain_edit_btn_send2")?>"
-							onclick="window.location='/bitrix/admin/sender_mailing_chain_admin.php?MAILING_ID=<?=$MAILING_ID?>&ID=<?=$ID?>&action=send&lang=<?=LANGUAGE_ID?>'"
-							title="<?echo GetMessage("sender_chain_edit_btn_send2_desc")?>" />
-					<?endif;?>
+					<?
+					if($ID>0 && $POST_RIGHT>="W"):
+
+						if(\Bitrix\Sender\MailingChainTable::isReadyToSend($ID))
+						{
+							?>
+							<input style="margin-left: 80px; margin-right: 15px;" type="button"
+								value="<?echo GetMessage("sender_chain_edit_btn_send")?>"
+								onclick="window.location='/bitrix/admin/sender_mailing_chain_admin.php?MAILING_ID=<?=$MAILING_ID?>&ID=<?=$ID?>&action=send&lang=<?=LANGUAGE_ID?>'"
+								title="<?echo GetMessage("sender_chain_edit_btn_send_desc")?>" />
+							<?
+
+							if($str_STATUS == \Bitrix\Sender\MailingChainTable::STATUS_PAUSE)
+							{
+								?>
+								<?echo GetMessage("sender_chain_edit_btn_send_or")?>
+								<input style="margin-left: 15px;" type="button"
+									value="<?echo GetMessage("sender_chain_edit_btn_stop")?>"
+									onclick="window.location='/bitrix/admin/sender_mailing_chain_admin.php?MAILING_ID=<?=$MAILING_ID?>&ID=<?=$ID?>&action=stop&lang=<?=LANGUAGE_ID?>'"
+									title="<?echo GetMessage("sender_chain_edit_btn_stop_desc")?>" />
+								<?
+							}
+
+						}
+						elseif(\Bitrix\Sender\MailingChainTable::isManualSentPartly($ID))
+						{
+							?>
+							<input style="margin-left: 80px; margin-right: 15px;" type="button"
+								value="<?echo GetMessage("sender_chain_edit_btn_send2")?>"
+								onclick="window.location='/bitrix/admin/sender_mailing_chain_admin.php?MAILING_ID=<?=$MAILING_ID?>&ID=<?=$ID?>&action=send&lang=<?=LANGUAGE_ID?>'"
+								title="<?echo GetMessage("sender_chain_edit_btn_send2_desc")?>" />
+							<?echo GetMessage("sender_chain_edit_btn_send_or")?>
+							<input style="margin-left: 15px;" type="button"
+								value="<?echo GetMessage("sender_chain_edit_btn_stop")?>"
+								onclick="window.location='/bitrix/admin/sender_mailing_chain_admin.php?MAILING_ID=<?=$MAILING_ID?>&ID=<?=$ID?>&action=stop&lang=<?=LANGUAGE_ID?>'"
+								title="<?echo GetMessage("sender_chain_edit_btn_stop_desc")?>" />
+							<?
+						}
+						elseif(in_array($str_STATUS, array(\Bitrix\Sender\MailingChainTable::STATUS_SEND, \Bitrix\Sender\MailingChainTable::STATUS_WAIT)))
+						{
+							?>
+							<input style="margin-left: 80px;" type="button"
+								value="<?echo GetMessage("sender_chain_edit_btn_pause")?>"
+								onclick="window.location='/bitrix/admin/sender_mailing_chain_admin.php?MAILING_ID=<?=$MAILING_ID?>&ID=<?=$ID?>&action=pause&lang=<?=LANGUAGE_ID?>'"
+								title="<?echo GetMessage("sender_chain_edit_btn_pause_desc")?>" />
+							<?
+						}
+						elseif($str_STATUS == \Bitrix\Sender\MailingChainTable::STATUS_END && \Bitrix\Sender\MailingChainTable::canReSendErrorRecipients($ID))
+						{
+							?>
+							<input style="margin-left: 80px;" type="button"
+								value="<?echo GetMessage("sender_chain_edit_btn_send_err")?>"
+								onclick="window.location='/bitrix/admin/sender_mailing_chain_admin.php?MAILING_ID=<?=$MAILING_ID?>&ID=<?=$ID?>&action=send_error&lang=<?=LANGUAGE_ID?>'"
+								title="<?echo GetMessage("sender_chain_edit_btn_send_err_desc")?>" />
+							<?
+						}
+						elseif($arMailing && $arMailing['ACTIVE'] == 'N')
+						{
+							?>
+							<span class="errortext">
+								<?=Loc::getMessage('sender_chain_edit_status_deactivated');?>
+							</span>
+							<?
+						}
+
+					endif;
+
+					if($ID > 0)
+					{
+						if(in_array(
+							$str_STATUS,
+							array(
+								\Bitrix\Sender\MailingChainTable::STATUS_SEND,
+								\Bitrix\Sender\MailingChainTable::STATUS_PAUSE
+							))
+						)
+						{
+							echo '<span class="sender-mailing-status-creator" style="margin-left: 30px;">(' .
+								GetMessage("sender_chain_edit_btn_send_stat_prcnt") . ': ' .
+								\Bitrix\Sender\PostingTable::getSendPercent($str_POSTING_ID) .
+								'%)</span>';
+						}
+					}
+					?>
 				</span>
 			</div>
 		</td>
@@ -550,7 +724,7 @@ $tabControl->BeginNextTab();
 	<tr class="hidden-when-show-template-list" <?=(empty($str_MESSAGE) ? 'style="display: none;"' : '')?>>
 		<td><?echo GetMessage("sender_chain_edit_field_sel_templ")?></td>
 		<td>
-			<span class="sender-template-message-caption-container"></span> <a class="sender-link-email sender-template-message-caption-container-btn" href="javascript: void(0);"><?echo GetMessage("sender_chain_edit_field_sel_templ_another")?></a>
+			<span class="sender-template-message-caption-container"><?=htmlspecialcharsbx($templateName)?></span> <a class="sender-link-email sender-template-message-caption-container-btn" href="javascript: void(0);"><?echo GetMessage("sender_chain_edit_field_sel_templ_another")?></a>
 		</td>
 	</tr>
 	<tr class="hidden-when-show-template-list"><td colspan="2">&nbsp;</td></tr>
@@ -612,7 +786,12 @@ $tabControl->BeginNextTab();
 			<?=\Bitrix\Sender\TemplateTable::initEditor(array(
 				'FIELD_NAME' => 'MESSAGE',
 				'FIELD_VALUE' => $str_MESSAGE,
-				'HAVE_USER_ACCESS' => $isUserHavePhpAccess
+				//'CONTENT_URL' => '/bitrix/admin/sender_mailing_chain_admin.php?action=get_template&ID=' . $ID . '&lang=' . LANGUAGE_ID . '&' . bitrix_sessid_get(),
+				'TEMPLATE_TYPE' => $str_TEMPLATE_TYPE,
+				'TEMPLATE_ID' => $str_TEMPLATE_ID,
+				'HAVE_USER_ACCESS' => $isUserHavePhpAccess,
+				'SITE' => $mailingSite['SITE_ID'],
+				'CHARSET' => $chainCharset,
 			));?>
 			<input type="hidden" name="IS_TEMPLATE_LIST_SHOWN" id="IS_TEMPLATE_LIST_SHOWN" value="<?=(empty($str_MESSAGE) ?"Y":"N")?>">
 		</td>
@@ -664,6 +843,26 @@ $tabControl->BeginNextTab();
 				);
 			}
 			?>
+		</td>
+	</tr>
+
+	<tr class="hidden-when-show-template-list" <?=(empty($str_MESSAGE) ? 'style="display: none;"' : '')?>>
+		<td><?echo GetMessage("sender_chain_edit_field_priority")?></td>
+		<td>
+			<input type="text" name="PRIORITY" id="MSG_PRIORITY" size="10" maxlength="255" value="<?echo $str_PRIORITY?>">
+			<select onchange="document.getElementById('MSG_PRIORITY').value=this.value">
+				<option value=""></option>
+				<option value="1 (Highest)"<?if($str_PRIORITY=='1 (Highest)')echo ' selected'?>><?echo GetMessage("sender_chain_edit_field_priority_1")?></option>
+				<option value="3 (Normal)"<?if($str_PRIORITY=='3 (Normal)')echo ' selected'?>><?echo GetMessage("sender_chain_edit_field_priority_3")?></option>
+				<option value="5 (Lowest)"<?if($str_PRIORITY=='5 (Lowest)')echo ' selected'?>><?echo GetMessage("sender_chain_edit_field_priority_5")?></option>
+			</select>
+		</td>
+	</tr>
+
+	<tr class="hidden-when-show-template-list" <?=(empty($str_MESSAGE) ? 'style="display: none;"' : '')?>>
+		<td><?echo GetMessage("sender_chain_edit_field_linkparams")?></td>
+		<td>
+			<input type="text" id="LINK_PARAMS" name="LINK_PARAMS" value="<?=$str_LINK_PARAMS?>" style="width: 450px;">
 		</td>
 	</tr>
 <?
@@ -748,6 +947,22 @@ $tabControl->BeginNextTab();
 										<?echo CalendarDate("AUTO_SEND_TIME", $str_AUTO_SEND_TIME, "post_form", "20")?>
 									<?endif;?>
 								</td>
+							</tr>
+							<?if ($recommendedSendTime):?>
+							<tr>
+								<td>&nbsp;</td>
+								<td>
+									<?=Loc::getMessage(
+										'sender_chain_edit_recommended_sent_time',
+										array(
+											'%send_time%' => '<b>' . htmlspecialcharsbx($recommendedSendTime['DAY_HOUR_DISPLAY']) . '</b>',
+											'%delivery_time%' => htmlspecialcharsbx($recommendedSendTime['DELIVERY_TIME']),
+										)
+									)?>
+									<br>
+									<?=Loc::getMessage('sender_chain_edit_recommended_sent_time_hint')?>
+							</tr>
+							<?endif;?>
 							</table>
 						</div>
 					</div>
@@ -854,10 +1069,8 @@ $tabControl->BeginNextTab();
 					ShowTemplateListL(false);
 				});
 
-				letterManager.onShowTemplateList(function()
-				{
-					ShowTemplateListL(true);
-				});
+				letterManager.onShowTemplateList(function(){ ShowTemplateListL(true); });
+				letterManager.onHideTemplateList(function(){ ShowTemplateListL(false); });
 
 			</script>
 

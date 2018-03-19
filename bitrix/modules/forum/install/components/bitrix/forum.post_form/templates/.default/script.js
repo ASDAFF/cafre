@@ -1,7 +1,8 @@
 ;(function(){
-	if (BX.Forum && BX.Forum.transliterate)
+	BX.namespace("BX.Forum");
+	if (BX.Forum["transliterate"])
 		return;
-	BX.Forum = (BX.Forum ? BX.Forum : {});
+
 	var repo = {};
 
 	BX.Forum.transliterate = function(node)
@@ -58,8 +59,248 @@
 			BX('TAGS_div_frame').id = oObj.id + "_div_frame";
 	};
 
+	BX.Forum.Form = (function() {
+		var o = function(params, editor) {
+			if (params && params["formID"])
+			{
+				this.editor = editor;
+				this.form = document.forms[params["formID"]];
+				this.onsuccess = BX.delegate(this.onsuccess, this);
+				this.onfailure = BX.delegate(this.onfailure, this);
+				this.submit = BX.delegate(this.submit, this);
 
-	var
+				BX.bind(this.form, "submit", this.submit);
+
+				this.isAjax = (params['ajaxPost'] == "Y");
+
+				if (params["captcha"] == "Y")
+				{
+					var oCaptcha = new Captcha(this.form);
+					BX.addCustomEvent(editor, 'OnContentChanged', BX.proxy(oCaptcha.Show, oCaptcha));
+					BX.ready(function(){
+						BX.bind(BX('forum-refresh-captcha'), 'click', BX.proxy(oCaptcha.Update, oCaptcha));
+					});
+					if (params["bVarsFromForm"] == "Y")
+						oCaptcha.Show();
+				}
+			}
+		};
+		o.prototype = {
+			submit : function(e) {
+				if (this.validate())
+				{
+					this.prepareForm();
+					this.disableButtons(true);
+
+					if (!this.isAjax)
+						return true;
+
+					this.send();
+				}
+				return BX.PreventDefault(e);
+			},
+			prepareForm : function() {
+				if (this.form['FILES[]'])
+				{
+					var
+						oEls = [],
+						oEl = BX.type.isDomNode(this.form['FILES[]']) ? this.form['FILES[]'] : this.form['FILES[]'][0],
+						ii = BX.type.isDomNode(this.form['FILES[]']) ? false : 0;
+					do
+					{
+						if (! BX('filetoupload' + oEl.value))
+						{
+							oEls.push(
+								BX.adjust(
+									BX.clone(oEl),
+									{attrs : {name : 'FILES_TO_UPLOAD[]', id : ('filetoupload' + oEl.value)}}
+								)
+							);
+						}
+						oEl = (ii === false ? false : (ii <  this.form['FILES[]'].length ? this.form['FILES[]'][ii++] : false));
+					} while (!!oEl);
+					while (oEls.length > 0)
+						this.form.appendChild(oEls.pop());
+				}
+			},
+			disableButtons : function(state) {
+				var arr = this.form.getElementsByTagName("input");
+				for (var i=0; i < arr.length; i++)
+				{
+					if (arr[i].getAttribute("type") == "submit")
+						arr[i].disabled = (state !== false);
+				}
+			},
+			validate : function() {
+				this.editor.SaveContent();
+				var errors = "",
+					Message = this.editor.GetContent(),
+					MessageLength = Message.length,
+					MessageMax = 64000;
+				if (this.form.TITLE && (this.form.TITLE.value.length <= 0 ))
+					errors += BX.message('no_topic_name');
+				if (MessageLength <= 0)
+					errors += BX.message('no_message');
+				else if (MessageLength > MessageMax)
+					errors += BX.message('max_len').replace(/#MAX_LENGTH#/gi, MessageMax).replace(/#LENGTH#/gi, MessageLength);
+
+				if (errors !== "")
+				{
+					alert(errors);
+					return false;
+				}
+				return true;
+			},
+			busy : false,
+			send : function() {
+				if (this.busy === true)
+					return false;
+
+				this.busy = true;
+
+				var post_data = BX.ajax.prepareForm(this.form, {dataType: 'json'}).data;
+
+				this.page_number = (this.page_number||parseInt(BX.message("page_number")));
+				this.page_number = (this.page_number||0);
+				post_data["pageNumber"] = this.page_number;
+				BX.ajax({
+					method: 'POST',
+					url: this.form.action,
+					data: post_data,
+					dataType: 'json',
+					onsuccess: this.onsuccess,
+					onfailure: this.onfailure
+				});
+				return true;
+			},
+			clearForm : function() {
+				window.LHEPostForm.reinitDataBefore('POST_MESSAGE');
+				var node, handler = LHEPostForm.getHandler('POST_MESSAGE');
+
+
+				if (this.editor)
+				{
+					this.editor.CheckAndReInit('');
+					for (var i in handler.arFiles)
+					{
+						if (handler.arFiles.hasOwnProperty(i))
+						{
+							if ((node = BX('file-doc'+handler.arFiles[i]["id"])) && !!node)
+							{
+								BX.remove(node);
+								BX.hide(BX('wd-doc'+handler.arFiles[i]["id"]));
+								BX.remove(BX('filetoupload' + handler.arFiles[i]["id"]));
+							}
+						}
+					}
+				}
+
+				if ((node = BX.findChild(document, {'className' : 'forum-preview'}, true)) && !!node)
+					BX.remove(node);
+
+				var attachNodes = BX.findChild(this.form, {'tagName' : 'TR', 'className':"error-load"}, true, true),
+					attachNode = null;
+				if (attachNodes)
+					while ((attachNode = attachNodes.pop()) && !!attachNode)
+						BX.hide(attachNode);
+
+				var captchaIMAGE = null,
+					captchaHIDDEN = BX.findChild(this.form, {attr : {'name': 'captcha_code'}}, true),
+					captchaINPUT = BX.findChild(this.form, {attr: {'name':'captcha_word'}}, true),
+					captchaDIV = BX.findChild(this.form, {'className':'forum-reply-field-captcha-image'}, true);
+
+				if (captchaDIV)
+					captchaIMAGE = BX.findChild(captchaDIV, {'tag':'img'});
+				if (captchaHIDDEN && captchaINPUT && captchaIMAGE)
+				{
+					captchaINPUT.value = '';
+					BX.ajax.getCaptcha(function(result) {
+						captchaHIDDEN.value = result["captcha_sid"];
+						captchaIMAGE.src = '/bitrix/tools/captcha.php?captcha_code='+result["captcha_sid"];
+					});
+				}
+			},
+			onsuccess : function(result){
+				this.busy = false;
+				this.disableButtons(false);
+
+				var arForumlist = BX.findChildren(document, {className: 'forum-block-inner'}, true);
+				if (! arForumlist || arForumlist.length <1)
+					BX.reload();
+
+				var node,
+					forumlist = arForumlist[arForumlist.length-1],
+					formlist = BX.findChild(forumlist, {tagName: 'form', className: 'forum-form'}, true),
+					ob;
+				forumlist = (formlist || forumlist);
+
+				if (result.status)
+				{
+					if (result["pageNumber"])
+						this.page_number = parseInt(result["pageNumber"]);
+
+					if (result["previewMessage"])
+					{
+						var previewDIV = BX.findChild(document, {className: 'forum-preview'}, true),
+							previewParent = BX.findChild(document, {className : 'forum_post_form'}, true).parentNode;
+						fReplaceOrInsertNode(result["previewMessage"], previewDIV, previewParent, {className : 'forum_post_form'});
+					}
+					else if (result["message"])
+					{
+						if (result["navigation"])
+						{
+							var nav = BX.processHTML(result["navigation"], false),
+								div = BX.create('DIV', {html : nav.HTML}),
+								navHtml = div.hasChildNodes() ? div.childNodes[0].innerHTML : '',
+								navPlaceholders = BX.findChildren(document, { className : 'forum-navigation-box' } , true),
+								i;
+							if (navPlaceholders)
+							{
+								for (i = 0; i < navPlaceholders.length; i++)
+									navPlaceholders[i].innerHTML = navHtml;
+							}
+						}
+						ob = BX.processHTML(result.message, false);
+						if (result["allMessages"])
+						{
+							var listparent = forumlist.parentNode;
+							BX.remove(forumlist);
+							listparent.innerHTML += ob.HTML;
+						}
+						else if (typeof result.message != 'undefined')
+						{
+							var allMessages = BX.findChildren(forumlist, {tagName: 'table', className: 'forum-post-table'}, true);
+							if (allMessages.length > 0)
+							{
+								var lastMessage = allMessages[allMessages.length - 1],
+									footerActions = BX.findChild(lastMessage, { tagName : 'tfoot' }, true);
+								if (footerActions)
+									BX.remove(footerActions);
+							}
+							forumlist.innerHTML += ob.HTML;
+						}
+						this.clearForm();
+					}
+					if (ob && ob.SCRIPT)
+						setTimeout(function(){ BX.ajax.processScripts(ob.SCRIPT)}, 1000);
+
+					if (result["messageID"])
+						if ((node = BX('message'+result["messageID"])) && node)
+							BX.scrollToNode(node);
+				}
+
+				PostFormAjaxStatus(result["statusMessage"]||'');
+
+			},
+			onfailure : function(){
+				BX.reload();
+			}
+		};
+		return o;
+	})();
+
+
+	var page_number = null,
 		fTextToNode = function (text)
 		{
 			var tmpdiv = BX.create('div');
@@ -112,24 +353,6 @@
 				}
 			}
 		},
-		PostFormAjaxNavigation = function(navString, pageNumber)
-		{
-			var navDIV = fTextToNode(navString), i;
-			if (!navDIV) return;
-			var navPlaceholders = BX.findChildren(document, { className : 'forum-navigation-box' } , true);
-			if (!navPlaceholders) return;
-			for (i = 0; i < navPlaceholders.length; i++)
-				navPlaceholders[i].innerHTML = navDIV.innerHTML;
-			window["oForum"]["page_number"] = pageNumber;
-		},
-		PostFormAjaxMsgStart = function(msg)
-		{
-			var msgNode = fTextToNode(msg);
-			if (!msgNode) return;
-			var navPlaceholder = BX.findChild(document, { className : 'forum-navigation-box' }, true);
-			if (!navPlaceholder) return;
-			navPlaceholder.parentNode.insertBefore(msgNode, navPlaceholder);
-		},
 		fReplaceOrInsertNode = function(sourceNode, targetNode, parentTargetNode, beforeTargetNode)
 		{
 			var nextNode = null;
@@ -156,226 +379,7 @@
 			}
 
 			return true;
-		},
-		fRunScripts = function(msg)
-		{
-			var ob = BX.processHTML(msg, true);
-			BX.ajax.processScripts(ob.SCRIPT, true);
-		},
-		PostFormAjaxResponse = function(response, postform)
-		{
-			postform['BXFormSubmit_save'] = null;
-			var result = window.forumAjaxPostTmp;
-			if (typeof result == 'undefined')
-			{
-				BX.reload();
-				return;
-			}
-
-			var arForumlist = BX.findChildren(document, {className: 'forum-block-inner'}, true);
-			if (! arForumlist || arForumlist.length <1)
-				BX.reload();
-			var node, forumlist = arForumlist[arForumlist.length-1],
-				formlist = BX.findChild(forumlist, {tagName: 'form', className: 'forum-form'}, true);
-			forumlist = (!!formlist ? formlist : forumlist);
-
-			if (result.status)
-			{
-				if (result["allMessages"])
-				{
-					if (! result.message) return;
-
-					var listparent = forumlist.parentNode;
-					BX.remove(forumlist);
-					listparent.innerHTML += result.message;
-
-					if (!!result.navigation && !!result.pageNumber)
-					{
-						PostFormAjaxNavigation(result.navigation, result.pageNumber);
-					}
-					if (!!result["messageStart"])
-					{
-						PostFormAjaxMsgStart(result["messageStart"]);
-					}
-					ClearForumPostForm(postform);
-					fRunScripts(result.message);
-				}
-				else if (typeof result.message != 'undefined')
-				{
-					var allMessages = BX.findChildren(forumlist, {tagName: 'table', className: 'forum-post-table'}, true);
-					if (allMessages.length > 0)
-					{
-						var lastMessage = allMessages[allMessages.length - 1],
-							footerActions = BX.findChild(lastMessage, { tagName : 'tfoot' }, true);
-						if (footerActions)
-							BX.remove(footerActions);
-					}
-					forumlist.innerHTML += result.message;
-					ClearForumPostForm(postform);
-					fRunScripts(result.message);
-				}
-				else if (result["previewMessage"])
-				{
-					var previewDIV = BX.findChild(document, {className: 'forum-preview'}, true),
-						previewParent = BX.findChild(document, {className : 'forum_post_form'}, true).parentNode;
-					fReplaceOrInsertNode(result["previewMessage"], previewDIV, previewParent, {className : 'forum_post_form'});
-
-					PostFormAjaxStatus('');
-					fRunScripts(result["previewMessage"]);
-				}
-
-				if (!!result["messageID"])
-					if ((node = BX('message'+result["messageID"])) && !!node)
-						BX.scrollToNode(node);
-			}
-
-			var arr = postform.getElementsByTagName("input");
-			for (var i=0; i < arr.length; i++)
-			{
-				var butt = arr[i];
-				if (butt.getAttribute("type") == "submit")
-					butt.disabled = false;
-			}
-
-			BX.remove(BX.findChild(postform, { 'attr' : { 'name' : 'pageNumber' }}, true));
-
-			if (result["statusMessage"])
-				PostFormAjaxStatus(result["statusMessage"]);
-		},
-		ClearForumPostForm = function(form)
-		{
-			window.LHEPostForm.reinitDataBefore('POST_MESSAGE');
-			var editor = LHEPostForm.getEditor('POST_MESSAGE'), node, handler = LHEPostForm.getHandler('POST_MESSAGE');
-			if (editor)
-			{
-				editor.CheckAndReInit('');
-				for (var i in handler.arFiles)
-				{
-					if (handler.arFiles.hasOwnProperty(i))
-					{
-						if ((node = BX('file-doc'+handler.arFiles[i]["id"])) && !!node)
-						{
-							BX.remove(node);
-							BX.hide(BX('wd-doc'+handler.arFiles[i]["id"]));
-							BX.remove(BX('filetoupload' + handler.arFiles[i]["id"]));
-						}
-					}
-				}
-			}
-
-			if (!BX.type.isDomNode(form)) return;
-
-			if ((node = BX.findChild(document, {'className' : 'forum-preview'}, true)) && !!node)
-				BX.remove(node);
-
-			var attachNodes = BX.findChild(form, {'tagName' : 'TR', 'className':"error-load"}, true, true),
-				attachNode = null;
-			if (attachNodes)
-				while ((attachNode = attachNodes.pop()) && !!attachNode)
-					BX.hide(attachNode);
-
-			var captchaIMAGE = null,
-				captchaHIDDEN = BX.findChild(form, {attr : {'name': 'captcha_code'}}, true),
-				captchaINPUT = BX.findChild(form, {attr: {'name':'captcha_word'}}, true),
-				captchaDIV = BX.findChild(form, {'className':'forum-reply-field-captcha-image'}, true);
-
-			if (captchaDIV)
-				captchaIMAGE = BX.findChild(captchaDIV, {'tag':'img'});
-			if (captchaHIDDEN && captchaINPUT && captchaIMAGE)
-			{
-				captchaINPUT.value = '';
-				BX.ajax.getCaptcha(function(result) {
-					captchaHIDDEN.value = result["captcha_sid"];
-					captchaIMAGE.src = '/bitrix/tools/captcha.php?captcha_code='+result["captcha_sid"];
-				});
-			}
 		};
-
-	BX.Forum.SetForumAjaxPostTmp = function(text)
-	{
-		window.forumAjaxPostTmp = text;
-	};
-	/**
-	 * @return {boolean}
-	 */
-	BX.Forum.ValidateForm = function(form, ajax_post)
-	{
-		if (form['BXFormSubmit_save']) return true; // ValidateForm may be run by BX.submit one more time
-		var editor = (window["BXHtmlEditor"] ? window["BXHtmlEditor"].Get('POST_MESSAGE') : false);
-		if (typeof form != "object" || !form["POST_MESSAGE"] || !editor)
-			return false;
-		if (typeof window["oForum"] == 'undefined')
-			window["oForum"] = {};
-		editor.SaveContent();
-		var
-			errors = "",
-			Message = editor.GetContent(),
-			MessageLength = Message.length,
-			MessageMax = 64000;
-		if (form.TITLE && (form.TITLE.value.length <= 0 ))
-			errors += BX.message('no_topic_name');
-		if (MessageLength <= 0)
-			errors += BX.message('no_message');
-		else if (MessageLength > MessageMax)
-			errors += BX.message('max_len').replace(/#MAX_LENGTH#/gi, MessageMax).replace(/#LENGTH#/gi, MessageLength);
-
-		if (errors !== "")
-		{
-			alert(errors);
-			return false;
-		}
-
-		if (form['FILES[]'])
-		{
-			var
-				oEls = [],
-				oEl = BX.type.isDomNode(form['FILES[]']) ? form['FILES[]'] : form['FILES[]'][0],
-				ii = BX.type.isDomNode(form['FILES[]']) ? false : 0;
-			do
-			{
-				if (! BX('filetoupload' + oEl.value))
-				{
-					oEls.push(
-						BX.adjust(
-							BX.clone(oEl),
-							{attrs : {name : 'FILES_TO_UPLOAD[]', id : ('filetoupload' + oEl.value)}}
-						)
-					);
-				}
-				oEl = (ii === false ? false : (ii <  form['FILES[]'].length ? form['FILES[]'][ii++] : false));
-			} while (!!oEl);
-			while (oEls.length > 0)
-				form.appendChild(oEls.pop());
-		}
-
-		var arr = form.getElementsByTagName("input");
-		for (var i=0; i < arr.length; i++)
-		{
-			var butt = arr[i];
-			if (butt.getAttribute("type") == "submit")
-				butt.disabled = true;
-		}
-
-		if (ajax_post == 'Y')
-		{
-			var postform = form;
-			if (typeof window["oForum"] != 'undefined' && typeof window["oForum"]["page_number"] != 'undefined')
-			{
-				var pageNumberInput = BX.findChild(postform, {attr : {name : 'pageNumber'}});
-				if (!pageNumberInput)
-				{
-					pageNumberInput = BX.create("input", {props : {type : "hidden", name : 'pageNumber'}});
-					pageNumberInput.value = window["oForum"]["page_number"];
-					postform.appendChild(pageNumberInput);
-				} else {
-					pageNumberInput.value = window["oForum"]["page_number"];
-				}
-			}
-			setTimeout(function() { BX.ajax.submit(postform, function(response) {PostFormAjaxResponse(response, postform);}); }, 50);
-			return false;
-		}
-		return true;
-	};
 
 	BX.Forum.ShowLastEditReason = function (checked, div)
 	{
@@ -646,98 +650,95 @@
 		}
 		return false;
 	};
+
+	BX.Forum.params = {};
+
 	BX.Forum.Init = function(params)
 	{
 		if (!params || typeof params != "object")
+		{
 			return;
+		}
+
+		BX.Forum.params = params;
+
 		if (BX.message('LANGUAGE_ID') == 'ru')
 		{
-			BX.addCustomEvent(window, 'OnEditorInitedBefore', function(editor)
-			{
-				editor.AddButton({
-					id : 'translit',
-					name : 'Translit',
-					iconClassName : 'bxhtmled-button-translit',
-					disabledForTextarea : false,
-					toolbarSort : 205,
-					handler : function()
-					{
-						var translit = function(textbody)
-							{
-								if (typeof editor.bTranslited == 'undefined')
-									editor.bTranslited = false;
-
-								var arStack = [], i = 0;
-
-								function bPushTag(str, p1, offset, s)
-								{
-									arStack.push(p1);
-									return "\001";
-								}
-
-								function bPopTag(str, p1, offset, s)
-								{
-									return arStack.shift();
-								}
-
-
-								var r = new RegExp("(\\[[^\\]]*\\])", 'gi');
-								textbody = textbody.replace(r, bPushTag);
-
-								if ( editor.bTranslited == false)
-								{
-									for (i=0; i<capitEngLettersReg.length; i++) textbody = textbody.replace(capitEngLettersReg[i], capitRusLetters[i]);
-									for (i=0; i<smallEngLettersReg.length; i++) textbody = textbody.replace(smallEngLettersReg[i], smallRusLetters[i]);
-									editor.bTranslited = true;
-								}
-								else
-								{
-									for (i=0; i<capitRusLetters.length; i++) textbody = textbody.replace(capitRusLettersReg[i], capitEngLetters[i]);
-									for (i=0; i<smallRusLetters.length; i++) textbody = textbody.replace(smallRusLettersReg[i], smallEngLetters[i]);
-									editor.bTranslited = false;
-								}
-
-								textbody = textbody.replace(new RegExp("\001", "g"), bPopTag);
-
-								return textbody;
-							};
-
-						editor.SaveContent();
-						var content = translit(editor.GetContent());
-						BX.defer(function()
-						{
-							editor.SetContent(content);
-						})();
-					}
-				});
-			});
+			BX.removeCustomEvent(window, 'OnEditorInitedBefore', BX.Forum.OnEditorInitedBefore);
+			BX.addCustomEvent(window, 'OnEditorInitedBefore', BX.Forum.OnEditorInitedBefore);
 		}
-		BX.addCustomEvent(window, 'OnEditorInitedAfter', function(editor)
-		{
-			editor.insertImageAfterUpload = true;
-			BX.bind(BX('post_message_hidden'), "focus", function(){ editor.Focus();} );
-			var formID = params["formID"],
-				form = document.forms[formID];
-			BX.bind(form, "submit", function(e){
-				if (!BX.Forum.ValidateForm(form, params['ajaxPost']))
-					BX.PreventDefault(e);
-			});
-			BX.addCustomEvent(editor, 'OnCtrlEnter', function(e) {
-				if (BX.Forum.ValidateForm(form, params['ajaxPost']))
-					BX.submit(form);
-			});
-			if (params["captcha"] == "Y")
+
+		BX.removeCustomEvent(window, 'OnEditorInitedAfter', BX.Forum.OnEditorInitedAfter);
+		BX.addCustomEvent(window, 'OnEditorInitedAfter', BX.Forum.OnEditorInitedAfter);
+	};
+
+	BX.Forum.OnEditorInitedAfter = function(editor)
+	{
+		editor.insertImageAfterUpload = true;
+		BX.bind(BX('post_message_hidden'), "focus", function(){ editor.Focus();} );
+		new BX.Forum.Form(BX.Forum.params, editor);
+	};
+
+	BX.Forum.OnEditorInitedBefore = function(editor)
+	{
+		editor.AddButton({
+			id : 'translit',
+			name : 'Translit',
+			iconClassName : 'bxhtmled-button-translit',
+			disabledForTextarea : false,
+			toolbarSort : 205,
+			handler : function()
 			{
-				var oCaptcha = new Captcha(form);
-				BX.addCustomEvent(editor, 'OnContentChanged', BX.proxy(oCaptcha.Show, oCaptcha));
-				BX.ready(function(){
-					BX.bind(BX('forum-refresh-captcha'), 'click', BX.proxy(oCaptcha.Update, oCaptcha));
-				});
-				if (params["bVarsFromForm"] == "Y")
-					oCaptcha.Show();
+				var translit = function(textbody)
+				{
+					if (typeof editor.bTranslited == 'undefined')
+						editor.bTranslited = false;
+
+					var arStack = [], i = 0;
+
+					function bPushTag(str, p1, offset, s)
+					{
+						arStack.push(p1);
+						return "\001";
+					}
+
+					function bPopTag(str, p1, offset, s)
+					{
+						return arStack.shift();
+					}
+
+
+					var r = new RegExp("(\\[[^\\]]*\\])", 'gi');
+					textbody = textbody.replace(r, bPushTag);
+
+					if ( editor.bTranslited == false)
+					{
+						for (i=0; i<capitEngLettersReg.length; i++) textbody = textbody.replace(capitEngLettersReg[i], capitRusLetters[i]);
+						for (i=0; i<smallEngLettersReg.length; i++) textbody = textbody.replace(smallEngLettersReg[i], smallRusLetters[i]);
+						editor.bTranslited = true;
+					}
+					else
+					{
+						for (i=0; i<capitRusLetters.length; i++) textbody = textbody.replace(capitRusLettersReg[i], capitEngLetters[i]);
+						for (i=0; i<smallRusLetters.length; i++) textbody = textbody.replace(smallRusLettersReg[i], smallEngLetters[i]);
+						editor.bTranslited = false;
+					}
+
+					textbody = textbody.replace(new RegExp("\001", "g"), bPopTag);
+
+					return textbody;
+				};
+
+				editor.SaveContent();
+				var content = translit(editor.GetContent());
+				BX.defer(function()
+				{
+					editor.SetContent(content);
+				})();
 			}
 		});
 	};
+
 	/**
 	 * @return boolean
 	 */

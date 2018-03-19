@@ -5,7 +5,7 @@ $arParams["URL"] = trim($arParams["~URL"]);
 if (empty($arParams["URL"]))
 	return false;
 if ($arParams["CONVERT"] == "Y")
-	$arParams["URL"] = htmlspecialcharsEx($arParams["URL"]);
+	$arParams["URL"] = htmlspecialcharsbx($arParams["URL"]);
 // *************************/BASE **********************************************************************
 // ************************* ADDITIONAL ****************************************************************
 // True image size For example 1024x768

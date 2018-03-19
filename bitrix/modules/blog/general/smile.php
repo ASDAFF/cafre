@@ -1,141 +1,114 @@
 <?
-class CAllBlogSmile
+class CBlogSmile
 {
-	//---------------> User insert, update, delete
-	function CheckFields($ACTION, &$arFields)
+	static $smiles = array();
+	static $sets = array();
+
+	function CheckFields()
 	{
-		if ((is_set($arFields, "SMILE_TYPE") || $ACTION=="ADD") && $arFields["SMILE_TYPE"]!="I" && $arFields["SMILE_TYPE"]!="S") return False;
-		if ((is_set($arFields, "IMAGE") || $ACTION=="ADD") && strlen($arFields["IMAGE"])<=0) return False;
+		return false;
+	}
 
-		if ((is_set($arFields, "SORT") || $ACTION=="ADD") && IntVal($arFields["SORT"])<=0) $arFields["SORT"] = 150;
+	function Add()
+	{
+		return false;
+	}
 
-		if (is_set($arFields, "LANG") || $ACTION=="ADD")
+	function Update()
+	{
+		return false;
+	}
+
+	function Delete()
+	{
+		return false;
+	}
+
+	function GetList()
+	{
+		return false;
+	}
+
+	function GetByID()
+	{
+		return false;
+	}
+
+	function GetByIDEx()
+	{
+		return false;
+	}
+
+	function GetLangByID()
+	{
+		return false;
+	}
+
+	public static function GetSmilesList()
+	{
+		$type = CSmile::TYPE_SMILE;
+		$lang = LANGUAGE_ID;
+
+		if (COption::GetOptionInt("blog", "smile_native_gallery_id", 0) <= 0)
+			return self::getSmiles($type, $lang);
+
+		$key = "old_".$type."_".$lang;
+		if (!array_key_exists($key, self::$smiles))
 		{
-			for ($i = 0; $i<count($arFields["LANG"]); $i++)
+			$smiles = CSmile::getByGalleryId($type, COption::GetOptionInt("blog", "smile_native_gallery_id", 0), $lang);
+			$result = array();
+			foreach ($smiles as $smile)
 			{
-				if (!is_set($arFields["LANG"][$i], "LID") || strlen($arFields["LANG"][$i]["LID"])<=0) return false;
-				if (!is_set($arFields["LANG"][$i], "NAME") || strlen($arFields["LANG"][$i]["NAME"])<=0) return false;
-			}
+				if ($smile['HIDDEN'] == 'Y')
+					continue;
 
-			$db_lang = CLangAdmin::GetList(($b="sort"), ($o="asc"), array("ACTIVE" => "Y"));
-			while ($arLang = $db_lang->Fetch())
+				$result[] = array(
+					'ID' => $smile['ID'],
+					'SMILE_TYPE' => $type,
+					'TYPING' => $smile['TYPING'],
+					'IMAGE' => $smile["IMAGE"],
+					'DESCRIPTION' => '',
+					'CLICKABLE' => 'Y',
+					'SORT' => $smile['SORT'],
+					'IMAGE_WIDTH' => $smile['IMAGE_WIDTH'],
+					'IMAGE_HEIGHT' => $smile['IMAGE_HEIGHT'],
+					'SET_ID' => $smile['SET_ID'],
+					'NAME' => $smile['NAME'],
+					'WIDTH' => $smile['IMAGE_WIDTH'],
+					'HEIGHT' => $smile['IMAGE_HEIGHT'],
+				);
+			}
+			self::$smiles[$key] = $result;
+		}
+		return self::$smiles[$key];
+	}
+
+	public static function getSmiles($type, $lang)
+	{
+		$type = ($type == "I" ? CSmile::TYPE_ICON : CSmile::TYPE_SMILE);
+		$key = "new_".$type."_".$lang;
+
+		if (!array_key_exists($key, self::$smiles))
+		{
+			$smiles = CSmile::getByGalleryId($type, COption::GetOptionInt("blog", "smile_gallery_id", 0), $lang);
+			$result = array();
+			foreach ($smiles as $smile)
 			{
-				$bFound = False;
-				for ($i = 0; $i<count($arFields["LANG"]); $i++)
-				{
-					if ($arFields["LANG"][$i]["LID"]==$arLang["LID"])
-						$bFound = True;
-				}
-				if (!$bFound) return false;
+				if ($smile['HIDDEN'] == 'Y')
+					continue;
+
+				$result[] = array(
+					'SET_ID' => $smile['SET_ID'],
+					'NAME' => $smile['NAME'],
+					'IMAGE' => ($smile['TYPE'] == CSmile::TYPE_SMILE ? CSmile::PATH_TO_SMILE : CSmile::PATH_TO_ICON).$smile["SET_ID"]."/".$smile["IMAGE"],
+					'TYPING' => $smile['TYPING'],
+					'WIDTH' => $smile['IMAGE_WIDTH'],
+					'HEIGHT' => $smile['IMAGE_HEIGHT'],
+				);
 			}
+			self::$smiles[$key] = $result;
 		}
-
-		return True;
-	}
-
-	function Delete($ID)
-	{
-		global $DB, $CACHE_MANAGER;
-		$ID = IntVal($ID);
-
-		$DB->Query("UPDATE b_blog_comment SET ICON_ID = NULL WHERE ICON_ID = ".$ID, True);
-
-		$DB->Query("DELETE FROM b_blog_smile_lang WHERE SMILE_ID = ".$ID, True);
-		$DB->Query("DELETE FROM b_blog_smile WHERE ID = ".$ID, True);
-		$CACHE_MANAGER->Clean("b_blog_smile");
-		BXClearCache(true, "/blog/smiles/");
-		
-		return true;
-	}
-
-	function GetByID($ID)
-	{
-		global $DB;
-
-		$ID = IntVal($ID);
-		$strSql = 
-			"SELECT FR.ID, FR.SORT, FR.SMILE_TYPE, FR.TYPING, FR.IMAGE, FR.CLICKABLE, ".
-			"	FR.DESCRIPTION, FR.IMAGE_WIDTH, FR.IMAGE_HEIGHT ".
-			"FROM b_blog_smile FR ".
-			"WHERE FR.ID = ".$ID."";
-		$db_res = $DB->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
-
-		if ($res = $db_res->Fetch())
-		{
-			return $res;
-		}
-		return False;
-	}
-
-	function GetByIDEx($ID, $strLang)
-	{
-		global $DB;
-
-		$ID = IntVal($ID);
-		$strSql = 
-			"SELECT FR.ID, FR.SORT, FR.SMILE_TYPE, FR.TYPING, FR.IMAGE, FR.CLICKABLE, ".
-			"	FRL.LID, FRL.NAME, FR.DESCRIPTION, FR.IMAGE_WIDTH, FR.IMAGE_HEIGHT ".
-			"FROM b_blog_smile FR ".
-			"	LEFT JOIN b_blog_smile_lang FRL ON (FR.ID = FRL.SMILE_ID AND FRL.LID = '".$DB->ForSql($strLang)."') ".
-			"WHERE FR.ID = ".$ID."";
-		$db_res = $DB->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
-
-		if ($res = $db_res->Fetch())
-		{
-			return $res;
-		}
-		return False;
-	}
-
-	function GetLangByID($SMILE_ID, $strLang)
-	{
-		global $DB;
-
-		$SMILE_ID = IntVal($SMILE_ID);
-		$strSql = 
-			"SELECT FRL.ID, FRL.SMILE_ID, FRL.LID, FRL.NAME ".
-			"FROM b_blog_smile_lang FRL ".
-			"WHERE FRL.SMILE_ID = ".$SMILE_ID." ".
-			"	AND FRL.LID = '".$DB->ForSql($strLang)."' ";
-		$db_res = $DB->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
-
-		if ($res = $db_res->Fetch())
-		{
-			return $res;
-		}
-		return False;
-	}
-	function GetSmilesList()
-	{
-		$cache = new CPHPCache;
-		$cache_id = "blog_smiles_".LANGUAGE_ID;
-		$cache_path = "/blog/smiles/";
-
-		$arParams["CACHE_TIME"] = 60*60*24*30;
-		if ($arParams["CACHE_TIME"] > 0 && $cache->InitCache($arParams["CACHE_TIME"], $cache_id, $cache_path))
-		{
-			$Vars = $cache->GetVars();
-			$arSmiles = $Vars["arResult"];
-		}
-		else
-		{
-			if ($arParams["CACHE_TIME"] > 0)
-				$cache->StartDataCache($arParams["CACHE_TIME"], $cache_id, $cache_path);
-
-			$arSelectFields = array("ID", "SMILE_TYPE", "TYPING", "IMAGE", "DESCRIPTION", "CLICKABLE", "SORT", "IMAGE_WIDTH", "IMAGE_HEIGHT", "LANG_NAME");
-			$arSmiles = array();
-			$res = CBlogSmile::GetList(array("SORT"=>"ASC","ID"=>"DESC"), array("SMILE_TYPE"=>"S", "LANG_LID"=>LANGUAGE_ID), false, false, $arSelectFields);
-			while ($arr = $res->GetNext())
-			{
-				list($type)=explode(" ",$arr["TYPING"]);
-				$arr["TYPE"]=str_replace("'","\'",$type);
-				$arr["TYPE"]=str_replace("\\","\\\\",$arr["TYPE"]);
-				$arSmiles[] = $arr;
-			}
-			if ($arParams["CACHE_TIME"] > 0)
-				$cache->EndDataCache(array("arResult" => $arSmiles));
-		}
-		return $arSmiles;
+		return self::$smiles[$key];
 	}
 }
 ?>

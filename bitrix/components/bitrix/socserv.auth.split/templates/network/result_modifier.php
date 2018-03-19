@@ -10,10 +10,15 @@ if(\Bitrix\Main\Loader::includeModule('socialservices'))
 			'EXTERNAL_AUTH_ID' => CSocServBitrix24Net::ID
 		),
 		'select' => array(
-			'NAME', 'LAST_NAME', 'LOGIN', 'PERSONAL_WWW'
+			'NAME', 'LAST_NAME', 'LOGIN', 'PERSONAL_WWW', 'XML_ID'
 		),
 	));
 
 	$arResult['NETWORK_ACCOUNT'] = $dbRes->fetch();
+
+	if(is_array($arResult['NETWORK_ACCOUNT']) && strlen($arResult['NETWORK_ACCOUNT']['PERSONAL_WWW']) <= 0)
+	{
+		$arResult['NETWORK_ACCOUNT']['PERSONAL_WWW'] = CSocServBitrix24Net::NETWORK_URL.'/id'.$arResult['NETWORK_ACCOUNT']['XML_ID'].'/';
+	}
 }
 ?>

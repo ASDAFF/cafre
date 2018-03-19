@@ -4,7 +4,7 @@ IncludeModuleLangFile($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/classes/g
 class CAllRatingsComponentsMain
 {
 	// return configs of component-rating
-	function OnGetRatingConfigs()
+	public static function OnGetRatingConfigs()
 	{
 		$arConfigs = array(
 			'MODULE_ID' => 'MAIN',
@@ -50,7 +50,7 @@ class CAllRatingsComponentsMain
 
 
 	// return support object
-	function OnGetRatingObject()
+	public static function OnGetRatingObject()
 	{
 		$arRatingConfigs = CRatingsComponentsMain::OnGetRatingConfigs();
 		foreach ($arRatingConfigs["COMPONENT"] as $SupportType => $value)
@@ -60,7 +60,7 @@ class CAllRatingsComponentsMain
 	}
 
 	// check the value of the component-rating which relate to the module
-	function OnAfterAddRating($ID, $arFields)
+	public static function OnAfterAddRating($ID, $arFields)
 	{
 		$arFields['CONFIGS']['MAIN'] = CRatingsComponentsMain::__CheckFields($arFields['ENTITY_ID'], $arFields['CONFIGS']['MAIN']);
 
@@ -68,7 +68,7 @@ class CAllRatingsComponentsMain
 	}
 
 	// check the value of the component-rating which relate to the module
-	function OnAfterUpdateRating($ID, $arFields)
+	public static function OnAfterUpdateRating($ID, $arFields)
 	{
 		$arFields['CONFIGS']['MAIN'] = CRatingsComponentsMain::__CheckFields($arFields['ENTITY_ID'], $arFields['CONFIGS']['MAIN']);
 
@@ -78,7 +78,7 @@ class CAllRatingsComponentsMain
 	// Utilities
 
 	// check input values, if value does not validate, set the default value
-	function __CheckFields($entityId, $arConfigs)
+	public static function __CheckFields($entityId, $arConfigs)
 	{
 		$arDefaultConfig = CRatingsComponentsMain::__AssembleConfigDefault($entityId);
 
@@ -101,7 +101,7 @@ class CAllRatingsComponentsMain
 	}
 
 	// collect the default and regular expressions for the fields component-rating
-	function __AssembleConfigDefault($objectType = null)
+	public static function __AssembleConfigDefault($objectType = null)
 	{
 		$arConfigs = array();
 		$arRatingConfigs = CRatingsComponentsMain::OnGetRatingConfigs();
@@ -123,7 +123,7 @@ class CAllRatingsComponentsMain
 		return $arConfigs;
 	}
 
-	function OnGetRatingContentOwner($arParams)
+	public static function OnGetRatingContentOwner($arParams)
 	{
 		if ($arParams['ENTITY_TYPE_ID'] == 'USER')
 		{
@@ -133,7 +133,7 @@ class CAllRatingsComponentsMain
 	}
 
 	// auto enabler rating vote
-	function GetShowRating(&$arParams)
+	public static function GetShowRating(&$arParams)
 	{
 		if (isset($arParams['SHOW_RATING']) && trim($arParams['SHOW_RATING']) != '')
 			$arParams['SHOW_RATING'] = $arParams['SHOW_RATING'] == 'Y'? 'Y': 'N';
@@ -143,5 +143,3 @@ class CAllRatingsComponentsMain
 		return $arParams['SHOW_RATING'];
 	}
 }
-
-?>

@@ -745,19 +745,3 @@ BX.Security.UserEdit.Otp = (function getUserOtp(BX)
 
 	return Manager;
 }(BX));
-
-(function initialize() {
-	// ToDo: change this, when Bitrix implement own "native" way to initialize JS components
-	function initAdminOtp() {
-		var messages = BX('otp-user-edit-messages');
-		var settings = BX('otp-user-edit-settings');
-		if (!messages || !settings)
-			return;
-
-		BX.message(JSON.parse(messages.innerHTML));
-		settings = JSON.parse(settings.innerHTML);
-		new BX.Security.UserEdit.Otp(settings.userId, settings);
-	}
-
-	BX.ready(initAdminOtp);
-})(BX);

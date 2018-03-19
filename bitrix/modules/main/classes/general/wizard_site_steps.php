@@ -3,10 +3,10 @@ class CPackageWelcome extends CWizardStep
 {
 	var $package;
 
-	function CPackageWelcome($package)
+	public function __construct($package)
 	{
 		$this->package = $package;
-		parent::CWizardStep();
+		parent::__construct();
 	}
 
 	function InitStep()
@@ -33,10 +33,10 @@ class CPackageLicense extends CWizardStep
 {
 	var $package;
 
-	function CPackageLicense($package)
+	public function __construct($package)
 	{
 		$this->package = $package;
-		parent::CWizardStep();
+		parent::__construct();
 	}
 
 	function InitStep()
@@ -80,10 +80,10 @@ class CPackageSelectSite extends CWizardStep
 {
 	var $package;
 
-	function CPackageSelectSite($package)
+	public function __construct($package)
 	{
 		$this->package = $package;
-		parent::CWizardStep();
+		parent::__construct();
 	}
 
 	function InitStep()
@@ -178,10 +178,10 @@ class CPackageSelectGroup extends CWizardStep
 {
 	var $package;
 
-	function CPackageSelectGroup($package)
+	public function __construct($package)
 	{
 		$this->package = $package;
-		parent::CWizardStep();
+		parent::__construct();
 	}
 
 	function InitStep()
@@ -273,10 +273,10 @@ class CPackageSelectTemplate extends CWizardStep
 {
 	var $package;
 
-	function CPackageSelectTemplate($package)
+	public function __construct($package)
 	{
 		$this->package = $package;
-		parent::CWizardStep();
+		parent::__construct();
 	}
 
 	function InitStep()
@@ -382,10 +382,10 @@ class CPackageSelectService extends CWizardStep
 {
 	var $package;
 
-	function CPackageSelectService($package)
+	public function __construct($package)
 	{
 		$this->package = $package;
-		parent::CWizardStep();
+		parent::__construct();
 	}
 
 	function InitStep()
@@ -545,10 +545,10 @@ class CPackageSelectStructure extends CWizardStep
 {
 	var $package;
 
-	function CPackageSelectStructure($package)
+	public function __construct($package)
 	{
 		$this->package = $package;
-		parent::CWizardStep();
+		parent::__construct();
 	}
 
 	function InitStep()
@@ -1081,11 +1081,11 @@ class CPackageStartInstall extends CWizardStep
 	var $package;
 	var $arSelected;
 
-	function CPackageStartInstall($package, $arSelected)
+	public function __construct($package, $arSelected)
 	{
 		$this->package = $package;
 		$this->arSelected = $arSelected;
-		parent::CWizardStep();
+		parent::__construct();
 	}
 
 	function InitStep()
@@ -1134,11 +1134,11 @@ class CPackageInstallSite extends CWizardStep
 	var $package;
 	var $siteID;
 
-	function CPackageInstallSite($package, $siteID)
+	public function __construct($package, $siteID)
 	{
 		$this->package = $package;
 		$this->siteID = $siteID;
-		parent::CWizardStep();
+		parent::__construct();
 		$this->SetAutoSubmit();
 		$this->SetTitle(GetMessage("MAIN_WIZARD_RUN_INSTALLATION"));
 	}
@@ -1162,11 +1162,11 @@ class CPackageInstallTemplate extends CWizardStep
 	var $package;
 	var $templateID;
 
-	function CPackageInstallTemplate($package, $templateID)
+	public function __construct($package, $templateID)
 	{
 		$this->package = $package;
 		$this->templateID = $templateID;
-		parent::CWizardStep();
+		parent::__construct();
 		$this->SetAutoSubmit();
 		$this->SetTitle(GetMessage("MAIN_WIZARD_RUN_INSTALLATION"));
 	}
@@ -1189,11 +1189,11 @@ class CPackageInstallService extends CWizardStep
 	var $package;
 	var $serviceID;
 
-	function CPackageInstallService($package, $serviceID)
+	public function __construct($package, $serviceID)
 	{
 		$this->package = $package;
 		$this->serviceID = $serviceID;
-		parent::CWizardStep();
+		parent::__construct();
 		$this->SetAutoSubmit();
 		$this->SetTitle(GetMessage("MAIN_WIZARD_RUN_INSTALLATION"));
 	}
@@ -1219,9 +1219,9 @@ class CPackageInstallService extends CWizardStep
 
 class CPackageInstallStructure extends CWizardStep
 {
-	function CPackageInstallStructure()
+	public function __construct()
 	{
-		parent::CWizardStep();
+		parent::__construct();
 	}
 
 	function InitStep()
@@ -1248,10 +1248,10 @@ class CPackageFinish extends CWizardStep
 {
 	var $package;
 
-	function CPackageStepFinal($package)
+	public function __construct($package)
 	{
 		$this->package = $package;
-		parent::CWizardStep();
+		parent::__construct();
 	}
 
 	function InitStep()
@@ -1276,10 +1276,10 @@ class CPackageCancel extends CWizardStep
 {
 	var $package;
 
-	function CPackageCancel($package)
+	public function __construct($package)
 	{
 		$this->package = $package;
-		parent::CWizardStep();
+		parent::__construct();
 	}
 
 	function InitStep()
@@ -1304,10 +1304,10 @@ class CPackageError extends CWizardStep
 {
 	var $package;
 
-	function CPackageError($package)
+	public function __construct($package)
 	{
 		$this->package = $package;
-		parent::CWizardStep();
+		parent::__construct();
 	}
 
 	function InitStep()

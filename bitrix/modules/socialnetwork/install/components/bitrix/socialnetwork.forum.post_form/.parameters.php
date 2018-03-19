@@ -66,22 +66,6 @@ $arComponentParameters = array(
 			"TYPE" => "STRING",
 			"DEFAULT" => "topic_list.php"),
 
-		"PATH_TO_SMILE" => Array(
-			"PARENT" => "ADDITIONAL_SETTINGS",
-			"NAME" => GetMessage("F_DEFAULT_PATH_TO_SMILE"),
-			"TYPE" => "STRING",
-			"DEFAULT" => "/bitrix/images/forum/smile/"),
-		"PATH_TO_ICON" => Array(
-			"PARENT" => "ADDITIONAL_SETTINGS",
-			"NAME" => GetMessage("F_DEFAULT_PATH_TO_ICON"),
-			"TYPE" => "STRING",
-			"DEFAULT" => "/bitrix/images/forum/icon/"),
-	    "SMILE_TABLE_COLS" => array(
-			"PARENT" => "ADDITIONAL_SETTINGS",
-	        "NAME" => GetMessage("F_SMILE_TABLE_COLS"),
-			"TYPE" => "STRING",
-			"DEFAULT" => "3"),
-
 		"AJAX_TYPE" => CForumParameters::GetAjaxType(),
 
 		"CACHE_TIME" => Array(),

@@ -92,7 +92,7 @@ else
 						"ENTITY_TYPE" => "WF",
 						"ENTITY_ID" => CBPStateService::getWorkflowIntegerId($arResult['WorkflowState']['ID']),
 						"ENTITY_XML_ID" => "WF_".$arResult['WorkflowState']['ID'],
-						"PERMISSION" => "Y",
+						"PERMISSION" => "M",
 						"URL_TEMPLATES_PROFILE_VIEW" => "/company/personal/user/#user_id#/",
 						"SHOW_RATING" => "Y",
 						"SHOW_LINK_TO_MESSAGE" => "N",

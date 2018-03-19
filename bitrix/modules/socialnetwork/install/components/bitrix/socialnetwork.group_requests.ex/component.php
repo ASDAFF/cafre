@@ -14,7 +14,10 @@
  * @param array $arResult
  * @param CBitrixComponent $this
  */
+
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
+
+use Bitrix\Main\Localization\Loc;
 
 if (!CModule::IncludeModule("socialnetwork"))
 {
@@ -87,19 +90,21 @@ else
 			$arResult["CurrentUserPerms"] = CSocNetUserToGroup::InitUserPerms($USER->GetID(), $arResult["Group"], CSocNetUser::IsCurrentUserModuleAdmin());
 
 			if (!$arResult["CurrentUserPerms"] || !$arResult["CurrentUserPerms"]["UserCanViewGroup"])
+			{
 				$arResult["FatalError"] = GetMessage("SONET_GRE_NO_PERMS").". ";
+			}
 			else
 			{
 				$arResult["Urls"]["Group"] = CComponentEngine::MakePathFromTemplate($arParams["PATH_TO_GROUP"], array("group_id" => $arResult["Group"]["ID"]));
 				$arResult["Urls"]["GroupEdit"] = CComponentEngine::MakePathFromTemplate($arParams["PATH_TO_GROUP_EDIT"], array("group_id" => $arResult["Group"]["ID"]));
 
 				if ($arParams["SET_TITLE"] == "Y")
-					$APPLICATION->SetTitle($arResult["Group"]["NAME"].": ".GetMessage("SONET_GRE_TITLE"));
+					$APPLICATION->SetTitle($arResult["Group"]["NAME"].": ".Loc::getMessage($arResult["Group"]["PROJECT"] == "Y" ? "SONET_GRE_TITLE_PROJECT" : "SONET_GRE_TITLE"));
 
 				if ($arParams["SET_NAV_CHAIN"] != "N")
 				{
 					$APPLICATION->AddChainItem($arResult["Group"]["NAME"], $arResult["Urls"]["Group"]);
-					$APPLICATION->AddChainItem(GetMessage("SONET_GRE_TITLE"));
+					$APPLICATION->AddChainItem(Loc::getMessage($arResult["Group"]["PROJECT"] == "Y" ? "SONET_GRE_TITLE_PROJECT" : "SONET_GRE_TITLE"));
 				}
 
 				if (!$arResult["CurrentUserPerms"]["UserCanInitiate"])

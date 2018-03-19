@@ -3,7 +3,7 @@
  * Bitrix Framework
  * @package bitrix
  * @subpackage main
- * @copyright 2001-2012 Bitrix
+ * @copyright 2001-2016 Bitrix
  */
 
 namespace Bitrix\Main\Entity;
@@ -89,6 +89,12 @@ class Base
 		if ($fieldInfo instanceof Field)
 		{
 			$field = $fieldInfo;
+
+			// rewrite name
+			if (!empty($fieldName) && !is_numeric($fieldName))
+			{
+				$field->setName($fieldName);
+			}
 		}
 		elseif (!empty($fieldInfo['reference']))
 		{
@@ -460,7 +466,7 @@ class Base
 	 */
 	public function getConnection()
 	{
-		return \Bitrix\Main\Application::getInstance()->getConnectionPool()->getConnection($this->connectionName);
+		return Main\Application::getInstance()->getConnectionPool()->getConnection($this->connectionName);
 	}
 
 	public function getDBTableName()
@@ -601,10 +607,11 @@ class Base
 		$replaced_aliases = array_flip($query->getReplacedAliases());
 
 		// generate fieldsMap
-		$fieldsMap = array('TMP_ID' => array('data_type' => 'integer', 'primary' => true));
+		$fieldsMap = array();
 
 		foreach ($query->getSelect() as $k => $v)
 		{
+			// convert expressions to regular field, clone in case of regular scalar field
 			if (is_array($v))
 			{
 				// expression
@@ -615,28 +622,52 @@ class Base
 				if ($v instanceof ExpressionField)
 				{
 					$fieldDefinition = $v->getName();
+
+					// better to initialize fields as objects after entity is created
+					$dataType = Field::getOldDataTypeByField($query_chains[$fieldDefinition]->getLastElement()->getValue());
+					$fieldsMap[$fieldDefinition] = array('data_type' => $dataType);
 				}
 				else
 				{
 					$fieldDefinition = is_numeric($k) ? $v : $k;
+
+					/** @var Field $field */
+					$field = $query_chains[$fieldDefinition]->getLastElement()->getValue();
+
+					if ($field instanceof ExpressionField)
+					{
+						$dataType = Field::getOldDataTypeByField($query_chains[$fieldDefinition]->getLastElement()->getValue());
+						$fieldsMap[$fieldDefinition] = array('data_type' => $dataType);
+					}
+					else
+					{
+						/** @var ScalarField[] $fieldsMap */
+						$fieldsMap[$fieldDefinition] = clone $field;
+						$fieldsMap[$fieldDefinition]->setName($fieldDefinition);
+						$fieldsMap[$fieldDefinition]->setColumnName($fieldDefinition);
+						$fieldsMap[$fieldDefinition]->resetEntity();
+					}
 				}
-
-				// better to initialize fields as objects after entity is created
-				$dataType = Field::getOldDataTypeByField($query_chains[$fieldDefinition]->getLastElement()->getValue());
-
-				$fieldsMap[$fieldDefinition] = array('data_type' => $dataType);
 			}
 
 			if (isset($replaced_aliases[$k]))
 			{
-				$fieldsMap[$k]['column_name'] = $replaced_aliases[$k];
+				if (is_array($fieldsMap[$k]))
+				{
+					$fieldsMap[$k]['column_name'] = $replaced_aliases[$k];
+				}
+				elseif ($fieldsMap[$k] instanceof ScalarField)
+				{
+					/** @var ScalarField[] $fieldsMap */
+					$fieldsMap[$k]->setColumnName($replaced_aliases[$k]);
+				}
 			}
 		}
 
 		// generate class content
 		$eval = 'class '.$entity_name.'Table extends '.__NAMESPACE__.'\DataManager {'.PHP_EOL;
 		$eval .= 'public static function getMap() {'.PHP_EOL;
-		$eval .= 'return '.var_export($fieldsMap, true).';'.PHP_EOL;
+		$eval .= 'return '.var_export(array('TMP_ID' => array('data_type' => 'integer', 'primary' => true)), true).';'.PHP_EOL;
 		$eval .= '}';
 		$eval .= 'public static function getTableName() {'.PHP_EOL;
 		$eval .= 'return '.var_export($query_string, true).';'.PHP_EOL;
@@ -645,7 +676,14 @@ class Base
 
 		eval($eval);
 
-		return self::getInstance($entity_name);
+		$entity = self::getInstance($entity_name);
+
+		foreach ($fieldsMap as $k => $v)
+		{
+			$entity->addField($v, $k);
+		}
+
+		return $entity;
 	}
 
 	/**
@@ -740,7 +778,7 @@ class Base
 		{
 			if ($field->isAutocomplete())
 			{
-				$autocomplete[] = $field->getColumnName();
+				$autocomplete[] = $field->getName();
 			}
 		}
 
@@ -788,9 +826,144 @@ class Base
 		if (isset(self::$instances[$entityName]))
 		{
 			unset(self::$instances[$entityName]);
+			DataManager::unsetEntity($entityName);
+
 			return true;
 		}
 
+		return false;
+	}
+
+	/**
+	 * Reads data from cache.
+	 * @param int $ttl TTL.
+	 * @param string $cacheId The cache ID.
+	 * @param bool $countTotal Whether to read total count from the cache.
+	 * @return Main\DB\ArrayResult|null
+	 */
+	public function readFromCache($ttl, $cacheId, $countTotal = false)
+	{
+		if($ttl > 0)
+		{
+			$cache = Main\Application::getInstance()->getManagedCache();
+			$cacheDir = $this->getCacheDir();
+
+			$count = null;
+			if($countTotal && $cache->read($ttl, $cacheId.".total", $cacheDir))
+			{
+				$count = $cache->get($cacheId.".total");
+			}
+			if($cache->read($ttl, $cacheId, $cacheDir))
+			{
+				$result = new Main\DB\ArrayResult($cache->get($cacheId));
+				if($count !== null)
+				{
+					$result->setCount($count);
+				}
+				return $result;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * @param Main\DB\Result $result A query result to cache.
+	 * @param string $cacheId The cache ID.
+	 * @param bool $countTotal Whether to write total count to the cache.
+	 * @return Main\DB\ArrayResult
+	 */
+	public function writeToCache(Main\DB\Result $result, $cacheId, $countTotal = false)
+	{
+		$rows = $result->fetchAll();
+		$arrayResult = new Main\DB\ArrayResult($rows);
+
+		$cache = Main\Application::getInstance()->getManagedCache();
+		$cache->set($cacheId, $rows);
+
+		if($countTotal)
+		{
+			$count = $result->getCount();
+			$cache->set($cacheId.".total", $count);
+			$arrayResult->setCount($count);
+		}
+		return $arrayResult;
+	}
+
+	/**
+	 * Returns cache TTL for the entity, possibly limited by the .settings.php:
+	 * 'cache_flags' => array('value'=> array(
+	 *		"b_group_max_ttl" => 200,
+	 *		"b_group_min_ttl" => 100,
+	 * ))
+	 * Maximum is a higher-priority.
+	 * @param int $ttl Preferable TTL
+	 * @return int Caclulated TTL
+	 */
+	public function getCacheTtl($ttl)
+	{
+		$table = $this->getDBTableName();
+		$cacheFlags = Main\Config\Configuration::getValue("cache_flags");
+		if(isset($cacheFlags[$table."_min_ttl"]))
+		{
+			$ttl = (int)max($ttl, $cacheFlags[$table."_min_ttl"]);
+		}
+		if(isset($cacheFlags[$table."_max_ttl"]))
+		{
+			$ttl = (int)min($ttl, $cacheFlags[$table."_max_ttl"]);
+		}
+		return $ttl;
+	}
+
+	protected function getCacheDir()
+	{
+		return "orm_".$this->getDBTableName();
+	}
+
+	/**
+	 * Cleans all cache entries for the entity.
+	 */
+	public function cleanCache()
+	{
+		$cache = Main\Application::getInstance()->getManagedCache();
+		$cache->cleanDir($this->getCacheDir());
+	}
+
+	/**
+	 * Sets a flag indicating full text index support for a field.
+	 * @param string $field
+	 * @param bool $mode
+	 */
+	public function enableFullTextIndex($field, $mode = true)
+	{
+		$table = $this->getDBTableName();
+		$options = array();
+		$optionString = Main\Config\Option::get("main", "~ft_".$table);
+		if($optionString <> '')
+		{
+			$options = unserialize($optionString);
+		}
+		$options[strtoupper($field)] = $mode;
+		Main\Config\Option::set("main", "~ft_".$table, serialize($options));
+	}
+
+	/**
+	 * Returns true if full text index is enabled for a field.
+	 * @param string $field
+	 * @return bool
+	 */
+	public function fullTextIndexEnabled($field)
+	{
+		$table = $this->getDBTableName();
+		$optionString = Main\Config\Option::get("main", "~ft_".$table);
+		if($optionString <> '')
+		{
+			$field = strtoupper($field);
+			$options = unserialize($optionString);
+			if(isset($options[$field]) && $options[$field] === true)
+			{
+				return true;
+			}
+		}
 		return false;
 	}
 }

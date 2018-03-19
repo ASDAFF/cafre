@@ -85,7 +85,7 @@ class Path
 		$path = self::getName($path);
 		if ($path != '')
 		{
-			$pos = Text\String::strrpos($path, '.');
+			$pos = Text\UtfSafeString::getLastPosition($path, '.');
 			if ($pos !== false)
 				return substr($path, $pos + 1);
 		}
@@ -96,7 +96,7 @@ class Path
 	{
 		//$path = self::normalize($path);
 
-		$p = Text\String::strrpos($path, self::DIRECTORY_SEPARATOR);
+		$p = Text\UtfSafeString::getLastPosition($path, self::DIRECTORY_SEPARATOR);
 		if ($p !== false)
 			return substr($path, $p + 1);
 
@@ -168,6 +168,22 @@ class Path
 			$path = Text\Encoding::convertEncoding($path, self::$physicalEncoding, 'utf-8');
 
 		return implode('/', array_map("rawurlencode", explode('/', $path)));
+	}
+
+	public static function convertUriToPhysical($path)
+	{
+		if (self::$physicalEncoding == "")
+			self::$physicalEncoding = self::getPhysicalEncoding();
+
+		if (self::$directoryIndex == null)
+			self::$directoryIndex = self::getDirectoryIndexArray();
+
+		$path = implode('/', array_map("rawurldecode", explode('/', $path)));
+
+		if ('utf-8' !== self::$physicalEncoding)
+			$path = Text\Encoding::convertEncoding($path, 'utf-8', self::$physicalEncoding);
+
+		return $path;
 	}
 
 	protected static function getLogicalEncoding()

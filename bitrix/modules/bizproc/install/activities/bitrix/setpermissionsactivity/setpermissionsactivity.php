@@ -48,10 +48,9 @@ class CBPSetPermissionsActivity
 			$arCurrentActivity = &CBPWorkflowTemplateLoader::FindActivityByName($arWorkflowTemplate, $activityName);
 			if (is_array($arCurrentActivity["Properties"]) && array_key_exists("Permission", $arCurrentActivity["Properties"]))
 			{
+				$current = $documentService->toExternalOperations($documentType, $arCurrentActivity["Properties"]["Permission"]);
 				foreach ($arAllowableOperations as $operationKey => $operationValue)
 				{
-					$current = $documentService->toExternalOperations($documentType, $arCurrentActivity["Properties"]["Permission"]);
-
 					$arCurrentValues["permission_".$operationKey] = CBPHelper::UsersArrayToString(
 						$current[$operationKey],
 						$arWorkflowTemplate,

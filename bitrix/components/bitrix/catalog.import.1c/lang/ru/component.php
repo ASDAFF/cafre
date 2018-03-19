@@ -22,6 +22,7 @@ $MESS["CC_BSC1_METADATA_IMPORTED"] = "Метаданные импортированы успешно.";
 $MESS["CC_BSC1_PROGRESS"] = "Обработано #DONE# из #TOTAL# элементов.";
 $MESS["CC_BSC1_DONE"] = "Загрузка элементов завершена.";
 $MESS["CC_BSC1_IMPORT_SUCCESS"] = "Импорт успешно завершен.";
+$MESS["CC_BSC1_IMPORT_COMPLETE"] = "Завершение процедуры импорта";
 $MESS["CC_BSC1_DEA_DONE"] = "Деактивация/Удаление элементов завершены.";
 $MESS["CC_BSC1_ZIP_ERROR"] = "Ошибка распаковки архива.";
 $MESS["CC_BSC1_ZIP_PROGRESS"] = "Идет распаковка архива.";

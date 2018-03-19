@@ -6,7 +6,7 @@ $MESS["admin_authorize_info"] = "Information";
 $MESS["AUTH_LOGIN"] = "Login";
 $MESS["AUTH_PASSWORD"] = "Password";
 $MESS["AUTH_REMEMBER_ME"] = "Remember Me";
-$MESS["AUTH_PLEASE_AUTH"] = "Please log in.";
+$MESS["AUTH_PLEASE_AUTH"] = "Please log in";
 $MESS["AUTH_FORGOT_PASSWORD_2"] = "Forgot password?";
 $MESS["AUTH_CAPTCHA_PROMT"] = "Type the letters you see on the picture";
 $MESS["AUTH_CHANGE_PASSWORD"] = "Change password";
@@ -29,4 +29,5 @@ $MESS["AUTH_GET_CHECK_STRING_SENT"] = "Checkword has been sent.";
 $MESS["AUTH_SEND"] = "Send";
 $MESS["AUTH_OTP_REMEMBER_ME"] = "Remember password on this computer";
 $MESS["AUTH_OTP_PASS"] = "One-time password";
+$MESS["AUTH_NW_SECTION"] = "or login using";
 ?>

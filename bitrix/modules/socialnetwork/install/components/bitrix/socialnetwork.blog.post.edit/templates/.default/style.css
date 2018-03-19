@@ -175,12 +175,11 @@
 	color: #555;
 	font-size: 12px;
 	font-weight: bold;
-	margin: 8px 20px 12px 23px;
+	margin: 8px 20px 6px 10px;
 	white-space: nowrap;
 }
 
 .feed-add-grat-list {
-	padding: 0 12px 14px 14px;
 	text-align: left;
 }
 
@@ -197,8 +196,7 @@
 }
 
 .feed-add-grat-box:hover {
-	-webkit-box-shadow: 0 0 0 3px;
-	box-shadow: 0 0 0 3px;
+	box-shadow: 0 0 0 3px #ddd;
 
 	-webkit-transition: box-shadow 0.25s linear;
 	transition: box-shadow 0.25s linear;
@@ -245,7 +243,10 @@
 	transition: background-color 0.2s linear;
 }
 
-.feed-add-post-grat a:link, .feed-add-post-grat a:visited, .feed-add-post-grat a:active, .feed-add-post-grat a:hover {
+.feed-add-post-grat a:link,
+.feed-add-post-grat a:visited,
+.feed-add-post-grat a:active,
+.feed-add-post-grat a:hover {
 	text-decoration: none;
 }
 
@@ -256,7 +257,6 @@
 .feed-add-post-grat-hover .feed-add-post-del-but {
 	opacity: 1;
 }
-
 
 .feed-add-grat-link,
 .feed-add-grat-link:link,
@@ -305,23 +305,19 @@
 
 .feed-add-post-form-variants {
 	border-bottom: 1px solid #f0f1f2;
-	min-height: 19px;
-	padding: 0 0 20px 15px;
+	min-height: 40px;
+	padding: 0 10px 0 23px;
 	position: relative;
 }
 
-
 .feed-add-post-form-arrow {
-	background: url(/bitrix/components/bitrix/socialnetwork.log.ex/templates/.default/images/log/live_feed_sprite_6.png?3) no-repeat -83px -386px;
-	bottom: -1px;
-	display: none;
-	left: 68px;
-	position: absolute;
-	height: 7px;
-	width: 13px;
+	background: #185ccd;
+	top: 40px;
+	left: 0;
 
-	-webkit-transition: left 0.2s ease-in-out;
-	transition: left 0.2s ease-in-out;
+	position: absolute;
+	height: 1px;
+	width: 0;
 }
 
 .blog-post-edit-open .feed-add-post-form-arrow {
@@ -332,13 +328,11 @@
 	color: #80868e;
 	cursor: pointer;
 	display: inline-block;
-	font-family: "OpenSans-Bold", sans-serif;
+	font-family: "OpenSans-Bold", Helvetica, Arial, sans-serif;
 	font-size: 12px;
-	float: left;
-	height: 19px;
-	line-height: 19px;
-	margin-right: 26px;
-	padding-left: 27px;
+	height: 40px;
+	line-height: 40px;
+	margin-right: 42px;
 	position: relative;
 	text-transform: uppercase;
 }
@@ -352,200 +346,74 @@
 }
 
 .feed-add-post-form-link-active {
-	color: #000 !important;
+	color: #185ccd !important;
+}
+
+.feed-add-post-form-link:after {
+	content: "";
+	position: absolute;
+	left: 0;
+	bottom: -1px;
+	width: 100%;
+	height: 1px;
+	background: #185ccd;
+	display: none;
+}
+
+.feed-add-post-form-link-active:after {
+	display: block;
 }
 
 .feed-add-post-form-link-more {
-	margin-right: 0;
-	padding: 0 14px 0 5px;
+	margin-right: 16px;
 }
 
 .feed-add-post-form-link-more .feed-add-post-form-link-icon {
 	display: none;
 }
 
-.feed-add-post-form-message-link.feed-add-post-form-link-more, .feed-add-post-form-file-link.feed-add-post-form-link-more, .feed-add-post-form-important-link.feed-add-post-form-link-more, .feed-add-post-form-calendar-link.feed-add-post-form-link-more, .feed-add-post-form-lists-link.feed-add-post-form-link-more, .feed-add-post-form-vote-link.feed-add-post-form-link-more, .feed-add-post-form-grat-link.feed-add-post-form-link-more {
-	padding: 0 14px 0 27px;
+.feed-add-post-form-popup .menu-popup-item-text {
+	font-size: 14px;
 }
 
-.feed-add-post-form-link-active .feed-add-post-form-link-text,
-.feed-add-post-form-link-more-active .feed-add-post-form-link-text {
-	color: #000;
-}
-
-.feed-add-post-form-link-active .feed-add-post-more-icon,
-.feed-add-post-form-link-more-active .feed-add-post-more-icon,
-.feed-add-post-form-link-more:hover .feed-add-post-more-icon {
-	background-position: -101px -779px;
-}
-
-.feed-add-post-form-message-link-icon, .feed-add-post-form-message-link.feed-add-post-form-link-more .feed-add-post-form-link-icon, .feed-add-post-form-file-link-icon, .feed-add-post-form-file-link.feed-add-post-form-link-more .feed-add-post-form-link-icon, .feed-add-post-form-polls-link-icon, .feed-add-post-form-lists-link .feed-add-post-form-link-icon, .feed-add-post-form-vote-link .feed-add-post-form-link-icon, .feed-add-post-form-important-link-icon, .feed-add-post-form-important-link.feed-add-post-form-link-more .feed-add-post-form-link-icon, .feed-add-post-form-grat-link-icon, .feed-add-post-form-grat-link.feed-add-post-form-link-more .feed-add-post-form-link-icon, .feed-add-post-form-calendar-link-icon, .feed-add-post-form-calendar-link.feed-add-post-form-link-more .feed-add-post-form-link-icon {
-	background: url("/bitrix/components/bitrix/socialnetwork.log.ex/templates/.default/images/log/live_feed_sprite_6.png?3") no-repeat 100px 100px;
-	display: inline-block;
-	height: 18px;
-	left: 0;
+.feed-add-post-more-icon {
 	position: absolute;
-	top: 2px;
-	width: 18px;
+	right: -13px;
+	top: 18px;
+
+	width: 0;
+	height: 0;
+	border-style: solid;
+	border-width: 3px 3px 0 3px;
+	border-color: #80868e transparent transparent transparent;
 }
 
-.feed-add-post-form-lists-link-icon
-{
-	background: url("images/lists.png");
-	display: inline-block;
-	height: 16px;
-	left: 0;
-	position: absolute;
-	top: 2px;
-	width: 16px;
-}
-
-.feed-add-post-form-link:hover .feed-add-post-form-lists-link-icon,
-.feed-add-post-form-link-active .feed-add-post-form-lists-link-icon {
-	background: url("images/lists-hover.png");
-}
-
-.feed-add-post-form-message-link-icon {
-	background-position: -40px -700px;
-}
-
-.feed-add-post-form-link:hover .feed-add-post-form-message-link-icon,
-.feed-add-post-form-link-active .feed-add-post-form-message-link-icon {
-	background-position: 2px -727px;
-}
-
-.feed-add-post-form-file-link-icon {
-	background-position: -35px -751px;
-	left: 6px;
-	top: 1px;
-}
-
-.feed-add-post-form-link:hover .feed-add-post-form-file-link-icon,
-.feed-add-post-form-link-active .feed-add-post-form-file-link-icon {
-	background-position: -2px -751px;
-}
-
-.feed-add-post-form-polls-link-icon, .feed-add-post-form-vote .menu-popup-item-icon, .feed-add-post-form-vote-link.feed-add-post-form-link-more .feed-add-post-form-link-icon {
-	background-position: -75px -701px;
-	left: 5px;
-	top: 1px;
-}
-
-.feed-add-post-form-link-active .feed-add-post-form-polls-link-icon, .feed-add-post-form-link-active.feed-add-post-form-vote-link .feed-add-post-form-link-icon, .feed-add-post-form-vote:hover .menu-popup-item-icon {
-	background-position: -34px -728px;
-}
-
-.feed-add-post-form-polls-link-icon, .feed-add-post-form-lists-link.feed-add-post-form-link-more .feed-add-post-form-link-icon {
-	background-position: -75px -701px;
-	left: 5px;
-	top: 1px;
-}
-
-.feed-add-post-form-link-active .feed-add-post-form-polls-link-icon, .feed-add-post-form-link-active.feed-add-post-form-lists-link .feed-add-post-form-link-icon {
-	background-position: -34px -728px;
-}
-
-.feed-add-post-form-important-link.feed-add-post-form-link-more .feed-add-post-form-link-icon, .feed-add-post-form-important-link-icon {
-	background-position: -131px -726px;
-}
-
-.feed-add-post-form-link-active .feed-add-post-form-important-link-icon, .feed-add-post-form-link-active.feed-add-post-form-important-link .feed-add-post-form-link-icon, .feed-add-post-form-important:hover .menu-popup-item-icon {
-	background-position: -131px -752px;
-	left: 2px;
-}
-
-.feed-add-post-form-calendar-link-icon {
-	background-position: -107px -890px;
-	top: 1px;
-}
-
-.feed-add-post-form-link:hover .feed-add-post-form-calendar-link-icon,
-.feed-add-post-form-link-active .feed-add-post-form-calendar-link-icon {
-	background-position: -138px -890px;
-}
-
-.feed-add-post-form-grat-link.feed-add-post-form-link-more .feed-add-post-form-link-icon, .feed-add-post-form-grat-link-icon {
-	background-position: -104px -698px;
-}
-
-.feed-add-post-form-link-active.feed-add-post-form-grat-link .feed-add-post-form-link-icon,
-.feed-add-post-form-link-active .feed-add-post-form-grat-link-icon,
-.feed-add-post-form-grat:hover .menu-popup-item-icon {
-	background-position: -67px -725px;
-	left: 2px;
-	top: 0;
-}
-
-.feed-add-post-form-message .menu-popup-item-icon {
-	background: url("/bitrix/components/bitrix/socialnetwork.log.ex/templates/.default/images/log/live_feed_sprite_6.png?3") no-repeat -42px -700px;
-	margin-left: 5px;
-}
-
-.feed-add-post-form-grat .menu-popup-item-icon {
-	background: url("/bitrix/components/bitrix/socialnetwork.log.ex/templates/.default/images/log/live_feed_sprite_6.png?3") no-repeat -104px -698px;
-	margin-left: 5px;
-	height: 18px;
-}
-
-.feed-add-post-form-important .menu-popup-item-icon {
-	background: url("/bitrix/components/bitrix/socialnetwork.log.ex/templates/.default/images/log/live_feed_sprite_6.png?3") no-repeat -131px -727px;
-	margin-left: 5px;
-}
-
-.feed-add-post-form-calendar .menu-popup-item-icon {
-	background: url("/bitrix/images/calendar/calendar-sprite.png") no-repeat -8px -149px;
-	margin-left: 5px;
-}
-
-.feed-add-post-form-vote .menu-popup-item-icon {
-	background: url("/bitrix/components/bitrix/socialnetwork.log.ex/templates/.default/images/log/live_feed_sprite_6.png?3") no-repeat -75px -701px;
-	margin-left: 5px;
+.feed-add-post-form-link-active .feed-add-post-more-icon {
+	border-top-color: #185ccd;
 }
 
 .feed-add-post-form-lists .menu-popup-item-icon {
 	text-align: center;
 }
+
 .feed-add-post-form-lists-default-new .menu-popup-item-icon {
 	background: url(images/sprite.png) no-repeat -19px -453px;
 }
+
 .feed-add-post-form-lists-default-new:hover .menu-popup-item-icon {
 	background: url(images/sprite.png) no-repeat 0px -453px;
 }
-.feed-add-post-form-lists-default-market .menu-popup-item-icon
-{
+
+.feed-add-post-form-lists-default-market .menu-popup-item-icon {
 	background: url(images/sprite.png) no-repeat -19px -472px;
 }
-/*.feed-add-post-form-lists-default-market:hover .menu-popup-item-icon {*/
-	/*background: url(images/sprite.png) no-repeat 0px -472px;*/
-/*}*/
+
 .feed-add-post-form-lists-default-settings .menu-popup-item-icon {
 	background: url(images/sprite.png) no-repeat -19px -434px;
 }
+
 .feed-add-post-form-lists-default-settings:hover .menu-popup-item-icon {
 	background: url(images/sprite.png) no-repeat 0px -434px;
-}
-
-.feed-add-post-form-file .menu-popup-item-icon {
-	background: url("/bitrix/components/bitrix/socialnetwork.log.ex/templates/.default/images/log/live_feed_sprite_6.png?3") no-repeat -35px -751px;
-	margin-left: 5px;
-}
-
-.feed-add-post-form-message .menu-popup-item-text, .feed-add-post-form-file .menu-popup-item-text, .feed-add-post-form-calendar .menu-popup-item-text, .feed-add-post-form-grat .menu-popup-item-text, .feed-add-post-form-lists .menu-popup-item-text, .feed-add-post-form-vote .menu-popup-item-text, .feed-add-post-form-important .menu-popup-item-text {
-	color: #7f8182;
-	font-size: 14px;
-}
-
-.feed-add-post-form-grat:hover .menu-popup-item-text, .feed-add-post-form-lists:hover .menu-popup-item-text, .feed-add-post-form-vote:hover .menu-popup-item-text, .feed-add-post-form-important:hover .menu-popup-item-text {
-	color: #515a65;
-}
-
-.feed-add-post-more-icon {
-	background: url("/bitrix/components/bitrix/socialnetwork.log.ex/templates/.default/images/log/live_feed_sprite_6.png?3") no-repeat -88px -779px;
-	height: 3px;
-	position: absolute;
-	right: 0;
-	top: 9px;
-	width: 6px;
 }
 
 .feed-add-post-more-icon-lists {
@@ -555,10 +423,6 @@
 	right: -12px;
 	top: 9px;
 	width: 6px;
-}
-
-.feed-add-post-form-link-active .feed-add-post-more-icon {
-	background-position: -101px -779px;
 }
 
 .feed-add-post.feed-add-post-edit-form-file .wduf-selectdialog {
@@ -571,4 +435,105 @@
 
 form.comments-form .feed-add-post-buttons {
 	display: block !important;
+}
+
+.template-bitrix24 .blog-post-edit .task-info {
+	margin: 0;
+}
+
+.blog-post-edit .task-info-panel {
+	padding: 16px 10px 16px 0;
+}
+
+.blog-post-edit .tasks-uf-panel .tasks-uf-panel-items {
+	min-width: 0;
+}
+
+.feed-add-post-micro {
+	color: #80868e;
+	font-size: 18px;
+	font-family: "OpenSans-Regular", Helvetica, Arial, sans-serif;
+	margin: 0;
+	height: 18px;
+	padding: 19px 2px 27px 22px;
+	position: relative;
+	cursor: text;
+}
+.feed-add-post-micro-dnd-ready.feed-add-post-micro {
+	background: rgba(248,250,250,0.9);
+	border: 2px dashed #a7b0b5;
+	padding: 17px 0 25px 16px;
+	cursor: default;
+}
+.feed-add-post-micro .feed-add-post-micro-dnd,
+.feed-add-post-micro-dnd-ready.feed-add-post-micro .feed-add-post-micro-title{
+	display: none;
+}
+.feed-add-post-micro-dnd-ready.feed-add-post-micro .feed-add-post-micro-dnd {
+	display: block;
+}
+.feed-add-post-block .task-message-label {
+	max-width: none;
+}
+
+.feed-add-post-loader-cont {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	height: 29px;
+	width: 29px;
+}
+
+.feed-add-post-loader {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	z-index: 1500;
+	-webkit-animation: rotate 2s linear infinite;
+	animation: rotate 2s linear infinite;
+	-webkit-transform-origin: center center;
+	transform-origin: center center;
+}
+
+.feed-add-post-loader-inner-path {
+	stroke: rgba(215,220,223,.17);
+	stroke-width: 1.5;
+	stroke-dasharray: 200, 200;
+	stroke-dashoffset: 0;
+	stroke-linecap: round;
+}
+
+.feed-add-post-loader-path {
+	stroke: rgba(215,220,223,.74);
+	stroke-width: 1.5;
+	stroke-dasharray: 20, 200;
+	stroke-dashoffset: 0;
+	-webkit-animation: dash 1.5s ease-in-out infinite;
+	animation: dash 1.5s ease-in-out infinite;
+	stroke-linecap: round;
+}
+
+@keyframes rotate {
+	100% {
+		transform: rotate(360deg);
+	}
+}
+
+@keyframes dash {
+	0% {
+		stroke-dasharray: 1, 200;
+		stroke-dashoffset: 0;
+	}
+	50% {
+		stroke-dasharray: 89, 200;
+		stroke-dashoffset: -35px;
+	}
+	100% {
+		stroke-dasharray: 89, 200;
+		stroke-dashoffset: -124px;
+	}
 }

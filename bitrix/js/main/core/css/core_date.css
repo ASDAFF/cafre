@@ -138,10 +138,6 @@ img.calendar-icon-hover {border:1px solid #AEB6C2; background-color:#DBE3F2; mar
 .bx-calendar-time-disabled .bx-calendar-button-block,
 .bx-calendar-time-disabled .bx-calendar-set-time-wrap {display: none;}
 
-.bx-tm-popup-clock {
-	padding: 10px;
-}
-
 * html .bx-calendar-month-title,
 * html .bx-calendar-year-title {margin-top:-2px;}
 * html .bx-calendar-month-popup,

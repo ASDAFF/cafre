@@ -3,7 +3,7 @@ IncludeModuleLangFile(__FILE__);
 
 class CClock
 {
-	function Init(&$arParams)
+	public static function Init(&$arParams)
 	{
 		if (!isset($arParams['inputId']))
 			$arParams['inputId'] = 'bxclock_'.rand();
@@ -18,7 +18,7 @@ class CClock
 			$arParams['view'] = 'input';
 	}
 
-	function Show($arParams)
+	public static function Show($arParams)
 	{
 		global $APPLICATION;
 
@@ -67,7 +67,7 @@ class CClock
 				<?
 				break;
 			default: //input
-				?><input id="<?=$arParams['inputId']?>" name="<?=$arParams['inputName']?>" type="text" value="<?=$arParams['initTime']?>" size="<?=IsAmPmMode() ? 6 : 4?>" title="<?=$arParams['inputTitle']?>" /><?
+				?><input id="<?=$arParams['inputId']?>" <?=($arParams['inputName'] ? 'name="'.$arParams['inputName'].'"' : '')?> type="text" value="<?=$arParams['initTime']?>" size="<?=IsAmPmMode() ? 6 : 4?>" <?=($arParams['inputTitle'] ? 'title="'.$arParams['inputTitle'].'"' : '')?> <?=($arParams['inputClass'] ? 'class="'.$arParams['inputClass'].'"' : '')?>/><?
 				break;
 		}
 		// Show icon

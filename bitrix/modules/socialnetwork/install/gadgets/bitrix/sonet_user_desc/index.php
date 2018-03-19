@@ -156,9 +156,42 @@ if ($arGadgetParams['CAN_VIEW_PROFILE'])
 		}
 	}
 
-	?></table>
+	?></table><?
 
-	<h4 class="bx-sonet-user-desc-contact"><?= GetMessage("GD_SONET_USER_DESC_CONTACT_TITLE") ?></h4>
+	if (!empty($arGadgetParams["EMAIL_FORWARD_TO"]))
+	{
+		?><h4 class="bx-sonet-user-desc-contact"><?= GetMessage("GD_SONET_USER_DESC_FORWARD_TO") ?></h4>
+		<table width="100%" cellspacing="2" cellpadding="3"><?
+			if (!empty($arGadgetParams["EMAIL_FORWARD_TO"]['BLOG_POST']))
+			{
+				?><tr valign="top">
+					<td width="40%" class="user-profile-mail-link"><?=GetMessage("GD_SONET_USER_DESC_FORWARD_TO_BLOG_POST")?>:</td>
+					<td width="60%" class="user-profile-block-right user-profile-mail-link">
+						<div class="user-profile-mail-link-block">
+							<span class="user-profile-short-link" data-link=""><?=$arGadgetParams["EMAIL_FORWARD_TO"]['BLOG_POST']?></span>
+							<input type="text" class="user-profile-link-input" data-input="" value="<?=$arGadgetParams["EMAIL_FORWARD_TO"]['BLOG_POST']?>">
+							<a href="javascript:void(0);" onclick="socnetUserDescObj.showLink(this);" class="user-profile-link user-profile-show-link-btn"><?=GetMessage("GD_SONET_USER_DESC_FORWARD_TO_SHOW")?></a>
+						</div>
+					</td>
+				</tr><?
+			}
+			if (!empty($arGadgetParams["EMAIL_FORWARD_TO"]['TASKS_TASK']))
+			{
+				?><tr valign="top">
+				<td width="40%" class="user-profile-mail-link"><?=GetMessage("GD_SONET_USER_DESC_FORWARD_TO_TASK")?>:</td>
+				<td width="60%" class="user-profile-block-right user-profile-mail-link">
+					<div class="user-profile-mail-link-block">
+						<span class="user-profile-short-link" data-link=""><?=$arGadgetParams["EMAIL_FORWARD_TO"]['TASKS_TASK']?></span>
+						<input type="text" class="user-profile-link-input" data-input="" value="<?=$arGadgetParams["EMAIL_FORWARD_TO"]['TASKS_TASK']?>">
+						<a href="javascript:void(0);" onclick="socnetUserDescObj.showLink(this);" class="user-profile-link user-profile-show-link-btn"><?=GetMessage("GD_SONET_USER_DESC_FORWARD_TO_SHOW")?></a>
+					</div>
+				</td>
+				</tr><?
+			}
+		?></table><?
+	}
+
+	?><h4 class="bx-sonet-user-desc-contact"><?= GetMessage("GD_SONET_USER_DESC_CONTACT_TITLE") ?></h4>
 	<table width="100%" cellspacing="2" cellpadding="3"><?
 	if ($arGadgetParams['CAN_VIEW_CONTACTS'])
 	{
@@ -262,6 +295,10 @@ if ($arGadgetParams['CAN_VIEW_PROFILE'])
 		?></table><?
 	endif;
 
+	$arJSParams = array(
+		"ajaxPath" => "/bitrix/gadgets/bitrix/sonet_user_desc/ajax.php"
+	);
+
 	if (
 		$arGadgetParams["OTP"]["IS_ENABLED"] !== "N"
 		&&
@@ -348,6 +385,16 @@ if ($arGadgetParams['CAN_VIEW_PROFILE'])
 					</td>
 				</tr>
 			<?endif?>
+
+			<?if (!empty($arParams["G_SONET_USER_LINKS_URL_SYNCHRONIZE"]) && $USER->GetID() == $arParams["USER_ID"]):?>
+                <tr>
+                    <td class="user-profile-nowrap" style="width: 40%"><?=GetMessage("GD_SONET_USER_DESC_SYNCHRONIZE")?>:</td>
+                    <td style="width: 60%">
+                        <a href="<?=$arParams["G_SONET_USER_LINKS_URL_SYNCHRONIZE"]?>"><?=GetMessage("GD_SONET_USER_DESC_SYNCHRONIZE_SETUP")?></a>
+                    </td>
+                </tr>
+			<?endif?>
+
 			<?if ($USER->GetID() == $arParams["USER_ID"] && $arGadgetParams["OTP"]["IS_ACTIVE"] && $arGadgetParams["OTP"]["ARE_RECOVERY_CODES_ENABLED"]):?>
 			<tr>
 				<td class="user-profile-nowrap" style="width: 40%"><?=GetMessage("GD_SONET_USER_DESC_OTP_CODES")?>:</td>
@@ -366,154 +413,182 @@ if ($arGadgetParams['CAN_VIEW_PROFILE'])
 		}
 		$arDays[0] = GetMessage("GD_SONET_USER_DESC_OTP_NO_DAYS");
 
-		$arJSParams = array(
-			"ajaxPath" => "/bitrix/gadgets/bitrix/sonet_user_desc/ajax.php",
-			"otpDays" => $arDays
-		);
-		?>
-		<script>
-			BX.namespace("BX.Socialnetwork.Gadget");
-			BX.Socialnetwork.Gadget.UserDesc = (function()
-			{
-				var UserDesc = function(arParams)
-				{
-					this.ajaxPath = "";
-					this.otpDays = {};
-
-					if (typeof arParams === "object")
-					{
-						this.ajaxPath = arParams.ajaxPath;
-						this.otpDays = arParams.otpDays;
-					}
-				};
-
-				UserDesc.prototype.deactivateUserOtp = function(userId, numDays)
-				{
-					if (!parseInt(userId))
-						return false;
-
-					BX.ajax({
-						method: 'POST',
-						dataType: 'json',
-						url: this.ajaxPath,
-						data:
-						{
-							userId: userId,
-							sessid: BX.bitrix_sessid(),
-							numDays: numDays,
-							action: "deactivate"
-						},
-						onsuccess: function(json)
-						{
-							if (json.error)
-							{
-
-							}
-							else
-							{
-								location.reload();
-							}
-						}
-					});
-				};
-
-				UserDesc.prototype.deferUserOtp = function(userId, numDays)
-				{
-					if (!parseInt(userId))
-						return false;
-
-					BX.ajax({
-						method: 'POST',
-						dataType: 'json',
-						url: this.ajaxPath,
-						data:
-						{
-							userId: userId,
-							sessid: BX.bitrix_sessid(),
-							numDays: numDays,
-							action: "defer"
-						},
-						onsuccess: function(json)
-						{
-							if (json.error)
-							{
-
-							}
-							else
-							{
-								location.reload();
-							}
-						}
-					});
-				};
-
-				UserDesc.prototype.activateUserOtp = function(userId)
-				{
-					if (!parseInt(userId))
-						return false;
-
-					BX.ajax({
-						method: 'POST',
-						dataType: 'json',
-						url: this.ajaxPath,
-						data:
-						{
-							userId: userId,
-							sessid: BX.bitrix_sessid(),
-							action: "activate"
-						},
-						onsuccess: function(json)
-						{
-							if (json.error)
-							{
-
-							}
-							else
-							{
-								location.reload();
-							}
-						}
-					});
-				};
-
-				UserDesc.prototype.showOtpDaysPopup = function(bind, userId, handler)
-				{
-					if (!parseInt(userId))
-						return false;
-
-					handler = (handler == "defer") ? "defer" : "activate";
-					var self = this;
-
-					var daysObj = [];
-					for (var i in this.otpDays)
-					{
-						daysObj.push({
-							text: this.otpDays[i],
-							numDays: i,
-							onclick: function(event, item)
-							{
-								this.popupWindow.close();
-								if (handler == "activate")
-									self.deactivateUserOtp(userId, item.numDays);
-								else
-									self.deferUserOtp(userId, item.numDays);
-							}
-						});
-					}
-
-					BX.PopupMenu.show('securityOtpDaysPopup', bind, daysObj,
-						{   offsetTop:10,
-							offsetLeft:0
-						}
-					);
-				};
-
-				return UserDesc;
-			})();
-
-			var socnetUserDescObj = new BX.Socialnetwork.Gadget.UserDesc(<?=CUtil::PhpToJSObject($arJSParams)?>);
-		</script>
-	<?
+		$arJSParams["otpDays"] = $arDays;
 	}
+	?>
+	<script>
+		BX.namespace("BX.Socialnetwork.Gadget");
+		BX.Socialnetwork.Gadget.UserDesc = (function()
+		{
+			var UserDesc = function(arParams)
+			{
+				this.ajaxPath = "";
+				this.otpDays = {};
+
+				if (typeof arParams === "object")
+				{
+					this.ajaxPath = arParams.ajaxPath;
+					this.otpDays = arParams.otpDays;
+				}
+			};
+
+			UserDesc.prototype.deactivateUserOtp = function(userId, numDays)
+			{
+				if (!parseInt(userId))
+					return false;
+
+				BX.ajax({
+					method: 'POST',
+					dataType: 'json',
+					url: this.ajaxPath,
+					data:
+					{
+						userId: userId,
+						sessid: BX.bitrix_sessid(),
+						numDays: numDays,
+						action: "deactivate"
+					},
+					onsuccess: function(json)
+					{
+						if (json.error)
+						{
+
+						}
+						else
+						{
+							location.reload();
+						}
+					}
+				});
+			};
+
+			UserDesc.prototype.deferUserOtp = function(userId, numDays)
+			{
+				if (!parseInt(userId))
+					return false;
+
+				BX.ajax({
+					method: 'POST',
+					dataType: 'json',
+					url: this.ajaxPath,
+					data:
+					{
+						userId: userId,
+						sessid: BX.bitrix_sessid(),
+						numDays: numDays,
+						action: "defer"
+					},
+					onsuccess: function(json)
+					{
+						if (json.error)
+						{
+
+						}
+						else
+						{
+							location.reload();
+						}
+					}
+				});
+			};
+
+			UserDesc.prototype.activateUserOtp = function(userId)
+			{
+				if (!parseInt(userId))
+					return false;
+
+				BX.ajax({
+					method: 'POST',
+					dataType: 'json',
+					url: this.ajaxPath,
+					data:
+					{
+						userId: userId,
+						sessid: BX.bitrix_sessid(),
+						action: "activate"
+					},
+					onsuccess: function(json)
+					{
+						if (json.error)
+						{
+
+						}
+						else
+						{
+							location.reload();
+						}
+					}
+				});
+			};
+
+			UserDesc.prototype.showOtpDaysPopup = function(bind, userId, handler)
+			{
+				if (!parseInt(userId))
+					return false;
+
+				handler = (handler == "defer") ? "defer" : "activate";
+				var self = this;
+
+				var daysObj = [];
+				for (var i in this.otpDays)
+				{
+					daysObj.push({
+						text: this.otpDays[i],
+						numDays: i,
+						onclick: function(event, item)
+						{
+							this.popupWindow.close();
+							if (handler == "activate")
+								self.deactivateUserOtp(userId, item.numDays);
+							else
+								self.deferUserOtp(userId, item.numDays);
+						}
+					});
+				}
+
+				BX.PopupMenu.show('securityOtpDaysPopup', bind, daysObj,
+					{   offsetTop:10,
+						offsetLeft:0
+					}
+				);
+			};
+
+			UserDesc.prototype.showLink = function(btn)
+			{
+				var wrapper = btn.parentNode;
+				var input = wrapper.querySelector('[data-input]');
+				var link = wrapper.querySelector('[data-link]');
+				var inpWidth, linkWidth;
+
+				input.style.width = 'auto';
+				BX.addClass(wrapper, 'user-profile-show-input');
+				inpWidth = input.offsetWidth;
+				linkWidth = link.offsetWidth;
+				btn.style.display = 'none';
+
+				setTimeout(function()
+				{
+					link.style.display = 'none';
+					input.style.width = linkWidth + 'px';
+				}, 50);
+
+				setTimeout(function()
+				{
+					input.style.opacity = 1;
+					input.style.width = inpWidth + 'px';
+				}, 100);
+
+				BX.bind(input, 'transitionend', function()
+				{
+					input.select();
+				})
+			}
+
+			return UserDesc;
+		})();
+
+		var socnetUserDescObj = new BX.Socialnetwork.Gadget.UserDesc(<?=CUtil::PhpToJSObject($arJSParams)?>);
+	</script>
+	<?
 }
 ?>

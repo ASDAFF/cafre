@@ -308,7 +308,7 @@ class CSOAPResponse extends CSOAPEnvelope
 						if (!$decoded and (!isset($param["strict"]) or
 							(isset($param["strict"]) and $param["strict"] == "strict") ))
 						{
-							return new CSOAPFault("Server Error", "Request has no enought params of strict type to be decoded. " );
+							return new CSOAPFault("Server Error", "Request has not enough params of strict type to be decoded. " );
 						}
 
 						$params[$pname] = $decoded;

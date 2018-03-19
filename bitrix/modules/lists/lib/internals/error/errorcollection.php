@@ -2,47 +2,26 @@
 
 namespace Bitrix\Lists\Internals\Error;
 
-use Bitrix\Main\ArgumentTypeException;
 use Bitrix\Main\Entity\Result;
-use Bitrix\Main\Type\Dictionary;
+use Bitrix\Main;
 
-final class ErrorCollection extends Dictionary
+final class ErrorCollection extends Main\ErrorCollection
 {
-	public function __construct(array $values = null)
-	{
-		if($values)
-		{
-			foreach($values as $value)
-			{
-				$this->checkType($value);
-			}
-		}
-		unset($value);
-
-		parent::__construct($values);
-	}
-
 	/**
-	 * @param Error[] $errors
-	 */
-	public function add(array $errors)
-	{
-		foreach ($errors as $error)
-		{
-			$this[] = $error;
-		}
-		unset($error);
-	}
-
-	/**
-	 * Add one error to collection.
+	 * Adds one error to collection.
 	 * @param Error $error Error object.
+	 * @return void
 	 */
 	public function addOne(Error $error)
 	{
 		$this[] = $error;
 	}
 
+	/**
+	 * Adds errors from Main\Entity\Result.
+	 * @param Result $result Result after action in Entity.
+	 * @return void
+	 */
 	public function addFromResult(Result $result)
 	{
 		$errors = array();
@@ -55,14 +34,18 @@ final class ErrorCollection extends Dictionary
 		$this->add($errors);
 	}
 
+	/**
+	 * Returns true if collection has errors.
+	 * @return bool
+	 */
 	public function hasErrors()
 	{
-		return count($this);
+		return (bool)count($this);
 	}
 
 	/**
-	 * Getting array of errors with the necessary code.
-	 * @param $code
+	 * Returns array of errors with the necessary code.
+	 * @param string $code Code of error.
 	 * @return Error[]
 	 */
 	public function getErrorsByCode($code)
@@ -79,43 +62,5 @@ final class ErrorCollection extends Dictionary
 		unset($error);
 
 		return $needle;
-	}
-
-	/**
-	 * Getting once error with the necessary code.
-	 * @param $code
-	 * @return Error[]
-	 */
-	public function getErrorByCode($code)
-	{
-		foreach($this->values as $error)
-		{
-			/** @var Error $error */
-			if($error->getCode() == $code)
-			{
-				return $error;
-			}
-		}
-		unset($error);
-
-		return null;
-	}
-
-	public function offsetSet($offset, $value)
-	{
-		$this->checkType($value);
-		parent::offsetSet($offset, $value);
-	}
-
-	/**
-	 * @param $value
-	 * @throws ArgumentTypeException
-	 */
-	protected function checkType($value)
-	{
-		if(!$value instanceof Error)
-		{
-			throw new ArgumentTypeException('Could not push in ErrorCollection non Error.');
-		}
 	}
 }

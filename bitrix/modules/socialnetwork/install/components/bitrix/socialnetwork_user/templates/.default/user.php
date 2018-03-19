@@ -1,11 +1,14 @@
-<?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();?>
+<?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
+/** @var CBitrixComponentTemplate $this */
+/** @var array $arParams */
+/** @var array $arResult */
+/** @global CDatabase $DB */
+/** @global CUser $USER */
+/** @global CMain $APPLICATION */
 
-<?
 $pageId = "user";
 include("util_menu.php");
-?>
 
-<?
 $APPLICATION->IncludeComponent(
 	"bitrix:socialnetwork.user_profile",
 	"",
@@ -60,7 +63,6 @@ $APPLICATION->IncludeComponent(
 		"PATH_TO_SUBSCRIBE" => $arResult["PATH_TO_SUBSCRIBE"],
 		"PATH_TO_GROUP_SEARCH" => $arParams["PATH_TO_GROUP_SEARCH"],
 		"CALENDAR_USER_IBLOCK_ID" => $arParams['CALENDAR_USER_IBLOCK_ID'],
-		"TASK_IBLOCK_ID" => $arParams["TASK_IBLOCK_ID"],
 		"TASK_VAR" => $arResult["ALIASES"]["task_id"],
 		"TASK_ACTION_VAR" => $arResult["ALIASES"]["action"],
 		"PATH_TO_GROUP_TASKS" => $arParams["PATH_TO_GROUP_TASKS"],
@@ -69,7 +71,6 @@ $APPLICATION->IncludeComponent(
 		"PATH_TO_USER_TASKS" => $arResult["PATH_TO_USER_TASKS"],
 		"PATH_TO_USER_TASKS_TASK" => $arResult["PATH_TO_USER_TASKS_TASK"],
 		"PATH_TO_USER_TASKS_VIEW" => $arResult["PATH_TO_USER_TASKS_VIEW"],
-		"TASKS_FIELDS_SHOW" => $arParams["TASKS_FIELDS_SHOW"],
 		"TASK_FORUM_ID" => $arParams["TASK_FORUM_ID"],
 		"PATH_TO_VIDEO_CALL" => $arResult["PATH_TO_VIDEO_CALL"],
 		"PATH_TO_USER_CONTENT_SEARCH" => $arResult["PATH_TO_USER_CONTENT_SEARCH"],
@@ -88,8 +89,9 @@ $APPLICATION->IncludeComponent(
 		"BLOG_ALLOW_POST_CODE" => $arParams["BLOG_ALLOW_POST_CODE"],
 		"PATH_TO_USER_SECURITY" => $arResult["PATH_TO_USER_SECURITY"],
 		"PATH_TO_USER_PASSWORDS" => $arResult["PATH_TO_USER_PASSWORDS"],
+		"PATH_TO_USER_SYNCHRONIZE" => !empty($arResult["PATH_TO_USER_SYNCHRONIZE"]) ? $arResult["PATH_TO_USER_SYNCHRONIZE"] : null,
 		"PATH_TO_USER_CODES" => $arResult["PATH_TO_USER_CODES"],
 	),
-	$component
+	$this->getComponent()
 );
 ?>

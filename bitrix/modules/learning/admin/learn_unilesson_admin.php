@@ -835,7 +835,7 @@ class CLearnRenderAdminUnilessonList
 			else
 			{
 				$hrefPrefix = 'learn_unilesson_edit.php?lang='.LANG.'&LESSON_ID=' . $arRes['LESSON_ID']
-					. '&LESSON_PATH=' . urlencode($urlCurPath);
+					. '&LESSON_PATH=' . ($this->requestedParentLessonId > 0 ? urlencode($urlCurPath) : $this->requestedParentLessonId);
 			}
 
 			$actionEditLesson = $hrefPrefix . $filterParams;

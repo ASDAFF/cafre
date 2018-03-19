@@ -1,4 +1,4 @@
-<?
+<?php
 IncludeModuleLangFile(__FILE__);
 
 class CWorkflowStatus
@@ -228,18 +228,18 @@ class CWorkflowStatus
 			".(strlen($strSqlSearch_h) > 0? "HAVING ".$strSqlSearch_h: "")."
 			$strSqlOrder
 			";
-		//echo "<pre>".htmlspecialcharsbx($strSql)."</pre>";
+
 		$res = $DB->Query($strSql, false, $err_mess.__LINE__);
 		$is_filtered = strlen($strSqlSearch) > 0;
 		return $res;
 	}
 
-	function GetByID($ID)
+	public static function GetByID($ID)
 	{
 		return CWorkflowStatus::GetList($b, $o, array("ID" => $ID, "ID_EXACT_MATCH" => "Y"), $is_filtered);
 	}
 
-	function GetDropDownList($SHOW_ALL="N", $strOrder = "desc", $arFilter = array())
+	public static function GetDropDownList($SHOW_ALL="N", $strOrder = "desc", $arFilter = array())
 	{
 		global $USER;
 
@@ -261,7 +261,7 @@ class CWorkflowStatus
 		return CWorkflowStatus::GetList($by = "s_c_sort", $strOrder, $arFilter, $is_filtered, array("REFERENCE_ID", "REFERENCE", "IS_FINAL", "C_SORT"));
 	}
 
-	function GetNextSort()
+	public static function GetNextSort()
 	{
 		$err_mess = (CWorkflowStatus::err_mess())."<br>Function: GetNextSort<br>Line: ";
 		global $DB;
@@ -274,7 +274,6 @@ class CWorkflowStatus
 	//check fields before writing
 	function CheckFields($ID, $arFields)
 	{
-		global $DB;
 		$aMsg = array();
 
 		$ID = intval($ID);
@@ -353,4 +352,3 @@ class CWorkflowStatus
 		}
 	}
 }
-?>

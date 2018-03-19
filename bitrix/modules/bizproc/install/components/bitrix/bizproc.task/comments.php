@@ -4,6 +4,14 @@
  */
 define("STOP_STATISTICS", true);
 global $USER, $APPLICATION;
+
+$SITE_ID = '';
+if (isset($_REQUEST["site_id"]) && is_string($_REQUEST["site_id"]))
+	$SITE_ID = substr(preg_replace("/[^a-z0-9_]/i", "", $_REQUEST["site_id"]), 0, 2);
+
+if ($SITE_ID != '')
+	define("SITE_ID", $SITE_ID);
+
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");
 
 if (!$USER->IsAuthorized() || !check_bitrix_sessid() || !CModule::IncludeModule("bizproc"))
@@ -54,7 +62,7 @@ $APPLICATION->RestartBuffer();
 				</style>
 			', false, true);
 	?></head>
-<body>
+<body style="overflow-y: hidden;">
 	<div id="wrapper">
 	<?php
 		// A < E < I < M < Q < U < Y
@@ -66,7 +74,7 @@ $APPLICATION->RestartBuffer();
 			"ENTITY_TYPE" => "WF",
 			"ENTITY_ID" => CBPStateService::getWorkflowIntegerId($task['WORKFLOW_ID']),
 			"ENTITY_XML_ID" => "WF_".$task['WORKFLOW_ID'],
-			"PERMISSION" => "Y",
+			"PERMISSION" => "M",
 			"URL_TEMPLATES_PROFILE_VIEW" => "/company/personal/user/#user_id#/",
 			"SHOW_RATING" => "Y",
 			"SHOW_LINK_TO_MESSAGE" => "N",

@@ -1,6 +1,5 @@
 <?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
-$dir = trim(preg_replace("'[\\\\/]+'", "/", (dirname(__FILE__)."/")));
-__IncludeLang($dir."lang/".LANGUAGE_ID."/group_bizproc_workflow_admin.php");
+\Bitrix\Main\Localization\Loc::loadMessages(__FILE__);
 ?><?
 $pageId = "group_group_lists";
 include($_SERVER["DOCUMENT_ROOT"]."/bitrix/components/bitrix/socialnetwork_group/templates/.default/util_group_menu.php");
@@ -62,8 +61,8 @@ include($_SERVER["DOCUMENT_ROOT"]."/bitrix/components/bitrix/socialnetwork_group
 		),
 		$component, array("HIDE_ICONS" => "Y")
 );?><?$APPLICATION->IncludeComponent("bitrix:bizproc.workflow.list", ".default", Array(
-	"MODULE_ID" => "iblock",
-	"ENTITY" => "CIBlockDocument",
+	"MODULE_ID" => "lists",
+	"ENTITY" => 'Bitrix\Lists\BizprocDocumentLists',
 	"DOCUMENT_ID" => "iblock_".$arResult["VARIABLES"]["list_id"],
 	"EDIT_URL" => str_replace(
 				array("#list_id#", "#group_id#"),

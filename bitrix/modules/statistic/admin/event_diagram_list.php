@@ -1,15 +1,7 @@
-<?
-/*
-##############################################
-# Bitrix: SiteManager                        #
-# Copyright (c) 2004 Bitrix                  #
-# http://www.bitrix.ru                       #
-# mailto:admin@bitrix.ru                     #
-##############################################
-*/
+<?php
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/statistic/prolog.php");
-
+/** @var CMain $APPLICATION */
 $STAT_RIGHT = $APPLICATION->GetGroupRight("statistic");
 if($STAT_RIGHT=="D")
 	$APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
@@ -100,7 +92,7 @@ if (is_array($find_events) && count($find_events)>0):
 <td valign="top" class="graph"><?
 	$diameter = COption::GetOptionString("statistic", "DIAGRAM_DIAMETER");
 	$s = "";
-	foreach ($find_events as $sid) $s .= "&amp;find_events[]=".$sid;
+	foreach ($find_events as $sid) $s .= "&find_events[]=".$sid;
 	?><img class="graph" src="<?echo htmlspecialcharsbx("event_diagram.php?rand=".urlencode(rand())."&lang=".urlencode(LANGUAGE_ID).$s."&find_date1=".urlencode($arFilter["DATE1_PERIOD"])."&find_date2=".urlencode($arFilter["DATE2_PERIOD"]))?>" width="<?=$diameter?>" height="<?=$diameter?>">
 </td>
 <td valign="center">
@@ -198,4 +190,4 @@ if($message)
 $lAdmin->DisplayList();
 ?>
 
-<?require_once ($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");?>
+<?require_once ($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");

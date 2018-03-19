@@ -632,8 +632,15 @@ BX.CWindow.prototype.Move = function(x, y)
 		if (left > (scrollSize.scrollWidth - floatWidth - dxShadow))
 			left = scrollSize.scrollWidth - floatWidth - dxShadow;
 
-		if (top > (scrollSize.scrollHeight - floatHeight - dxShadow))
-			top = scrollSize.scrollHeight - floatHeight - dxShadow;
+		var scrollHeight = Math.max(
+			document.body.scrollHeight, document.documentElement.scrollHeight,
+			document.body.offsetHeight, document.documentElement.offsetHeight,
+			document.body.clientHeight, document.documentElement.clientHeight,
+			scrollSize.scrollHeight
+		);
+
+		if (top > (scrollHeight - floatHeight - dxShadow))
+			top = scrollHeight - floatHeight - dxShadow;
 
 		//Top side
 		if (top < 0)
@@ -766,6 +773,15 @@ BX.CWindowDialog.prototype.CreateOverlay = function(zIndex)
 	if (null == this.OVERLAY)
 	{
 		var windowSize = BX.GetWindowScrollSize();
+
+		// scrollHeight in BX.GetWindowScrollSize may be incorrect
+		var scrollHeight = Math.max(
+			document.body.scrollHeight, document.documentElement.scrollHeight,
+			document.body.offsetHeight, document.documentElement.offsetHeight,
+			document.body.clientHeight, document.documentElement.clientHeight,
+			windowSize.scrollHeight
+		);
+
 		this.OVERLAY = document.body.appendChild(BX.create("DIV", {
 			style: {
 				position: 'absolute',
@@ -773,7 +789,7 @@ BX.CWindowDialog.prototype.CreateOverlay = function(zIndex)
 				left: '0px',
 				zIndex: zIndex || (parseInt(this.DIV.style.zIndex)-2),
 				width: windowSize.scrollWidth + "px",
-				height: windowSize.scrollHeight + "px"
+				height: scrollHeight + "px"
 			}
 		}));
 	}
@@ -1437,6 +1453,10 @@ BX.CDialog.prototype.ShowButtons = function()
 			{
 				result.push(this.PARAMS.buttons[i]);
 			}
+			else if (BX.type.isElementNode(this.PARAMS.buttons[i]))
+			{
+				result.push(this.PARAMS.buttons[i]);
+			}
 			else if (this.PARAMS.buttons[i])
 			{
 				//if (!(this.PARAMS.buttons[i] instanceof BX.CWindowButton))
@@ -1703,13 +1723,23 @@ BX.CDialog.prototype.adjustSizeEx = function()
 
 BX.CDialog.prototype.__adjustSizeEx = function()
 {
-	var ob = this.PARTS.CONTENT_DATA.firstChild, new_height = 0;
+	var ob = this.PARTS.CONTENT_DATA.firstChild,
+		new_height = 0,
+		marginTop,
+		marginBottom;
+
 	while (ob)
 	{
-		new_height += ob.offsetHeight
-			+ parseInt(BX.style(ob, 'margin-top'))
-			+ parseInt(BX.style(ob, 'margin-bottom'));
-
+		if (BX.type.isElementNode(ob))
+		{
+			marginTop = parseInt(BX.style(ob, 'margin-top'), 10);
+			if (isNaN(marginTop))
+				marginTop = 0;
+			marginBottom = parseInt(BX.style(ob, 'margin-bottom'), 10);
+			if (isNaN(marginBottom))
+				marginBottom = 0;
+			new_height += ob.offsetHeight + marginTop + marginBottom;
+		}
 		ob = BX.nextSibling(ob);
 	}
 
@@ -1861,17 +1891,16 @@ BX.CAdminDialog.prototype.SetHead = function()
 
 		while (ob)
 		{
-			marginLeft = parseInt(BX.style(ob, 'margin-left'), 10);
-			if (isNaN(marginLeft))
+			if (BX.type.isElementNode(ob))
 			{
-				marginLeft = 0;
+				marginLeft = parseInt(BX.style(ob, 'margin-left'), 10);
+				if (isNaN(marginLeft))
+					marginLeft = 0;
+				marginRight = parseInt(BX.style(ob, 'margin-right'), 10);
+				if (isNaN(marginRight))
+					marginRight = 0;
+				new_width += ob.offsetWidth + marginLeft + marginRight;
 			}
-			marginRight = parseInt(BX.style(ob, 'margin-right'), 10);
-			if (isNaN(marginRight))
-			{
-				marginRight = 0;
-			}
-			new_width += ob.offsetWidth + marginLeft + marginRight;
 			ob = BX.nextSibling(ob);
 		}
 
@@ -1910,21 +1939,6 @@ BX.CAdminDialog.prototype.SetContent = function(html)
 	{
 		this.__form.appendChild(BX.create('INPUT', {props:{type:'submit'},style:{display:'none'}}));
 		this.__form.onsubmit = BX.delegate(this.__submit, this);
-	}
-};
-
-BX.CAdminDialog.prototype.__adjustSizeEx = function()
-{
-	var ob = this.PARTS.CONTENT_DATA.firstChild,
-		new_height = 0;
-	while (ob)
-	{
-		new_height += ob.offsetHeight
-			+ parseInt(BX.style(ob, 'margin-top'))
-			+ parseInt(BX.style(ob, 'margin-bottom'));
-		ob = BX.nextSibling(ob);
-	 if (new_height)
-	 	this.PARTS.CONTENT_DATA.style.height = new_height + 'px';
 	}
 };
 
@@ -2665,7 +2679,7 @@ BX.CMenu.prototype.addItem = function(item)
 					BX.onCustomEvent('onMenuItemHover', [this.BXMENULEVEL, this.OPENER])
 				}
 			},
-			html: '<span class="bx-core-popup-menu-item-icon' + (item.GLOBAL_ICON ? ' '+item.GLOBAL_ICON : '') + '"></span><span class="bx-core-popup-menu-item-text">'+item.TEXT+'</span>'
+			html: '<span class="bx-core-popup-menu-item-icon' + (item.GLOBAL_ICON ? ' '+item.GLOBAL_ICON : '') + '"></span><span class="bx-core-popup-menu-item-text">'+(item.HTML||(item.TEXT? BX.util.htmlspecialchars(item.TEXT) : ''))+'</span>'
 		});
 
 		if (bHasMenu && !item.DISABLED)

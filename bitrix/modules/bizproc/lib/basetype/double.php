@@ -23,6 +23,23 @@ class Double extends Base
 	}
 
 	/**
+	 * Normalize single value.
+	 *
+	 * @param FieldType $fieldType Document field type.
+	 * @param mixed $value Field value.
+	 * @return mixed Normalized value
+	 */
+	public static function toSingleValue(FieldType $fieldType, $value)
+	{
+		if (is_array($value))
+		{
+			reset($value);
+			$value = current($value);
+		}
+		return $value;
+	}
+
+	/**
 	 * @param FieldType $fieldType Document field type.
 	 * @param mixed $value Field value.
 	 * @param string $toTypeClass Type class name.
@@ -64,6 +81,26 @@ class Double extends Base
 	}
 
 	/**
+	 * Return conversion map for current type.
+	 * @return array Map.
+	 */
+	public static function getConversionMap()
+	{
+		return array(
+			array(
+				FieldType::BOOL,
+				FieldType::DATE,
+				FieldType::DATETIME,
+				FieldType::DOUBLE,
+				FieldType::INT,
+				FieldType::STRING,
+				FieldType::TEXT,
+				FieldType::USER
+			)
+		);
+	}
+
+	/**
 	 * @param FieldType $fieldType
 	 * @param array $field
 	 * @param mixed $value
@@ -75,12 +112,14 @@ class Double extends Base
 	{
 		$name = static::generateControlName($field);
 		$controlId = static::generateControlId($field);
-		$renderResult = '<input type="text" size="10" id="'.htmlspecialcharsbx($controlId).'" name="'
-			.htmlspecialcharsbx($name).'" value="'.htmlspecialcharsbx((string) $value).'">';
+		$className = static::generateControlClassName($fieldType, $field);
+		$renderResult = '<input type="text" class="'.htmlspecialcharsbx($className)
+			.'" size="10" id="'.htmlspecialcharsbx($controlId).'" name="'
+			.htmlspecialcharsbx($name).'" value="'.htmlspecialcharsbx((string) $value).'"/>';
 
 		if ($allowSelection)
 		{
-			$renderResult .= static::renderControlSelector($field);
+			$renderResult .= static::renderControlSelector($field, null, false, '', $fieldType);
 		}
 		return $renderResult;
 	}
@@ -104,6 +143,7 @@ class Double extends Base
 	 */
 	public static function renderControlSingle(FieldType $fieldType, array $field, $value, $allowSelection, $renderMode)
 	{
+		$value = static::toSingleValue($fieldType, $value);
 		return static::renderControl($fieldType, $field, $value, $allowSelection, $renderMode);
 	}
 
@@ -148,7 +188,7 @@ class Double extends Base
 	 * @param array $request
 	 * @return float|null
 	 */
-	protected static function extractValue(FieldType $fieldType, $field, $request)
+	protected static function extractValue(FieldType $fieldType, array $field, array $request)
 	{
 		$value = parent::extractValue($fieldType, $field, $request);
 

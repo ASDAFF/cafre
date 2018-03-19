@@ -78,6 +78,7 @@ if (($arTABLES = $lAdmin->GroupAction()) && $RIGHT >= "W")
 			$tableParts = explode("_", $table_name);
 			array_shift($tableParts);
 			$moduleNamespace = ucfirst($tableParts[0]);
+			$moduleName = strtolower($tableParts[0]);
 			if (count($tableParts) > 1)
 				array_shift($tableParts);
 			$className = \Bitrix\Main\Entity\Base::snake2camel(implode("_", $tableParts));
@@ -104,7 +105,7 @@ if (($arTABLES = $lAdmin->GroupAction()) && $RIGHT >= "W")
 			$arValidators = array();
 			$arMessages = array();
 
-			echo "File: /bitrix/modules/".$tableParts[0]."/lib/".strtolower($className).".php";
+			echo "File: /bitrix/modules/".$moduleName."/lib/".strtolower($className).".php";
 			echo "<hr>";
 			echo "<pre>";
 			echo "&lt;", "?", "php\n";
@@ -305,7 +306,7 @@ if (($arTABLES = $lAdmin->GroupAction()) && $RIGHT >= "W")
 			}
 			echo "}\n";
 			echo "</pre>";
-			echo "File: /bitrix/modules/".$tableParts[0]."/lang/ru/lib/".strtolower($className).".php";
+			echo "File: /bitrix/modules/".$moduleName."/lang/ru/lib/".strtolower($className).".php";
 			echo "<hr>";
 			echo "<pre>";
 			echo "&lt;", "?\n";
@@ -547,7 +548,7 @@ if (strlen($strLastTables) > 0)
 	function filter_rows()
 	{
 		var i;
-		var input = BX('instant-search').value;
+		var input = BX('instant-search').value.replace(/[^a-z_0-9]+/, '');
 		if (input != prev)
 		{
 			prev = input;

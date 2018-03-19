@@ -275,7 +275,7 @@ Class statistic extends CModule
 	{
 		global $APPLICATION, $step;
 		$STAT_RIGHT = $APPLICATION->GetGroupRight("statistic");
-		$step = IntVal($step);
+		$step = intval($step);
 
 		if($STAT_RIGHT < "W")
 			return;
@@ -318,7 +318,7 @@ Class statistic extends CModule
 		$STAT_RIGHT = $APPLICATION->GetGroupRight("statistic");
 		if ($STAT_RIGHT>="W")
 		{
-			$step = IntVal($step);
+			$step = intval($step);
 			if($step < 2)
 			{
 				$APPLICATION->IncludeAdminFile(GetMessage("STAT_UNINSTALL_TITLE"), $_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/statistic/install/unstep1.php");
@@ -354,7 +354,7 @@ Class statistic extends CModule
 		return $arr;
 	}
 
-	function OnGetTableList()
+	public static function OnGetTableList()
 	{
 		return array(
 			"MODULE" => new statistic,

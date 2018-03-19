@@ -82,7 +82,6 @@ if (
 	"SOCNET_USER_ID" => $arResult["VARIABLES"]["user_id"],
 	"FILES_USER_IBLOCK_ID" => $arParams["FILES_USER_IBLOCK_ID"],
 	"CALENDAR_USER_IBLOCK_ID" => $arParams["CALENDAR_USER_IBLOCK_ID"],
-	"TASKS_USER_IBLOCK_ID" => $arParams["TASK_IBLOCK_ID"],
 	"PHOTO_USER_IBLOCK_ID" => $arParams["PHOTO_USER_IBLOCK_ID"],	),
 	$component
 );?>

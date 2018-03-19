@@ -366,7 +366,7 @@ if(!function_exists('__BizprocInterfaceFilterRenderField'))
 				$user = array('ID' => $userID, 'NAME' => $userName);
 				$zIndex = 0;
 
-				echo '<div class="bx-input-wrap"><input type="text" class="bx-input" id="', htmlspecialcharsbx($searchInputID) ,'" name="', htmlspecialcharsbx($searchInputName), '" autocomplete="off">',
+				echo '<div class="bx-input-wrap"><span class="bizproc-user-search-filter-clean"></span><input type="text" class="bx-input" id="', htmlspecialcharsbx($searchInputID) ,'" name="', htmlspecialcharsbx($searchInputName), '" autocomplete="off">',
 				'<input type="hidden" id="', htmlspecialcharsbx($dataInputID),'" name="', htmlspecialcharsbx($dataInputName), '" value=""></div>';
 
 				$delay = 100;

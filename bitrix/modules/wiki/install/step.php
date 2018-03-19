@@ -60,7 +60,7 @@ CheckCreate(document.getElementById('sconet_forum'));
 			{
 				if($ar=CIBlockType::GetByIDLang($arr["ID"], LANGUAGE_ID))
 				{
-					?><option value="<?=$arr["ID"]?>" <?=($_REQUEST["iblock_type_id"] == $arr["ID"] ? " selected='selected'" : "")?>><?="[".$arr["ID"]."] ".$ar["NAME"]?></option><?
+					?><option value="<?=$ar["ID"]?>" <?=($_REQUEST["iblock_type_id"] == $ar["ID"] ? " selected='selected'" : "")?>><?="[".$ar["ID"]."] ".$ar["NAME"]?></option><?
 				}
 			}
 			?></select><br />

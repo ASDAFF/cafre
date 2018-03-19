@@ -3,24 +3,53 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true)
 	die();
 
 use Bitrix\Main\Localization\Loc;
-
-Loc::loadMessages(__FILE__);
+use Bitrix\Main\Loader;
+use Bitrix\Main\SystemException;
 
 class ListExportExcelComponent extends CBitrixComponent
 {
+	protected $listsPerm;
 	protected $arIBlock = array();
 
-	/* Processing of input parameter */
+	public function onIncludeComponentLang()
+	{
+		$this->includeComponentLang(basename(__FILE__));
+		Loc::loadMessages(__FILE__);
+	}
+
+	protected function checkModules()
+	{
+		if(!Loader::includeModule('lists'))
+			throw new SystemException(Loc::getMessage('CC_BLL_MODULE_NOT_INSTALLED'));
+
+		$this->arResult['BIZPROC'] = (bool)Loader::includeModule('bizproc') && CBPRuntime::isFeatureEnabled();
+		$this->arResult['DISK'] = (bool)Loader::includeModule('disk');
+	}
+
 	public function onPrepareComponentParams($params)
 	{
+		if(!Loader::includeModule('lists'))
+			return $params;
+
 		$this->arIBlock = CIBlock::GetArrayByID($params["IBLOCK_ID"]);
-		$this->arResult["IBLOCK"] = htmlspecialcharsex($this->arIBlock);
+		$this->arResult["IBLOCK"] = $this->arIBlock;
 		$this->arResult["IBLOCK_ID"] = $this->arIBlock["ID"];
 		$this->arResult["GRID_ID"] = "lists_list_elements_".$this->arResult["IBLOCK_ID"];
+		$this->arResult["FILTER_ID"] = "lists_list_elements_".$this->arResult["IBLOCK_ID"];
 		$this->arResult["ANY_SECTION"] = isset($_GET["list_section_id"]) && strlen($_GET["list_section_id"]) == 0;
-		$this->arResult["SECTIONS"] = array();
+		$sectionUpperUrl = CHTTP::urlAddParams(str_replace(array("#list_id#", "#section_id#", "#group_id#"),
+			array($this->arResult["IBLOCK_ID"], 0, $params["SOCNET_GROUP_ID"]),
+			$params['LIST_URL']), array('list_section_id' => ""));
+		$this->arResult["SECTIONS"] = array(
+			array(
+				"NAME" => GetMessage("CC_BLL_UPPER_LEVEL"),
+				"NAME_HTML" => '<a href="'.$sectionUpperUrl .'">'.GetMessage("CC_BLL_UPPER_LEVEL").'</a>',
+			)
+		);
 		$this->arResult["SECTION_ID"] = false;
+		$this->arResult["PARENT_SECTION_ID"] = false;
 		$this->arResult["LIST_SECTIONS"] = array();
+		$this->arResult["SECTION_PATH"] = array();
 		if (isset($_GET["list_section_id"]))
 			$sectionId = intval($_GET["list_section_id"]);
 		else
@@ -28,24 +57,53 @@ class ListExportExcelComponent extends CBitrixComponent
 
 		$rsSections = CIBlockSection::GetList(
 			array("left_margin" => "asc"),
-			array(
-				"IBLOCK_ID"         => $this->arIBlock["ID"],
-				"GLOBAL_ACTIVE"     => "Y",
-				"CHECK_PERMISSIONS" => "Y",
-			)
+			array("IBLOCK_ID" => $this->arIBlock["ID"], "GLOBAL_ACTIVE" => "Y", "CHECK_PERMISSIONS" => "Y")
 		);
 		while ($arSection = $rsSections->GetNext())
 		{
-			$this->arResult["SECTIONS"][$arSection["ID"]] = array(
-				"ID"   => $arSection["ID"],
-				"NAME" => $arSection["NAME"]
-			);
-			if ($arSection["ID"] == $sectionId)
+
+			if($sectionId && !$this->arResult["SECTION"])
+			{
+				while(count($this->arResult["SECTION_PATH"]) && $arSection["DEPTH_LEVEL"] <= $this->arResult["SECTION_PATH"]
+					[count($this->arResult["SECTION_PATH"])-1]["DEPTH_LEVEL"])
+					array_pop($this->arResult["SECTION_PATH"]);
+
+				if(!count($this->arResult["SECTION_PATH"])|| $arSection["DEPTH_LEVEL"] > $this->arResult["SECTION_PATH"]
+					[count($this->arResult["SECTION_PATH"])-1]["DEPTH_LEVEL"])
+					array_push($this->arResult["SECTION_PATH"], $arSection);
+			}
+
+			if($arSection["ID"] == $sectionId)
 			{
 				$this->arResult["SECTION"] = $arSection;
-				$this->arResult["SECTION_ID"] = $arSection["ID"];
+				$this->arResult["SECTION_ID"] = intval($arSection["ID"]);
+				$this->arResult["PARENT_SECTION_ID"] = $arSection["IBLOCK_SECTION_ID"];
 			}
-			$this->arResult["LIST_SECTIONS"][$arSection["ID"]] = str_repeat(" . ", $arSection["DEPTH_LEVEL"]).$arSection["NAME"];
+
+			$this->arResult["LIST_SECTIONS"][$arSection["ID"]] = str_repeat(" . ",
+					$arSection["DEPTH_LEVEL"]).$arSection["NAME"];
+			$this->arResult["~LIST_SECTIONS"][$arSection["ID"]] = str_repeat(" . ",
+					$arSection["DEPTH_LEVEL"]).$arSection["~NAME"];
+
+			$sectionUrl = CHTTP::URN2URI(CHTTP::urlAddParams(str_replace(array("#list_id#", "#section_id#", "#group_id#"),
+				array($this->arResult["IBLOCK_ID"], 0, $params["SOCNET_GROUP_ID"]),
+				$params['LIST_URL']), array('list_section_id' => $arSection["ID"])));
+
+			$this->arResult["SECTIONS"][$arSection["ID"]] = array(
+				"ID" => $arSection["ID"],
+				"NAME" => $arSection["NAME"],
+				"LIST_URL" => str_replace(
+					array("#list_id#", "#section_id#", "#group_id#"),
+					array($arSection["IBLOCK_ID"], $arSection["ID"], $params["SOCNET_GROUP_ID"]),
+					$params['LIST_URL']
+				),
+				"PARENT_ID" => intval($arSection["IBLOCK_SECTION_ID"]),
+				"SECTION_URL" => $sectionUrl,
+				"NAME_HTML_LABLE" => '<a href="'.$sectionUrl .'">'.htmlspecialcharsbx($arSection["~NAME"]).'</a>',
+				"NAME_HTML" => '<a href="'.$sectionUrl .'">'.htmlspecialcharsbx(str_repeat(
+							" . ", ($arSection["DEPTH_LEVEL"])).$arSection["~NAME"]).'</a>',
+				"DEPTH_LEVEL" => intval($arSection["DEPTH_LEVEL"])
+			);
 		}
 
 		$this->arResult["IS_SOCNET_GROUP_CLOSED"] = false;
@@ -72,82 +130,82 @@ class ListExportExcelComponent extends CBitrixComponent
 		return $params;
 	}
 
-	/* Start Component */
 	public function executeComponent()
 	{
-		global $USER, $APPLICATION;
-
-		$this->setFrameMode(false);
-
-		if (!CModule::IncludeModule('lists'))
+		try
 		{
-			ShowError(Loc::getMessage("CC_BLL_MODULE_NOT_INSTALLED"));
+			$this->checkModules();
+			$this->checkPermissions();
 
-			return;
+			$this->setFrameMode(false);
+			global $APPLICATION;
+
+			$this->createDataExcel();
+
+			$APPLICATION->RestartBuffer();
+			header("Content-Type: application/vnd.ms-excel");
+			header("Content-Disposition: filename=list_".$this->arIBlock["ID"].".xls");
+			$this->IncludeComponentTemplate();
+			$r = $APPLICATION->EndBufferContentMan();
+			echo $r;
+			include($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_after.php");
+			die();
 		}
-
-		$listsPerm = CListPermissions::CheckAccess(
-			$USER,
-			$this->arParams["~IBLOCK_TYPE_ID"],
-			$this->arResult["IBLOCK_ID"],
-			$this->arParams["~SOCNET_GROUP_ID"]
-		);
-		if($listsPerm < 0)
+		catch (SystemException $exception)
 		{
-			switch($listsPerm)
+			ShowError($exception->getMessage());
+		}
+	}
+
+	protected function checkPermissions()
+	{
+		global $USER;
+		$this->listsPerm = CListPermissions::checkAccess(
+			$USER,
+			$this->arParams['IBLOCK_TYPE_ID'],
+			$this->arResult['IBLOCK_ID'],
+			$this->arParams['SOCNET_GROUP_ID']
+		);
+		if($this->listsPerm < 0)
+		{
+			switch($this->listsPerm)
 			{
 				case CListPermissions::WRONG_IBLOCK_TYPE:
-					ShowError(GetMessage("CC_BLL_WRONG_IBLOCK_TYPE"));
-					return;
+					throw new SystemException(Loc::getMessage('CC_BLL_WRONG_IBLOCK_TYPE'));
 				case CListPermissions::WRONG_IBLOCK:
-					ShowError(GetMessage("CC_BLL_WRONG_IBLOCK"));
-					return;
+					throw new SystemException(Loc::getMessage('CC_BLL_WRONG_IBLOCK'));
 				case CListPermissions::LISTS_FOR_SONET_GROUP_DISABLED:
-					ShowError(GetMessage("CC_BLL_LISTS_FOR_SONET_GROUP_DISABLED"));
-					return;
+					throw new SystemException(Loc::getMessage('CC_BLL_LISTS_FOR_SONET_GROUP_DISABLED'));
 				default:
-					ShowError(GetMessage("CC_BLL_UNKNOWN_ERROR"));
-					return;
+					throw new SystemException(Loc::getMessage('CC_BLL_UNKNOWN_ERROR'));
 			}
 		}
 		elseif(
-			$listsPerm < CListPermissions::CAN_READ
+			$this->listsPerm < CListPermissions::CAN_READ
 			&& !(
-				CIBlockRights::UserHasRightTo($this->arResult["IBLOCK_ID"], $this->arResult["IBLOCK_ID"], "element_read")
-				|| CIBlockSectionRights::UserHasRightTo($this->arResult["IBLOCK_ID"], $this->arResult["SECTION_ID"], "section_element_bind")
+				CIBlockRights::UserHasRightTo($this->arResult['IBLOCK_ID'],$this->arResult['IBLOCK_ID'],'element_read')
+				|| CIBlockSectionRights::UserHasRightTo(
+					$this->arResult["IBLOCK_ID"], $this->arResult["SECTION_ID"], "section_element_bind")
 			)
 		)
 		{
-			ShowError(GetMessage("CC_BLL_ACCESS_DENIED"));
-			return;
+			throw new SystemException(Loc::getMessage("CC_BLL_ACCESS_DENIED"));
 		}
 
 		if(!(
 			!$this->arResult["IS_SOCNET_GROUP_CLOSED"]
-			&& (
-				$listsPerm > CListPermissions::CAN_READ
-				|| CIBlockSectionRights::UserHasRightTo($this->arResult["IBLOCK_ID"], $this->arResult["SECTION_ID"], "element_read")
-				|| CIBlockSectionRights::UserHasRightTo($this->arResult["IBLOCK_ID"], $this->arResult["SECTION_ID"], "section_element_bind")
+			&& ($this->listsPerm > CListPermissions::CAN_READ
+				|| CIBlockSectionRights::UserHasRightTo($this->arResult["IBLOCK_ID"],
+					$this->arResult["SECTION_ID"], "element_read")
+				|| CIBlockSectionRights::UserHasRightTo($this->arResult["IBLOCK_ID"],
+					$this->arResult["SECTION_ID"], "section_element_bind")
 			)
 		))
 		{
-			ShowError(GetMessage("CC_BLL_ACCESS_DENIED"));
-			return;
+			throw new SystemException(Loc::getMessage("CC_BLL_ACCESS_DENIED"));
 		}
-
-		$this->createDataExcel();
-
-		$APPLICATION->RestartBuffer();
-		header("Content-Type: application/vnd.ms-excel");
-		header("Content-Disposition: filename=list_".$this->arIBlock["ID"].".xls");
-		$this->IncludeComponentTemplate();
-		$r = $APPLICATION->EndBufferContentMan();
-		echo $r;
-		include($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_after.php");
-		die();
 	}
 
-	/* Create an dataArray to excel */
 	protected function createDataExcel()
 	{
 		$obList = new CList($this->arIBlock["ID"]);
@@ -160,6 +218,9 @@ class ListExportExcelComponent extends CBitrixComponent
 		$arProperties = array();
 
 		$this->arResult["FIELDS"] = $arListFields = $obList->GetFields();
+		$filterable = array();
+		$dateFilter = array();
+		$customFilter = array();
 		foreach ($arListFields as $fieldId => $arField)
 		{
 			if (!count($gridColumns) || in_array($fieldId, $gridColumns))
@@ -176,329 +237,316 @@ class ListExportExcelComponent extends CBitrixComponent
 			if ($fieldId == "MODIFIED_BY")
 				$arSelect[] = "USER_NAME";
 
-			$this->arResult["ELEMENTS_HEADERS"][$fieldId] = array(
-				"name"  => htmlspecialcharsex($arField["NAME"]),
-				"default" => true,
-				"sort" => $arField["MULTIPLE"] == "Y" ? "" : $fieldId,
-			);
+			$this->arResult["ELEMENTS_HEADERS"][$fieldId] = $arField["NAME"];
+
+			$preparedField = Bitrix\Lists\Field::prepareFieldDataForFilter($arField);
+			$filterable[$preparedField["id"]] = $preparedField["filterable"];
+			if(!empty($preparedField["dateFilter"]))
+				$dateFilter[$preparedField["id"]] = true;
+			if(!empty($preparedField["customFilter"]))
+				$customFilter[$preparedField["id"]] = $preparedField["customFilter"];
 		}
 
 		if (!count($gridColumns) || in_array("IBLOCK_SECTION_ID", $gridColumns))
 		{
 			$arSelect[] = "IBLOCK_SECTION_ID";
-		}
-		$this->arResult["ELEMENTS_HEADERS"]["IBLOCK_SECTION_ID"] = array(
-			"name" => Loc::getMessage("CC_BLL_COLUMN_SECTION"),
-			"default" => true,
-			"sort" => false,
-		);
-
-		/* FILTER */
-		$sections = array();
-		foreach ($this->arResult["LIST_SECTIONS"] as $id => $name)
-			$sections[$id] = $name;
-
-		$this->arResult["FILTER"] = array(
-			array(
-				"id" => "list_section_id",
-				"type" => "list",
-				"items" => $sections,
-				"filtered" => $this->arResult["SECTION_ID"] !== false,
-				"filter_value" => $this->arResult["SECTION_ID"],
-				"value" => $this->arResult["SECTION_ID"],
-			),
-		);
-
-		$i = 1;
-		$arFilterable = array();
-		$arDateFilter = array();
-		foreach ($arListFields as $fieldId => $arField)
-		{
-			if (
-				$arField["TYPE"] == "ACTIVE_FROM"
-				|| $arField["TYPE"] == "ACTIVE_TO"
-			)
-			{
-				$this->arResult["FILTER"][$i] = array(
-					"id" => "DATE_".$fieldId,
-					"name" => htmlspecialcharsex($arField["NAME"]),
-					"type" => "date",
-				);
-				$arFilterable["DATE_".$fieldId] = "";
-				$arDateFilter["DATE_".$fieldId] = true;
-			}
-			elseif (
-				$arField["TYPE"] == "DATE_CREATE"
-				|| $arField["TYPE"] == "TIMESTAMP_X"
-			)
-			{
-				$this->arResult["FILTER"][$i] = array(
-					"id" => $fieldId,
-					"name" => htmlspecialcharsex($arField["NAME"]),
-					"type" => "date",
-				);
-				$arFilterable[$fieldId] = "";
-				$arDateFilter[$fieldId] = true;
-			}
-			elseif (is_array($arField["PROPERTY_USER_TYPE"]) && array_key_exists("GetPublicFilterHTML", $arField["PROPERTY_USER_TYPE"]))
-			{
-				$this->arResult["FILTER"][$i] = array(
-					"id" => $fieldId,
-					"name" => htmlspecialcharsex($arField["NAME"]),
-					"type" => "custom",
-					"enable_settings" => false,
-					"value" => call_user_func_array($arField["PROPERTY_USER_TYPE"]["GetPublicFilterHTML"], array(
-						$arField,
-						array(
-							"VALUE" => $fieldId,
-							"FORM_NAME" => "filter_".$this->arResult["GRID_ID"],
-							"GRID_ID" => $this->arResult["GRID_ID"],
-						),
-					)),
-				);
-				$arFilterable[$fieldId] = "";
-			}
-			elseif ($arField["TYPE"] == "SORT" || $arField["TYPE"] == "N")
-			{
-				$this->arResult["FILTER"][$i] = array(
-					"id" => $fieldId,
-					"name" => htmlspecialcharsex($arField["NAME"]),
-					"type" => "number",
-				);
-				$arFilterable[$fieldId] = "";
-			}
-			elseif ($arField["TYPE"] == "G")
-			{
-				$items = array();
-				$prop_secs = CIBlockSection::GetList(array("left_margin" => "asc"), array("IBLOCK_ID" => $arField["LINK_IBLOCK_ID"]));
-				while ($ar_sec = $prop_secs->Fetch())
-					$items[$ar_sec["ID"]] = str_repeat(". ", $ar_sec["DEPTH_LEVEL"] - 1).$ar_sec["NAME"];
-
-				$this->arResult["FILTER"][$i] = array(
-					"id" => $fieldId,
-					"name" => htmlspecialcharsex($arField["NAME"]),
-					"type" => "list",
-					"items" => $items,
-					"params" => array("size" => 5, "multiple" => "multiple"),
-					"valign" => "top",
-				);
-				$arFilterable[$fieldId] = "";
-			}
-			elseif ($arField["TYPE"] == "E")
-			{
-				//Should be handled in template
-				$this->arResult["FILTER"][$i] = array(
-					"id" => $fieldId,
-					"name" => htmlspecialcharsex($arField["NAME"]),
-					"type" => "E",
-					"value" => $arField,
-				);
-				$arFilterable[$fieldId] = "";
-			}
-			elseif ($arField["TYPE"] == "L")
-			{
-				$items = array();
-				$propEnums = CIBlockProperty::GetPropertyEnum($arField["ID"]);
-				while ($arEnum = $propEnums->Fetch())
-					$items[$arEnum["ID"]] = $arEnum["VALUE"];
-
-				$this->arResult["FILTER"][$i] = array(
-					"id" => $fieldId,
-					"name" => htmlspecialcharsex($arField["NAME"]),
-					"type" => "list",
-					"items" => $items,
-					"params" => array("size" => 5, "multiple" => "multiple"),
-					"valign" => "top",
-				);
-				$arFilterable[$fieldId] = "";
-			}
-			elseif (in_array($arField["TYPE"], array("S", "S:HTML", "NAME", "DETAIL_TEXT", "PREVIEW_TEXT")))
-			{
-				$this->arResult["FILTER"][$i] = array(
-					"id" => $fieldId,
-					"name" => htmlspecialcharsex($arField["NAME"]),
-				);
-				$arFilterable[$fieldId] = "?";
-			}
-			else
-			{
-				$this->arResult["FILTER"][$i] = array(
-					"id" => $fieldId,
-					"name" => htmlspecialcharsex($arField["NAME"]),
-				);
-				$arFilterable[$fieldId] = "";
-			}
-
-			$i++;
+			$this->arResult["ELEMENTS_HEADERS"]["IBLOCK_SECTION_ID"] = Loc::getMessage("CC_BLL_COLUMN_SECTION");
 		}
 
 		$arFilter = array();
-		$gridFilter = $gridOptions->GetFilter($this->arResult["FILTER"]);
-		foreach ($gridFilter as $key => $value)
+		$filterOption = new \Bitrix\Main\UI\Filter\Options($this->arResult["FILTER_ID"]);
+		$filterData = $filterOption->getFilter();
+		global $DB;
+		foreach($filterData as $key => $value)
 		{
-			if (substr($key, -5) == "_from")
+			if (is_array($value))
 			{
-				$op = ">=";
-				$newKey = substr($key, 0, -5);
+				if (empty($value))
+					continue;
 			}
-			elseif (substr($key, -3) == "_to")
+			elseif(strlen($value) <= 0)
+				continue;
+
+			if(substr($key, -5) == "_from")
 			{
-				$op = "<=";
-				$newKey = substr($key, 0, -3);
-				if (array_key_exists($newKey, $arDateFilter))
+				$new_key = substr($key, 0, -5);
+				$op = (!empty($filterData[$new_key."_numsel"]) && $filterData[$new_key."_numsel"] == "more") ? ">" : ">=";
+			}
+			elseif(substr($key, -3) == "_to")
+			{
+				$new_key = substr($key, 0, -3);
+				$op = (!empty($filterData[$new_key."_numsel"]) && $filterData[$new_key."_numsel"] == "less") ? "<" : "<=";
+				if(array_key_exists($new_key, $dateFilter))
 				{
-					if (!preg_match("/\\d\\d:\\d\\d:\\d\\d\$/", $value))
-						$value .= " 23:59:59";
+					$dateFormat = $DB->dateFormatToPHP(Csite::getDateFormat());
+					$dateParse = date_parse_from_format($dateFormat, $value);
+					if(!strlen($dateParse["hour"]) && !strlen($dateParse["minute"]) && !strlen($dateParse["second"]))
+					{
+						$timeFormat = $DB->dateFormatToPHP(CSite::getTimeFormat());
+						$value .= " ".date($timeFormat, mktime(23, 59, 59, 0, 0, 0));
+					}
 				}
+			}
+			elseif($key == 'list_section_id')
+			{
+				$this->arResult["ANY_SECTION"] = false;
+				$this->arResult["SECTION_ID"] = $value;
 			}
 			else
 			{
 				$op = "";
-				$newKey = $key;
+				$new_key = $key;
 			}
-			if (array_key_exists($newKey, $arFilterable))
+
+			if($key == "CREATED_BY" || $key == "MODIFIED_BY")
 			{
-				if ($op == "")
-					$op = $arFilterable[$newKey];
-				$arFilter[$op.$newKey] = $value;
+				if(!intval($value))
+				{
+					$userId = array();
+					$userQuery = CUser::GetList(
+						$by = "ID",
+						$order = "ASC",
+						array("NAME" => $value),
+						array("FIELDS" => array("ID"))
+					);
+					while($user = $userQuery->fetch())
+						$userId[] = $user["ID"];
+					if(!empty($userId))
+						$value = $userId;
+				}
 			}
+
+			if(array_key_exists($new_key, $filterable))
+			{
+				if($op == "")
+					$op = $filterable[$new_key];
+				$arFilter[$op.$new_key] = $value;
+			}
+
+			if($key == "FIND")
+			{
+				$op = "?";
+				$arFilter[$op."SEARCHABLE_CONTENT"] = $value;
+			}
+		}
+		foreach($customFilter as $fieldId => $callback)
+		{
+			$filtered = false;
+			call_user_func_array($callback, array(
+				$this->arResult["FIELDS"][$fieldId],
+				array(
+					"VALUE" => $fieldId,
+					"FILTER_ID" => $this->arResult["FILTER_ID"],
+				),
+				&$arFilter,
+				&$filtered,
+			));
 		}
 
 		$arFilter["IBLOCK_ID"] = $this->arIBlock["ID"];
-		if (!$this->arResult["ANY_SECTION"])
-			$arFilter["SECTION_ID"] = $this->arResult["SECTION_ID"];
-
-		$rsElements = CIBlockElement::GetList(
-			$gridSort["sort"], $arFilter, false, false, $arSelect
-		);
+		if($this->arParams["CAN_EDIT"])
+			$arFilter["SHOW_NEW"] = "Y";
+		$arFilter["CHECK_PERMISSIONS"] = $this->listsPerm >= CListPermissions::CAN_READ ? "N" : "Y";
+		if(!$this->arResult["ANY_SECTION"])
+		{
+			$listChildSection = array();
+			CLists::getChildSection($this->arResult["SECTION_ID"], $this->arResult["SECTIONS"], $listChildSection);
+			$arFilter["SECTION_ID"] = $listChildSection;
+		}
 
 		$this->arResult["EXCEL_COLUMN_NAME"] = array();
 		$this->arResult["EXCEL_CELL_VALUE"] = array();
 		$count = 0;
-		while ($obElement = $rsElements->GetNextElement())
+		$comments = in_array("COMMENTS", $gridColumns) && CModule::includeModule("forum");
+		$listValues = array();
+
+		$rsElements = CIBlockElement::GetList(
+			$gridSort["sort"], $arFilter, false, false, $arSelect);
+		$regexp = '/<a.*?href="(.*?)".*?>(.*?)<\/a>/';
+		while($obElement = $rsElements->GetNextElement())
 		{
 			$data = $obElement->GetFields();
-			$propertyArray = $obElement->GetProperties();
-			if (!empty($arProperties))
-			{
-				foreach ($propertyArray as $arProp)
-				{
-					$fieldId = "PROPERTY_".$arProp["ID"];
-					if (in_array($fieldId, $arProperties))
-					{
-						$arField = $this->arResult["FIELDS"][$fieldId];
+			if(!is_array($data))
+				continue;
 
-						if (is_array($arField["PROPERTY_USER_TYPE"]) && is_array($arField["PROPERTY_USER_TYPE"]["GetPublicViewHTML"]))
-						{
-							if(is_array($arProp["~VALUE"]))
-							{
-								foreach($arProp["~VALUE"] as $propValue)
-								{
-									$data[$fieldId][] = call_user_func_array($arField["PROPERTY_USER_TYPE"]["GetPublicViewHTML"], array(
-										$arField,
-										array("VALUE" => $propValue),
-										array(),
-									));
-								}
-							}
-							else
-							{
-								$data[$fieldId] = call_user_func_array($arField["PROPERTY_USER_TYPE"]["GetPublicViewHTML"], array(
-									$arField,
-									array("VALUE" => $arProp["~VALUE"]),
-									array(),
-								));
-							}
-						}
-						elseif ($arField["PROPERTY_TYPE"] == "L")
-						{
-							$data[$fieldId] = htmlspecialcharsex($arProp["VALUE_ENUM"]);
-						}
-						elseif ($arField["PROPERTY_TYPE"] == "F")
-						{
-							$files = is_array($arProp["VALUE"]) ? $arProp["VALUE"] : array($arProp["VALUE"]);
-							foreach ($files as $file)
-							{
-								$value = CFile::MakeFileArray($file);
-								$data[$fieldId] .= $value["name"]."\r\n";
-							}
-						}
-						else
-						{
-							$data[$fieldId] = htmlspecialcharsex($arProp["VALUE"]);
-						}
-					}
-				}
-				if (!empty($data["IBLOCK_SECTION_ID"]))
+			if(!is_array($listValues[$data["ID"]]))
+				$listValues[$data["ID"]] = array();
+			foreach($data as $fieldId => $fieldValue)
+				$listValues[$data["ID"]][$fieldId] = $fieldValue;
+
+			if(!empty($arProperties))
+			{
+				$propertyValuesObject = \CIblockElement::getPropertyValues(
+					$data["IBLOCK_ID"], array("ID" => $data["ID"], "SHOW_NEW" => "Y"));
+				while($propertyValues = $propertyValuesObject->fetch())
 				{
-					if (array_key_exists($data["IBLOCK_SECTION_ID"], $this->arResult["SECTIONS"]))
+					foreach($propertyValues as $propertyId => $propertyValue)
 					{
-						$data["IBLOCK_SECTION_ID"] = $this->arResult["SECTIONS"][$data["IBLOCK_SECTION_ID"]]["NAME"];
+						if($propertyId == "IBLOCK_ELEMENT_ID")
+							continue;
+						$listValues[$data["ID"]]['PROPERTY_'.$propertyId] = $propertyValue;
 					}
 				}
-				if(in_array("BIZPROC", $gridColumns))
-					$data["BIZPROC"] = $this->getArrayBizproc($data);
 			}
 
-			if (isset($data["CREATED_BY"]))
-				$data["CREATED_BY"] = "[".$data["CREATED_BY"]."] ".$data["CREATED_USER_NAME"];
+			foreach($this->arResult["FIELDS"] as $fieldId => $field)
+			{
+				switch($field["TYPE"])
+				{
+					case "S:DiskFile":
+						$field["CONTROL_SETTINGS"]["MODE"] = "EXCEL_EXPORT";
+						break;
+					case "S:map_yandex":
+						$field["CONTROL_SETTINGS"]["MODE"] = "CSV_EXPORT";
+						break;
+					case "S:ECrm":
+						$field["CONTROL_SETTINGS"]["MODE"] = "EXCEL_EXPORT";
+						break;
+				}
+				$valueKey = (substr($fieldId, 0, 9) == "PROPERTY_") ? $fieldId : "~".$fieldId;
+				$field["VALUE"] = $listValues[$data["ID"]][$valueKey];
+				$data[$fieldId] = \Bitrix\Lists\Field::renderField($field);
+			}
 
-			if (isset($data["MODIFIED_BY"]))
-				$data["MODIFIED_BY"] = "[".$data["MODIFIED_BY"]."] ".$data["USER_NAME"];
-			if (isset($data["ACTIVE_FROM"]))
-				$data['ACTIVE_FROM'] = FormatDateFromDB($data['ACTIVE_FROM']);
-			if (isset($data["ACTIVE_TO"]))
-				$data['ACTIVE_TO'] = FormatDateFromDB($data['ACTIVE_TO']);
-			if (isset($data["DATE_CREATE"]))
-				$data['DATE_CREATE'] = FormatDateFromDB($data['DATE_CREATE']);
-			if (isset($data["TIMESTAMP_X"]))
-				$data['TIMESTAMP_X'] = FormatDateFromDB($data['TIMESTAMP_X']);
+			if(!empty($data["IBLOCK_SECTION_ID"]) &&
+				array_key_exists($data["IBLOCK_SECTION_ID"], $this->arResult["SECTIONS"]))
+			{
+				$iblockSectionId = $data["IBLOCK_SECTION_ID"];
+				$sectionName = array();
+				$data["IBLOCK_SECTION_ID"] = $this->arResult["SECTIONS"][0]["NAME_HTML"];
+				$parentId = $this->arResult["SECTIONS"][$iblockSectionId]["PARENT_ID"];
+				if($parentId)
+				{
+					for($count = 1; $count < $this->arResult["SECTIONS"][$iblockSectionId]["DEPTH_LEVEL"]; $count++)
+					{
+						foreach($this->arResult["SECTIONS"] as $sectionId => $sectionData)
+						{
+							if($sectionId == $parentId)
+							{
+								$sectionName[] = $sectionData["NAME_HTML"];
+								if($sectionData["PARENT_ID"])
+									$parentId = $sectionData["PARENT_ID"];
+							}
+						}
+					}
+					krsort($sectionName);
+					foreach($sectionName as $name)
+						$data["IBLOCK_SECTION_ID"] .= "<br>".$name;
+				}
+				$data["IBLOCK_SECTION_ID"] .= "<br>".$this->arResult["SECTIONS"][$iblockSectionId]["NAME_HTML"];
+			}
 
+			if(in_array("BIZPROC", $gridColumns))
+				$data["BIZPROC"] = $this->getArrayBizproc($data);
+
+			if($comments)
+				$countComments = $this->getCommentsProcess($data["ID"]);
+
+			if (empty($gridColumns))
+				$gridColumns = array_keys($arListFields);
 			foreach ($gridColumns as $position => $id)
 			{
-				$this->arResult["EXCEL_CELL_VALUE"][$count][$position] = is_array($data[$id]) ? implode('/', $data[$id]) : $data[$id];
-				$this->arResult["EXCEL_COLUMN_NAME"][$position] = $this->arResult["ELEMENTS_HEADERS"][$id]["name"];
+				if($id == "COMMENTS")
+				{
+					if($comments)
+						$data[$id] = $countComments;
+					else
+						continue;
+				}
+				if(is_array($data[$id]))
+					continue;
+				if(preg_match_all($regexp, $data[$id], $matches, PREG_SET_ORDER))
+				{
+					foreach($matches as $match)
+					{
+						$fullLink = CHTTP::URN2URI($match[1]);
+						$data[$id] = str_replace($match[1], $fullLink, $data[$id]);
+					}
+				}
+				$this->arResult["EXCEL_CELL_VALUE"][$count][$position] = is_array($data[$id]) ?
+					implode('/', $data[$id]) : $data[$id];
+				$this->arResult["EXCEL_COLUMN_NAME"][$position] = $this->arResult["ELEMENTS_HEADERS"][$id];
 			}
 			$count++;
 		}
 	}
 
-	/* Data business process */
 	protected function getArrayBizproc($data = array())
 	{
+		if(!$this->arResult["BIZPROC"])
+			return '';
+
 		$currentUserId = $GLOBALS["USER"]->GetID();
-
 		$html = "";
-
-		if ($this->arResult["IBLOCK"]["BIZPROC"] == "Y" && CModule::IncludeModule('bizproc'))
+		if ($this->arResult["IBLOCK"]["BIZPROC"] == "Y")
 		{
-			$this->arResult["ELEMENTS_HEADERS"]["BIZPROC"] = array(
-				"name" => Loc::getMessage("CC_BLL_COLUMN_BIZPROC"),
-				"default" => true,
-				"sort" => false,
-			);
+			$this->arResult["ELEMENTS_HEADERS"]["BIZPROC"] = Loc::getMessage("CC_BLL_COLUMN_BIZPROC");
 
 			$arDocumentStates = CBPDocument::GetDocumentStates(
-				BizProcDocument::generateDocumentComplexType($this->arParams["IBLOCK_TYPE_ID"], $this->arResult["IBLOCK_ID"]),
-				BizProcDocument::getDocumentComplexId($this->arParams["IBLOCK_TYPE_ID"], $data["ID"])
+				BizprocDocument::generateDocumentComplexType(
+					$this->arParams["IBLOCK_TYPE_ID"], $this->arResult["IBLOCK_ID"]),
+				BizprocDocument::getDocumentComplexId($this->arParams["IBLOCK_TYPE_ID"], $data["ID"])
 			);
 
 			$userGroups = $GLOBALS["USER"]->GetUserGroupArray();
 			if ($data["~CREATED_BY"] == $currentUserId)
 				$userGroups[] = "Author";
 
+			$arUserGroupsForBP = CUser::GetUserGroup($currentUserId);
+
 			$ii = 0;
 			foreach ($arDocumentStates as $workflowId => $workflowState)
 			{
+				$canViewWorkflow = BizprocDocument::canUserOperateDocument(
+					CBPCanUserOperateOperation::ViewWorkflow,
+					$currentUserId,
+					$data["ID"],
+					array(
+						"IBlockPermission" => $this->listsPerm,
+						"AllUserGroups" => $arUserGroupsForBP,
+						"DocumentStates" => $arDocumentStates,
+						"WorkflowId" => $workflowId,
+					)
+				);
+				if (!$canViewWorkflow)
+					continue;
 				if (strlen($workflowState["TEMPLATE_NAME"]) > 0)
 					$html .= "".$workflowState["TEMPLATE_NAME"].":\r\n";
 				else
 					$html .= "".(++$ii).":\r\n";
 
-				$html .= "".(strlen($workflowState["STATE_TITLE"]) > 0 ? $workflowState["STATE_TITLE"] : $workflowState["STATE_NAME"])."\r\n";
+				$html .= "".(strlen($workflowState["STATE_TITLE"]) > 0 ?
+						$workflowState["STATE_TITLE"] : $workflowState["STATE_NAME"])."\r\n";
 			}
 		}
 
 		return $html;
+	}
+
+	protected function getCommentsProcess($elementId)
+	{
+		$countComments = 0;
+
+		$this->arResult["ELEMENTS_HEADERS"]["COMMENTS"] = Loc::getMessage("CC_BLL_COMMENTS");
+
+		if(!$this->arResult["BIZPROC"] || !$elementId)
+			return $countComments;
+
+		$documentStates = CBPDocument::GetDocumentStates(
+			BizprocDocument::generateDocumentComplexType(
+				$this->arParams["IBLOCK_TYPE_ID"], $this->arResult["IBLOCK_ID"]),
+			BizprocDocument::getDocumentComplexId($this->arParams["IBLOCK_TYPE_ID"], $elementId)
+		);
+
+		if(!empty($documentStates))
+			$state = current($documentStates);
+		else
+			return $countComments;
+
+		$query = CForumTopic::getList(array(), array("@XML_ID" => 'WF_'.$state["ID"]));
+		while ($row = $query->fetch())
+			$countComments = $row["POSTS"];
+
+		return $countComments;
 	}
 }

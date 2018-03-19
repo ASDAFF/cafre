@@ -55,7 +55,7 @@ class CAllOption
 
 	public static function GetOptionInt($module_id, $name, $def="", $site=false)
 	{
-		return COption::GetOptionString($module_id, $name, $def, $site);
+		return intval(COption::GetOptionString($module_id, $name, $def, $site));
 	}
 
 	public static function SetOptionInt($module_id, $name, $value="", $desc="", $site="")
@@ -68,7 +68,7 @@ global $MAIN_PAGE_OPTIONS;
 $MAIN_PAGE_OPTIONS = array();
 class CAllPageOption
 {
-	function GetOptionString($module_id, $name, $def="", $site=false)
+	public static function GetOptionString($module_id, $name, $def="", $site=false)
 	{
 		global $MAIN_PAGE_OPTIONS;
 
@@ -82,7 +82,7 @@ class CAllPageOption
 		return $def;
 	}
 
-	function SetOptionString($module_id, $name, $value="", $desc=false, $site="")
+	public static function SetOptionString($module_id, $name, $value="", $desc=false, $site="")
 	{
 		global $MAIN_PAGE_OPTIONS;
 
@@ -95,7 +95,7 @@ class CAllPageOption
 		return true;
 	}
 
-	function RemoveOption($module_id, $name="", $site=false)
+	public static function RemoveOption($module_id, $name="", $site=false)
 	{
 		global $MAIN_PAGE_OPTIONS;
 
@@ -118,12 +118,12 @@ class CAllPageOption
 		}
 	}
 
-	function GetOptionInt($module_id, $name, $def="", $site=false)
+	public static function GetOptionInt($module_id, $name, $def="", $site=false)
 	{
 		return CPageOption::GetOptionString($module_id, $name, $def, $site);
 	}
 
-	function SetOptionInt($module_id, $name, $value="", $desc="", $site="")
+	public static function SetOptionInt($module_id, $name, $value="", $desc="", $site="")
 	{
 		return CPageOption::SetOptionString($module_id, $name, IntVal($value), $desc, $site);
 	}

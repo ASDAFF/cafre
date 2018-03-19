@@ -19,4 +19,8 @@ $MESS["PERFMON_COMP_CACHE_COUNT"] = "Cache operations";
 $MESS["PERFMON_COMP_CACHE_COUNT_R"] = "Cache reads";
 $MESS["PERFMON_COMP_CACHE_COUNT_W"] = "Cache writes";
 $MESS["PERFMON_COMP_CACHE_COUNT_C"] = "Cache resets";
+$MESS["PERFMON_COMP_COUNT"] = "Count";
+$MESS["PERFMON_COMP_GROUP"] = "Group";
+$MESS["PERFMON_COMP_GROUP_ON"] = "Grouped";
+$MESS["PERFMON_COMP_GROUP_OFF"] = "Not grouped";
 ?>

@@ -29,6 +29,9 @@ class OrderCompatibility
 	const ORDER_COMPAT_ACTION_ADD = 'ADD';
 	const ORDER_COMPAT_ACTION_UPDATE = 'UPDATE';
 	const ORDER_COMPAT_ACTION_SAVE = 'SAVE';
+
+	protected $runtimeFields = array();
+	protected $propertyRuntimeList = array();
 	/**
 	 * @param array $fields
 	 */
@@ -106,20 +109,6 @@ class OrderCompatibility
 			$order->setPersonTypeId($fields['PERSON_TYPE_ID']);
 		}
 
-		if (!empty($fields['ORDER_PROP']) && is_array($fields['ORDER_PROP']))
-		{
-			$fields['PROPERTIES'] = $fields['ORDER_PROP'];
-		}
-
-		$propCollection = $order->getPropertyCollection();
-		/** @var Sale\Result $r */
-		$propCollection->setValuesFromPost($fields, $_FILES);
-
-		if (!isset($fields['DATE_STATUS']))
-		{
-			$fields['DATE_STATUS'] = new Main\Type\DateTime();
-		}
-
 		$orderFields = static::replaceFields($fields, static::getOrderReplaceFields());
 
 		$orderFields = $orderCompatibility->parseRawFields(static::ENTITY_ORDER, $orderFields);
@@ -164,6 +153,16 @@ class OrderCompatibility
 
 		unset($orderFields['TAX_PRICE']);
 
+		if (array_key_exists('STATUS_ID', $orderFields) && $order->getId() > 0)
+		{
+			$order->setField('STATUS_ID', $orderFields['STATUS_ID']);
+			unset($orderFields['STATUS_ID']);
+		}
+
+		if (isset($orderFields['USE_VAT']) && $orderFields['USE_VAT'] === true)
+		{
+			$orderFields['USE_VAT'] = 'Y';
+		}
 
 		$order->setFieldsNoDemand($orderFields);
 
@@ -205,21 +204,65 @@ class OrderCompatibility
 				if (!$r->isSuccess())
 				{
 					$result->addErrors($r->getErrors());
+					return $result;
 				}
+
+				if (array_key_exists("REASON_CANCELED", $fields))
+				{
+					/** @var Sale\Result $r */
+					$r = $order->setField('REASON_CANCELED', $fields['REASON_CANCELED']);
+					if (!$r->isSuccess())
+					{
+						$result->addErrors($r->getErrors());
+						return $result;
+					}
+				}
+
 			}
 		}
 
 
 		if (isset($fields['MARKED']))
 		{
-			if ($order->getId() > 0 && $order->getField('MARKED') != $fields['MARKED'])
+			if ($order->getId() > 0)
 			{
-				/** @var Sale\Result $r */
-				$r = $order->setField('MARKED', $fields['MARKED']);
-				if (!$r->isSuccess())
+				if ($fields['MARKED'] == 'Y')
 				{
-					$result->addErrors($r->getErrors());
+					$reasonMarked = '';
+					if (!empty($fields['REASON_MARKED']))
+					{
+						$reasonMarked = trim($fields['REASON_MARKED']);
+					}
+
+					$r = new Sale\Result();
+					$r->addError(new Sale\ResultWarning($reasonMarked, 'SALE_ORDER_MARKER_ERROR'));
+					Sale\EntityMarker::addMarker($order, $order, $r);
 				}
+
+				if ($order->getField('MARKED') != $fields['MARKED'])
+				{
+					/** @var Sale\Result $r */
+					$r = $order->setField('MARKED', $fields['MARKED']);
+					if (!$r->isSuccess())
+					{
+						$result->addErrors($r->getErrors());
+					}
+				}
+			}
+		}
+
+		if ($order->getId() > 0 && !empty($fields['ACCOUNT_NUMBER']) && !empty($fields['SITE_ID']))
+		{
+			$filter = array(
+				'filter' => array(
+					'ACCOUNT_NUMBER' => $fields['ACCOUNT_NUMBER'],
+					'!ID' => $order->getId()
+				),
+				'select' => array('ID')
+			);
+			if (($res = OrderTable::getList($filter)) && ($res->fetch()))
+			{
+				$result->addError(new Sale\ResultError(Main\Localization\Loc::getMessage('SALE_COMPATIBLE_ORDER_ACCOUNT_NUMBER_ALREADY_EXISTS'), 'SALE_COMPATIBLE_ORDER_ACCOUNT_NUMBER_ALREADY_EXISTS'));
 			}
 		}
 
@@ -260,14 +303,14 @@ class OrderCompatibility
 
 		if (strval(trim($deliveryCode)) != '')
 		{
-			$deliveryId = \Bitrix\Sale\Delivery\Services\Table::getIdByCode($deliveryCode);
+			$deliveryId = \CSaleDelivery::getIdByCode($deliveryCode);
 		}
 
 		if ($order->getId() > 0)
 		{
 			//todo: check $deliveryId
 
-			if (count($shipmentCollection) == 2 && $shipmentCollection->isExistsSystemShipment() && $deliveryId > 0)
+			if (count($shipmentCollection) == 2 && $shipmentCollection->isExistsSystemShipment())
 			{
 				/** @var Sale\Shipment $shipment */
 				foreach($shipmentCollection as $shipment)
@@ -275,68 +318,52 @@ class OrderCompatibility
 					if ($shipment->isSystem())
 						continue;
 
-					unset($fields['DELIVERY_ID']);
-
-					if ($deliveryId != $shipment->getDeliveryId())
+					if ($deliveryId > 0 && $deliveryId != $shipment->getDeliveryId())
 					{
 						/** @var Sale\Result $r */
 						$r = $shipment->setField('DELIVERY_ID', $deliveryId);
-						if (!$r->isSuccess())
+						if ($r->isSuccess())
+						{
+							/** @var Services\Base $deliveryService */
+							$deliveryService = Sale\Delivery\Services\Manager::getObjectById($deliveryId);
+							if ($deliveryService->isProfile())
+								$fields['DELIVERY_NAME'] = $deliveryService->getNameWithParent();
+							else
+								$fields['DELIVERY_NAME'] = $deliveryService->getName();
+						}
+						else
 						{
 							$result->addErrors($r->getErrors());
 						}
 					}
-
-					if (!empty($fields['PRICE_DELIVERY']) && (float)$fields['PRICE_DELIVERY'] != $shipment->getField('PRICE_DELIVERY'))
+					elseif (intval($deliveryId) == 0 && array_key_exists('DELIVERY_ID', $fields) || (intval($deliveryId) !== intval($deliveryCode)))
 					{
-						$fields['BASE_PRICE_DELIVERY'] = (float)$fields['PRICE_DELIVERY'] + (!empty($fields['PRICE_DELIVERY'])? floatval($fields['PRICE_DELIVERY']) : 0);
+						unset($fields['DELIVERY_ID']);
+					}
+
+					if (array_key_exists('PRICE_DELIVERY', $fields) && (float)$fields['PRICE_DELIVERY'] != $shipment->getField('PRICE_DELIVERY'))
+					{
+						$fields['BASE_PRICE_DELIVERY'] = (float)$fields['PRICE_DELIVERY'];
+						$fields['CUSTOM_PRICE_DELIVERY'] = "Y";
+
 						unset($fields['PRICE_DELIVERY']);
 					}
 
-					$shipmentFields = static::convertDateFields($fields, static::getShipmentDateFields());
+					$shipmentFields = static::convertDateFields($fields, static::getEntityDateFields($shipment));
 
 					unset($shipmentFields['ALLOW_DELIVERY']);
 					unset($shipmentFields['DEDUCTED']);
+
+					if ($fields['CURRENCY'] != $shipmentFields['CURRENCY'])
+					{
+						$shipmentFields['CURRENCY'] = $fields['CURRENCY'];
+					}
 
 					/** @var Sale\Result $r */
 					$r = $shipment->setFields(static::clearFields($shipmentFields, static::getShipmentAvailableFields()));
 					if ($r->isSuccess())
 					{
-						$orderFields = array();
-
-						foreach (static::getShipmentFieldsToConvert() as $checkField)
-						{
-							$checkOrderField = $order->getField($checkField);
-
-							$isDate = false;
-
-							if (array_key_exists($checkField, static::getShipmentDateFields()))
-							{
-								$isDate = true;
-								$checkOrderField = static::convertDateFieldToOldFormat($order->getField($checkField));
-							}
-
-							if (!empty($fields[$checkField]) && $checkOrderField != trim($fields[$checkField]))
-							{
-								$setValue = $shipment->getField($checkField);
-								if ($isDate)
-								{
-									$setValue = static::convertDateField($checkOrderField, $shipment->getField($checkField), static::getShipmentDateFields());
-								}
-
-								$orderFields[$checkField] = $setValue;
-							}
-						}
-
-						if (!empty($orderFields))
-						{
-							/** @var Sale\Result $r */
-							$r = $order->setFieldsNoDemand($orderFields);
-							if (!$r->isSuccess())
-							{
-								$result->addErrors($r->getErrors());
-							}
-						}
+						static::fillOrderFieldsFromEntity($order, $shipment, $fields, static::getShipmentFieldsToConvert());
 					}
 					else
 					{
@@ -347,6 +374,8 @@ class OrderCompatibility
 					{
 						DiscountCompatibility::setShipment($order->getId(), $shipment->getId());
 					}
+
+					unset($fields['DELIVERY_ID']);
 				}
 			}
 
@@ -382,24 +411,16 @@ class OrderCompatibility
 					{
 						DiscountCompatibility::setShipment($order->getId(), $shipment->getId());
 					}
+
+					static::fillOrderFieldsFromEntity($order, $shipment, $fields, static::getShipmentFieldsToConvert());
 				}
 			}
 		}
 
-		$basketOrderableItems = null;
-
 		if ($basket = $order->getBasket())
 		{
-	//		/** @var Sale\Basket $basket */
-	//		if (!$basket = $order->getBasket())
-	//		{
-	//			throw new Main\ObjectNotFoundException('Entity "Basket" not found');
-	//		}
-
-			$basketOrderableItems = $basket->getOrderableItems();
-
 			/** @var Sale\Result $r */
-			$r = BasketCompatibility::syncShipmentCollectionAndBasket($shipmentCollection, $basketOrderableItems);
+			$r = BasketCompatibility::syncShipmentCollectionAndBasket($shipmentCollection, $basket);
 			if (!$r->isSuccess())
 			{
 				$result->addErrors($r->getErrors());
@@ -415,10 +436,8 @@ class OrderCompatibility
 			$result->addErrors($r->getErrors());
 			return $result;
 		}
-
-		if ($basketOrderableItems)
+		if ($basket)
 		{
-
 			/** @var Sale\Shipment $shipment */
 			foreach ($shipmentCollection as $shipment)
 			{
@@ -434,7 +453,7 @@ class OrderCompatibility
 				if (!empty($fields['BARCODE_LIST']) && is_array($fields['BARCODE_LIST']))
 				{
 					/** @var Sale\Result $r */
-					$r = static::fillShipmentItemCollectionFromRequest($shipmentItemCollection, $fields['BARCODE_LIST'], $basketOrderableItems);
+					$r = static::fillShipmentItemCollectionFromRequest($shipmentItemCollection, $fields['BARCODE_LIST'], $basket);
 					if (!$r->isSuccess())
 					{
 						$result->addErrors($r->getErrors());
@@ -444,8 +463,44 @@ class OrderCompatibility
 
 			}
 		}
-
 		return $result;
+	}
+
+	/**
+	 * @param Sale\Order $order
+	 * @param Sale\Internals\CollectableEntity $entity
+	 * @param array $requestFields
+	 * @param array $allowFields
+	 */
+	private static function fillOrderFieldsFromEntity(Sale\Order $order, Sale\Internals\CollectableEntity $entity, array $requestFields, array $allowFields)
+	{
+		$dateFields = static::getEntityDateFields($entity);
+		foreach ($allowFields as $checkField)
+		{
+			$checkOrderField = $order->getField($checkField);
+
+			$isDate = false;
+
+			if (array_key_exists($checkField, $dateFields))
+			{
+				$isDate = true;
+				$checkOrderField = static::convertDateFieldToOldFormat($order->getField($checkField));
+			}
+
+			if (!empty($requestFields[$checkField]) && $checkOrderField != trim($requestFields[$checkField]))
+			{
+				$setValue = $entity->getField($checkField);
+				if ($isDate)
+				{
+					$setValue = static::convertDateField($checkField, $requestFields[$checkField], static::getEntityDateFields($entity));
+				}
+
+				if (in_array($checkField, static::getAvailableFields()))
+				{
+					$order->setFieldNoDemand($checkField, $setValue);
+				}
+			}
+		}
 	}
 
 	/**
@@ -460,12 +515,16 @@ class OrderCompatibility
 
 		$shipment = null;
 
-		if (intval($deliveryId) > 0 && $service = Sale\Delivery\Services\Manager::getService($deliveryId))
+		if (intval($deliveryId) > 0 && $service = Sale\Delivery\Services\Manager::getObjectById($deliveryId))
 		{
 
 			$shipment = $shipmentCollection->createItem($service);
 
-			$shipment->setField('DELIVERY_NAME', $service->getName());
+			if ($service->isProfile())
+				$serviceName = $service->getNameWithParent();
+			else
+				$serviceName = $service->getName();
+			$shipment->setField('DELIVERY_NAME', $serviceName);
 
 
 			if (isset($requestFields['DELIVERY_PRICE']) && floatval($requestFields['DELIVERY_PRICE']) > 0)
@@ -485,6 +544,13 @@ class OrderCompatibility
 
 				if (isset($requestFields['PRICE_DELIVERY']) && $requestFields['PRICE_DELIVERY'] < $requestFields['DELIVERY_PRICE'])
 					$shipment->setFieldNoDemand('PRICE_DELIVERY', $requestFields['PRICE_DELIVERY']);
+			}
+			elseif (array_key_exists("PRICE_DELIVERY", $requestFields) && floatval($requestFields['PRICE_DELIVERY']) >= 0)
+			{
+				$shipment->setFieldNoDemand('PRICE_DELIVERY', floatval($requestFields['PRICE_DELIVERY']));
+				$shipment->setFieldNoDemand('BASE_PRICE_DELIVERY', floatval($requestFields['PRICE_DELIVERY']));
+				$shipment->setFieldNoDemand('CURRENCY', $requestFields['CURRENCY']);
+				$shipment->setFieldNoDemand('CUSTOM_PRICE_DELIVERY', "Y");
 			}
 		}
 
@@ -594,9 +660,11 @@ class OrderCompatibility
 	}
 	/**
 	 * @internal
-	 *
 	 * @param array $fields
+	 *
 	 * @return Sale\Result
+	 * @throws Main\ArgumentOutOfRangeException
+	 * @throws Main\NotSupportedException
 	 * @throws Main\ObjectNotFoundException
 	 */
 	public function fillPaymentCollectionFromRequest(array $fields)
@@ -652,6 +720,8 @@ class OrderCompatibility
 		$paymentOuter = null;
 		$countPayments = count($paymentCollection);
 
+		$orderPaid = false;
+
 		if ((($countPayments == 0 && $order->getId() == 0)
 			|| ($countPayments == 2 && $paymentCollection->isExistsInnerPayment())
 			|| ($countPayments == 1 && !$paymentCollection->isExistsInnerPayment())))
@@ -659,27 +729,58 @@ class OrderCompatibility
 
 			$needSum = $order->getPrice() - $order->getSumPaid();
 
-			if ($countPayments == 0)
+			if ($countPayments <= 1)
 			{
-				if (!isset($fields["PAY_SYSTEM_ID"]))
-					$fields["PAY_SYSTEM_ID"] = static::getDefaultPaySystemId($order->getPersonTypeId());
 
-				/** @var Sale\PaySystemService $paySystem */
-				$paySystem = \Bitrix\Sale\PaySystemService::load($fields["PAY_SYSTEM_ID"]);
-
-				if ($paySystem !== null)
+				if ($order->getId() == 0)
 				{
-					/** @var Sale\Payment $paymentOuter */
-					$paymentOuter = $paymentCollection->createItem($paySystem);
-					$paymentOuter->setField('SUM', $needSum);
-					$paymentOuter->setField('PAY_SYSTEM_NAME', $paySystem->getAttribute('NAME'));
-					$order->setFieldNoDemand('PAY_SYSTEM_ID', $fields["PAY_SYSTEM_ID"]);
-					$countPayments = 1;
+					if (!isset($fields["PAY_SYSTEM_ID"]))
+						$fields["PAY_SYSTEM_ID"] = static::getDefaultPaySystemId($order->getPersonTypeId());
+
+
+					/** @var Sale\PaySystem\Service $service */
+					if ($service = Sale\PaySystem\Manager::getObjectById($fields["PAY_SYSTEM_ID"]))
+					{
+						/** @var Sale\Payment $paymentOuter */
+						$paymentOuter = $paymentCollection->createItem($service);
+						$paymentOuter->setField('DATE_BILL', new Main\Type\DateTime());
+						$paymentOuter->setField('SUM', $needSum);
+						$paymentOuter->setField('PAY_SYSTEM_NAME', $service->getField('NAME'));
+						$order->setFieldNoDemand('PAY_SYSTEM_ID', $fields["PAY_SYSTEM_ID"]);
+						$countPayments = 1;
+					}
+				}
+				else
+				{
+					$paymentOuter = null;
+
+					/** @var Sale\Payment $payment */
+					foreach ($paymentCollection as $payment)
+					{
+						if ($payment->isInner())
+							continue;
+
+						$paymentOuter = $payment;
+					}
+
+					if ($paymentOuter !== null
+						&& ($paymentOuter->getPaymentSystemId() != intval($fields["PAY_SYSTEM_ID"]))
+					)
+					{
+						/** @var Sale\PaySystem\Service $service */
+						if ($service = Sale\PaySystem\Manager::getObjectById($fields["PAY_SYSTEM_ID"]))
+						{
+							/** @var Sale\Payment $paymentOuter */
+							$paymentOuter->setField('PAY_SYSTEM_NAME', $service->getField('NAME'));
+							$paymentOuter->setField('PAY_SYSTEM_ID', intval($fields["PAY_SYSTEM_ID"]));
+							$order->setFieldNoDemand('PAY_SYSTEM_ID', intval($fields["PAY_SYSTEM_ID"]));
+						}
+					}
+
 				}
 
 
 			}
-
 
 			if (isset($fields['PAYED']))
 			{
@@ -714,6 +815,7 @@ class OrderCompatibility
 					if ($fields['PAYED'] == "Y")
 					{
 						$pay = true;
+						$orderPaid = true;
 
 						if ($isPayFromUserBudget !== null)
 						{
@@ -862,10 +964,10 @@ class OrderCompatibility
 						{
 							$paySystemId = (int)$paymentFields['PAY_SYSTEM_ID'];
 
-							/** @var Sale\PaySystemService $paysystem */
-							if ($paysystem = Sale\PaySystemService::load($paySystemId))
+							/** @var Sale\PaySystem\Service $paysystem */
+							if ($paysystem = Sale\PaySystem\Manager::getObjectById($paySystemId))
 							{
-								$paymentFields['PAY_SYSTEM_NAME'] = $paysystem->getAttribute('NAME');
+								$paymentFields['PAY_SYSTEM_NAME'] = $paysystem->getField('NAME');
 							}
 						}
 					}
@@ -878,36 +980,8 @@ class OrderCompatibility
 					$r = $payment->setFields($paymentFields);
 					if ($r->isSuccess())
 					{
-						$orderFields = array();
 
-						foreach (static::getPaymentFieldsToConvert() as $checkField)
-						{
-							$checkOrderField = $order->getField($checkField);
-
-							$isDate = false;
-
-							if (array_key_exists($checkField, static::getPaymentDateFields()))
-							{
-								$isDate = true;
-								$checkOrderField = static::convertDateFieldToOldFormat($order->getField($checkField));
-							}
-
-							if (!empty($fields[$checkField]) && $checkOrderField != trim($fields[$checkField]))
-							{
-								$setValue = $payment->getField($checkField);
-								if ($isDate)
-								{
-									$setValue = static::convertDateField($checkOrderField, $payment->getField($checkField), static::getPaymentDateFields());
-								}
-
-								$orderFields[$checkField] = $setValue;
-							}
-						}
-
-						if (!empty($orderFields))
-						{
-							$order->setFieldsNoDemand($orderFields);
-						}
+						static::fillOrderFieldsFromEntity($order, $payment, $fields, static::getPaymentFieldsToConvert());
 					}
 					else
 					{
@@ -951,7 +1025,7 @@ class OrderCompatibility
 				'PS_STATUS_MESSAGE', 'PS_SUM', 'PS_CURRENCY', 'PS_RESPONSE_DATE',
 				'PAY_VOUCHER_NUM', 'PAY_VOUCHER_DATE', 'DATE_PAY_BEFORE',
 				'DATE_BILL', 'PAY_SYSTEM_NAME', 'PAY_SYSTEM_ID',
-				'DATE_PAYED', 'EMP_PAYED_ID'
+				'DATE_PAYED', 'EMP_PAYED_ID', 'CURRENCY'
 			);
 
 			foreach ($fieldsFromOrder as $fieldName)
@@ -990,11 +1064,19 @@ class OrderCompatibility
 					if ($fieldName === 'PAY_SYSTEM_ID')
 					{
 						$order->setFieldNoDemand('PAY_SYSTEM_ID', $value);
-						if ($paysystem = Sale\PaySystemService::load($value))
-							$paymentOuter->setFieldNoDemand('PAY_SYSTEM_NAME', $paysystem->getAttribute('NAME'));
+
+						/** @var Sale\PaySystem\Service $paysystem */
+						if ($paysystem = Sale\PaySystem\Manager::getObjectById($value))
+							$paymentOuter->setFieldNoDemand('PAY_SYSTEM_NAME', $paysystem->getField('NAME'));
 					}
 
-					$order->setFieldNoDemand($fieldName, $value);
+					if ($fieldName == "DATE_PAID")
+						$fieldName = 'DATE_PAYED';
+
+					if (in_array($fieldName, $this->getAvailableFields()))
+					{
+						$order->setFieldNoDemand($fieldName, $value);
+					};
 				}
 				elseif (isset($fields['~'.$fieldName]))
 				{
@@ -1002,9 +1084,108 @@ class OrderCompatibility
 				}
 			}
 
+			if (isset($fields['PAY_SYSTEM_PRICE']))
+				$paymentOuter->setField('PRICE_COD', $fields['PAY_SYSTEM_PRICE']);
+
 			if (!empty($rawFields))
 			{
 				$this->parseRawFields(static::ENTITY_PAYMENT, $rawFields);
+			}
+		}
+
+
+		if (array_key_exists('SUM_PAID', $fields))
+		{
+
+			if ($orderPaid)
+			{
+				if ($fields['SUM_PAID'] == 0)
+				{
+					$fields['SUM_PAID'] = $order->getPrice();
+				}
+			}
+
+			if ($fields['SUM_PAID'] >= 0)
+			{
+				$oldSumPaid = $order->getSumPaid();
+
+				$deltaSumPaid = floatval($fields['SUM_PAID']) - $oldSumPaid;
+
+				if ($deltaSumPaid > 0)
+				{
+
+					$paidPayment = false;
+
+					/** @var Sale\Payment $payment */
+					foreach ($paymentCollection as $payment)
+					{
+						if ($payment->isPaid() || $payment->isInner())
+							continue;
+
+						if (Sale\PriceMaths::roundPrecision($payment->getSum()) === Sale\PriceMaths::roundPrecision($deltaSumPaid))
+						{
+							$paidPayment = true;
+							/** @var Sale\Result $r */
+							$r = $payment->setPaid("Y");
+							if (!$r->isSuccess())
+							{
+								$result->addErrors($r->getErrors());
+							}
+							break;
+						}
+					}
+
+					if (!$paidPayment)
+					{
+						$service = null;
+						$paymentSystemId = null;
+
+						if (count($paymentCollection) > 0)
+						{
+							/** @var Sale\Payment $firstPayment */
+							if ($firstPayment = $paymentCollection->rewind())
+							{
+								$paymentSystemId = $firstPayment->getPaymentSystemId();
+								if ($paymentSystemId > 0)
+								{
+									$service = Sale\PaySystem\Manager::getObjectById($paymentSystemId);
+								}
+							}
+						}
+
+						if (!$service)
+						{
+							$paymentSystemId = static::getDefaultPaySystemId($order->getPersonTypeId());
+							$service = Sale\PaySystem\Manager::getObjectById($paymentSystemId);
+						}
+
+						/** @var Sale\PaySystem\Service $service */
+						if ($service)
+						{
+							/** @var Sale\Payment $paymentOuter */
+							$payment = $paymentCollection->createItem($service);
+							$payment->setField('DATE_BILL', new Main\Type\DateTime());
+							$payment->setField('SUM', $deltaSumPaid);
+							$payment->setField('PAY_SYSTEM_NAME', $service->getField('NAME'));
+							$order->setFieldNoDemand('PAY_SYSTEM_ID', $paymentSystemId);
+
+							/** @var Sale\Result $r */
+							$r = $payment->setPaid("Y");
+							if (!$r->isSuccess())
+							{
+								$result->addErrors($r->getErrors());
+							}
+						}
+					}
+				}
+				elseif ($deltaSumPaid < 0)
+				{
+					throw new Main\NotSupportedException('Sum paid of reduction is not supported');
+				}
+			}
+			else
+			{
+				throw new Main\NotSupportedException('Sum paid of reduction is not supported');
 			}
 		}
 		return $result;
@@ -1024,12 +1205,12 @@ class OrderCompatibility
 
 		if ($personTypeId > 0)
 		{
-			$dbPaySystem = Sale\PaySystemService::getList(
+			$dbPaySystem = Sale\PaySystem\Manager::getList(
 				array(
 					'select' => array("ID"),
 					'filter' => array(
 						'ACTIVE' => 'Y',
-						'ACTION.PERSON_TYPE_ID' => $personTypeId
+						'PERSON_TYPE_ID' => $personTypeId
 					),
 					'order' => array('SORT'),
 					'limit' => 1
@@ -1042,7 +1223,7 @@ class OrderCompatibility
 				return $defaultPaySystemId[$personTypeId];
 		}
 
-		$dbPaySystem = Sale\PaySystemService::getList(
+		$dbPaySystem = Sale\PaySystem\Manager::getList(
 			array(
 				'select' => array("ID"),
 				'filter' => array('ACTIVE' => 'Y'),
@@ -1065,6 +1246,11 @@ class OrderCompatibility
 	 */
 	public function fillTaxFromRequest(Sale\Tax $tax, array $fields)
 	{
+		if (!empty($fields['COUNT_DELIVERY_TAX']))
+		{
+			$tax->setDeliveryCalculate(($fields['COUNT_DELIVERY_TAX'] == "Y"));
+		}
+
 		if (!empty($fields['TAX_LIST']) && is_array($fields['TAX_LIST']))
 		{
 			$tax->initTaxList($fields['TAX_LIST']);
@@ -1075,9 +1261,17 @@ class OrderCompatibility
 			if ($order = $this->getOrder())
 			{
 				$order->refreshVat();
+				if ($tax = $order->getTax())
+				{
+					$tax->resetTaxList();
+				}
 			}
+		}
 
-			$tax->resetTaxList();
+		if (array_key_exists('TAX_VALUE', $fields))
+		{
+			$order = $this->getOrder();
+			$order->setFieldNoDemand('TAX_VALUE', floatval($fields['TAX_VALUE']));
 		}
 
 		return new Sale\Result();
@@ -1385,7 +1579,36 @@ class OrderCompatibility
 	 */
 	public static function add(array $fields)
 	{
-		/** @var Sale\Result $r */
+		if (!empty($fields['ORDER_PROP']) && is_array($fields['ORDER_PROP']))
+		{
+			$fields['PROPERTIES'] = $fields['ORDER_PROP'];
+			unset($fields['ORDER_PROP']);
+		}
+
+		if (!isset($fields['PROPERTIES']) || !is_array($fields['PROPERTIES']))
+		{
+			$fields['PROPERTIES'] = array();
+		}
+
+		/** @var Sale\Compatible\OrderCompatibility $orderCompatibility */
+		$orderCompatibility = Sale\Compatible\OrderCompatibility::create($fields);
+
+		/** @var Sale\PropertyValueCollection $propCollection */
+		$propCollection = $orderCompatibility->getOrder()->getPropertyCollection();
+
+		// compatibility to prevent setting default values for empty properties
+		/** @var Sale\PropertyValue $property */
+		foreach ($propCollection as $property)
+		{
+			$propertyFields = $property->getProperty();
+			$key = isset($propertyFields['ID']) ? $propertyFields['ID'] : 'n'.$property->getId();
+
+			if (!array_key_exists($key, $fields['PROPERTIES']))
+			{
+				$fields['PROPERTIES'][$key] = null;
+			}
+		}
+
 		return static::modifyOrder(static::ORDER_COMPAT_ACTION_ADD, $fields);
 	}
 
@@ -1410,9 +1633,9 @@ class OrderCompatibility
 
 		$fields['ID'] = $id;
 
-		if ($dateUpdate)
+		if (!$dateUpdate)
 		{
-			$fields['DATE_UPDATE'] = new Main\Type\DateTime();
+			$fields['DATE_UPDATE'] = null;
 		}
 
 		/** @var Sale\Result $r */
@@ -1434,7 +1657,6 @@ class OrderCompatibility
 
 		try
 		{
-
 			$adminSection = (defined('ADMIN_SECTION') && ADMIN_SECTION === true);
 
 			/** @var Sale\Compatible\OrderCompatibility $orderCompatibility */
@@ -1442,6 +1664,28 @@ class OrderCompatibility
 
 			/** @var Sale\Order $order */
 			$order = $orderCompatibility->getOrder();
+
+			/** @var Sale\PropertyValueCollection $propCollection */
+			$propCollection = $order->getPropertyCollection();
+
+			if (!empty($fields['ORDER_PROP']) && is_array($fields['ORDER_PROP']))
+			{
+				$fields['PROPERTIES'] = $fields['ORDER_PROP'];
+			}
+
+			if (!isset($fields['PROPERTIES']) || !is_array($fields['PROPERTIES']))
+			{
+				$fields['PROPERTIES'] = array();
+			}
+
+			/** @var Sale\Result $r */
+			$r = $propCollection->setValuesFromPost($fields, $_FILES);
+			if (!$r->isSuccess())
+			{
+				$result->addErrors($r->getErrors());
+				return $result;
+			}
+
 
 			$oldPrice = $order->getPrice();
 
@@ -1453,17 +1697,64 @@ class OrderCompatibility
 
 			if (!$basket && $action == static::ORDER_COMPAT_ACTION_SAVE)
 			{
-				$fUserId = Sale\Fuser::getIdByUserId($order->getUserId());
+				$fUserId = null;
+
+
+				if (!empty($fields['BASKET_ITEMS']) && is_array($fields['BASKET_ITEMS']))
+				{
+					foreach ($fields['BASKET_ITEMS'] as $basketItemData)
+					{
+						if (!empty($basketItemData['FUSER_ID']) && intval($basketItemData['FUSER_ID']) > 0)
+						{
+							$fUserId = intval($basketItemData['FUSER_ID']);
+							break;
+						}
+					}
+				}
+
+
+				if (intval($fUserId) <= 0 && !$adminSection)
+				{
+					$fUserId = Sale\Fuser::getId();
+				}
+
+				$userId = $order->getUserId();
+				if ($userId > 0)
+				{
+					$fUserIdByUserId = Sale\Fuser::getIdByUserId($userId);
+					if (intval($fUserId) > 0 && intval($fUserIdByUserId) > 0
+						&& intval($fUserId) != intval($fUserIdByUserId))
+					{
+						\CSaleBasket::TransferBasket($fUserId, $fUserIdByUserId);
+					}
+
+					$fUserId = $fUserIdByUserId;
+				}
+
+				if (intval($fUserId) <= 0)
+				{
+					$result->addError(new Sale\ResultError(Main\Localization\Loc::getMessage('SALE_COMPATIBLE_ORDER_FUSERID_NOT_FOUND'), "SALE_COMPATIBLE_ORDER_FUSERID_NOT_FOUND"));
+					return $result;
+				}
+
+
 				if (!$adminSection)
 				{
 					$siteId = !empty($fields["SITE_ID"]) ? $fields["SITE_ID"] : (!empty($fields["LID"]) ? $fields['LID']: null);
-					$basket = Sale\Basket::loadItemsForFUser($fUserId, $siteId);
+					/** @var Sale\Basket $allBasket */
+					$allBasket = Sale\Basket::loadItemsForFUser($fUserId, $siteId);
+
+					if ($allBasket)
+					{
+						$basket = $allBasket->getOrderableItems();
+					}
 				}
 
 
 				if (!$basket)
 				{
-					$basket = Sale\Basket::create($order->getSiteId(), $fUserId);
+					$basket = Sale\Basket::create($order->getSiteId());
+					$basket->setFUserId($fUserId);
 				}
 			}
 
@@ -1474,8 +1765,6 @@ class OrderCompatibility
 			{
 				$basketCompatibility = BasketCompatibility::create($orderCompatibility);
 
-//				$orderCompatibility->resetOrderPrice($basket, $fields);
-
 				/** @var Sale\Result $r */
 				$r = $basketCompatibility->fillBasket($basket, $fields);
 				if (!$r->isSuccess())
@@ -1484,10 +1773,10 @@ class OrderCompatibility
 					return $result;
 				}
 
-				if ($action == static::ORDER_COMPAT_ACTION_SAVE && $order->getId() == 0 && count($basket->getOrderableItems()) > 0)
+				if ($action == static::ORDER_COMPAT_ACTION_SAVE && $order->getId() == 0 && count($basket) > 0)
 				{
 					$order->setMathActionOnly(true);
-					$order->setBasket($basket->getOrderableItems());
+					$order->setBasket($basket);
 					$order->setMathActionOnly(false);
 				}
 				
@@ -1506,6 +1795,13 @@ class OrderCompatibility
 				return $result;
 			}
 
+			/** @var Sale\Result $r */
+			$r = $orderCompatibility->fillShipmentCollectionFromRequest( $order->getShipmentCollection(), $fields);
+			if (!$r->isSuccess())
+			{
+				$result->addErrors($r->getErrors());
+				return $result;
+			}
 
 			if ($isStartField)
 			{
@@ -1520,16 +1816,6 @@ class OrderCompatibility
 				}
 			}
 
-
-
-			/** @var Sale\Result $r */
-			$r = $orderCompatibility->fillShipmentCollectionFromRequest( $order->getShipmentCollection(), $fields);
-			if (!$r->isSuccess())
-			{
-				$result->addErrors($r->getErrors());
-				return $result;
-			}
-
 			$order->setMathActionOnly(false);
 
 			/** @var Sale\Result $r */
@@ -1539,8 +1825,6 @@ class OrderCompatibility
 				$result->addErrors($r->getErrors());
 				return $result;
 			}
-
-
 
 			/** @var Sale\Result $r */
 			$r = Sale\Compatible\OrderCompatibility::fillOrderFromRequest($order, $fields);
@@ -1655,17 +1939,10 @@ class OrderCompatibility
 				$r = $shipment->tryReserve();
 				if (!$r->isSuccess())
 				{
-					$shipment->setField('MARKED', 'Y');
-
-					if (is_array($r->getErrorMessages()))
+					Sale\EntityMarker::addMarker($order, $shipment, $r);
+					if (!$shipment->isSystem())
 					{
-						$oldErrorText = $shipment->getField('REASON_MARKED');
-						foreach($r->getErrorMessages() as $error)
-						{
-							$oldErrorText .= (strval($oldErrorText) != '' ? "\n" : ""). $error;
-						}
-
-						$shipment->setField('REASON_MARKED', $oldErrorText);
+						$shipment->setField('MARKED', 'Y');
 					}
 
 					$result->addErrors($r->getErrors());
@@ -1679,6 +1956,11 @@ class OrderCompatibility
 					$r = $shipment->tryUnreserve();
 					if (!$r->isSuccess())
 					{
+						Sale\EntityMarker::addMarker($order, $shipment, $r);
+						if (!$shipment->isSystem())
+						{
+							$shipment->setField('MARKED', 'Y');
+						}
 						$result->addErrors($r->getErrors());
 					}
 				}
@@ -1733,7 +2015,8 @@ class OrderCompatibility
 			$r = $order->setField('CANCELED', 'N');
 			if (!$r->isSuccess())
 			{
-				return $r;
+				$result->addErrors($r->getErrors());
+				return $result;
 			}
 		}
 
@@ -1875,7 +2158,7 @@ class OrderCompatibility
 
 		$needSum = $order->getPrice() - $order->getSumPaid();
 
-		if ($needSum > 0)
+		if ($needSum >= 0)
 		{
 
 			/** @var Sale\Payment $payment */
@@ -1908,7 +2191,8 @@ class OrderCompatibility
 				{
 					$paymentInnerFields = array(
 						'SUM' => $setSum,
-						'CURRENCY' => $order->getCurrency()
+						'CURRENCY' => $order->getCurrency(),
+						'DATE_BILL' => new Main\Type\DateTime(),
 					);
 
 					$r = $paymentInner->setFields($paymentInnerFields);
@@ -1944,11 +2228,13 @@ class OrderCompatibility
 				if ($payment === null)
 				{
 					$paySystemId = static::getDefaultPaySystemId($order->getPersonTypeId());
-					/** @var Sale\PaySystemService $paysystem */
-					if (($paysystem = Sale\PaySystemService::load($paySystemId)))
+
+					/** @var Sale\PaySystem\Service $paySystem */
+					if ($paySystem = Sale\PaySystem\Manager::getObjectById($paySystemId))
 					{
-						$payment = Sale\Payment::create($paymentCollection, $paysystem);
+						$payment = Sale\Payment::create($paymentCollection, $paySystem);
 						$payment->setField('SUM', $needSum);
+						$payment->setField('DATE_BILL', new Main\Type\DateTime());
 						$paymentCollection->addItem($payment);
 					}
 				}
@@ -1959,10 +2245,17 @@ class OrderCompatibility
 					$operationPayment = $paymentOuter;
 				}
 
-				$r = Sale\Internals\PaySystemInner::createOperation($order, $operationPayment, Sale\Internals\PaySystemInner::OPERATION_CREDIT);
-				if (!$r->isSuccess())
+				$service = Sale\PaySystem\Manager::getObjectById($operationPayment->getPaymentSystemId());
+				if ($service)
 				{
-					$result->addErrors($r->getErrors());
+					$r = $service->creditNoDemand($operationPayment);
+					if (!$r->isSuccess())
+						$result->addErrors($r->getErrors());
+				}
+				else
+				{
+					$result->addError(new Main\Entity\EntityError(Main\Localization\Loc::getMessage('SALE_COMPATIBLE_PAYSYSTEM_NOT_FOUND')));
+					return $result;
 				}
 			}
 
@@ -1993,8 +2286,18 @@ class OrderCompatibility
 							}
 						}
 
-						/** @var Sale\Result $r */
-						$r = Sale\Internals\PaySystemInner::createOperation($order, $operationPayment, Sale\Internals\PaySystemInner::OPERATION_DEBIT);
+						$service = Sale\PaySystem\Manager::getObjectById($operationPayment->getPaymentSystemId());
+						if ($service)
+						{
+							$r = $service->creditNoDemand($operationPayment);
+							if (!$r->isSuccess())
+								$result->addErrors($r->getErrors());
+						}
+						else
+						{
+							$result->addError(new Main\Entity\EntityError(Main\Localization\Loc::getMessage('SALE_COMPATIBLE_PAYSYSTEM_NOT_FOUND')));
+							return $result;
+						}
 					}
 
 				}
@@ -2023,10 +2326,11 @@ class OrderCompatibility
 	 *
 	 * @param int $orderId		Order ID.
 	 * @param string $value		The cancel key(Y/N).
+	 * @param bool|string $comment	cancel reason
 	 * @return Sale\Result
 	 * @throws \Bitrix\Main\ArgumentNullException
 	 */
-	public static function cancel($orderId, $value)
+	public static function cancel($orderId, $value, $comment = false)
 	{
 		$result = new Sale\Result();
 
@@ -2044,17 +2348,52 @@ class OrderCompatibility
 			return $result;
 		}
 
+		$paymentCollection = $order->getPaymentCollection();
+		/** @var Sale\Payment $payment */
+		foreach ($paymentCollection as $payment)
+		{
+			if ($payment->isPaid())
+				$payment->setReturn('Y');
+		}
+
+		$shipmentCollection = $order->getShipmentCollection();
+		/** @var Sale\Shipment $shipment */
+		foreach ($shipmentCollection as $shipment)
+		{
+			if ($shipment->isSystem())
+				continue;
+
+			if ($shipment->isShipped())
+				$shipment->setField('DEDUCTED', 'N');
+
+			if ($shipment->isAllowDelivery())
+				$shipment->disallowDelivery();
+		}
+
 		/** @var Sale\Result $r */
 		$r = $order->setField('CANCELED', $value);
 		if (!$r->isSuccess())
 		{
-			return $r;
+			$result->addErrors($r->getErrors());
+			return $result;
+		}
+
+		if (!empty($comment) && strval($comment) != '')
+		{
+			/** @var Sale\Result $r */
+			$r = $order->setField('REASON_CANCELED', $comment);
+			if (!$r->isSuccess())
+			{
+				$result->addErrors($r->getErrors());
+				return $result;
+			}
 		}
 
 		$r = $order->save();
 		if (!$r->isSuccess())
 		{
-			return $r;
+			$result->addErrors($r->getErrors());
+			return $result;
 		}
 
 		return $result;
@@ -2097,7 +2436,8 @@ class OrderCompatibility
 			$r = $order->save();
 			if (!$r->isSuccess())
 			{
-				return $r;
+				$result->addErrors($r->getErrors());
+				return $result;
 			}
 		}
 
@@ -2152,7 +2492,7 @@ class OrderCompatibility
 
 			if (!$shipment)
 			{
-				if ($service = Sale\Delivery\Services\Manager::getService($systemShipment->getDeliveryId()))
+				if ($service = Sale\Delivery\Services\Manager::getObjectById($systemShipment->getDeliveryId()))
 				{
 					/** @var Sale\Shipment $shipment */
 					$shipment = $shipmentCollection->createItem($service);
@@ -2228,11 +2568,49 @@ class OrderCompatibility
 	}
 
 	/**
+	 * @param $id
+	 *
+	 * @return CDBResult|int
+	 * @throws Main\ArgumentNullException
+	 */
+	public static function getById($id)
+	{
+		$compatibility = new static();
+
+		$select = array('*');
+		/** @var Sale\Order $order */
+		if ($order = Sale\Order::load($id))
+		{
+			/** @var Sale\PaymentCollection $paymentCollection */
+			if ($paymentCollection = $order->getPaymentCollection())
+			{
+				if (count($paymentCollection) == 1)
+				{
+					$select = array_merge($select, array_keys(static::getAliasPaymentFields()));
+				}
+			}
+
+			/** @var Sale\ShipmentCollection $shipmentCollection */
+			if ($shipmentCollection = $order->getShipmentCollection())
+			{
+				if (count($shipmentCollection) == 1
+					|| (count($shipmentCollection) == 2 && $shipmentCollection->isExistsSystemShipment()))
+				{
+					$select = array_merge($select, array_keys(static::getAliasShipmentFields()));
+				}
+			}
+		}
+
+		return static::setGetListParameters($compatibility, array(), array("ID" => $id), null, array(), $select);
+	}
+
+	/**
+	 * @internal 
 	 * @return array
 	 */
-	protected static function getAliasFields()
+	public static function getAliasFields()
 	{
-		return array(
+		$fields = array(
 			'NAME_SEARCH' => array(
 				'NAME' => 'USER.NAME',
 				'LAST_NAME' => 'USER.LAST_NAME',
@@ -2246,6 +2624,7 @@ class OrderCompatibility
 			'USER_NAME' => 'USER.NAME',
 			'USER_LAST_NAME' => 'USER.LAST_NAME',
 			'USER_EMAIL' => 'USER.EMAIL',
+			'RESPONSIBLE_ID' => 'RESPONSIBLE.ID',
 			'RESPONSIBLE_LOGIN' => 'RESPONSIBLE.LOGIN',
 			'RESPONSIBLE_NAME' => 'RESPONSIBLE.NAME',
 			'RESPONSIBLE_LAST_NAME' => 'RESPONSIBLE.LAST_NAME',
@@ -2254,6 +2633,28 @@ class OrderCompatibility
 			'RESPONSIBLE_WORK_POSITION' => 'RESPONSIBLE.WORK_POSITION',
 			'RESPONSIBLE_PERSONAL_PHOTO' => 'RESPONSIBLE.PERSONAL_PHOTO',
 
+			'PROPERTY_ID' => 'PROPERTY.ID',
+			'PROPERTY_ORDER_PROPS_ID' => 'PROPERTY.ORDER_PROPS_ID',
+			'PROPERTY_NAME' => 'PROPERTY.NAME',
+			'PROPERTY_VALUE' => 'PROPERTY.VALUE',
+			'PROPERTY_CODE' => 'PROPERTY.CODE',
+			'PROPERTY_VAL_BY_CODE' => 'PROPERTY.VALUE',
+//			'COMPLETE_ORDERS' => 'PROPERTY.ORDER_PROPS_ID',
+
+		);
+		return array_merge($fields,
+						   static::getAliasPaymentFields(),
+						   static::getAliasShipmentFields(),
+						   static::getAliasBasketFields()
+		);
+	}
+
+	/**
+	 * @return array
+	 */
+	protected static function getAliasPaymentFields()
+	{
+		return array(
 			'PAY_SYSTEM_ID' => 'PAYMENT.PAY_SYSTEM_ID',
 			'PAYED' => 'PAYMENT.PAID',
 
@@ -2267,7 +2668,15 @@ class OrderCompatibility
 			'PS_SUM' => 'PAYMENT.PS_SUM',
 			'PS_CURRENCY' => 'PAYMENT.PS_CURRENCY',
 			'PS_RESPONSE_DATE' => 'PAYMENT.PS_RESPONSE_DATE',
+		);
+	}
 
+	/**
+	 * @return array
+	 */
+	protected static function getAliasShipmentFields()
+	{
+		return array(
 			'DELIVERY_ID' => 'SHIPMENT.DELIVERY.CODE',
 			//'DELIVERY_ID' => 'SHIPMENT.DELIVERY_ID',
 			'PRICE_DELIVERY' => 'SHIPMENT.PRICE_DELIVERY',
@@ -2275,7 +2684,6 @@ class OrderCompatibility
 			'DATE_ALLOW_DELIVERY' => 'SHIPMENT.DATE_ALLOW_DELIVERY',
 			'EMP_ALLOW_DELIVERY_ID' => 'SHIPMENT.EMP_ALLOW_DELIVERY_ID',
 
-//			'DEDUCTED' => 'SHIPMENT.DEDUCTED',
 			'DATE_DEDUCTED' => 'SHIPMENT.DATE_DEDUCTED',
 			'EMP_DEDUCTED_ID' => 'SHIPMENT.EMP_DEDUCTED_ID',
 			'REASON_UNDO_DEDUCTED' => 'SHIPMENT.REASON_UNDO_DEDUCTED',
@@ -2283,9 +2691,15 @@ class OrderCompatibility
 			'TRACKING_NUMBER' => 'SHIPMENT.TRACKING_NUMBER',
 			'DELIVERY_DOC_NUM' => 'SHIPMENT.DELIVERY_DOC_NUM',
 			'DELIVERY_DOC_DATE' => 'SHIPMENT.DELIVERY_DOC_DATE',
-			//'DELIVERY_DATE_REQUEST' => 'SHIPMENT.DATE_REQUEST',
+		);
+	}
 
-
+	/**
+	 * @return array
+	 */
+	protected static function getAliasBasketFields()
+	{
+		return array(
 			'BASKET_ID' => 'BASKET.ID',
 			'BASKET_PRODUCT_ID' => 'BASKET.PRODUCT_ID',
 			'BASKET_PRODUCT_XML_ID' => 'BASKET.PRODUCT_XML_ID',
@@ -2294,22 +2708,11 @@ class OrderCompatibility
 			'BASKET_QUANTITY' => 'BASKET.QUANTITY',
 			'BASKET_PRICE' => 'BASKET.PRICE',
 			'BASKET_CURRENCY' => 'BASKET.CURRENCY',
-			'BASKET_DISCOUNT_PRICE' => 'BASKET.DISCOUNT_PRICE',
-			'BASKET_DISCOUNT_NAME' => 'BASKET.DISCOUNT_NAME',
-			'BASKET_DISCOUNT_VALUE' => 'BASKET.DISCOUNT_VALUE',
-			'BASKET_DISCOUNT_COUPON' => 'BASKET.DISCOUNT_COUPON',
 			'BASKET_VAT_RATE' => 'BASKET.VAT_RATE',
 			'BASKET_RECOMMENDATION' => 'BASKET.RECOMMENDATION',
-
-
-			'PROPERTY_ID' => 'PROPERTY.ID',
-			'PROPERTY_ORDER_PROPS_ID' => 'PROPERTY.ORDER_PROPS_ID',
-			'PROPERTY_NAME' => 'PROPERTY.NAME',
-			'PROPERTY_VALUE' => 'PROPERTY.VALUE',
-			'PROPERTY_CODE' => 'PROPERTY.CODE',
-			'PROPERTY_VAL_BY_CODE' => 'PROPERTY.VALUE',
-//			'COMPLETE_ORDERS' => 'PROPERTY.ORDER_PROPS_ID',
-
+            'BASKET_DISCOUNT_PRICE' => 'BASKET.DISCOUNT_PRICE',
+            'BASKET_DISCOUNT_NAME' => 'BASKET.DISCOUNT_NAME',
+            'BASKET_DISCOUNT_VALUE' => 'BASKET.DISCOUNT_VALUE',
 		);
 	}
 
@@ -2358,13 +2761,6 @@ class OrderCompatibility
 			"DATE_STATUS",
 			"EMP_STATUS_ID",
 			"DATE_INSERT_FORMAT",
-			"PS_STATUS",
-			"PS_STATUS_CODE",
-			"PS_STATUS_DESCRIPTION",
-			"PS_STATUS_MESSAGE",
-			"PS_SUM",
-			"PS_CURRENCY",
-			"PS_RESPONSE_DATE",
 			"USER_LOGIN",
 			"USER_NAME",
 			"USER_LAST_NAME",
@@ -2379,19 +2775,57 @@ class OrderCompatibility
 
 	}
 
-	protected static function getAvailableFields()
+	/**
+	 * @internal
+	 * @return array
+	 */
+	public static function getAvailableFields()
 	{
 		return array_merge(Sale\Order::getAvailableFields(),
-							array('PRICE_DELIVERY')
+							array('PRICE_DELIVERY', "PAY_VOUCHER_DATE", "PAY_VOUCHER_NUM", "DATE_ALLOW_DELIVERY", "DATE_PAYED")
 		);
 	}
 
+
+	/**
+	 * @return array
+	 */
+	protected static function getShipmentClearFields()
+	{
+		return array(
+			'STATUS_ID',
+			'ACCOUNT_NUMBER',
+			'DATE_INSERT',
+			'MARKED',
+			'EMP_MARKED_ID',
+			'DATE_MARKED',
+			'REASON_MARKED',
+			'DATE_CANCELED',
+			'EMP_CANCELED_ID',
+		);
+	}
+
+
+	/**
+	 * @return array
+	 */
+	protected static function getPaymentClearFields()
+	{
+		return array(
+			'ACCOUNT_NUMBER',
+			'MARKED',
+			'EMP_MARKED_ID',
+			'DATE_MARKED',
+			'REASON_MARKED',
+		);
+	}
+	
 	/**
 	 * @return array
 	 */
 	protected static function getPaymentAvailableFields()
 	{
-		return Sale\Payment::getAvailableFields();
+		return static::clearAvailableFields(Sale\Payment::getAvailableFields(), static::getPaymentClearFields());
 	}
 
 	/**
@@ -2399,12 +2833,25 @@ class OrderCompatibility
 	 */
 	protected static function getShipmentAvailableFields()
 	{
-		$clearFields = array(
-			'STATUS_ID'
-		);
-		$result = array();
-		$fields = Sale\Shipment::getAvailableFields();
+		return static::clearAvailableFields(Sale\Shipment::getAvailableFields(), static::getShipmentClearFields());
+	}
 
+
+	protected function getWhiteListFields()
+	{
+		return array_merge(parent::getWhiteListFields(), array_keys(static::getAliasFields()));
+	}
+
+
+	/**
+	 * @param array $fields
+	 * @param array $clearFields
+	 *
+	 * @return array
+	 */
+	protected static function clearAvailableFields(array $fields, array $clearFields = array())
+	{
+		$result = array();
 		if (!empty($clearFields))
 		{
 			foreach ($fields as $field)
@@ -2445,6 +2892,7 @@ class OrderCompatibility
 			'DATE_PAY_BEFORE' => 'date',
 			'DATE_BILL' => 'date',
 			'DATE_MARKED' => 'datetime',
+			'DATE_CANCELED' => 'datetime',
 		);
 	}
 
@@ -2454,7 +2902,7 @@ class OrderCompatibility
 	protected static function getShipmentFieldsToConvert()
 	{
 		return array(
-			'ALLOW_DELIVERY',
+//			'ALLOW_DELIVERY',
 			'DATE_ALLOW_DELIVERY',
 			'EMP_ALLOW_DELIVERY_ID',
 
@@ -2462,7 +2910,7 @@ class OrderCompatibility
 			'DELIVERY_DOC_DATE',
 			'TRACKING_NUMBER',
 
-			'DEDUCTED',
+//			'DEDUCTED',
 			'DATE_DEDUCTED',
 			'EMP_DEDUCTED_ID',
 			'REASON_UNDO_DEDUCTED',
@@ -2477,7 +2925,7 @@ class OrderCompatibility
 	protected static function getPaymentFieldsToConvert()
 	{
 		return array(
-			'PAYED',
+//			'PAYED',
 			'DATE_PAYED',
 			'EMP_PAYED_ID',
 			'PAY_VOUCHER_NUM',
@@ -2489,14 +2937,30 @@ class OrderCompatibility
 	/**
 	 * @return array
 	 */
-	protected static function getShipmentDateFields()
+	protected static function getEntityDateFields(Sale\Internals\CollectableEntity $entity)
 	{
-		return array(
-			'DATE_ALLOW_DELIVERY' => 'datetime',
-			'DELIVERY_DOC_DATE' => 'date',
-			'DATE_DEDUCTED' => 'datetime',
-			'DATE_MARKED' => 'datetime',
-		);
+		if ($entity instanceof Sale\Shipment)
+		{
+			return array(
+				'DATE_ALLOW_DELIVERY' => 'datetime',
+				'DELIVERY_DOC_DATE' => 'date',
+				'DATE_DEDUCTED' => 'datetime',
+				'DATE_MARKED' => 'datetime',
+				'DATE_RESPONSIBLE_ID' => 'date',
+				'DATE_INSERT' => 'datetime',
+				'TRACKING_LAST_CHECK' => 'datetime',
+				'TRACKING_LAST_CHANGE' => 'datetime',
+			);
+		}
+		elseif ($entity instanceof Sale\Payment)
+		{
+			return array(
+				'DATE_PAYED' => 'datetime',
+				'DATE_PAID' => 'datetime',
+				'PAY_VOUCHER_DATE' => 'date',
+				'PS_RESPONSE_DATE' => 'datetime',
+			);
+		}
 	}
 
 	/**
@@ -2763,19 +3227,28 @@ class OrderCompatibility
 		$output = null;
 		$locationPropInfo = \CSaleOrder::getLocationPropertyInfo();
 
+		static $propIndex = 0;
+
 		$propIDTmp = false;
 		if (strpos($key, "PROPERTY_ID_") === 0)
 		{
+			$propIndex++;
+			$this->addPropertyRuntime($propIndex);
+			if (!($propRuntimeName = $this->getPropertyRuntimeName($propIndex)))
+			{
+				return null;
+			}
+
 			$propIDTmp = intval(substr($key, strlen("PROPERTY_ID_")));
 
-			$this->query->addFilter('=PROPERTY.ORDER_PROPS_ID', $propIDTmp);
+			$this->query->addFilter('='.$propRuntimeName.'.ORDER_PROPS_ID', $propIDTmp);
 			if(isset($locationPropInfo['ID'][$propIDTmp]))
 			{
 				$this->addQueryAlias('PROPERTY_ID_'.$propIDTmp, 'LOCATION.ID');
 			}
 			else
 			{
-				$this->addQueryAlias('PROPERTY_ID_'.$propIDTmp, 'PROPERTY.ID');
+				$this->addQueryAlias('PROPERTY_ID_'.$propIDTmp, $propRuntimeName.'.ID');
 			}
 
 			$output = 'PROPERTY_ID_'.$propIDTmp;
@@ -2783,31 +3256,52 @@ class OrderCompatibility
 		}
 		elseif (strpos($key, "PROPERTY_ORDER_PROPS_ID_") === 0)
 		{
+			$propIndex++;
+			$this->addPropertyRuntime($propIndex);
+			if (!($propRuntimeName = $this->getPropertyRuntimeName($propIndex)))
+			{
+				return null;
+			}
+
 			$propIDTmp = intval(substr($key, strlen("PROPERTY_ORDER_PROPS_ID_")));
 
-			$this->query->addFilter('=PROPERTY.ORDER_PROPS_ID', $propIDTmp);
+			$this->query->addFilter('='.$propRuntimeName.'.ORDER_PROPS_ID', $propIDTmp);
 			if(isset($locationPropInfo['ID'][$propIDTmp]))
 			{
 				$this->addQueryAlias('PROPERTY_ORDER_PROPS_ID_'.$propIDTmp, 'LOCATION.ID');
 			}
 			else
 			{
-				$this->addQueryAlias('PROPERTY_ORDER_PROPS_ID_'.$propIDTmp, 'PROPERTY.ORDER_PROPS_ID');
+				$this->addQueryAlias('PROPERTY_ORDER_PROPS_ID_'.$propIDTmp, $propRuntimeName.'.ORDER_PROPS_ID');
 			}
 
 			$output = 'PROPERTY_ORDER_PROPS_ID_'.$propIDTmp;
 		}
 		elseif (strpos($key, "PROPERTY_NAME_") === 0)
 		{
+			$propIndex++;
+			$this->addPropertyRuntime($propIndex);
+			if (!($propRuntimeName = $this->getPropertyRuntimeName($propIndex)))
+			{
+				return null;
+			}
+
 			$propIDTmp = intval(substr($key, strlen("PROPERTY_NAME_")));
 
-			$this->addQueryAlias('PROPERTY_NAME_'.$propIDTmp, 'PROPERTY.NAME');
-			$this->query->addFilter('=PROPERTY.ORDER_PROPS_ID', $propIDTmp);
+			$this->addQueryAlias('PROPERTY_NAME_'.$propIDTmp, $propRuntimeName.'.NAME');
+			$this->query->addFilter('='.$propRuntimeName.'.ORDER_PROPS_ID', $propIDTmp);
 
 			$output = 'PROPERTY_NAME_'.$propIDTmp;
 		}
 		elseif (strpos($key, "PROPERTY_VALUE_") === 0)
 		{
+			$propIndex++;
+			$this->addPropertyRuntime($propIndex);
+			if (!($propRuntimeName = $this->getPropertyRuntimeName($propIndex)))
+			{
+				return null;
+			}
+
 			$propIDTmp = intval(substr($key, strlen("PROPERTY_VALUE_")));
 
 			if(isset($locationPropInfo['ID'][$propIDTmp]))
@@ -2816,36 +3310,108 @@ class OrderCompatibility
 			}
 			else
 			{
-				$this->addQueryAlias('PROPERTY_ID_'.$propIDTmp, 'PROPERTY.VALUE');
+				$this->addQueryAlias('PROPERTY_ID_'.$propIDTmp, $propRuntimeName.'.VALUE');
 			}
 
 			$output = 'PROPERTY_ID_'.$propIDTmp;
 		}
 		elseif (strpos($key, "PROPERTY_CODE_") === 0)
 		{
+			$propIndex++;
+			$this->addPropertyRuntime($propIndex);
+			if (!($propRuntimeName = $this->getPropertyRuntimeName($propIndex)))
+			{
+				return null;
+			}
+
 			$propIDTmp = intval(substr($key, strlen("PROPERTY_CODE_")));
-			$this->addQueryAlias('PROPERTY_CODE_'.$propIDTmp, 'PROPERTY.CODE');
-			$this->query->addFilter('=PROPERTY.ORDER_PROPS_ID', $propIDTmp);
+			$this->addQueryAlias('PROPERTY_CODE_'.$propIDTmp, $propRuntimeName.'.CODE');
+			$this->query->addFilter('='.$propRuntimeName.'.ORDER_PROPS_ID', $propIDTmp);
 
 			$output = 'PROPERTY_CODE_'.$propIDTmp;
 		}
 		elseif (strpos($key, "PROPERTY_VAL_BY_CODE_") === 0)
 		{
+			$propIndex++;
+			$this->addPropertyRuntime($propIndex);
+			if (!($propRuntimeName = $this->getPropertyRuntimeName($propIndex)))
+			{
+				return null;
+			}
+
 			$propIDTmp = preg_replace("/[^a-zA-Z0-9_-]/is", "", trim(substr($key, strlen("PROPERTY_VAL_BY_CODE_"))));
 
-			$this->addQueryAlias('PROPERTY_VAL_BY_CODE_'.$propIDTmp, 'PROPERTY.VALUE');
+			$this->addQueryAlias('PROPERTY_VAL_BY_CODE_'.$propIDTmp, $propRuntimeName.'.VALUE');
 			if(isset($locationPropInfo['CODE'][$propIDTmp]))
 			{
 				$this->addQueryAlias('PROPERTY_VAL_BY_CODE_'.$propIDTmp, 'LOCATION.ID');
 			}
 			else
 			{
-				$this->addQueryAlias('PROPERTY_VAL_BY_CODE_'.$propIDTmp, 'PROPERTY.VALUE');
+				$this->addQueryAlias('PROPERTY_VAL_BY_CODE_'.$propIDTmp, $propRuntimeName.'.VALUE');
 			}
 
-			$this->query->addFilter('=PROPERTY.CODE', $propIDTmp);
+			$this->query->addFilter('='.$propRuntimeName.'.CODE', $propIDTmp);
 
 			$output = 'PROPERTY_VAL_BY_CODE_'.$propIDTmp;
+		}
+		elseif (strpos($key, "BASKET_") === 0)
+		{
+			if ($key == "BASKET_DISCOUNT_COUPON")
+			{
+				if (!in_array('COUPONS', $this->runtimeFields))
+				{
+					$this->query->registerRuntimeField(
+						'COUPONS',
+						array(
+							'data_type' => '\Bitrix\Sale\Internals\OrderCouponsTable',
+							'reference' => array(
+								'=ref.ORDER_ID' => 'this.ID'
+							),
+						)
+					);
+					$this->runtimeFields[] = "COUPONS";
+				}
+
+				$this->addQueryAlias('BASKET_DISCOUNT_COUPON', 'COUPONS.COUPON');
+				$output = 'BASKET_DISCOUNT_COUPON';
+
+			}
+			elseif ($key == "BASKET_DISCOUNT_NAME")
+			{
+				if (!in_array('DISCOUNT_ORDER_RULES', $this->runtimeFields))
+				{
+					$this->query->registerRuntimeField(
+						'DISCOUNT_ORDER_RULES',
+						array(
+							'data_type' => '\Bitrix\Sale\Internals\OrderRulesTable',
+							'reference' => array(
+								'=ref.ORDER_ID' => 'this.ID',
+							),
+						)
+					);
+					$this->runtimeFields[] = "DISCOUNT_ORDER_RULES";
+				}
+
+				if (!in_array('DISCOUNT', $this->runtimeFields))
+				{
+					$this->query->registerRuntimeField(
+						'DISCOUNT',
+						array(
+							'data_type' => '\Bitrix\Sale\Internals\OrderDiscountTable',
+							'reference' => array(
+								'=ref.ID' => 'this.DISCOUNT_ORDER_RULES.ORDER_DISCOUNT_ID'
+							),
+						)
+					);
+
+					$this->runtimeFields[] = "DISCOUNT";
+				}
+
+				$this->addQueryAlias('BASKET_DISCOUNT_NAME', 'DISCOUNT.NAME');
+				$output = 'BASKET_DISCOUNT_NAME';
+			}
+
 		}
 
 		if(isset($locationPropInfo['ID'][$propIDTmp]))
@@ -2865,17 +3431,86 @@ class OrderCompatibility
 		return $output;
 	}
 
+
+	/**
+	 * @param int $index
+	 */
+	protected function addPropertyRuntime($index)
+	{
+		if ($this->getPropertyRuntimeName($index))
+			return;
+
+		$this->query->registerRuntimeField(
+			'PROPERTY_'.$index,
+			array(
+				'data_type' => '\Bitrix\Sale\Internals\OrderPropsValueTable',
+				'reference' => array(
+					'ref.ORDER_ID' => 'this.ID',
+				),
+				'join_type' => 'inner'
+			)
+		);
+
+		$this->runtimeFields[] = 'PROPERTY_'.$index;
+		$this->propertyRuntimeList[$index] = 'PROPERTY_'.$index;
+	}
+
+
+	protected function getPropertyRuntimeName($index)
+	{
+		return (!empty($this->propertyRuntimeList[$index]) ? $this->propertyRuntimeList[$index] : null);
+	}
 }
 
 class OrderFetchAdapter implements FetchAdapter
 {
+
+	protected function getMoneyFields()
+	{
+		return array(
+			"PRICE_DELIVERY",
+			"PRICE",
+			"DISCOUNT_VALUE",
+			"DISCOUNT_ALL",
+			"BASKET_PRICE_TOTAL",
+			"PS_SUM",
+			"PRICE_DELIVERY",
+		);
+	}
+	/**
+	 * @param array $row
+	 *
+	 * @return array
+	 */
 	public function adapt(array $row)
 	{
 		$data = OrderCompatibility::convertDateFieldsToOldFormat($row);
+		return static::convertRowData($data);
+	}
+
+	/**
+	 * @param array $data
+	 *
+	 * @return array
+	 */
+	public static function convertRowData(array $data)
+	{
 		if (isset($data['DELIVERY_ID']) && intval($data['DELIVERY_ID']) > 0)
 		{
-			$data['DELIVERY_ID'] = \Bitrix\Sale\Delivery\Services\Table::getCodeById($data['DELIVERY_ID']);
+			$data['DELIVERY_ID'] = \CSaleDelivery::getCodeById($data['DELIVERY_ID']);
 		}
+
+		if (isset($data['CURRENCY']) && !empty($data['CURRENCY']))
+		{
+			foreach (static::getMoneyFields() as $field)
+			{
+				if (array_key_exists($field, $data))
+				{
+					$data[$field] = SaleFormatCurrency($data[$field], $data["CURRENCY"], false, true);
+				}
+			}
+		}
+
 		return $data;
 	}
 }

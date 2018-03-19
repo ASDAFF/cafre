@@ -8,14 +8,6 @@ if ($arParams["FUTURE_MONTH_COUNT"] <= 0)
 
 $curUserId = $USER->IsAuthorized() ? $USER->GetID() : '';
 
-if (!function_exists('getTSFormat')) // TODO: clean this function from result_modifier.php in bitrix24 template
-{
-	function getTSFormat()
-	{
-		return CSite::GetDateFormat("FULL");
-	}
-}
-
 if(!CModule::IncludeModule("calendar") || !class_exists("CCalendar"))
 	return ShowError(GetMessage("EC_CALENDAR_MODULE_NOT_INSTALLED"));
 
@@ -55,8 +47,8 @@ elseif (is_array($arEvents))
 
 	for ($i = 0, $l = count($arEvents); $i < $l; $i++)
 	{
-		$arEvents[$i]['_DETAIL_URL'] = $arParams['DETAIL_URL'].'?EVENT_ID='.$arEvents[$i]['ID'].'&EVENT_DATE='.$arEvents[$i]['DT_FROM'];
-		if ($arEvents[$i]['IS_MEETING'] && $arEvents[$i]['USER_MEETING']['STATUS'] == 'Q')
+		$arEvents[$i]['_DETAIL_URL'] = $arParams['DETAIL_URL'].'?EVENT_ID='.$arEvents[$i]['ID'].'&EVENT_DATE='.$arEvents[$i]['DATE_FROM'];
+		if ($arEvents[$i]['IS_MEETING'] && $arEvents[$i]['MEETING_STATUS'] == 'Q')
 		{
 			$arEvents[$i]['_ADD_CLASS'] = ' calendar-not-confirmed';
 			$arEvents[$i]['_Q_ICON'] = '<span class="calendar-reminder" title="'.GetMessage('EC_NOT_CONFIRMED').'">[?]</span>';
@@ -69,12 +61,16 @@ elseif (is_array($arEvents))
 		if ($arEvents[$i]['IMPORTANCE'] == 'high')
 			$arEvents[$i]['_ADD_CLASS'] = ' imortant-event';
 
-		$arEvents[$i]['~FROM_TO_HTML'] = CCalendar::GetFromToHtml($arEvents[$i]['DT_FROM_TS'], $arEvents[$i]['DT_TO_TS'], $arEvents[$i]['DT_SKIP_TIME'] == 'Y', $arEvents[$i]['DT_LENGTH']);
+		$fromTs = CCalendar::Timestamp($arEvents[$i]['DATE_FROM']);
+		$toTs = $fromTs + $arEvents[$i]['DT_LENGTH'];
+
+		$arEvents[$i]['~FROM_TO_HTML'] = CCalendar::GetFromToHtml($fromTs, $toTs, $arEvents[$i]['DT_SKIP_TIME'] == 'Y', $arEvents[$i]['DT_LENGTH']);
 
 		$arResult['ITEMS'][] = $arEvents[$i];
 	}
 	array_splice($arResult['ITEMS'], intVal($arParams['EVENTS_COUNT']));
 }
+
 
 if ($arParams['RETURN_ARRAY'] == 'Y')
 	return $arResult;

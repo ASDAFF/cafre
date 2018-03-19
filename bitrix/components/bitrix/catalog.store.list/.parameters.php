@@ -1,17 +1,15 @@
 <?
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
 
-$arMapType=array("Yandex","Google");
-
-$arComponentParameters = Array(
-	"PARAMETERS" => Array(
-		"PHONE" => Array(
+$arComponentParameters = array(
+	"PARAMETERS" => array(
+		"PHONE" => array(
 			"NAME" => GetMessage("SHOW_PHONE"),
 			"TYPE" => "CHECKBOX",
 			"DEFAULT" => 'N',
 			"PARENT" => "ADDITIONAL_SETTINGS",
 		),
-		"SCHEDULE" => Array(
+		"SCHEDULE" => array(
 			"NAME" => GetMessage("SHOW_SCHEDULE"),
 			"TYPE" => "CHECKBOX",
 			"DEFAULT" => 'N',
@@ -19,7 +17,7 @@ $arComponentParameters = Array(
 		),
 		"PATH_TO_ELEMENT" => array(
 			'PARENT' => 'STORE_SETTINGS',
-			'NAME' => GetMessage('STORE_PATH'),
+			'NAME' => GetMessage('STORE_PATH_EXT'),
 			"TYPE"		=> "STRING",
 			"DEFAULT"	=> "store/#store_id#",
 		),
@@ -27,11 +25,16 @@ $arComponentParameters = Array(
 			"PARENT" => "ADDITIONAL_SETTINGS",
 			"NAME" => GetMessage("MAP_TYPE"),
 			"TYPE" => "LIST",
-			"VALUES" => $arMapType,
-			'DEFAULT' => "Yandex",
+			"VALUES" => array("Yandex","Google"),
+			"DEFAULT" => "0",
 		),
-		"SET_TITLE" => Array(),
-		"CACHE_TIME" => Array("DEFAULT"=>36000000),
+		"SET_TITLE" => array(),
+		"CACHE_TIME" => array("DEFAULT"=>36000000),
+		"TITLE" => array(
+			"PARENT" => "ADDITIONAL_SETTINGS",
+			"NAME" => GetMessage('BX_CATALOG_CSL_TITLE'),
+			"TYPE" => "STRING",
+			"DEFAULT_VALUE" => ""
+		)
 	)
 );
-?>

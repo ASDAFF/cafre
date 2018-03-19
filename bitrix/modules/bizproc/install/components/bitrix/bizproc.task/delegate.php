@@ -27,18 +27,33 @@ if (!empty($_REQUEST['action']) && $_REQUEST['action'] == 'delegate')
 	$isAdmin = $USER->IsAdmin() || (CModule::IncludeModule('bitrix24') && CBitrix24::IsPortalAdmin($USER->GetID()));
 	$errors = array();
 
-	if (!empty($_REQUEST['task_id'])
-		&& !empty($_REQUEST['from_user_id'])
-		&& !empty($_REQUEST['to_user_id'])
-		&&
-		($isAdmin || CBPHelper::checkUserSubordination($USER->GetID(), $_REQUEST['to_user_id']))
-	)
+	$allowedDelegationType = array(CBPTaskDelegationType::AllEmployees);
+	if ($isAdmin)
 	{
-		if (!CBPDocument::delegateTasks($_REQUEST['from_user_id'], $_REQUEST['to_user_id'], $_REQUEST['task_id'], $errors))
+		$allowedDelegationType = null;
+	}
+	elseif (CBPHelper::checkUserSubordination($USER->GetID(), $_REQUEST['to_user_id']))
+	{
+		$allowedDelegationType[] = CBPTaskDelegationType::Subordinate;
+	}
+
+	if (!empty($_REQUEST['task_id']) && !empty($_REQUEST['from_user_id']) && !empty($_REQUEST['to_user_id']))
+	{
+		if (!CBPDocument::delegateTasks(
+			$_REQUEST['from_user_id'],
+			$_REQUEST['to_user_id'],
+			$_REQUEST['task_id'],
+			$errors,
+			$allowedDelegationType
+		))
+		{
 			$errors[] = GetMessage('BPAT_DELEGATE_NOTASKS');
+		}
 	}
 	else
-		$errors[] = GetMessage('BPAT_DELEGATE_ERROR');
+	{
+		$errors[] = 'System error';
+	}
 
 	$message = $errors? $errors[0] : GetMessage('BPAT_DELEGATE_SUCCESS');
 	echo CUtil::PhpToJSObject(array('message' => $message, 'success' => empty($errors)));

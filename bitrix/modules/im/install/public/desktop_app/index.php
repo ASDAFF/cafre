@@ -4,7 +4,10 @@ require($_SERVER["DOCUMENT_ROOT"]."/bitrix/header.php");
 
 \Bitrix\Main\Page\Asset::getInstance()->setJsToBody(false);
 
-if (intval($USER->GetID()) <= 0)
+if (!CModule::IncludeModule('im'))
+	return;
+
+if (intval($USER->GetID()) <= 0 || \Bitrix\Im\User::getInstance()->isConnector())
 {
 	?>
 <script type="text/javascript">
@@ -17,13 +20,18 @@ if (intval($USER->GetID()) <= 0)
 }
 IncludeModuleLangFile($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/im/install/public/desktop_app/index.php");
 
-if (!CModule::IncludeModule('im'))
-	return;
-
-CJSCore::Init(array('im_desktop'));
-if (!isset($_GET['BXD_API_VERSION']) && strpos($_SERVER['HTTP_USER_AGENT'], 'BitrixDesktop') === false)
+if (isset($_GET['IFRAME']) == 'Y')
 {
-	$APPLICATION->IncludeComponent("bitrix:im.messenger", "fullscreen", Array('FULLSCREEN' => 'Y'), false, Array("HIDE_ICONS" => "Y"));
+	$APPLICATION->IncludeComponent("bitrix:im.messenger", "iframe", Array(
+		"CONTEXT" => "FULLSCREEN",
+	), false, Array("HIDE_ICONS" => "Y"));
+}
+else if (!isset($_GET['BXD_API_VERSION']) && strpos($_SERVER['HTTP_USER_AGENT'], 'BitrixDesktop') === false)
+{
+	$APPLICATION->IncludeComponent("bitrix:im.messenger", "fullscreen", Array(
+		"CONTEXT" => "FULLSCREEN",
+		"DESIGN" => "DESKTOP",
+	), false, Array("HIDE_ICONS" => "Y"));
 }
 else
 {
@@ -31,11 +39,15 @@ else
 	<script type="text/javascript">
 		if (typeof(BXDesktopSystem) != 'undefined')
 			BX.desktop.init();
+		<?if (!isset($_GET['BXD_MODE'])):?>
 		else
 			location.href = '/';
+		<?endif;?>
 	</script>
 	<?
-	$APPLICATION->IncludeComponent("bitrix:im.messenger", "", Array("DESKTOP" => "Y"), false, Array("HIDE_ICONS" => "Y"));
+	$APPLICATION->IncludeComponent("bitrix:im.messenger", "", Array(
+		"CONTEXT" => "DESKTOP"
+	), false, Array("HIDE_ICONS" => "Y"));
 
 	$diskEnabled = false;
 	if(IsModuleInstalled('disk'))

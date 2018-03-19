@@ -1,16 +1,14 @@
-<?
+<?php
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/workflow/classes/general/workflow.php");
 
 class CWorkflow extends CAllWorkflow
 {
-	function err_mess()
+	public static function err_mess()
 	{
-		$module_id = "workflow";
-		@include($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/".$module_id."/install/version.php");
-		return "<br>Module: ".$module_id." (".$arModuleVersion["VERSION"].")<br>Class: CWorkflow<br>File: ".__FILE__;
+		return "<br>Module: workflow<br>Class: CAllWorkflow<br>File: ".__FILE__;
 	}
 
-	function Insert($arFields)
+	public static function Insert($arFields)
 	{
 		$err_mess = (CWorkflow::err_mess())."<br>Function: Insert<br>Line: ";
 		global $DB;
@@ -27,7 +25,7 @@ class CWorkflow extends CAllWorkflow
 		return $ID;
 	}
 
-	function Update($arFields, $DOCUMENT_ID)
+	public static function Update($arFields, $DOCUMENT_ID)
 	{
 		$err_mess = (CWorkflow::err_mess())."<br>Function: Update<br>Line: ";
 		global $DB;
@@ -66,7 +64,7 @@ class CWorkflow extends CAllWorkflow
 		}
 	}
 
-	function GetLockStatus($DOCUMENT_ID, &$locked_by, &$date_lock)
+	public static function GetLockStatus($DOCUMENT_ID, &$locked_by, &$date_lock)
 	{
 		$err_mess = (CWorkflow::err_mess())."<br>Function: GetLockStatus<br>Line: ";
 		global $DB, $USER;
@@ -92,7 +90,7 @@ class CWorkflow extends CAllWorkflow
 		return $zr["LOCK_STATUS"];
 	}
 
-	function GetList(&$by, &$order, $arFilter=Array(), &$is_filtered)
+	public static function GetList(&$by, &$order, $arFilter=Array(), &$is_filtered)
 	{
 		$err_mess = (CWorkflow::err_mess())."<br>Function: GetList<br>Line: ";
 		global $DB, $USER, $APPLICATION;
@@ -248,7 +246,7 @@ class CWorkflow extends CAllWorkflow
 		return $rs;
 	}
 
-	function GetByID($ID)
+	public static function GetByID($ID)
 	{
 		$err_mess = (CWorkflowStatus::err_mess())."<br>Function: GetByID<br>Line: ";
 		global $DB, $USER;
@@ -282,7 +280,7 @@ class CWorkflow extends CAllWorkflow
 		return $res;
 	}
 
-	function GetByFilename($FILENAME, $SITE_ID, $arFilter = false)
+	public static function GetByFilename($FILENAME, $SITE_ID, $arFilter = false)
 	{
 		if(!is_array($arFilter))
 		{
@@ -334,7 +332,7 @@ class CWorkflow extends CAllWorkflow
 		return $res;
 	}
 
-	function GetHistoryList(&$by, &$order, $arFilter=Array(), &$is_filtered)
+	public static function GetHistoryList(&$by, &$order, $arFilter=Array(), &$is_filtered)
 	{
 		$err_mess = (CWorkflow::err_mess())."<br>Function: GetHistoryList<br>Line: ";
 		global $DB;
@@ -441,7 +439,7 @@ class CWorkflow extends CAllWorkflow
 		return $res;
 	}
 
-	function GetHistoryByID($ID)
+	public static function GetHistoryByID($ID)
 	{
 		$err_mess = (CWorkflow::err_mess())."<br>Function: GetHistoryByID<br>Line: ";
 		global $DB;
@@ -463,7 +461,7 @@ class CWorkflow extends CAllWorkflow
 		return $res;
 	}
 
-	function CleanUpHistory()
+	public static function CleanUpHistory()
 	{
 		$err_mess = (CWorkflow::err_mess())."<br>Function: CleanUpHistory<br>Line: ";
 		global $DB;
@@ -480,7 +478,7 @@ class CWorkflow extends CAllWorkflow
 		if (CModule::IncludeModule("iblock")) CIblockElement::WF_CleanUpHistory();
 	}
 
-	function CleanUpPublished()
+	public static function CleanUpPublished()
 	{
 		$err_mess = (CWorkflow::err_mess())."<br>Function: CleanUpPublished<br>Line: ";
 		global $DB;
@@ -504,7 +502,7 @@ class CWorkflow extends CAllWorkflow
 		}
 	}
 
-	function GetFileList($DOCUMENT_ID)
+	public static function GetFileList($DOCUMENT_ID)
 	{
 		$err_mess = (CAllWorkflow::err_mess())."<br>Function: GetFileList<br>Line: ";
 		global $DB;
@@ -527,4 +525,3 @@ class CWorkflow extends CAllWorkflow
 		return $z;
 	}
 }
-?>

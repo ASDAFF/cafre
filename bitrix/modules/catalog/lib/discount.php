@@ -1,9 +1,9 @@
 <?php
 namespace Bitrix\Catalog;
 
-use Bitrix\Main;
-use Bitrix\Main\Localization\Loc;
-use Bitrix\Currency;
+use Bitrix\Main,
+	Bitrix\Main\Localization\Loc,
+	Bitrix\Currency;
 
 Loc::loadMessages(__FILE__);
 
@@ -21,15 +21,11 @@ Loc::loadMessages(__FILE__);
  * <li> ACTIVE_TO datetime optional
  * <li> RENEWAL bool optional default 'N'
  * <li> NAME string(255) optional
- * <li> MAX_USES int mandatory
- * <li> COUNT_USES int mandatory
- * <li> COUPON string(20) optional
  * <li> SORT int optional default 100
  * <li> MAX_DISCOUNT double optional
  * <li> VALUE_TYPE string(1) mandatory default 'P'
  * <li> VALUE double mandatory default 0.0000
  * <li> CURRENCY string(3) mandatory
- * <li> MIN_ORDER_SUM double optional default 0.0000
  * <li> TIMESTAMP_X datetime mandatory default 'CURRENT_TIMESTAMP'
  * <li> COUNT_PERIOD string(1) mandatory default 'U'
  * <li> COUNT_SIZE int mandatory
@@ -47,6 +43,9 @@ Loc::loadMessages(__FILE__);
  * <li> NOTES string(255) optional
  * <li> CONDITIONS string optional
  * <li> UNPACK string optional
+ * <li> CREATED_BY_USER reference to {@link \Bitrix\Main\UserTable}
+ * <li> MODIFIED_BY_USER reference to {@link \Bitrix\Main\UserTable}
+ * <li> RESTRICTION reference to {@link \Bitrix\Catalog\DiscountRestriction}
  * </ul>
  *
  * @package Bitrix\Catalog
@@ -141,15 +140,6 @@ class DiscountTable extends Main\Entity\DataManager
 				'validation' => array(__CLASS__, 'validateName'),
 				'title' => Loc::getMessage('DISCOUNT_ENTITY_NAME_FIELD')
 			)),
-			'MAX_USES' => new Main\Entity\IntegerField('MAX_USES', array(
-				'default_value' => 0
-			)),
-			'COUNT_USES' => new Main\Entity\IntegerField('COUNT_USES', array(
-				'default_value' => 0
-			)),
-			'COUPON' => new Main\Entity\StringField('COUPON', array(
-				'validation' => array(__CLASS__, 'validateCoupon')
-			)),
 			'SORT' => new Main\Entity\IntegerField('SORT', array(
 				'title' => Loc::getMessage('DISCOUNT_ENTITY_SORT_FIELD')
 			)),
@@ -170,9 +160,6 @@ class DiscountTable extends Main\Entity\DataManager
 				'required' => true,
 				'validation' => array(__CLASS__, 'validateCurrency'),
 				'title' => Loc::getMessage('DISCOUNT_ENTITY_CURRENCY_FIELD')
-			)),
-			'MIN_ORDER_SUM' => new Main\Entity\FloatField('MIN_ORDER_SUM', array(
-				'default_value' => 0
 			)),
 			'TIMESTAMP_X' => new Main\Entity\DatetimeField('TIMESTAMP_X', array(
 				'required' => true,
@@ -237,15 +224,21 @@ class DiscountTable extends Main\Entity\DataManager
 				'title' => Loc::getMessage('DISCOUNT_ENTITY_CONDITIONS_LIST_FIELD')
 			)),
 			'UNPACK' => new Main\Entity\TextField('UNPACK', array()),
+			'SALE_ID' => new Main\Entity\IntegerField('SALE_ID'),
 			'CREATED_BY_USER' => new Main\Entity\ReferenceField(
 				'CREATED_BY_USER',
-				'Bitrix\Main\User',
+				'\Bitrix\Main\User',
 				array('=this.CREATED_BY' => 'ref.ID')
 			),
 			'MODIFIED_BY_USER' => new Main\Entity\ReferenceField(
 				'MODIFIED_BY_USER',
-				'Bitrix\Main\User',
+				'\Bitrix\Main\User',
 				array('=this.MODIFIED_BY' => 'ref.ID')
+			),
+			'SALE_DISCOUNT' => new Main\Entity\ReferenceField(
+				'SALE_DISCOUNT',
+				'Bitrix\Sale\Internals\DiscountTable',
+				array('=this.SALE_ID' => 'ref.ID')
 			)
 		);
 	}
@@ -291,17 +284,6 @@ class DiscountTable extends Main\Entity\DataManager
 	{
 		return array(
 			new Main\Entity\Validator\Length(null, 255),
-		);
-	}
-	/**
-	 * Returns validators for COUPON field.
-	 *
-	 * @return array
-	 */
-	public static function validateCoupon()
-	{
-		return array(
-			new Main\Entity\Validator\Length(null, 20),
 		);
 	}
 	/**

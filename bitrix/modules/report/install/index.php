@@ -1,8 +1,7 @@
 <?
 global $MESS;
-$strPath2Lang = str_replace("\\", "/", __FILE__);
-$strPath2Lang = substr($strPath2Lang, 0, strlen($strPath2Lang)-strlen("/install/index.php"));
-include(GetLangFileName($strPath2Lang."/lang/", "/install/index.php"));
+
+IncludeModuleLangFile(__FILE__);
 
 Class report extends CModule
 {
@@ -55,6 +54,7 @@ Class report extends CModule
 		}
 
 		RegisterModule("report");
+		RegisterModuleDependences('report', 'OnReportDelete', 'report', '\Bitrix\Report\Sharing', 'OnReportDelete');
 
 		return true;
 	}
@@ -69,6 +69,7 @@ Class report extends CModule
 			$this->errors = $DB->RunSQLBatch($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/report/install/db/".ToLower($DB->type)."/uninstall.sql");
 		}
 
+		UnRegisterModuleDependences('report', 'OnReportDelete', 'report', '\Bitrix\Report\Sharing', 'OnReportDelete');
 		UnRegisterModule("report");
 
 		return true;
@@ -103,6 +104,9 @@ Class report extends CModule
 				true,
 				true
 			);
+			CopyDirFiles(
+				$_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/report/install/images",
+				$_SERVER["DOCUMENT_ROOT"]."/bitrix/images", true, true);
 		}
 
 		return true;
@@ -111,6 +115,7 @@ Class report extends CModule
 	function UnInstallFiles()
 	{
 		DeleteDirFilesEx("/bitrix/js/report/");//scripts
+		DeleteDirFilesEx("/bitrix/images/report/");
 		return true;
 	}
 

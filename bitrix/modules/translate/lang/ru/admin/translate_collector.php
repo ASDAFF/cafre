@@ -24,6 +24,7 @@ $MESS["TR_ERROR_CREATE_TEMP_FOLDER"] = "Не удается создать временную директорию 
 $MESS["TR_ERROR_DELETE_TEMP_FOLDER"] = "Не удается удалить временную директорию \"%PATH%\"";
 $MESS["TR_ERROR_SELECT_LANGUAGE"] = "Пожалуйста, выберите язык создаваемой сборки";
 $MESS["TR_ERROR_TARFILE"] = "Не выбран файл";
+$MESS["TR_ERROR_TARFILE_EXTENTION"] = "Неверный тип файла";
 $MESS["TR_ERROR_ENCODING"] = "Пожалуйста, выберите корректную кодировку";
 $MESS["TR_ERROR_OPEN_FILE"] = "Не удается открыть файл \"%FILE%\"";
 $MESS["TR_ERROR_ARCHIVE"] = "Ошибка архива";
@@ -31,4 +32,6 @@ $MESS["TR_LANGUAGE_COLLECTED_ARCHIVE"] = "Локализация \"%LANG%\" собрана в архив
 $MESS["TR_LANGUAGE_COLLECTED_FOLDER"] = "Локализация \"%LANG%\" собрана в директорию \"%PATH%\"";
 $MESS["TR_UPLOAD_FILE"] = "Выберите файл (tar.gz)";
 $MESS["TR_LANGUAGE_DOWNLOADED"] = "Локализация загружена";
+$MESS["TR_ERROR_LANGUAGE_ID"] = "Не найден выбранный язык";
+$MESS["TR_ERROR_LANGUAGE_CHARSET_NON_UTF"] = "Кодировка выбраного языка отличается от utf-8. Отключите конвертацию в национальную кодировку.";
 ?>

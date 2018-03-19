@@ -11,6 +11,7 @@ $MESS["FLOW_PAGES"] = "Документ";
 $MESS["FLOW_DATE_MODIFY"] = "Дата изменения";
 $MESS["FLOW_MODIFIED_BY"] = "Кем изменен";
 $MESS["FLOW_TITLE"] = "Заголовок";
+$MESS["FLOW_SITE_ID"] = "Сайт";
 $MESS["FLOW_FILENAME"] = "Имя файла";
 $MESS["FLOW_STATUS"] = "Статус";
 $MESS["FLOW_F_LOGIC"] = "Логика между полями";

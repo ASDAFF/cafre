@@ -110,7 +110,7 @@ var wind = new BX.PopupWindow('popup_notify', BX('popup_form_notify'), {
 					}
 					else
 					{
-						data = data + '&user_mail='+BX('popup_user_email').value;
+						data = data + '&user_mail=' + BX.util.urlencode(BX('popup_user_email').value);
 
 						if (BX('popup_captcha_sid') && BX('popup_captcha_word'))
 						{
@@ -157,7 +157,7 @@ var wind = new BX.PopupWindow('popup_notify', BX('popup_form_notify'), {
 							}
 							else if (rs['STATUS'] == 'Y')
 							{
-								notifyProduct(BX('popup_notify_url').value, 11);
+								notifyProduct(BX('popup_notify_url').value, '<?=$arParams['NOTIFY_ID']?>');
 								wind.close();
 							}
 						});

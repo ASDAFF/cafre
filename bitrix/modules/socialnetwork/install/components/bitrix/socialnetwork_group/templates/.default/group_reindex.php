@@ -16,7 +16,7 @@ $APPLICATION->IncludeComponent(
 		"BLOG_GROUP_ID" => $arParams["BLOG_GROUP_ID"],
 		"PATH_TO_GROUP_BLOG" => $arResult["PATH_TO_GROUP_BLOG"],
 		"PATH_TO_GROUP_BLOG_POST" => $arResult["PATH_TO_GROUP_BLOG_POST"],
-		"PATH_TO_GROUP_BLOG_COMMENT" => $arResult["PATH_TO_GROUP_BLOG_POST"]."?commentId=#comment_id###comment_id#",
+		"PATH_TO_GROUP_BLOG_COMMENT" => $arResult["PATH_TO_GROUP_BLOG_POST"]."?commentId=#comment_id##com#comment_id#",
 		"PATH_TO_USER_BLOG" => "",
 		"PATH_TO_USER_BLOG_POST" => "",
 		"PATH_TO_USER_BLOG_COMMENT" => "",
@@ -34,7 +34,6 @@ $APPLICATION->IncludeComponent(
 		"CALENDAR_GROUP_IBLOCK_ID" => $arParams["CALENDAR_GROUP_IBLOCK_ID"],
 		"PATH_TO_GROUP_CALENDAR_ELEMENT" => $arResult["PATH_TO_GROUP_CALENDAR"]."?EVENT_ID=#element_id#",
 
-		"TASK_IBLOCK_ID" => $arParams["TASK_IBLOCK_ID"],
 		"PATH_TO_GROUP_TASK_ELEMENT" => $arResult["PATH_TO_GROUP_TASKS_TASK"],
 		"PATH_TO_USER_TASK_ELEMENT" => "",
 		"TASK_FORUM_ID" => $arParams["TASK_FORUM_ID"],

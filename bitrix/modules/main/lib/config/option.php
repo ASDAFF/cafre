@@ -1,4 +1,10 @@
 <?php
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2015 Bitrix
+ */
 namespace Bitrix\Main\Config;
 
 use Bitrix\Main;
@@ -8,6 +14,17 @@ class Option
 	protected static $options = array();
 	protected static $cacheTtl = null;
 
+	/**
+	 * Returns a value of an option.
+	 *
+	 * @param string $moduleId The module ID.
+	 * @param string $name The option name.
+	 * @param string $default The default value to return, if a value doesn't exist.
+	 * @param bool|string $siteId The site ID, if the option differs for sites.
+	 * @return string
+	 * @throws Main\ArgumentNullException
+	 * @throws Main\ArgumentOutOfRangeException
+	 */
 	public static function get($moduleId, $name, $default = "", $siteId = false)
 	{
 		if (empty($moduleId))
@@ -52,6 +69,15 @@ class Option
 		return $default;
 	}
 
+	/**
+	 * Returns the real value of an option as it's written in a DB.
+	 *
+	 * @param string $moduleId The module ID.
+	 * @param string $name The option name.
+	 * @param bool|string $siteId The site ID.
+	 * @return null|string
+	 * @throws Main\ArgumentNullException
+	 */
 	public static function getRealValue($moduleId, $name, $siteId = false)
 	{
 		if (empty($moduleId))
@@ -81,7 +107,14 @@ class Option
 		return null;
 	}
 
-	private static function getDefaults($moduleId)
+	/**
+	 * Returns an array with default values of a module options (from a default_option.php file).
+	 *
+	 * @param string $moduleId The module ID.
+	 * @return array
+	 * @throws Main\ArgumentOutOfRangeException
+	 */
+	public static function getDefaults($moduleId)
 	{
 		static $defaultsCache = array();
 		if (isset($defaultsCache[$moduleId]))
@@ -101,6 +134,48 @@ class Option
 			return $defaultsCache[$moduleId] = ${$varName};
 
 		return $defaultsCache[$moduleId] = array();
+	}
+	/**
+	 * Returns an array of set options array(name => value).
+	 *
+	 * @param string $moduleId The module ID.
+	 * @param bool|string $siteId The site ID, if the option differs for sites.
+	 * @return array
+	 * @throws Main\ArgumentNullException
+	 */
+	public static function getForModule($moduleId, $siteId = false)
+	{
+		if (empty($moduleId))
+			throw new Main\ArgumentNullException("moduleId");
+
+		$return = array();
+		static $defaultSite = null;
+		if ($siteId === false)
+		{
+			if ($defaultSite === null)
+			{
+				$context = Main\Application::getInstance()->getContext();
+				if ($context != null)
+					$defaultSite = $context->getSite();
+			}
+			$siteId = $defaultSite;
+		}
+
+		$siteKey = ($siteId == "") ? "-" : $siteId;
+		if (static::$cacheTtl === null)
+			static::$cacheTtl = self::getCacheTtl();
+		if ((static::$cacheTtl === false) && !isset(self::$options[$siteKey][$moduleId])
+			|| (static::$cacheTtl !== false) && empty(self::$options))
+		{
+			self::load($moduleId, $siteId);
+		}
+
+		if (isset(self::$options[$siteKey][$moduleId]))
+			$return = self::$options[$siteKey][$moduleId];
+		else if (isset(self::$options["-"][$moduleId]))
+			$return = self::$options["-"][$moduleId];
+
+		return is_array($return) ? $return : array();
 	}
 
 	private static function load($moduleId, $siteId)
@@ -129,6 +204,8 @@ class Option
 				{
 					$s = ($ar["SITE_ID"] == ""? "-" : $ar["SITE_ID"]);
 					self::$options[$s][$moduleId][$ar["NAME"]] = $ar["VALUE"];
+
+					
 				}
 			}
 		}
@@ -154,12 +231,23 @@ class Option
 						self::$options[$s][$ar["MODULE_ID"]][$ar["NAME"]] = $ar["VALUE"];
 					}
 
+					
+
 					$cache->set("b_option", self::$options);
 				}
 			}
 		}
 	}
 
+	/**
+	 * Sets an option value and saves it into a DB. After saving the OnAfterSetOption event is triggered.
+	 *
+	 * @param string $moduleId The module ID.
+	 * @param string $name The option name.
+	 * @param string $value The option value.
+	 * @param string $siteId The site ID, if the option depends on a site.
+	 * @throws Main\ArgumentOutOfRangeException
+	 */
 	public static function set($moduleId, $name, $value = "", $siteId = "")
 	{
 		if (static::$cacheTtl === null)
@@ -197,7 +285,7 @@ class Option
 		{
 			$con->queryExecute(
 				"UPDATE b_option SET ".
-				"	VALUE = '".$sqlHelper->forSql($value, 2000)."' ".
+				"	VALUE = '".$sqlHelper->forSql($value)."' ".
 				"WHERE ".$strSqlWhere
 			);
 		}
@@ -210,7 +298,7 @@ class Option
 					($siteId == "") ? "NULL" : "'".$sqlHelper->forSql($siteId, 2)."'",
 					$sqlHelper->forSql($moduleId, 50),
 					$sqlHelper->forSql($name, 50),
-					$sqlHelper->forSql($value, 2000)
+					$sqlHelper->forSql($value)
 				)
 			);
 		}
@@ -266,6 +354,15 @@ class Option
 		return $cacheFlags["config_options"];
 	}
 
+	/**
+	 * Deletes options from a DB.
+	 *
+	 * @param string $moduleId The module ID.
+	 * @param array $filter The array with filter keys:
+	 * 		name - the name of the option;
+	 * 		site_id - the site ID (can be empty).
+	 * @throws Main\ArgumentNullException
+	 */
 	public static function delete($moduleId, $filter = array())
 	{
 		if (static::$cacheTtl === null)

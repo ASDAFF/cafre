@@ -7,6 +7,7 @@
  */
 
 namespace Bitrix\Main\Entity;
+use Bitrix\Main\Application;
 use Bitrix\Main\DB\SqlExpression;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\SystemException;
@@ -134,6 +135,11 @@ abstract class Field
 		}
 
 		$this->entity = $entity;
+	}
+
+	public function resetEntity()
+	{
+		$this->entity = null;
 	}
 
 	/**
@@ -406,6 +412,11 @@ abstract class Field
 		return $this->name;
 	}
 
+	public function setName($name)
+	{
+		$this->name = $name;
+	}
+
 	public function getTitle()
 	{
 		if($this->title !== null)
@@ -493,7 +504,22 @@ abstract class Field
 
 	public function getLangCode()
 	{
-		return $this->getEntity()->getLangCode().'_'.$this->getName().'_FIELD';
+		$entity = $this->getEntity();
+		if($entity !== null)
+		{
+			return $entity->getLangCode().'_'.$this->getName().'_FIELD';
+		}
+		return null;
+	}
+
+	public function getConnection()
+	{
+		if ($this->entity)
+		{
+			return $this->entity->getConnection();
+		}
+
+		return Application::getConnection();
 	}
 
 	public function serialize($value)

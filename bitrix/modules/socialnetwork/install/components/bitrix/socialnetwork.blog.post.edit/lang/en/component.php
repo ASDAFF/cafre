@@ -6,7 +6,6 @@ $MESS["BLOG_NEW_MESSAGE"] = "New conversation";
 $MESS["BLOG_ERR_NO_RIGHTS"] = "Error: insufficient permissions to write message";
 $MESS["BLOG_P_INSERT"] = "Click to insert an image";
 $MESS["BLOG_SONET_MODULE_NOT_AVAIBLE"] = "Conversations are not available for this user.";
-$MESS["BLG_NAME"] = "Started by";
 $MESS["BLG_GRP_NAME"] = "Started in";
 $MESS["BPE_HIDDEN_POSTED"] = "You post has been added successfully. Posts in this conversation are premoderated; your post will become visible as soon as the moderator has approved it.";
 $MESS["BPE_SESS"] = "Your session has expired. Please repost your message.";
@@ -25,4 +24,9 @@ $MESS["BLOG_EMPTY_TITLE_PLACEHOLDER"] = "Image";
 $MESS["BLOG_BPE_DESTINATION_EMPTY"] = "Please specify at least one person.";
 $MESS["B_B_HIDDEN_GROUP"] = "Hidden group";
 $MESS["B_B_PC_DUPLICATE_POST"] = "You have already added your post";
+$MESS["SBPE_MULTIPLE_PREMODERATION"] = "Cannot publish post because some of the selected groups are pre-moderated.";
+$MESS["SBPE_EXISTING_POST_PREMODERATION"] = "Cannot publish because a pre-moderated user group is selected as recipient.";
+$MESS["BLOG_EMPTY_TITLE_PLACEHOLDER2"] = "File";
+$MESS["B_B_HIDDEN_USER"] = "Hidden user";
+$MESS["B_B_HIDDEN_DEPARTMENT"] = "Hidden department";
 ?>

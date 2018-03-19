@@ -4,6 +4,9 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
 class CBPCreateDocumentActivity
 	extends CBPActivity
 {
+	const EXECUTION_MAX_DEPTH = 1;
+	private static $executionDepth = array();
+
 	public function __construct($name)
 	{
 		parent::__construct($name);
@@ -17,9 +20,32 @@ class CBPCreateDocumentActivity
 	{
 		$rootActivity = $this->GetRootActivity();
 		$documentId = $rootActivity->GetDocumentId();
+		$fieldValue = $this->Fields;
 
 		$documentService = $this->workflow->GetService("DocumentService");
-		$documentService->CreateDocument($documentId, $this->Fields);
+
+		$documentFields = $documentService->GetDocumentFields($documentService->GetDocumentType($documentId));
+		$documentFieldsAliasesMap = CBPDocument::getDocumentFieldsAliasesMap($documentFields);
+		if ($documentFieldsAliasesMap)
+		{
+			$fixedFields = array();
+			foreach ($fieldValue as $key => $value)
+			{
+				if (!isset($documentFields[$key]) && isset($documentFieldsAliasesMap[$key]))
+				{
+					$fixedFields[$documentFieldsAliasesMap[$key]] = $value;
+					continue;
+				}
+				$fixedFields[$key] = $value;
+			}
+			$fieldValue = $fixedFields;
+		}
+
+		$executionKey = $rootActivity->GetWorkflowTemplateId();
+
+		self::increaseExecutionDepth($executionKey);
+		$documentService->CreateDocument($documentId, $fieldValue);
+		self::resetExecutionDepth($executionKey);
 
 		return CBPActivityExecutionStatus::Closed;
 	}
@@ -33,8 +59,10 @@ class CBPCreateDocumentActivity
 		if (!is_array($arWorkflowVariables))
 			$arWorkflowVariables = array();
 
+		/** @var CBPDocumentService $documentService */
 		$documentService = $runtime->GetService("DocumentService");
 		$arDocumentFieldsTmp = $documentService->GetDocumentFields($documentType);
+		$documentFieldsAliasesMap = CBPDocument::getDocumentFieldsAliasesMap($arDocumentFieldsTmp);
 
 		$arFieldTypes = $documentService->GetDocumentFieldTypes($documentType);
 
@@ -49,6 +77,9 @@ class CBPCreateDocumentActivity
 			{
 				foreach ($arCurrentActivity["Properties"]["Fields"] as $k => $v)
 				{
+					if (!isset($arDocumentFieldsTmp[$k]) && isset($documentFieldsAliasesMap[$k]))
+						$k = $documentFieldsAliasesMap[$k];
+
 					$arCurrentValues[$k] = $v;
 
 					if ($arDocumentFieldsTmp[$k]["BaseType"] == "user")
@@ -187,5 +218,20 @@ class CBPCreateDocumentActivity
 
 		return true;
 	}
+
+	private static function increaseExecutionDepth($key)
+	{
+		if (!isset(self::$executionDepth[$key]))
+		{
+			self::$executionDepth[$key] = 0;
+		}
+		self::$executionDepth[$key]++;
+
+		if (self::$executionDepth[$key] > self::EXECUTION_MAX_DEPTH)
+			throw new Exception(GetMessage('BPCDA_RECURSION_ERROR'));
+	}
+	private static function resetExecutionDepth($key)
+	{
+		self::$executionDepth[$key] = 0;
+	}
 }
-?>

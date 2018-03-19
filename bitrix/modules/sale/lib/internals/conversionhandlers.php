@@ -4,10 +4,12 @@ namespace Bitrix\Sale\Internals;
 
 use Bitrix\Conversion\Utils;
 use Bitrix\Conversion\DayContext;
+use Bitrix\Main;
 use Bitrix\Main\Loader;
 use Bitrix\Main\Type\Date;
 use Bitrix\Main\Type\DateTime;
 use Bitrix\Main\Localization\Loc;
+use Bitrix\Sale;
 
 Loc::loadMessages(__FILE__);
 
@@ -52,12 +54,12 @@ final class ConversionHandlers
 				'UNITS'     => $units,
 				'MODULE'    => 'sale',
 				'SORT'      => 1100,
-				'COUNTERS'  => array('conversion_visit_day', 'sale_payment_add_day', 'sale_payment_add', 'sale_payment_sum_add'),
+				'COUNTERS'  => array('conversion_visit_day', 'sale_payment_add_day', 'sale_payment_add', 'sale_payment_add_cmpfb', 'sale_payment_sum_add'),
 				'CALCULATE' => function (array $counters)
 				{
 					$denominator = $counters['conversion_visit_day'] ?: 0;
 					$numerator   = $counters['sale_payment_add_day'] ?: 0;
-					$quantity    = $counters['sale_payment_add'    ] ?: 0;
+					$quantity    = $counters['sale_payment_add']+$counters['sale_payment_add_cmpfb'] ?: 0;
 					$sum         = $counters['sale_payment_sum_add'] ?: 0;
 
 					return array(
@@ -77,13 +79,13 @@ final class ConversionHandlers
 				'UNITS'     => $units,
 				'MODULE'    => 'sale',
 				'SORT'      => 1200,
-				'COUNTERS'  => array('conversion_visit_day', 'sale_order_add_day', 'sale_order_add', 'sale_order_sum_add'),
+				'COUNTERS'  => array('conversion_visit_day', 'sale_order_add_day', 'sale_order_add', 'sale_order_add_cmpfb', 'sale_order_sum_add'),
 				'CALCULATE' => function (array $counters)
 				{
 					$denominator = $counters['conversion_visit_day'] ?: 0;
-					$numerator   = $counters['sale_order_add_day'  ] ?: 0;
-					$quantity    = $counters['sale_order_add'      ] ?: 0;
-					$sum         = $counters['sale_order_sum_add'  ] ?: 0;
+					$numerator   = $counters['sale_order_add_day'] ?: 0;
+					$quantity    = $counters['sale_order_add']+$counters['sale_order_add_cmpfb'] ?: 0;
+					$sum         = $counters['sale_order_sum_add'] ?: 0;
 
 					return array(
 						'DENOMINATOR' => $denominator,
@@ -102,13 +104,13 @@ final class ConversionHandlers
 				'UNITS'     => $units,
 				'MODULE'    => 'sale',
 				'SORT'      => 1300,
-				'COUNTERS'  => array('conversion_visit_day', 'sale_cart_add_day', 'sale_cart_add', 'sale_cart_sum_add'),
+				'COUNTERS'  => array('conversion_visit_day', 'sale_cart_add_day', 'sale_cart_add', 'sale_cart_add_cmpfb', 'sale_cart_sum_add'),
 				'CALCULATE' => function (array $counters)
 				{
 					$denominator = $counters['conversion_visit_day'] ?: 0;
-					$numerator   = $counters['sale_cart_add_day'   ] ?: 0;
-					$quantity    = $counters['sale_cart_add'       ] ?: 0;
-					$sum         = $counters['sale_cart_sum_add'   ] ?: 0;
+					$numerator   = $counters['sale_cart_add_day'] ?: 0;
+					$quantity    = $counters['sale_cart_add']+$counters['sale_cart_add_cmpfb'] ?: 0;
+					$sum         = $counters['sale_cart_sum_add'] ?: 0;
 
 					return array(
 						'DENOMINATOR' => $denominator,
@@ -249,6 +251,32 @@ final class ConversionHandlers
 	// 2) OnBeforeBasketAdd -> OnBeforeBasketUpdate -> OnBasketUpdate -> OnBasketAdd
 	// 3) and other variations with mixed arguments as well, sick!!!
 
+	public static function onSaleBasketItemSaved(Main\Event $event)
+	{
+		if (!$event->getParameter('IS_NEW'))
+			return;
+
+		$basketItem = $event->getParameter('ENTITY');
+
+		if ($basketItem instanceof Sale\BasketItem)
+		{
+			$price    = $basketItem->getPrice();
+			$quantity = $basketItem->getQuantity();
+			$currency = $basketItem->getCurrency();
+
+			if ($quantity && Loader::includeModule('conversion'))
+			{
+				$context = DayContext::getSiteInstance($basketItem->getField('LID'));
+
+				$context->addDayCounter('sale_cart_add_day', 1);
+				$context->addCounter('sale_cart_add', 1);
+
+				if ($price*$quantity && $currency)
+					$context->addCurrencyCounter('sale_cart_sum_add', $price*$quantity, $currency);
+			}
+		}
+	}
+
 	static $onBeforeBasketAddQuantity = 0;
 
 	static public function onBeforeBasketAdd(/*array*/ $fields)
@@ -263,7 +291,7 @@ final class ConversionHandlers
 			&& self::$onBeforeBasketAddQuantity
 			&& Loader::includeModule('conversion'))
 		{
-			$context = DayContext::getInstance();
+			$context = DayContext::getSiteInstance($fields['LID']);
 			$context->addDayCounter     ('sale_cart_add_day', 1);
 			$context->addCounter        ('sale_cart_add'    , 1);
 			$context->addCurrencyCounter('sale_cart_sum_add', $fields['PRICE'] * self::$onBeforeBasketAddQuantity, $fields['CURRENCY']);
@@ -340,11 +368,37 @@ final class ConversionHandlers
 
 	// Order Counters
 
+	public static function onSaleOrderSaved(Main\Event $event)
+	{
+		if (!$event->getParameter('IS_NEW'))
+			return;
+
+		$order = $event->getParameter('ENTITY');
+
+		if ($order instanceof Sale\Order)
+		{
+			$price    = $order->getPrice();
+			$currency = $order->getCurrency();
+
+			if (Loader::includeModule('conversion'))
+			{
+				$context = DayContext::getSiteInstance($order->getField('LID'));
+
+				$context->addDayCounter('sale_order_add_day', 1);
+				$context->addCounter('sale_order_add', 1);
+				$context->attachEntityItem('sale_order', $order->getId());
+
+				if ($price && $currency)
+					$context->addCurrencyCounter('sale_order_sum_add', $price, $currency);
+			}
+		}
+	}
+
 	static public function onOrderAdd($id, array $fields)
 	{
 		if (Loader::includeModule('conversion'))
 		{
-			$context = DayContext::getInstance();
+			$context = DayContext::getSiteInstance($fields['LID']);
 			$context->addDayCounter     ('sale_order_add_day', 1);
 			$context->addCounter        ('sale_order_add'    , 1);
 			$context->addCurrencyCounter('sale_order_sum_add', $fields['PRICE'], $fields['CURRENCY']);
@@ -353,6 +407,32 @@ final class ConversionHandlers
 	}
 
 	// Payment Counters
+
+	public static function onSaleOrderPaid(Main\Event $event)
+	{
+		$order = $event->getParameter('ENTITY');
+
+		if (!$order->isPaid())
+			return;
+
+		if ($order instanceof Sale\Order)
+		{
+			$price    = $order->getPrice();
+			$currency = $order->getCurrency();
+
+			if (Loader::includeModule('conversion'))
+			{
+				$context = DayContext::getEntityItemInstance('sale_order', $order->getId());
+
+				$addMethod = defined('ADMIN_SECTION') && ADMIN_SECTION === true ? 'addCounter' : 'addDayCounter';
+				$context->$addMethod('sale_payment_add_day', 1);
+				$context->addCounter('sale_payment_add', 1);
+
+				if ($price && $currency)
+					$context->addCurrencyCounter('sale_payment_sum_add', $price, $currency);
+			}
+		}
+	}
 
 	static public function onSalePayOrder($id, $paid)
 	{

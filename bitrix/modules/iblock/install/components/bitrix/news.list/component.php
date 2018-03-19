@@ -13,8 +13,10 @@ if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) die();
 /** @global CIntranetToolbar $INTRANET_TOOLBAR */
 global $INTRANET_TOOLBAR;
 
-use Bitrix\Main\Context;
-use Bitrix\Main\Type\DateTime;
+use Bitrix\Main\Context,
+	Bitrix\Main\Type\DateTime,
+	Bitrix\Main\Loader,
+	Bitrix\Iblock;
 
 CPageOption::SetOptionString("main", "nav_page_in_session", "N");
 
@@ -81,6 +83,7 @@ $arParams["SET_META_KEYWORDS"] = (isset($arParams["SET_META_KEYWORDS"]) && $arPa
 $arParams["SET_META_DESCRIPTION"] = (isset($arParams["SET_META_DESCRIPTION"]) && $arParams["SET_META_DESCRIPTION"] === 'N' ? 'N' : 'Y');
 $arParams["ADD_SECTIONS_CHAIN"] = $arParams["ADD_SECTIONS_CHAIN"]!="N"; //Turn on by default
 $arParams["INCLUDE_IBLOCK_INTO_CHAIN"] = $arParams["INCLUDE_IBLOCK_INTO_CHAIN"]!="N";
+$arParams["STRICT_SECTION_CHECK"] = (isset($arParams["STRICT_SECTION_CHECK"]) && $arParams["STRICT_SECTION_CHECK"] === "Y");
 $arParams["ACTIVE_DATE_FORMAT"] = trim($arParams["ACTIVE_DATE_FORMAT"]);
 if(strlen($arParams["ACTIVE_DATE_FORMAT"])<=0)
 	$arParams["ACTIVE_DATE_FORMAT"] = $DB->DateFormatToPHP(CSite::GetDateFormat("SHORT"));
@@ -146,11 +149,11 @@ if($arParams["USE_PERMISSIONS"] && isset($GLOBALS["USER"]) && is_object($GLOBALS
 	}
 }
 
-if($this->StartResultCache(false, array(($arParams["CACHE_GROUPS"]==="N"? false: $USER->GetGroups()), $bUSER_HAVE_ACCESS, $arNavigation, $arrFilter, $pagerParameters)))
+if($this->startResultCache(false, array(($arParams["CACHE_GROUPS"]==="N"? false: $USER->GetGroups()), $bUSER_HAVE_ACCESS, $arNavigation, $arrFilter, $pagerParameters)))
 {
-	if(!CModule::IncludeModule("iblock"))
+	if(!Loader::includeModule("iblock"))
 	{
-		$this->AbortResultCache();
+		$this->abortResultCache();
 		ShowError(GetMessage("IBLOCK_MODULE_NOT_INSTALLED"));
 		return;
 	}
@@ -169,237 +172,242 @@ if($this->StartResultCache(false, array(($arParams["CACHE_GROUPS"]==="N"? false:
 			"SITE_ID" => SITE_ID,
 		));
 	}
-	if($arResult = $rsIBlock->GetNext())
+
+	$arResult = $rsIBlock->GetNext();
+	if (!$arResult)
 	{
-		$arResult["USER_HAVE_ACCESS"] = $bUSER_HAVE_ACCESS;
-		//SELECT
-		$arSelect = array_merge($arParams["FIELD_CODE"], array(
-			"ID",
-			"IBLOCK_ID",
-			"IBLOCK_SECTION_ID",
-			"NAME",
-			"ACTIVE_FROM",
-			"TIMESTAMP_X",
-			"DETAIL_PAGE_URL",
-			"LIST_PAGE_URL",
-			"DETAIL_TEXT",
-			"DETAIL_TEXT_TYPE",
-			"PREVIEW_TEXT",
-			"PREVIEW_TEXT_TYPE",
-			"PREVIEW_PICTURE",
-		));
-		$bGetProperty = count($arParams["PROPERTY_CODE"])>0;
-		if($bGetProperty)
-			$arSelect[]="PROPERTY_*";
-		//WHERE
-		$arFilter = array (
-			"IBLOCK_ID" => $arResult["ID"],
-			"IBLOCK_LID" => SITE_ID,
-			"ACTIVE" => "Y",
-			"CHECK_PERMISSIONS" => $arParams['CHECK_PERMISSIONS'] ? "Y" : "N",
-		);
-
-		if($arParams["CHECK_DATES"])
-			$arFilter["ACTIVE_DATE"] = "Y";
-
-		$arParams["PARENT_SECTION"] = CIBlockFindTools::GetSectionID(
-			$arParams["PARENT_SECTION"],
-			$arParams["PARENT_SECTION_CODE"],
-			array(
-				"GLOBAL_ACTIVE" => "Y",
-				"IBLOCK_ID" => $arResult["ID"],
-			)
-		);
-
-		if($arParams["PARENT_SECTION"]>0)
-		{
-			$arFilter["SECTION_ID"] = $arParams["PARENT_SECTION"];
-			if($arParams["INCLUDE_SUBSECTIONS"])
-				$arFilter["INCLUDE_SUBSECTIONS"] = "Y";
-
-			$arResult["SECTION"]= array("PATH" => array());
-			$rsPath = CIBlockSection::GetNavChain($arResult["ID"], $arParams["PARENT_SECTION"]);
-			$rsPath->SetUrlTemplates("", $arParams["SECTION_URL"], $arParams["IBLOCK_URL"]);
-			while($arPath = $rsPath->GetNext())
-			{
-				$ipropValues = new \Bitrix\Iblock\InheritedProperty\SectionValues($arParams["IBLOCK_ID"], $arPath["ID"]);
-				$arPath["IPROPERTY_VALUES"] = $ipropValues->getValues();
-				$arResult["SECTION"]["PATH"][] = $arPath;
-			}
-
-			$ipropValues = new \Bitrix\Iblock\InheritedProperty\SectionValues($arResult["ID"], $arParams["PARENT_SECTION"]);
-			$arResult["IPROPERTY_VALUES"] = $ipropValues->getValues();
-		}
-		else
-		{
-			$arResult["SECTION"]= false;
-		}
-		//ORDER BY
-		$arSort = array(
-			$arParams["SORT_BY1"]=>$arParams["SORT_ORDER1"],
-			$arParams["SORT_BY2"]=>$arParams["SORT_ORDER2"],
-		);
-		if(!array_key_exists("ID", $arSort))
-			$arSort["ID"] = "DESC";
-
-		$obParser = new CTextParser;
-		$arResult["ITEMS"] = array();
-		$arResult["ELEMENTS"] = array();
-		$rsElement = CIBlockElement::GetList($arSort, array_merge($arFilter, $arrFilter), false, $arNavParams, $arSelect);
-		$rsElement->SetUrlTemplates($arParams["DETAIL_URL"], "", $arParams["IBLOCK_URL"]);
-		while($obElement = $rsElement->GetNextElement())
-		{
-			$arItem = $obElement->GetFields();
-
-			$arButtons = CIBlock::GetPanelButtons(
-				$arItem["IBLOCK_ID"],
-				$arItem["ID"],
-				0,
-				array("SECTION_BUTTONS"=>false, "SESSID"=>false)
-			);
-			$arItem["EDIT_LINK"] = $arButtons["edit"]["edit_element"]["ACTION_URL"];
-			$arItem["DELETE_LINK"] = $arButtons["edit"]["delete_element"]["ACTION_URL"];
-
-			if($arParams["PREVIEW_TRUNCATE_LEN"] > 0)
-				$arItem["PREVIEW_TEXT"] = $obParser->html_cut($arItem["PREVIEW_TEXT"], $arParams["PREVIEW_TRUNCATE_LEN"]);
-
-			if(strlen($arItem["ACTIVE_FROM"])>0)
-				$arItem["DISPLAY_ACTIVE_FROM"] = CIBlockFormatProperties::DateFormat($arParams["ACTIVE_DATE_FORMAT"], MakeTimeStamp($arItem["ACTIVE_FROM"], CSite::GetDateFormat()));
-			else
-				$arItem["DISPLAY_ACTIVE_FROM"] = "";
-
-			$ipropValues = new \Bitrix\Iblock\InheritedProperty\ElementValues($arItem["IBLOCK_ID"], $arItem["ID"]);
-			$arItem["IPROPERTY_VALUES"] = $ipropValues->getValues();
-
-			if(isset($arItem["PREVIEW_PICTURE"]))
-			{
-				$arItem["PREVIEW_PICTURE"] = (0 < $arItem["PREVIEW_PICTURE"] ? CFile::GetFileArray($arItem["PREVIEW_PICTURE"]) : false);
-				if ($arItem["PREVIEW_PICTURE"])
-				{
-					$arItem["PREVIEW_PICTURE"]["ALT"] = $arItem["IPROPERTY_VALUES"]["ELEMENT_PREVIEW_PICTURE_FILE_ALT"];
-					if ($arItem["PREVIEW_PICTURE"]["ALT"] == "")
-						$arItem["PREVIEW_PICTURE"]["ALT"] = $arItem["NAME"];
-					$arItem["PREVIEW_PICTURE"]["TITLE"] = $arItem["IPROPERTY_VALUES"]["ELEMENT_PREVIEW_PICTURE_FILE_TITLE"];
-					if ($arItem["PREVIEW_PICTURE"]["TITLE"] == "")
-						$arItem["PREVIEW_PICTURE"]["TITLE"] = $arItem["NAME"];
-				}
-			}
-			if(isset($arItem["DETAIL_PICTURE"]))
-			{
-				$arItem["DETAIL_PICTURE"] = (0 < $arItem["DETAIL_PICTURE"] ? CFile::GetFileArray($arItem["DETAIL_PICTURE"]) : false);
-				if ($arItem["DETAIL_PICTURE"])
-				{
-					$arItem["DETAIL_PICTURE"]["ALT"] = $arItem["IPROPERTY_VALUES"]["ELEMENT_DETAIL_PICTURE_FILE_ALT"];
-					if ($arItem["DETAIL_PICTURE"]["ALT"] == "")
-						$arItem["DETAIL_PICTURE"]["ALT"] = $arItem["NAME"];
-					$arItem["DETAIL_PICTURE"]["TITLE"] = $arItem["IPROPERTY_VALUES"]["ELEMENT_DETAIL_PICTURE_FILE_TITLE"];
-					if ($arItem["DETAIL_PICTURE"]["TITLE"] == "")
-						$arItem["DETAIL_PICTURE"]["TITLE"] = $arItem["NAME"];
-				}
-			}
-
-			$arItem["FIELDS"] = array();
-			foreach($arParams["FIELD_CODE"] as $code)
-				if(array_key_exists($code, $arItem))
-					$arItem["FIELDS"][$code] = $arItem[$code];
-
-			if($bGetProperty)
-				$arItem["PROPERTIES"] = $obElement->GetProperties();
-			$arItem["DISPLAY_PROPERTIES"]=array();
-			foreach($arParams["PROPERTY_CODE"] as $pid)
-			{
-				$prop = &$arItem["PROPERTIES"][$pid];
-				if(
-					(is_array($prop["VALUE"]) && count($prop["VALUE"])>0)
-					|| (!is_array($prop["VALUE"]) && strlen($prop["VALUE"])>0)
-				)
-				{
-					$arItem["DISPLAY_PROPERTIES"][$pid] = CIBlockFormatProperties::GetDisplayValue($arItem, $prop, "news_out");
-				}
-			}
-
-			if ($arParams["SET_LAST_MODIFIED"])
-			{
-				$time = DateTime::createFromUserTime($arItem["TIMESTAMP_X"]);
-				if (
-					!isset($arResult["ITEMS_TIMESTAMP_X"])
-					|| $time->getTimestamp() > $arResult["ITEMS_TIMESTAMP_X"]->getTimestamp()
-				)
-					$arResult["ITEMS_TIMESTAMP_X"] = $time;
-			}
-
-			$arResult["ITEMS"][] = $arItem;
-			$arResult["ELEMENTS"][] = $arItem["ID"];
-		}
-
-		$navComponentParameters = array();
-		if ($arParams["PAGER_BASE_LINK_ENABLE"] === "Y")
-		{
-			$pagerBaseLink = trim($arParams["PAGER_BASE_LINK"]);
-			if ($pagerBaseLink === "")
-			{
-				if (
-					$arResult["SECTION"]
-					&& $arResult["SECTION"]["PATH"]
-					&& $arResult["SECTION"]["PATH"][0]
-					&& $arResult["SECTION"]["PATH"][0]["~SECTION_PAGE_URL"]
-				)
-				{
-					$pagerBaseLink = $arResult["SECTION"]["PATH"][0]["~SECTION_PAGE_URL"];
-				}
-				elseif (
-					$arItem["~LIST_PAGE_URL"]
-				)
-				{
-					$pagerBaseLink = $arItem["~LIST_PAGE_URL"];
-				}
-			}
-
-			if ($pagerParameters && isset($pagerParameters["BASE_LINK"]))
-			{
-				$pagerBaseLink = $pagerParameters["BASE_LINK"];
-				unset($pagerParameters["BASE_LINK"]);
-			}
-
-			$navComponentParameters["BASE_LINK"] = CHTTP::urlAddParams($pagerBaseLink, $pagerParameters, array("encode"=>true));
-		}
-
-		$arResult["NAV_STRING"] = $rsElement->GetPageNavStringEx(
-			$navComponentObject,
-			$arParams["PAGER_TITLE"],
-			$arParams["PAGER_TEMPLATE"],
-			$arParams["PAGER_SHOW_ALWAYS"],
-			$this,
-			$navComponentParameters
-		);
-		$arResult["NAV_CACHED_DATA"] = null;
-		$arResult["NAV_RESULT"] = $rsElement;
-		$arResult["NAV_PARAM"] = $navComponentParameters;
-
-		$this->SetResultCacheKeys(array(
-			"ID",
-			"IBLOCK_TYPE_ID",
-			"LIST_PAGE_URL",
-			"NAV_CACHED_DATA",
-			"NAME",
-			"SECTION",
-			"ELEMENTS",
-			"IPROPERTY_VALUES",
-			"ITEMS_TIMESTAMP_X",
-		));
-		$this->IncludeComponentTemplate();
-	}
-	else
-	{
-		$this->AbortResultCache();
-		\Bitrix\Iblock\Component\Tools::process404(
+		$this->abortResultCache();
+		Iblock\Component\Tools::process404(
 			trim($arParams["MESSAGE_404"]) ?: GetMessage("T_NEWS_NEWS_NA")
 			,true
 			,$arParams["SET_STATUS_404"] === "Y"
 			,$arParams["SHOW_404"] === "Y"
 			,$arParams["FILE_404"]
 		);
+		return;
 	}
+
+	$arResult["USER_HAVE_ACCESS"] = $bUSER_HAVE_ACCESS;
+	//SELECT
+	$arSelect = array_merge($arParams["FIELD_CODE"], array(
+		"ID",
+		"IBLOCK_ID",
+		"IBLOCK_SECTION_ID",
+		"NAME",
+		"ACTIVE_FROM",
+		"TIMESTAMP_X",
+		"DETAIL_PAGE_URL",
+		"LIST_PAGE_URL",
+		"DETAIL_TEXT",
+		"DETAIL_TEXT_TYPE",
+		"PREVIEW_TEXT",
+		"PREVIEW_TEXT_TYPE",
+		"PREVIEW_PICTURE",
+	));
+	$bGetProperty = count($arParams["PROPERTY_CODE"])>0;
+	if($bGetProperty)
+		$arSelect[]="PROPERTY_*";
+	//WHERE
+	$arFilter = array (
+		"IBLOCK_ID" => $arResult["ID"],
+		"IBLOCK_LID" => SITE_ID,
+		"ACTIVE" => "Y",
+		"CHECK_PERMISSIONS" => $arParams['CHECK_PERMISSIONS'] ? "Y" : "N",
+	);
+
+	if($arParams["CHECK_DATES"])
+		$arFilter["ACTIVE_DATE"] = "Y";
+
+	$PARENT_SECTION = CIBlockFindTools::GetSectionID(
+		$arParams["PARENT_SECTION"],
+		$arParams["PARENT_SECTION_CODE"],
+		array(
+			"GLOBAL_ACTIVE" => "Y",
+			"IBLOCK_ID" => $arResult["ID"],
+		)
+	);
+
+	if (
+		$arParams["STRICT_SECTION_CHECK"]
+		&& (
+			$arParams["PARENT_SECTION"] > 0
+			|| strlen($arParams["PARENT_SECTION_CODE"]) > 0
+		)
+	)
+	{
+		if ($PARENT_SECTION <= 0)
+		{
+			$this->abortResultCache();
+			Iblock\Component\Tools::process404(
+				trim($arParams["MESSAGE_404"]) ?: GetMessage("T_NEWS_NEWS_NA")
+				,true
+				,$arParams["SET_STATUS_404"] === "Y"
+				,$arParams["SHOW_404"] === "Y"
+				,$arParams["FILE_404"]
+			);
+			return;
+		}
+	}
+
+	$arParams["PARENT_SECTION"] = $PARENT_SECTION;
+
+	if($arParams["PARENT_SECTION"]>0)
+	{
+		$arFilter["SECTION_ID"] = $arParams["PARENT_SECTION"];
+		if($arParams["INCLUDE_SUBSECTIONS"])
+			$arFilter["INCLUDE_SUBSECTIONS"] = "Y";
+
+		$arResult["SECTION"]= array("PATH" => array());
+		$rsPath = CIBlockSection::GetNavChain($arResult["ID"], $arParams["PARENT_SECTION"]);
+		$rsPath->SetUrlTemplates("", $arParams["SECTION_URL"], $arParams["IBLOCK_URL"]);
+		while($arPath = $rsPath->GetNext())
+		{
+			$ipropValues = new Iblock\InheritedProperty\SectionValues($arParams["IBLOCK_ID"], $arPath["ID"]);
+			$arPath["IPROPERTY_VALUES"] = $ipropValues->getValues();
+			$arResult["SECTION"]["PATH"][] = $arPath;
+		}
+
+		$ipropValues = new Iblock\InheritedProperty\SectionValues($arResult["ID"], $arParams["PARENT_SECTION"]);
+		$arResult["IPROPERTY_VALUES"] = $ipropValues->getValues();
+	}
+	else
+	{
+		$arResult["SECTION"]= false;
+	}
+	//ORDER BY
+	$arSort = array(
+		$arParams["SORT_BY1"]=>$arParams["SORT_ORDER1"],
+		$arParams["SORT_BY2"]=>$arParams["SORT_ORDER2"],
+	);
+	if(!array_key_exists("ID", $arSort))
+		$arSort["ID"] = "DESC";
+
+	$obParser = new CTextParser;
+	$arResult["ITEMS"] = array();
+	$arResult["ELEMENTS"] = array();
+	$rsElement = CIBlockElement::GetList($arSort, array_merge($arFilter , $arrFilter), false, $arNavParams, $arSelect);
+	$rsElement->SetUrlTemplates($arParams["DETAIL_URL"], "", $arParams["IBLOCK_URL"]);
+	while($obElement = $rsElement->GetNextElement())
+	{
+		$arItem = $obElement->GetFields();
+
+		$arButtons = CIBlock::GetPanelButtons(
+			$arItem["IBLOCK_ID"],
+			$arItem["ID"],
+			0,
+			array("SECTION_BUTTONS"=>false, "SESSID"=>false)
+		);
+		$arItem["EDIT_LINK"] = $arButtons["edit"]["edit_element"]["ACTION_URL"];
+		$arItem["DELETE_LINK"] = $arButtons["edit"]["delete_element"]["ACTION_URL"];
+
+		if($arParams["PREVIEW_TRUNCATE_LEN"] > 0)
+			$arItem["PREVIEW_TEXT"] = $obParser->html_cut($arItem["PREVIEW_TEXT"], $arParams["PREVIEW_TRUNCATE_LEN"]);
+
+		if(strlen($arItem["ACTIVE_FROM"])>0)
+			$arItem["DISPLAY_ACTIVE_FROM"] = CIBlockFormatProperties::DateFormat($arParams["ACTIVE_DATE_FORMAT"], MakeTimeStamp($arItem["ACTIVE_FROM"], CSite::GetDateFormat()));
+		else
+			$arItem["DISPLAY_ACTIVE_FROM"] = "";
+
+		$ipropValues = new Iblock\InheritedProperty\ElementValues($arItem["IBLOCK_ID"], $arItem["ID"]);
+		$arItem["IPROPERTY_VALUES"] = $ipropValues->getValues();
+
+		Iblock\Component\Tools::getFieldImageData(
+			$arItem,
+			array('PREVIEW_PICTURE', 'DETAIL_PICTURE'),
+			Iblock\Component\Tools::IPROPERTY_ENTITY_ELEMENT,
+			'IPROPERTY_VALUES'
+		);
+
+		$arItem["FIELDS"] = array();
+		foreach($arParams["FIELD_CODE"] as $code)
+			if(array_key_exists($code, $arItem))
+				$arItem["FIELDS"][$code] = $arItem[$code];
+
+		if($bGetProperty)
+			$arItem["PROPERTIES"] = $obElement->GetProperties();
+		$arItem["DISPLAY_PROPERTIES"]=array();
+		foreach($arParams["PROPERTY_CODE"] as $pid)
+		{
+			$prop = &$arItem["PROPERTIES"][$pid];
+			if(
+				(is_array($prop["VALUE"]) && count($prop["VALUE"])>0)
+				|| (!is_array($prop["VALUE"]) && strlen($prop["VALUE"])>0)
+			)
+			{
+				$arItem["DISPLAY_PROPERTIES"][$pid] = CIBlockFormatProperties::GetDisplayValue($arItem, $prop, "news_out");
+			}
+		}
+
+		if ($arParams["SET_LAST_MODIFIED"])
+		{
+			$time = DateTime::createFromUserTime($arItem["TIMESTAMP_X"]);
+			if (
+				!isset($arResult["ITEMS_TIMESTAMP_X"])
+				|| $time->getTimestamp() > $arResult["ITEMS_TIMESTAMP_X"]->getTimestamp()
+			)
+				$arResult["ITEMS_TIMESTAMP_X"] = $time;
+		}
+
+		$arResult["ITEMS"][] = $arItem;
+		$arResult["ELEMENTS"][] = $arItem["ID"];
+	}
+
+	$navComponentParameters = array();
+	if ($arParams["PAGER_BASE_LINK_ENABLE"] === "Y")
+	{
+		$pagerBaseLink = trim($arParams["PAGER_BASE_LINK"]);
+		if ($pagerBaseLink === "")
+		{
+			if (
+				$arResult["SECTION"]
+				&& $arResult["SECTION"]["PATH"]
+				&& $arResult["SECTION"]["PATH"][0]
+				&& $arResult["SECTION"]["PATH"][0]["~SECTION_PAGE_URL"]
+			)
+			{
+				$pagerBaseLink = $arResult["SECTION"]["PATH"][0]["~SECTION_PAGE_URL"];
+			}
+			elseif (
+				isset($arItem) && isset($arItem["~LIST_PAGE_URL"])
+			)
+			{
+				$pagerBaseLink = $arItem["~LIST_PAGE_URL"];
+			}
+		}
+
+		if ($pagerParameters && isset($pagerParameters["BASE_LINK"]))
+		{
+			$pagerBaseLink = $pagerParameters["BASE_LINK"];
+			unset($pagerParameters["BASE_LINK"]);
+		}
+
+		$navComponentParameters["BASE_LINK"] = CHTTP::urlAddParams($pagerBaseLink, $pagerParameters, array("encode"=>true));
+	}
+
+	$arResult["NAV_STRING"] = $rsElement->GetPageNavStringEx(
+		$navComponentObject,
+		$arParams["PAGER_TITLE"],
+		$arParams["PAGER_TEMPLATE"],
+		$arParams["PAGER_SHOW_ALWAYS"],
+		$this,
+		$navComponentParameters
+	);
+	$arResult["NAV_CACHED_DATA"] = null;
+	$arResult["NAV_RESULT"] = $rsElement;
+	$arResult["NAV_PARAM"] = $navComponentParameters;
+
+	$this->setResultCacheKeys(array(
+		"ID",
+		"IBLOCK_TYPE_ID",
+		"LIST_PAGE_URL",
+		"NAV_CACHED_DATA",
+		"NAME",
+		"SECTION",
+		"ELEMENTS",
+		"IPROPERTY_VALUES",
+		"ITEMS_TIMESTAMP_X",
+	));
+	$this->includeComponentTemplate();
 }
 
 if(isset($arResult["ID"]))
@@ -413,7 +421,7 @@ if(isset($arResult["ID"]))
 			|| $arParams["SET_TITLE"]
 		)
 		{
-			if(CModule::IncludeModule("iblock"))
+			if(Loader::includeModule("iblock"))
 			{
 				$arButtons = CIBlock::GetPanelButtons(
 					$arResult["ID"],
@@ -423,7 +431,7 @@ if(isset($arResult["ID"]))
 				);
 
 				if($APPLICATION->GetShowIncludeAreas())
-					$this->AddIncludeAreaIcons(CIBlock::GetComponentMenu($APPLICATION->GetPublicShowMode(), $arButtons));
+					$this->addIncludeAreaIcons(CIBlock::GetComponentMenu($APPLICATION->GetPublicShowMode(), $arButtons));
 
 				if(
 					is_array($arButtons["intranet"])
@@ -441,14 +449,14 @@ if(isset($arResult["ID"]))
 					$arTitleOptions = array(
 						'ADMIN_EDIT_LINK' => $arButtons["submenu"]["edit_iblock"]["ACTION"],
 						'PUBLIC_EDIT_LINK' => "",
-						'COMPONENT_NAME' => $this->GetName(),
+						'COMPONENT_NAME' => $this->getName(),
 					);
 				}
 			}
 		}
 	}
 
-	$this->SetTemplateCachedData($arResult["NAV_CACHED_DATA"]);
+	$this->setTemplateCachedData($arResult["NAV_CACHED_DATA"]);
 
 	if($arParams["SET_TITLE"])
 	{

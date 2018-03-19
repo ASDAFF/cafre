@@ -386,16 +386,6 @@
 
 					var applier = getStyler(tagName, arStyle, cssClass);
 
-//					if (false && params.bSelectParentIfCollapsed && range.collapsed)
-//					{
-//						var parents = applier.IsAppliedToRange(range, false);
-//						if (parents && parents[0])
-//						{
-//							//range = applier.SelectNode(range, parents[0]);
-//							range = _this.editor.selection.SelectNode(parents[0]);
-//						}
-//					}
-
 					if (params.bClear)
 					{
 						range = applier.UndoToRange(range, false);
@@ -408,6 +398,56 @@
 					setTimeout(function()
 					{
 						_this.editor.selection.SetSelection(range);
+
+						// If we format text in the table - we could accidentally broke table,
+						// so now we should check and repair all possible tables (mantis: #66342)
+						var
+							table, i, j, k, cellNode,
+							tables = [],
+							bogusNodes = [],
+							nodes = range.getNodes([1]);
+
+						for (i = 0; i < nodes.length; i++)
+						{
+							if (BX.util.in_array(nodes[i].nodeName, ['TD', 'TR', 'TH']))
+							{
+								table = BX.findParent(nodes[i], function(n)
+								{
+									return n.nodeName == "TABLE";
+								}, _this.editor.GetIframeDoc().body);
+
+								if (table && !BX.util.in_array(table, tables))
+								{
+									tables.push(table);
+								}
+							}
+						}
+
+						// Now we have list of tables. In most cases it will be one node.
+						for (i = 0; i < tables.length; i++)
+						{
+							table = tables[i];
+							for (j = 0; j < table.rows.length; j++)
+							{
+								for (k = 0; k < table.rows[j].childNodes.length; k++)
+								{
+									cellNode = table.rows[j].childNodes[k];
+									// If it's cell inside the row, it should at least be on of the table dedicated tag. If not - we will remove it to save html valid.
+									if (cellNode
+										&& cellNode.nodeType == 1
+										&& !BX.util.in_array(cellNode.nodeName, _this.editor.TABLE_TAGS))
+									{
+										bogusNodes.push(cellNode);
+									}
+								}
+							}
+						}
+
+						// Clean invalid tags inside the table.
+						for (i = 0; i < bogusNodes.length; i++)
+						{
+							BX.cleanNode(bogusNodes[i], true);
+						}
 
 						var lastCreatedNode = _this.editor.selection.GetSelectedNode();
 						if (lastCreatedNode && lastCreatedNode.nodeType == 1)
@@ -598,7 +638,7 @@
 					params = params || {};
 					nodeName = typeof nodeName === "string" ? nodeName.toUpperCase() : nodeName;
 					var
-						childBlockNodes, i, allNodes, createdBlockNodes,
+						childBlockNodes, i, createdBlockNodes,
 						range = params.range || _this.editor.selection.GetRange(),
 						blockElement = nodeName ? _this.actions.formatBlock.state(command, nodeName, className, arStyle) : false,
 						selectedNode;
@@ -611,7 +651,7 @@
 						var wholeBlockSelected = range.startContainer == blockElement.firstChild && range.endContainer == blockElement.lastChild;
 
 						// Divs and blockquotes can be inside each other
-						if (BX.util.in_array(nodeName, nestedBlockTags) && params.nestedBlocks !== false)
+						if (nodeName && BX.util.in_array(nodeName, nestedBlockTags) && params.nestedBlocks !== false)
 						{
 							// create new div
 							blockElement = _this.document.createElement(nodeName || DEFAULT_NODE_NAME);
@@ -1305,7 +1345,10 @@
 						});
 					}
 
-					_this.actions.formatBlock.exec('formatBlock', null);
+					if (!_this.editor.iframeView.IsEmpty(true))
+					{
+						_this.actions.formatBlock.exec('formatBlock', null);
+					}
 				},
 				state: BX.DoNothing,
 				value: BX.DoNothing
@@ -1520,7 +1563,7 @@
 
 					for (i = 0; i < nodes.length; i++)
 					{
-						if (nodes[i] && nodes[i].nodeName == "LI")
+						if (nodes[i] && nodes[i].nodeName == "LI" && !_this.editor.bbCode)
 						{
 							// 1. Add color to LI
 							nodes[i].style.color = value;
@@ -1637,7 +1680,7 @@
 					if (_this.editor.bbCode && _this.editor.synchro.IsFocusedOnTextarea())
 					{
 						_this.editor.textareaView.Focus();
-						var linkHtml = "[URL=" + value.href + "]" + (value.text || value.href) + "[/URL]";
+						var linkHtml = "[URL=" + _this.editor.util.spaceUrlEncode(value.href) + "]" + (value.text || value.href) + "[/URL]";
 						_this.editor.textareaView.WrapWith(false, false, linkHtml);
 					}
 					else
@@ -1646,7 +1689,7 @@
 
 						var
 							nodeToSetCarret,
-							params = typeof(value) === "object" ? value : {href: value},
+							params = (value && typeof(value) === "object") ? value : {href: value},
 							i, link, linksCount = 0, lastLink,
 							links;
 
@@ -1672,7 +1715,7 @@
 							}
 							if (params.className)
 								link.className = params.className;
-							link.href = params.href || '';
+							link.href = _this.editor.util.spaceUrlEncode(params.href) || '';
 
 							if (params.noindex)
 							{
@@ -1878,6 +1921,8 @@
 					if (value.src == '')
 						return;
 
+					value.src = _this.editor.util.spaceUrlEncode(value.src);
+
 					// Only for bbCode == true
 					if (_this.editor.bbCode && _this.editor.synchro.IsFocusedOnTextarea())
 					{
@@ -1894,7 +1939,7 @@
 
 					_this.editor.iframeView.Focus();
 					var
-						params = typeof(value) === "object" ? value : {src: value},
+						params = (value && typeof(value) === "object") ? value : {src: value},
 						image = value.image || _this.actions.insertImage.state(action, value),
 						invisText, sibl;
 
@@ -2634,7 +2679,7 @@
 					if (node && node.nodeType == 1 && node.nodeName == 'LI')
 					{
 						fch = node.firstChild;
-						if (fch.nodeName == 'I' && fch.innerHTML == '' && fch.className !== '')
+						if (fch && fch.nodeName == 'I' && fch.innerHTML == '' && fch.className !== '')
 						{
 							return fch.className;
 						}
@@ -2652,7 +2697,7 @@
 					for (i = 0; i < list.childNodes.length; i++)
 					{
 						node = list.childNodes[i];
-						if (node && node.nodeType == 1 && node.nodeName == 'LI')
+						if (node && node.nodeType == 1 && node.nodeName == 'LI' && node.firstChild)
 						{
 							fch = node.firstChild;
 							if (fch.nodeName == 'I' && fch.innerHTML == '' && fch.className !== '')
@@ -4048,6 +4093,51 @@
 			{
 				return range = rng;
 			}
+			function setExternalSelectionFromRange(range)
+			{
+				range = range || _this.editor.selection.GetRange(_this.editor.selection.GetSelection(document));
+
+				if (range)
+				{
+					var tmpDiv;
+					// mantis:64329
+					if (range.startContainer == range.endContainer && range.startOffset == 0 && range.endOffset == range.endContainer.length && range.startContainer.parentNode && range.startContainer.parentNode.nodeName == 'A' && range.startContainer.parentNode.href)
+					{
+						tmpDiv = BX.create('DIV', {html: range.startContainer.parentNode.href}, _this.editor.GetIframeDoc());
+					}
+					else
+					{
+						var html = range.toHtml();
+						html = html.replace(/<br.*?>/ig, "#BX_BR#");
+						tmpDiv = BX.create('DIV', {html: BX.util.htmlspecialchars(html)}, _this.editor.GetIframeDoc());
+					}
+
+					var extSel = _this.editor.util.GetTextContentEx(tmpDiv);
+					extSel = extSel.replace(/#BX_BR#/ig, "<br>");
+					setExternalSelection(extSel);
+					BX.remove(tmpDiv);
+				}
+				else
+				{
+					setExternalSelection('');
+				}
+			}
+
+			function checkSpaceAfterQuotes(target)
+			{
+				var
+					i, quote,
+					quotes = target.querySelectorAll("blockquote.bxhtmled-quote");
+
+				for (i = 0; i < quotes.length; i++)
+				{
+					quote = quotes[i];
+					if (quote.nextSibling === null)
+					{
+						_this.editor.util.InsertAfter(_this.editor.util.GetInvisibleTextNode(), quote);
+					}
+				}
+			}
 
 			return {
 				exec: function(action)
@@ -4070,41 +4160,21 @@
 					}
 					else
 					{
+						if (!range && _this.editor.selection.lastCheckedRange && _this.editor.selection.lastCheckedRange.range)
+						{
+							range = _this.editor.selection.lastCheckedRange.range;
+						}
+						_this.editor.iframeView.Focus();
+						if (range)
+						{
+							_this.editor.selection.SetSelection(range);
+						}
+
 						if(sel)
 						{
-							if (!range && _this.editor.selection.lastCheckedRange && _this.editor.selection.lastCheckedRange.range)
-							{
-								range = _this.editor.selection.lastCheckedRange.range;
-							}
-							_this.editor.iframeView.Focus();
-							if (range)
-							{
-								_this.editor.selection.SetSelection(range);
-							}
-
 							var quoteId = 'bxq_' + Math.round(Math.random() * 1000000);
 
-							// Bug in Chrome - when you press enter but it put carret on the prev string
-							// Chrome 43.0.2357 in Mac puts visible space instead of invisible
-							if (BX.browser.IsMac() && BX.browser.IsChrome())
-							{
-								var tmpId = "bx-editor-temp-" + Math.round(Math.random() * 1000000);
-								_this.editor.InsertHtml('<blockquote id="' + quoteId + '" class="bxhtmled-quote">' + sel + '</blockquote>' + '<span><span id="' + tmpId + '">' + _this.editor.INVISIBLE_SPACE + '</span></span>', range);
-
-								setTimeout(function()
-								{
-									var tmpElement = _this.editor.GetIframeElement(tmpId);
-									if (tmpElement)
-									{
-										_this.editor.selection.SetAfter(tmpElement.parentNode);
-										BX.remove(tmpElement);
-									}
-								}, 0);
-							}
-							else
-							{
-								_this.editor.InsertHtml('<blockquote id="' + quoteId + '" class="bxhtmled-quote">' + sel + '</blockquote>' + _this.editor.INVISIBLE_SPACE, range);
-							}
+							_this.editor.InsertHtml('<blockquote id="' + quoteId + '" class="bxhtmled-quote">' + sel + '</blockquote>' + _this.editor.INVISIBLE_SPACE, range);
 
 							setTimeout(function()
 							{
@@ -4117,14 +4187,20 @@
 									{
 										BX.remove(prev);
 									}
-									quote.id = null;
+									quote.removeAttribute('id');
 								}
 							}, 0);
 						}
 						else
 						{
+							if (!range && _this.editor.selection.lastRange)
+								range = _this.editor.selection.lastRange;
+
 							res = _this.actions.formatBlock.exec('formatBlock', 'blockquote', 'bxhtmled-quote', false, {range: range});
 						}
+
+						if(!sel)
+							_this.editor.selection.ScrollIntoView();
 					}
 
 					range = null;
@@ -4135,8 +4211,10 @@
 					return _this.actions.formatBlock.state('formatBlock', 'blockquote', 'bxhtmled-quote');
 				},
 				value: BX.DoNothing,
+				setExternalSelectionFromRange : setExternalSelectionFromRange,
 				setExternalSelection : setExternalSelection,
 				getExternalSelection : getExternalSelection,
+				checkSpaceAfterQuotes: checkSpaceAfterQuotes,
 				setRange : setRange,
 				checkNode: checkNode
 			};
@@ -4208,7 +4286,7 @@
 							{
 								src: smile.path,
 								title: smile.name || smile.code
-							}});
+							}}, _this.editor.iframeView.document);
 							_this.editor.SetBxTag(smileImg, {tag: "smile", params: smile});
 							if (smile.width)
 								smileImg.style.width = parseInt(smile.width) + 'px';
@@ -4218,11 +4296,10 @@
 
 							var textBefore = _this.editor.iframeView.document.createTextNode(' ');
 							smileImg.parentNode.insertBefore(textBefore, smileImg);
-							var textAfer = _this.editor.iframeView.document.createTextNode(' ');
+							var textAfer = BX.create("SPAN", {html: '&nbsp;'}, _this.editor.iframeView.document);
 							_this.editor.util.InsertAfter(textAfer, smileImg);
-
 							_this.editor.selection.SetAfter(textAfer);
-							setTimeout(function(){_this.editor.selection.SetAfter(smileImg);}, 10);
+							setTimeout(function(){_this.editor.selection.SetAfter(textAfer);}, 10);
 						}
 					}
 				},
@@ -4780,6 +4857,7 @@
 					trI,
 					newCell,
 					colSpan = cells[0].colSpan,
+					rowSpan = cells[0].rowSpan,
 					tr = cells[0].parentNode;
 
 				for(i = 0; i <= cells[0].cellIndex; i++)
@@ -4793,7 +4871,7 @@
 				{
 					for(j = 0; j < table.rows.length; j++)
 					{
-						if (j == tr.rowIndex)
+						if (j == tr.rowIndex || j >= tr.rowIndex && j < tr.rowIndex + rowSpan)
 							continue;
 
 						realIndI = 0;
@@ -4803,7 +4881,12 @@
 						while (realIndI < realInd && i < trI.cells.length)
 							realIndI += trI.cells[i++].colSpan;
 
-						trI.cells[--i].colSpan += 1;
+						i--;
+						trI.cells[i].colSpan += 1;
+
+						// mantis: 71909
+						if (trI.cells[i].rowSpan > 1)
+							j = j + trI.cells[i].rowSpan - 1;
 					}
 				}
 				newCell = tr.insertCell(cells[0].cellIndex + 1);
@@ -5078,7 +5161,10 @@
 						tag += "=" + value;
 					}
 
-					_this.editor.textareaView.WrapWith("[" + tag + "]", "[/" + tag_end + "]");
+					if(params.singleTag === true)
+						_this.editor.textareaView.WrapWith("[", "]", tag);
+					else
+						_this.editor.textareaView.WrapWith("[" + tag + "]", "[/" + tag_end + "]");
 				},
 				state: BX.DoNothing,
 				value: BX.DoNothing

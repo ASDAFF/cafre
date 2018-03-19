@@ -19,7 +19,7 @@ class CAllVoteChannel
 	{
 		global $DB, $APPLICATION;
 		$aMsg = array();
-		$ID = intVal($ID);
+		$ID = intval($ID);
 
 		foreach(array("TITLE", "SYMBOLIC_NAME") as $key)
 		{
@@ -180,7 +180,7 @@ class CAllVoteChannel
 	function SetAccessPermissions($ID, $arGroups)
 	{
 		global $DB;
-		$ID = intVal($ID);
+		$ID = intval($ID);
 		$arGroups = (is_array($arGroups) ? $arGroups : array());
 		$arMainGroups = array();
 		if ($ID <= 0 || empty($arGroups))

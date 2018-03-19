@@ -31,7 +31,8 @@ $lAdminHistory = new CAdminList($sTableHistory, $oSortHistory);
 $arFilterFieldsHistory = array(
 	"filter_user",
 	"filter_date_history",
-	"filter_type"
+	"filter_type",
+	"filter_important"
 );
 
 $lAdminHistory->InitFilter($arFilterFieldsHistory);
@@ -43,6 +44,11 @@ if ('' == $by)
 
 $order = trim(array_key_exists('order', $_REQUEST) ? $_REQUEST['order'] : '');
 
+if (!isset($filter_important))
+{
+	$filter_important = "Y";
+}
+
 if ('' == $order)
 	$order = 'DESC';
 
@@ -51,8 +57,10 @@ $arHistSort["ID"] = $order;
 
 $arFilterHistory = array("ORDER_ID" => $ID);
 
-if (isset($entity))
-	$arFilterHistory = array_merge($entity, $arFilterHistory);
+if (isset($historyEntity) && is_array($historyEntity))
+{
+	$arFilterHistory = array_merge($historyEntity, $arFilterHistory);
+}
 
 if (strlen($filter_type)>0) $arFilterHistory["TYPE"] = trim($filter_type);
 if (IntVal($filter_user)>0) $arFilterHistory["USER_ID"] = intval($filter_user);
@@ -103,6 +111,13 @@ while ($arHistory = $dbHistory->Fetch())
 	}
 }
 
+if ($filter_important === 'Y')
+{
+	$arFilterHistory['@TYPE'] = \Bitrix\Sale\OrderHistory::getManagerLogItems();
+}
+
+CTimeZone::Disable();
+
 // new order history data
 $dbOrderChange = CSaleOrderChange::GetList(
 	$arHistSort,
@@ -114,6 +129,8 @@ $dbOrderChange = CSaleOrderChange::GetList(
 
 while ($arChangeRecord = $dbOrderChange->Fetch())
 	$arHistoryData[] = $arChangeRecord;
+
+CTimeZone::Enable();
 
 // advancing sorting is necessary if old history results are mixed with new order changes
 if ($bUseOldHistory)
@@ -154,13 +171,16 @@ while ($arChangeRecord = $dbRecords->Fetch())
 {
 	$entityName = '';
 	$row =& $lAdminHistory->AddRow($arChangeRecord["ID"], $arChangeRecord, '', '');
-	$stmp = MakeTimeStamp($arChangeRecord["DATE_CREATE"], "DD.MM.YYYY HH:MI:SS");
-	$row->AddField("DATE_CREATE", date("d.m.Y H:i", $stmp));
+
+	$datetime = new \Bitrix\Main\Type\DateTime($arChangeRecord["DATE_CREATE"]);
+	$datetime->format(\Bitrix\Main\Type\DateTime::getFormat());
+	$row->AddField("DATE_CREATE", $datetime);
+
 	$row->AddField("USER_ID", GetFormatedUserName($arChangeRecord["USER_ID"], false));
 	$arRecord = CSaleOrderChange::GetRecordDescription($arChangeRecord["TYPE"], $arChangeRecord["DATA"]);
 	$row->AddField("TYPE", $arRecord["NAME"]);
 	$row->AddField("DATA", htmlspecialcharsbx($arRecord["INFO"]));
-	if (!isset($entity))
+	if (!isset($entity) && intval($arChangeRecord["ENTITY_ID"]) > 0)
 	{
 		if ($arChangeRecord["ENTITY"] == 'SHIPMENT')
 		{
@@ -190,14 +210,10 @@ if($_REQUEST["table_id"] == $sTableHistory)
 	<input type="hidden" name="table_id" value="<?=$sTableHistory?>">
 	<?
 	$arFilterFieldsTmp = array(
-		"filter_user" => Loc::getMessage("SOA_ROW_BUYER"),
-		"filter_date_history" => Loc::getMessage("SALE_F_DATE"),
-		"filter_status_id" => Loc::getMessage("SALE_F_DATE_UPDATE"),
-		"filter_payed" => Loc::getMessage("SALE_F_ID"),
-		"filter_allow_delivery" => Loc::getMessage("SALE_F_LANG_CUR"),
-		"filter_canceled" => Loc::getMessage("SOA_F_PRICE"),
-		"filter_deducted" => Loc::getMessage("SOA_F_PRICE"),
-		"filter_marked" => Loc::getMessage("SOA_F_PRICE")
+		"filter_user" => Loc::getMessage("SOD_HIST_H_USER"),
+		"filter_date_history" => Loc::getMessage("SOD_HIST_H_DATE"),
+		"filter_type" => Loc::getMessage("SOD_HIST_TYPE"),
+		"filter_important" => Loc::getMessage("SOD_HIST_IMPORTANT_TYPES"),
 	);
 
 	$oFilter = new CAdminFilter(
@@ -205,7 +221,7 @@ if($_REQUEST["table_id"] == $sTableHistory)
 		$arFilterFieldsTmp
 	);
 
-	$oFilter->SetDefaultRows(array("filter_user"));
+	$oFilter->SetDefaultRows(array("filter_user", 'filter_important'));
 	$oFilter->Begin();
 	?>
 <tr>
@@ -229,6 +245,15 @@ if($_REQUEST["table_id"] == $sTableHistory)
 			<?foreach ($arOperations as $type => $name):?>
 				<option value="<?=$type?>"<?if ($filter_type== $type) echo " selected"?>><?=htmlspecialcharsbx($name);?></option>
 			<?endforeach;?>
+		</select>
+	</td>
+</tr>
+<tr>
+	<td><?=Loc::getMessage('SOD_HIST_IMPORTANT_TYPES')?>:</td>
+	<td>
+		<select name="filter_important">
+			<option value="Y"<?if ($filter_important === 'Y' || $filter_important === null) echo " selected"?>><?=Loc::getMessage("SOD_HIST_YES");?></option>
+			<option value="N"<?if ($filter_important === 'N') echo " selected"?>><?=Loc::getMessage("SOD_HIST_NO");?></option>
 		</select>
 	</td>
 </tr>

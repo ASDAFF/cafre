@@ -31,20 +31,23 @@ elseif (strpos($this->__page, "user_files") !== false || strpos($this->__page, "
 	}
 }
 
-$GLOBALS["APPLICATION"]->AddHeadScript("/bitrix/js/main/utils.js");
+if (IsModuleInstalled('webdav'))
+{
+	?>
+	<script type="text/javascript">
+		var phpVars;
+		if (typeof(phpVars) != "object")
+			var phpVars = {};
+		phpVars.cookiePrefix = '<?=htmlspecialcharsbx(CUtil::JSEscape(COption::GetOptionString("main", "cookie_name", "BITRIX_SM")))?>';
+		phpVars.titlePrefix = '<?=htmlspecialcharsbx(CUtil::JSEscape(COption::GetOptionString("main", "site_name", $_SERVER["SERVER_NAME"])))?> - ';
+		phpVars.messLoading = '<?=CUtil::JSEscape(GetMessage("SONET_LOADING"))?>';
+		phpVars.LANGUAGE_ID = '<?=CUtil::JSEscape(LANGUAGE_ID)?>';
+		phpVars.bitrix_sessid = '<?=bitrix_sessid()?>';
+		if (!phpVars.ADMIN_THEME_ID)
+			phpVars.ADMIN_THEME_ID = '.default';
+		if (typeof oObjectWD != "object")
+			var oObjectWD = {};
+	</script>
+	<?
+}
 ?>
-<script type="text/javascript">
-var phpVars;
-if (typeof(phpVars) != "object")
-	var phpVars = {};
-phpVars.cookiePrefix = '<?=htmlspecialcharsbx(CUtil::JSEscape(COption::GetOptionString("main", "cookie_name", "BITRIX_SM")))?>';
-phpVars.titlePrefix = '<?=htmlspecialcharsbx(CUtil::JSEscape(COption::GetOptionString("main", "site_name", $_SERVER["SERVER_NAME"])))?> - ';
-phpVars.messLoading = '<?=CUtil::JSEscape(GetMessage("SONET_LOADING"))?>';
-phpVars.LANGUAGE_ID = '<?=CUtil::JSEscape(LANGUAGE_ID)?>';
-phpVars.bitrix_sessid = '<?=bitrix_sessid()?>';
-if (!phpVars.ADMIN_THEME_ID)
-	phpVars.ADMIN_THEME_ID = '.default';
-var photoVars = {'templatePath' : '/bitrix/components/bitrix/photogallery/templates/.default/'};
-if (typeof oObjectWD != "object")
-	var oObjectWD = {};
-</script>

@@ -128,11 +128,9 @@ if(!$USER->IsAuthorized())
 			}
 		}
 
-		if(defined("HTML_PAGES_FILE") && !defined("ERROR_404"))
-			$arResult["~USER_LOGIN"] = "";
-		else
-			$arResult["~USER_LOGIN"] = $_COOKIE[COption::GetOptionString("main", "cookie_name", "BITRIX_SM")."_LOGIN"];
-
+		$loginCookieName = COption::GetOptionString("main", "cookie_name", "BITRIX_SM")."_LOGIN";
+		$arResult["~LOGIN_COOKIE_NAME"] = $loginCookieName;
+		$arResult["~USER_LOGIN"] = $_COOKIE[$loginCookieName];
 		$arResult["USER_LOGIN"] = $arResult["LAST_LOGIN"] = htmlspecialcharsbx($arResult["~USER_LOGIN"]);
 		$arResult["~LAST_LOGIN"] = $arResult["~USER_LOGIN"];
 

@@ -86,6 +86,7 @@ else
 
 	$arFilter = Array(
 			"<=DATE_PUBLISH" => ConvertTimeStamp(time()+$tzOffset, "FULL", false),
+			">=DATE_PUBLISH" => ConvertTimeStamp(time()+$tzOffset- 60*60*24*30, "FULL", false),
 			"PUBLISH_STATUS" => BLOG_PUBLISH_STATUS_PUBLISH,
 			">PERMS" => BLOG_PERMS_DENY,
 			"BLOG_ACTIVE" => "Y",

@@ -5,36 +5,31 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
 <tr>
 	<td align="right" width="40%"><span class="adm-required-field"><?= GetMessage("BPSNAA2_PD_CUSER") ?>:</span></td>
 	<td width="60%">
-		<input type="text" name="absence_user" id="id_absence_user" value="<?= htmlspecialcharsbx($arCurrentValues["absence_user"]) ?>" size="50">
-		<input type="button" value="..." onclick="BPAShowSelector('id_absence_user', 'user');">
+		<?=CBPDocument::ShowParameterField('user', 'absence_user', $arCurrentValues['absence_user'], Array('rows' => 1))?>
 	</td>
 </tr>
 <tr>
 	<td align="right" width="40%"><span class="adm-required-field"><?= GetMessage("BPSNAA2_PD_CNAME") ?>:</span></td>
 	<td width="60%">
-		<input type="text" name="absence_name" id="id_absence_name" value="<?= htmlspecialcharsbx($arCurrentValues["absence_name"]) ?>" size="50">
-		<input type="button" value="..." onclick="BPAShowSelector('id_absence_name', 'string');">
+		<?=CBPDocument::ShowParameterField("string", 'absence_name', $arCurrentValues['absence_name'], Array('size'=> 50))?>
 	</td>
 </tr>
 <tr>
 	<td align="right" width="40%" valign="top"> <?= GetMessage("BPSNAA2_PD_CDESCR") ?>:</td>
 	<td width="60%">
-		<textarea name="absence_desrc" id="id_absence_desrc" rows="7" cols="40"><?= htmlspecialcharsbx($arCurrentValues["absence_desrc"]) ?></textarea>
-		<input style="vertical-align: top" type="button" value="..." onclick="BPAShowSelector('id_absence_desrc', 'string');">
+		<?=CBPDocument::ShowParameterField("text", 'absence_desrc', $arCurrentValues['absence_desrc'], Array('rows'=> 7))?>
 	</td>
 </tr>
 <tr>
 	<td align="right" width="40%"><span class="adm-required-field"><?= GetMessage("BPSNAA2_PD_CFROM") ?>:</span></td>
 	<td width="60%">
-		<span style="white-space:nowrap;"><input type="text" name="absence_from" id="id_absence_from" size="30" value="<?= htmlspecialcharsbx($arCurrentValues["absence_from"]) ?>"><?= CAdminCalendar::Calendar("absence_from", "", "", true) ?></span>
-		<input type="button" value="..." onclick="BPAShowSelector('id_absence_from', 'datetime');">
+		<?=CBPDocument::ShowParameterField("datetime", 'absence_from', $arCurrentValues['absence_from'])?>
 	</td>
 </tr>
 <tr>
 	<td align="right" width="40%"><span class="adm-required-field"><?= GetMessage("BPSNAA2_PD_CTO") ?>:</span></td>
 	<td width="60%">
-		<span style="white-space:nowrap;"><input type="text" name="absence_to" id="id_absence_to" size="30" value="<?= htmlspecialcharsbx($arCurrentValues["absence_to"]) ?>"><?= CAdminCalendar::Calendar("absence_to", "", "", true) ?></span>
-		<input type="button" value="..." onclick="BPAShowSelector('id_absence_to', 'datetime');">
+		<?=CBPDocument::ShowParameterField("datetime", 'absence_to', $arCurrentValues['absence_to'])?>
 	</td>
 </tr>
 <tr>
@@ -53,15 +48,13 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
 <tr>
 	<td align="right" width="40%"><?= GetMessage("BPSNAA2_PD_CSTATE") ?>:</td>
 	<td width="60%">
-		<input type="text" name="absence_state" id="id_absence_state" value="<?= htmlspecialcharsbx($arCurrentValues["absence_state"]) ?>" size="50">
-		<input type="button" value="..." onclick="BPAShowSelector('id_absence_state', 'string');">
+		<?=CBPDocument::ShowParameterField("string", 'absence_state', $arCurrentValues['absence_state'], Array('size'=> 50))?>
 	</td>
 </tr>
 <tr>
 	<td align="right" width="40%"><?= GetMessage("BPSNAA2_PD_CFSTATE") ?>:</td>
 	<td width="60%">
-		<input type="text" name="absence_finish_state" id="id_absence_finish_state" value="<?= htmlspecialcharsbx($arCurrentValues["absence_finish_state"]) ?>" size="50">
-		<input type="button" value="..." onclick="BPAShowSelector('id_absence_finish_state', 'string');">
+		<?=CBPDocument::ShowParameterField("string", 'absence_finish_state', $arCurrentValues['absence_finish_state'], Array('size'=> 50))?>
 		<input type="hidden" name="absence_site_id" value="<?= $absenceSiteId ?>">
 	</td>
 </tr>

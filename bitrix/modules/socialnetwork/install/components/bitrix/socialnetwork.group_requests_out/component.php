@@ -191,7 +191,8 @@ else
 								$arFields = Array(
 									"USER_ID"	=>	$arInvitedUser["ID"],
 									"CHECKWORD"	=>	$arInvitedUser["CONFIRM_CODE"],
-									"EMAIL"	=>	$arInvitedUser["EMAIL"]
+									"EMAIL"	=>	$arInvitedUser["EMAIL"],
+									"USER_TEXT" => ''
 								);
 
 								$event->Send("EXTRANET_INVITATION", SITE_ID, $arFields);

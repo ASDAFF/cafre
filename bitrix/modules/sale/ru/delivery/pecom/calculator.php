@@ -89,7 +89,7 @@ class Calculator
 					$price += intval($arInfo["take"][2]);
 
 
-				if(isset($arInfo["deliver"][2]) && \CDeliveryPecom::isConfCheckedVal($this->arConfig, 'SERVICE_TAKE_ENABLED'))
+				if(isset($arInfo["deliver"][2]) && \CDeliveryPecom::isConfCheckedVal($this->arConfig, 'SERVICE_DELIVERY_ENABLED'))
 					$price += intval($arInfo["deliver"][2]);
 
 				foreach($arInfo as $key => $value)
@@ -160,6 +160,7 @@ class Calculator
 			"streamTimeout" => 30,
 			"redirect" => true,
 			"redirectMax" => 5,
+			"disableSslVerification" => true
 		));
 
 		$jsnData = $http->post("http://www.pecom.ru/bitrix/components/pecom/calc/ajax.php", $strParams);
@@ -276,6 +277,9 @@ class Calculator
 				|| $item["WEIGHT"] > \CDeliveryPecom::$EXTRA_DEMENSIONS_WEIGHT
 			)
 				$loadingRange = false;
+
+			if(strlen($itemsStr) > 0)
+				$itemsStr .='&';
 
 			$itemsStr .= 'places['.$i.'][]='.strval($width).
 				'&places['.$i.'][]='.strval($lenght).

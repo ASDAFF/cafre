@@ -40,15 +40,21 @@ if ($arParams['IS_BLOG'] == 'Y')
 }
 
 $extmailAvailable = CModule::IncludeModule('intranet') && CIntranetUtils::IsExternalMailAvailable();
+$extmailConfigPath = \Bitrix\Main\Config\Option::get('intranet', $arParams['ID'] == $USER->getId() ? 'path_mail_config' : 'path_mail_manage');
 if (
-	!empty($arResult['User']['MAILBOX'])
-	|| (
-		$extmailAvailable
-		&& (
-			$arParams['ID'] == $USER->getID()
-			|| $USER->isAdmin())
+	(
+		!empty($arResult['User']['MAILBOX'])
+		|| (
+			$extmailAvailable
+			&& !empty($extmailConfigPath)
+			&& (
+				$arParams['ID'] == $USER->getID()
+				|| $USER->isAdmin())
 		)
 	)
+	&& !in_array($arResult["User"]["EXTERNAL_AUTH_ID"], \Bitrix\Socialnetwork\ComponentHelper::checkPredefinedAuthIdList(array('bot', 'email', 'imconnector')))
+)
+
 {
 	$arParams['EDITABLE_FIELDS'][] = 'EXTMAIL';
 }
@@ -91,8 +97,6 @@ foreach ($arFields as $GROUP => $arGroupFields)
 	$arFields[$GROUP] = array_unique($arGroupFields);
 }
 
-//echo '<pre>'; print_r($arFields); echo '</pre>';
-
 $current_fieldset = $_REQUEST['current_fieldset'] ? $_REQUEST['current_fieldset'] : ($GROUP_ACTIVE ? $GROUP_ACTIVE : 'PERSONAL');
 
 if (!in_array($current_fieldset, array_keys($arFields))) $current_fieldset = 'PERSONAL';
@@ -108,7 +112,6 @@ if ($arResult['ERROR_MESSAGE'])
 <?
 }
 
-//echo '<pre>'; print_r($arFields); echo '</pre>';
 ?>
 <form name="bx_user_profile_form" method="POST" action="<?echo POST_FORM_ACTION_URI;?>" enctype="multipart/form-data">
 <input type="hidden" name="MAX_FILE_SIZE" value="2000000" />
@@ -250,9 +253,9 @@ foreach ($arFields as $GROUP_ID => $arGroupFields):
 				case 'EXTMAIL':
 					if (!empty($arResult['User']['MAILBOX']))
 						echo $arResult['User']['MAILBOX'];
-					if ($extmailAvailable && ($arParams['ID'] == $USER->getID() || $USER->isAdmin()))
+					if ($extmailAvailable && !empty($extmailConfigPath) && ($arParams['ID'] == $USER->getID() || $USER->isAdmin()))
 					{
-						?> <a href="<?=$arParams['PATH_TO_MAIL'].(strpos($arParams['PATH_TO_MAIL'], '?') !== false ? '&' : '?'); ?>page=<?=($arParams['ID'] == $USER->getID() ? 'home' : 'manage'); ?>"><?=GetMessage('ISL_EXTMAIL_EDIT'); ?></a><?
+						?> <a href="<?=htmlspecialcharsbx($extmailConfigPath) ?>"><?=getMessage('ISL_EXTMAIL_EDIT') ?></a><?
 					}
 					break;
 				default: 

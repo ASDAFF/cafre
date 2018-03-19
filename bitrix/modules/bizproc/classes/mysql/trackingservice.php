@@ -8,7 +8,7 @@ class CBPTrackingService
 	{
 		global $DB;
 
-		if (in_array($type, $this->skipTypes))
+		if (!$this->canWrite($type, $workflowId))
 			return;
 
 		$workflowId = trim($workflowId);
@@ -67,8 +67,6 @@ class CBPTrackingService
 			if (strlen($arSqls["GROUPBY"]) > 0)
 				$strSql .= "GROUP BY ".$arSqls["GROUPBY"]." ";
 
-			//echo "!1!=".htmlspecialcharsbx($strSql)."<br>";
-
 			$dbRes = $DB->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
 			if ($arRes = $dbRes->Fetch())
 				return $arRes["CNT"];
@@ -98,8 +96,6 @@ class CBPTrackingService
 			if (strlen($arSqls["GROUPBY"]) > 0)
 				$strSql_tmp .= "GROUP BY ".$arSqls["GROUPBY"]." ";
 
-			//echo "!2.1!=".htmlspecialcharsbx($strSql_tmp)."<br>";
-
 			$dbRes = $DB->Query($strSql_tmp, false, "File: ".__FILE__."<br>Line: ".__LINE__);
 			$cnt = 0;
 			if (strlen($arSqls["GROUPBY"]) <= 0)
@@ -109,22 +105,17 @@ class CBPTrackingService
 			}
 			else
 			{
-				// ÒÎËÜÊÎ ÄËß MYSQL!!! ÄËß ORACLE ÄÐÓÃÎÉ ÊÎÄ
+				// only for MySQL
 				$cnt = $dbRes->SelectedRowsCount();
 			}
 
 			$dbRes = new CDBResult();
-
-			//echo "!2.3!=".htmlspecialcharsbx($strSql)."<br>";
-
 			$dbRes->NavQuery($strSql, $cnt, $arNavStartParams);
 		}
 		else
 		{
 			if (is_array($arNavStartParams) && IntVal($arNavStartParams["nTopCount"]) > 0)
 				$strSql .= "LIMIT ".intval($arNavStartParams["nTopCount"]);
-
-			//echo "!3!=".htmlspecialcharsbx($strSql)."<br>";
 
 			$dbRes = $DB->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
 		}

@@ -77,9 +77,10 @@ if(strlen($arResult["LIFE_SEARCH_QUERY"]) > 0)
 	<?//Work Field?>
 	<?$this->SetViewTarget("idea_filter", 100)?>
 		<?if($arParams["DISABLE_RSS"] != "Y"):
-			$pathPostfix = ($pageMode == "index" ? "" : "_".ToUpper(str_replace(array("_1", "_2"), "", $pageMode))).
-				(strpos($pageMode, "status") !== false ? "_STATUS" : "");
-			?><?$APPLICATION->IncludeComponent(
+			$pathPostfix = ($pageMode == "index" ? "" : "_".ToUpper(str_replace(array("_1", "_2"), "", $pageMode)));/*.
+				(strpos($pageMode, "status") !== false ? "_STATUS" : "")*/;
+			?><?
+$APPLICATION->IncludeComponent(
 				"bitrix:blog.rss.link",
 				"",
 				Array(

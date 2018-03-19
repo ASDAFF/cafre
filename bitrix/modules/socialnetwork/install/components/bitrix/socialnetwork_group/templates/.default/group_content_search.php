@@ -87,7 +87,6 @@ if (
 	"SOCNET_GROUP_ID" => $arResult["VARIABLES"]["group_id"],
 	"FILES_GROUP_IBLOCK_ID" => $arParams["FILES_GROUP_IBLOCK_ID"],
 	"CALENDAR_GROUP_IBLOCK_ID" => $arParams["CALENDAR_GROUP_IBLOCK_ID"],
-	"TASKS_GROUP_IBLOCK_ID" => $arParams["TASK_IBLOCK_ID"],
 	"PHOTO_GROUP_IBLOCK_ID" => $arParams["PHOTO_GROUP_IBLOCK_ID"],	),
 	$component
 );?>

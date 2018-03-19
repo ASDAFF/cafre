@@ -373,7 +373,7 @@ $oFilter->Begin();
 					?>
 					<option value="<?=$key?>"
 					<?=(intVal($filter_group_id)==intVal($key) ? " selected" : "")?>
-					><?=htmlspecialcharsEx($val)?></option><?
+					><?=htmlspecialcharsbx($val)?></option><?
 				endforeach;
 				?>
 				</select>

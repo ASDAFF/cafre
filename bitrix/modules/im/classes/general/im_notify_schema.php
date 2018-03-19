@@ -84,18 +84,28 @@ class CIMNotifySchema
 				"NAME" => GetMessage('IM_NS_IM'),
 				"NOTIFY" => Array(
 					"message" => Array(
-						"NAME" => GetMessage('IM_NS_MESSAGE'),
+						"NAME" => GetMessage('IM_NS_MESSAGE_2'),
 						"PUSH" => 'Y',
 						"DISABLED" => Array(IM_NOTIFY_FEATURE_SITE, IM_NOTIFY_FEATURE_XMPP)
 					),
 					"chat" => Array(
-						"NAME" => GetMessage('IM_NS_CHAT'),
+						"NAME" => GetMessage('IM_NS_CHAT_2'),
+						"MAIL" => 'N',
+						"PUSH" => 'Y',
+						"DISABLED" => Array(IM_NOTIFY_FEATURE_SITE, IM_NOTIFY_FEATURE_XMPP, IM_NOTIFY_FEATURE_MAIL)
+					),
+					"openChat" => Array(
+						"NAME" => GetMessage('IM_NS_OPEN'),
 						"MAIL" => 'N',
 						"PUSH" => 'Y',
 						"DISABLED" => Array(IM_NOTIFY_FEATURE_SITE, IM_NOTIFY_FEATURE_XMPP, IM_NOTIFY_FEATURE_MAIL)
 					),
 					"like" => Array(
 						"NAME" => GetMessage('IM_NS_LIKE'),
+					),
+					"mention" => Array(
+						"NAME" => GetMessage('IM_NS_MENTION_2'),
+						"PUSH" => 'Y',
 					),
 					"default" => Array(
 						"NAME" => GetMessage('IM_NS_DEFAULT'),
@@ -133,5 +143,3 @@ class CIMNotifySchema
 		return $config;
 	}
 }
-
-?>

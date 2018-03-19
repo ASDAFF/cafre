@@ -182,14 +182,21 @@ class Google extends Engine implements IEngine
 		{
 			$result = Json::decode($queryResult->getResult());
 			$response = array();
-			if(is_array($result))
+			if(is_array($result) && is_array($result['siteEntry']))
 			{
 				foreach($result['siteEntry'] as $key => $siteInfo)
 				{
 					$siteUrlInfo = parse_url($siteInfo['siteUrl']);
 					if($siteUrlInfo)
 					{
-						$response[$siteUrlInfo["host"]] = array(
+						$errors = array();
+						$hostKey = \CBXPunycode::toASCII($siteUrlInfo["host"], $errors);
+						if(count($errors) > 0)
+						{
+							$hostKey = $siteUrlInfo["host"];
+						}
+
+						$response[$hostKey] = array(
 							'binded' => $siteInfo["permissionLevel"] !== "siteRestrictedUser",
 							'verified' => $siteInfo["permissionLevel"] !== "siteRestrictedUser"
 								&& $siteInfo["permissionLevel"] !== "siteUnverifiedUser",
@@ -317,7 +324,14 @@ class Google extends Engine implements IEngine
 				case 'POST':
 				case 'PUT':
 					$http->setHeader("Content-Type", $contentType);
+
+					if(!$data)
+					{
+						$http->setHeader("Content-Length", 0);
+					}
+
 					$result = $http->query($method, $scope, $data);
+
 				break;
 				case 'DELETE':
 

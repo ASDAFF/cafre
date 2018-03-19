@@ -22,4 +22,5 @@ $MESS["CC_BLL_UNKNOWN_ERROR"] = "Unknown error.";
 $MESS["CC_BLL_ACCESS_DENIED"] = "Insufficient permission to view and edit the list.";
 $MESS["CC_BLL_DELETE_ERROR"] = "Error in deletion.";
 $MESS["BPATL_NAME"] = "Name";
+$MESS["CC_BLL_BIZPROC_MODULE_NOT_INSTALLED"] = "The Business Processes module is not installed.";
 ?>

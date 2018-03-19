@@ -19,7 +19,8 @@ BX.viewElementBind = function(div, params, isTarget, groupBy)
 
 	return obElementViewer;
 };
-
+var counterElementClick = 0;
+var timerElementClick = null;
 function _viewerElementBind(div, isTarget, groupBy, obElementViewer)
 {
 	var div = BX(div);
@@ -27,9 +28,28 @@ function _viewerElementBind(div, isTarget, groupBy, obElementViewer)
 	{
 		BX.bindDelegate(div, 'click', isTarget, function(e)
 		{
+			if(BX.findParent(this, {tagName: 'a', attribute: {target: '_blank'}}, 5))
+			{
+				return true;
+			}
+
 			//not run elementShow if click on folder
 			if(this.getAttribute('data-bx-viewer') == 'folder')
 				return true;
+
+			counterElementClick++;
+			if(counterElementClick !== 1)
+			{
+				clearTimeout(timerElementClick);
+				counterElementClick = 0;
+				return true;
+			}
+			else
+			{
+				timerElementClick = setTimeout(function() {
+					counterElementClick = 0;
+				}, 1000);
+			}
 
 			var parent = div;
 			if (!!groupBy)
@@ -98,6 +118,11 @@ function _viewerElementBind(div, isTarget, groupBy, obElementViewer)
 					var iframeElement = obElementViewer.createElementByType(elementNodeList[i]);
 					obElementViewer.add(iframeElement);
 				}
+				else if(type == 'ajax')
+				{
+					var ajaxElement = obElementViewer.createElementByType(elementNodeList[i]);
+					obElementViewer.add(ajaxElement);
+				}
 				else if(type == 'unknown')
 				{
 					var unknowElement = new BX.CViewUnknownElement({
@@ -144,6 +169,9 @@ function _viewerElementBind(div, isTarget, groupBy, obElementViewer)
 			obElementViewer.show(this.getAttribute('data-bx-image')||this.getAttribute('data-bx-src')||this.src);
 
 			return BX.PreventDefault(e);
+		});
+		BX.bindDelegate(div, 'dblclick', isTarget, function(e){
+			BX.PreventDefault(e);
 		});
 	}
 }
@@ -230,7 +258,7 @@ BX.CViewCoreElement.prototype.runAction = function(action, params){
 				//first run. We have to show setting window.
 				if(!BX.message('disk_document_service'))
 				{
-					params.obElementViewer.openWindowForSelectDocumentService({viewInUf: !!BX.message('disk_render_uf')});
+					params.obElementViewer.openWindowForSelectDocumentService({viewInUf: !!BX.message.disk_render_uf});
 					return;
 				}
 			}
@@ -258,7 +286,7 @@ BX.CViewCoreElement.prototype.localEditProcess = function(obElementViewer, param
 	{
 		if(!this.isFromUserLib && editUrl)
 		{
-			if (editUrl.indexOf(window.location.hostname) === -1) {
+			if (editUrl.indexOf('/') === 0) {
 				window.location.origin = window.location.origin || (window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port: ''));
 				editUrl = window.location.origin + editUrl;
 			}
@@ -270,6 +298,7 @@ BX.CViewCoreElement.prototype.localEditProcess = function(obElementViewer, param
 			}
 			else
 			{
+				editUrl = BX.util.remove_url_param(editUrl, 'filename');
 				BX.CViewer.goToBx('bx://editFile'
 					+ '/externalId/' + (this.externalId? encodeURIComponent(this.externalId) : '0')
 					+ '/objectId/' + (this.objectId? encodeURIComponent(this.objectId) : '0')
@@ -295,12 +324,13 @@ BX.CViewCoreElement.prototype.localViewProcess = function(obElementViewer)
 	{
 		if(!this.isFromUserLib && downloadUrl)
 		{
-			if (downloadUrl.indexOf(window.location.hostname) === -1) {
+			if (downloadUrl.indexOf('/') === 0) {
 				window.location.origin = window.location.origin || (window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port: ''));
 				downloadUrl = window.location.origin + downloadUrl;
 			}
 			//editUrl = this.addToLinkParam(editUrl, 'action', 'start');
 			downloadUrl = CViewerUrlHelper.getUrlEditFile(downloadUrl, 'l');
+			downloadUrl = BX.util.remove_url_param(downloadUrl, 'filename');
 			BX.CViewer.goToBx('bx://viewFile'
 				+ '/externalId/' + (this.externalId? encodeURIComponent(this.externalId) : '0')
 				+ '/objectId/' + (this.objectId? encodeURIComponent(this.objectId) : '0')
@@ -322,18 +352,107 @@ BX.CViewCoreElement.prototype.getTextForSave = function(){
 	return '';
 };
 
-BX.CViewCoreElement.prototype.getComplexEditButton = function(selfViewer, params)
+BX.CViewCoreElement.prototype.getComplexEditButton = function(selfViewer, params, forPopupWindow)
 {
+	forPopupWindow = forPopupWindow || false;
+	var classNames = {
+		'editBtn': 'bx-viewer-btn-split-text'
+	};
+	if(forPopupWindow)
+	{
+		classNames = {
+			'editBtn': 'webform-small-button',
+			'serviceText': 'bx-viewer-edit-service-txt'
+		}
+	}
+	var editEvents = {
+		click: BX.delegate(function(event)
+		{
+			if(!enableEdit || !this.getCurrent().editUrl)
+			{
+				return BX.PreventDefault(event);
+			}
+
+			var ele = event.srcElement || event.target;
+			var buttonsForEdit = [
+				{text: BX.message('JS_CORE_VIEWER_EDIT_IN_SERVICE').replace('#SERVICE#', this.getNameEditService('google')), className: "bx-viewer-popup-item item-gdocs", href: "#", onclick: BX.delegate(function (e) {
+					this.setEditService('google');
+					BX.fireEvent(BX('bx-viewer-edit-btn'), 'click');
+					this.closeMenu();
+
+					return BX.PreventDefault(e);
+				}, this)},
+				(BX.CViewer.enableInVersionDisk(6)? {text: BX.message('JS_CORE_VIEWER_EDIT_IN_SERVICE').replace('#SERVICE#', this.getNameEditService('office365')), className: "bx-viewer-popup-item item-office365", href: "#", onclick: BX.delegate(function (e) {
+					this.setEditService('office365');
+					BX.fireEvent(BX('bx-viewer-edit-btn'), 'click');
+					this.closeMenu();
+
+					return BX.PreventDefault(e);
+				}, this)} : null),
+				(BX.message('DISK_MYOFFICE')? {text: BX.message('JS_CORE_VIEWER_EDIT_IN_SERVICE').replace('#SERVICE#', this.getNameEditService('myoffice')), className: "bx-viewer-popup-item item-myoffice", href: "#", onclick: BX.delegate(function (e) {
+					this.setEditService('myoffice');
+					BX.fireEvent(BX('bx-viewer-edit-btn'), 'click');
+					this.closeMenu();
+
+					return BX.PreventDefault(e);
+				}, this)} : null),
+				{text: BX.message('JS_CORE_VIEWER_EDIT_IN_SERVICE').replace('#SERVICE#', this.getNameEditService('skydrive')), className: "bx-viewer-popup-item item-office", href: "#", onclick: BX.delegate(function (e) {
+					this.setEditService('skydrive');
+					BX.fireEvent(BX('bx-viewer-edit-btn'), 'click');
+					this.closeMenu();
+
+					return BX.PreventDefault(e);
+				}, this)}
+			];
+			if(/*this.getCurrent().isFromUserLib &&*/ this.getCurrent().editUrl && !BX.CViewer.isDisabledLocalEdit)
+			{
+				buttonsForEdit.push(
+					{text: BX.message('JS_CORE_VIEWER_EDIT_IN_LOCAL_SERVICE').replace('#SERVICE#', this.getNameEditService('local')), className: "bx-viewer-popup-item item-local", href: "#", onclick: BX.delegate(function (e) {
+
+						if(BX.CViewer.isEnableLocalEditInDesktop())
+						{
+							this.setEditService('local');
+							BX.fireEvent(BX('bx-viewer-edit-btn'), 'click');
+						}
+						else
+						{
+							selfViewer.helpDiskDialog();
+						}
+						this.closeMenu();
+						return BX.PreventDefault(e);
+					}, this)}
+				);
+			}
+
+			this.openMenu('bx-viewer-popup-edit', BX(ele), buttonsForEdit, {
+				offsetTop: 0,
+				offsetLeft: -9,
+				zIndex: 11400
+			});
+		}, selfViewer)
+	};
+	var titleHint = '';
 	var enableEdit = params.enableEdit || false;
+	if(params.isLocked)
+	{
+		enableEdit = false;
+		titleHint = BX.message('JS_CORE_VIEWER_DOCUMENT_IS_LOCKED_BY');
+	}
+	if(!params.enableEdit)
+	{
+		titleHint = BX.message('JS_CORE_VIEWER_DISABLE_EDIT_BY_PERM');
+	}
+
+
 	var initEditService = selfViewer.initEditService();
 	var editBtn = BX.create('span', {
-			props: {
+		props: {
 			id: 'bx-viewer-edit-btn',
-			className: 'bx-viewer-btn-split-text'
+			className: classNames.editBtn
 		},
 		events: {
 			click: BX.delegate(function(e){
-				if(!this.editUrl)
+				if(!enableEdit || !this.editUrl)
 				{
 					return BX.PreventDefault(e);
 				}
@@ -344,7 +463,8 @@ BX.CViewCoreElement.prototype.getComplexEditButton = function(selfViewer, params
 		children: [
 			BX.create('i', {
 				props: {
-					id: 'bx-viewer-edit-service-txt'
+					id: 'bx-viewer-edit-service-txt',
+					className: classNames.serviceText || null
 				},
 				text: !BX.CViewer.isLocalEditService(initEditService) /*&& !this.isFromUserLib*/? selfViewer.getNameEditService(initEditService) : selfViewer.getNameEditService()
 			})
@@ -353,90 +473,68 @@ BX.CViewCoreElement.prototype.getComplexEditButton = function(selfViewer, params
 
 	editBtn.insertBefore(document.createTextNode(BX.message(BX.CViewer.isLocalEditService(initEditService)? 'JS_CORE_VIEWER_EDIT_IN_LOCAL_SERVICE_SHORT' : 'JS_CORE_VIEWER_EDIT_IN_SERVICE').replace('#SERVICE#', ' ')), editBtn.firstChild);
 
-	return BX.create('span', {
-		props: {
-			className: 'bx-viewer-btn-split ' + (enableEdit? '' : 'bx-viewer-btn-split-disable'),
-			title: enableEdit? '' : BX.message('JS_CORE_VIEWER_DISABLE_EDIT_BY_PERM')
-		},
-		children: [
-			BX.create('span', {
-				props: {
-					className: 'bx-viewer-btn-split-l'
-				},
-				children: [
-					editBtn,
-					BX.create('span', {
-						props: {
-							className: 'bx-viewer-btn-split-bg'
-						}
-					})
-				]
-			}),
-			BX.create('span', {
-				props: {
-					className: 'bx-viewer-btn-split-r'
-				},
-				events: {
-					click: BX.delegate(function(event)
-					{
-						if(!this.getCurrent().editUrl)
-						{
-							return BX.PreventDefault(event);
-						}
-
-						var ele = event.srcElement || event.target;
-						var buttonsForEdit = [
-							{text: BX.message('JS_CORE_VIEWER_EDIT_IN_SERVICE').replace('#SERVICE#', this.getNameEditService('google')), className: "bx-viewer-popup-item item-gdocs", href: "#", onclick: BX.delegate(function (e) {
-								this.setEditService('google');
-								BX.fireEvent(BX('bx-viewer-edit-btn'), 'click');
-								this.closeMenu();
-
-								return BX.PreventDefault(e);
-							}, this)},
-							{text: BX.message('JS_CORE_VIEWER_EDIT_IN_SERVICE').replace('#SERVICE#', this.getNameEditService('skydrive')), className: "bx-viewer-popup-item item-office", href: "#", onclick: BX.delegate(function (e) {
-								this.setEditService('skydrive');
-								BX.fireEvent(BX('bx-viewer-edit-btn'), 'click');
-								this.closeMenu();
-
-								return BX.PreventDefault(e);
-							}, this)}
-						];
-						if(/*this.getCurrent().isFromUserLib &&*/ this.getCurrent().editUrl)
-						{
-							buttonsForEdit.push(
-								{text: BX.message('JS_CORE_VIEWER_EDIT_IN_LOCAL_SERVICE').replace('#SERVICE#', this.getNameEditService('local')), className: "bx-viewer-popup-item item-local", href: "#", onclick: BX.delegate(function (e) {
-
-									if(BX.CViewer.isEnableLocalEditInDesktop())
-									{
-										this.setEditService('local');
-										BX.fireEvent(BX('bx-viewer-edit-btn'), 'click');
-									}
-									else
-									{
-										selfViewer.helpDiskDialog();
-									}
-									this.closeMenu();
-									return BX.PreventDefault(e);
-								}, this)}
-							);
-						}
-
-						this.openMenu('bx-viewer-popup-edit', BX(ele), buttonsForEdit, {
-							offsetTop: 0,
-							offsetLeft: -9
-						});
-					}, selfViewer)
-				},
-				children: [
-					BX.create('span', {
-						props: {
-							className: 'bx-viewer-btn-split-bg'
-						}
-					})
-				]
-			})
-		]
-	});
+	if(forPopupWindow)
+	{
+		return BX.create('span', {
+			props: {
+				className: 'bx-viewer-btn-split bx-viewer-btn-split-margin-top ' + (enableEdit? '' : 'bx-viewer-btn-split-disable'),
+				title: titleHint
+			},
+			children: [
+				BX.create('span', {
+					props: {
+						className: 'webform-small-button-separate-wrap'
+					},
+					children: [
+						editBtn,
+						BX.create('span', {
+							props: {
+								className: 'webform-small-button-right-part'
+							},
+							events: editEvents
+						})
+					]
+				})
+			]
+		});
+	}
+	else
+	{
+		return BX.create('span', {
+			props: {
+				className: 'bx-viewer-btn-split ' + (enableEdit? '' : 'bx-viewer-btn-split-disable'),
+				title: titleHint
+			},
+			children: [
+				BX.create('span', {
+					props: {
+						className: 'bx-viewer-btn-split-l'
+					},
+					children: [
+						editBtn,
+						BX.create('span', {
+							props: {
+								className: 'bx-viewer-btn-split-bg'
+							}
+						})
+					]
+				}),
+				BX.create('span', {
+					props: {
+						className: 'bx-viewer-btn-split-r'
+					},
+					events: editEvents,
+					children: [
+						BX.create('span', {
+							props: {
+								className: 'bx-viewer-btn-split-bg'
+							}
+						})
+					]
+				})
+			]
+		});
+	}
 }
 
 BX.CViewCoreElement.prototype.getLocalEditButton = function(selfViewer, params)
@@ -462,7 +560,7 @@ BX.CViewCoreElement.prototype.getLocalEditButton = function(selfViewer, params)
 			}, this)
 		},
 		children: [
-			BX.create('i', {
+			BX.create('span', {
 				props: {
 					id: 'bx-viewer-edit-service-txt'
 				},
@@ -510,20 +608,22 @@ BX.CViewCoreElement.prototype.getComplexSaveButton = function(selfViewer, params
 				{
 					var ele = event.srcElement || event.target;
 					selfViewer.openMenu('bx-viewer-popup-down', BX(ele), [
-						{text: BX.message('JS_CORE_VIEWER_SAVE_TO_OWN_FILES'), className: "bx-viewer-popup-item item-b24", href: '#', onclick: BX.delegate(function(e){
-							var link = this.addToLinkParam(BX.CViewer.enableInVersionDisk(2)? downloadUrl : this.src, 'saveToDisk', 1);
-							link = this.addToLinkParam(link, 'toWDController', 1);
-							link = BX.util.remove_url_param(link, 'showInViewer');
-							link = BX.util.remove_url_param(link, 'document_action');
-							link = BX.util.remove_url_param(link, 'primaryAction');
-							link = CViewerUrlHelper.getUrlCopyToMe(link);
-							selfViewer.closeMenu();
+						((BX.CViewer.isDisabledLocalEdit || !BX.message.disk_revision_api)? null :
+							{text: BX.message('JS_CORE_VIEWER_SAVE_TO_OWN_FILES'), className: "bx-viewer-popup-item item-b24", href: '#', onclick: BX.delegate(function(e){
+								var link = this.addToLinkParam(BX.CViewer.enableInVersionDisk(2)? downloadUrl : this.src, 'saveToDisk', 1);
+								link = this.addToLinkParam(link, 'toWDController', 1);
+								link = BX.util.remove_url_param(link, 'showInViewer');
+								link = BX.util.remove_url_param(link, 'document_action');
+								link = BX.util.remove_url_param(link, 'primaryAction');
+								link = CViewerUrlHelper.getUrlCopyToMe(link);
+								selfViewer.closeMenu();
 
-							BX.CViewer.getWindowCopyToDisk({link: link, selfViewer: selfViewer, title: this.title, showEdit: params.showEdit});
+								BX.CViewer.getWindowCopyToDisk({link: link, selfViewer: selfViewer, title: this.title, showEdit: params.showEdit});
 
-							BX.PreventDefault(e);
-							return false;
-						}, this)},
+								BX.PreventDefault(e);
+								return false;
+							}, this)}
+						),
 						{text: BX.message('JS_CORE_VIEWER_DOWNLOAD_TO_PC'), className: "bx-viewer-popup-item item-download", href: downloadUrl, onclick: BX.delegate(function(e){
 							selfViewer.closeMenu();
 							//if click on download link, but iframe not loaded.
@@ -590,6 +690,19 @@ BX.CViewCoreElement.prototype.getIconClassByName = function(filename)
 		case 'xls':
 		case 'xlsx':
 			className = 'bx-viewer-icon-xls';
+			break;
+		case 'avi':
+		case 'wmv':
+		case 'mp4':
+		case 'mov':
+		case 'webm':
+		case 'flv':
+		case 'm4v':
+		case 'mkv':
+		case 'vob':
+		case '3gp':
+		case 'ogv':
+			className = 'bx-viewer-icon-video';
 			break;
 		default:
 			className = 'bx-viewer-icon';
@@ -675,6 +788,10 @@ BX.CViewCoreElement.prototype.addToLinkParam = function(link, name, value)
 	}
 	return link + '?' + name + '=' + value;
 }
+BX.CViewCoreElement.prototype.getBottomHtml = function()
+{
+	return '';
+}
 //##############################################################################
 
 BX.CViewImageElement = function(params)
@@ -689,6 +806,7 @@ BX.CViewImageElement = function(params)
 	this.full_height = params.full_height;
 	this.full_size = params.full_size;
 	this.topPadding = 43;
+	this.imageElement = true;
 }
 
 BX.extend(BX.CViewImageElement, BX.CViewCoreElement);
@@ -827,6 +945,28 @@ BX.CViewImageElement.prototype.onLoad = function()
 		this.successLoad(this);
 	}, this), 150);
 }
+BX.CViewImageElement.prototype.getBottomHtml = function()
+{
+	if(!this.full)
+	{
+		return '';
+	}
+
+	var p = [];
+	if(this.full_height && this.full_width)
+	{
+		p.push(this.full_width+'x'+this.full_height);
+	}
+
+	if(this.full_size)
+	{
+		p.push(this.full_size);
+	}
+
+	var html = '<a href="'+this.full+'" class="bx-viewer-full-link" target="_blank">' + BX.message('JS_CORE_IMAGE_FULL') + (p.length > 0 ? (' ('+p.join(', ')+')') : '') + '</a>';
+
+	return html;
+}
 
 //##############################################################################
 BX.CViewEditableElement = function(params)
@@ -834,6 +974,7 @@ BX.CViewEditableElement = function(params)
 	BX.CViewEditableElement.superclass.constructor.apply(this, arguments);
 	this.askConvert = !!params.askConvert;
 	this.editUrl = params.editUrl? this.addToLinkSessid(params.editUrl) : '';
+	this.lockedBy = params.lockedBy;
 	this.fakeEditUrl = params.fakeEditUrl || false;
 	this.historyPageUrl = params.historyPageUrl || '';
 	this.downloadUrl = params.downloadUrl || '';
@@ -842,13 +983,17 @@ BX.CViewEditableElement = function(params)
 	this.idToPost = params.idToPost || '';
 	this.isNowConverted = false;
 	this.version = parseInt(params.version) || 0;
+	this.hideEdit = (params.hideEdit == 1);
+	this.dateModify = params.dateModify;
 	this.currentModalWindow = params.currentModalWindow || false;
+	this.editInProcess = false;
 }
 
 BX.extend(BX.CViewEditableElement, BX.CViewCoreElement);
 
 BX.CViewEditableElement.prototype.runAction = function(action, params){
 
+	this.editInProcess = false;
 	//todo normalize this! check params, add action class. Return result action.
 	action = action.toLowerCase();
 	switch(action)
@@ -866,6 +1011,12 @@ BX.CViewEditableElement.prototype.runAction = function(action, params){
 			}, 100));
 			break;
 		case 'forceedit':
+			if(!!BX.message('disk_document_service') && BX.CViewer.isLocalEditService(BX.message('disk_document_service')) && BX.CViewer.isEnableLocalEditInDesktop())
+			{
+				this.localEditProcess(params.obElementViewer);
+				return;
+			}
+
 			if(!this.editUrl || !params.obElementViewer)
 			{
 				return false;
@@ -874,7 +1025,7 @@ BX.CViewEditableElement.prototype.runAction = function(action, params){
 			//BX.is_subclass_of(currentElement, BX.CViewImageElement) doesn't work ^(
 			if(
 				BX.CViewer.enableInVersionDisk(2) &&
-				!this.hasOwnProperty('image')
+				!this.hasOwnProperty('imageElement')
 			)
 			{
 				//first run. We have to show setting window.
@@ -918,7 +1069,7 @@ BX.CViewEditableElement.prototype.runAction = function(action, params){
 				//first run. We have to show setting window.
 				if(!BX.message('disk_document_service'))
 				{
-					params.obElementViewer.openWindowForSelectDocumentService({viewInUf: !!BX.message('disk_render_uf')});
+					params.obElementViewer.openWindowForSelectDocumentService({viewInUf: !!BX.message.disk_render_uf});
 					return;
 				}
 			}
@@ -967,7 +1118,7 @@ BX.CViewEditableElement.prototype.pasteInForm = function(params)
 
 BX.CViewEditableElement.prototype.discardFile = function(parameters)
 {
-	var uriToDoc = parameters.uriToDoc || CViewerUrlHelper.getUrlDiscardFile(this.src);
+	var uriToDoc = parameters.uriToDoc || CViewerUrlHelper.getUrlDiscardFile(this.editUrl);
 	var idDoc = parameters.idDoc || parameters.id;
 	if(!uriToDoc || !idDoc)
 	{
@@ -1025,6 +1176,7 @@ BX.CViewEditableElement.prototype.getExtensionAfterConvert = function()
 
 BX.CViewEditableElement.prototype.editFile = function(obElementViewer)
 {
+	this.editInProcess = true;
 	if((/*!this.isFromUserLib || */!BX.CViewer.isLocalEditService(obElementViewer.initEditService())) && this.askConvert)
 	{
 		var convertDialog = BX.create('div', {
@@ -1073,6 +1225,7 @@ BX.CViewEditableElement.prototype.editFile = function(obElementViewer)
 				text : BX.message('JS_CORE_VIEWER_IFRAME_CONVERT_DECLINE'),
 				events : { click : BX.delegate(function() {
 						this.closeConfirm();
+						this.editInProcess = false;
 					}, obElementViewer
 				)}
 			})
@@ -1133,6 +1286,7 @@ BX.CViewEditableElement.prototype.openEditConfirm = function(obElementViewer)
 			text : BX.message('JS_CORE_VIEWER_IFRAME_SAVE_DOC'),
 			className : "popup-window-button-accept",
 			events : { click : BX.delegate(function() {
+					window.onbeforeunload = null;
 
 					this.showLoading({text: this.getCurrent().getTextForSave()});
 
@@ -1141,45 +1295,61 @@ BX.CViewEditableElement.prototype.openEditConfirm = function(obElementViewer)
 					dataForCommit.success = BX.delegate(function(element, response){
 						if(this.bVisible && this.isCurrent(element))
 						{
-							var elementId = response.elementId;
-							var cid = response.cid;
-							if(element.urlToPost && response.serialize /*&& fileId*/)
+							if(element.getLastVersionUri)
 							{
 								BX.ajax({
 									'method': 'POST',
-									'dataType': 'html',
-									'url': element.urlToPost,
+									'dataType': 'json',
+									'url': element.getLastVersionUri,
 									'data':  {
-										sessid: BX.bitrix_sessid(),
-										comment_post_id: element.idToPost,
-										ENTITY_XML_ID:'BLOG_' + element.idToPost,
-										ENTITY_TYPE:'BG',
-										ENTITY_ID:element.idToPost,
-										NOREDIRECT:'Y',
-										AJAX_POST:'Y',
-										MODE:'RECORD',
-										act: 'add',
-										post: 'Y',
-										save: 'Y',
-										webdav_history: 'Y',
-										'UF_BLOG_COMMENT_FH': response.serialize,
-										blog_upload_cid: cid,
-										comment: BX.CViewer.getMsgAfterUploadNewVersionByUser()
+										sessid: BX.bitrix_sessid()
 									},
-									'onsuccess': function(data){},
-									processData: false
+									'onsuccess': BX.delegate(function(data){
+										if(data.version)
+										{
+											element.version = data.version;
+										}
+										if(data.editUrl)
+										{
+											element.editUrl = data.editUrl;
+										}
+										if(data.src)
+										{
+											element.src = data.src;
+										}
+										if(element.iframeSrc)
+										{
+											if(data.iframeSrc)
+											{
+												element.iframeSrc = data.iframeSrc;
+											}
+											var iframeElement = this.createIframeElementFromAjaxElement(element);
+											iframeElement.setCurrentModalWindow(element.getCurrentModalWindow());
+											this.getCurrent().hide();
+											this.setCurrent(iframeElement);
+											this.show();
+										}
+										else
+										{
+											this.show(element, true);
+										}
+									}, this)
 								});
-								element.isHistory = true;
-							}
-							if(element.isHistory && element.baseElementId)
-							{
-								//set version to last. Keep it simple
-								this.setCurrent(this.createElementByType(BX(element.baseElementId), {version: 0}));
-								this.show();
 							}
 							else
 							{
-								this.show(element, true);
+								if(element.iframeSrc)
+								{
+									var iframeElement = this.createIframeElementFromAjaxElement(element);
+									iframeElement.setCurrentModalWindow(element.getCurrentModalWindow());
+									this.getCurrent().hide();
+									this.setCurrent(iframeElement);
+									this.show();
+								}
+								else
+								{
+									this.show(element, true);
+								}
 							}
 						}
 					}, this);
@@ -1195,6 +1365,7 @@ BX.CViewEditableElement.prototype.openEditConfirm = function(obElementViewer)
 		new BX.PopupWindowButton({
 			text : BX.message('JS_CORE_VIEWER_IFRAME_CANCEL'),
 			events : { click : BX.delegate(function() {
+					window.onbeforeunload = null;
 					this.runActionByCurrentElement('discard', this.getCurrent().getDataForCommit());
 					this.closeConfirm();
 					try{
@@ -1235,10 +1406,23 @@ BX.CViewEditableElement.prototype.editFileProcess = function(obElementViewer)
 		editUrl,
 		this.title
 	));
+
+	window.onbeforeunload = BX.delegate(this.onUnload, this);
+
 	this.openEditConfirm(obElementViewer);
 
 	return false;
 }
+
+BX.CViewEditableElement.prototype.onUnload = function()
+{
+	try
+	{
+		this.runAction('discard', this.getDataForCommit());
+	}
+	catch (e)
+	{}
+};
 
 BX.CViewEditableElement.prototype.setDataForCommit = function(data)
 {
@@ -1246,7 +1430,7 @@ BX.CViewEditableElement.prototype.setDataForCommit = function(data)
 	{
 		this.dataForCommit = data;
 	}
-	else if((BX.browser.IsIE() || BX.browser.IsIE11()))
+	else if((BX.browser.IsIE() || BX.browser.IsIE11() || /Edge\/12./i.test(navigator.userAgent)))
 	{
 		//IE and garbage collector delete all objects (from modal window). This is half-hack.
 		for(var key in arguments)
@@ -1292,13 +1476,15 @@ BX.CViewEditableElement.prototype.getDataForCommit = function()
 
 BX.CViewEditableElement.prototype.commitFile = function(parameters)
 {
+	window.onbeforeunload = null;
+
 	parameters = parameters || {};
 	if(!parameters || !parameters.obElementViewer)
 	{
 		return false;
 	}
 
-	var uriToDoc = parameters.uriToDoc || CViewerUrlHelper.getUrlCommitFile(this.src);
+	var uriToDoc = parameters.uriToDoc || CViewerUrlHelper.getUrlCommitFile(this.editUrl);
 	var idDoc = parameters.idDoc || parameters.id;
 	if(!uriToDoc || !idDoc)
 	{
@@ -1316,6 +1502,14 @@ BX.CViewEditableElement.prototype.commitFile = function(parameters)
 		sessid: BX.bitrix_sessid()
 	},
 	onsuccess: BX.delegate(function(result){
+
+		if(result.originalIsLocked)
+		{
+			BX.CViewer.objNowInShow.close();
+			BX.Disk.InformationPopups.showWarningLockedDocument({link: BX.Disk.getUrlToShowObjectInGrid(result.forkedObject.id)});
+			return;
+		}
+
 		var newName = result.newName;
 		var oldName = result.oldName;
 		if(newName)
@@ -1330,10 +1524,22 @@ BX.CViewEditableElement.prototype.commitFile = function(parameters)
 			this.src = BX.CViewer._convertElementsMatch[this.src].src;
 			this.isNowConverted = true;
 		}
+
+		if(this.title.split('.').pop() == 'xodt' && BX.message.disk_document_service === 'myoffice')
+		{
+			this.dateModify = BX.date.format(
+				BX.date.convertBitrixFormat(BX.message('FORMAT_DATETIME')),
+				new Date(),
+				null
+			);
+		}
+
 		if(BX.type.isFunction(parameters.success))
 		{
 			parameters.success(this, result);
 		}
+
+		BX.onCustomEvent(this, 'onIframeElementConverted', [this, newName, oldName]);
 	}, this)});
 
 	return false;
@@ -1517,7 +1723,7 @@ BX.CViewBlankElement.prototype.createFile = function(obElementViewer)
 					BX.CViewer.showLoading(BX.findChild(createDialog, {className: 'bx-viewer-confirm-text-wrap'}, true), {className: 'bx-viewer-wrap-loading-modal', notAddClassLoadingToObj: true});
 					if(BX.proxy_context && BX.is_subclass_of(BX.proxy_context, BX.PopupWindowButton))
 					{
-						BX.proxy_context.setClassName('bx-viewer-save-disable-button popup-window-button-accept');
+						BX.proxy_context.setClassName('webform-button-accept webform-button-disable');
 					}
 					var titleNodeText = BX.findChild(createDialog, {className: 'bx-viewer-confirm-title'}, true);
 					if(titleNodeText)
@@ -1795,99 +2001,188 @@ BX.CViewIframeElement = function(params)
 	this.viewerUrl = '';
 	this.autoReduction = true;
 	this.autoReductionWidth = 350;
+	this.pdfFallback = params.pdfFallback;
+	this.previewImage = params.previewImage;
+	this.transformTimeout = params.transformTimeout || 0;
+	this.getLastVersionUri = params.getLastVersionUri;
 }
 
 BX.extend(BX.CViewIframeElement, BX.CViewEditableElement);
 
 BX.CViewIframeElement.prototype.load = function(successLoadCallback, errorLoadCallback)
 {
-	var self = this;
 	if(!this.loaded)
 	{
-		BX.ajax({
-			'method': 'POST',
-			'dataType': 'json',
-			'url': self.src,
-			'data':  {
-				sessid: BX.bitrix_sessid(),
-				json: 1
-			},
-			'onsuccess': BX.delegate(function(data){
-				if(data && data.error)
-				{
-					if(BX.type.isFunction(errorLoadCallback))
-					{
-						errorLoadCallback(this, data);
-					}
-					return;
-				}
+		var iframeMainAjax = BX.proxy(function()
+		{
+			BX.ajax({
+				'method': 'POST',
+				'dataType': 'json',
+				'url': this.src,
+				'data':  {
+					sessid: BX.bitrix_sessid(),
+					json: 1
+				},
+				'onsuccess': BX.delegate(function(data){
 
-				var checkIframeError = function(){};
-				if(data.neededCheckView !== undefined && data.neededCheckView)
-				{
-					checkIframeError = BX.delegate(function(){
-						if(BX.localStorage.get('iframe_options_error'))
+					BX.onCustomEvent(this, 'onIframeElementLoadDataToView', [this, data]);
+
+					if(data && data.viewerType === 'ajax')
+					{
+						BX.onCustomEvent(this, 'onIframeElementCreateAjaxElement', [this, data.viewerParams]);
+						return;
+					}
+					if(data && data.viewerType === 'local')
+					{
+						BX.onCustomEvent(this, 'onIframeElementPerformLocalAction', [this]);
+						return;
+					}
+
+					if(data && (data.error || data.status === 'error'))
+					{
+						if(BX.type.isFunction(errorLoadCallback))
 						{
-							BX.onCustomEvent(this, 'onIframeDocError', [this]);
-							return;
+							errorLoadCallback(this, data);
 						}
-						if(BX.localStorage.get('iframe_options_error') !== null)
+						return;
+					}
+
+					if(data && data.status === 'restriction')
+					{
+						return;
+					}
+
+					if(data && data.authUrlOpenerMode)
+					{
+						BX.removeClass(this.contentWrap, 'bx-viewer-wrap-loading');
+						this.contentWrap.innerHTML =
+							'<div style="font-weight: bold;font-size: 17px;padding: 20px 25px;">' +
+								BX.message('JS_CORE_VIEWER_SHOW_FILE_DIALOG_OAUTH_NOTICE').replace('#SERVICE#', data.serviceName) +
+							'</div>';
+
+						BX.bind(BX('bx-js-disk-run-oauth-modal'), 'click', function(e){
+							BX.util.popup(data.authUrlOpenerMode, 1030, 700);
+							BX.PreventDefault(e);
+							return false;
+						});
+
+						BX.bind(window, 'hashchange', BX.proxy(function ()
 						{
-							return;
+							var matches = document.location.hash.match(/external-auth-(\w+)/);
+							if (!matches)
+								return;
+
+							BX.CViewer.objNowInShow.show(this, true);
+
+						}, this));
+
+						return;
+					}
+
+					var checkIframeError = function(){};
+					if(data.neededCheckView !== undefined && data.neededCheckView)
+					{
+						checkIframeError = BX.delegate(function(){
+							if(BX.localStorage.get('iframe_options_error'))
+							{
+								BX.onCustomEvent(this, 'onIframeDocError', [this]);
+								return;
+							}
+							if(BX.localStorage.get('iframe_options_error') !== null)
+							{
+								return;
+							}
+							BX.ajax({
+								'method': 'POST',
+								'dataType': 'json',
+								'url': CViewerUrlHelper.getUrlCheckView(this.src),
+								'data':  {
+									extLink: data.file,
+									sessid: BX.bitrix_sessid(),
+									checkViewByGoogle: 1,
+									id: data.id
+								},
+								'onsuccess': BX.delegate(function(data){
+									if(!data || (data.viewed === undefined && !data.viewByGoogle || data.viewByGoogle === undefined && !data.viewed) )
+									{
+										BX.onCustomEvent(this, 'onIframeDocError', [this]);
+									}
+									else
+									{
+										BX.onCustomEvent(this, 'onIframeDocSuccess', [this]);
+									}
+								}, this)
+							});
+						}, this);
+					}
+
+					if(BX.localStorage.get('iframe_options_error'))
+					{
+						BX.onCustomEvent(this, 'onIframeDocError', [this]);
+						return;
+					}
+
+					this.domElement = BX.create('iframe', {
+						props: {
+							className: 'bx-viewer-image',
+							src: data.viewUrl || data.viewerUrl
+						},
+						events: {
+							load: !BX.CViewer.browserWithDeferredCheckIframeError()? BX.proxy(function(){
+								BX.proxy(this.onLoad, this);
+								checkIframeError();
+							}, this) : BX.proxy(this.onLoad, this)
+						},
+						style: {
+							border: 'none'
 						}
-						BX.ajax({
-							'method': 'POST',
-							'dataType': 'json',
-							'url': CViewerUrlHelper.getUrlCheckView(this.src),
-							'data':  {
-								extLink: data.file,
-								sessid: BX.bitrix_sessid(),
-								checkViewByGoogle: 1,
-								id: data.id
-							},
-							'onsuccess': BX.delegate(function(data){
-								if(!data || (data.viewed === undefined && !data.viewByGoogle || data.viewByGoogle === undefined && !data.viewed) )
+					});
+					var transformationInProcessMessage = BX.findChildByClassName(this.contentWrap, 'bx-viewer-file-transformation-in-process-message');
+					if(transformationInProcessMessage)
+					{
+						transformationInProcessMessage.remove();
+					}
+					this.contentWrap.appendChild(this.domElement);
+
+					this.viewUrl = data.viewUrl || data.viewerUrl;
+					if(BX.localStorage.get('iframe_options_error'))
+					{
+						BX.onCustomEvent(this, 'onIframeDocError', [this]);
+					}
+					else if(BX.CViewer.browserWithDeferredCheckIframeError() && BX.localStorage.get('iframe_options_error') === null)
+					{
+						this.addTimeoutId(setTimeout(checkIframeError, 15000));
+					}
+					else
+					{
+						// check for 204 status
+						this.addTimeoutId(setTimeout(BX.proxy(function(){
+							try
+							{
+								if(!!this.domElement.contentDocument && this.domElement.contentDocument.URL == 'about:blank')
 								{
 									BX.onCustomEvent(this, 'onIframeDocError', [this]);
 								}
-								else
-								{
-									BX.onCustomEvent(this, 'onIframeDocSuccess', [this]);
-								}
-							}, this)
-						});
-					}, this);
-				}
-
-				this.domElement = BX.create('iframe', {
-					props: {
-						className: 'bx-viewer-image',
-						src: data.viewUrl || data.viewerUrl
-					},
-					events: {
-						load: !BX.CViewer.browserWithDeferredCheckIframeError()? BX.proxy(function(){
-							BX.proxy(this.onLoad, this);
-							checkIframeError();
-						}, this) : BX.proxy(this.onLoad, this)
-					},
-					style: {
-						border: 'none'
+							} catch(e) {}
+						}, this), 15000));
 					}
-				});
-				this.contentWrap.appendChild(this.domElement);
 
-				this.viewUrl = data.viewUrl || data.viewerUrl;
-				if(BX.localStorage.get('iframe_options_error'))
-				{
-					BX.onCustomEvent(this, 'onIframeDocError', [this]);
-				}
-				else if(BX.CViewer.browserWithDeferredCheckIframeError() && BX.localStorage.get('iframe_options_error') === null)
-				{
-					this.addTimeoutId(setTimeout(checkIframeError, 15000));
-				}
+				}, this)
+			});
+		}, this);
 
-			}, this)
-		});
+		if(this.transformTimeout > 0)
+		{
+			this.contentWrap.innerHTML =
+				'<div class="bx-viewer-file-transformation-in-process-message" style="text-align: center;margin-top: 50%;">' +
+					BX.message('JS_CORE_VIEWER_TRANSFORMATION_IN_PROCESS') +
+				'</div>';
+			setTimeout(iframeMainAjax, (this.transformTimeout * 1000));
+		}
+		else
+		{
+			iframeMainAjax();
+		}
 
 		this.titleDomElement = BX.create('span', {
 			props: {
@@ -1902,13 +2197,11 @@ BX.CViewIframeElement.prototype.load = function(successLoadCallback, errorLoadCa
 					},
 					text: this.title
 				}),
-				BX.create('a', {
+				BX.create('span', {
 					props: {
 						className: 'bx-viewer-file-last-v',
 						title: this.title,
-						alt: this.title,
-						href: this.historyPageUrl,
-						target: '_blank'
+						alt: this.title
 					},
 					text: this.version?
 						BX.message('JS_CORE_VIEWER_THROUGH_VERSION').replace('#NUMBER#', this.version > 0? this.version : ''):
@@ -1969,6 +2262,198 @@ BX.CViewIframeElement.prototype.hide = function(isCloseElement)
 }
 
 //##############################################################################
+BX.CViewAjaxElement = function(params)
+{
+	BX.CViewAjaxElement.superclass.constructor.apply(this, arguments);
+	this.width = params.width || 900;
+	this._minWidth = params.width || 900;
+	this.height = params.height || 700;
+	this._minHeight = params.height || 700;
+	this.topPadding = 43;
+	this.viewerUrl = '';
+	this.autoReduction = true;
+	this.autoReductionWidth = 350;
+	this.pdfFallback = params.pdfFallback;
+	this.full = this.pdfFallback;
+	this.iframeSrc = params.iframeSrc;
+	this.transformTimeout = params.transformTimeout;
+	this.wrapClassName = '';
+	this.image = null;
+	this.getLastVersionUri = params.getLastVersionUri;
+}
+
+BX.extend(BX.CViewAjaxElement, BX.CViewEditableElement);
+
+BX.CViewAjaxElement.prototype.load = function(successLoadCallback)
+{
+	var self = this;
+	if(!this.loaded)
+	{
+		BX.ajax({
+			'method': 'GET',
+			'dataType': 'json',
+			'url': self.src,
+			'data':  {
+				sessid: BX.bitrix_sessid()
+			},
+			'onsuccess': BX.delegate(function(data){
+				if(!data || (!data.html))
+				{
+					data = data || {};
+					if(!data.message || data.message.length == 0)
+					{
+						if(!!data.status && data.status === 'denied')
+						{
+							data.message = BX.message('JS_CORE_VIEWER_AJAX_ACCESS_DENIED');
+						}
+						else if(data.errors && BX.type.isArray(data.errors))
+						{
+							data.message = '';
+							for(var i in data.errors)
+							{
+								data.message += data.errors[i].message + ' ';
+							}
+						}
+					}
+					this.errorMessage = data.message;
+					BX.onCustomEvent(self, 'onAjaxElementError', [this]);
+					return;
+				}
+				else
+				{
+					if(data.wrapClassName && this.contentWrap.parentNode.parentNode)
+					{
+						this.wrapClassName = data.wrapClassName;
+						BX.addClass(this.contentWrap.parentNode.parentNode, data.wrapClassName);
+					}
+					var html = BX.processHTML(data.html);
+					if(!!data.innerElementId)
+					{
+						this.innerElementId = data.innerElementId;
+						BX.addCustomEvent('onElementViewClose', BX.delegate(function(){
+							var player;
+							if ((typeof videojs !== 'undefined') && (player = BX(this.innerElementId)))
+							{
+								videojs(player.id).pause();
+							}
+						}, this));
+					}
+					this.domElement = BX.create('div', {
+						props: {
+							className: 'bx-viewer-image'
+						},
+						style: {
+							border: 'none'
+						},
+						html: html.HTML
+					});
+					this.contentWrap.appendChild(this.domElement);
+					if(!!html.SCRIPT)
+					{
+						BX.ajax.processScripts(html.SCRIPT);
+					}
+				}
+			}, this),
+			'onfailure': BX.delegate(function(){
+				this.errorMessage = BX.message('JS_CORE_VIEWER_AJAX_CONNECTION_FAILED');
+				BX.onCustomEvent(self, 'onAjaxElementError', [self]);
+				return;
+			}, this)
+		});
+
+		this.titleDomElement = BX.create('span', {
+			props: {
+				className: 'bx-viewer-file-name-block',
+				title: this.title
+			},
+			children: [
+				BX.create('span', {
+					props: {
+						className: 'bx-viewer-file-name',
+						title: this.title
+					},
+					text: this.title
+				}),
+				BX.create('span', {
+					props: {
+						className: 'bx-viewer-file-last-v',
+						title: this.title,
+						alt: this.title
+					},
+					text: this.version?
+						BX.message('JS_CORE_VIEWER_THROUGH_VERSION').replace('#NUMBER#', this.version > 0? this.version : ''):
+						BX.message('JS_CORE_VIEWER_THROUGH_LAST_VERSION')
+				})
+			]
+		});
+
+		this.titleButtons = BX.create('span', {
+			props: {
+				className: 'bx-viewer-top-right'
+			},
+			style: {
+				//display: 'none'
+			},
+			children: this.buttons
+		});
+
+		this.successLoad = successLoadCallback || BX.CViewIframeElement.prototype.successLoad;
+		this.isProccessed = true;
+	}
+}
+
+BX.CViewAjaxElement.prototype.preload = function(successLoadCallback)
+{
+	return false;
+}
+BX.CViewAjaxElement.prototype.onLoad = function()
+{
+	if(this.loaded)
+	{
+		return;
+	}
+	this.loaded = true;
+	this.successLoad(this);
+}
+BX.CViewAjaxElement.prototype.show = function()
+{
+	this.domElement.style.opacity = 1;
+	this.domElement.style.display = 'block';
+	//this.titleButtons.style.display = 'block';
+	this.preventShow = false;
+}
+BX.CViewAjaxElement.prototype.hide = function(isCloseElement)
+{
+	if(this.wrapClassName)
+	{
+		BX.removeClass(this.contentWrap.parentNode.parentNode, this.wrapClassName);
+	}
+	isCloseElement = isCloseElement || false;
+	if(this.domElement)
+	{
+		this.domElement.style.opacity = 0;
+		//this.titleButtons.style.display = 'none';
+		BX.unbind(this.domElement, 'load', BX.proxy(this.onLoad, this));
+	}
+	//this.domElement.style.display = 'none';
+	this.preventTimeout();
+	this.loaded = false;
+	this.preventShow = false;
+	this.isProccessed = false;
+}
+BX.CViewAjaxElement.prototype.getBottomHtml = function()
+{
+	if(!this.full)
+	{
+		return '';
+	}
+
+	var html = '<a href="'+this.full+'" class="bx-viewer-full-link" target="_blank">' + BX.message('JS_CORE_VIEWER_AJAX_OPEN_NEW_TAB') + '</a>';
+
+	return html;
+}
+
+//##############################################################################
 BX.CViewWithoutPreviewEditableElement = function(params)
 {
 	BX.CViewWithoutPreviewEditableElement.superclass.constructor.apply(this, arguments);
@@ -2007,13 +2492,11 @@ BX.CViewWithoutPreviewEditableElement.prototype.load = function(successLoadCallb
 				},
 				text: this.title
 			}),
-			BX.create('a', {
+			BX.create('span', {
 				props: {
 					className: 'bx-viewer-file-last-v',
 					title: this.title,
-					alt: this.title,
-					href: this.historyPageUrl,
-					target: '_blank'
+					alt: this.title
 				},
 				text: this.version?
 					BX.message('JS_CORE_VIEWER_THROUGH_VERSION').replace('#NUMBER#', this.version > 0? this.version : ''):
@@ -2250,6 +2733,60 @@ BX.CViewErrorIframeElement = function(params)
 	this.buttonUrl = params.buttonUrl;
 	this.autoReduction = true;
     this.autoReductionWidth = 175;
+    this.pdfFallback = params.pdfFallback;
+
+    if(!params.errorDescription)
+    {
+    	this.errorDescription = (BX.create('div', {
+		    props: {
+			    className: 'bx-viewer-cap-text-block'
+		    },
+		    children: [
+			    (BX.create('div', {
+				    props: {
+					    className: 'bx-viewer-cap-title',
+					    title: this.title
+				    },
+				    text: BX.message('JS_CORE_VIEWER_IFRAME_ERROR_TITLE')
+			    })),
+			    BX.create('div', {
+				    props: {
+					    className: 'bx-viewer-too-big-title'
+				    },
+				    text: BX.message('JS_CORE_VIEWER_SERVICE_LOCAL_INSTALL_DESKTOP')
+			    }),
+			    BX.create('a', {
+				    props: {
+					    className: 'bx-viewer-btn'
+				    },
+				    events: {
+					    click: BX.delegate(function(e){
+						    document.location.href = (BX.browser.IsMac()? "http://dl.bitrix24.com/b24/bitrix24_desktop.dmg": "http://dl.bitrix24.com/b24/bitrix24_desktop.exe");
+						    return false;
+					    }, this)
+				    },
+				    text: BX.message('JS_CORE_VIEWER_DOWNLOAD_B24_DESKTOP_FULL')
+			    }),
+			    BX.create('span', {
+				    props: {
+					    className: 'bx-viewer-btn'
+				    },
+				    events: {
+					    click: BX.delegate(function(e){
+						    document.location.href = this.downloadUrl;
+						    return false;
+					    }, this)
+				    },
+				    text: BX.message('JS_CORE_VIEWER_DOWNLOAD_DOCUMENT')
+			    })
+		    ]
+	    }))
+    }
+    else
+    {
+    	this.errorDescription = params.errorDescription;
+    }
+
 }
 
 BX.extend(BX.CViewErrorIframeElement, BX.CViewEditableElement);
@@ -2269,13 +2806,11 @@ BX.CViewErrorIframeElement.prototype.load = function(successLoadCallback)
 				},
 				text: this.title
 			}),
-			BX.create('a', {
+			BX.create('span', {
 				props: {
 					className: 'bx-viewer-file-last-v',
 					title: this.title,
-					alt: this.title,
-					href: this.historyPageUrl,
-					target: '_blank'
+					alt: this.title
 				},
 				text: this.version?
 					BX.message('JS_CORE_VIEWER_THROUGH_VERSION').replace('#NUMBER#', this.version > 0? this.version : ''):
@@ -2305,37 +2840,7 @@ BX.CViewErrorIframeElement.prototype.load = function(successLoadCallback)
 								className: 'bx-viewer-icon ' + this.getIconClassByName(this.title)
 							}
 						})),
-						(BX.create('div', {
-							props: {
-								className: 'bx-viewer-cap-text-block'
-							},
-							children: [
-								(BX.create('div', {
-									props: {
-										className: 'bx-viewer-cap-title',
-										title: this.title
-									},
-									text: this.title
-								})),
-								(BX.create('div', {
-									props: {
-										className: 'bx-viewer-too-big-title'
-									},
-									text: BX.message('JS_CORE_VIEWER_IFRAME_DESCR_ERROR')
-								})),
-								(BX.create('a', {
-									props: {
-										className: 'bx-viewer-btn',
-										target: '_blank',
-										href: this.buttonUrl
-									},
-									events: {
-										click: BX.eventCancelBubble
-									},
-									text: BX.message('JS_CORE_VIEWER_OPEN_WITH_GVIEWER')
-								}))
-							]
-						}))
+						this.errorDescription
 					]
 			}))
 		]
@@ -2499,9 +3004,13 @@ BX.CViewUnknownElement.prototype.show = function()
 BX.CViewUnknownElement.prototype.hide = function(isCloseElement)
 {
 	isCloseElement = isCloseElement || false;
-	this.domElement.style.opacity = 0;
-	this.titleButtons.style.display = 'none';
-	//this.domElement.style.display = 'none';
+	if(this.loaded)
+	{
+		this.domElement.style.opacity = 0;
+		this.titleButtons.style.display = 'none';
+		//this.domElement.style.display = 'none';
+	}
+
 	this.preventTimeout();
 	this.loaded = false;
 	this.preventShow = false;
@@ -2629,6 +3138,7 @@ BX.CViewer._convertElementsMatch = {};
 //todo refactor! globals....
 BX.CViewer.rightNowRunActionAfterShow = '';
 BX.CViewer.objNowInShow = false;
+BX.CViewer.isDisabledLocalEdit = false;
 BX.CViewer.localChangeServiceEdit = false;
 BX.CViewer.listPopupId = [];
 
@@ -2686,7 +3196,7 @@ BX.CViewer.enableInVersionDesktop = function(version)
 
 BX.CViewer.enableInVersionDisk = function(version)
 {
-	var revisionApi = BX.message('disk_revision_api');
+	var revisionApi = BX.message.disk_revision_api;
 	if(!revisionApi)
 	{
 		revisionApi = 0;
@@ -2695,8 +3205,17 @@ BX.CViewer.enableInVersionDisk = function(version)
 	return revisionApi >= parseInt(version, 10);
 };
 
+BX.CViewer.disableLocalEdit = function()
+{
+	BX.CViewer.isDisabledLocalEdit = true;
+};
+
 BX.CViewer.isEnableLocalEditInDesktop = function()
 {
+	if(BX.CViewer.isDisabledLocalEdit)
+	{
+		return false;
+	}
 	//desktop is installed and disk enabled.
 	return BX.CViewer.enableInVersionDesktop(21) && (!!BX.message('wd_desktop_disk_is_installed') || (typeof(BXIM) !== "undefined" && BXIM.desktopStatus));
 };
@@ -2999,6 +3518,86 @@ BX.CViewer.showLoading = function(obj, params)
 	return true;
 }
 
+BX.CViewer.prototype.initEventHandlersForElement = function(currentElement)
+{
+	if(currentElement.hasEventHandlers === true)
+	{
+		return;
+	}
+	currentElement.hasEventHandlers = true;
+	BX.addCustomEvent(currentElement, 'onIframeDocSuccess', BX.delegate(function (elementWithError) {
+		BX.localStorage.set('iframe_options_error', false, 60);
+	}, this));
+
+	BX.addCustomEvent(currentElement, 'onIframeElementPerformLocalAction', BX.delegate(function (elementWithError) {
+		if((!elementWithError.id || this.getCurrent().id != elementWithError.id) && this.getCurrent().src != elementWithError.src)
+		{
+			return;
+		}
+
+		if(BX.CViewer.isLocalEditService(this.initEditService()))
+		{
+			if(!elementWithError.editUrl && elementWithError.fakeEditUrl)
+			{
+				elementWithError.editUrl = elementWithError.fakeEditUrl;
+			}
+			if(!elementWithError.editUrl)
+			{
+				this.close();
+				this.runActionByCurrentElement('localview', {obElementViewer: this});
+				//this.openWindowOnlyView(currentElement);
+			}
+			else
+			{
+				this.close();
+				this.runActionByCurrentElement('forceedit', {obElementViewer: this});
+			}
+		}
+
+	}, this));
+
+	BX.addCustomEvent(currentElement, 'onIframeDocError', BX.delegate(function (elementWithError) {
+		if((!elementWithError.id || this.getCurrent().id != elementWithError.id) && this.getCurrent().src != elementWithError.src)
+		{
+			return;
+		}
+		this.getCurrent().preventTimeout();
+		this.getCurrent().hide();
+		this.createPopupWindowFromErrorElement(elementWithError);
+		BX.localStorage.set('iframe_options_error', true, 60);
+	}, this));
+
+	BX.addCustomEvent(currentElement, 'onAjaxElementError', BX.delegate(function (elementWithError) {
+
+		if((!elementWithError.id || this.getCurrent().id != elementWithError.id) && this.getCurrent().src != elementWithError.src)
+		{
+			return;
+		}
+		this.getCurrent().preventTimeout();
+		this.getCurrent().hide();
+		this.createPopupWindowFromErrorElement(elementWithError);
+
+		/*var errorElement = this.createErrorIframeElementFromAjaxElement(elementWithError);
+		errorElement.setCurrentModalWindow(elementWithError.getCurrentModalWindow());
+		this.getCurrent().hide();
+		this.setCurrent(errorElement);
+		this.show();*/
+	}, this));
+
+	BX.addCustomEvent(currentElement, 'onIframeElementCreateAjaxElement', BX.delegate(function (iframeElement, ajaxParams) {
+		if((!iframeElement.id || this.getCurrent().id != iframeElement.id) && this.getCurrent().src != iframeElement.src)
+		{
+			return;
+		}
+
+		var ajaxElement = this.createAjaxElementFromIframeElement(iframeElement, ajaxParams);
+		ajaxElement.setCurrentModalWindow(iframeElement.getCurrentModalWindow());
+		this.getCurrent().hide();
+		this.setCurrent(ajaxElement);
+		this.show();
+	}, this));
+}
+
 BX.CViewer.showError = function(obj, params)
 {
 	params = params || {};
@@ -3181,33 +3780,7 @@ BX.CViewer.prototype.getCurrent = function()
 	}
 	else
 	{
-		BX.addCustomEvent((this.currentElement || this.list[this._current]), 'onIframeDocSuccess', BX.delegate(function (elementWithError) {
-			BX.localStorage.set('iframe_options_error', false, 60);
-		}, this));
-		BX.addCustomEvent((this.currentElement || this.list[this._current]), 'onIframeDocError', BX.delegate(function (elementWithError) {
-			if((!elementWithError.id || this.getCurrent().id != elementWithError.id) && this.getCurrent().src != elementWithError.src)
-			{
-				return;
-			}
-			var errorElement = this.createErrorIframeElementFromEditable(elementWithError);
-			var runEditAction = false;
-			if(!BX.CViewer.isEmptyObject(elementWithError.getDataForCommit()))
-			{
-				runEditAction = true;
-				errorElement.setDataForCommit(elementWithError.getDataForCommit());
-			}
-			errorElement.setCurrentModalWindow(elementWithError.getCurrentModalWindow());
-			this.getCurrent().hide();
-			this.setCurrent(errorElement);
-			this.show();
-			if(runEditAction)
-			{
-				errorElement.openEditConfirm(this);
-			}
-
-			BX.localStorage.set('iframe_options_error', true, 60);
-		}, this));
-
+		this.initEventHandlersForElement(this.currentElement || this.list[this._current]);
 	}
 	return (this.currentElement || this.list[this._current]);
 }
@@ -3217,6 +3790,20 @@ BX.CViewer.prototype._keypress = function(e)
 	var key = (e||window.event).keyCode || (e||window.event).charCode;
 	if (!!this.params.keyMap && !!this.params.keyMap[key] && !!this[this.params.keyMap[key]])
 	{
+		var current = this.getCurrent();
+		if(current.wrapClassName && current.wrapClassName === 'bx-viewer-video' && current.innerElementId && key != 27)
+		{
+			if(typeof BX.Fileman.PlayerManager !== 'undefined' && BX.Fileman.PlayerManager.getPlayerById)
+			{
+				var player = BX.Fileman.PlayerManager.getPlayerById(current.innerElementId);
+				if(player && player.isReady())
+				{
+					player.onKeyDown(e);
+					e.preventDefault();
+					return;
+				}
+			}
+		}
 		this[this.params.keyMap[key]].apply(this);
 		return BX.PreventDefault(e);
 	}
@@ -3312,9 +3899,12 @@ BX.CViewer.prototype.adjustSizeTitle = function()
 		var pointIndex = text.lastIndexOf('.');
 		var ext = text.substring(pointIndex);
 		var name = text.substring(0, pointIndex);
-		var shortName = text.substring(0, 7) + '...' + name.substring(name.length-3) + ext;
-
-		textBlock.innerHTML = shortName;
+		var leftPartSymbolsNumber = parseInt(maxWidth / 10) - 8;
+		var shortName = text.substring(0, leftPartSymbolsNumber) + '...' + name.substring(name.length-3) + ext;
+		if(shortName.length < text.length)
+		{
+			textBlock.innerHTML = shortName;
+		}
 	}
 	if(autoReduction)
 	{
@@ -3405,7 +3995,7 @@ BX.CViewer.prototype.adjustSize = function()
 		this.CONTENT_WRAP.style.width = parseInt(width) + 'px';
 
 		this.getCurrent().addTimeoutId(
-			setTimeout(BX.proxy(this.adjustSizeTitle, this), 100)
+			setTimeout(BX.proxy(this.adjustSizeTitle, this), 300)
 		);
 
 		if (BX.browser.IsIE())
@@ -3498,7 +4088,10 @@ BX.CViewer.prototype._hide = function()
 
 BX.CViewer.prototype.add = function(data)
 {
-	this.list.push(data);
+	if (!BX.util.in_array(data.src, this.list.map(function(ob) {return ob.src})))
+	{
+		this.list.push(data);
+	}
 };
 
 BX.CViewer.prototype.setList = function(list)
@@ -3530,8 +4123,9 @@ BX.CViewer.prototype.setList = function(list)
 };
 
 BX.CViewer.prototype.show = function(element, force)
-{	
+{
 	BX.CViewer.temporaryServiceEditDoc = '';
+	this.initEditService();
 	this.closeConfirm();
 	if(BX.PopupWindowManager.getCurrentPopup())
 	{
@@ -3571,6 +4165,15 @@ BX.CViewer.prototype.show = function(element, force)
 		var currentElement = this.currentElement;
 	}
 	this._currentEl = currentElement;
+
+	var status = {};
+	BX.onCustomEvent(this, 'onBeforeElementShow', [this, currentElement, status]);
+	if(status && status.prevent)
+	{
+		this.close();
+		return;
+	}
+
 	//BX.is_subclass_of(currentElement, BX.CViewImageElement) doesn't work ^(
 	if(
 		BX.CViewer.enableInVersionDisk(2) &&
@@ -3580,7 +4183,8 @@ BX.CViewer.prototype.show = function(element, force)
 		//first run. We have to show setting window.
 		if(!BX.message('disk_document_service'))
 		{
-			this.openWindowForSelectDocumentService({viewInUf: !!BX.message('disk_render_uf')});
+			this.openWindowForSelectDocumentService({viewInUf: !!BX.message.disk_render_uf});
+			this.close();
 			return;
 		}
 		else
@@ -3643,9 +4247,16 @@ BX.CViewer.prototype.show = function(element, force)
 					BX.remove(element.titleButtons);
 				}
 			}
+			else if(dataError && dataError.status === 'error')
+			{
+				if(dataError.errors)
+				{
+					this.showError({text: dataError.errors.shift().message});
+				}
+			}
 		}, this));
 		this.getCurrent().addTimeoutId(
-			setTimeout(BX.proxy(this.adjustSizeTitle, this), 100)
+			setTimeout(BX.proxy(this.adjustSizeTitle, this), 300)
 		);
 	}
 	else
@@ -3676,6 +4287,13 @@ BX.CViewer.prototype.show = function(element, force)
 	this._unhide();
 
 	BX.onCustomEvent(this, 'onElementViewShow', [currentElement]);
+
+	if (BX.type.isDomNode(document.activeElement))
+	{
+		document.activeElement.blur();
+	}
+
+	BX.focus(window);
 };
 
 BX.CViewer.prototype.showLoading = function(params)
@@ -3728,18 +4346,7 @@ BX.CViewer.prototype._check_title = function()
 		{
 			BX.cleanNode(this.FULL_TITLE);
 
-			var p = [];
-			if(this.getCurrent().full_height && this.getCurrent().full_width)
-			{
-				p.push(this.getCurrent().full_width+'x'+this.getCurrent().full_height);
-			}
-
-			if(this.getCurrent().full_size)
-			{
-				p.push(this.getCurrent().full_size);
-			}
-
-			var html = '<a href="'+this.getCurrent().full+'" class="bx-viewer-full-link" target="_blank">' + BX.message('JS_CORE_IMAGE_FULL') + (p.length > 0 ? (' ('+p.join(', ')+')') : '') + '</a>';
+			var html = this.getCurrent().getBottomHtml();
 			BX.adjust(this.FULL_TITLE, {
 				style: {
 					opacity: '1'
@@ -3922,6 +4529,14 @@ BX.CViewer.prototype.openConfirm = function(content, buttons, modal, bindElement
 
 	this.popupConfirm = BX.PopupWindowManager.create('bx-gedit-convert-confirm' + params.windowName, bindElement, params);
 	this.popupConfirm.show();
+	BX.addCustomEvent(this.popupConfirm, 'onPopupClose', BX.proxy(function(event)
+	{
+		this.destroyMenu();
+		if(BX.CViewer.hasLockScroll())
+		{
+			BX.CViewer.unlockScroll();
+		}
+	}, this));
 	//BX.bind(this.popupConfirm.popupContainer, "click", BX.PreventDefault);
 };
 
@@ -4023,6 +4638,10 @@ BX.CViewer.prototype.getNameEditService = function(service)
 			return BX.message('JS_CORE_VIEWER_SERVICE_GOOGLE_DRIVE');
 		case 'onedrive':
 			return BX.message('JS_CORE_VIEWER_SERVICE_SKYDRIVE');
+		case 'office365':
+			return BX.message('JS_CORE_VIEWER_SERVICE_OFFICE365');
+		case 'myoffice':
+			return BX.message('JS_CORE_VIEWER_SERVICE_MYOFFICE');
 		case 'l':
 		case 'local':
 			return BX.message('JS_CORE_VIEWER_SERVICE_LOCAL');
@@ -4123,7 +4742,9 @@ BX.CViewer.prototype.openWindowForSelectDocumentService = function(params)
 	});
 };
 
-BX.CViewer.prototype.helpDiskDialog = function(){
+BX.CViewer.prototype.helpDiskDialog = function(title, message, downloadUrl){
+	title = title || BX.message('JS_CORE_VIEWER_EDIT_IN_LOCAL_SERVICE');
+	message = message || BX.message('JS_CORE_VIEWER_SERVICE_LOCAL_INSTALL_DESKTOP');
 	var helpDiskDialog = BX.create('div', {
 		props: {
 			className: 'bx-viewer-confirm'
@@ -4133,7 +4754,7 @@ BX.CViewer.prototype.helpDiskDialog = function(){
 				props: {
 					className: 'bx-viewer-confirm-title'
 				},
-				text: BX.message('JS_CORE_VIEWER_EDIT_IN_LOCAL_SERVICE'),
+				text: title,
 				children: []
 			}),
 			BX.create('div', {
@@ -4150,7 +4771,7 @@ BX.CViewer.prototype.helpDiskDialog = function(){
 						props: {
 							className: 'bx-viewer-confirm-text'
 						},
-						html: BX.message('JS_CORE_VIEWER_SERVICE_LOCAL_INSTALL_DESKTOP')
+						html: message
 					})
 				]
 			})
@@ -4161,7 +4782,7 @@ BX.CViewer.prototype.helpDiskDialog = function(){
 	BX.CViewer.lockScroll();
 	this.openConfirm(helpDiskDialog, [
 		new BX.PopupWindowButton({
-			text : BX.message('JS_CORE_VIEWER_DOWNLOAD_B24_DESKTOP'),
+			text : (downloadUrl? BX.message('JS_CORE_VIEWER_DOWNLOAD_B24_DESKTOP_FULL'): BX.message('JS_CORE_VIEWER_DOWNLOAD_B24_DESKTOP')),
 			className : "popup-window-button-accept",
 			events : { click : BX.delegate(function() {
 					document.location.href = (BX.browser.IsMac()? "http://dl.bitrix24.com/b24/bitrix24_desktop.dmg": "http://dl.bitrix24.com/b24/bitrix24_desktop.exe");
@@ -4178,14 +4799,151 @@ BX.CViewer.prototype.helpDiskDialog = function(){
 					}
 				}, this
 			)}
-		})
+		}),
+		(downloadUrl? new BX.PopupWindowButton({
+			text : BX.message('JS_CORE_VIEWER_DOWNLOAD_DOCUMENT'),
+			className : "popup-window-button-accept",
+			events : { click : BX.delegate(function() {
+					document.location.href = downloadUrl;
+				}, this
+			)}
+		}): null)
 	], true);
+};
+
+BX.CViewer.prototype.createPopupWindowFromErrorElement = function(errorElement){
+	if(errorElement.editInProcess && errorElement.editInProcess === true)
+	{
+		return;
+	}
+
+	var errorMessage = errorElement.errorMessage;
+	if(!errorMessage)
+	{
+		errorMessage = BX.message('JS_CORE_VIEWER_IFRAME_ERROR_COULD_NOT_VIEW');
+	}
+
+	var titleBar = {content: BX.create('div', {
+		props: {
+			className: 'popup-window-titlebar'
+		},
+		children: [
+			BX.create('span', {
+				props: {
+					className: 'popup-window-titlebar-text'
+				},
+				text: errorElement.title
+			}),
+			BX.create('span', {
+				props: {
+					className: 'popup-window-titlebar-text-version'
+				},
+				text: errorElement.version?
+				BX.message('JS_CORE_VIEWER_THROUGH_VERSION').replace('#NUMBER#', errorElement.version > 0? errorElement.version : ''):
+				'(' + BX.message('JS_CORE_VIEWER_THROUGH_LAST_VERSION').toLowerCase() + ')'
+			})
+		]
+	})};
+	var content = BX.create('div', {
+		props: {
+			className: 'bx-viewer-error-popup'
+		},
+		children: [
+			BX.create('div', {
+				props: {
+					className: 'bx-viewer-error-popup-file-icon-wrapper'
+				},
+				children: [
+					BX.create('div', {
+						props: {
+							className: 'bx-viewer-icon ' + errorElement.getIconClassByName(errorElement.title)
+						}
+					})
+				]
+			}),
+			BX.create('div', {
+				props: {
+					className: 'bx-viewer-error-popup-right'
+				},
+				children: [
+					BX.create('div', {
+						props: {
+							className: 'bx-viewer-error-popup-title'
+						},
+						text: BX.message('JS_CORE_VIEWER_IFRAME_ERROR_TITLE')
+					}),
+					(errorMessage? BX.create('span', {
+						props: {
+							className: 'bx-viewer-error-popup-text'
+						},
+						html: errorMessage
+					}) : null),
+					(!BX.CViewer.isDisabledLocalEdit? BX.create('span', {
+						props: {
+							className: 'bx-viewer-error-popup-text'
+						},
+						html: BX.message('JS_CORE_VIEWER_SERVICE_LOCAL_INSTALL_DESKTOP')
+					}) : null),
+					(!BX.CViewer.isDisabledLocalEdit? BX.create('span', {
+						props : {
+							className : "popup-window-button"
+						},
+						events : {
+							click : BX.delegate(function() {
+								document.location.href = (BX.browser.IsMac()? "http://dl.bitrix24.com/b24/bitrix24_desktop.dmg": "http://dl.bitrix24.com/b24/bitrix24_desktop.exe");
+							}, this)
+						},
+						text : BX.message('JS_CORE_VIEWER_DOWNLOAD_B24_DESKTOP_FULL')
+					}) : null),
+					(errorElement.hideEdit? null: errorElement.getComplexEditButton(this, {
+						enableEdit: !!errorElement.editUrl,
+						isLocked: !!errorElement.lockedBy && errorElement.lockedBy != BX.message('USER_ID')
+					}, true))
+				]
+			})
+		]
+	});
+
+	this.openConfirm(content, [
+		(errorElement.downloadUrl? new BX.PopupWindowButton({
+			text : BX.message('JS_CORE_VIEWER_DOWNLOAD_DOCUMENT'),
+			className : "popup-window-button-accept",
+			events : { click : BX.delegate(function() {
+					document.location.href = errorElement.downloadUrl;
+				}, this
+			)}
+		}): null),
+		new BX.PopupWindowButton({
+			className: 'bx-viewer-error-popup-cancel',
+			text : BX.message('JS_CORE_VIEWER_IFRAME_CONVERT_DECLINE'),
+			events : {
+				click : BX.delegate(function() {
+					this.destroyMenu();
+					this.closeConfirm();
+					this.close();
+				}, this
+			)}
+		})
+	], true, null, {
+		titleBar: titleBar,
+		closeIcon: false,
+		closeByEsc: false
+	});
 };
 
 BX.CViewer.prototype.createElementByType = function(element, params)
 {
 	var type = element.getAttribute('data-bx-viewer');
 	params = params || {};
+
+	if(element.getAttribute('data-bx-title').split('.').pop() == 'xodt')
+	{
+		var elementIframte = this.createErrorIframeElementFromEditable(this.createIframeElement(element, params));
+		elementIframte.disableGoogleViewer = true;
+
+		return elementIframte;
+	}
+
 	switch(type)
 	{
 		case 'onlyedit':
@@ -4193,6 +4951,9 @@ BX.CViewer.prototype.createElementByType = function(element, params)
 			break;
 		case 'iframe':
 			return this.createIframeElement(element, params);
+			break;
+		case 'ajax':
+			return this.createAjaxElement(element, params);
 			break;
 	}
 }
@@ -4217,23 +4978,190 @@ BX.CViewer.prototype.createErrorIframeElementFromEditable = function(editableEle
 		objectId: editableElement.objectId,
 
 		editUrl: editableElement.editUrl,
+		lockedBy: editableElement.lockedBy,
 		urlToPost: editableElement.urlToPost,
 		idToPost: editableElement.idToPost,
 		downloadUrl: editableElement.downloadUrl,
 		historyPageUrl: editableElement.historyPageUrl,
 		askConvert: editableElement.askConvert,
 		version: editableElement.version,
+		pdfFallback: editableElement.pdfFallback,
 
 		buttons: []
 	});
 	errorElement.buttons.push(errorElement.getComplexEditButton(this, {
-		enableEdit: !!errorElement.editUrl
+		enableEdit: !!errorElement.editUrl,
+		isLocked: !!errorElement.lockedBy && errorElement.lockedBy != BX.message('USER_ID')
 	}));
 	errorElement.buttons.push(errorElement.getComplexSaveButton(this, {
 		downloadUrl: errorElement.downloadUrl
 	}));
 
 	return errorElement;
+}
+
+BX.CViewer.prototype.createErrorIframeElementFromAjaxElement = function(ajaxElement, errorDescription)
+{
+	ajaxElement.errorMessage = ajaxElement.errorMessage || BX.message('JS_CORE_VIEWER_AJAX_CONNECTION_FAILED');
+
+	if(!errorDescription)
+	{
+		errorDescription = (BX.create('div', {
+			props: {
+				className: 'bx-viewer-cap-text-block'
+			},
+			children: [
+				BX.create('div', {
+					props: {
+						className: 'bx-viewer-cap-title',
+						title: ajaxElement.title
+					},
+					text: ajaxElement.title
+				}),
+				BX.create('div', {
+					props: {
+						className: 'bx-viewer-too-big-title'
+					},
+					text: ajaxElement.errorMessage
+				})
+			]
+		}));
+	}
+
+	var errorElement = new BX.CViewErrorIframeElement({
+		id: ajaxElement.id,
+		baseElementId: ajaxElement.baseElementId,
+		title: ajaxElement.title,
+		src: ajaxElement.src,
+		owner: ajaxElement.owner,
+		size: ajaxElement.size,
+		dateModify: ajaxElement.dateModify,
+		tooBigSizeMsg: ajaxElement.tooBigSizeMsg,
+
+		buttonUrl: ajaxElement.viewerUrl || ajaxElement.viewUrl,
+
+		isFromUserLib: ajaxElement.isFromUserLib,
+		relativePath: ajaxElement.relativePath,
+		externalId: ajaxElement.externalId,
+		objectId: ajaxElement.objectId,
+
+		editUrl: ajaxElement.editUrl,
+		lockedBy: ajaxElement.lockedBy,
+		urlToPost: ajaxElement.urlToPost,
+		idToPost: ajaxElement.idToPost,
+		downloadUrl: ajaxElement.downloadUrl,
+		historyPageUrl: ajaxElement.historyPageUrl,
+		askConvert: ajaxElement.askConvert,
+		version: ajaxElement.version,
+		errorDescription: errorDescription,
+
+		buttons: []
+	});
+	if(!ajaxElement.hideEdit)
+	{
+		errorElement.buttons.push(ajaxElement.getComplexEditButton(this, {
+			enableEdit: !!ajaxElement.editUrl,
+			isLocked: !!ajaxElement.lockedBy && ajaxElement.lockedBy != BX.message('USER_ID')
+		}));
+	}
+	errorElement.buttons.push(errorElement.getComplexSaveButton(this, {
+		downloadUrl: errorElement.downloadUrl
+	}));
+
+	return errorElement;
+}
+
+BX.CViewer.prototype.createAjaxElementFromIframeElement = function(iframeElement, ajaxParams)
+{
+	var ajaxElement = new BX.CViewAjaxElement({
+		src: ajaxParams.src,
+		width: ajaxParams.width,
+		height: ajaxParams.height,
+		hideEdit: ajaxParams.hideEdit,
+		pdfFallback: ajaxParams['data-bx-pdfFallback'],
+		transformTimeout: ajaxParams.transformTimeout,
+		baseElementId: iframeElement.baseElementId,
+		title: iframeElement.title,
+		dateModify: iframeElement.dateModify,
+
+		isFromUserLib: iframeElement.isFromUserLib,
+		externalId: iframeElement.externalId,
+		objectId: iframeElement.objectId,
+		relativePath: iframeElement.relativePath,
+
+		editUrl: iframeElement.editUrl,
+		lockedBy: iframeElement.lockedBy,
+		fakeEditUrl: iframeElement.fakeEditUrl,
+		urlToPost: iframeElement.urlToPost,
+		idToPost: iframeElement.idToPost,
+		downloadUrl: iframeElement.downloadUrl,
+		historyPageUrl: iframeElement.historyPageUrl,
+		askConvert: iframeElement.askConvert,
+		version: iframeElement.version,
+		iframeSrc: iframeElement.src,
+		getLastVersionUri: iframeElement.getLastVersionUri
+	});
+
+	if(!ajaxElement.hideEdit)
+	{
+		ajaxElement.buttons.push(ajaxElement.getComplexEditButton(this, {
+			enableEdit: !!ajaxElement.editUrl,
+			isLocked: !!ajaxElement.lockedBy && ajaxElement.lockedBy != BX.message('USER_ID')
+		}));
+	}
+	ajaxElement.buttons.push(ajaxElement.getComplexSaveButton(this, {
+		downloadUrl: ajaxElement.downloadUrl,
+		reloadAfterDownload: false,
+		showEdit: true
+	}));
+
+	return ajaxElement;
+}
+
+BX.CViewer.prototype.createIframeElementFromAjaxElement = function(ajaxElement)
+{
+	var iframeElement = new BX.CViewIframeElement({
+		src: ajaxElement.iframeSrc,
+		width: ajaxElement.width,
+		height: ajaxElement.height,
+		hideEdit: ajaxElement.hideEdit,
+		pdfFallback: ajaxElement.pdfFallback,
+		transformTimeout: ajaxElement.transformTimeout,
+		baseElementId: ajaxElement.baseElementId,
+		title: ajaxElement.title,
+		dateModify: ajaxElement.dateModify,
+
+		isFromUserLib: ajaxElement.isFromUserLib,
+		externalId: ajaxElement.externalId,
+		objectId: ajaxElement.objectId,
+		relativePath: ajaxElement.relativePath,
+
+		editUrl: ajaxElement.editUrl,
+		lockedBy: ajaxElement.lockedBy,
+		fakeEditUrl: ajaxElement.fakeEditUrl,
+		urlToPost: ajaxElement.urlToPost,
+		idToPost: ajaxElement.idToPost,
+		downloadUrl: ajaxElement.downloadUrl,
+		historyPageUrl: ajaxElement.historyPageUrl,
+		askConvert: ajaxElement.askConvert,
+		version: ajaxElement.version,
+		getLastVersionUri: ajaxElement.getLastVersionUri
+	});
+
+	if(!iframeElement.hideEdit)
+	{
+		iframeElement.buttons.push(iframeElement.getComplexEditButton(this, {
+			enableEdit: !!iframeElement.editUrl,
+			isLocked: !!iframeElement.lockedBy && iframeElement.lockedBy != BX.message('USER_ID')
+		}));
+	}
+	iframeElement.buttons.push(iframeElement.getComplexSaveButton(this, {
+		downloadUrl: iframeElement.downloadUrl,
+		reloadAfterDownload: true,
+		showEdit: true
+	}));
+
+	return iframeElement;
 }
 
 BX.CViewer.prototype.createBlankElementByParams = function(params)
@@ -4259,6 +5187,7 @@ BX.CViewer.prototype.createWithoutPreviewEditableElement = function(element, par
 		relativePath: element.getAttribute('data-bx-relativePath'),
 
 		editUrl: element.getAttribute('data-bx-edit'),
+		lockedBy: element.getAttribute('data-bx-lockedBy'),
 		fakeEditUrl: element.getAttribute('data-bx-fakeEdit'),
 		urlToPost: element.getAttribute('data-bx-urlToPost'),
 		idToPost: element.getAttribute('data-bx-idToPost'),
@@ -4279,7 +5208,8 @@ BX.CViewer.prototype.createWithoutPreviewEditableElement = function(element, par
 	}
 
 	nonPreviewEditableElement.buttons.push(nonPreviewEditableElement.getComplexEditButton(this, {
-		enableEdit: !!nonPreviewEditableElement.editUrl
+		enableEdit: !!nonPreviewEditableElement.editUrl,
+		isLocked: !!nonPreviewEditableElement.lockedBy && nonPreviewEditableElement.lockedBy != BX.message('USER_ID')
 	}));
 	nonPreviewEditableElement.buttons.push(nonPreviewEditableElement.getComplexSaveButton(this, {
 		downloadUrl: nonPreviewEditableElement.downloadUrl
@@ -4293,6 +5223,7 @@ BX.CViewer.prototype.createIframeElement = function(element, params)
 	var iframeElement = new BX.CViewIframeElement({
 		baseElementId: element.getAttribute('data-bx-baseElementId'),
 		title: element.getAttribute('data-bx-title'),
+		dateModify: element.getAttribute('data-bx-dateModify'),
 
 		isFromUserLib: !!element.getAttribute('data-bx-isFromUserLib'),
 		externalId: element.getAttribute('data-bx-externalId'),
@@ -4300,6 +5231,8 @@ BX.CViewer.prototype.createIframeElement = function(element, params)
 		relativePath: element.getAttribute('data-bx-relativePath'),
 
 		editUrl: element.getAttribute('data-bx-edit'),
+		lockedBy: element.getAttribute('data-bx-lockedBy'),
+		hideEdit: element.getAttribute('data-bx-hideEdit'),
 		fakeEditUrl: element.getAttribute('data-bx-fakeEdit'),
 		urlToPost: element.getAttribute('data-bx-urlToPost'),
 		idToPost: element.getAttribute('data-bx-idToPost'),
@@ -4308,6 +5241,10 @@ BX.CViewer.prototype.createIframeElement = function(element, params)
 		src: element.getAttribute('data-bx-src'),
 		askConvert: element.getAttribute('data-bx-askConvert'),
 		version: params.version >= 0? params.version : element.getAttribute('data-bx-version'),
+		pdfFallback: element.getAttribute('data-bx-pdfFallback'),
+		previewImage: element.getAttribute('data-bx-previewImage'),
+		transformTimeout: params.transformTimeout,
+		getLastVersionUri: params.getLastVersionUri || element.getAttribute('data-bx-getLastVersionUri'),
 		buttons: []
 	});
 	if(iframeElement.isConverted())
@@ -4319,9 +5256,13 @@ BX.CViewer.prototype.createIframeElement = function(element, params)
 		iframeElement.askConvert = false;
 	}
 
-	iframeElement.buttons.push(iframeElement.getComplexEditButton(this, {
-		enableEdit: !!iframeElement.editUrl
-	}));
+	if(!iframeElement.hideEdit)
+	{
+		iframeElement.buttons.push(iframeElement.getComplexEditButton(this, {
+			enableEdit: !!iframeElement.editUrl,
+			isLocked: !!iframeElement.lockedBy && iframeElement.lockedBy != BX.message('USER_ID')
+		}));
+	}
 	iframeElement.buttons.push(iframeElement.getComplexSaveButton(this, {
 		downloadUrl: iframeElement.downloadUrl,
 		reloadAfterDownload: true,
@@ -4330,6 +5271,54 @@ BX.CViewer.prototype.createIframeElement = function(element, params)
 
 	return iframeElement;
 };
+
+BX.CViewer.prototype.createAjaxElement = function(element, params)
+	{
+		var ajaxElement = new BX.CViewAjaxElement({
+			baseElementId: element.getAttribute('data-bx-baseElementId'),
+			title: element.getAttribute('data-bx-title'),
+			dateModify: element.getAttribute('data-bx-dateModify'),
+
+			isFromUserLib: !!element.getAttribute('data-bx-isFromUserLib'),
+			externalId: element.getAttribute('data-bx-externalId'),
+			objectId: element.getAttribute('bx-attach-file-id'),
+			relativePath: element.getAttribute('data-bx-relativePath'),
+
+			editUrl: element.getAttribute('data-bx-edit'),
+			lockedBy: element.getAttribute('data-bx-lockedBy'),
+			fakeEditUrl: element.getAttribute('data-bx-fakeEdit'),
+			urlToPost: element.getAttribute('data-bx-urlToPost'),
+			idToPost: element.getAttribute('data-bx-idToPost'),
+			downloadUrl: element.getAttribute('data-bx-download'),
+			historyPageUrl: element.getAttribute('data-bx-historyPage'),
+			src: element.getAttribute('data-bx-src'),
+			askConvert: element.getAttribute('data-bx-askConvert'),
+			version: params.version >= 0? params.version : element.getAttribute('data-bx-version'),
+			buttons: [],
+			pdfFallback: element.getAttribute('data-bx-pdfFallback'),
+			width: element.getAttribute('data-bx-width'),
+			height: element.getAttribute('data-bx-height'),
+			hideEdit: element.getAttribute('data-bx-hideEdit'),
+			iframeSrc: element.getAttribute('data-bx-iframeSrc'),
+			transformTimeout: element.getAttribute('data-bx-transformTimeout'),
+			getLastVersionUri: element.getAttribute('data-bx-getLastVersionUri')
+		});
+
+		if(!ajaxElement.hideEdit)
+		{
+			ajaxElement.buttons.push(ajaxElement.getComplexEditButton(this, {
+				enableEdit: !!ajaxElement.editUrl,
+				isLocked: !!ajaxElement.lockedBy && ajaxElement.lockedBy != BX.message('USER_ID')
+			}));
+		}
+		ajaxElement.buttons.push(ajaxElement.getComplexSaveButton(this, {
+			downloadUrl: ajaxElement.downloadUrl,
+			reloadAfterDownload: false,
+			showEdit: true
+		}));
+
+		return ajaxElement;
+	};
 
 var CViewerUrlHelper = {
 	lastService: null,
@@ -4350,6 +5339,12 @@ var CViewerUrlHelper = {
 			case 'sky-drive':
 			case 'onedrive':
 				service = 'onedrive';
+				break;
+			case 'office365':
+				service = 'office365';
+				break;
+			case 'myoffice':
+				service = 'myoffice';
 				break;
 			case 'l':
 			case 'local':

@@ -55,6 +55,6 @@ foreach ($arParams["UPLOADS"] as $v)
 		if (BX["MPF"])
 			f();
 		else
-			BX.loadScript('<?=$templateFolder?>/script.js');
+			BX.loadScript('<?=\CUtil::GetAdditionalFileURL($templateFolder.'/script.js', true)?>');
 	});
 </script>

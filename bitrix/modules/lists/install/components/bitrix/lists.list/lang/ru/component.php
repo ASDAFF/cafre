@@ -23,3 +23,8 @@ $MESS["CC_BLL_TITLE_PROCESS"] = "Процесс: #NAME#";
 $MESS["CC_BLL_COMMENTS"] = "Комментарии";
 $MESS["CT_BLL_BIZPROC_DELETE"] = "Удалить бизнес-процесс";
 $MESS["CT_BLL_BIZPROC_STOP"] = "Остановить бизнес-процесс";
+$MESS["CT_BLL_ENLARGE"] = "Увеличить";
+$MESS["CT_BLL_DOWNLOAD"] = "Скачать";
+$MESS["CT_BLL_GRID_PAGE_SIZES_ALL"] = "Все";
+$MESS["CC_BLL_ELEMENT_ACTION_MENU_OPEN"] = "Открыть";
+?>

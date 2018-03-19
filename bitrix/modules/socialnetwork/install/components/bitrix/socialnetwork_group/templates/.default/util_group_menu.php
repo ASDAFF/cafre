@@ -1,5 +1,11 @@
-<?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();?>
-<?
+<?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
+/** @var CBitrixComponentTemplate $this */
+/** @var array $arParams */
+/** @var array $arResult */
+/** @global CDatabase $DB */
+/** @global CUser $USER */
+/** @global CMain $APPLICATION */
+
 $arReturnGroupMenu = $APPLICATION->IncludeComponent(
 	"bitrix:socialnetwork.group_menu",
 	"",
@@ -7,6 +13,7 @@ $arReturnGroupMenu = $APPLICATION->IncludeComponent(
 		"GROUP_VAR" => $arResult["ALIASES"]["group_id"],
 		"PAGE_VAR" => $arResult["ALIASES"]["page"],
 		"PATH_TO_GROUP" => $arResult["PATH_TO_GROUP"],
+		"PATH_TO_GROUP_GENERAL" => $arResult["PATH_TO_GROUP_GENERAL"],
 		"PATH_TO_GROUP_MODS" => $arResult["PATH_TO_GROUP_MODS"],
 		"PATH_TO_GROUP_USERS" => $arResult["PATH_TO_GROUP_USERS"],
 		"PATH_TO_GROUP_EDIT" => $arResult["PATH_TO_GROUP_EDIT"],

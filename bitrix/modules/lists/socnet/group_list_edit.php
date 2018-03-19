@@ -22,6 +22,7 @@ include($_SERVER["DOCUMENT_ROOT"]."/bitrix/components/bitrix/socialnetwork_group
 	"LISTS_URL" => $arResult["PATH_TO_GROUP_LISTS"],
 	"LIST_URL" => $arResult["PATH_TO_GROUP_LIST_VIEW"],
 	"LIST_EDIT_URL" => $arResult["PATH_TO_GROUP_LIST_EDIT"],
+	"LIST_ELEMENT_URL" => $arResult["PATH_TO_GROUP_LIST_ELEMENT_EDIT"],
 	"LIST_FIELDS_URL" => $arResult["PATH_TO_GROUP_LIST_FIELDS"],
 	"CACHE_TYPE" => $arParams["CACHE_TYPE"],
 	"CACHE_TIME" => $arParams["CACHE_TIME"],

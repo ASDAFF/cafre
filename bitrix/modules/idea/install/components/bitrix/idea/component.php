@@ -34,13 +34,14 @@ $arDefaultUrlTemplates404 = array(
 	"post_edit" => "edit/#post_id#/",
 	"post" => "#post_id#/",
 	//RSS
-	"post_rss" => "rss/#type#/#post_id#/",
-	"rss" => "rss/#type#/",
+	"rss_category_status" => "rss/#type#/category/#category#/status/#status_code#/",
+	"rss_user_ideas_status" => "rss/#type#/user/#user_id#/idea/status/#status_code#/",
 	"rss_status" => "rss/#type#/status/#status_code#/",
 	"rss_category" => "rss/#type#/category/#category#/",
-	"rss_category_status" => "rss/#type#/category/#category#/status/#status_code#/",
 	"rss_user_ideas" => "rss/#type#/user/#user_id#/idea/",
-	"rss_user_ideas_status" => "rss/#type#/user/#user_id#/idea/status/#status_code#/",
+	"post_rss" => "rss/#type#/#post_id#/",
+	"rss" => "rss/#type#/",
+
 );
 
 $arDefaultVariableAliases404 = array(
@@ -213,7 +214,7 @@ else if (in_array($componentPage, array(
 )) && !$this->initComponentTemplate("", false, ""))
 {
 	$arResult["PAGE_MODE"] = $this->__pageMode = $componentPage;
-	$componentPage = "rss";
+	//$componentPage = "rss";
 }
 
 $this->IncludeComponentTemplate($componentPage);

@@ -12,6 +12,9 @@ $MESS["SC_UPDATE_ERROR"] = "Not connected to update server";
 $MESS["SC_TMP_FOLDER_PERMS"] = "Insufficient permission to write to temporary folder.";
 $MESS["SC_NO_TMP_FOLDER"] = "Temporary folder does not exist.";
 $MESS["ERR_NO_MODS"] = "The required extensions are not installed:";
+$MESS["SC_ERR_DNS"] = "Cannot get MX record for domain #DOMAIN#";
+$MESS["SC_ERR_DNS_WRONG"] = "DNS configuration is incorrect. Only one MX record has to be there: mail-001.bitrix24.com (current: #DOMAIN#).";
+$MESS["SC_ERR_CONNECT_MAIL001"] = "Cannot connect mail server mail-001.bitrix24.com";
 $MESS["ERR_NO_SSL"] = "SSL support is not enabled for PHP";
 $MESS["SC_RUS_L1"] = "Site ticket";
 $MESS["SC_TIK_SEND_SUCCESS"] = "The message has been sent successfully. Please check your inbox #EMAIL# after some time for confirmation of the message receipt from the technical support system.";
@@ -19,6 +22,7 @@ $MESS["SC_TIK_TITLE"] = "Send message to the technical support system";
 $MESS["SC_TIK_DESCR"] = "Problem description";
 $MESS["SC_TIK_DESCR_DESCR"] = "sequence of operations that caused the error, error description,...";
 $MESS["SC_TIK_LAST_ERROR"] = "Last error text";
+$MESS["SC_ERR_TEST_MAIL_PUSH"] = "Cannot connect to #DOMAIN# from e-mail server";
 $MESS["SC_TIK_LAST_ERROR_ADD"] = "attached";
 $MESS["SC_TIK_SEND_MESS"] = "Send message";
 $MESS["SC_TAB_2"] = "Access check";
@@ -91,6 +95,7 @@ $MESS["SC_WARN_DAV"] = "WebDav is disabled because the module mod_dav/mod_dav_fs
 $MESS["SC_DELIMITER_ERR"] = "Current delimiter: &quot;#VAL#&quot;, &quot;.&quot; is required.";
 $MESS["SC_DB_MISC_CHARSET"] = "The table #TBL# charset (#T_CHAR#) does not match the database charset (#CHARSET#).";
 $MESS["SC_COLLATE_WARN"] = "The collation value for &quot;#TABLE#&quot; (#VAL0#) differs from the database value (#VAL1#).";
+$MESS["SC_TABLE_BROKEN"] = "The table &quot;#TABLE#&quot; has been destroyed due to internal MySQL error. Autorecovery will recreate the table.";
 $MESS["SC_TABLE_CHARSET_WARN"] = "The &quot;#TABLE#&quot; table contains fields in encoding not matching the database encoding.";
 $MESS["SC_FIELDS_COLLATE_WARN"] = "The field &quot;#FIELD#&quot; result in the table &quot;#TABLE#&quot;  (#VAL1#) does not match that in the database (#VAL1#).";
 $MESS["SC_TABLE_SIZE_WARN"] = "The size of the &quot;#TABLE#&quot; table is possibly too large (#SIZE# M).";
@@ -140,6 +145,9 @@ $MESS["SC_DATABASE_COLLATION_DIFF"] = "The database collation (#VAL1#) does not 
 $MESS["SC_DATABASE_CHARSET_DIFF"] = "The database charset (#VAL1#) does not match the connection charset (#VAL0#).";
 $MESS["SC_HELP_NOTOPIC"] = "Sorry, no help on this topic.";
 $MESS["SC_HELP_CHECK_INSTALL_SCRIPTS"] = "Users may occasionally forget to delete the installation scripts (restore.php, bitrixsetup.php) after system recovery or installation. This may become a serious security threat and result in website hijacking. If you have ignored the autodelete warning, remember to remove these files manually.";
+$MESS["SC_HELP_CHECK_MAIL_PUSH"] = "The <a href=\"https://helpdesk.bitrix24.com/open/1602367/\" target=_blank>Message Relay</a> feature will post messages from e-mail to Activity Stream making it possible to involve in discussion any user who does not have an account on your Bitrix24.
+
+You will have to <a href=\"https://dev.1c-bitrix.ru/learning/course/index.php?COURSE_ID=71&LESSON_ID=7655&LESSON_PATH=6415.6420.3698.7655\" target=_blank>configure DNS</a> properly and make your Bitrix24 externally accessible to use this feature.";
 $MESS["SC_HELP_CHECK_PHP_MODULES"] = "This will check for the PHP extensions required by the system. If there are missing extensions, shows the modules that cannot run without these extensions.
 
 To add missing PHP extensions, contact your hosting techsupport. If you run the system at a local machine, you will have to install them manually; refer to documentation available at php.net.";
@@ -189,7 +197,7 @@ Besides, authorizations and CAPTCHA problems may occur.";
 $MESS["SC_HELP_CHECK_UPLOAD"] = "This will attempt to connect to the web server and send a chunk of binary data as a file. The server will then compare the received data with the original sample. If a problem arises, it may be caused by some parameter in <i>php.ini</I> prohibiting binary data transfer, or by inaccessible temporary folder (or <i>/bitrix/tmp</i>).
 
 Should the problem appear, contact your hosting provider. If you are running the system at a local machine, you will have to configure the server manually.";
-$MESS["SC_HELP_CHECK_UPLOAD_BIG"] = "This will upload a large binary file (over 4MB). If this test fails while the previous one succeeds, the problem may be the limit in php.ini (<b>post_max_size</b> or <b>upload_max_filesize</b>). Use phpinfo to get the current values (Settings - Tools - PHP Settings).
+$MESS["SC_HELP_CHECK_UPLOAD_BIG"] = "This will upload a large binary file (over 4MB). If this test fails while the previous one succeeds, the problem may be the limit in php.ini (<b>post_max_size</b> or <b>upload_max_filesize</b>). Use phpinfo to get the current values (Settings - Tools - System Administration - PHP Settings).
 
 Insufficient disk space may cause this problem as well.";
 $MESS["SC_HELP_CHECK_UPLOAD_RAW"] = "Sends binary data in the body of a POST request. However, the data sometimes may become damaged on the server side in which case the Flash based image uploader won't work.";
@@ -329,6 +337,7 @@ $MESS["ERR_MAX_INPUT_VARS"] = "The value of max_input_vars must be #MIN# or grea
 $MESS["SC_T_APACHE"] = "Web server modules";
 $MESS["SC_T_INSTALL_SCRIPTS"] = "Service scripts in the site root";
 $MESS["ERR_OLD_VM"] = "You are running an outdated version of Bitrix Environment. Please install the most recent version to prevent configuration issues.";
+$MESS["ERR_DNS"] = "You are running an outdated version of Bitrix Environment. Please install the most recent version to prevent configuration issues.";
 $MESS["SC_ERR_NO_FIELD"] = "The field #FIELD# is missing from the table #TABLE#";
 $MESS["SC_ERR_NO_VALUE"] = "There is no system record #SQL# for the table #TABLE#";
 $MESS["SC_ERR_FIELD_DIFFERS"] = "Table #TABLE#: the field #FIELD# \"#CUR#\" does not match the description \"#NEW#\"";
@@ -367,6 +376,7 @@ $MESS["SC_HELP_CHECK_PULL_COMMENTS"] = "To make comments in Avtivity Stream avai
 ";
 $MESS["SC_HELP_CHECK_CONNECT_MAIL"] = "To get notified by Intranet about new e-mail messages, a user has to specify the mailbox connection parameters on the Intranet user profile page.";
 $MESS["SC_HELP_CHECK_SOCNET"] = "To receive updates from social resources, the <a href=\"http://www.bitrixsoft.com/company/blog/news/integration-with-social-networks.php\">Social Website Integration</a> module has to be configured providing authentication keys for each service that are going to be used.";
+$MESS["SC_HELP_CHECK_REST"] = "The \"rest\" module is required for external app integration and  some of the Marketplace apps. You can add your apps to Bitrix24; follow these <a href=\"https://dev.1c-bitrix.ru/learning/course/?COURSE_ID=43&LESSON_ID=3568\" target=\"_blank\">guidelines</a>.";
 $MESS["SC_HELP_CHECK_EXTRANET"] = "The <a href=\"http://www.bitrixsoft.com/products/intranet/features/collaboration/extranet.php\">Extranet</a> module requires that your Intranet is externally accessible via the Internet.
 
 If you don't need features provided by this module, simply <a href=\"/bitrix/admin/module_admin.php\">uninstall it</a>.";
@@ -439,10 +449,11 @@ $MESS["MAIN_PERF_MID"] = "Average";
 $MESS["MAIN_PERF_HIGH"] = "High";
 $MESS["MAIN_PAGES_PER_SECOND"] = "pages per second";
 $MESS["MAIN_BX_CRONTAB_DEFINED"] = "Defined the BX_CRONTAB constant which can only be done in scripts running on cron.";
+$MESS["MAIN_CRON_NO_START"] = "cron_events.php is not configured to run on cron; the most recent agent has been executed more than 24 hours ago.";
 $MESS["MAIN_AGENTS_HITS"] = "The system agents are run on hits. Migrate the agents to cron.";
 $MESS["SC_GR_EXTENDED"] = "Advanced features";
 $MESS["SC_GR_MYSQL"] = "Database test";
-$MESS["SC_GR_FIX"] = "Fix database errors";
+$MESS["SC_GR_FIX"] = "Fix errors";
 $MESS["SC_WARN"] = "not configured";
 $MESS["SC_PORTAL_WORK"] = "Intranet operability";
 $MESS["SC_PORTAL_WORK_DESC"] = "Intranet operability check";
@@ -497,12 +508,14 @@ $MESS["MAIN_SC_TEST_CHAT"] = "Real time business chat";
 $MESS["MAIN_SC_TEST_COMMENTS"] = "Live comments";
 $MESS["MAIN_SC_TEST_VIDEO"] = "Video calls";
 $MESS["MAIN_SC_TEST_MOBILE"] = "Bitrix24 mobile app";
+$MESS["MAIN_SC_TEST_MAIL_PUSH"] = "Relay e-mail messages to Activity Stream";
 $MESS["MAIN_SC_TEST_PUSH"] = "Notifications to mobile devices (push notifications)";
 $MESS["MAIN_SC_TEST_DOCS"] = "Editing documents in Google Docs and Microsoft Office Online";
 $MESS["MAIN_SC_TEST_FAST_FILES"] = "Bitrix24.Drive. Fast file operations";
 $MESS["MAIN_SC_TEST_SEARCH_CONTENTS"] = "Search document contents";
 $MESS["MAIN_SC_TEST_MAIL_INTEGRATION"] = "Internal corporate mail integration";
 $MESS["MAIN_SC_TEST_SOCNET_INTEGRATION"] = "Social service integration";
+$MESS["MAIN_SC_TEST_REST"] = "REST API Usage";
 $MESS["MAIN_SC_EXTRANET_ACCESS"] = "External access to Extranet";
 $MESS["MAIN_SC_WINDOWS_ENV"] = "Windows environment integration";
 $MESS["MAIN_SC_DOCS_EDIT_MS_OFFICE"] = "Editing documents in Microsoft Office";
@@ -512,7 +525,9 @@ $MESS["MAIN_SC_PERFORM"] = "Performance";
 $MESS["MAIN_SC_MAIL_IS_NOT_INSTALLED"] = "The Mail module is not installed.";
 $MESS["MAIN_SC_MAIL_INTEGRATION"] = "External e-mail account integration is OK, but none of the users configured integration settings.";
 $MESS["MAIN_SC_NO_SOCIAL_MODULE"] = "The social networking module is not installed.";
+$MESS["MAIN_SC_NO_REST_MODULE"] = "The Rest module is not installed.";
 $MESS["MAIN_SC_NO_SOCIAL_SERVICES"] = "No social networking service configured in the social networking module settings.";
+$MESS["MAIN_SC_NO_SOCIAL_SERVICES_24NET"] = "bitrix24.net integration is not configured in the Social Service module settings.";
 $MESS["MAIN_SC_NO_LDAP_MODULE"] = "The LDAP module is not installed.";
 $MESS["MAIN_SC_NO_LDAP_INTEGRATION"] = "AD server integration is not configured.";
 $MESS["MAIN_SC_OPTION_SWITCHED_OFF"] = "NTLM authentication is enabled in the LDAP module settings.";
@@ -538,5 +553,12 @@ $MESS["MAIN_SC_NO_PULL_EXTERNAL"] = "External connection to the Intranet was a s
 $MESS["MAIN_CATDOC_WARN"] = "Bad catdoc version: #VERSION#<br>
 Details: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=679877<br>
 Install an earlier catdoc version or a newer version with fixes. ";
-$MESS["SC_TABLE_BROKEN"] = "The table &quot;#TABLE#&quot; has been destroyed due to internal MySQL error. Autorecovery will recreate the table.";
+$MESS["MAIN_SC_MBSTRING_SETTIGNS_DIFFER"] = "mbstring preferences in <i>/bitrix/.settings.php</i> (utf_mode) and <i>/bitrix/php_interface/dbconn.php</i> (BX_UTF) are different.";
+$MESS["SC_ERR_NO_SETTINGS"] = "Configuration file /bitrix/.settings.php was not found";
+$MESS["SC_FIX_MBSTRING"] = "Repair configuration";
+$MESS["SC_FIX_MBSTRING_CONFIRM"] = "Attention!
+
+This will change the configuration files. If the operation fails, your site will be recoverable only from the web hosting control panel.
+
+Continue?";
 ?>

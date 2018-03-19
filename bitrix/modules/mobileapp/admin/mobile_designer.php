@@ -5,6 +5,7 @@
  * @subpackage mobileapp
  * @copyright 2001-2014 Bitrix
  */
+use Bitrix\Main\Web\Json;
 
 /**
  * Bitrix vars
@@ -39,7 +40,7 @@ if (IsIE() !== false && IsIE() < 9)
 	return;
 }
 
-CUtil::InitJSCore(Array('ajax', 'window', "popup", "mdesigner"));
+CUtil::InitJSCore(Array("mdesigner"));
 $action = $_REQUEST["action"];
 $templates = $_REQUEST["action"];
 
@@ -84,10 +85,14 @@ function __DSGetInitData()
 
 	$dbres = \CSiteTemplate::GetList();
 	$templates = array();
-	while ($t = $dbres->Fetch())
+	while ($template = $dbres->Fetch())
 	{
-		$templates[] = $t;
+		if(array_key_exists("MOBILE",$template) && $template["MOBILE"] == "Y")
+		{
+			$templates[] = $template;
+		}
 	}
+
 
 	$data = array(
 		"map" => array(
@@ -140,8 +145,10 @@ if (strlen($action) > 0)
 				break;
 			case "createApp":
 				$code = $_REQUEST["code"];
+				$appTemplateName = $_REQUEST["appTemplateName"];
 				$createTemplate = ($_REQUEST["createNew"] === "Y");
 				$bindTemplate = ($_REQUEST["bindTemplate"] === "Y");
+				$useOffline = ($_REQUEST["useOffline"] === "Y") ;
 				$fields = array(
 					"FOLDER" => $_REQUEST["folder"],
 					"NAME" => $_REQUEST["name"],
@@ -153,8 +160,25 @@ if (strlen($action) > 0)
 					$code = \Bitrix\Main\Text\Encoding::convertEncoding($code, "UTF-8", SITE_CHARSET);
 					$templateName = \Bitrix\Main\Text\Encoding::convertEncoding($templateName, "UTF-8", SITE_CHARSET);
 				}
+				$initConfig = array();
+				if($useOffline)
+				{
+					$initConfig =  array(
+							"offline/launch_mode"=>"offline_only",
+							"offline/file_list"=>array(
+								"index.html"=>"/".$fields["FOLDER"]."/offline/index.html",
+								"script.js"=>"/".$fields["FOLDER"]."/offline/script.js",
+								"style.css"=>"/".$fields["FOLDER"]."/offline/style.css",
+							),
+							"offline/main"=>"index.html"
+					);
 
-				$result = \Bitrix\MobileApp\Designer\Manager::createApp($code, $fields); //creating global config inside
+					$data["config"] = $initConfig;
+
+				}
+
+
+				$result = \Bitrix\MobileApp\Designer\Manager::createApp($code, $fields, $initConfig); //creating global config inside
 
 				if($result == \Bitrix\MobileApp\Designer\Manager::IS_ALREADY_EXISTS)
 				{
@@ -166,18 +190,21 @@ if (strlen($action) > 0)
 					die();
 				}
 
+
+
 				$status = ($result == \Bitrix\MobileApp\Designer\Manager::SUCCESS);
+
 				if ($status)
 				{
-					\Bitrix\MobileApp\Designer\Manager::copyFromTemplate($fields["FOLDER"], $code);
+					\Bitrix\MobileApp\Designer\Manager::copyFromTemplate($fields["FOLDER"], $code, $useOffline, $appTemplateName);
 
 					if ($bindTemplate)
 					{
 						$templateId = $_REQUEST["template_id"];
 						\Bitrix\MobileApp\Designer\Manager::bindTemplate($templateId, $fields["FOLDER"], $createTemplate);
 					}
-
 				}
+
 				break;
 			case "removeApp":
 				$code = $_REQUEST["code"];
@@ -199,7 +226,7 @@ if (strlen($action) > 0)
 	$data["status"] = ($status !== false) ? "ok" : "fail";
 
 	$APPLICATION->RestartBuffer();
-	echo CUtil::PhpToJSObject($data);
+	echo Json::encode($data);
 	die();
 }
 ?>
@@ -236,7 +263,7 @@ $componentParams = array(
 
 $GLOBALS['APPLICATION']->IncludeComponent('bitrix:mobileapp.designer.file.input', 'drag_n_drop', $componentParams, false);
 $initData = __DSGetInitData();
-$initDataJS = CUtil::PhpToJSObject($initData);
+$initDataJS = Json::encode($initData);
 ?>
 
 
@@ -250,12 +277,31 @@ $initDataJS = CUtil::PhpToJSObject($initData);
 
 		window.designer = new BX.Mobile.Designer({
 			containerId: "designer-wrapper",
-			platforms:<?=CUtil::PhpToJSObject(\Bitrix\MobileApp\Designer\ConfigTable::getSupportedPlatforms())?>
+			platforms:<?=Json::encode(\Bitrix\MobileApp\Designer\ConfigTable::getSupportedPlatforms())?>
 		});
 		window.designer.init();
 	});
 </script>
+<div>
+	<?
 
-<? require($_SERVER["DOCUMENT_ROOT"] . BX_ROOT . "/modules/main/include/epilog_admin.php"); ?>
+CAdminFileDialog::ShowScript(Array
+(
+	"event" => "openFileDialog",
+	"arResultDest" => Array("FUNCTION_NAME" => "designerEditorFileChosen"),
+	"arPath" => Array(),
+	"select" => "F", // F - file only, D - folder only, DF - files & dirs
+	"operation" => 'O',
+	"showUploadTab" => false,
+	"showAddToMenuTab" => false,
+	"fileFilter" => "js,html,htm,png,jpeg,jpg,svg,gif,txt,css",
+	"allowAllFiles" => true,
+	"SaveConfig" => true
+));
+?>
+</div>
+
+<?
+require($_SERVER["DOCUMENT_ROOT"] . BX_ROOT . "/modules/main/include/epilog_admin.php"); ?>
 
 

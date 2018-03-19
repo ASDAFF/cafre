@@ -136,7 +136,7 @@ StateActivity = function()
 			cmdC.title = BPMESS['STATEACT_DEL'];
 			cmdC.onclick = ob.remove;
 
-			cl.style.borderTop = '1px solid #e5e5e5'
+			cl.style.borderTop = '1px solid #e5e5e5';
 			cl.style.fontSize="12px";
 			cl.style.cursor = 'pointer';
 			cl.onmouseover = function (e){this.style.backgroundColor='#f7f7f7';};
@@ -150,17 +150,17 @@ StateActivity = function()
 
 		c = r.insertCell(-1);
 		c.style.background = 'url(/bitrix/images/bizproc/stat_b.gif)';
-		c.height = '5'
+		c.height = '5';
 
 		c = r.insertCell(-1);
 		c.width = '5';
 		c.style.background = 'url(/bitrix/images/bizproc/stat_br.gif)';
-	}
+	};
 
 	ob.OnRemoveClick = function ()
 	{
 		ob.parentActivity.RemoveChild(ob);
-	}
+	};
 
 	ob.remove = function (e)
 	{
@@ -175,7 +175,7 @@ StateActivity = function()
 				break;
 			}
 		}
-	}
+	};
 
 	ob.settings = function (e)
 	{
@@ -191,7 +191,7 @@ StateActivity = function()
 				break;
 			}
 		}
-	}
+	};
 
 	ob.clickrow = function (e)
 	{
@@ -204,14 +204,14 @@ StateActivity = function()
 				break;
 			}
 		}
-	}
+	};
 	
 	ob.HideRows = function ()
 	{
 		for(var i=0; i<ob.parentActivity.__l.length; i++)
 			for(var j=0; j<5; j++)
 				ob.parentActivity.__l[i][j].style.display = 'none';
-	}
+	};
 
 	ob.SequentialShow = function(act)
 	{
@@ -236,7 +236,7 @@ StateActivity = function()
 			document.getElementById("bizprocsavebuttons").style.display = 'none';
 
 		act.Draw(ob.__seq);
-	}
+	};
 
 	ob.SequentialHide = function()
 	{
@@ -253,7 +253,7 @@ StateActivity = function()
 		rootActivity._redrawObject = null;
 		arWorkflowTemplate = rootActivity.Serialize();
 		ReDraw();
-	}
+	};
 
 	ob.AddInitialize = function ()
 	{
@@ -264,7 +264,7 @@ StateActivity = function()
 		ob.childActivities.push(act);
 		act.parentActivity = ob;
 		ob.SequentialShow(act);
-	}
+	};
 
 	ob.AddCommand = function ()
 	{
@@ -282,7 +282,7 @@ StateActivity = function()
 		act.parentActivity = ob;
 
 		act2.Settings();
-	}
+	};
 
 	ob.AddDelayActivity = function ()
 	{
@@ -300,7 +300,7 @@ StateActivity = function()
 		act.parentActivity = ob;
 
 		act2.Settings();
-	}
+	};
 
 	ob.AddFinilize = function ()
 	{
@@ -312,7 +312,7 @@ StateActivity = function()
 		ob.childActivities.push(act);
 		act.parentActivity = ob;
 		ob.SequentialShow(act);
-	}
+	};
 
 	ob.ShowAddMenu = function (e)
 	{
@@ -322,7 +322,7 @@ StateActivity = function()
 		if(ob.menu.IsVisible())
 			return;
 
-		var bStart=false; bFinish=false;
+		var bStart = false, bFinish = false;
 		for(var i=0; i<ob.childActivities.length; i++)
 		{
 			if(ob.childActivities[i].Type == 'StateInitializationActivity')
@@ -330,7 +330,7 @@ StateActivity = function()
 			if(ob.childActivities[i].Type == 'StateFinalizationActivity')
 				bFinish = true;
 		}
-		ob.menuItems = Array();
+		ob.menuItems = new Array();
 		ob.menuItems.push({'ID': '2', 'TEXT':	BPMESS['STATEACT_MENU_COMMAND'], 'ONCLICK': "__StateActivityAdd('command', '"+ob.Name+"')"});
 		ob.menuItems.push({'ID': '3', 'TEXT':	BPMESS['STATEACT_MENU_DELAY'], 'ONCLICK': "__StateActivityAdd('delay', '"+ob.Name+"')"});
 		if(!bStart)
@@ -345,15 +345,15 @@ StateActivity = function()
 		pos["bottom"]+=1;
 
 		ob.menu.PopupShow(pos);
-	}
+	};
 
 	ob.RemoveResources = function ()
 	{
 		ob.main.parentNode.removeChild(ob.main);
-	}
+	};
 
 	return ob;
-}
+};
 
 __StateActivityAdd = function (type, id)
 {
@@ -382,4 +382,4 @@ __StateActivityAdd = function (type, id)
 			break;
 		}
 	}
-}
+};

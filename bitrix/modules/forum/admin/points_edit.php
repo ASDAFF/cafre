@@ -146,14 +146,14 @@ $tabControl->BeginNextTab();
 					GetMessage("FORUM_PE_RATING_VOTES"): GetMessage("FORUM_PE_RATING_VALUE")))?>:
 		</td>
 		<td width="60%">
-			<input type="text" name="MIN_POINTS" value="<?=htmlspecialcharsEx($str_MIN_POINTS)?>" size="10" />
+			<input type="text" name="MIN_POINTS" value="<?=htmlspecialcharsbx($str_MIN_POINTS)?>" size="10" />
 		</td>
 	</tr>
 
 	<tr>
 		<td><?= GetMessage("FORUM_PE_MNEMOCODE") ?>:</td>
 		<td>
-			<input type="text" name="CODE" value="<?=htmlspecialcharsEx($str_CODE)?>" size="30" />
+			<input type="text" name="CODE" value="<?=htmlspecialcharsbx($str_CODE)?>" size="30" />
 		</td>
 	</tr>
 	<?
@@ -162,7 +162,7 @@ $tabControl->BeginNextTab();
 	<tr>
 		<td><?= GetMessage("FORUM_PE_VOTES") ?>:</td>
 		<td>
-			<input type="text" name="VOTES" value="<?=htmlspecialcharsEx($str_VOTES)?>" size="10" />
+			<input type="text" name="VOTES" value="<?=htmlspecialcharsbx($str_VOTES)?>" size="10" />
 		</td>
 	</tr>
 

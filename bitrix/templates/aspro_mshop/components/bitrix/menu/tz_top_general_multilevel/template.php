@@ -109,7 +109,7 @@ $brend_list=array();
 			<?endif;?>
 			<?if($arItem["DEPTH_LEVEL"]==2&&$brend):
 			$brn++;
-				if(ereg('[^A-Za-z]', substr($arItem["TEXT"], 0, 1))) {
+				if(preg_match('[^A-Za-z]', substr($arItem["TEXT"], 0, 1))) {
 					if(!in_array(substr($arItem["TEXT"], 0, 1), $ru_alphabet)) $ru_alphabet[]=substr($arItem["TEXT"], 0, 1);
 				}
 				else {

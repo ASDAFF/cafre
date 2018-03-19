@@ -1,15 +1,7 @@
-<?
-/*
-##############################################
-# Bitrix: SiteManager                        #
-# Copyright (c) 2004 Bitrix                  #
-# http://www.bitrix.ru                       #
-# mailto:admin@bitrix.ru                     #
-##############################################
-*/
-
+<?php
 define("STOP_STATISTICS", true);
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
+/** @var CMain $APPLICATION */
 $STAT_RIGHT = $APPLICATION->GetGroupRight("statistic");
 if($STAT_RIGHT=="D") $APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
 include($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/statistic/colors.php");
@@ -112,4 +104,3 @@ foreach($arrLegend as $keyL=>$arrL)
 *******************************************************/
 
 ShowImageHeader($ImageHandle);
-?>

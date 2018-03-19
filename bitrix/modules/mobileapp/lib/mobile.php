@@ -9,6 +9,11 @@ use Bitrix\Main\Text\Encoding;
 
 class Mobile
 {
+	public static $platform = "ios";
+	public static $apiVersion = 1;
+	public static $pgVersion = "2.0.0";
+	public static $supportedCordovaVersion = "3.6.3";
+	public static $isDev = false;
 	protected static $instance;
 	protected static $isAlreadyInit = false;
 	private $pixelRatio = 1.0;
@@ -18,21 +23,13 @@ class Mobile
 	private $scale = 1.2;
 	private $width = false;
 	private $userScalable = "no";
-
 	private $deviceWidth = 320;
 	private $deviceHeight = 480;
 	private $screenCategory = "NORMAL";
 	private $device = "";
-
 	private $largeScreenSupport = true;
 	private $isWebRtcSupported = false;
 	private $isBXScriptSupported = false;
-	public static $platform = "ios";
-	public static $apiVersion = 1;
-	public static $pgVersion = "2.0.0";
-	public static $supportedCordovaVersion = "3.6.3";
-	public static $isDev = false;
-	private static $remoteScriptPath = "http://dev.1c-bitrix.ru/mobile_scripts/";
 
 	private function __construct()
 	{
@@ -40,17 +37,23 @@ class Mobile
 
 		$this->setDeviceWidth($_COOKIE["MOBILE_RESOLUTION_WIDTH"]);
 		$this->setDeviceHeight($_COOKIE["MOBILE_RESOLUTION_HEIGHT"]);
-		$this->setScreenCategory($_COOKIE["MOBILE_SCREEN_CATEGORY"]);
 		$this->setPixelratio($_COOKIE["MOBILE_SCALE"]);
-		$this->setPgVersion($_COOKIE["PG_VERSION"]);
+		$this->screenCategory = $_COOKIE["MOBILE_SCREEN_CATEGORY"];
+		if($_COOKIE["PG_VERSION"])
+		{
+			self::$pgVersion = $_COOKIE["PG_VERSION"];
+		}
 
 		self::$isDev = (isset($_COOKIE["MOBILE_DEV"]) && $_COOKIE["MOBILE_DEV"] == "Y");
-
-		$this->setDevice($_COOKIE["MOBILE_DEVICE"]);
-		if($_COOKIE["IS_WEBRTC_SUPPORTED"] && $_COOKIE["IS_WEBRTC_SUPPORTED"] == "Y")
+		$this->device = $_COOKIE["MOBILE_DEVICE"];
+		if ($_COOKIE["IS_WEBRTC_SUPPORTED"] && $_COOKIE["IS_WEBRTC_SUPPORTED"] == "Y")
+		{
 			$this->setWebRtcSupport(true);
+		}
 		if ($_COOKIE["IS_BXSCRIPT_SUPPORTED"] && $_COOKIE["IS_BXSCRIPT_SUPPORTED"] == "Y")
+		{
 			$this->setBXScriptSupported(true);
+		}
 
 		if ($this->getDevice() == "iPad")
 		{
@@ -81,7 +84,7 @@ class Mobile
 			self::$platform = "android";
 		}
 
-		if(array_key_exists("emulate_platform", $_REQUEST))
+		if (array_key_exists("emulate_platform", $_REQUEST))
 		{
 			self::$platform = $_REQUEST["emulate_platform"];
 		}
@@ -95,29 +98,20 @@ class Mobile
 		{
 			self::$apiVersion = $APPLICATION->get_cookie("MOBILE_APP_VERSION");
 		}
-		elseif(array_key_exists("api_version", $_REQUEST))
+		elseif (array_key_exists("api_version", $_REQUEST))
 		{
 			self::$apiVersion = intval($_REQUEST["api_version"]);
 		}
+		else
+		{
+			$userAgent = \Bitrix\Main\Context::getCurrent()->getServer()->get("HTTP_USER_AGENT");
+			preg_match("/(?<=BitrixMobile\/Version=).*\d/i",$userAgent, $pregMatch);
 
-	}
-
-	/**
-	 * @return boolean
-	 */
-	public function isWebRtcSupported()
-	{
-		return $this->isWebRtcSupported;
-	}
-
-	/**
-	 * Returns true if mobile application made this request in background
-	 * @return bool
-	 */
-	public static function isAppBackground()
-	{
-		$isBackground = Context::getCurrent()->getServer()->get("HTTP_BX_MOBILE_BACKGROUND");
-		return ($isBackground === "true");
+			if(count($pregMatch) == 1)
+			{
+				self::$apiVersion = $pregMatch[0];
+			}
+		}
 	}
 
 	/**
@@ -137,140 +131,50 @@ class Mobile
 	}
 
 	/**
-	 * @return boolean
-	 */
-	public function getBXScriptSupported()
-	{
-		return $this->isBXScriptSupported;
-	}
-
-	/**
-	 * @return integer
-	 */
-	public function getWidth()
-	{
-		return $this->width;
-	}
-
-	/**
-	 * @param integer $width
-	 */
-	public function setWidth($width)
-	{
-		$this->width = $width;
-	}
-
-	/**
+	 * Return type of current device
 	 * @return string
 	 */
-	public function getUserScalable()
+	public function getDevice()
 	{
-		return $this->userScalable;
+		return $this->device;
 	}
 
 	/**
-	 * @param boolean $userScalable
+	 * Gets the value of pixelRatio.
+	 *
+	 * @return mixed
 	 */
-	public function setUserScalable($userScalable)
+	public function getPixelRatio()
 	{
-		$this->userScalable = ($userScalable === false?"no":"yes");
-	}
-
-	private function __clone()
-	{
-		//you can't clone it
+		return $this->pixelRatio;
 	}
 
 	/**
-	 * @return \Bitrix\MobileApp\Mobile
+	 * Sets the value of pixelRatio.
+	 *
+	 * @param mixed $pixelRatio the pixelRatio
 	 */
-	public static function getInstance()
+	public function setPixelRatio($pixelRatio)
 	{
-		if (is_null(self::$instance))
-		{
-			self::$instance = new Mobile();
-		}
-
-		return self::$instance;
+		$this->pixelRatio = $pixelRatio;
 	}
 
+	/**
+	 * Returns true if mobile application made this request in background
+	 * @return bool
+	 */
+	public static function isAppBackground()
+	{
+		$isBackground = Context::getCurrent()->getServer()->get("HTTP_BX_MOBILE_BACKGROUND");
+		return ($isBackground === "true");
+	}
+
+	/**
+	 * Initiate the mobile platform
+	 */
 	public static function Init()
 	{
 		self::getInstance()->_Init();
-	}
-
-	/**
-	 * Sets viewport-metadata
-	 */
-	public static function initScripts()
-	{
-		global $APPLICATION;
-
-		\CJSCore::Init();
-		$APPLICATION->AddHeadString("<script type=\"text/javascript\">var mobileSiteDir=\"" . SITE_DIR . "\"; var appVersion = " . self::$apiVersion . ";var platform = \"" . self::$platform . "\";</script>", false, true);
-		if(self::$platform == "android")
-		{
-			/**
-			 * This is workaround for android
-			 * We use console.log() to tell the application about successful loading of this page
-			 */
-			$APPLICATION->AddHeadString("<script type=\"text/javascript\">console.log(\"bxdata://success\")</script>", false, true);
-		}
-		if(self::getInstance()->getBXScriptSupported())
-		{
-			/**
-			 * If the application tells us bxscript-feature is available
-			 * it means that device can load cordova-scripts (including plugins) itself.
-			 */
-			$pgJsFile = "/bitrix/js/mobileapp/__deviceload__/cordova.js";
-			$APPLICATION->AddHeadString("<script type=\"text/javascript\" src=\"" . $pgJsFile . "\"></script>", false, true);
-
-		}
-		else
-		{
-			$pgJsFile = "/bitrix/js/mobileapp/" . self::$platform . "-cordova-" . self::$pgVersion . ".js";
-			if (!File::isFileExists(Application::getDocumentRoot() . $pgJsFile))
-			{
-				$pgJsFile = self::$remoteScriptPath . self::$platform . "-cordova-" . self::$pgVersion . ".js";
-			}
-
-			$APPLICATION->AddHeadString("<script type=\"text/javascript\" src=\"" . \CUtil::GetAdditionalFileURL($pgJsFile) . "\"></script>", false, true);
-		}
-
-		$APPLICATION->AddHeadString("<script type=\"text/javascript\" src=\"" . \CUtil::GetAdditionalFileURL("/bitrix/js/mobileapp/bitrix_mobile.js") . "\"></script>", false, true);
-		$APPLICATION->AddHeadString("<script type=\"text/javascript\" src=\"" . \CUtil::GetAdditionalFileURL("/bitrix/js/mobileapp/mobile_lib.js") . "\"></script>", false, true);
-
-
-		if (self::$platform == "android")
-		{
-			$APPLICATION->AddHeadString("<script type=\"text/javascript\">app.bindloadPageBlank();</script>", false, false);
-		}
-
-		$APPLICATION->AddHeadString(Mobile::getInstance()->getViewPort());
-	}
-
-	/**
-	 * Converts string from site charset in utf-8 and returns it
-	 *
-	 * @param string $s
-	 *
-	 * @return string
-	 */
-	public static function PrepareStrToJson($s = '')
-	{
-		return (Application::isUtfMode() ? $s : Encoding::convertEncoding($s, SITE_CHARSET, 'UTF-8'));
-	}
-
-	/**
-	 * Converts string from utf-8 in site charset and returns it
-	 *
-	 * @param string $s
-	 *
-	 * @return string
-	 */
-	public static function ConvertFromUtf($s = '')
-	{
-		return (defined("BX_UTF") ? $s : Encoding::convertEncoding($s, 'UTF-8', SITE_CHARSET));
 	}
 
 	/**
@@ -292,49 +196,99 @@ class Mobile
 		self::$isAlreadyInit = true;
 	}
 
-
-	public static function onMobileInit()
+	/**
+	 * @return \Bitrix\MobileApp\Mobile
+	 */
+	public static function getInstance()
 	{
-		if(!defined("MOBILE_INIT_EVENT_SKIP"))
+		if (is_null(self::$instance))
 		{
-			$db_events = getModuleEvents("mobileapp", "OnMobileInit");
-			while ($arEvent = $db_events->Fetch())
-				ExecuteModuleEventEx($arEvent);
+			self::$instance = new Mobile();
 		}
+
+		return self::$instance;
 	}
 
 	/**
-	 * Gets target dpi for a viewport meta data
-	 *
-	 * @return string
+	 * Sets viewport-metadata
 	 */
-	public function getTargetDpi()
+	public static function initScripts()
 	{
-		$targetDpi = "medium-dpi";
-		if ($this->getDevice() == "iPad")
+		global $APPLICATION, $USER;
+
+		\CJSCore::Init();
+		\CJSCore::Init("db");
+		$jsVarsFormat = <<<JSCODE
+		<script type="text/javascript">
+			(window.BX||top.BX).message({ 'USER_ID': '%s'});
+			var appVersion = "%s";
+			var platform = "%s";
+			var mobileSiteDir = "%s";
+		</script>
+			
+JSCODE;
+
+		$APPLICATION->AddHeadString(
+			sprintf($jsVarsFormat,
+				$USER->getId(),
+				self::$apiVersion,
+				self::$platform,
+				SITE_DIR
+			), false, true);
+
+		if (self::$platform == "android")
 		{
-			return $targetDpi;
+			/**
+			 * This is workaround for android
+			 * We use console.log() to tell the application about successful loading of this page
+			 */
+			$androidJS = <<<JSCODE
+				<script type="text/javascript">
+				 	console.log("bxdata://success");
+				</script>
+JSCODE;
+
+			$APPLICATION->AddHeadString($androidJS, false, true);
 		}
-		switch ($this->getScreenCategory())
+		$userAgent = \Bitrix\Main\Context::getCurrent()->getServer()->get("HTTP_USER_AGENT");
+		if(strpos($userAgent, "WKWebView/BitrixMobile") === false)
 		{
-			case 'NORMAL':
-				$targetDpi = "medium-dpi";
-				break;
-			case 'LARGE':
-				$targetDpi = "low-dpi";
-				break;
-			case 'XLARGE':
-				$targetDpi = "low-dpi";
-				break;
-			case 'SMALL':
-				$targetDpi = "medium-dpi";
-				break;
-			default:
-				$targetDpi = "medium-dpi";
-				break;
+			if (self::getInstance()->getBXScriptSupported())
+			{
+				/**
+				 * If the application tells us bxscript-feature is available
+				 * it means that device can load cordova-scripts (including plugins) itself.
+				 */
+				$pgJsFile = "/bitrix/js/mobileapp/__deviceload__/cordova.js?mod=1";
+				$APPLICATION->AddHeadString("<script type=\"text/javascript\" src=\"" . $pgJsFile . "\"></script>", false, true);
+
+			}
+			else
+			{
+				$pgJsFile = "/bitrix/js/mobileapp/" . self::$platform . "-cordova-" . self::$pgVersion . ".js";
+				$APPLICATION->AddHeadString("<script type=\"text/javascript\" src=\"" . \CUtil::GetAdditionalFileURL($pgJsFile) . "\"></script>", false, true);
+			}
 		}
 
-		return $targetDpi;
+
+		$APPLICATION->AddHeadString("<script type=\"text/javascript\" src=\"" . \CUtil::GetAdditionalFileURL("/bitrix/js/mobileapp/bitrix_mobile.js") . "\"></script>", false, true);
+		$APPLICATION->AddHeadString("<script type=\"text/javascript\" src=\"" . \CUtil::GetAdditionalFileURL("/bitrix/js/mobileapp/mobile_lib.js") . "\"></script>", false, true);
+
+
+		if (self::$platform == "android")
+		{
+			$APPLICATION->AddHeadString("<script type=\"text/javascript\">app.bindloadPageBlank();</script>", false, false);
+		}
+
+		$APPLICATION->AddHeadString(Mobile::getInstance()->getViewPort());
+	}
+
+	/**
+	 * @return boolean
+	 */
+	public function getBXScriptSupported()
+	{
+		return $this->isBXScriptSupported;
 	}
 
 	/**
@@ -383,8 +337,7 @@ class Mobile
 		}
 
 
-
-		if($this->getWidth())
+		if ($this->getWidth())
 		{
 			$contentAttributes[] = "width=" . $this->getWidth();
 		}
@@ -393,26 +346,38 @@ class Mobile
 			$contentAttributes[] = "width=" . ($width / $this->getIniscale());
 		}
 
-
 		if (toUpper($this->getPlatform()) == "ANDROID")
 		{
 			if (!$this->getWidth())
+			{
 				$contentAttributes[] = "width=device-width";
-			$contentAttributes[] = "target-densitydpi=" . $this->getTargetDpi();
+			}
 		}
 
-
-		$contentAttributes[] = "user-scalable=".$this->getUserScalable();
+		$contentAttributes[] = "user-scalable=" . $this->getUserScalable();
+		$contentAttributes[] = "viewport-fit=cover";
 
 		return str_replace("#content_value#", implode(", ", $contentAttributes), $viewPortMeta);
 	}
 
 	/**
-	 * Use it to get value of viewport-metadata for large screen of android based device.
+	 * Gets the value of deviceWidth.
+	 *
+	 * @return mixed
 	 */
-	public function getLargeScreenViewPort()
+	public function getDeviceWidth()
 	{
-		return "<meta id=\"bx_mobile_viewport\" name=\"viewport\" content=\"user-scalable=no width=device-width target-densitydpi=" . $this->getTargetDpi() . "\">";
+		return $this->deviceWidth;
+	}
+
+	/**
+	 * Sets the value of deviceWidth.
+	 *
+	 * @param mixed $deviceWidth the deviceWidth
+	 */
+	public function setDeviceWidth($deviceWidth)
+	{
+		$this->deviceWidth = $deviceWidth;
 	}
 
 	/**
@@ -430,171 +395,12 @@ class Mobile
 		}
 		$viewPortMeta = "<meta id=\"bx_mobile_viewport\" name=\"viewport\" content=\"#content_value#\">";
 		$contentAttributes = Array(
-			"initial-scale=" . $this->scale,
-			"maximum-scale=" . $this->scale,
-			"minimum-scale=" . $this->scale,
 			"width=" . ($width / $this->scale),
 			"user-scalable=no"
 		);
 		$content = implode(", ", $contentAttributes);
 
 		return str_replace("#content_value#", $content, $viewPortMeta);
-	}
-
-	/**
-	 * Use it to get value of viewport-metadata for portrait orientation.
-	 *
-	 * @return string
-	 */
-	public function getViewPortPortrait()
-	{
-		return $this->getViewPort($this->deviceWidth);
-	}
-
-	/**
-	 * Use it to get value of viewport-metadata for landscape orientation.
-	 *
-	 * @return string
-	 */
-	public function getViewPortLandscape()
-	{
-		return $this->getViewPort($this->deviceHeight);
-	}
-
-	/**
-	 * Sets the value of pixelRatio.
-	 *
-	 * @param mixed $pixelRatio the pixelRatio
-	 */
-	public function setPixelRatio($pixelRatio)
-	{
-		$this->pixelRatio = $pixelRatio;
-	}
-
-	/**
-	 * Sets the value of minScale.
-	 *
-	 * @param mixed $minScale the minScale
-	 */
-	public function setMinScale($minScale)
-	{
-		$this->minScale = $minScale;
-	}
-
-
-	/**
-	 * Sets the value of device.
-	 *
-	 * @param mixed $device the pixelRatio
-	 */
-	public function setDevice($device)
-	{
-		$this->device = $device;
-	}
-
-	/**
-	 * Sets the value of iniScale.
-	 *
-	 * @param mixed $iniScale the iniScale
-	 */
-	public function setIniScale($iniScale)
-	{
-		$this->iniScale = $iniScale;
-	}
-
-	/**
-	 * Sets the value of maxScale.
-	 *
-	 * @param mixed $maxScale the maxScale
-	 */
-	public function setMaxScale($maxScale)
-	{
-		$this->maxScale = $maxScale;
-	}
-
-	/**
-	 * Sets the value of deviceWidth.
-	 *
-	 * @param mixed $deviceWidth the deviceWidth
-	 */
-	public function setDeviceWidth($deviceWidth)
-	{
-		$this->deviceWidth = $deviceWidth;
-	}
-
-	/**
-	 * Sets the value of deviceHeight.
-	 *
-	 * @param mixed $deviceHeight the deviceHeight
-	 */
-	public function setDeviceHeight($deviceHeight)
-	{
-		$this->deviceHeight = $deviceHeight;
-	}
-
-	/**
-	 * Gets the value of pixelRatio.
-	 *
-	 * @return mixed
-	 */
-	public function getPixelRatio()
-	{
-		return $this->pixelRatio;
-	}
-
-	/**
-	 * Gets the value of minScale.
-	 *
-	 * @return mixed
-	 */
-	public function getMinScale()
-	{
-		return $this->minScale;
-	}
-
-	/**
-	 * Gets the value of iniScale.
-	 *
-	 * @return mixed
-	 */
-	public function getIniScale()
-	{
-		return $this->iniScale;
-	}
-
-	/**
-	 * Gets the value of maxScale.
-	 *
-	 * @return mixed
-	 */
-	public function getMaxScale()
-	{
-		return $this->maxScale;
-	}
-
-	/**
-	 * Gets the value of deviceWidth.
-	 *
-	 * @return mixed
-	 */
-	public function getDeviceWidth()
-	{
-		return $this->deviceWidth;
-	}
-
-	/**
-	 * Gets the value of deviceHeight.
-	 *
-	 * @return mixed
-	 */
-	public function getDeviceHeight()
-	{
-		return $this->deviceHeight;
-	}
-
-	public function getDevice()
-	{
-		return $this->device;
 	}
 
 	/**
@@ -618,13 +424,252 @@ class Mobile
 	}
 
 	/**
-	 * Sets the value of largeScreenSupport.
-	 *
-	 * @param mixed $largeScreenSupport the $largeScreenSupport
+	 * Use it to get value of viewport-metadata for large screen of android based device.
 	 */
-	public function setLargeScreenSupport($largeScreenSupport)
+	public function getLargeScreenViewPort()
 	{
-		$this->largeScreenSupport = $largeScreenSupport;
+		return "<meta id=\"bx_mobile_viewport\" name=\"viewport\" content=\"user-scalable=no width=device-width target-densitydpi=" . $this->getTargetDpi() . "\">";
+	}
+
+	/**
+	 * Gets target dpi for a viewport meta data
+	 *
+	 * @return string
+	 */
+	public function getTargetDpi()
+	{
+		$targetDpi = "medium-dpi";
+		if ($this->getDevice() == "iPad")
+		{
+			return $targetDpi;
+		}
+		switch ($this->getScreenCategory())
+		{
+			case 'NORMAL':
+				$targetDpi = "medium-dpi";
+				break;
+			case 'LARGE':
+				$targetDpi = "low-dpi";
+				break;
+			case 'XLARGE':
+				$targetDpi = "low-dpi";
+				break;
+			case 'SMALL':
+				$targetDpi = "medium-dpi";
+				break;
+			default:
+				$targetDpi = "medium-dpi";
+				break;
+		}
+
+		return $targetDpi;
+	}
+
+	/**
+	 * Gets the value of iniScale.
+	 *
+	 * @return mixed
+	 */
+	public function getIniScale()
+	{
+		return $this->iniScale;
+	}
+
+	/**
+	 * Sets the value of iniScale.
+	 *
+	 * @param mixed $iniScale the iniScale
+	 */
+	public function setIniScale($iniScale)
+	{
+		$this->iniScale = $iniScale;
+	}
+
+	/**
+	 * Gets the value of maxScale.
+	 *
+	 * @return mixed
+	 */
+	public function getMaxScale()
+	{
+		return $this->maxScale;
+	}
+
+	/**
+	 * Sets the value of maxScale.
+	 *
+	 * @param mixed $maxScale the maxScale
+	 */
+	public function setMaxScale($maxScale)
+	{
+		$this->maxScale = $maxScale;
+	}
+
+	/**
+	 * Gets the value of minScale.
+	 *
+	 * @return mixed
+	 */
+	public function getMinScale()
+	{
+		return $this->minScale;
+	}
+
+	/**
+	 * Sets the value of minScale.
+	 *
+	 * @param mixed $minScale the minScale
+	 */
+	public function setMinScale($minScale)
+	{
+		$this->minScale = $minScale;
+	}
+
+	/**
+	 * Return width of device's screen in pixels
+	 * @return integer
+	 */
+	public function getWidth()
+	{
+		return $this->width;
+	}
+
+	/**
+	 * @param integer $width
+	 */
+	public function setWidth($width)
+	{
+		$this->width = $width;
+	}
+
+	/**
+	 * Returns the value of  self::platform
+	 * @return string
+	 */
+	public static function getPlatform()
+	{
+		return self::$platform;
+	}
+
+	/**
+	 * Returns value of parameter user-scalable which will be used in viewport meta tag
+	 * @return string
+	 */
+	public function getUserScalable()
+	{
+		return $this->userScalable;
+	}
+
+	/**
+	 * Sets value of parameter "user-scalable" which will be used in viewport meta tag
+	 * @param boolean $userScalable
+	 */
+	public function setUserScalable($userScalable)
+	{
+		$this->userScalable = ($userScalable === false ? "no" : "yes");
+	}
+
+	/**
+	 * Converts string from site charset in utf-8 and returns it
+	 *
+	 * @param string $s
+	 *
+	 * @return string
+	 */
+	public static function PrepareStrToJson($s = '')
+	{
+		return (Application::isUtfMode() ? $s : Encoding::convertEncoding($s, SITE_CHARSET, 'UTF-8'));
+	}
+
+	/**
+	 * Converts string from utf-8 in site charset and returns it
+	 *
+	 * @param string $s
+	 *
+	 * @return string
+	 */
+	public static function ConvertFromUtf($s = '')
+	{
+		return (defined("BX_UTF") ? $s : Encoding::convertEncoding($s, 'UTF-8', SITE_CHARSET));
+	}
+
+	public static function onMobileInit()
+	{
+		if (!defined("MOBILE_INIT_EVENT_SKIP"))
+		{
+			$db_events = getModuleEvents("mobileapp", "OnMobileInit");
+			while ($arEvent = $db_events->Fetch())
+			{
+				ExecuteModuleEventEx($arEvent);
+			}
+		}
+	}
+
+	/**
+	 * Sets the value of self::$apiVersion
+	 *
+	 * @return int
+	 */
+	public static function getApiVersion()
+	{
+		return self::$apiVersion;
+	}
+
+	/**
+	 * Returns phonegap version
+	 * @return string
+	 */
+	public static function getPgVersion()
+	{
+		return self::$pgVersion;
+	}
+
+	/**
+	 * @return boolean
+	 */
+	public function isWebRtcSupported()
+	{
+		return $this->isWebRtcSupported;
+	}
+
+	/**
+	 * Use it to get value of viewport-metadata for portrait orientation.
+	 *
+	 * @return string
+	 */
+	public function getViewPortPortrait()
+	{
+		return $this->getViewPort($this->deviceWidth);
+	}
+
+	/**
+	 * Use it to get value of viewport-metadata for landscape orientation.
+	 *
+	 * @return string
+	 */
+	public function getViewPortLandscape()
+	{
+		return $this->getViewPort($this->deviceHeight);
+	}
+
+	/**
+	 * Gets the value of deviceHeight.
+	 *
+	 * @return mixed
+	 */
+	public function getDeviceHeight()
+	{
+		return $this->deviceHeight;
+	}
+
+	/**
+	 * Sets the value of deviceHeight.
+	 *
+	 * @param mixed $deviceHeight the deviceHeight
+	 */
+	public function setDeviceHeight($deviceHeight)
+	{
+		$this->deviceHeight = $deviceHeight;
 	}
 
 	/**
@@ -635,6 +680,16 @@ class Mobile
 	public function getLargeScreenSupport()
 	{
 		return $this->largeScreenSupport;
+	}
+
+	/**
+	 * Sets the value of largeScreenSupport.
+	 *
+	 * @param mixed $largeScreenSupport the $largeScreenSupport
+	 */
+	public function setLargeScreenSupport($largeScreenSupport)
+	{
+		$this->largeScreenSupport = $largeScreenSupport;
 	}
 
 	/**
@@ -659,72 +714,17 @@ class Mobile
 	}
 
 	/**
-	 * gets the value of  self::platform
-	 * @return string
-	 */
-	public static function getPlatform()
-	{
-		return self::$platform;
-	}
-
-	/**
-	 * sets the value of self::platform
-	 *
-	 * @param $platform
-	 */
-	public static function setPlatform($platform)
-	{
-		self::$platform = $platform;
-	}
-
-	/**
-	 * Sets the value of self::$apiVersion
-	 *
-	 * @return int
-	 */
-	public static function getApiVersion()
-	{
-		return self::$apiVersion;
-	}
-
-	/**
-	 * Gets the value of self::$apiVersion
-	 *
-	 * @param $apiVersion
-	 */
-	public static function setApiVersion($apiVersion)
-	{
-		self::$apiVersion = $apiVersion;
-	}
-
-	/**
-	 * Returns phonegap version
-	 * @return string
-	 */
-	public static function getPgVersion()
-	{
-		return self::$pgVersion;
-	}
-
-	/**
-	 * Sets phonegap version
-	 * @param $pgVersion
-	 */
-	public static function setPgVersion($pgVersion)
-	{
-		if ($pgVersion)
-		{
-			self::$pgVersion = $pgVersion;
-		}
-	}
-
-	/**
 	 *  Returns true if device has a large screen
 	 * @return bool
 	 */
 	public function isLarge()
 	{
 		return ($this->getScreenCategory() == "LARGE" || $this->getScreenCategory() == "XLARGE");
+	}
+
+	private function __clone()
+	{
+		//you can't clone it
 	}
 }
 

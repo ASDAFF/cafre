@@ -36,6 +36,19 @@ if (strlen($arResult["BACKURL"]) > 0)
 				<input type="text" name="USER_EMAIL" maxlength="255" />
 			</td>
 		</tr>
+	<?if($arResult["USE_CAPTCHA"]):?>
+		<tr>
+			<td></td>
+			<td>
+				<input type="hidden" name="captcha_sid" value="<?=$arResult["CAPTCHA_CODE"]?>" />
+				<img src="/bitrix/tools/captcha.php?captcha_sid=<?=$arResult["CAPTCHA_CODE"]?>" width="180" height="40" alt="CAPTCHA" />
+			</td>
+		</tr>
+		<tr>
+			<td><?echo GetMessage("system_auth_captcha")?></td>
+			<td><input type="text" name="captcha_word" maxlength="50" value="" /></td>
+		</tr>
+	<?endif?>
 	</tbody>
 	<tfoot>
 		<tr> 

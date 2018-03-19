@@ -24,7 +24,7 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
 		}
 		</script>
 		<select name="user_type" onchange="__BPCRUUserTypeChange(this.value)">
-			<option value="random"<?= ($arCurrentValues['user_type'] != "boss") ? " selected" : "" ?>><?= GetMessage("BPCRU_PD_TYPE_RANDOM") ?></option>
+			<option value="random"<?= ($arCurrentValues['user_type'] == "random") ? " selected" : "" ?>><?= GetMessage("BPCRU_PD_TYPE_RANDOM") ?></option>
 			<option value="boss"<?= ($arCurrentValues['user_type'] == "boss") ? " selected" : "" ?>><?= GetMessage("BPCRU_PD_TYPE_BOSS") ?></option>
 		</select>
 	</td>
@@ -57,6 +57,15 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
 		<select name="skip_absent">
 			<option value="Y"<?= $arCurrentValues["skip_absent"] != "N" ? " selected" : "" ?>><?= GetMessage("BPCRU_PD_YES") ?></option>
 			<option value="N"<?= $arCurrentValues["skip_absent"] == "N" ? " selected" : "" ?>><?= GetMessage("BPCRU_PD_NO") ?></option>
+		</select>
+	</td>
+</tr>
+<tr>
+	<td align="right"><?= GetMessage("BPCRU_PD_SKIP_TIMEMAN") ?>:</td>
+	<td>
+		<select name="skip_timeman">
+			<option value="N"<?= $arCurrentValues["skip_timeman"] != "Y" ? " selected" : "" ?>><?= GetMessage("BPCRU_PD_NO") ?></option>
+			<option value="Y"<?= $arCurrentValues["skip_timeman"] == "Y" ? " selected" : "" ?>><?= GetMessage("BPCRU_PD_YES") ?></option>
 		</select>
 	</td>
 </tr>

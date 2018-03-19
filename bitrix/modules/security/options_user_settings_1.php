@@ -1,13 +1,14 @@
 <?
-
-use Bitrix\Security\Mfa\Otp;
-
 /**
  * @global int $ID - Edited user id
  * @global string $strError - Save error
  * @global \CUser $USER
  * @global CMain $APPLICATION
  */
+
+use Bitrix\Security\Mfa\Otp;
+use Bitrix\Main\Web\Json;
+
 
 IncludeModuleLangFile(__FILE__);
 
@@ -53,8 +54,15 @@ $jsSettings = array(
 	'availableTypes' => $availableTypesDescription
 )
 ?>
-<script id="otp-user-edit-messages" type="application/json"><?=\Bitrix\Main\Web\Json::encode($jsMessages)?></script>
-<script id="otp-user-edit-settings" type="application/json"><?=\Bitrix\Main\Web\Json::encode($jsSettings)?></script>
+<script type="text/javascript">
+	BX.message(<?=Json::encode($jsMessages)?>);
+</script>
+<script type="text/javascript">
+	BX.ready(function() {
+		var settings = <?=Json::encode($jsSettings)?>;
+		new BX.Security.UserEdit.Otp(settings.userId, settings);
+	});
+</script>
 <!--Popup starts-->
 <tr style="display: none;">
 	<td colspan="2">

@@ -10,15 +10,7 @@ class CSocNetGroupSubject extends CAllSocNetGroupSubject
 	{
 		global $DB, $CACHE_MANAGER;
 
-		$arFields1 = array();
-		foreach ($arFields as $key => $value)
-		{
-			if (substr($key, 0, 1) == "=")
-			{
-				$arFields1[substr($key, 1)] = $value;
-				unset($arFields[$key]);
-			}
-		}
+		$arFields1 = \Bitrix\Socialnetwork\Util::getEqualityFields($arFields);
 
 		if (!CSocNetGroupSubject::CheckFields("ADD", $arFields))
 			return false;
@@ -41,16 +33,7 @@ class CSocNetGroupSubject extends CAllSocNetGroupSubject
 			$arFields["SITE_ID"] = end($arSiteID);
 
 		$arInsert = $DB->PrepareInsert("b_sonet_group_subject", $arFields);
-
-		foreach ($arFields1 as $key => $value)
-		{
-			if (strlen($arInsert[0]) > 0)
-				$arInsert[0] .= ", ";
-			$arInsert[0] .= $key;
-			if (strlen($arInsert[1]) > 0)
-				$arInsert[1] .= ", ";
-			$arInsert[1] .= $value;
-		}
+		\Bitrix\Socialnetwork\Util::processEqualityFieldsToInsert($arFields1, $arInsert);
 
 		$ID = false;
 		if (strlen($arInsert[0]) > 0)
@@ -111,7 +94,8 @@ class CSocNetGroupSubject extends CAllSocNetGroupSubject
 						$arResult = $CACHE_MANAGER->Get($cacheId);
 
 						$arReturnValue = array();
-						for ($i = 0; $i < count($arResult); $i++)
+						$cnt = count($arResult);
+						for ($i = 0; $i < $cnt; $i++)
 						{
 							if ($bFilterByID && $arResult[$i]["ID"] == $arFilter["ID"])
 								$arReturnValue[] = $arResult[$i];

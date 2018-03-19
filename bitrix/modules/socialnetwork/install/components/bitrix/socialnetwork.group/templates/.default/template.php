@@ -85,8 +85,9 @@ else
 			"G_SONET_GROUP_LINKS_CAN_MODERATE_GROUP" => $arResult["CurrentUserPerms"]["UserCanModerateGroup"],
 			"G_SONET_GROUP_LINKS_CAN_INITIATE" => $arResult["CurrentUserPerms"]["UserCanInitiate"],
 			"G_SONET_GROUP_LINKS_USER_ROLE" => $arResult["CurrentUserPerms"]["UserRole"],
-			"G_SONET_GROUP_LINKS_INITIATED_BY_TYPE" => $arResult["CurrentUserPerms"]["InitiatedByType"],			
+			"G_SONET_GROUP_LINKS_INITIATED_BY_TYPE" => $arResult["CurrentUserPerms"]["InitiatedByType"],
 			"G_SONET_GROUP_LINKS_USER_IS_MEMBER" => $arResult["CurrentUserPerms"]["UserIsMember"],
+			"G_SONET_GROUP_LINKS_USER_IS_AUTO_MEMBER" => $arResult["CurrentUserPerms"]["UserIsAutoMember"],
 			"G_SONET_GROUP_LINKS_USER_IS_OWNER" => $arResult["CurrentUserPerms"]["UserIsOwner"],
 			"G_SONET_GROUP_LINKS_HIDE_ARCHIVE_LINKS" => $arResult["HideArchiveLinks"],
 			"G_SONET_GROUP_LINKS_URL_MESSAGE_TO_GROUP" => htmlspecialcharsback($arResult["Urls"]["MessageToGroup"]),
@@ -190,7 +191,6 @@ else
 		$arDesktopParams["G_TASKS_SHOW_TITLE"] = "N";
 		$arDesktopParams["G_TASKS_SHOW_FOOTER"] = "N";
 		$arDesktopParams["G_TASKS_TEMPLATE_NAME"] = ".default";
-		$arDesktopParams["G_TASKS_IBLOCK_ID"] = $arParams["TASK_IBLOCK_ID"];
 		$arDesktopParams["G_TASKS_OWNER_ID"] = $arResult["Group"]["ID"];
 		$arDesktopParams["G_TASKS_TASK_TYPE"] = 'group';
 		$arDesktopParams["G_TASKS_ITEMS_COUNT"] = 10;
@@ -202,8 +202,7 @@ else
 		$arDesktopParams["G_TASKS_PATH_TO_GROUP_TASKS"] = $arParams["PATH_TO_GROUP_TASKS"];
 		$arDesktopParams["G_TASKS_PATH_TO_GROUP_TASKS_TASK"] = $arParams["PATH_TO_GROUP_TASKS_TASK"];
 		$arDesktopParams["G_TASKS_PATH_TO_GROUP_TASKS_VIEW"] = $arParams["PATH_TO_GROUP_TASKS_VIEW"];
-		$arDesktopParams["G_TASKS_TASKS_FIELDS_SHOW"] = $arParams["TASKS_FIELDS_SHOW"];
-		$arDesktopParams["G_TASKS_FORUM_ID"] = $arParams["TASK_FORUM_ID"];		
+		$arDesktopParams["G_TASKS_FORUM_ID"] = $arParams["TASK_FORUM_ID"];
 	}
 	else
 		$arDesktopParams["G_TASKS_SHOW"] = "N";		

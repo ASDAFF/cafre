@@ -5,7 +5,7 @@ $MESS["SALE_YMH_ERROR_BAD_STRUCTURE"] = "Неверная структура информации в запросе
 $MESS["SALE_YMH_ERROR_CATALOG_NOT_INSTALLED"] = "Модуль \"Торговый каталог\" не установлен";
 $MESS["SALE_YMH_ERROR_UNKNOWN_STATUS"] = "Неизвестный статус заказа";
 $MESS["SALE_YMH_SUBSTATUS_RESERVATION_EXPIRED"] = "Покупатель не завершил оформление зарезервированного заказа вовремя";
-$MESS["SALE_YMH_SUBSTATUS_USER_NOT_PAID"] = "Покупатель не оплатил заказ";
+$MESS["SALE_YMH_SUBSTATUS_USER_NOT_PAID"] = "Покупатель не оплатил заказ (для типа оплаты PREPAID)";
 $MESS["SALE_YMH_SUBSTATUS_USER_UNREACHABLE"] = "Не удалось связаться с покупателем";
 $MESS["SALE_YMH_SUBSTATUS_USER_CHANGED_MIND"] = "Покупатель отменил заказ по собственным причинам";
 $MESS["SALE_YMH_SUBSTATUS_USER_REFUSED_DELIVERY"] = "Покупателя не устраивают условия доставки";
@@ -13,7 +13,7 @@ $MESS["SALE_YMH_SUBSTATUS_USER_REFUSED_PRODUCT"] = "Покупателю не подошел товар"
 $MESS["SALE_YMH_SUBSTATUS_SHOP_FAILED"] = "Магазин не может выполнить заказ";
 $MESS["SALE_YMH_SUBSTATUS_USER_REFUSED_QUALITY"] = "Покупателя не устраивает качество товара";
 $MESS["SALE_YMH_SUBSTATUS_REPLACING_ORDER"] = "Покупатель изменяет состав заказа";
-$MESS["SALE_YMH_SUBSTATUS_PROCESSING_EXPIRED"] = "Магазин не обработал заказ вовремя";
+$MESS["SALE_YMH_SUBSTATUS_PROCESSING_EXPIRED"] = "Mагазин не обработал заказ вовремя";
 $MESS["SALE_YMH_CITY_MOSCOW"] = "Москва";
 $MESS["SALE_YMH_CITY_SPB"] = "Санкт-Петербург";
 $MESS["SALE_YMH_ADDRESS_COUNTRY"] = "страна";
@@ -51,4 +51,7 @@ $MESS["SALE_YMH_NAME"] = "Покупки на Яндекс-Маркете";
 $MESS["SALE_YMH_DESCRIPTION"] = "Интеграция магазина с программой Яндекса \"Покупка на Маркете\"";
 $MESS["SALE_YMH_SHT"] = "шт.";
 $MESS["SALE_YMH_ADMIN_NOTIFY_SEND_STATUS_ERROR_403"] = "Ошибки авторизации при обмене с Яндекс-Маркетом. Подробности обмена можно посмотреть в <a href='/bitrix/admin/event_log.php?lang=##LANGUAGE_ID##'>журнале событий</a>.<br>Наиболее вероятная причина - неверный авторизационный токен для запросов магазина к Яндекс-Маркету. Возможно, Вам необходимо получить новый токен и указать его в <a href='/bitrix/admin/sale_ymarket.php?lang=##LANGUAGE_ID##'>настройках</a>.";
+$MESS["SALE_YMH_LOG_TYPE_ORDER_CREATE_ERROR"] = "Ошибка создания заказа";
+$MESS["SALE_YMARKET_ORDER_PRICE_CHANGED"] = "Внимание! Цена на заказ изменилась пока клиент оформлял заказ";
+$MESS["SALE_YMH_MARK_BUYER_WAITING"] = "Ожидаем получения информации о покупателе";
 ?>

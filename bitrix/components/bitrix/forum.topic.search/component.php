@@ -43,7 +43,7 @@ if (!function_exists("__array_merge"))
 	{
 		if (strLen(trim($arParams["URL_TEMPLATES_".strToUpper($URL)])) <= 0)
 			$arParams["URL_TEMPLATES_".strToUpper($URL)] = $APPLICATION->GetCurPage()."?".$URL_VALUE;
-		$arParams["URL_TEMPLATES_".strToUpper($URL)] = htmlspecialcharsEx($arParams["URL_TEMPLATES_".strToUpper($URL)]);
+		$arParams["URL_TEMPLATES_".strToUpper($URL)] = htmlspecialcharsbx($arParams["URL_TEMPLATES_".strToUpper($URL)]);
 	}
 /***************** ADDITIONAL **************************************/
 	$arParams["PAGE_NAVIGATION_TEMPLATE"] = trim($arParams["PAGE_NAVIGATION_TEMPLATE"]);

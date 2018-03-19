@@ -27,7 +27,6 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admi
 		"COLUMN_WIDTH_1" => "50%",
 		"GADGETS" => Array("ALL"),
 		"G_RSSREADER_SHOW_URL" => "Y",
-		"GADGETS_FIXED" => array("ADMIN_PERFMON")
 	),
 	false,
 	array(

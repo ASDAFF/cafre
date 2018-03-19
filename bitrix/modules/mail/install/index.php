@@ -86,9 +86,6 @@ Class mail extends CModule
 						'mail.ru' => array(
 							'SERVER' => 'imap.mail.ru', 'PORT' => 993, 'ENCRYPTION' => 'Y', 'LINK' => 'http://e.mail.ru/',
 						),
-						'ukr.net' => array(
-							'SERVER' => 'imap.ukr.net', 'PORT' => 993, 'ENCRYPTION' => 'Y', 'LINK' => 'http://freemail.ukr.net/',
-						),
 						'exchange' => array(),
 						'other' => array(),
 					);
@@ -104,8 +101,7 @@ Class mail extends CModule
 							700  => 'aol',
 							800  => 'yandex',
 							900  => 'mail.ru',
-							1000 => 'ukr.net',
-							1100 => 'other'
+							1000 => 'other',
 						),
 						'ua' => array(
 							100  => 'gmail',
@@ -115,10 +111,7 @@ Class mail extends CModule
 							500  => 'exchange',
 							600  => 'yahoo',
 							700  => 'aol',
-							800  => 'yandex',
-							900  => 'mail.ru',
-							1000 => 'ukr.net',
-							1100 => 'other'
+							800  => 'other',
 						),
 						'en' => array(
 							100 => 'gmail',
@@ -165,6 +158,105 @@ Class mail extends CModule
 						}
 					}
 				}
+
+
+				// create group and give it rights
+				$arGroup = array(
+					"ACTIVE" => "Y",
+					"C_SORT" => 201,
+					"NAME" => GetMessage("MAIL_GROUP_NAME"),
+					"DESCRIPTION" => GetMessage("MAIL_GROUP_DESC"),
+					"STRING_ID" => "MAIL_INVITED",
+					"TASKS_MODULE" => array("main_change_profile"),
+					"TASKS_FILE" => array(
+						Array("fm_folder_access_read", "/bitrix/components/bitrix/"),
+						Array("fm_folder_access_read", "/bitrix/rk.php"),
+						Array("fm_folder_access_read", "/bitrix/tools/"),
+						Array("fm_folder_access_read", "/upload/"),
+						Array("fm_folder_access_read", "/pub/")
+					),
+				);
+
+				$group = new CGroup;
+
+				$dbResult = CGroup::GetList(
+					$v1="id",
+					$v2="asc",
+					array(
+						"STRING_ID" => $arGroup["STRING_ID"],
+						"STRING_ID_EXACT_MATCH" => "Y"
+					)
+				);
+				if ($arExistsGroup = $dbResult->Fetch())
+				{
+					$groupID = $arExistsGroup["ID"];
+				}
+				else
+				{
+					if (file_exists($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/bitrix24"))
+					{
+						$arGroup["~ID"] = 17;
+					}
+					$groupID = $group->Add($arGroup);
+				}
+
+				if ($groupID > 0)
+				{
+					COption::SetOptionString("mail", "mail_invited_group", $groupID);
+
+					$arTasksID = Array();
+					foreach ($arGroup["TASKS_MODULE"] as $taskName)
+					{
+						$dbResult = CTask::GetList(array(), array("NAME" => $taskName));
+						if ($arTask = $dbResult->Fetch())
+						{
+							$arTasksID[] = $arTask["ID"];
+						}
+					}
+					if (!empty($arTasksID))
+					{
+						CGroup::SetTasks($groupID, $arTasksID, true);
+					}
+
+					if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/bitrix24"))
+					{
+						foreach ($arGroup["TASKS_FILE"] as $arFile)
+						{
+							$taskName = $arFile[0];
+							$originalPath = $filePath = $arFile[1];
+
+							$dbResult = CTask::GetList(Array(), Array("NAME" => $taskName));
+							if ($arTask = $dbResult->Fetch())
+							{
+								$permissions = array(
+									$groupID => "T_".$arTask["ID"]
+								);
+
+								$documentRoot = $_SERVER["DOCUMENT_ROOT"];
+								$filePath = rtrim($filePath, "/");
+								$position = strrpos($filePath, "/");
+
+								$pathFile = substr($filePath, $position+1);
+								$pathDir = substr($filePath, 0, $position);
+
+								$PERM = array();
+								if (file_exists($documentRoot.$pathDir."/.access.php"))
+								{
+									@include($documentRoot.$pathDir."/.access.php");
+								}
+
+								$arPermisson = (
+								!isset($PERM[$pathFile])
+								|| !is_array($PERM[$pathFile])
+									? $permissions
+									: $permissions + $PERM[$pathFile]
+								);
+
+								$GLOBALS["APPLICATION"]->SetFileAccessPermission($originalPath, $arPermisson);
+							}
+						}
+					}
+				}
 			}
 
 			RegisterModuleDependences('rest', 'OnRestServiceBuildDescription', 'mail', 'CMailRestService', 'OnRestServiceBuildDescription');
@@ -173,6 +265,7 @@ Class mail extends CModule
 			RegisterModuleDependences('main', 'OnAfterUserDelete', 'mail', 'CMail', 'onUserDelete');
 
 			CAgent::AddAgent("CMailbox::CleanUp();", "mail", "N", 60*60*24);
+			CAgent::addAgent('Bitrix\Mail\Helper::resyncDomainUsersAgent();', 'mail', 'N', 60*60*24);
 
 			return true;
 		}
@@ -240,6 +333,7 @@ Class mail extends CModule
 			CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/mail/install/admin", $_SERVER["DOCUMENT_ROOT"]."/bitrix/admin", true);
 			CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/mail/install/tools", $_SERVER["DOCUMENT_ROOT"]."/bitrix/tools", true, true);
 			CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/mail/install/themes", $_SERVER["DOCUMENT_ROOT"]."/bitrix/themes", true, true);
+			CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/mail/install/templates", $_SERVER["DOCUMENT_ROOT"]."/bitrix/templates", true, true);
 		}
 		return true;
 	}

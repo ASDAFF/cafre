@@ -1,6 +1,6 @@
 <?if (!defined('B_PROLOG_INCLUDED') || B_PROLOG_INCLUDED!==true)die();
 
-if (!$USER->IsAdmin())
+if (!$USER->CanDoOperation("bitrixcloud_monitoring"))
 {
 	ShowError(GetMessage("BCLMMD_ACCESS_DENIED"));
 	return;

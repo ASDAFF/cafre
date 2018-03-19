@@ -6,26 +6,21 @@
  * @var CUser $USER
  * @var CBitrixComponentTemplate $this
  */
-$link = GetPagePath(false, false)."?".http_build_query(
-		array_diff_key(
-			$_REQUEST,
-			array_flip(
-				array(
-					"MID",
-					"sessid",
-					"AJAX_POST",
-					"ENTITY_XML_ID",
-					"ENTITY_TYPE",
-					"ENTITY_ID",
-					"REVIEW_ACTION",
-					"MODE",
-					"FILTER",
-					"result",
-					"clear_cache"
-				)
-			)
-		)
-	);
+
+CUtil::InitJSCore(array('content_view'));
+
+$link = $APPLICATION->GetCurPageParam("MID=#ID#", array(
+	"MID",
+	"sessid",
+	"AJAX_POST",
+	"ENTITY_XML_ID",
+	"ENTITY_TYPE",
+	"ENTITY_ID",
+	"REVIEW_ACTION",
+	"MODE",
+	"FILTER",
+	"result",
+	"clear_cache"));
 $arResult["OUTPUT_LIST"] = $APPLICATION->IncludeComponent(
 	"bitrix:main.post.list",
 	"",
@@ -54,7 +49,7 @@ $arResult["OUTPUT_LIST"] = $APPLICATION->IncludeComponent(
 		"EDIT_URL" => ForumAddPageParams($link, array("REVIEW_ACTION" => "GET"), false, false),
 		"MODERATE_URL" => ForumAddPageParams($link, array("REVIEW_ACTION" => "#ACTION#"), false, false),
 		"DELETE_URL" => ForumAddPageParams($link, array("REVIEW_ACTION" => "DEL"), false, false),
-		"AUTHOR_URL" => $arParams["PATH_TO_USER"],
+		"AUTHOR_URL" => $arParams["URL_TEMPLATES_PROFILE_VIEW"],
 
 		"AVATAR_SIZE" => $arParams["AVATAR_SIZE_COMMENT"],
 		"NAME_TEMPLATE" => $arParams["NAME_TEMPLATE"],
@@ -106,5 +101,15 @@ if ($_REQUEST["empty_get_comments"] == "Y")
 	<span id="post-comment-last-after"></span>
 </div>
 <script>
+	BX.ready(function() {
+
+		BX.onCustomEvent(window, 'BX.UserContentView.onInitCall', [{
+			mobile: true,
+			ajaxUrl: '<?=SITE_DIR?>mobile/ajax.php',
+			commentsContainerId: 'post-comments-wrap',
+			commentsClassName: 'post-comment-wrap'
+		}]);
+	});
+
 	BX.addCustomEvent(window, "OnUCFormSubmit", function(xml, id, obj, post) { if (post['comment_review']=="Y" && xml=='<?=$arParams["ENTITY_XML_ID"]?>' && id > 0) post['MID'] = id; });
 </script>

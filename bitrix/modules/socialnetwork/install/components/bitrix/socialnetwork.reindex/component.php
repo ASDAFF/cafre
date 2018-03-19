@@ -1,4 +1,13 @@
 <?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
+/** @var CBitrixComponent $this */
+/** @var array $arParams */
+/** @var array $arResult */
+/** @var string $componentPath */
+/** @var string $componentName */
+/** @var string $componentTemplate */
+/** @global CDatabase $DB */
+/** @global CUser $USER */
+/** @global CMain $APPLICATION */
 
 if(!$USER->IsAdmin() || !CModule::IncludeModule('socialnetwork'))
 {
@@ -80,27 +89,24 @@ if(intval($arParams["CALENDAR_GROUP_IBLOCK_ID"]) && CModule::IncludeModule('iblo
 		$arSteps["group_calendars"] = GetMessage("CC_BSR_STEP_GROUPS_CALENDARS");
 }
 
-if(intval($arParams["TASK_IBLOCK_ID"]) && CModule::IncludeModule('iblock'))
+if (\Bitrix\Main\ModuleManager::isModuleInstalled('tasks'))
 {
-	$arIBlock = CIBlock::GetArrayByID($arParams["TASK_IBLOCK_ID"]);
-	if($arIBlock["INDEX_ELEMENT"]==="Y" || $arIBlock["INDEX_SECTION"]==="Y")
-		$arWarnings[] = GetMessage("CC_BSR_WARN_TASK_IBLOCK", array("#href#" => htmlspecialcharsbx(BX_ROOT."/admin/iblock_edit.php?type=".urlencode($arIBlock["IBLOCK_TYPE_ID"])."&lang=".LANGUAGE_ID."&ID=".urlencode($arIBlock["ID"])."&admin=Y&return_url=".urlencode($APPLICATION->GetCurPageParam()))));
-
 	if(intval($arParams["TASK_FORUM_ID"]) && CModule::IncludeModule('forum'))
 	{
 		$arForum = CForumNew::GetByID($arParams["TASK_FORUM_ID"]);
 		if ($arForum === false)
+		{
 			$arWarnings[] = GetMessage("CC_BSR_WARN_TASK_FORUM_NOT_FOUND", array("#FORUM_ID#" => htmlspecialcharsbx($arParams["TASK_FORUM_ID"])));
+		}
 		else if($arForum["INDEXATION"]!=="Y")
+		{
 			$arWarnings[] = GetMessage("CC_BSR_WARN_TASK_FORUM", array("#href#" => htmlspecialcharsbx(BX_ROOT."/admin/forum_edit.php?lang=".LANGUAGE_ID."&ID=".intval($arForum["ID"]))));
+		}
 	}
 	else
+	{
 		$arWarnings[] = GetMessage("CC_BSR_WARN_TASK_FORUM_NOT_SET");
-
-	if(strlen($arParams["PATH_TO_GROUP_TASK_ELEMENT"]))
-		$arSteps["group_tasks"] = GetMessage("CC_BSR_STEP_GROUPS_TASKS");
-	if(strlen($arParams["PATH_TO_USER_TASK_ELEMENT"]))
-		$arSteps["user_tasks"] = GetMessage("CC_BSR_STEP_USERS_TASKS");
+	}
 }
 
 if(intval($arParams["FILES_GROUP_IBLOCK_ID"]) && CModule::IncludeModule('iblock'))
@@ -196,7 +202,7 @@ if($_GET["index"] == "y" && check_bitrix_sessid())
 	else
 		$step = "init";
 
-	if(preg_match('/^.\d+$/', $_GET["last_id"]))
+	if(preg_match('/^[a-zA-Z]\d+$/', $_GET["last_id"]))
 		$last_id = $_GET["last_id"];
 	else
 		$last_id = intval($_GET["last_id"]);

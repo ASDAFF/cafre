@@ -133,4 +133,9 @@ $MESS["CAT_ADM_MISC_EXP_TAB2_TITLE"] = "Результат экспорта";
 $MESS["CAT_ADM_CSV_EXP_CML2_LINK_IS_XML"] = "Выгружать в свойство привязки торговых предложений к товарам внешний код товара (XML_ID)";
 $MESS["CAT_YANDEX_XML_CURRENCY"] = "Валюта, в которую конвертировать цены товаров:";
 $MESS["CAT_YANDEX_USE_HTTPS"] = "Использовать в выгрузке протокол https:";
+$MESS["CAT_YANDEX_FILTER_AVAILABLE"] = "Выгружать только доступные к покупке товары:";
+$MESS["CAT_YANDEX_DISABLE_REFERERS"] = "Не добавлять к ссылкам на товары реферер:";
+$MESS["CAT_MAX_EXECUTION_TIME"] = "Время выполнения шага:";
+$MESS["CAT_MAX_EXECUTION_TIME_NOTE"] = "0 - выгрузить все сразу<br> положительное значение - число секунд на выполнение одного шага";
+$MESS["CAT_YANDEX_CHECK_PERMISSIONS"] = "Включить проверку прав доступа для группы 2 (все пользователи):";
 ?>

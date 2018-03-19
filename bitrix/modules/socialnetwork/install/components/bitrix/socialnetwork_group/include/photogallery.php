@@ -227,7 +227,6 @@ $arParams["PHOTO"] = array(
 		"RATING_MAIN_TYPE" => $arParams["SHOW_RATING"] == "Y"? $arParams["RATING_TYPE"]: "",
 /***************** COMMENTS ****************************************/
 		"USE_COMMENTS" => ($arParams["PHOTO_USE_COMMENTS"] == "Y" && $arResult["GROUP"]["CLOSED"] != "Y" ? "Y" : "N"),
-		"PATH_TO_SMILE" => $arParams["PATH_TO_FORUM_SMILE"],
 		"COMMENTS_TYPE" => ($arParams["PHOTO_COMMENTS_TYPE"] == "blog" ? "BLOG" : "FORUM"),
 		"BLOG_URL" => $arParams["PHOTO_BLOG_URL"],
 		"COMMENTS_COUNT" => $arParams["PHOTO_COMMENTS_COUNT"],

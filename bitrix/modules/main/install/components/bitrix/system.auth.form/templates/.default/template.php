@@ -1,4 +1,7 @@
-<?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();?>
+<?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
+
+CJSCore::Init();
+?>
 
 <div class="bx-system-auth-form">
 
@@ -22,7 +25,19 @@ if ($arResult['SHOW_ERRORS'] == 'Y' && $arResult['ERROR'])
 		<tr>
 			<td colspan="2">
 			<?=GetMessage("AUTH_LOGIN")?>:<br />
-			<input type="text" name="USER_LOGIN" maxlength="50" value="<?=$arResult["USER_LOGIN"]?>" size="17" /></td>
+			<input type="text" name="USER_LOGIN" maxlength="50" value="" size="17" />
+			<script>
+				BX.ready(function() {
+					var loginCookie = BX.getCookie("<?=CUtil::JSEscape($arResult["~LOGIN_COOKIE_NAME"])?>");
+					if (loginCookie)
+					{
+						var form = document.forms["system_auth_form<?=$arResult["RND"]?>"];
+						var loginInput = form.elements["USER_LOGIN"];
+						loginInput.value = loginCookie;
+					}
+				});
+			</script>
+			</td>
 		</tr>
 		<tr>
 			<td colspan="2">

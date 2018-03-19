@@ -6,7 +6,7 @@ IncludeModuleLangFile(__FILE__);
 
 if(!$USER->IsAuthorized()):
 ?>
-<div class="access-container" style="padding:20px"><?echo GetMessage("acc_dialog_access_denied")?></div>
+<div class="access-container"><?echo GetMessage("acc_dialog_access_denied")?></div>
 <?
 	die();
 endif;

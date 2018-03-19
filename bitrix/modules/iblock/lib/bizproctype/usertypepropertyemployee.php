@@ -20,6 +20,15 @@ class UserTypePropertyEmployee extends UserTypeProperty
 		return FieldType::STRING;
 	}
 
+	public static function convertTo(FieldType $fieldType, $value, $toTypeClass)
+	{
+		if (is_array($value) && isset($value['VALUE']))
+			$value = $value['VALUE'];
+
+		$value = (string) $value;
+		return BaseType\User::convertTo($fieldType, $value, $toTypeClass);
+	}
+
 	/**
 	 * @param FieldType $fieldType Document field object.
 	 * @param mixed $value Field value.
@@ -61,6 +70,27 @@ class UserTypePropertyEmployee extends UserTypeProperty
 	}
 
 	/**
+	 * Return conversion map for current type.
+	 * @return array Map.
+	 */
+	public static function getConversionMap()
+	{
+		$userMap = BaseType\User::getConversionMap();
+		return array(
+			$userMap[0],
+			array(
+				FieldType::DOUBLE,
+				FieldType::INT,
+				FieldType::INTERNALSELECT,
+				FieldType::SELECT,
+				FieldType::STRING,
+				FieldType::TEXT,
+				FieldType::USER
+			)
+		);
+	}
+
+	/**
 	 * @param FieldType $fieldType Document field object.
 	 * @param array $field Form field information.
 	 * @param mixed $value Field value.
@@ -76,7 +106,7 @@ class UserTypePropertyEmployee extends UserTypeProperty
 		if ($allowSelection)
 		{
 			$selectorValue = \CBPActivity::isExpression($value) ? $value : null;
-			$renderResult .= static::renderControlSelector($field, $selectorValue, true, 'employee');
+			$renderResult .= static::renderControlSelector($field, $selectorValue, true, 'employee', $fieldType);
 		}
 
 		return $renderResult;
@@ -106,7 +136,7 @@ class UserTypePropertyEmployee extends UserTypeProperty
 				if (\CBPActivity::isExpression($v))
 					$selectorValue = $v;
 			}
-			$renderResult .= static::renderControlSelector($field, $selectorValue, true, 'employee');
+			$renderResult .= static::renderControlSelector($field, $selectorValue, true, 'employee', $fieldType);
 		}
 
 		return $renderResult;
@@ -120,7 +150,9 @@ class UserTypePropertyEmployee extends UserTypeProperty
 	 */
 	protected static function extractValue(FieldType $fieldType, array $field, array $request)
 	{
-		$value = parent::extractValue($fieldType, $field, $request);
+		$value = (int) parent::extractValue($fieldType, $field, $request);
+		if (empty($value))
+			$value = null;
 
 		if ($value !== null && !static::isCompatibleMode())
 		{
@@ -128,6 +160,12 @@ class UserTypePropertyEmployee extends UserTypeProperty
 		}
 
 		return $value;
+	}
+
+	public static function extractValueMultiple(FieldType $fieldType, array $field, array $request)
+	{
+		$values = parent::extractValueMultiple($fieldType, $field, $request);
+		return array_unique($values);
 	}
 
 	/**
@@ -138,6 +176,22 @@ class UserTypePropertyEmployee extends UserTypeProperty
 	protected static function formatValuePrintable(FieldType $fieldType, $value)
 	{
 		$value = static::fixUserPrefix($value);
+		$userType = static::getUserType($fieldType);
+		if (is_array($value) && isset($value['VALUE']))
+			$value = $value['VALUE'];
+
+		if (!empty($userType['GetPublicViewHTML']))
+		{
+			$result = call_user_func_array(
+				$userType['GetPublicViewHTML'],
+				array(
+					array('LINK_IBLOCK_ID' => $fieldType->getOptions()),
+					array('VALUE' => $value),
+					''
+				)
+			);
+			return htmlspecialcharsback($result);
+		}
 		return parent::formatValuePrintable($fieldType, $value);
 	}
 

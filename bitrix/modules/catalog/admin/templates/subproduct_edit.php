@@ -1,6 +1,9 @@
 <?
 /** @global CUser $USER */
-use Bitrix\Currency;
+/** @global CMain $APPLICATION */
+use Bitrix\Main,
+	Bitrix\Currency,
+	Bitrix\Catalog;
 
 if ($USER->CanDoOperation('catalog_read') || $USER->CanDoOperation('catalog_price') || $USER->CanDoOperation('catalog_view'))
 {
@@ -11,11 +14,20 @@ if ($USER->CanDoOperation('catalog_read') || $USER->CanDoOperation('catalog_pric
 	{
 		$currencyList[$currency] = array(
 			'CURRENCY' => $currency,
-			'FULL_NAME' => htmlspecialcharsex($currencyName),
-			'FULL_NAME_JS' => CUtil::JSEscape(htmlspecialcharsbx($currencyName))
+			'FULL_NAME' => htmlspecialcharsbx($currencyName)
 		);
+		$currencyList[$currency]['FULL_NAME_JS'] = CUtil::JSEscape($currencyList[$currency]['FULL_NAME']);
 	}
 	unset($currency, $currencyName);
+
+	$bDiscount = $USER->CanDoOperation('catalog_discount');
+	$bStore = $USER->CanDoOperation('catalog_store');
+	$bUseStoreControl = (COption::GetOptionString('catalog', 'default_use_store_control') == "Y");
+	$bEnableReservation = ('N' != COption::GetOptionString('catalog', 'enable_reservation'));
+
+	$availQuantityTrace = COption::GetOptionString("catalog", "default_quantity_trace");
+	$availCanBuyZero = COption::GetOptionString("catalog", "default_can_buy_zero");
+	$strGlobalSubscribe = COption::GetOptionString("catalog", "default_subscribe");
 
 	$IBLOCK_ID = intval($IBLOCK_ID);
 	if ($IBLOCK_ID <= 0)
@@ -43,15 +55,9 @@ if ($USER->CanDoOperation('catalog_read') || $USER->CanDoOperation('catalog_pric
 		$arBaseProduct['QUANTITY'] = '';
 		$arBaseProduct['QUANTITY_RESERVED'] = '';
 	}
-	$bDiscount = $USER->CanDoOperation('catalog_discount');
-	$bStore = $USER->CanDoOperation('catalog_store');
-	$bUseStoreControl = (COption::GetOptionString('catalog', 'default_use_store_control') == "Y");
-	$bEnableReservation = ('N' != COption::GetOptionString('catalog', 'enable_reservation'));
 
-	$availQuantityTrace = COption::GetOptionString("catalog", "default_quantity_trace");
-	$availCanBuyZero = COption::GetOptionString("catalog", "default_can_buy_zero");
-	$availNegativeAmountGlobal = COption::GetOptionString("catalog", "allow_negative_amount");
-	$strGlobalSubscribe = COption::GetOptionString("catalog", "default_subscribe");
+	$subscribeEnabled = $arBaseProduct["SUBSCRIBE"] == 'Y';
+	$activitySubscribeTab = $PRODUCT_ID > 0 && !$bCopy && $subscribeEnabled;
 
 	$arExtraList = array();
 	$l = CExtra::GetList(array("NAME" => "ASC"));
@@ -67,39 +73,6 @@ if ($USER->CanDoOperation('catalog_read') || $USER->CanDoOperation('catalog_pric
 	?>
 <script type="text/javascript">
 var bReadOnly = <? echo ($bReadOnly ? 'true' : 'false'); ?>;
-function onChangeSubCanBuyZero(el)
-{
-	var prefix = 'SUB',
-		defaultValue = '<? echo $availCanBuyZero; ?>',
-		obNegativeAmount,
-		oldValue = 0,
-		i = 0;
-
-	obNegativeAmount = BX(prefix+'NEGATIVE_AMOUNT');
-	if (!!obNegativeAmount)
-	{
-		if (-1 < el.selectedIndex)
-		{
-			if (
-				'Y' === el.options[el.selectedIndex].value ||
-				('D' === el.options[el.selectedIndex].value && 'Y' === defaultValue)
-			)
-			{
-				obNegativeAmount.selectedIndex = ('Y' === el.options[el.selectedIndex].value ? 1 : 0);
-				obNegativeAmount.disabled = true;
-			}
-			else
-			{
-				obNegativeAmount.disabled = false;
-				if (obNegativeAmount.hasAttribute('data-oldvalue'))
-				{
-					oldValue = parseInt(obNegativeAmount.getAttribute('data-oldvalue'), 10);
-				}
-				obNegativeAmount.selectedIndex = oldValue;
-			}
-		}
-	}
-}
 
 function getElementSubForm()
 {
@@ -260,11 +233,21 @@ function toggleSubPriceType()
 		{
 			$aTabs1[] = array("DIV" => "subcat_edit7", "TAB" => GetMessage("C2IT_BAR_CODE"), "TITLE" => GetMessage("C2IT_BAR_CODE_D"));
 		}
+		if($activitySubscribeTab)
+		{
+			$aTabs1[] = array(
+				"DIV" => "subcat_edit8",
+				"TAB" => GetMessage("C2IT_SUBSCRIBE_TAB"),
+				"TITLE" => GetMessage("C2IT_SUBSCRIBE_TAB_TITLE"),
+				"ONSELECT" => "getDataSubscriptions();"
+			);
+		}
 
 		$subtabControl1 = new CAdminViewTabControl("subtabControl1", $aTabs1);
 		$subtabControl1->Begin();
 
 		// Define boundaries
+		$usedRanges = false;
 		$arProductFilter = array("PRODUCT_ID" => $PRODUCT_ID);
 		if (!CBXFeatures::IsFeatureEnabled('CatMultiPrice'))
 		{
@@ -278,22 +261,30 @@ function toggleSubPriceType()
 			);
 		while ($arPrice = $dbPrice->Fetch())
 		{
+			$arPrice['RAW_QUANTITY_FROM'] = $arPrice['QUANTITY_FROM'];
+			$arPrice['RAW_QUANTITY_TO'] = $arPrice['QUANTITY_TO'];
+			$arPrice['QUANTITY_FROM'] = (int)$arPrice['QUANTITY_FROM'];
+			$arPrice['QUANTITY_TO'] = (int)$arPrice['QUANTITY_TO'];
+			if ($arPrice['RAW_QUANTITY_FROM'] !== null && $arPrice['QUANTITY_FROM'] > 0)
+				$usedRanges = true;
+			if ($arPrice['RAW_QUANTITY_TO'] !== null && $arPrice['QUANTITY_TO'] > 0)
+				$usedRanges = true;
 			if ($arPrice["BASE"] == "Y")
 			{
 				$arPriceBoundaries[] = array(
-						"FROM" => intval($arPrice["QUANTITY_FROM"]),
-						"TO" => intval($arPrice["QUANTITY_TO"])
+						"FROM" => $arPrice["QUANTITY_FROM"],
+						"TO" => $arPrice["QUANTITY_TO"]
 					);
-				if (intval($arPrice["QUANTITY_FROM"]) > intval($arPrice["QUANTITY_TO"])
-					&& intval($arPrice["QUANTITY_TO"]) != 0)
+				if ($arPrice["QUANTITY_FROM"] > $arPrice["QUANTITY_TO"]
+					&& $arPrice["QUANTITY_TO"] != 0)
 				{
 					$arPriceBoundariesError[] = str_replace("#RIGHT#", $arPrice["QUANTITY_TO"], str_replace("#LEFT#", $arPrice["QUANTITY_FROM"], GetMessage("C2IT_BOUND_LR")));
 				}
 			}
 			else
 			{
-				if (intval($arPrice["QUANTITY_FROM"]) > intval($arPrice["QUANTITY_TO"])
-					&& intval($arPrice["QUANTITY_TO"]) != 0)
+				if ($arPrice["QUANTITY_FROM"] > $arPrice["QUANTITY_TO"]
+					&& $arPrice["QUANTITY_TO"] != 0)
 				{
 					$arPriceBoundariesError[] = str_replace("#TYPE#", $arPrice["CATALOG_GROUP_NAME"], str_replace("#RIGHT#", $arPrice["QUANTITY_TO"], str_replace("#LEFT#", $arPrice["QUANTITY_FROM"], GetMessage("C2IT_BOUND_LR1"))));
 				}
@@ -303,9 +294,9 @@ function toggleSubPriceType()
 					$intCount = count($arPriceBoundaries);
 					for ($i = 0; $i < $intCount; $i++)
 					{
-						if ($arPriceBoundaries[$i]["FROM"] == intval($arPrice["QUANTITY_FROM"]))
+						if ($arPriceBoundaries[$i]["FROM"] == $arPrice["QUANTITY_FROM"])
 						{
-							if ($arPriceBoundaries[$i]["TO"] != intval($arPrice["QUANTITY_TO"]))
+							if ($arPriceBoundaries[$i]["TO"] != $arPrice["QUANTITY_TO"])
 							{
 								$arPriceBoundariesError[] = str_replace("#TYPE#", $arPrice["CATALOG_GROUP_NAME"], str_replace("#RIGHT#", $arPrice["QUANTITY_TO"], str_replace("#LEFT#", $arPrice["QUANTITY_FROM"], GetMessage("C2IT_BOUND_DIAP"))));
 							}
@@ -314,9 +305,9 @@ function toggleSubPriceType()
 						}
 						else
 						{
-							if ($arPriceBoundaries[$i]["FROM"] < intval($arPrice["QUANTITY_FROM"])
-								&& $arPriceBoundaries[$i]["TO"] >= intval($arPrice["QUANTITY_TO"])
-								&& intval($arPrice["QUANTITY_TO"]) != 0)
+							if ($arPriceBoundaries[$i]["FROM"] < $arPrice["QUANTITY_FROM"]
+								&& $arPriceBoundaries[$i]["TO"] >= $arPrice["QUANTITY_TO"]
+								&& $arPrice["QUANTITY_TO"] != 0)
 							{
 								$arPriceBoundariesError[] = str_replace("#TYPE#", $arPrice["CATALOG_GROUP_NAME"], str_replace("#RIGHT#", $arPrice["QUANTITY_TO"], str_replace("#LEFT#", $arPrice["QUANTITY_FROM"], GetMessage("C2IT_BOUND_DIAP"))));
 								$bNewSegment = false;
@@ -326,32 +317,33 @@ function toggleSubPriceType()
 					}
 					if ($bNewSegment)
 					{
-						$arPriceBoundaries[] = array("FROM" => intval($arPrice["QUANTITY_FROM"]), "TO" => intval($arPrice["QUANTITY_TO"]));
+						$arPriceBoundaries[] = array("FROM" => $arPrice["QUANTITY_FROM"], "TO" => $arPrice["QUANTITY_TO"]);
 					}
 				}
 			}
 		}
 
-		$intCount = count($arPriceBoundaries);
-		for ($i = 0; $i < $intCount - 1; $i++)
+		if (!empty($arPriceBoundaries))
 		{
-			for ($j = $i + 1; $j < $intCount; $j++)
+			if (count($arPriceBoundaries) > 1)
 			{
-				if ($arPriceBoundaries[$i]["FROM"] > $arPriceBoundaries[$j]["FROM"])
-				{
-					$tmp = $arPriceBoundaries[$i];
-					$arPriceBoundaries[$i] = $arPriceBoundaries[$j];
-					$arPriceBoundaries[$j] = $tmp;
-				}
+				Main\Type\Collection::sortByColumn($arPriceBoundaries, array('FROM' => SORT_ASC));
+			}
+			elseif (!$usedRanges)
+			{
+				$arPriceBoundaries[0]['FROM'] = false;
+				$arPriceBoundaries[0]['TO'] = false;
 			}
 		}
 
 // prices tab
 		$subtabControl1->BeginNextTab();
 $arCatPricesExist = array(); // attr for exist prices for range
-$bUseExtendedPrice = $bVarsFromForm ? $subprice_useextform == 'Y' : count($arPriceBoundaries) > 1;
+$bUseExtendedPrice = $bVarsFromForm ? $subprice_useextform == 'Y' : $usedRanges;
 $str_CAT_VAT_ID = $bVarsFromForm ? $SUBCAT_VAT_ID : ($arBaseProduct['VAT_ID'] == 0 ? $arCatalog['VAT_ID'] : $arBaseProduct['VAT_ID']);
-$str_CAT_VAT_INCLUDED = $bVarsFromForm ? $SUBCAT_VAT_INCLUDED : $arBaseProduct['VAT_INCLUDED'];
+$str_CAT_VAT_INCLUDED = (string)($bVarsFromForm ? $SUBCAT_VAT_INCLUDED : $arBaseProduct['VAT_INCLUDED']);
+if ($str_CAT_VAT_INCLUDED != 'Y' && $str_CAT_VAT_INCLUDED != 'N')
+	$str_CAT_VAT_INCLUDED = ((string)Main\Config\Option::get('catalog', 'default_product_vat_included') == 'Y' ? 'Y' : 'N');
 		?>
 <input type="hidden" name="subprice_useextform" id="subprice_useextform_N" value="N" />
 <table border="0" cellspacing="0" cellpadding="0" width="100%" class="edit-table" id="subcatalog_vat_table">
@@ -1721,22 +1713,28 @@ function HideNotice()
 				</td>
 				<td width="60%">
 					<?
-					$str_CAT_MEASURE = $arBaseProduct["MEASURE"];
 					$arAllMeasure = array();
-					$dbResultList = CCatalogMeasure::getList(array(), array(), false, false, array("ID", "CODE", "MEASURE_TITLE", "SYMBOL_INTL", "IS_DEFAULT"));
+					$dbResultList = CCatalogMeasure::getList(
+						array(),
+						array(),
+						false,
+						false,
+						array("ID", "CODE", "MEASURE_TITLE", "SYMBOL_INTL", "IS_DEFAULT")
+					);
 					while($arMeasure = $dbResultList->Fetch())
 					{
 						$arAllMeasure[] = $arMeasure;
 					}
-					if($bVarsFromForm) $str_CAT_MEASURE = $SUBCAT_MEASURE;
+					$str_CAT_MEASURE = $arBaseProduct["MEASURE"];
+					if ($bVarsFromForm)
+						$str_CAT_MEASURE = $SUBCAT_MEASURE;
 					?>
 					<?if(!empty($arAllMeasure)):?>
 						<select style="max-width:220px" id="SUBCAT_MEASURE" name="SUBCAT_MEASURE" <?if ($bReadOnly) echo "disabled readonly" ?>>
-							<?foreach($arAllMeasure as &$arMeasure):?>
-								<option <?if(($arBaseProduct["MEASURE"] == $arMeasure["ID"]) || ($str_CAT_MEASURE == '' && $arMeasure["IS_DEFAULT"] == 'Y')) echo " selected";?> value="<?=$arMeasure["ID"]?>"><?=htmlspecialcharsbx($arMeasure["MEASURE_TITLE"])?></option>
+							<?foreach($arAllMeasure as $arMeasure):?>
+								<option <?if($str_CAT_MEASURE == $arMeasure["ID"] || ($str_CAT_MEASURE == '' && $arMeasure["IS_DEFAULT"] == 'Y')) echo " selected";?> value="<?=$arMeasure["ID"]?>"><?=htmlspecialcharsbx($arMeasure["MEASURE_TITLE"])?></option>
 							<?endforeach;
-							if (isset($arMeasure))
-								unset($arMeasure);
+							unset($arMeasure);
 							?>
 						</select>
 					<?else:?>
@@ -1789,48 +1787,17 @@ function HideNotice()
 			</tr>
 			<tr>
 				<td width="40%">
-					<?echo GetMessage("C2IT_CAN_BUY_NULL")?>:
+					<?echo GetMessage("C2IT_CAN_BUY_NULL_EXT")?>:
 				</td>
 				<td width="60%">
 					<?
 					$str_CAT_BASE_CAN_BUY_ZERO = $arBaseProduct["CAN_BUY_ZERO_ORIG"];
 					if ($bVarsFromForm) $str_CAT_BASE_CAN_BUY_ZERO = $SUBUSE_STORE;
 					?>
-					<select id="SUBUSE_STORE" name="SUBUSE_STORE" <? echo ($bReadOnly ? "disabled readonly" : 'onchange="onChangeSubCanBuyZero(this)"'); ?>>
+					<select id="SUBUSE_STORE" name="SUBUSE_STORE" <? echo ($bReadOnly ? "disabled readonly" : ''); ?>>
 						<option value="D" <?if ("D"==$str_CAT_BASE_CAN_BUY_ZERO) echo " selected"?>><?=GetMessage("C2IT_DEFAULT_NEGATIVE")." ("?><?echo $availCanBuyZero=='Y' ? GetMessage("C2IT_YES_NEGATIVE") : GetMessage("C2IT_NO_NEGATIVE")?>) </option>
 						<option value="Y" <?if ("Y"==$str_CAT_BASE_CAN_BUY_ZERO) echo " selected"?>><?=GetMessage("C2IT_YES_NEGATIVE")?></option>
 						<option value="N" <?if ("N"==$str_CAT_BASE_CAN_BUY_ZERO) echo " selected"?>><?=GetMessage("C2IT_NO_NEGATIVE")?></option>
-					</select>
-				</td>
-			</tr>
-			<tr>
-				<td width="40%">
-					<?echo GetMessage("C2IT_CAN_NEGATIVE_AMOUMT")?>:
-				</td>
-				<td width="60%">
-					<?
-					$str_CAT_BASE_NEGATIVE_AMOUNT_TRACE = $arBaseProduct["NEGATIVE_AMOUNT_TRACE_ORIG"];
-					if ($bVarsFromForm) $str_CAT_BASE_NEGATIVE_AMOUNT_TRACE = $SUBNEGATIVE_AMOUNT;
-					$oldIndex = 0;
-					if ('N' == $str_CAT_BASE_NEGATIVE_AMOUNT_TRACE)
-					{
-						$oldIndex = 2;
-					}
-					elseif ('Y' == $str_CAT_BASE_NEGATIVE_AMOUNT_TRACE)
-					{
-						$oldIndex = 1;
-					}
-					$disableNegative = false;
-					if ('Y' == $str_CAT_BASE_CAN_BUY_ZERO || ('D' == $str_CAT_BASE_CAN_BUY_ZERO && 'Y' == $availCanBuyZero))
-					{
-						$str_CAT_BASE_NEGATIVE_AMOUNT_TRACE = $str_CAT_BASE_CAN_BUY_ZERO;
-						$disableNegative = true;
-					}
-					?>
-					<select id="SUBNEGATIVE_AMOUNT" name="SUBNEGATIVE_AMOUNT" <?if ($bReadOnly) echo "disabled readonly" ?><? if ($disableNegative) echo " disabled"; ?> data-oldvalue="<? echo $oldIndex; ?>">
-						<option value="D" <?if ("D"==$str_CAT_BASE_NEGATIVE_AMOUNT_TRACE) echo " selected"?>><?=GetMessage("C2IT_DEFAULT_NEGATIVE")." ("?><?echo $availNegativeAmountGlobal=='Y' ? GetMessage("C2IT_YES_NEGATIVE") : GetMessage("C2IT_NO_NEGATIVE")?>) </option>
-						<option value="Y" <?if ("Y"==$str_CAT_BASE_NEGATIVE_AMOUNT_TRACE) echo " selected"?>><?=GetMessage("C2IT_YES_NEGATIVE")?></option>
-						<option value="N" <?if ("N"==$str_CAT_BASE_NEGATIVE_AMOUNT_TRACE) echo " selected"?>><?=GetMessage("C2IT_NO_NEGATIVE")?></option>
 					</select>
 				</td>
 			</tr>
@@ -2164,7 +2131,7 @@ SetSubFieldsStyle('subcatalog_properties_table');
 		$subtabControl1->BeginNextTab();
 
 		$arParams = array();
-		$arSKU = CCatalogSKU::GetInfoByOfferIBlock($IBLOCK_ID);
+		$arSKU = CCatalogSku::GetInfoByOfferIBlock($IBLOCK_ID);
 		if (is_array($arSKU))
 		{
 			$arParams['SKU'] = 'Y';
@@ -2179,6 +2146,13 @@ SetSubFieldsStyle('subcatalog_properties_table');
 		}
 		else
 		{
+			$showDiscountUrl = $bDiscount;
+			$discountUrl = '/bitrix/admin/cat_discount_edit.php?ID=';
+			if (Main\ModuleManager::isModuleInstalled('sale') && (string)Main\Config\Option::get('sale', 'use_sale_discount_only') == 'Y')
+			{
+				$showDiscountUrl = ($APPLICATION->GetGroupRight('sale') >= 'W');
+				$discountUrl = '/bitrix/admin/sale_discount_edit.php?ID=';
+			}
 			?><table border="0" cellspacing="0" cellpadding="0" class="internal" align="center" width="100%">
 				<tr class="heading">
 					<td>ID</td>
@@ -2186,7 +2160,7 @@ SetSubFieldsStyle('subcatalog_properties_table');
 					<td><?echo GetMessage("C2IT_ACTIVITY")?></td>
 					<td><?echo GetMessage("C2IT_NAME")?></td>
 					<td><?echo GetMessage("C2IT_AMOUNT")?></td>
-					<? if ($bDiscount)
+					<? if ($showDiscountUrl)
 					{
 					?><td><?echo GetMessage("C2IT_ACTIONS")?></td><?
 					}
@@ -2217,11 +2191,11 @@ SetSubFieldsStyle('subcatalog_properties_table');
 							?>
 						</td>
 						<?
-						if ($bDiscount)
+						if ($showDiscountUrl)
 						{
 						?>
 						<td style="text-align: center;">
-							<a href="/bitrix/admin/cat_discount_edit.php?ID=<? echo $arProductDiscounts["ID"] ?>&lang=<? echo LANGUAGE_ID; ?>#tb" target="_blank"><?echo GetMessage("C2IT_MODIFY")?></a>
+							<a href="<?=$discountUrl.$arProductDiscounts["ID"] ?>&lang=<?=LANGUAGE_ID; ?>#tb" target="_blank"><?echo GetMessage("C2IT_MODIFY")?></a>
 						</td>
 						<?
 						}
@@ -2235,84 +2209,100 @@ SetSubFieldsStyle('subcatalog_properties_table');
 		<br>
 		<?echo GetMessage("C2IT_DISCOUNT_HINT");
 	$subtabControl1->BeginNextTab();
-	?>
-	<table border="0" cellspacing="0" cellpadding="0" class="internal" align="center">
-		<tr class="heading">
-		<td><?echo GetMessage("C2IT_STORE_NUMBER"); ?></td>
-		<td><? echo GetMessage('C2IT_STORE_ID'); ?></td>
-		<td><?echo GetMessage("C2IT_NAME"); ?></td>
-		<td><?echo GetMessage("C2IT_STORE_ADDR"); ?></td>
-		<td><?echo GetMessage("C2IT_PROD_AMOUNT"); ?></td>
-		</tr>
-		<?
-		$numStore = 1;
-		if ($bSubCopy)
+		$stores = array();
+		$storeLink = array();
+		$storeCount = 0;
+		$iterator = Catalog\StoreTable::getList(array(
+			'select' => array('ID', 'TITLE', 'ADDRESS', 'SORT'),
+			'filter' => array('=ACTIVE' => 'Y'),
+			'order' => array('SORT' => 'ASC', 'ID' => 'ASC'),
+		));
+		while ($row = $iterator->fetch())
 		{
-			$arSelect = array(
-				"ID",
-				"TITLE",
-				"ADDRESS",
-			);
-			$rsProps = CCatalogStore::GetList(array('SORT' => 'ASC'), array('ACTIVE' => 'Y'), false, false, $arSelect);
+			$row['ID'] = (int)$row['ID'];
+			$row['ADDRESS'] = trim($row['ADDRESS']);
+			$row['PRODUCT_AMOUNT'] = '';
+			$stores[$storeCount] = $row;
+			$storeLink[$row['ID']] = &$stores[$storeCount];
+			$storeCount++;
+		}
+		unset($row, $iterator);
+		if ($storeCount > 0)
+		{
+			$storeIds = array_keys($storeLink);
+			if (!$bCopy)
+			{
+				$iterator = Catalog\StoreProductTable::getList(array(
+					'select' => array('STORE_ID', 'AMOUNT'),
+					'filter' => array('=PRODUCT_ID' => $PRODUCT_ID, '@STORE_ID' => $storeIds)
+				));
+				while ($row = $iterator->fetch())
+				{
+					$storeId = (int)$row['STORE_ID'];
+					$storeLink[$storeId]['PRODUCT_AMOUNT'] = $row['AMOUNT'];
+				}
+				unset($row, $iterator);
+			}
+			if ($bVarsFromForm)
+			{
+				foreach ($storeIds as $store)
+				{
+					if (isset($_POST['SUBAR_AMOUNT'][$store]) && is_string($_POST['SUBAR_AMOUNT'][$store]))
+						$storeLink[$store]['PRODUCT_AMOUNT'] = $_POST['SUBAR_AMOUNT'][$store];
+				}
+				unset($store);
+			}
+			unset($storeIds);
+		}
+		unset($storeLink);
+		if ($storeCount > 0)
+		{
+			?><table border="0" cellspacing="0" cellpadding="0" width="100%" class="internal">
+			<tr class="heading">
+				<td><?echo GetMessage("C2IT_STORE_NUMBER"); ?></td>
+				<td><? echo GetMessage('C2IT_STORE_ID'); ?></td>
+				<td><?echo GetMessage("C2IT_NAME"); ?></td>
+				<td><?echo GetMessage("C2IT_STORE_ADDR"); ?></td>
+				<td><?echo GetMessage("C2IT_PROD_AMOUNT"); ?></td>
+			</tr>
+			<?
+			foreach ($stores as $storeIndex => $row)
+			{
+				$storeId = '';
+				$address = '';
+				$storeUrl = $storeIndex + 1;
+				if ($bStore)
+				{
+					$storeId = $row['ID'];
+					$address = ('' != $row['ADDRESS'] ? htmlspecialcharsbx($row['ADDRESS']) : '<a href="/bitrix/admin/cat_store_edit.php?ID='.$row['ID'].'&lang='.LANGUAGE_ID.'">'.GetMessage("C2IT_EDIT").'</a>');
+					$storeUrl = '<a href="/bitrix/admin/cat_store_edit.php?ID='.$row['ID'].'&lang='.LANGUAGE_ID.'">'.$storeUrl.'</a>';
+				}
+				?><tr>
+				<td style="text-align:center;"><?=$storeUrl; ?></td>
+				<td style="text-align:center;"><?=$storeId; ?></td>
+				<td style="text-align:center;"><?=htmlspecialcharsbx($row['TITLE']); ?></td>
+				<td style="text-align:center;"><?=$address; ?></td>
+				<td style="text-align:center;"><input type="text" id="SUBAR_AMOUNT_<?=$row['ID']; ?>" name="SUBAR_AMOUNT[<?=$row['ID']?>]" size="12" value="<?=htmlspecialcharsbx($row['PRODUCT_AMOUNT']); ?>" <? echo ((!$bStore || $bUseStoreControl) ? 'disabled readonly' : ''); ?>><?
+				if ($bStore)
+				{
+					?><input type="hidden" name="SUBAR_STORE_ID[<?=$row['ID']?>]" value="<?=$row['ID']?>"><?
+				}
+				?></td></tr><?
+				unset($storeUrl, $address, $storeId);
+			}
+			unset($storeIndex, $row);
+			?></table><?
 		}
 		else
 		{
-			$arSelect = array(
-				"ID",
-				"TITLE",
-				"ADDRESS",
-				"PRODUCT_AMOUNT",
-			);
-			$rsProps = CCatalogStore::GetList(array('SORT' => 'ASC'), array("PRODUCT_ID" => $PRODUCT_ID, 'ACTIVE' => 'Y'), false, false, $arSelect);
-		}
-
-		while ($arProp = $rsProps->GetNext())
-		{
-			if ($bSubCopy)
-			{
-				$amount = 0;
-			}
-			else
-			{
-				$amount = (is_null($arProp["PRODUCT_AMOUNT"])) ? 0 : $arProp["PRODUCT_AMOUNT"];
-			}
-			if ($bVarsFromForm && isset($_POST['SUBAR_AMOUNT'][$arProp['ID']]))
-				$amount = $_POST['SUBAR_AMOUNT'][$arProp['ID']];
-			$address = '';
-			$strNum = $numStore;
-			$storeID = '';
 			if ($bStore)
-			{
-				$storeID = $arProp['ID'];
-				$arProp['ADDRESS'] = trim($arProp['ADDRESS']);
-				$address = ('' != $arProp['ADDRESS'] ? $arProp['ADDRESS'] : '<a href="/bitrix/admin/cat_store_edit.php?ID='.$arProp['ID'].'&lang='.LANGUAGE_ID.'">'.GetMessage("C2IT_EDIT").'</a>');
-				$strNum = '<a href="/bitrix/admin/cat_store_edit.php?ID='.$arProp['ID'].'&lang='.LANGUAGE_ID.'">'.$numStore.'</a>';
-			}
-			?>
-			<tr>
-				<td style="text-align:center;"><? echo $strNum; ?></td>
-				<td style="text-align:center;"><? echo $storeID; ?></td>
-				<td style="text-align:center;"><?=$arProp['TITLE']?></td>
-				<td style="text-align:center;"><?=$address?></td>
-				<td style="text-align:center;"><input type="text" id="SUBAR_AMOUNT_<? echo $arProp['ID']; ?>" name="SUBAR_AMOUNT[<?=$arProp['ID']?>]" size="12" value="<? echo htmlspecialcharsbx($amount); ?>" <? echo ((!$bStore || $bUseStoreControl) ? 'disabled readonly' : ''); ?>><?
-				if ($bStore)
-				{
-					?><input type="hidden" name="SUBAR_STORE_ID[<?=$arProp['ID']?>]" value="<?=$arProp['ID']?>"><?
-				}
-				?></td></tr>
-			<?
-			$numStore++;
-		}
-		?></table><?
-		if ($bStore)
-		{
-			if($numStore < 2)
 			{
 				?><b><? echo GetMessage("C2IT_STORE_NO_STORE"); ?> <a href="/bitrix/admin/cat_store_list.php?lang=<? echo LANGUAGE_ID; ?>"><? echo GetMessage("C2IT_STORE"); ?></a></b><br><?
 			}
 		}
-		if(!$bUseStoreControl)
+		if (!$bUseStoreControl)
 			echo "<br>".GetMessage("C2IT_STORE_HINT");
+		unset($storeCount, $stores);
 
 		if($bUseStoreControl)
 		{
@@ -2366,10 +2356,74 @@ SetSubFieldsStyle('subcatalog_properties_table');
 			</table>
 			<?
 		}
+
+		if($activitySubscribeTab)
+		{
+			$subtabControl1->BeginNextTab();
+			?>
+			<script type="text/javascript">
+				function getDataSubscriptions() {
+					BX.ajax({
+						method: 'POST',
+						dataType: 'json',
+						url: '/bitrix/tools/catalog/subscription_card_product.php',
+						data: {
+							sessid: BX.bitrix_sessid(),
+							getSubscriptionData: 'Y',
+							itemId: '<?=$PRODUCT_ID?>'
+						},
+						onsuccess: BX.delegate(function (result) {
+							if(result.success)
+							{
+								if(result.hasOwnProperty('data'))
+								{
+									if(result.data.hasOwnProperty('totalCount'))
+										BX('bx-catalog-subscribe-total-count').innerHTML = result.data.totalCount;
+									if(result.data.hasOwnProperty('activeCount'))
+										BX('bx-catalog-subscribe-active-count').innerHTML = result.data.activeCount;
+								}
+								BX('subscription-data-table').style.display = '';
+								BX('subscription-data-error').innerHTML = '';
+							}
+							else
+							{
+								if(result.hasOwnProperty('message'))
+								{
+									BX('subscription-data-error').innerHTML = result.message;
+									BX('subscription-data-table').style.display = 'none';
+								}
+							}
+						}, this)
+					});
+				}
+			</script>
+			<div id="subscription-data">
+				<span id="subscription-data-error" class="errortext"></span>
+				<table border="0" cellspacing="0" cellpadding="5" width="100%" class="edit-table" id="subscription-data-table">
+					<tr>
+						<td width="40%" style="text-align:right;"><?=GetMessage('C2IT_NUMBER_SUBSCRIPTIONS')?></td>
+						<td width="60%" id="bx-catalog-subscribe-total-count"></td>
+					</tr>
+					<tr>
+						<td width="40%" style="text-align:right;"><?=GetMessage('C2IT_NUMBER_ACTIVE_SUBSCRIPTIONS')?></td>
+						<td width="60%" id="bx-catalog-subscribe-active-count"></td>
+					</tr>
+					<tr>
+						<td width="40%" style="text-align:right;"><?=GetMessage('C2IT_LIST_SUBSCRIPTIONS')?></td>
+						<td width="60%">
+							<a href="/bitrix/admin/cat_subscription_list.php?ITEM_ID=<?=htmlspecialcharsbx($PRODUCT_ID)?>
+							&lang=<?=LANGUAGE_ID?>" target="_blank">
+								<?=GetMessage('C2IT_LIST_SUBSCRIPTIONS_TEXT')?>
+							</a>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<?
+		}
 		$subtabControl1->End();
 		?>
 	</td>
 </tr>
 <?
 }
-?>

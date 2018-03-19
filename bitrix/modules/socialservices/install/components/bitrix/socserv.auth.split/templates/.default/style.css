@@ -15,7 +15,7 @@ div.soc-serv-main tr.soc-serv-personal td.bx-ss-icons { padding: 9px !important;
 i.soc-serv-photo { width: 30px; height: 30px; display: inline-block; vertical-align:-60%;}
 i.soc-serv-text { font-style: normal; vertical-align:-43%;}
 td.bx-ss-icons i.bx-ss-icon { width: 16px; height: 16px;  display: inline-block; vertical-align:-10%; }
-.bx-ss-icon {background-image:url('/bitrix/js/socialservices/css/icons_v4.png'); width:16px; height:16px; background-repeat:no-repeat; }
+.bx-ss-icon {background-image:url('/bitrix/js/socialservices/css/icons_v5.png'); width:16px; height:16px; background-repeat:no-repeat; }
 .openid {background-position: 0px -192px;}
 .yandex {background-position: 0px 0px;}
 .openid-mail-ru {background-position: 0px -48px;}

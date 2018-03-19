@@ -3,6 +3,8 @@ namespace Bitrix\Sale\Delivery\Restrictions;
 
 use Bitrix\Sale\Delivery\Restrictions;
 use Bitrix\Main\Localization\Loc;
+use Bitrix\Sale\Internals\Entity;
+use Bitrix\Sale\Shipment;
 
 Loc::loadMessages(__FILE__);
 
@@ -29,29 +31,7 @@ class ByMaxSize extends Restrictions\Base
 	 * @param int $deliveryId
 	 * @return bool
 	 */
-	public function check($dimensions, array $restrictionParams, $deliveryId = 0)
-	{
-		$maxSize = intval($restrictionParams["MAX_SIZE"]);
-
-		foreach($dimensions as $dimension)
-		{
-			if(intval($dimension) <= 0)
-				continue;
-
-			if(intval($dimension) > $maxSize)
-				return false;
-		}
-
-		return true;
-	}
-
-	/**
-	 * @param \Bitrix\Sale\Shipment $shipment
-	 * @param array $restrictionParams
-	 * @param int $deliveryId
-	 * @return bool
-	 */
-	public function checkByShipment(\Bitrix\Sale\Shipment $shipment, array $restrictionParams, $deliveryId = 0)
+	public static function check($dimensionsList, array $restrictionParams, $deliveryId = 0)
 	{
 		if(empty($restrictionParams))
 			return true;
@@ -61,25 +41,50 @@ class ByMaxSize extends Restrictions\Base
 		if($maxSize <= 0)
 			return true;
 
-		foreach($shipment->getShipmentItemCollection() as $shipmentItem)
+		foreach($dimensionsList as $dimensions)
 		{
-			$basketItem = $shipmentItem->getBasketItem();
-			$dimensions = $basketItem->getField("DIMENSIONS");
-
-			if(is_string($dimensions))
-				$dimensions = unserialize($dimensions);
-
 			if(!is_array($dimensions))
-				return true;
+				continue;
 
-			if(!$this->check($dimensions, $restrictionParams, $deliveryId))
-				return false;
+			foreach($dimensions as $dimension)
+			{
+				if(intval($dimension) <= 0)
+					continue;
+
+				if(intval($dimension) > $maxSize)
+					return false;
+			}
 		}
 
 		return true;
 	}
 
-	public static function getParamsStructure()
+	protected static function extractParams(Entity $entity)
+	{
+		$result = array();
+
+		if ($entity instanceof Shipment)
+		{
+			foreach($entity->getShipmentItemCollection() as $shipmentItem)
+			{
+				$basketItem = $shipmentItem->getBasketItem();
+
+				if(!$basketItem)
+					continue;
+
+				$dimensions = $basketItem->getField("DIMENSIONS");
+
+				if(is_string($dimensions))
+					$dimensions = unserialize($dimensions);
+
+				$result[] = $dimensions;
+			}
+		}
+
+		return $result;
+	}
+
+	public static function getParamsStructure($entityId = 0)
 	{
 		return array(
 			"MAX_SIZE" => array(

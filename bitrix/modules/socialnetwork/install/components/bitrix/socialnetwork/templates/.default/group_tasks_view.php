@@ -33,7 +33,6 @@ if (CSocNetFeatures::IsActiveFeature(SONET_ENTITY_GROUP, $arResult["VARIABLES"][
 		"bitrix:intranet.tasks.create_view",
 		".default",
 		Array(
-			"IBLOCK_ID" => $arParams["TASK_IBLOCK_ID"],
 			"OWNER_ID" => $arResult["VARIABLES"]["group_id"],
 			"TASK_TYPE" => 'group',
 			"PAGE_VAR" => $arResult["ALIASES"]["page"],
@@ -47,7 +46,6 @@ if (CSocNetFeatures::IsActiveFeature(SONET_ENTITY_GROUP, $arResult["VARIABLES"][
 			"PATH_TO_GROUP_TASKS_TASK" => $arResult["PATH_TO_GROUP_TASKS_TASK"],
 			"PATH_TO_GROUP_TASKS_VIEW" => $arResult["PATH_TO_GROUP_TASKS_VIEW"],
 			"ITEMS_COUNT" => $arParams["ITEM_DETAIL_COUNT"], 
-			"TASKS_FIELDS_SHOW" => $arParams["TASKS_FIELDS_SHOW"],
 			"SET_NAV_CHAIN" => $arResult["SET_NAV_CHAIN"],
 			"SET_TITLE" => $arResult["SET_TITLE"],
 			"FORUM_ID" => $arParams["TASK_FORUM_ID"],

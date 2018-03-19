@@ -36,6 +36,7 @@ $MESS["CAL_PATH_TO_GROUP"] = "Шаблон ссылки на просмотр рабочей группы";
 $MESS["CAL_PATH_TO_USER_CALENDAR"] = "Шаблон ссылки на просмотр календаря пользователя";
 $MESS["CAL_PATH_TO_GROUP_CALENDAR"] = "Шаблон ссылки на просмотр календаря группы";
 $MESS["CAL_USER_NAME_TEMPLATE"] = "Шаблон имени пользователя";
+$MESS["CAL_SYNC_BY_PUSH"] = "По возможности проводить синхронизацию календаря через Webhook вместо агента.";
 $MESS["CAL_USER_SHOW_LOGIN"] = "Показывать логин пользователя";
 $MESS["CAL_RESERVE_MEETING"] = "Параметры переговорных";
 $MESS["CAL_TYPE_XML_ID_WARN"] = "Символьный код имеет неверный формат или не является уникальным.";
@@ -54,4 +55,5 @@ $MESS ['CAL_MAX_UPLOAD_FILES_IN_COMMENTS'] = 'Лимит кол-ва файлов в одном коммен
 $MESS ['CAL_COMMENTS_FORUM'] = "Форум для комментариев";
 $MESS ['CAL_COMMENTS_ALLOW_EDIT'] = "Разрешить редактирование комментариев";
 $MESS ['CAL_COMMENTS_ALLOW_REMOVE'] = "Разрешить удаление комментариев";
+$MESS["CAL_PATH_TO_CAL_TYPE"] = "Шаблон ссылки на просмотр календаря типа \"#CALENDAR_TYPE#\"";
 ?>

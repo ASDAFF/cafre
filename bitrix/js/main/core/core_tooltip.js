@@ -4,12 +4,17 @@ if (BX.tooltip) return;
 var arTooltipIndex = {},
 	bDisable = false;
 
-BX.tooltip = function(user_id, anchor_name, loader, rootClassName, bForceUseLoader)
+BX.tooltip = function(user_id, anchor_name, loader, rootClassName, bForceUseLoader, params)
 {
 	if (BX.message('TOOLTIP_ENABLED') != "Y")
+	{
 		return;
+	}
 
-	if(BX.browser.IsAndroid() || BX.browser.IsIOS())
+	if (
+		BX.browser.IsAndroid()
+		|| BX.browser.IsIOS()
+	)
 	{
 		return;
 	}
@@ -17,7 +22,9 @@ BX.tooltip = function(user_id, anchor_name, loader, rootClassName, bForceUseLoad
 	BX.ready(function() {
 		var anchor = BX(anchor_name);
 		if (null == anchor)
+		{
 			return;
+		}
 
 		var tooltipId = user_id;
 		if(bForceUseLoader && BX.type.isNotEmptyString(loader))
@@ -33,12 +40,20 @@ BX.tooltip = function(user_id, anchor_name, loader, rootClassName, bForceUseLoad
 		}
 
 		if (null == arTooltipIndex[tooltipId])
-			arTooltipIndex[tooltipId] = new BX.CTooltip(user_id, anchor, loader, rootClassName, bForceUseLoader);
+		{
+			arTooltipIndex[tooltipId] = new BX.CTooltip(user_id, anchor, loader, rootClassName, bForceUseLoader, params);
+		}
 		else
 		{
 			arTooltipIndex[tooltipId].ANCHOR = anchor;
 			arTooltipIndex[tooltipId].rootClassName = rootClassName;
-			arTooltipIndex[tooltipId].LOADER = (bForceUseLoader && BX.type.isNotEmptyString(loader)) ? loader : '/bitrix/tools/tooltip.php';
+			arTooltipIndex[tooltipId].LOADER = (
+				bForceUseLoader
+				&& BX.type.isNotEmptyString(loader)
+					? loader
+					: '/bitrix/tools/tooltip.php'
+			);
+			arTooltipIndex[tooltipId].params = params;
 			arTooltipIndex[tooltipId].Create();
 		}
 	});
@@ -47,19 +62,77 @@ BX.tooltip = function(user_id, anchor_name, loader, rootClassName, bForceUseLoad
 BX.tooltip.disable = function(){ bDisable = true; };
 BX.tooltip.enable = function(){ bDisable = false; };
 
-BX.CTooltip = function(user_id, anchor, loader, rootClassName, bForceUseLoader)
+BX.tooltip.hide = function(userId) {
+	if (BX('user_info_' + userId))
+	{
+		BX('user_info_' + userId).style.display = 'none';
+	}
+};
+
+BX.tooltip.openIM = function(userId) {
+	if (top.BXIM)
+	{
+		top.BXIM.openMessenger(userId);
+		BX.tooltip.hide(userId);
+	}
+	else if (BX('MULSonetMessageChatTemplate'))
+	{
+		window.open(BX('MULSonetMessageChatTemplate').replace('#user_id#', userId).replace('#USER_ID#', userId).replace('#ID#', userId), '', 'location=yes,status=no,scrollbars=yes,resizable=yes,width=700,height=550,top='+Math.floor((screen.height - 550)/2-14)+',left='+Math.floor((screen.width - 700)/2-5));
+		BX.tooltip.hide(userId);
+	}
+	return false;
+};
+
+
+BX.tooltip.openCallTo = function(userId) {
+	if (top.BXIM)
+	{
+		top.BXIM.callTo(userId);
+		BX.tooltip.hide(userId);
+	}
+	return false;
+};
+
+BX.tooltip.checkCallTo = function(nodeId) {
+	if (
+		!top.BXIM
+		|| !top.BXIM.checkCallSupport()
+	)
+	{
+		BX.remove(nodeId);
+	}
+};
+
+BX.tooltip.openVideoCall = function(userId) {
+	if (BX('MULVideoCallTemplate'))
+	{
+		window.open(BX('MULVideoCallTemplate').replace('#user_id#', userId).replace('#USER_ID#', userId).replace('#ID#', userId), '', 'location=yes,status=no,scrollbars=yes,resizable=yes,width=1000,height=600,top='+Math.floor((screen.height - 600)/2-14)+',left='+Math.floor((screen.width - 1000)/2-5));
+		BX.tooltip.hide(userId);
+	}
+	return false;
+};
+
+BX.CTooltip = function(user_id, anchor, loader, rootClassName, bForceUseLoader, params)
 {
-	this.LOADER = (bForceUseLoader && BX.type.isNotEmptyString(loader)) ? loader : '/bitrix/tools/tooltip.php';
+	this.LOADER = (
+		bForceUseLoader
+		&& BX.type.isNotEmptyString(loader)
+			? loader
+			: '/bitrix/tools/tooltip.php'
+	);
 	this.USER_ID = user_id;
 	this.ANCHOR = anchor;
 	this.rootClassName = '';
+	this.params = (typeof params != 'undefined' ? params : {});
 
 	if (
 		rootClassName != 'undefined'
 		&& rootClassName != null
 		&& rootClassName.length > 0
 	)
+	{
 		this.rootClassName = rootClassName;
+	}
 
 	var old = document.getElementById('user_info_' + this.USER_ID);
 	if (null != old)
@@ -77,6 +150,7 @@ BX.CTooltip = function(user_id, anchor, loader, rootClassName, bForceUseLoader)
 	this.width = 393;
 	this.height = 302;
 
+	this.RealAnchor = null;
 	this.CoordsLeft = 0;
 	this.CoordsTop = 0;
 	this.AnchorRight = 0;
@@ -86,7 +160,9 @@ BX.CTooltip = function(user_id, anchor, loader, rootClassName, bForceUseLoader)
 	this.ROOT_DIV = null;
 
 	if (BX.browser.IsIE())
+	{
 		this.IFRAME = null;
+	}
 
 	this.v_delta = 0;
 	this.classNameAnim = false;
@@ -175,7 +251,7 @@ BX.CTooltip = function(user_id, anchor, loader, rootClassName, bForceUseLoader)
 
 		var left = _this.CoordsLeft;
 		var top = _this.CoordsTop + 30;
-		var arScroll = jsUtils.GetWindowScrollPos();
+		var arScroll = BX.GetWindowScrollPos();
 		var body = document.body;
 
 		var h_mirror = false;
@@ -211,15 +287,24 @@ BX.CTooltip = function(user_id, anchor, loader, rootClassName, bForceUseLoader)
 
 		if ('' == _this.DIV.innerHTML)
 		{
-			var url;
-			if (_this.LOADER.indexOf('?') >= 0)
-			{
-				url = _this.LOADER + '&MUL_MODE=INFO&USER_ID=' + _this.USER_ID + '&site=' + (BX.message('SITE_ID') || '');
-			}
-			else
-			{
-				url = _this.LOADER + '?MUL_MODE=INFO&USER_ID=' + _this.USER_ID + '&site=' + (BX.message('SITE_ID') || '');
-			}
+			var url = _this.LOADER +
+				(_this.LOADER.indexOf('?') >= 0 ? '&' : '?') +
+				'MUL_MODE=INFO&USER_ID=' + _this.USER_ID +
+				'&site=' + (BX.message('SITE_ID') || '') +
+				(
+					typeof _this.params != 'undefined'
+					&& typeof _this.params.entityType != 'undefined'
+					&& _this.params.entityType.length > 0
+						? '&entityType=' + _this.params.entityType
+						: ''
+				) +
+				(
+					typeof _this.params != 'undefined'
+					&& typeof _this.params.entityId != 'undefined'
+					&& parseInt(_this.params.entityId) > 0
+						? '&entityId=' + parseInt(_this.params.entityId)
+						: ''
+				);
 
 			BX.ajax.get(url, _this.InsertData);
 			_this.DIV.id = 'user_info_' + _this.USER_ID;
@@ -350,7 +435,9 @@ BX.CTooltip = function(user_id, anchor, loader, rootClassName, bForceUseLoader)
 
 		document.getElementById('user_info_' + _this.USER_ID).onmouseout = function() {
 			_this.StopTrackMouse(this);
-		}
+		};
+
+		BX.onCustomEvent('onTooltipShow', [this]);
 	};
 
 	this.InsertData = function(data)
@@ -370,6 +457,16 @@ BX.CTooltip = function(user_id, anchor, loader, rootClassName, bForceUseLoader)
 
 			var toolbar2El = document.getElementById('user-info-toolbar2-' + _this.USER_ID);
 			toolbar2El.innerHTML = _this.INFO.RESULT.Toolbar2;
+
+			if(BX.type.isArray(_this.INFO.RESULT.Scripts))
+			{
+				for(var i = 0; i < _this.INFO.RESULT.Scripts.length; i++)
+				{
+					eval(_this.INFO.RESULT.Scripts[i]);
+				}
+			}
+
+			BX.onCustomEvent('onTooltipInsertData', [_this]);
 		}
 	}
 
@@ -380,14 +477,16 @@ BX.CTooltip.prototype.StartTrackMouse = function(ob)
 
 	if(!this.tracking)
 	{
-		var elCoords = jsUtils.GetRealPos(ob);
+		var elCoords = BX.pos(ob);
+		this.RealAnchor = ob;
 		this.CoordsLeft = elCoords.left + 0;
 		this.CoordsTop = elCoords.top - 325;
 		this.AnchorRight = elCoords.right;
 		this.AnchorBottom = elCoords.bottom;
 
 		this.tracking = 1;
-		jsUtils.addEvent(document, "mousemove", _this.TrackMouse);
+		BX.bind(document, "mousemove", _this.TrackMouse);
+
 		setTimeout(function() {_this.tickTimer()}, 500);
 	}
 };
@@ -397,7 +496,7 @@ BX.CTooltip.prototype.StopTrackMouse = function()
 	var _this = this;
 	if(this.tracking)
 	{
-		jsUtils.removeEvent(document, "mousemove", _this.TrackMouse);
+		BX.unbind(document, "mousemove", _this.TrackMouse);
 		this.active = false;
 		setTimeout(function() {_this.HideTooltip()}, 500);
 		this.tracking = false;
@@ -468,11 +567,11 @@ BX.CTooltip.prototype.ShowOpacityEffect = function(oCallback, bFade)
 					_this.DIV.style.display = 'none';
 
 
-				if (jsUtils.IsIE() && i == 1 && bFade && _this.IFRAME)
+				if (BX.browser.IsIE() && i == 1 && bFade && _this.IFRAME)
 					_this.IFRAME.style.display = 'none';
 
 
-				if (jsUtils.IsIE() && i == steps && _this.DIV)
+				if (BX.browser.IsIE() && i == steps && _this.DIV)
 				{
 					if (!bFade)
 						_this.IFRAME.style.display = 'block';
@@ -480,6 +579,11 @@ BX.CTooltip.prototype.ShowOpacityEffect = function(oCallback, bFade)
 					_this.DIV.style.filter = _this.filterFixed;
 					_this.DIV.className = _this.classNameFixed;
 					_this.DIV.innerHTML = ''+_this.DIV.innerHTML;
+				}
+
+				if(bFade)
+				{
+					BX.onCustomEvent('onTooltipHide', [_this]);
 				}
 			}
 		}

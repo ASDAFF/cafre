@@ -3,7 +3,7 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/socialnetwork/classes/ge
 
 class CSocNetUser extends CAllSocNetUser
 {
-	function SearchUsers($searchString, $groupId = 0, $numberOfUsers = 10)
+	public static function SearchUsers($searchString, $groupId = 0, $numberOfUsers = 10)
 	{
 		global $DB;
 
@@ -40,4 +40,3 @@ class CSocNetUser extends CAllSocNetUser
 		return $DB->Query($strSql, false, "Function CSocNetUser::SearchUsers: ".__LINE__);
 	}
 }
-?>

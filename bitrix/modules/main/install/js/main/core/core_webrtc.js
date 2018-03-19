@@ -18,36 +18,23 @@
 		this.videoMuted = false;
 		this.enabled = false;
 		this.detectedBrowser = 'none';
-		this.attachMediaStream = null;
 		this.pcConfig = {};
 		this.oneway = false;
 		this.lastUserMediaParams = {};
 		this.pcConstraints = {};
 		this.sdpConstraints = {'mandatory': { 'OfferToReceiveAudio':true, 'OfferToReceiveVideo':true }};
+		this.defaultMicrophone = null;
+		this.defaultCamera = null;
+		this.defaultSpeaker = null;
+		this.enableMicAutoParameters = true;
+		this.useFallbackConstraints = false;
 
 		this.configVideo = {
-			maxWidth: 1920,
-			maxHeight: 1080,
-			minWidth: 1280,
-			minHeight: 720
+			aspectRatio: 1.7777777778
 		};
-		this.configVideoGroup = {
-			maxWidth: 1280,
-			maxHeight: 720,
-			minWidth: 1280,
-			minHeight: 720
-		};
-		this.configVideoMobile = {
-			maxWidth: 1280,
-			maxHeight: 720,
-			minWidth: 1280,
-			minHeight: 720
-		};
-
-		this.configVideoAfterError = {
-			maxWidth: 1920,
-			maxHeight: 1080
-		};
+		this.configVideoGroup = this.configVideo;
+		this.configVideoMobile = this.configVideo;
+		this.configVideoAfterError = { };
 
 		this.callStreamSelf = null;
 		this.callStreamMain = null;
@@ -76,82 +63,39 @@
 		this.iceCandidateTimeout = {};
 		this.pcConnectTimeout = {};
 
-		this.adapter();
+		this.init();
 		this.setTurnServer();
 	};
 
 	// this function needed to execute, after constructor
 	BX.inheritWebrtc = function(child)
 	{
-		child.prototype = new BX.webrtc();
+		child.prototype = Object.create(BX.webrtc.prototype);
 		child.prototype.constructor = child;
 		child.prototype.parent = BX.webrtc.prototype;
 	};
 
-	// this is private function, don't overwrite
-	BX.webrtc.prototype.adapter = function ()
+	BX.webrtc.prototype.init = function()
 	{
-		if (navigator.mozGetUserMedia && typeof(mozRTCPeerConnection) != 'undefined' && navigator.userAgent.substr(navigator.userAgent.indexOf('Firefox/')+8, 2) >= 27)
-		{
+		if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia)
 			this.enabled = true;
+		else
+			return;
+
+		if (navigator.userAgent.substr(navigator.userAgent.indexOf('Firefox/')+8, 2) >= 27)
 			this.detectedBrowser = 'firefox';
-
-			RTCPeerConnection = mozRTCPeerConnection;
-			RTCSessionDescription = mozRTCSessionDescription;
-			RTCIceCandidate = mozRTCIceCandidate;
-
-			getUserMedia = navigator.mozGetUserMedia.bind(navigator);
-
-			this.attachMediaStream = function(element, stream)
-			{
-				element.mozSrcObject = stream;
-				element.play();
-			};
-		}
-		else if (navigator.webkitGetUserMedia && typeof(webkitRTCPeerConnection) != 'undefined' && navigator.appVersion.substr(navigator.appVersion.indexOf('Chrome/')+7, 2) >= 29)
-		{
-			this.enabled = true;
+		else if (navigator.appVersion.substr(navigator.appVersion.indexOf('Chrome/')+7, 2) >= 29)
 			this.detectedBrowser = 'chrome';
+	};
 
-			RTCPeerConnection = webkitRTCPeerConnection;
-
-			getUserMedia = navigator.webkitGetUserMedia.bind(navigator);
-
-			this.attachMediaStream = function(element, stream)
-			{
-				element.src = URL.createObjectURL(stream);
-			};
-
-			if (!webkitMediaStream.prototype.getVideoTracks)
-			{
-				webkitMediaStream.prototype.getVideoTracks = function()
-				{
-					return this.videoTracks;
-				};
-				webkitMediaStream.prototype.getAudioTracks = function()
-				{
-					return this.audioTracks;
-				};
-			}
-
-			try { MediaStreamTrack.getSources(function(){}) } catch(e) {
-				MediaStreamTrack.getSources = function(func) {func([])};
-			}
-
-			if (!webkitRTCPeerConnection.prototype.getLocalStreams)
-			{
-				webkitRTCPeerConnection.prototype.getLocalStreams = function()
-				{
-					return this.localStreams;
-				};
-				webkitRTCPeerConnection.prototype.getRemoteStreams = function()
-				{
-					return this.remoteStreams;
-				};
-			}
+	BX.webrtc.prototype.attachMediaStream = function(element, stream)
+	{
+		element.src = URL.createObjectURL(stream);
+		if(BX.type.isNotEmptyString(this.defaultSpeaker) && element.setSinkId)
+		{
+			this.log('Trying to set output device: ' + this.defaultSpeaker);
+			element.setSinkId(this.defaultSpeaker);
 		}
-
-		return true;
 	};
 
 	// this is public function, don't overwrite
@@ -179,7 +123,7 @@
 		}
 		else if (this.detectedBrowser == 'chrome')
 		{
-			this.pcConfig = { "iceServers": [ { url:"stun:"+this.turnServer}, { url:"turn:"+this.turnServerLogin+"@"+this.turnServer, credential:this.turnServerPassword} ] };
+			this.pcConfig = { "iceServers": [ { url:"stun:"+this.turnServer}, { url:"turn:"+this.turnServerLogin+"@"+this.turnServer, username: this.turnServerLogin, credential:this.turnServerPassword} ] };
 			this.pcConstraints = {"optional": [{"DtlsSrtpKeyAgreement": true}]};
 		}
 
@@ -240,7 +184,15 @@
 		{
 			for (var i = 0; i < arguments.length; i++)
 			{
-				text = text+' | '+(typeof(arguments[i]) == 'object'? JSON.stringify(arguments[i]): arguments[i]);
+				try
+				{
+					text = text+' | '+(typeof(arguments[i]) == 'object'? JSON.stringify(arguments[i]): arguments[i]);
+				}
+				catch (e)
+				{
+					text = text+' | (circular structure)';
+				}
+
 			}
 			BX.desktop.log(BX.message('USER_ID')+'.video.log', text.substr(3));
 		}
@@ -266,11 +218,48 @@
 		if (this.callRequestUserMedia[this.callVideo? 'video': 'audio'])
 			return false;
 
-		video = typeof(video) != 'undefined' && video !== true ? video: this.callToGroup? this.configVideoGroup: this.configVideo;
-		audio = typeof(audio) != 'undefined' && audio !== true? audio: true;
-		if (video && !BX.browser.IsFirefox())
+		if(typeof(video) != 'undefined' && video !== true)
 		{
-			video = {"mandatory": video, "optional": []};
+			//nop
+		}
+		else
+		{
+			if(this.useFallbackConstraints)
+				video = this.configVideoAfterError;
+			else if(this.callToGroup)
+				video = this.configVideoGroup;
+			else
+				video = this.configVideo;
+		}
+
+		if(video && this.defaultCamera)
+		{
+			video.deviceId = {ideal: this.defaultCamera};
+		}
+
+		audio = typeof(audio) != 'undefined' && audio !== true? audio: {};
+		if(audio && this.defaultMicrophone)
+		{
+			audio.deviceId = {ideal: this.defaultMicrophone};
+		}
+
+		/* for unknown reason, these constraints do not work in chrome, when paired with video resolution constraints */
+		if(false && this.enableMicAutoParameters === false)
+		{
+			audio.optional = [
+				{echoCancellation:false},
+				{googEchoCancellation:false},
+				{googEchoCancellation2:false},
+				{googDAEchoCancellation:false},
+				{googAutoGainControl: false},
+				{googAutoGainControl2: false},
+				{mozAutoGainControl: false},
+				{googNoiseSuppression: false},
+				{googNoiseSuppression2: false},
+				{googHighpassFilter: false},
+				{googTypingNoiseDetection: false},
+				{googAudioMirroring: false}
+			];
 		}
 
 		var constraints = {
@@ -282,7 +271,7 @@
 
 		try {
 			this.callRequestUserMedia[this.callVideo? 'video': 'audio'] = true;
-			getUserMedia(constraints, BX.delegate(this.onUserMediaSuccess, this), BX.delegate(this.onUserMediaError, this));
+			navigator.mediaDevices.getUserMedia(constraints).then(BX.delegate(this.onUserMediaSuccess, this), BX.delegate(this.onUserMediaError, this));
 		} catch (e) {
 			this.debug = true;
 			this.log("Method getUserMedia failed with exception: " + e.message);
@@ -294,6 +283,15 @@
 	// this is protected function, you must inherit
 	BX.webrtc.prototype.onUserMediaSuccess = function(stream)
 	{
+		this.log('Media stream received');
+		if(stream && stream.getTracks)
+		{
+			stream.getTracks().forEach(function(track)
+			{
+				this.log(BX.webrtc.mediaStreamTrackToString(track));
+			}.bind(this));
+		}
+
 		if (!this.oneway || this.initiator)
 		{
 			this.callRequestUserMedia[this.callVideo? 'video': 'audio'] = false;
@@ -302,7 +300,7 @@
 
 			if (!this.callActive && stream)
 			{
-				stream.stop();
+				BX.webrtc.stopMediaStream(stream);
 				return false;
 			}
 
@@ -363,13 +361,6 @@
 
 		this.log("Failed to get access to local media. Error code was " + JSON.stringify(error));
 
-		if (error && error.name == 'ConstraintNotSatisfiedError')
-		{
-			this.configVideo = this.configVideoAfterError;
-			this.configVideoGroup = this.configVideoAfterError;
-			this.configVideoMobile = this.configVideoAfterError;
-		}
-
 		return true;
 	}
 
@@ -398,7 +389,7 @@
 					return false;
 				}
 
-				this.log("Adding local stream.", userId, JSON.stringify(this.pc[userId]));
+				this.log("Adding local stream.", userId, this.pc[userId]);
 
 				this.pcStart[userId] = true;
 
@@ -565,22 +556,20 @@
 
 		if (this.callStreamSelf)
 		{
-			if (this.callStreamSelf.stop)
-				this.callStreamSelf.stop();
+			BX.webrtc.stopMediaStream(this.callStreamSelf);
 			this.callStreamSelf = null;
 		}
 		if (this.callStreamMain)
 		{
-			if (this.callStreamMain.stop)
-				this.callStreamMain.stop();
+			BX.webrtc.stopMediaStream(this.callStreamMain);
 			this.callStreamMain = null;
 		}
 		for (i in this.callStreamUsers)
 		{
 			if (this.callStreamUsers.hasOwnProperty(i))
 			{
-				if (this.callStreamUsers[i] && this.callStreamUsers[i].stop)
-					this.callStreamUsers[i].stop();
+				if (this.callStreamUsers[i])
+					BX.webrtc.stopMediaStream(this.callStreamUsers[i]);
 				delete this.callStreamUsers[i];
 			}
 		}
@@ -747,6 +736,7 @@
 
 		if (event.candidate)
 		{
+			this.log("New ICE candidate: ", event.candidate);
 			this.iceCandidates[userId].push({type: 'candidate', label: event.candidate.sdpMLineIndex, id: event.candidate.sdpMid, candidate: event.candidate.candidate});
 
 			clearTimeout(this.iceCandidateTimeout[userId]);
@@ -820,5 +810,73 @@
 		return true;
 	}
 
+	BX.webrtc.prototype.setDefaultCamera = function(defaultCamera)
+	{
+		this.defaultCamera = defaultCamera;
+	};
+
+	BX.webrtc.prototype.setDefaultMicrophone = function(defaultMicrophone)
+	{
+		this.defaultMicrophone = defaultMicrophone;
+	};
+
+	BX.webrtc.prototype.logDevices = function()
+	{
+		var self = this;
+		if(navigator.mediaDevices && navigator.mediaDevices.enumerateDevices)
+		{
+			self.log('Enumerating media devices');
+			navigator.mediaDevices.enumerateDevices().then(function(devices)
+			{
+				devices.forEach(function(device)
+				{
+					try
+					{
+						self.log(JSON.stringify(device));
+					}
+					catch (e)
+					{
+						self.log(device);
+					}
+				});
+			})
+		}
+		else
+		{
+			self.log('Could not enumerate devices, api is not supported');
+		}
+	};
+
+	BX.webrtc.mediaStreamTrackToString = function(track)
+	{
+		var result = '';
+		for(key in track)
+		{
+			if(!BX.type.isFunction(track[key]))
+			{
+				result = result + ' ' + key + ': ' + track[key] + ';';
+			}
+		}
+		return result;
+	};
+
+	BX.webrtc.stopMediaStream = function(mediaStream)
+	{
+		if(!(mediaStream instanceof MediaStream))
+			return;
+
+		if (typeof mediaStream.getTracks === 'undefined')
+		{
+			// Support for legacy browsers
+			mediaStream.stop();
+		}
+		else
+		{
+			mediaStream.getTracks().forEach(function(track)
+			{
+				track.stop();
+			});
+		}
+	};
 
 })(window);

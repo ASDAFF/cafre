@@ -6,23 +6,36 @@
 # mailto:admin@bitrixsoft.com				 #
 ##############################################
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
-$VOTE_ID = 0;
-if (isset($_REQUEST['VOTE_ID']))
-{
-	$VOTE_ID = intval($_REQUEST['VOTE_ID']);
-}
-$sTableID = "tbl_vote_votes_table".$VOTE_ID;
+require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/vote/prolog.php");
+
+$request = \Bitrix\Main\Context::getCurrent()->getRequest();
+$voteId = intval($request->getQuery("VOTE_ID"));
+$sTableID = "tbl_vote_votes_table".$voteId;
 $oSort = new CAdminSorting($sTableID, "ID", "desc");
 $lAdmin = new CAdminList($sTableID, $oSort);
 
-require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/vote/prolog.php");
 $VOTE_RIGHT = $APPLICATION->GetGroupRight("vote");
-if($VOTE_RIGHT=="D") $APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
 
-require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/vote/include.php");
-
+CModule::IncludeModule("vote");
 IncludeModuleLangFile(__FILE__);
 $err_mess = "File: ".__FILE__."<br>Line: ";
+$APPLICATION->SetTitle(GetMessage("VOTE_PAGE_TITLE", array("#ID#" => $voteId)));
+
+try
+{
+	$vote = \Bitrix\Vote\Vote::loadFromId($voteId);
+	global $USER;
+	if (!$vote->canRead($USER->GetID()))
+		throw new \Bitrix\Main\ArgumentException(GetMessage("ACCESS_DENIED"), "Access denied.");
+}
+catch(Exception $e)
+{
+	$APPLICATION->SetTitle(GetMessage("VOTE_NEW_RECORD"));
+	require_once ($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_after.php");
+	ShowError($e->getMessage());
+	require_once ($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");
+	die();
+}
 
 /********************************************************************
 				Functions
@@ -33,8 +46,10 @@ function CheckFilter()
 	foreach ($arFilterFields as $s) global $$s;
 	$str = "";
 
-	$find_date_1 = trim($find_date_1);
-	$find_date_2 = trim($find_date_2);
+	$request = \Bitrix\Main\Context::getCurrent()->getRequest();
+	$bGotErr = false;
+	$find_date_1 = trim($request->getQuery("find_date_1"));
+	$find_date_2 = trim($request->getQuery("find_date_2"));
 
 	if (strlen($find_date_1)>0 || strlen($find_date_2)>0)
 	{
@@ -58,8 +73,7 @@ function CheckFilter()
 			$lAdmin->AddUpdateError(GetMessage("VOTE_WRONG_FROM_TILL"));
 		}
 	}
-
-	if ($bGotErr) return false; else return true;
+	return !$bGotErr;
 }
 
 /***************************************************************************
@@ -84,44 +98,6 @@ InitBVar($find_vote_exact_match);
 InitBVar($find_vote_user_exact_match);
 InitBVar($find_session_exact_match);
 InitBVar($find_ip_exact_match);
-if ($VOTE_ID <= 0)
-{
-	$CHANNEL_ID = 0;
-	if (isset($_REQUEST['CHANNEL_ID']))
-	{
-		$CHANNEL_ID = intval($_REQUEST['CHANNEL_ID']);
-	}
-	if ($CHANNEL_ID <= 0)
-	{
-		require_once ($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_after.php");
-		echo "<a href='vote_user_votes_table.php?lang=".LANGUAGE_ID."' class='navchain'>".GetMessage("VOTE_LIST")."</a>";
-		echo ShowError(GetMessage("VOTE_NOT_FOUND"));
-		require_once ($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");
-		die();
-	} else {
-		$APPLICATION->SetTitle(GetMessage("VOTE_PAGE_TITLE"));
-		define('BX_ADMIN_FORM_MENU_OPEN', 1);
-		if($_REQUEST["mode"] == "list")
-		{
-			require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_js.php");
-		}
-		else
-		{
-			require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_after.php");
-		}
-		$adminPage->ShowSectionIndex("vote_channel_".$CHANNEL_ID, "vote");
-		if($_REQUEST["mode"] == "list")
-		{
-			require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin_js.php");
-		}
-		else
-		{
-			require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");
-		}
-
-		die();
-	}
-}
 
 $lAdmin->InitFilter($arFilterFields);
 if (CheckFilter())
@@ -130,7 +106,7 @@ if (CheckFilter())
 		"ID"						=> $find_id,
 		"ID_EXACT_MATCH"			=> $find_id_exact_match,
 		"VALID"						=> $find_valid,
-		"VOTE_ID"					=> $VOTE_ID,
+		"VOTE_ID"					=> $voteId,
 		"DATE_1"					=> $find_date_1,
 		"DATE_2"					=> $find_date_2,
 		"VOTE_USER"					=> $find_vote_user,
@@ -196,27 +172,27 @@ if(($arID = $lAdmin->GroupAction()) && $VOTE_RIGHT=="W" && check_bitrix_sessid()
 
 
 /************** Initial list - Get data ****************************/
-$rsData = CVoteEvent::GetList($by, $order, $arFilter, $is_filtered);
-$rsData = new CAdminResult($rsData, $sTableID);
+$nameFormat = CSite::GetNameFormat(false);
+$rsData = new CAdminResult(CVoteEvent::GetList($by, $order, $arFilter, $is_filtered, "Y"), $sTableID);
 $rsData->NavStart();
 
 /************** Initial list - Navigation **************************/
 $lAdmin->NavText($rsData->GetNavPrint(GetMessage("VOTE_PAGES")));
 $headers = array(
-				array("id"=>"ID", "content"=>"ID", "sort"=>"s_id", "default"=>true),
-				array("id"=>"VOTE_USER_ID", "content"=>GetMessage("VOTE_USER"), "sort"=>"s_vote_user", "default"=>true),
-				array("id"=>"STAT_SESSION_ID", "content"=>GetMessage("VOTE_SESSION"), "sort"=>"s_session", "default"=>true),
-				array("id"=>"IP", "content"=>"IP", "sort"=>"s_ip", "default"=>true),
-				array("id"=>"DATE_VOTE", "content"=>GetMessage("VOTE_DATE"), "sort"=>"s_date", "default"=>true),
-				array("id"=>"VALID", "content"=>GetMessage("VOTE_VALID"), "sort"=>"s_valid", "default"=>true),
-			);
+	array("id"=>"ID", "content"=>"ID", "sort"=>"s_id", "default"=>true),
+	array("id"=>"VOTE_USER_ID", "content"=>GetMessage("VOTE_VISITOR"), "sort"=>"s_vote_user", "default"=>true),
+	array("id"=>"USER", "content"=>GetMessage("VOTE_USER"), "default"=>true),
+	array("id"=>"STAT_SESSION_ID", "content"=>GetMessage("VOTE_SESSION"), "sort"=>"s_session", "default"=>true),
+	array("id"=>"IP", "content"=>"IP", "sort"=>"s_ip", "default"=>true),
+	array("id"=>"DATE_VOTE", "content"=>GetMessage("VOTE_DATE"), "sort"=>"s_date", "default"=>true),
+	array("id"=>"VALID", "content"=>GetMessage("VOTE_VALID"), "sort"=>"s_valid", "default"=>true)
+);
 $by = 'c_sort';
 $order = 'asc';
 $arAllQuestions = array();
-$rsQuestions = CVoteQuestion::GetList($VOTE_ID, $by, $order, array(), $is_filtered);
+$rsQuestions = CVoteQuestion::GetList($voteId, $by, $order, array(), $is_filtered);
 while ($arQuestion = $rsQuestions->Fetch())
 {
-
 	$headers[] = array(
 		"id"=>"Q".$arQuestion["ID"],
 		"content"=>htmlspecialcharsbx($arQuestion["QUESTION"]),
@@ -232,24 +208,29 @@ while ($arQuestion = $rsQuestions->Fetch())
 	$arAllQuestions[] = array('ID' => $arQuestion["ID"], 'ANSWERS' => $arAllAnswers);
 }
 
-
 $lAdmin->AddHeaders($headers);
+
 $arrUsers = array();
-while($arRes = $rsData->NavNext(true, "f_"))
+while($res = $rsData->getNext())
 {
-	$row =& $lAdmin->AddRow($f_ID, $arRes);
+	$row =& $lAdmin->AddRow($res["ID"], $res);
 
-	$row->AddViewField("VALID",$f_VALID=="Y"?GetMessage("MAIN_YES"):GetMessage("MAIN_NO"));
-	$row->AddViewField("VOTE_USER_ID","<a title=\"".GetMessage("VOTE_USER_LIST_TITLE")."\" href=\"vote_user_list.php?lang=".LANGUAGE_ID."&find_id=$f_VOTE_USER_ID&set_filter=Y\">$f_VOTE_USER_ID</a>");
-	if (CModule::IncludeModule("statistic"))
-		$row->AddViewField("STAT_SESSION_ID","<a title=\"".GetMessage("VOTE_SESSIONU_LIST_TITLE")."\" href=\"session_list.php?lang=".LANGUAGE_ID."&find_id=$f_STAT_SESSION_ID&set_filter=Y\">$f_STAT_SESSION_ID</a>");
-
-	if (strlen($f_TITLE)>0)
-		$txt= "[<a title='".GetMessage("VOTE_EDIT_TITLE")."' href='vote_edit.php?lang=".LANGUAGE_ID."&ID=$f_VOTE_ID'>$f_VOTE_ID</a>] $f_TITLE";
-	elseif ($f_DESCRIPTION_TYPE=="html")
-		$txt= "[<a title='".GetMessage("VOTE_EDIT_TITLE")."' href='vote_edit.php?lang=".LANGUAGE_ID."&ID=$f_VOTE_ID'>$f_VOTE_ID</a>] ".TruncateText(strip_tags(htmlspecialcharsback($f_DESCRIPTION)),50);
+	$row->AddViewField("VALID", ($res["VALID"] == "Y" ? GetMessage("MAIN_YES") : GetMessage("MAIN_NO")));
+	$row->AddViewField("VOTE_USER_ID", "<a href=\"vote_user_list.php?lang=".LANGUAGE_ID."&find_id={$res["VOTE_USER_ID"]}&set_filter=Y\">{$res["VOTE_USER_ID"]}</a>");
+	if ($res["AUTH_USER_ID"] > 0)
+		$row->AddViewField("USER", "[<a href=\"user_admin.php?lang=".LANGUAGE_ID."&find_id={$res["AUTH_USER_ID"]}&set_filter=Y\">{$res["AUTH_USER_ID"]}</a>] " . CUser::FormatName($nameFormat, $res, true, false));
 	else
-		$txt= "[<a href='vote_edit.php?lang=".LANGUAGE_ID."&ID=$f_VOTE_ID'>$f_VOTE_ID</a>] ".TruncateText($f_DESCRIPTION,50);
+		$row->AddViewField("USER", GetMessage("VOTE_NONAUTHORIZED"));
+
+	if (CModule::IncludeModule("statistic"))
+		$row->AddViewField("STAT_SESSION_ID","<a title=\"".GetMessage("VOTE_SESSIONU_LIST_TITLE")."\" href=\"session_list.php?lang=".LANGUAGE_ID."&find_id={$res["STAT_SESSION_ID"]}&set_filter=Y\">{$res["STAT_SESSION_ID"]}</a>");
+
+	if (strlen($res["TITLE"])>0)
+		$txt = "[<a title='".GetMessage("VOTE_EDIT_TITLE")."' href='vote_edit.php?lang=".LANGUAGE_ID."&ID={$res["VOTE_ID"]}'>{$res["VOTE_ID"]}</a>] {$res["TITLE"]}";
+	elseif ($res["DESCRIPTION_TYPE"]=="html")
+		$txt = "[<a title='".GetMessage("VOTE_EDIT_TITLE")."' href='vote_edit.php?lang=".LANGUAGE_ID."&ID={$res["VOTE_ID"]}'>{$res["VOTE_ID"]}</a>] ".TruncateText(strip_tags(htmlspecialcharsback($res["DESCRIPTION"])),50);
+	else
+		$txt = "[<a href='vote_edit.php?lang=".LANGUAGE_ID."&ID={$res["VOTE_ID"]}'>{$res["VOTE_ID"]}</a>] ".TruncateText($res["DESCRIPTION"],50);
 
 	$row->AddViewField("TITLE", $txt);
 
@@ -258,7 +239,7 @@ while($arRes = $rsData->NavNext(true, "f_"))
 		$txt = '';
 		foreach($arQuestion["ANSWERS"] as $arAnswer)
 		{
-			if ($msg = CVoteEvent::GetAnswer($arRes['ID'], $arAnswer['ID']))
+			if ($msg = CVoteEvent::GetAnswer($res['ID'], $arAnswer['ID']))
 			{
 				if (
 					($arAnswer['FIELD_TYPE'] < 4) // not a string
@@ -272,13 +253,13 @@ while($arRes = $rsData->NavNext(true, "f_"))
 	}
 
 	$arActions = Array();
-		$arActions[] = array("DEFAULT"=>true, "ICON"=>"view", "TEXT"=>GetMessage("VOTE_RESULT"), "ACTION"=>$lAdmin->ActionRedirect("vote_user_results_table.php?lang=".LANGUAGE_ID."&EVENT_ID=".$f_ID));
+		$arActions[] = array("DEFAULT"=>true, "ICON"=>"view", "TEXT"=>GetMessage("VOTE_RESULT"), "ACTION"=>$lAdmin->ActionRedirect("vote_user_results_table.php?lang=".LANGUAGE_ID."&VOTE_ID=".$res["VOTE_ID"]."&EVENT_ID=".$res["ID"]));
 
 	if ($VOTE_RIGHT=="W")
 		$arActions[] = array(
 			"ICON" => "delete",
 			"TEXT" => GetMessage("VOTE_DELETE_U"),
-			"ACTION" => "if(confirm('".GetMessage('VOTE_DELETE_CONFIRMATION')."')) ".$lAdmin->ActionDoGroup($f_ID, "delete", 'VOTE_ID='.$VOTE_ID));
+			"ACTION" => "if(confirm('".GetMessage('VOTE_DELETE_CONFIRMATION')."')) ".$lAdmin->ActionDoGroup($res["ID"], "delete", 'VOTE_ID='.$voteId));
 
 		$row->AddActions($arActions);
 }
@@ -297,17 +278,27 @@ if ($VOTE_RIGHT=="W")
 		"validate"=>GetMessage("VOTE_VALIDATE"),
 		"devalidate"=>GetMessage("VOTE_DEVALIDATE"),
 		));
-
-$lAdmin->AddAdminContextMenu(array());
-
 /************** Initial list - Check AJAX **************************/
 $lAdmin->CheckListMode();
 
 /********************************************************************
 				Html form
 ********************************************************************/
-$APPLICATION->SetTitle(GetMessage("VOTE_PAGE_TITLE"));
 require_once ($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_after.php");
+
+$context = new CAdminContextMenu(array(
+	array(
+		"TEXT"	=> GetMessage("VOTE_BACK_TO_VOTE"),
+		"LINK"	=> ($vote->canEdit($USER->GetID()) ? "/bitrix/admin/vote_edit.php?lang=".LANGUAGE_ID."&ID=".$voteId : "/bitrix/admin/vote_preview.php?lang=".LANGUAGE_ID."&VOTE_ID=".$voteId),
+		"ICON" => "btn_list"
+	),
+	array(
+		"TEXT"	=> GetMessage("VOTE_VIEW_RESULTS"),
+		"LINK"	=> "/bitrix/admin/vote_results.php?lang=".LANGUAGE_ID."&VOTE_ID=".$voteId,
+	))
+);
+$context->Show();
+
 ?>
 <a name="tb"></a>
 

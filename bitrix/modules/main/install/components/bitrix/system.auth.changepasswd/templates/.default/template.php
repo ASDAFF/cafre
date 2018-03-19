@@ -48,6 +48,19 @@ document.getElementById('bx_auth_secure').style.display = 'inline-block';
 				<td><span class="starrequired">*</span><?=GetMessage("AUTH_NEW_PASSWORD_CONFIRM")?></td>
 				<td><input type="password" name="USER_CONFIRM_PASSWORD" maxlength="50" value="<?=$arResult["USER_CONFIRM_PASSWORD"]?>" class="bx-auth-input" autocomplete="off" /></td>
 			</tr>
+		<?if($arResult["USE_CAPTCHA"]):?>
+			<tr>
+				<td></td>
+				<td>
+					<input type="hidden" name="captcha_sid" value="<?=$arResult["CAPTCHA_CODE"]?>" />
+					<img src="/bitrix/tools/captcha.php?captcha_sid=<?=$arResult["CAPTCHA_CODE"]?>" width="180" height="40" alt="CAPTCHA" />
+				</td>
+			</tr>
+			<tr>
+				<td><span class="starrequired">*</span><?echo GetMessage("system_auth_captcha")?></td>
+				<td><input type="text" name="captcha_word" maxlength="50" value="" /></td>
+			</tr>
+		<?endif?>
 		</tbody>
 		<tfoot>
 			<tr>

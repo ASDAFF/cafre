@@ -139,7 +139,7 @@ abstract class Connector extends Entity\DataManager
 	* 
 	* @return Bitrix\Main\Entity\AddResult
 	*/
-	public static function add($data = array())
+	public static function add(array $data)
 	{
 		$res = parent::add($data);
 		if($res->isSuccess())
@@ -159,7 +159,7 @@ abstract class Connector extends Entity\DataManager
 	* 
 	* @return Bitrix\Main\Entity\UpdateResult
 	*/
-	public static function update($primary, $data = array())
+	public static function update($primary, array $data)
 	{
 		$linkFld = static::getLinkField();
 
@@ -635,7 +635,7 @@ abstract class Connector extends Entity\DataManager
 	* @throws ArgumentNullException
 	* @throws NotImplementedException
 	*
-	* @return Bitrix\Main\DB\Result list of locations
+	* @return \Bitrix\Main\DB\Result list of locations
 	*/
 	public static function getConnectedGroups($entityPrimary, $parameters = array())
 	{

@@ -51,16 +51,23 @@ class UserTypeProperty extends BaseType\Base
 	 */
 	public static function convertTo(FieldType $fieldType, $value, $toTypeClass)
 	{
-		if (is_subclass_of($toTypeClass, '\Bitrix\Iblock\BizprocType\UserTypeProperty'))
-		{
-			return $value;
-		}
-
 		if (is_array($value) && isset($value['VALUE']))
 			$value = $value['VALUE'];
 
 		$value = (string) $value;
+		//BaseType\String was removed for PHP7 compatibility
+		if (class_exists('\Bitrix\Bizproc\BaseType\StringType'))
+			return BaseType\StringType::convertTo($fieldType, $value, $toTypeClass);
 		return BaseType\String::convertTo($fieldType, $value, $toTypeClass);
+	}
+
+	/**
+	 * Return conversion map for current type.
+	 * @return array Map.
+	 */
+	public static function getConversionMap()
+	{
+		return BaseType\StringType::getConversionMap();
 	}
 
 	/**
@@ -105,7 +112,7 @@ class UserTypeProperty extends BaseType\Base
 
 		if ($allowSelection)
 		{
-			$renderResult .= static::renderControlSelector($field, $selectorValue, true);
+			$renderResult .= static::renderControlSelector($field, $selectorValue, true, '', $fieldType);
 		}
 
 		return $renderResult;
@@ -185,7 +192,7 @@ class UserTypeProperty extends BaseType\Base
 
 		if ($allowSelection)
 		{
-			$renderResult .= static::renderControlSelector($field, $selectorValue, true);
+			$renderResult .= static::renderControlSelector($field, $selectorValue, true, '', $fieldType);
 		}
 
 		return $renderResult;

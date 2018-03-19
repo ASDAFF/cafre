@@ -112,6 +112,15 @@ class Manager
 		\Bitrix\Iblock\IblockTable::update($iblockId, array(
 			"PROPERTY_INDEX" => "I",
 		));
+
+		$productIblock = self::resolveIblock($iblockId);
+		if ($iblockId != $productIblock)
+		{
+			\Bitrix\Iblock\IblockTable::update($productIblock, array(
+				"PROPERTY_INDEX" => "I",
+			));
+		}
+
 		self::checkAdminNotification(true);
 	}
 

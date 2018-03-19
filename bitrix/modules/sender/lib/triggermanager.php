@@ -14,12 +14,12 @@ use Bitrix\Main\Type\DateTime;
 
 class TriggerManager
 {
-	static $debug = false;
-	static $postingId = null;
+	public static $debug = false;
+	public static $postingId = null;
 
 	/**
-	 * @param void
-	 * @return mixed
+	 * @param mixed
+	 * @return void
 	 */
 	public static function handleEvent()
 	{
@@ -48,6 +48,10 @@ class TriggerManager
 		));
 	}
 
+	/**
+	 * @param array $params
+	 * @return void
+	 */
 	protected static function processEvent($params)
 	{
 		$moduleId = $params['MODULE_ID'];
@@ -98,37 +102,19 @@ class TriggerManager
 			if(!$trigger->filter()) continue;
 
 			//add recipient to posting
-			$recipientDb = $trigger->getRecipient();
-			$isFirstFetch = true;
 			static::$postingId = null;
-
-			do
+			$recipientDb = $trigger->getRecipientResult();
+			while($recipient = $recipientDb->fetch())
 			{
-				$recipient = null;
-				if(is_array($recipientDb) && $isFirstFetch)
+				if($settings->isTypeStart())
 				{
-					$recipient = $recipientDb;
-					$isFirstFetch = false;
+					static::addRecipient($chain, $settings, $recipient);
 				}
-				elseif($recipientDb instanceof \Bitrix\Main\DB\Result)
+				else
 				{
-					$recipient = $recipientDb->fetch();
+					static::stop($chain, $recipient, true);
 				}
-				elseif($recipientDb instanceof \CDBResult)
-				{
-					$recipient = $recipientDb->Fetch();
-				}
-
-				if($recipient)
-				{
-					if($settings->isTypeStart())
-						static::addRecipient($chain, $settings, $recipient, $trigger->getPersonalizeFields());
-					else
-						static::stop($chain, $recipient, true);
-				}
-
-
-			}while(!empty($recipient));
+			}
 
 			// mark mailing trigger fields as first run for process old data
 			if($runForOldData)
@@ -153,7 +139,12 @@ class TriggerManager
 		//return $data;
 	}
 
-	/** @return void */
+	/**
+	 * @param array $chain
+	 * @param array $rpnt
+	 * @param bool $setGoal
+	 * @return void
+	 */
 	protected static function stop($chain, $rpnt, $setGoal)
 	{
 		$rpnt['EMAIL'] = strtolower($rpnt['EMAIL']);
@@ -223,7 +214,10 @@ class TriggerManager
 		}
 	}
 
-	/** @return void */
+	/**
+	 * @param array $chain
+	 * @return void
+	 */
 	protected static function send($chain)
 	{
 		// set send status
@@ -260,7 +254,10 @@ class TriggerManager
 		}
 	}
 
-	/** @return void */
+	/**
+	 * @param array $emailEvent
+	 * @return void
+	 */
 	protected static function preventMailEvent(array $emailEvent)
 	{
 		if(isset($emailEvent['EVENT_NAME']) && strlen($emailEvent['EVENT_NAME'])>0)
@@ -272,8 +269,13 @@ class TriggerManager
 		}
 	}
 
-	/** @return void */
-	protected static function addRecipient($chain, $settings, $rpnt, $personalizeFields = array())
+	/**
+	 * @param array $chain
+	 * @param TriggerSettings $settings
+	 * @param array $rpnt
+	 * @return void
+	 */
+	protected static function addRecipient($chain, $settings, $rpnt)
 	{
 		if(!$rpnt || empty($rpnt['EMAIL']))
 			return;
@@ -368,8 +370,8 @@ class TriggerManager
 				$recipient['NAME'] = $rpnt['NAME'];
 			if(!empty($rpnt['USER_ID']))
 				$recipient['USER_ID'] = $rpnt['USER_ID'];
-			if(is_array($personalizeFields) && count($personalizeFields) > 0)
-				$recipient['FIELDS'] = $personalizeFields;
+			if(is_array($rpnt['FIELDS']) && count($rpnt['FIELDS']) > 0)
+				$recipient['FIELDS'] = $rpnt['FIELDS'];
 
 			$addDb = PostingRecipientTable::add($recipient);
 			if($addDb->isSuccess())
@@ -383,6 +385,10 @@ class TriggerManager
 		}
 	}
 
+	/**
+	 * @param bool $activate
+	 * @return void
+	 */
 	public static function activateAllHandlers($activate = true)
 	{
 		static::actualizeHandlerForChild($activate);
@@ -421,6 +427,11 @@ class TriggerManager
 		}
 	}
 
+	/**
+	 * @param array $params
+	 * @param bool $activate
+	 * @return void
+	 */
 	public static function actualizeHandler(array $params, $activate = null)
 	{
 		$moduleId = $params['MODULE_ID'];
@@ -663,8 +674,8 @@ class TriggerManager
 	}
 
 	/**
-	 * @param $a
-	 * @param $b
+	 * @param array $a
+	 * @param array $b
 	 * @return int
 	 */
 	public static function sort($a, $b)
@@ -675,18 +686,33 @@ class TriggerManager
 		return ($a['NAME'] < $b['NAME']) ? -1 : 1;
 	}
 
+	/**
+	 * @param string $mess
+	 * @return void
+	 */
 	public static function debug($mess)
 	{
 		if(static::$debug)
 			\Bitrix\Main\Diag\Debug::writeToFile($mess, "", "__bx_sender_trigger.log");
 	}
 
-
+	/**
+	* @param string $moduleId
+	* @param string $eventType
+	* @param int $chainId
+	* @return string
+	*/
 	public static function getClosedEventAgentName($moduleId, $eventType, $chainId)
 	{
 		return '\Bitrix\Sender\TriggerManager::fireClosedEventAgent("' . $moduleId . '","' . $eventType .'","' . $chainId .'");';
 	}
 
+	/**
+	* @param string $moduleId
+	* @param string $eventType
+	* @param int $chainId
+	* @return string
+	*/
 	public static function fireClosedEventAgent($moduleId, $eventType, $chainId)
 	{
 		if(!empty($moduleId) && !empty($eventType) && !empty($chainId))
@@ -710,7 +736,7 @@ class TriggerManager
 
 
 	/**
-	 * @param void
+	 * @param bool $activate
 	 * @return void
 	 */
 	public static function actualizeHandlerForChild($activate = null)
@@ -935,7 +961,7 @@ class TriggerManager
 	}
 
 	/**
-	 * @param $data
+	 * @param array $data
 	 * @return void
 	 */
 	public static function onAfterRecipientUnsub($data)
@@ -948,8 +974,8 @@ class TriggerManager
 	}
 
 	/**
-	 * @param $data
-	 * @return mixed
+	 * @param array $data
+	 * @return array
 	 */
 	public static function onTriggerList($data)
 	{

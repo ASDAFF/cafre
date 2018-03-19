@@ -60,7 +60,7 @@ class CAllBlogTrackback
 		return True;
 	}
 
-	function Delete($ID)
+	public static function Delete($ID)
 	{
 		global $DB;
 
@@ -139,6 +139,7 @@ class CAllBlogTrackback
 				else
 					$serverName = COption::GetOptionString("main", "server_name", "");
 			}
+			$serverName = \Bitrix\Main\Text\HtmlFilter::encode($serverName);
 
 			if (strlen($charset) <= 0)
 			{
@@ -309,7 +310,7 @@ class CAllBlogTrackback
 
 	function SendPingResponce($error = 0, $text = "")
 	{
-		header("Content-type: text/xml");
+		header("Content-type: text/xml; charset=".LANG_CHARSET);
 		echo "<"."?xml version=\"1.0\" encoding=\"".SITE_CHARSET."\"?".">\n";
 		echo "<response>\n";
 		echo "<error>".htmlspecialcharsbx($error)."</error>\n";

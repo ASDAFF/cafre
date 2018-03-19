@@ -8,27 +8,33 @@ include_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/bizproc/include.php");
 IncludeModuleLangFile(__FILE__);
 
 if(!$USER->IsAuthorized())
-	die('<script>alert("'.GetMessage("ACCESS_DENIED").'");</script>');
+	die('<script>alert("'.GetMessageJS("ACCESS_DENIED").'");</script>');
 
-CUtil::DecodeUriComponent($_POST);
+CBPHelper::decodeTemplatePostData($_POST);
 
-$activityName = $_REQUEST['id'];
-$activityType = $_REQUEST['activity'];
-
-//$runtime = CBPRuntime::GetRuntime();
-//$arActivityDescription = $runtime->GetActivityDescription($activityType);
-//if ($arActivityDescription == null)
-//	die ("Bad activity type!".$activityType);
-
-$documentType = Array(MODULE_ID, ENTITY, $_POST['document_type']);
+$documentType = array(MODULE_ID, ENTITY, $_POST['document_type']);
+$documentId = !empty($_POST['document_id'])? array(MODULE_ID, ENTITY, $_POST['document_id']) : null;
 
 try
 {
-	$canWrite = CBPDocument::CanUserOperateDocumentType(
-		CBPCanUserOperateOperation::WriteDocument,
-		$GLOBALS["USER"]->GetID(),
-		$documentType
-	);
+	$canWrite = false;
+	if ($documentId)
+	{
+		$canWrite = CBPDocument::CanUserOperateDocument(
+			CBPCanUserOperateOperation::WriteDocument,
+			$GLOBALS["USER"]->GetID(),
+			$documentId
+		);
+	}
+
+	if (!$canWrite)
+	{
+		$canWrite = CBPDocument::CanUserOperateDocumentType(
+			CBPCanUserOperateOperation::WriteDocument,
+			$GLOBALS["USER"]->GetID(),
+			$documentType
+		);
+	}
 }
 catch (Exception $e)
 {
@@ -37,16 +43,8 @@ catch (Exception $e)
 
 if(!$canWrite)
 {
-	echo '<script>alert("'.GetMessage("ACCESS_DENIED").'");</script>';
+	echo '<script>alert("'.GetMessageJS("ACCESS_DENIED").'");</script>';
 	die();
-}
-
-foreach (array('arWorkflowTemplate', 'arWorkflowParameters', 'arWorkflowVariables', 'arWorkflowConstants') as $k)
-{
-	if (!is_array($_POST[$k]))
-	{
-		$_POST[$k] = (array) CUtil::JsObjectToPhp($_POST[$k]);
-	}
 }
 
 $arWorkflowTemplate = isset($_POST['arWorkflowTemplate']) && is_array($_POST['arWorkflowTemplate'])? $_POST['arWorkflowTemplate']: array();
@@ -96,6 +94,8 @@ switch($_POST['fieldType'])
 	default:
 		$arFilter = false;
 }
+if (!empty($_REQUEST['load_access_lib']))
+	CJSCore::init('access');
 ?>
 <body class="dialogcontent">
 
@@ -259,6 +259,36 @@ function _RecFindParams($act, $arFilter, &$arResult)
 				$arResult = array_merge($arResult, $arResultTmp);
 			}
 		}
+		elseif(is_array($arAllActivities[$value['Type']]['ADDITIONAL_RESULT']))
+		{
+			$resultTmp = array();
+			foreach($arAllActivities[$value['Type']]['ADDITIONAL_RESULT'] as $propertyKey)
+			{
+				if(!is_array($value['Properties'][$propertyKey]))
+					continue;
+
+				foreach($value['Properties'][$propertyKey] as $fieldId => $fieldData)
+				{
+					if($arFilter !== false && !in_array($fieldData['Type'], $arFilter))
+						continue;
+
+					$resultTmp[] = array(
+						'ID' => '{='.$value['Name'].':'.$fieldId.'}',
+						'NAME' => '...'.$fieldData['Name'],
+						'TYPE' => $fieldData['Type']
+					);
+				}
+			}
+
+			if(count($resultTmp) > 0)
+			{
+				$arResult[] = array(
+					'ID' => $value['Name'],
+					'NAME' => $value['Properties']['Title']
+				);
+				$arResult = array_merge($arResult, $resultTmp);
+			}
+		}
 
 		if(is_array($value["Children"]))
 			_RecFindParams($value["Children"], $arFilter, $arResult);
@@ -357,26 +387,23 @@ _RecFindParams($arWorkflowTemplate, $arFilter, $arReturns);
 				<option value="" style="background-color: #eeeeff"><?echo GetMessage("BIZPROC_SEL_USERS_TAB_USERS")?></option>
 				<?
 				global $DB;
-				$cnt = count($arUsers);
+				$cnt = max(2000, count($arUsers));
 				$mcnt = 500;
 				$i = 0;
 				while ($i < $cnt)
 				{
-					$str = "SELECT ID, LOGIN, NAME, LAST_NAME, SECOND_NAME, EMAIL, EXTERNAL_AUTH_ID FROM b_user WHERE ID IN (0";
+					$str = "SELECT ID, LOGIN, NAME, LAST_NAME, SECOND_NAME, EMAIL FROM b_user WHERE ID IN (0";
 					$cnt1 = min($cnt, $i + $mcnt);
 					for ($j = $i; $j < $cnt1; $j++)
 						$str .= ", ".IntVal($arUsers[$j]);
 					$i += $mcnt;
-					$str .= ") AND ACTIVE='Y' ORDER BY LAST_NAME, EMAIL, ID";
+					$str .= ") AND ACTIVE='Y' AND (EXTERNAL_AUTH_ID IS NULL OR EXTERNAL_AUTH_ID NOT IN ('replica', 'email', 'imconnector', 'bot')) ORDER BY LAST_NAME, EMAIL, ID";
 					$dbuser = $DB->Query($str);
 					while($user = $dbuser->fetch())
 					{
-						if ($user['EXTERNAL_AUTH_ID'] == 'replica' || $user['EXTERNAL_AUTH_ID'] == 'email')
-							continue;
-
 						$n = CUser::FormatName(str_replace(",","", COption::GetOptionString("bizproc", "name_template", CSite::GetNameFormat(false), SITE_ID)), $user, true, true);
 						?>
-						<option value="<?= $n ?> [<?=$user['ID']?>]; "><?=$n?> &lt;<?=$user['EMAIL']?>&gt; [<?=$user['ID']?>]</option>
+						<option value="<?= $n ?> [<?=(int)$user['ID']?>]; "><?=$n?> &lt;<?=htmlspecialcharsbx($user['EMAIL'])?>&gt; [<?=(int)$user['ID']?>]</option>
 						<?
 					}
 				}
@@ -407,11 +434,14 @@ function BPSVInsert(v)
 
 	if(!v)
 	{
-		alert('<?=GetMessage("BIZPROC_SEL_ERR")?>');
+		alert('<?=GetMessageJS("BIZPROC_SEL_ERR")?>');
 		return;
 	}
 	else
 	{
+		<?if ($selectorMode == 'employee'):?>
+		v = BX.util.trim(v.replace(';', ''));
+		<?endif;?>
 		var tdocument = top.document;
 		var toField = tdocument.getElementById('<?=AddSlashes(htmlspecialcharsbx($_POST["fieldName"]))?>');
 

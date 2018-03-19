@@ -11,4 +11,5 @@ $MESS["IM_CL_SEARCH_EMPTY"] = "The search query is empty.";
 $MESS["IM_QUOTE"] = "Quote";
 $MESS["IM_FILE"] = "File";
 $MESS["IM_CL_GROUP_SEARCH"] = "Search results";
+$MESS["IM_SEARCH_OL"] = "Open Channel";
 ?>

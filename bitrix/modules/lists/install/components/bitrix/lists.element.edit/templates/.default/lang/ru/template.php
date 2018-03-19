@@ -32,4 +32,23 @@ $MESS["CT_BLEE_TAB_ACCESS"] = "Доступ";
 $MESS["CT_BLEE_ACCESS_RIGHTS"] = "Группы пользователей, имеющие доступ к списку";
 $MESS["CT_BLEE_TOOLBAR_COPY_ELEMENT"] = "Копировать";
 $MESS["CT_BLEE_TOOLBAR_COPY_ELEMENT_TITLE"] = "Копировать элемент";
+$MESS["CT_BLEE_READ_ONLY_FIELD_NOT_DATA"] = "Нет данных";
+$MESS["CT_BLEE_BIZPROC_CONSTANTS_LABLE"] = "Константы";
+$MESS["CT_BLEE_BIZPROC_CONSTANTS_FILL"] = "Заполнить значения констант";
+$MESS["CT_BLEE_BIZPROC_CONSTANTS_FILL_TITLE"] = "Настройка констант Бизнес-процесса";
+$MESS["CT_BLEE_BIZPROC_SAVE_BUTTON"] = "Сохранить";
+$MESS["CT_BLEE_BIZPROC_CANCEL_BUTTON"] = "Отмена";
+$MESS["CT_BLEE_BIZPROC_NOTIFY_TITLE"] = "Уведомление администратора";
+$MESS["CT_BLEE_BIZPROC_SELECT_STAFF_SET_RESPONSIBLE"] = "Почему я не могу сохранить изменения";
+$MESS["CT_BLEE_BIZPROC_NOTIFY_ADMIN_TEXT_ONE"] = "Константы бизнес-процесса не настроены";
+$MESS["CT_BLEE_BIZPROC_NOTIFY_ADMIN_TEXT_TWO"] = "Отправьте уведомление одному из пользователей, который сможет
+настроить константы бизнес-процесса или делегировать право управления настройками вам.";
+$MESS["CT_BLEE_BIZPROC_NOTIFY_ADMIN_MESSAGE"] = "Уведомить:";
+$MESS["CT_BLEE_BIZPROC_NOTIFY_ADMIN_MESSAGE_BUTTON"] = "Отправить уведомление";
+$MESS["CT_BLEE_BIZPROC_NOTIFY_ADMIN_BUTTON_CLOSE"] = "Закрыть";
+$MESS["CT_BLEE_TOOLBAR_ACTION"] = "Действия";
+$MESS["CT_BLEE_TOOLBAR_RETURN_LIST_ELEMENT"] = "К СПИСКУ";
+$MESS["CT_BLEE_DELETE_POPUP_TITLE"] = "Подтверждение удаления";
+$MESS["CT_BLEE_DELETE_POPUP_ACCEPT_BUTTON"] = "Удалить";
+$MESS["CT_BLEE_DELETE_POPUP_CANCEL_BUTTON"] = "Отмена";
 ?>

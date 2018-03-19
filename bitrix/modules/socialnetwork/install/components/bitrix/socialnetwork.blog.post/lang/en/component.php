@@ -27,4 +27,5 @@ $MESS["B_B_SHARE_ALL"] = "All employees";
 $MESS["B_B_SHARE_ALL_BUS"] = "All users";
 $MESS["B_B_SHARE"] = "Shared with: ";
 $MESS["B_B_SHARE_1"] = "Shared with: ";
+$MESS["SBP_SHARE_PREMODERATION"] = "You cannot add recipients because the selected group is pre-moderated.";
 ?>

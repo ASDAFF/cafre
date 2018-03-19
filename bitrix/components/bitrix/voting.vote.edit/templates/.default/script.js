@@ -2,6 +2,13 @@
 if (window.BVoteConstructor)
 	return;
 // uploader section
+	BX.addCustomEvent('onClickMulti', function(node){
+		var answers = BX.findChildren(node.parentNode.previousSibling, {attribute : {"data-bx-answer-field" : "field-type"}}, true);
+		for (var i = 0; i < answers.length; i++)
+		{
+			answers[i].value = node.checked ? "1" : "0";
+		}
+	});
 top.BVoteConstructor = window.BVoteConstructor = function(Params)
 {
 	this.controller = Params.controller;
@@ -10,8 +17,8 @@ top.BVoteConstructor = window.BVoteConstructor = function(Params)
 	this.q = {num : 0, cnt : 0};
 	this.a = [{num : 0, cnt : 0}];
 	this.InitVoteForm();
-};
 
+};
 window.BVoteConstructor.prototype.checkAnswerAdding = function(qId) {
 	var nodeQuestion = BX('question_' + qId);
 	if (this.a[qId].list) {
@@ -101,8 +108,10 @@ window.BVoteConstructor.prototype.InitVoteForm = function() {
 			a = BX.findChildren(vOl.parentNode, {"tagName" : nodeTags[nodeTag]}, true);
 			for (ii in a)
 			{
-				if (a.hasOwnProperty(ii))
+				if (a.hasOwnProperty(ii) && !BX.hasClass(a[ii], "vote-checkbox-label"))
+				{
 					BX.bind(a[ii], "click", BX.delegate(this._do, this));
+				}
 			}
 		}
 	}
@@ -142,11 +151,12 @@ window.BVoteConstructor.prototype._do = function(e)
 					this.a[q].num++; this.a[q].cnt++;
 					res = BX.create('DIV', {'html' : BX.message('VOTE_TEMPLATE_ANSWER').
 							replace(/#Q#/gi, q).replace(/#A#/gi, this.a[q].num).
+							replace(/#A_FIELD_TYPE#/gi, (BX("multi_" + q) && BX("multi_" + q).checked ? "1" : "0")).
 							replace(/#A_VALUE#/gi, "").replace(/#A_PH#/gi, (this.a[q].num + 1))});
 					a = BX.findChildren(res.firstChild, {"tagName" : "LABEL"}, true);
 					for (ii in a)
 					{
-						if (a.hasOwnProperty(ii))
+						if (a.hasOwnProperty(ii) && !BX.hasClass(a[ii], "vote-checkbox-label"))
 						{
 							BX.bind(a[ii], "click", BX.delegate(this._do, this));
 						}
@@ -173,15 +183,15 @@ window.BVoteConstructor.prototype._do = function(e)
 				{
 					qOl = BX.findChild(node.parentNode, {"tag" : "OL"}, false);
 					this.q.num++; this.q.cnt++;
-					res = BX.message('VOTE_TEMPLATE_ANSWER').replace(/#A#/gi, 0).replace(/#A_PH#/gi, 1).replace(/#A_VALUE#/gi, "") +
-						BX.message('VOTE_TEMPLATE_ANSWER').replace(/#A#/gi, 1).replace(/#A_PH#/gi, 2).replace(/#A_VALUE#/gi, "");
+					res = BX.message('VOTE_TEMPLATE_ANSWER').replace(/#A#/gi, 0).replace(/#A_PH#/gi, 1).replace(/#A_FIELD_TYPE#/gi, "0").replace(/#A_VALUE#/gi, "") +
+						BX.message('VOTE_TEMPLATE_ANSWER').replace(/#A#/gi, 1).replace(/#A_PH#/gi, 2).replace(/#A_FIELD_TYPE#/gi, "0").replace(/#A_VALUE#/gi, "");
 					res = BX.create("DIV", {html : BX.message('VOTE_TEMPLATE_QUESTION').
 						replace(/#ANSWERS#/gi, res).replace(/#Q#/gi, this.q.num).
 						replace(/#Q_VALUE#/gi, "").replace(/#Q_MULTY#/gi, "")});
 					a = BX.findChildren(res.firstChild, {"tagName" : "LABEL"}, true);
 					for (ii in a)
 					{
-						if (a.hasOwnProperty(ii))
+						if (a.hasOwnProperty(ii) && !BX.hasClass(a[ii], "vote-checkbox-label"))
 						{
 							BX.bind(a[ii], "click", BX.delegate(this._do, this));
 						}

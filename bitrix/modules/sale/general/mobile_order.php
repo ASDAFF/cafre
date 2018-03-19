@@ -93,19 +93,19 @@ class CSaleMobileOrderUtils
 		$items = array(
 			array(
 				"text" => GetMessage("SMOB_ALL_ORDERS"),
-				"data-url" => "/bitrix/admin/mobile/sale_orders_list.php",
+				"data-url" => "/bitrix/admin/mobile/sale_orders_list.php?lang=".LANGUAGE_ID,
 				"data-pageid" => "orders_list",
 				"default" => true,
 				"push-param" => "sl"
 			),
 			array(
 				"text" => GetMessage("SMOB_WAITING_FOR_PAY"),
-				"data-url" => "/bitrix/admin/mobile/sale_orders_list.php?action=get_filtered&filter_name=waiting_for_pay",
+				"data-url" => "/bitrix/admin/mobile/sale_orders_list.php?lang=".LANGUAGE_ID."&action=get_filtered&filter_name=waiting_for_pay",
 				"data-pageid" => "orders_waiting_for_pay",
 			),
 			array(
 				"text" => GetMessage("SMOB_WAITING_FOR_DELIVERY"),
-				"data-url" => "/bitrix/admin/mobile/sale_orders_list.php?action=get_filtered&filter_name=waiting_for_delivery",
+				"data-url" => "/bitrix/admin/mobile/sale_orders_list.php?lang=".LANGUAGE_ID."&action=get_filtered&filter_name=waiting_for_delivery",
 				"data-pageid" => "orders_waiting_for_delivery",
 			)
 		);
@@ -114,7 +114,7 @@ class CSaleMobileOrderUtils
 		{
 			$items[] = array(
 				"text" => GetMessage("SMOB_PUSH_SETTINGS"),
-				"data-url" => "/bitrix/admin/mobile/sale_orders_push.php",
+				"data-url" => "/bitrix/admin/mobile/sale_orders_push.php?lang=".LANGUAGE_ID,
 				"data-pageid" => "orders_push"
 			);
 		}
@@ -183,22 +183,22 @@ class CSaleMobileOrderUtils
 					"ROWS" => array(
 						array("TITLE" => GetMessage("SMOB_LOGIN").":", "VALUE" => $arOrder['USER_LOGIN']),
 						array("TITLE" => GetMessage("SMOB_PAYER_TYPE").":", "VALUE" => $arOrder['PERSON_TYPE_NAME']),
-						array("TITLE" => GetMessage("SMOB_FIO").":", "VALUE" => $arOrder['CUSTOMER_FIO']),
+						array("TITLE" => GetMessage("SMOB_FIO").":", "VALUE" => htmlspecialcharsbx($arOrder['CUSTOMER_FIO'])),
 						array("TITLE" => GetMessage("SMOB_EMAIL").":",
-							"VALUE" => '<a href="mailto:'.$arOrder['CUSTOMER_EMAIL'].'">'.
-							$arOrder['CUSTOMER_EMAIL'].'</a>'),
+							"VALUE" => '<a href="mailto:'.htmlspecialcharsbx($arOrder['CUSTOMER_EMAIL']).'">'.
+								htmlspecialcharsbx($arOrder['CUSTOMER_EMAIL']).'</a>'),
 						array("TITLE" => GetMessage("SMOB_PHONE").":",
-							"VALUE" => '<a href="tel:'.$arOrder['CUSTOMER_PHONE'].'">'.
-							$arOrder['CUSTOMER_PHONE'].'</a>'),
-						array("TITLE" => GetMessage("SMOB_ZIP").":", "VALUE" => $arOrder['CUSTOMER_ZIP']),
+							"VALUE" => '<a href="tel:'.htmlspecialcharsbx($arOrder['CUSTOMER_PHONE']).'">'.
+								htmlspecialcharsbx($arOrder['CUSTOMER_PHONE']).'</a>'),
+						array("TITLE" => GetMessage("SMOB_ZIP").":", "VALUE" => htmlspecialcharsbx($arOrder['CUSTOMER_ZIP'])),
 						array("TITLE" => GetMessage("SMOB_LOCATION").":", "VALUE" => $arOrder['CUSTOMER_LOCATION'])
 						),
 					);
 
 		if(strlen(trim($arOrder['CUSTOMER_CITY']))>0)
-			$arSection["ROWS"][] = array("TITLE" => GetMessage("SMOB_CITY").":", "VALUE" => $arOrder['CUSTOMER_CITY']);
+			$arSection["ROWS"][] = array("TITLE" => GetMessage("SMOB_CITY").":", "VALUE" => htmlspecialcharsbx($arOrder['CUSTOMER_CITY']));
 
-		$arSection["ROWS"][] = array("TITLE" => GetMessage("SMOB_ADDRESS").":", "VALUE" => $arOrder['CUSTOMER_ADDRESS']);
+		$arSection["ROWS"][] = array("TITLE" => GetMessage("SMOB_ADDRESS").":", "VALUE" => htmlspecialcharsbx($arOrder['CUSTOMER_ADDRESS']));
 
 		$mad->addSection($arSection);
 
@@ -230,7 +230,7 @@ class CSaleMobileOrderUtils
 		$arSection = array(
 					"TITLE" => GetMessage("SMOB_PAYMENT"),
 					"ROWS" => array(
-						array("TITLE" => GetMessage("SMOB_P_METHOD").":", "VALUE" => $arOrder['PAY_SYSTEM_NAME']),
+						array("TITLE" => GetMessage("SMOB_P_METHOD").":", "VALUE" => htmlspecialcharsbx($arOrder['PAY_SYSTEM_NAME'])),
 						array("TITLE" => GetMessage("SMOB_P_PRICE").":", "VALUE" => $arOrder['PRICE_STR']),
 					));
 
@@ -406,7 +406,7 @@ class CSaleMobileOrderUtils
 			return false;
 
 		$arOrder["STATUS"] = CSaleStatus::GetLangByID($arOrder["STATUS_ID"]);
-		$arOrder["STATUS_NAME"] = $arOrder["STATUS"]["NAME"];
+		$arOrder["STATUS_NAME"] = htmlspecialcharsbx($arOrder["STATUS"]["NAME"]);
 		$arOrder["PRICE_IN_ALL_NUM"] = floatval(($arOrder["~PRICE"])+floatval($arOrder["~PRICE_DELIVERY"]));
 		$arOrder["PRICE_IN_ALL"] = SaleFormatCurrency($arOrder["PRICE_IN_ALL_NUM"], $arOrder["CURRENCY"]);
 		$arOrder["PRICE_STR"] = SaleFormatCurrency($arOrder["PRICE"], $arOrder["CURRENCY"]);
@@ -440,31 +440,40 @@ class CSaleMobileOrderUtils
 
 	private function getOrderProps($arOrder)
 	{
-		$dbOrderProps = CSaleOrderPropsValue::GetOrderProps($arOrder["ID"]);
-		$orderPropsCodes = array("FIO", "EMAIL", "PHONE", "ZIP", "CITY", "ADDRESS");
+		$dbRes = \Bitrix\Sale\Internals\OrderPropsValueTable::getList(array(
+			'filter' => array('ORDER_ID' => $arOrder["ID"]),
+			'select' => array('*',
+				'TYPE' => 'PROPERTY.TYPE',
+				'IS_ZIP' => 'PROPERTY.IS_ZIP',
+				'IS_PAYER' => 'PROPERTY.IS_PAYER',
+				'IS_EMAIL' => 'PROPERTY.IS_EMAIL',
+				'IS_PHONE' => 'PROPERTY.IS_PHONE',
+				'IS_ADDRESS' => 'PROPERTY.IS_ADDRESS',
+				'IS_LOCATION' => 'PROPERTY.IS_LOCATION'
+			)
+		));
 
-		while($arOrderProps = $dbOrderProps->GetNext())
+		while($pVal = $dbRes->fetch())
 		{
-			$arOrder["PROPS"][] = $arOrderProps;
-
-			if(in_array($arOrderProps["CODE"], $orderPropsCodes))
+			if($pVal['IS_PAYER'] == 'Y')
+				$arOrder["CUSTOMER_FIO"] = $pVal['VALUE'];
+			elseif($pVal['IS_EMAIL'] == 'Y')
+				$arOrder["CUSTOMER_EMAIL"] = $pVal['VALUE'];
+			elseif($pVal['IS_PHONE'] == 'Y')
+				$arOrder["CUSTOMER_PHONE"] = $pVal['VALUE'];
+			elseif($pVal['IS_ADDRESS'] == 'Y')
+				$arOrder["CUSTOMER_ADDRESS"] = $pVal['VALUE'];
+			elseif($pVal['IS_ZIP'] == 'Y')
+				$arOrder["CUSTOMER_ZIP"] = $pVal['VALUE'];
+			elseif($pVal['CODE'] == 'CITY')
+				$arOrder["CUSTOMER_CITY"] = $pVal['VALUE'];
+			elseif($pVal['IS_LOCATION'] == 'Y')
 			{
-				$idx = "CUSTOMER_".$arOrderProps["CODE"];
-				$arOrder[$idx] = $arOrderProps["VALUE"];
-			}
+				$arVal = CSaleLocation::GetByID($pVal["VALUE"], LANG);
 
-			if($arOrderProps["TYPE"] == "LOCATION")
-			{
-				$arVal = CSaleLocation::GetByID($arOrderProps["VALUE"], LANG);
-
-				if(strlen($arOrderProps["CODE"]) > 0)
-					$arOrder["CUSTOMER_LOCATION"] = htmlspecialcharsEx($arVal["COUNTRY_NAME"].
-							((strlen($arVal["COUNTRY_NAME"])<=0 || strlen($arVal["CITY_NAME"])<=0) ? "" : " - ").
-							$arVal["CITY_NAME"]);
-				else
-					$arOrder["CUSTOMER_LOCATION"] = htmlspecialcharsEx($arVal["COUNTRY_NAME"].
-							((strlen($arVal["COUNTRY_NAME"])<=0 || strlen($arVal["CITY_NAME"])<=0) ? "" : " - ").
-							$arVal["CITY_NAME"]);
+				$arOrder["CUSTOMER_LOCATION"] = htmlspecialcharsEx($arVal["COUNTRY_NAME"].
+					((strlen($arVal["COUNTRY_NAME"])<=0 || strlen($arVal["CITY_NAME"])<=0) ? "" : " - ").
+					$arVal["CITY_NAME"]);
 			}
 		}
 
@@ -627,8 +636,10 @@ class CSaleMobileOrderUtils
 
 	function getDateTime($strDate)
 	{
-		$stmp = MakeTimeStamp($strDate, "DD.MM.YYYY HH:MI:SS");
-		return date("d.m.Y", $stmp).' '.date("H:i", $stmp);
+		return FormatDateFromDB(
+			$strDate,
+			CSite::GetDateFormat('FULL', LANGUAGE_ID)
+		);
 	}
 
 	function getPreparedTemplate($template, $arFields)
@@ -928,13 +939,12 @@ class CSaleMobileOrderPush
 	public static function getSubscribers($eventId, $arParams)
 	{
 		$arResult = array();
-
 		$arSubscriptions = self::getData();
 
 		if(is_array($arSubscriptions))
 			foreach ($arSubscriptions as $subsId => $arSubscription)
 				if(
-					$arSubscription["E"] == self::$arEvents[$eventId]
+					$arSubscription["E"] == array_search($eventId, self::$arEvents)
 					&&
 					$arSubscription["V"] == "Y"
 					)
@@ -1065,6 +1075,12 @@ class CSaleMobileOrderPush
 			&& CModule::IncludeModule("pull")
 			)
 		{
+
+			if (!empty($arParams["ORDER_ID"]) && !empty($GLOBALS['SALE_NEW_ORDER_SEND'][$arParams["ORDER_ID"]]))
+			{
+				return $result;
+			}
+
 			$arUsers = self::getSubscribers($eventId, $arParams);
 
 			if(!empty($arUsers))

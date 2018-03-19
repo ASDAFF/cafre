@@ -565,7 +565,7 @@ if ($STEP == 2)
 				var boolCheck = obj.checked;
 				var intCurrent = parseInt(BX('count_checked').value);
 				intCurrent += (boolCheck ? 1 : -1);
-				BX('field_needed_all').checked = (intCurrent < cnt ? false : true);
+				BX('field_needed_all').checked = (intCurrent >= cnt);
 				BX('count_checked').value = intCurrent;
 			}
 			</script>

@@ -5,11 +5,10 @@ $MESS ['STATWIZ_STEP1_TITLE'] = "Мастер создания индекса";
 $MESS ['STATWIZ_STEP1_CONTENT'] = "Вас приветствует Мастер создания индексов для определения страны и города по IP адресу.<br />Выберите одно из действий:";
 $MESS ['STATWIZ_STEP1_COUNTRY'] = "Создание индекса для определения <b>страны</b> по IP адресу.";
 $MESS ['STATWIZ_STEP1_CITY'] = "Создание индекса для определения <b>страны</b> и <b>города</b> по IP адресу.";
-$MESS ['STATWIZ_STEP1_COUNTRY_NOTE'] = "Поддерживаются следующие форматы:
+$MESS ['STATWIZ_STEP1_COUNTRY_NOTE_V2'] = "Поддерживаются следующие форматы:
 <ul>
 <li><a target=\"_blank\" href=\"#GEOIP_HREF#\">GeoIP Country</a>.</li>
 <li><a target=\"_blank\" href=\"#GEOIPLITE_HREF#\">GeoLite Country</a>.</li>
-<li><a target=\"_blank\" href=\"#IPTOCOUNTRY_HREF#\">ip-to-country</a>.</li>
 </ul>
 ";
 $MESS ['STATWIZ_STEP1_CITY_NOTE'] = "Поддерживаются следующие форматы:

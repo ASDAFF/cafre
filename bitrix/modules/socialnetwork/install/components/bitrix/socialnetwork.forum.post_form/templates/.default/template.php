@@ -13,7 +13,7 @@ BX.message({
 	vote_drop_question_confirm : '<?=GetMessageJS("F_VOTE_DROP_QUESTION_CONFIRM")?>',
 	MPL_HAVE_WRITTEN : '<?=GetMessageJS('MPL_HAVE_WRITTEN')?>'
 });
-BX.Forum.Init('<?=$id?>', {
+BX.Forum.Init({
 	formID : '<?=$arParams["FORM_ID"]?>',
 	captcha : '<?=($arParams["FORUM"]["USE_CAPTCHA"]=="Y" && !$USER->IsAuthorized() ? "Y" : "N")?>',
 	bVarsFromForm : '<?=$arParams["bVarsFromForm"]?>',
@@ -55,6 +55,7 @@ endif;
 	<input type="hidden" name="AUTHOR_ID" value="<?=$arResult["DATA"]["AUTHOR_ID"];?>" />
 	<input type="hidden" name="forum_post_action" value="save" />
 	<input type="hidden" name="MESSAGE_MODE" value="NORMAL" />
+	<input type="hidden" name="AJAX_POST" value="<?=$arParams["AJAX_POST"]?>" />
 	<?=bitrix_sessid_post()?>
 	<? if ($arParams['AUTOSAVE']) $arParams['AUTOSAVE']->Init(); ?>
 	<?
@@ -252,19 +253,6 @@ if ($arResult["SHOW_PANEL"]["TOPIC"] == "Y" && $arResult["SHOW_PANEL"]["VOTE"] =
 	<div class="forum-reply-fields">
 		<div class="forum-reply-field forum-reply-field-text">
 			<?
-			$postMessageTabIndex = $tabIndex++;
-			$arSmiles = array();
-			if ($arResult["FORUM"]["ALLOW_SMILES"] == "Y")
-			{
-				foreach($arResult["SMILES"] as $arSmile)
-				{
-					$arSmiles[] = array(
-						'name' => $arSmile["NAME"],
-						'path' => $arParams["PATH_TO_SMILE"].$arSmile["IMAGE"],
-						'code' => array_shift(explode(" ", str_replace("\\\\","\\",$arSmile["TYPING"])))
-					);
-				}
-			}
 			$APPLICATION->IncludeComponent(
 				"bitrix:main.post.form",
 				"",
@@ -314,7 +302,7 @@ if ($arResult["SHOW_PANEL"]["TOPIC"] == "Y" && $arResult["SHOW_PANEL"]["VOTE"] =
 
 //					"TAGS" => Array(),
 
-					"SMILES" => array("VALUE" => $arSmiles),
+					"SMILES" => COption::GetOptionInt("forum", "smile_gallery_id", 0),
 					"NAME_TEMPLATE" => $arParams["NAME_TEMPLATE"],
 				)
 			);

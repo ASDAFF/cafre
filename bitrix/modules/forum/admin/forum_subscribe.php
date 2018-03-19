@@ -10,8 +10,8 @@
 	IncludeModuleLangFile(__FILE__);
 	require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/forum/prolog.php");
 /*******************************************************************/
-	$arForum = array("" => GetMessage('FM_SPACE'));
 	$db_res = CForumNew::GetListEx(array("SORT"=>"ASC", "NAME"=>"ASC"));
+	$arForum = array();
 	if ($db_res && $res = $db_res->Fetch())
 	{
 		do
@@ -20,6 +20,7 @@
 		}while ($res = $db_res->Fetch());
 	}
 	asort($arForum);
+	array_unshift($arForum, GetMessage('FM_SPACE'));
 /*******************************************************************/
 	$sTableID = "tbl_subscribe";
 	$oSort = new CAdminSorting($sTableID, "ID", "asc");
@@ -189,7 +190,7 @@ while ($arRes = $rsData->NavNext(true, "t_"))
 	<tr valign="center">
 		<td><b><?=GetMessage("FM_FLT_SEARCH")?>:</b></td>
 		<td nowrap>
-		<input type="text" size="25" name="Filter" value="<?=htmlspecialcharsEx($Filter)?>" title="<?=GetMessage("FM_FLT_SEARCH_TITLE")?>">
+		<input type="text" size="25" name="Filter" value="<?=htmlspecialcharsbx($Filter)?>" title="<?=GetMessage("FM_FLT_SEARCH_TITLE")?>">
 		<select name="FilterType">
 			<option value="login"<?if($_REQUEST["find_type"]=="login") echo " selected"?>><?=GetMessage('FM_FLT_LOGIN')?></option>
 			<option value="email"<?if($_REQUEST["find_type"]=="email") echo " selected"?>><?=GetMessage('FM_FLT_EMAIL')?></option>

@@ -102,7 +102,7 @@ Class learning extends CModule
 					$path = "/learning/";
 					if($_REQUEST["copy_".$site["LID"]] == "Y" && !empty($_REQUEST["path_".$site["LID"]]))
 					{
-						$path = $_REQUEST["path_".$site["LID"]];
+						$path = $DB->ForSql($_REQUEST["path_".$site["LID"]]);
 					}
 
 					$DB->Query(

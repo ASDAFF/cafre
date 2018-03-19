@@ -231,7 +231,7 @@ class QueryChainElement
 		}
 		elseif ($this->value instanceof Base)
 		{
-			echo get_class($this->value);
+			echo get_class($this->value).' '.$this->value->getFullName();
 		}
 		elseif (is_array($this->value))
 		{

@@ -1,7 +1,7 @@
 <?
 class CAllCatalogExport
 {
-	function CheckFields($ACTION, &$arFields)
+	public static function CheckFields($ACTION, &$arFields)
 	{
 		global $DB;
 		global $USER;
@@ -85,15 +85,17 @@ class CAllCatalogExport
 		return true;
 	}
 
-	function Delete($ID)
+	public static function Delete($ID)
 	{
 		global $DB;
 
-		$ID = intval($ID);
+		$ID = (int)$ID;
+		if ($ID <= 0)
+			return false;
 		return $DB->Query("DELETE FROM b_catalog_export WHERE ID = ".$ID." AND IS_EXPORT = 'Y'", true);
 	}
 
-	function GetList($arOrder=array("ID"=>"ASC"), $arFilter=array(), $bCount = false)
+	public static function GetList($arOrder = array("ID"=>"ASC"), $arFilter = array(), $bCount = false)
 	{
 		global $DB;
 		$arSqlSearch = array();
@@ -106,7 +108,8 @@ class CAllCatalogExport
 		for ($i = 0, $intCount = count($filter_keys); $i < $intCount; $i++)
 		{
 			$val = $DB->ForSql($arFilter[$filter_keys[$i]]);
-			if (strlen($val)<=0) continue;
+			if (strlen($val)<=0)
+				continue;
 
 			$bInvert = false;
 			$key = $filter_keys[$i];
@@ -228,7 +231,7 @@ class CAllCatalogExport
 		return $db_res;
 	}
 
-	function GetByID($ID)
+	public static function GetByID($ID)
 	{
 		global $DB;
 
@@ -249,12 +252,13 @@ class CAllCatalogExport
 		return false;
 	}
 
-	function PreGenerateExport($profile_id)
+	public static function PreGenerateExport($profile_id)
 	{
 		global $DB;
 
 		$profile_id = (int)$profile_id;
-		if ($profile_id <= 0) return false;
+		if ($profile_id <= 0)
+			return false;
 
 		$ar_profile = CCatalogExport::GetByID($profile_id);
 		if ((!$ar_profile) || ('Y' == $ar_profile['NEED_EDIT']))
@@ -265,9 +269,7 @@ class CAllCatalogExport
 		{
 			$strFile = CATALOG_PATH2EXPORTS_DEF.$ar_profile["FILE_NAME"]."_run.php";
 			if (!file_exists($_SERVER["DOCUMENT_ROOT"].$strFile))
-			{
 				return false;
-			}
 		}
 
 		$arSetupVars = array();
@@ -276,9 +278,7 @@ class CAllCatalogExport
 		{
 			parse_str($ar_profile["SETUP_VARS"], $arSetupVars);
 			if (!empty($arSetupVars) && is_array($arSetupVars))
-			{
 				$intSetupVarsCount = extract($arSetupVars, EXTR_SKIP);
-			}
 		}
 
 		global $arCatalogAvailProdFields;
@@ -305,6 +305,12 @@ class CAllCatalogExport
 		global $defCatalogAvailCurrencies;
 		$defCatalogAvailCurrencies = CCatalogCSVSettings::getDefaultSettings(CCatalogCSVSettings::FIELDS_CURRENCY);
 
+		if (!defined('CATALOG_EXPORT_NO_STEP'))
+			define('CATALOG_EXPORT_NO_STEP', true);
+		$firstStep = true;
+		$finalExport = true;
+		$CUR_ELEMENT_ID = 0;
+
 		CCatalogDiscountSave::Disable();
 		include($_SERVER["DOCUMENT_ROOT"].$strFile);
 		CCatalogDiscountSave::Enable();
@@ -316,6 +322,4 @@ class CAllCatalogExport
 
 		return "CCatalogExport::PreGenerateExport(".$profile_id.");";
 	}
-
 }
-?>

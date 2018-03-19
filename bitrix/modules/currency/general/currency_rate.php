@@ -59,6 +59,21 @@ class CAllCurrencyRates
 				}
 			}
 		}
+		if ($ACTION == 'ADD')
+		{
+			if ($arFields['CURRENCY'] == Currency\CurrencyManager::getBaseCurrency())
+			{
+				$arMsg[] = array('id' => 'CURRENCY', 'text' => GetMessage('BT_MOD_CURR_ERR_RATE_FOR_BASE_CURRENCY'));
+			} else
+			{
+				if (!isset($arFields['BASE_CURRENCY']) || !Currency\CurrencyManager::checkCurrencyID($arFields['BASE_CURRENCY']))
+					$arFields['BASE_CURRENCY'] = Currency\CurrencyManager::getBaseCurrency();
+			}
+			if ($arFields['CURRENCY'] == $arFields['BASE_CURRENCY'])
+			{
+				$arMsg[] = array('id' => 'CURRENCY', 'text' => GetMessage('BT_MOD_CURR_ERR_RATE_FOR_SELF_CURRENCY'));
+			}
+		}
 
 		if (!empty($arMsg))
 		{

@@ -6,6 +6,8 @@
  * @copyright 2001-2014 Bitrix
  */
 
+use \Bitrix\Main\Application;
+
 global
 	$arrViewedBanners,		// баннеры показанные на данной странице
 	$arrADV_KEYWORDS,		// массив ключевых слов для страницы
@@ -48,13 +50,13 @@ define("BANNER_UNIFORMITY_DIVERGENCE_COEF", 0.05);
 
 class CAdvContract_all
 {
-	function err_mess()
+	public static function err_mess()
 	{
 		$module_id = "advertising";
 		return "<br>Module: ".$module_id."<br>Class: CAdvContract_all<br>File: ".__FILE__;
 	}
 
-	function GetNextSort()
+	public static function GetNextSort()
 	{
 		$rsContracts = CAdvContract::GetList($by="s_sort", $order="desc", array("ID" => "~1", "ID_EXACT_MATCH" => "Y"), $is_filtered=false);
 		$arContract = $rsContracts->Fetch();
@@ -74,33 +76,33 @@ class CAdvContract_all
 
 	*****************************************************************/
 
-	function GetDeniedRoleID()
+	public static function GetDeniedRoleID()
 	{
 		return "D";
 	}
 
-	function GetAdvertiserRoleID()
+	public static function GetAdvertiserRoleID()
 	{
 		return "R";
 	}
 
-	function GetManagerRoleID()
+	public static function GetManagerRoleID()
 	{
 		return "T";
 	}
 
-	function GetDemoRoleID()
+	public static function GetDemoRoleID()
 	{
 		return "V";
 	}
 
-	function GetAdminRoleID()
+	public static function GetAdminRoleID()
 	{
 		return "W";
 	}
 
 	// возвращает true если заданный пользователь имеет заданную роль на модуль
-	function HaveRole($role, $USER_ID=false)
+	public static function HaveRole($role, $USER_ID=false)
 	{
 		global $USER, $APPLICATION;
 
@@ -124,14 +126,14 @@ class CAdvContract_all
 
 	// true - если пользователь имеет роль "рекламодатель"
 	// false - в противном случае
-	function IsAdvertiser($USER_ID=false)
+	public static function IsAdvertiser($USER_ID=false)
 	{
 		return CAdvContract::HaveRole(CAdvContract::GetAdvertiserRoleID(), $USER_ID);
 	}
 
 	// true - если пользователь имеет роль "администратор рекламы"
 	// false - в противном случае
-	function IsAdmin($USER_ID=false)
+	public static function IsAdmin($USER_ID=false)
 	{
 		global $USER;
 		if ($USER_ID===false && is_object($USER))
@@ -143,21 +145,21 @@ class CAdvContract_all
 
 	// true - если пользователь имеет роль "демо-доступ"
 	// false - в противном случае
-	function IsDemo($USER_ID=false)
+	public static function IsDemo($USER_ID=false)
 	{
 		return CAdvContract::HaveRole(CAdvContract::GetDemoRoleID(), $USER_ID);
 	}
 
 	// true - если пользователь имеет право на модуль "менеджер баннеров" и выше
 	// false - в противном случае
-	function IsManager($USER_ID=false)
+	public static function IsManager($USER_ID=false)
 	{
 		return CAdvContract::HaveRole(CAdvContract::GetManagerRoleID(), $USER_ID);
 	}
 
 	// возвращает массив ID групп для которых задана роль
 	// $role - идентификатор роли
-	function GetGroupsByRole($role)
+	public static function GetGroupsByRole($role)
 	{
 		global $APPLICATION, $USER;
 		if (!is_object($USER)) $USER = new CUser;
@@ -172,7 +174,7 @@ class CAdvContract_all
 	}
 
 	// возвращает массив пользователей имеющих право на модуль "рекламодатель"
-	function GetAdvertisersArray()
+	public static function GetAdvertisersArray()
 	{
 		$arrRes = array();
 		$arGroups = CAdvContract::GetGroupsByRole(CAdvContract::GetAdvertiserRoleID());
@@ -185,7 +187,7 @@ class CAdvContract_all
 	}
 
 	// возвращает массив EMail адресов всех пользователей имеющих заданную роль
-	function GetEmailArrayByRole($role)
+	public static function GetEmailArrayByRole($role)
 	{
 		global $USER;
 		if (!is_object($USER)) $USER = new CUser;
@@ -203,13 +205,13 @@ class CAdvContract_all
 	}
 
 	// возвращает массив EMail'ов всех пользователей имеющих роль "администратор"
-	function GetAdminEmails()
+	public static function GetAdminEmails()
 	{
 		return CAdvContract::GetEmailArrayByRole(CAdvContract::GetAdminRoleID());
 	}
 
 	// возвращает массив EMail'ов всех пользователей имеющих роль "менеджер баннеров"
-	function GetManagerEmails()
+	public static function GetManagerEmails()
 	{
 		return CAdvContract::GetEmailArrayByRole(CAdvContract::GetManagerRoleID());
 	}
@@ -227,13 +229,13 @@ class CAdvContract_all
 	*****************************************************************/
 
 	// получение массива максимальных прав доступа на контракт
-	function GetMaxPermissionsArray()
+	public static function GetMaxPermissionsArray()
 	{
 		return array("VIEW", "ADD", "EDIT");
 	}
 
 	// возвращает массивы EMail'ов всех пользователей имеющих доступ к заданному контракту (владельцы контракта)
-	function GetOwnerEmails($CONTRACT_ID, &$OWNER_EMAIL, &$ADD_EMAIL, &$VIEW_EMAIL, &$EDIT_EMAIL)
+	public static function GetOwnerEmails($CONTRACT_ID, &$OWNER_EMAIL, &$ADD_EMAIL, &$VIEW_EMAIL, &$EDIT_EMAIL)
 	{
 		$OWNER_EMAIL = array();
 		$VIEW_EMAIL = array();
@@ -260,7 +262,7 @@ class CAdvContract_all
 	}
 
 	// получение массива прав текущего пользователя по всем контрактам
-	function GetUserPermissions($CONTRACT_ID=0, $USER_ID=false)
+	public static function GetUserPermissions($CONTRACT_ID=0, $USER_ID=false)
 	{
 		$err_mess = (CAdvContract_all::err_mess())."<br>Function: GetUserPermissions<br>Line: ";
 		global $DB, $USER;
@@ -328,7 +330,7 @@ class CAdvContract_all
 
 	// true - если пользователь имеет доступ к контракту
 	// false - в противном случае
-	function IsOwner($CONTRACT_ID, $USER_ID=false)
+	public static function IsOwner($CONTRACT_ID, $USER_ID=false)
 	{
 		$CONTRACT_ID = intval($CONTRACT_ID);
 		if ($CONTRACT_ID<=0) return false;
@@ -339,7 +341,7 @@ class CAdvContract_all
 	}
 
 	// получение массива всех прав доступа по заданному контракту
-	function GetContractPermissions($CONTRACT_ID)
+	public static function GetContractPermissions($CONTRACT_ID)
 	{
 		$err_mess = (CAdvContract_all::err_mess())."<br>Function: GetContractPermissions<br>Line: ";
 		global $DB;
@@ -381,7 +383,7 @@ class CAdvContract_all
 					Группа функций по отправке почты
 	*****************************************************************/
 
-	function SendEMail($arContract, $mess="")
+	public static function SendEMail($arContract, $mess="")
 	{
 		$CONTRACT_ID = $arContract["ID"];
 
@@ -459,7 +461,7 @@ class CAdvContract_all
 		CEvent::Send("ADV_CONTRACT_INFO", $arrSITE, $arEventFields);
 	}
 
-	function SendInfo()
+	public static function SendInfo()
 	{
 		$err_mess = (CAdvContract_all::err_mess())."<br>Function: SendInfo<br>Line: ";
 		global $DB;
@@ -477,7 +479,7 @@ class CAdvContract_all
 				Группа функций по управлению контрактом
 	*****************************************************************/
 
-	function CheckFilter($arFilter)
+	public static function CheckFilter($arFilter)
 	{
 		global $strError;
 		$str = "";
@@ -504,7 +506,7 @@ class CAdvContract_all
 	}
 
 	// получаем массив времени и дней недели связанных с контрактом
-	function GetWeekdayArray($CONTRACT_ID)
+	public static function GetWeekdayArray($CONTRACT_ID)
 	{
 		$err_mess = (CAdvContract_all::err_mess())."<br>Function: GetWeekdayArray<br>Line: ";
 		global $DB;
@@ -529,7 +531,7 @@ class CAdvContract_all
 	}
 
 	// получаем массив типов связанных с контрактом
-	function GetTypeArray($CONTRACT_ID)
+	public static function GetTypeArray($CONTRACT_ID)
 	{
 		$err_mess = (CAdvContract_all::err_mess())."<br>Function: GetTypeArray<br>Line: ";
 		global $DB;
@@ -563,7 +565,7 @@ class CAdvContract_all
 	}
 
 	// получаем массив языков связанных с контрактом
-	function GetSiteArray($CONTRACT_ID)
+	public static function GetSiteArray($CONTRACT_ID)
 	{
 		$err_mess = (CAdvContract_all::err_mess())."<br>Function: GetSiteArray<br>Line: ";
 		global $DB;
@@ -585,7 +587,7 @@ class CAdvContract_all
 	}
 
 	// получаем массив страниц связанных с контрактом
-	function GetPageArray($CONTRACT_ID, $SHOW="SHOW")
+	public static function GetPageArray($CONTRACT_ID, $SHOW="SHOW")
 	{
 		$err_mess = (CAdvContract_all::err_mess())."<br>Function: GetPageArray<br>Line: ";
 		global $DB;
@@ -608,7 +610,7 @@ class CAdvContract_all
 	}
 
 	// получаем контракт по ID
-	function GetByID($CONTRACT_ID, $CHECK_RIGHTS="Y")
+	public static function GetByID($CONTRACT_ID, $CHECK_RIGHTS="Y")
 	{
 		$CONTRACT_ID = intval($CONTRACT_ID);
 		if ($CONTRACT_ID<=0) return false;
@@ -621,7 +623,7 @@ class CAdvContract_all
 	}
 
 	// проверка полей при модификации контракта
-	function CheckFields($arFields, $CONTRACT_ID, $CHECK_RIGHTS="Y")
+	public static function CheckFields($arFields, $CONTRACT_ID, $CHECK_RIGHTS="Y")
 	{
 		global $strError;
 		$str = "";
@@ -660,7 +662,7 @@ class CAdvContract_all
 	}
 
 	// добавляем новый контракт или модифицируем существующий
-	function Set($arFields, $CONTRACT_ID, $CHECK_RIGHTS="Y")
+	public static function Set($arFields, $CONTRACT_ID, $CHECK_RIGHTS="Y")
 	{
 		$err_mess = (CAdvContract_all::err_mess())."<br>Function: Set<br>Line: ";
 		global $DB, $USER;
@@ -1045,7 +1047,7 @@ class CAdvContract_all
 	}
 
 	// удаление контракта
-	function Delete($CONTRACT_ID, $CHECK_RIGHTS="Y")
+	public static function Delete($CONTRACT_ID, $CHECK_RIGHTS="Y")
 	{
 		$err_mess = (CAdvContract_all::err_mess())."<br>Function: Delete<br>Line: ";
 		global $DB, $strError;
@@ -1077,7 +1079,7 @@ class CAdvContract_all
 	}
 
 	// удаление связи контракта со страницами
-	function DeletePageLink($CONTRACT_ID, $where="")
+	public static function DeletePageLink($CONTRACT_ID, $where="")
 	{
 		$err_mess = (CAdvContract_all::err_mess())."<br>Function: DeletePageLink<br>Line: ";
 		global $DB;
@@ -1090,7 +1092,7 @@ class CAdvContract_all
 	}
 
 	// удаление связи контракта с сайтами
-	function DeleteSiteLink($CONTRACT_ID)
+	public static function DeleteSiteLink($CONTRACT_ID)
 	{
 		$err_mess = (CAdvContract_all::err_mess())."<br>Function: DeleteSiteLink<br>Line: ";
 		global $DB;
@@ -1103,7 +1105,7 @@ class CAdvContract_all
 	}
 
 	// удаление связи контракта с типами баннеров
-	function DeleteTypeLink($CONTRACT_ID)
+	public static function DeleteTypeLink($CONTRACT_ID)
 	{
 		$err_mess = (CAdvContract_all::err_mess())."<br>Function: DeleteTypeLink<br>Line: ";
 		global $DB;
@@ -1116,7 +1118,7 @@ class CAdvContract_all
 	}
 
 	// удаление связи контракта с пользователями
-	function DeleteUserLink($CONTRACT_ID, $where="")
+	public static function DeleteUserLink($CONTRACT_ID, $where="")
 	{
 		$err_mess = (CAdvContract_all::err_mess())."<br>Function: DeleteUserLink<br>Line: ";
 		global $DB;
@@ -1129,7 +1131,7 @@ class CAdvContract_all
 	}
 
 	// удаление связи контракта со временем и днями недели
-	function DeleteWeekdayLink($CONTRACT_ID)
+	public static function DeleteWeekdayLink($CONTRACT_ID)
 	{
 		$err_mess = (CAdvContract_all::err_mess())."<br>Function: DeleteWeekdayLink<br>Line: ";
 		global $DB;
@@ -1142,7 +1144,7 @@ class CAdvContract_all
 	}
 
 	//Получение статистики по контрактам
-	function GetStatList($by, $order, $arFilter)
+	public static function GetStatList($by, $order, $arFilter)
 	{
 		$err_mess = (CAdvBanner::err_mess())."<br>Function: GetDynamicList<br>Line: ";
 		global $DB;
@@ -1277,13 +1279,13 @@ class CAdvContract_all
 
 class CAdvBanner_all
 {
-	function err_mess()
+	public static function err_mess()
 	{
 		$module_id = "advertising";
 		return "<br>Module: ".$module_id."<br>Class: CAdvBanner_all<br>File: ".__FILE__;
 	}
 
-	function GetCurUri()
+	public static function GetCurUri()
 	{
 		global $strAdvCurUri, $APPLICATION;
 		if ($strAdvCurUri!==false)
@@ -1292,7 +1294,7 @@ class CAdvBanner_all
 			return $APPLICATION->GetCurUri("", true);
 	}
 
-	function SetCurUri($uri=false)
+	public static function SetCurUri($uri=false)
 	{
 		global $strAdvCurUri;
 		if ($uri!==false)
@@ -1300,7 +1302,7 @@ class CAdvBanner_all
 	}
 
 	// получим баннер по ID
-	function GetByID($BANNER_ID, $CHECK_RIGHTS="Y")
+	public static function GetByID($BANNER_ID, $CHECK_RIGHTS="Y")
 	{
 		$BANNER_ID = intval($BANNER_ID);
 		if ($BANNER_ID<=0)
@@ -1314,7 +1316,7 @@ class CAdvBanner_all
 	}
 
 	// копирование баннера
-	function Copy($BANNER_ID, $CHECK_RIGHTS="Y")
+	public static function Copy($BANNER_ID, $CHECK_RIGHTS="Y")
 	{
 		$ID = 0;
 		$rsBanner = CAdvBanner::GetByID($BANNER_ID, $CHECK_RIGHTS);
@@ -1395,7 +1397,7 @@ class CAdvBanner_all
 	}
 
 	// удаление баннера
-	function Delete($BANNER_ID, $CHECK_RIGHTS="Y")
+	public static function Delete($BANNER_ID, $CHECK_RIGHTS="Y")
 	{
 		$err_mess = (CAdvBanner_all::err_mess())."<br>Function: Delete<br>Line: ";
 		global $DB, $strError;
@@ -1403,7 +1405,7 @@ class CAdvBanner_all
 		if ($BANNER_ID<=0)
 			return false;
 
-		$strSql = "SELECT CONTRACT_ID, IMAGE_ID FROM b_adv_banner WHERE ID = '$BANNER_ID'";
+		$strSql = "SELECT CONTRACT_ID, IMAGE_ID, TYPE_SID FROM b_adv_banner WHERE ID = '$BANNER_ID'";
 		$rsBanner = $DB->Query($strSql, false, $err_mess.__LINE__);
 		if ($arBanner = $rsBanner->Fetch())
 		{
@@ -1422,6 +1424,12 @@ class CAdvBanner_all
 
 			if ($ok)
 			{
+				if (defined('BX_COMP_MANAGED_CACHE'))
+				{
+					$taggedCache = Application::getInstance()->getTaggedCache();
+					$taggedCache->clearByTag('advertising_banner_type_'.$arBanner['TYPE_SID']);
+				}
+
 				CFile::Delete($arBanner["IMAGE_ID"]);
 				CAdvBanner::DeleteCountryLink($BANNER_ID);
 				CAdvBanner::DeleteSiteLink($BANNER_ID);
@@ -1446,7 +1454,7 @@ class CAdvBanner_all
 	}
 
 	// удаление связи баннера со временем и днями недели
-	function DeleteWeekdayLink($BANNER_ID)
+	public static function DeleteWeekdayLink($BANNER_ID)
 	{
 		$err_mess = (CAdvBanner_all::err_mess())."<br>Function: DeleteWeekdayLink<br>Line: ";
 		global $DB;
@@ -1459,7 +1467,7 @@ class CAdvBanner_all
 	}
 
 	// удаление связи баннера с языками
-	function DeleteSiteLink($BANNER_ID)
+	public static function DeleteSiteLink($BANNER_ID)
 	{
 		$err_mess = (CAdvBanner_all::err_mess())."<br>Function: DeleteSiteLink<br>Line: ";
 		global $DB;
@@ -1472,7 +1480,7 @@ class CAdvBanner_all
 	}
 
 	// удаление связи баннера со страной
-	function DeleteCountryLink($BANNER_ID)
+	public static function DeleteCountryLink($BANNER_ID)
 	{
 		$err_mess = (CAdvBanner_all::err_mess())."<br>Function: DeleteCountryLink<br>Line: ";
 		global $DB;
@@ -1485,7 +1493,7 @@ class CAdvBanner_all
 	}
 
 	// удаление связи баннера со рекламными кампаниями статистики
-	function DeleteStatAdvLink($BANNER_ID)
+	public static function DeleteStatAdvLink($BANNER_ID)
 	{
 		$err_mess = (CAdvBanner_all::err_mess())."<br>Function: DeleteStatAdvLink<br>Line: ";
 		global $DB;
@@ -1498,7 +1506,7 @@ class CAdvBanner_all
 	}
 
 	// удаление связи баннера со страницами
-	function DeletePageLink($BANNER_ID, $where="")
+	public static function DeletePageLink($BANNER_ID, $where="")
 	{
 		$err_mess = (CAdvBanner_all::err_mess())."<br>Function: DeletePageLink<br>Line: ";
 		global $DB;
@@ -1510,7 +1518,7 @@ class CAdvBanner_all
 		return true;
 	}
 
-	function DeleteGroupLink($BANNER_ID)
+	public static function DeleteGroupLink($BANNER_ID)
 	{
 		$err_mess = (CAdvBanner_all::err_mess())."<br>Function: DeleteGroupLink<br>Line: ";
 		global $DB;
@@ -1522,7 +1530,7 @@ class CAdvBanner_all
 		return true;
 	}
 
-	function GetStatusList()
+	public static function GetStatusList()
 	{
 		$ref_id = array(
 			"PUBLISHED",
@@ -1539,7 +1547,7 @@ class CAdvBanner_all
 	}
 
 	// получаем массив страниц связанных с баннером
-	function GetPageArray($BANNER_ID, $SHOW="SHOW")
+	public static function GetPageArray($BANNER_ID, $SHOW="SHOW")
 	{
 		$err_mess = (CAdvBanner_all::err_mess())."<br>Function: GetPageArray<br>Line: ";
 		global $DB;
@@ -1564,7 +1572,7 @@ class CAdvBanner_all
 	}
 
 	// получаем массив групп пользователей связанных с баннером
-	function GetGroupArray($BANNER_ID)
+	public static function GetGroupArray($BANNER_ID)
 	{
 		$err_mess = (CAdvBanner_all::err_mess())."<br>Function: GetGroupArray<br>Line: ";
 		global $DB;
@@ -1588,7 +1596,7 @@ class CAdvBanner_all
 	}
 
 	// получаем массив языков связанных с баннером
-	function GetSiteArray($BANNER_ID)
+	public static function GetSiteArray($BANNER_ID)
 	{
 		$err_mess = (CAdvBanner_all::err_mess())."<br>Function: GetSiteArray<br>Line: ";
 		global $DB;
@@ -1611,7 +1619,7 @@ class CAdvBanner_all
 	}
 
 	// получаем массив стран связанных с баннером
-	function GetCountryArray($BANNER_ID, $WHAT = "COUNTRY")
+	public static function GetCountryArray($BANNER_ID, $WHAT = "COUNTRY")
 	{
 		$err_mess = (CAdvBanner_all::err_mess())."<br>Function: GetCountryArray<br>Line: ";
 		global $DB;
@@ -1666,7 +1674,7 @@ class CAdvBanner_all
 	}
 
 	// получаем массив времени и дней недели связанных с баннером
-	function GetWeekdayArray($BANNER_ID)
+	public static function GetWeekdayArray($BANNER_ID)
 	{
 		$err_mess = (CAdvBanner_all::err_mess())."<br>Function: GetWeekdayArray<br>Line: ";
 		global $DB;
@@ -1690,7 +1698,7 @@ class CAdvBanner_all
 	}
 
 	// получаем массив рекламных кампаний связанных с баннером
-	function GetStatAdvArray($BANNER_ID)
+	public static function GetStatAdvArray($BANNER_ID)
 	{
 		$err_mess = (CAdvBanner_all::err_mess())."<br>Function: GetStatAdvArray<br>Line: ";
 		global $DB;
@@ -1713,7 +1721,7 @@ class CAdvBanner_all
 	}
 
 	// проверяем поля при модификации баннера
-	function CheckFields($arFields, $BANNER_ID, $CHECK_RIGHTS="Y")
+	public static function CheckFields($arFields, $BANNER_ID, $CHECK_RIGHTS="Y")
 	{
 		global $strError;
 		$str = "";
@@ -2000,19 +2008,38 @@ class CAdvBanner_all
 	private static function makeFileArrayFromArray($file_array, $description = null, $options = array())
 	{
 		$result = false;
-		if (file_exists($_SERVER["DOCUMENT_ROOT"].$file_array["tmp_name"]))
+
+		if (is_uploaded_file($file_array["tmp_name"]))
 		{
 			$result = $file_array;
-			$result["tmp_name"] = $_SERVER["DOCUMENT_ROOT"].$file_array["tmp_name"];
 			if (!is_null($description))
 				$result["description"] = $description;
 		}
-		elseif (strlen($file_array["tmp_name"]) > 0 && strpos($file_array["tmp_name"], CTempFile::GetAbsoluteRoot()) === 0)
+		elseif (
+			strlen($file_array["tmp_name"]) > 0
+			&& strpos($file_array["tmp_name"], CTempFile::GetAbsoluteRoot()) === 0
+		)
 		{
 			$io = CBXVirtualIo::GetInstance();
 			$absPath = $io->CombinePath("/", $file_array["tmp_name"]);
-			$tmpPath = CTempFile::GetAbsoluteRoot();
-			if (strpos($absPath, $tmpPath) === 0)
+			$tmpPath = CTempFile::GetAbsoluteRoot()."/";
+			if (strpos($absPath, $tmpPath) === 0 || (($absPath = ltrim($absPath, "/")) && strpos($absPath, $tmpPath) === 0))
+			{
+				$result = $file_array;
+				$result["tmp_name"] = $absPath;
+				$result["error"] = intval($result["error"]);
+				if (!is_null($description))
+					$result["description"] = $description;
+			}
+		}
+		elseif (strlen($file_array["tmp_name"]) > 0)
+		{
+			$io = CBXVirtualIo::GetInstance();
+			$normPath = $io->CombinePath("/", $file_array["tmp_name"]);
+			$absPath = $io->CombinePath(CTempFile::GetAbsoluteRoot(), $normPath);
+			$tmpPath = CTempFile::GetAbsoluteRoot()."/";
+			if (strpos($absPath, $tmpPath) === 0 && $io->FileExists($absPath) ||
+				($absPath = $io->CombinePath($_SERVER["DOCUMENT_ROOT"], $normPath)) && strpos($absPath, $tmpPath) === 0)
 			{
 				$result = $file_array;
 				$result["tmp_name"] = $absPath;
@@ -2042,7 +2069,7 @@ class CAdvBanner_all
 	}
 
 	// добавляем новый баннер или модифицируем существующий
-	function Set($arFields, $BANNER_ID, $CHECK_RIGHTS="Y")
+	public static function Set($arFields, $BANNER_ID, $CHECK_RIGHTS="Y")
 	{
 		$err_mess = (CAdvBanner_all::err_mess())."<br>Function: Set<br>Line: ";
 		global $DB, $USER, $APPLICATION, $strError;
@@ -2430,11 +2457,7 @@ class CAdvBanner_all
 
 				if (in_array("TEMPLATE", $arrKeys))
 				{
-					$arFields_i["TEMPLATE"] = "'".$DB->ForSql($arFields["TEMPLATE"])."'";
-					if ("'".$DB->ForSql($arBanner["TEMPLATE"])."'"!=$arFields_i["TEMPLATE"])
-					{
-						$modify_status = "Y";
-					}
+					$arFields_i["TEMPLATE"] = CAdvBanner::addBindField($arFields["TEMPLATE"], $arBanner["TEMPLATE"], $modify_status);
 				}
 
 				if (in_array("FLASH_TRANSPARENT", $arrKeys))
@@ -2565,6 +2588,12 @@ class CAdvBanner_all
 						$arFields_i["MODIFIED_BY"] = $USER_ID;
 
 					$BANNER_ID = CAdvBanner::Add($arFields_i);
+				}
+
+				if (defined('BX_COMP_MANAGED_CACHE'))
+				{
+					$taggedCache = Application::getInstance()->getTaggedCache();
+					$taggedCache->clearByTag('advertising_banner_type_'.$arFields['TYPE_SID']);
 				}
 
 				$BANNER_ID = intval($BANNER_ID);
@@ -2854,7 +2883,7 @@ class CAdvBanner_all
 		return $BANNER_ID;
 	}
 
-	function SetKeywords($keywords, $TYPE_SID="", $LOGIC="DESIRED")
+	public static function SetKeywords($keywords, $TYPE_SID="", $LOGIC="DESIRED")
 	{
 		global $arrADV_KEYWORDS;
 		if (strlen($LOGIC)<=0) return;
@@ -2908,7 +2937,7 @@ class CAdvBanner_all
 		}
 	}
 
-	function GetKeywords($TYPE_SID="", $LOGIC="", $EXACT_MATCH="")
+	public static function GetKeywords($TYPE_SID="", $LOGIC="", $EXACT_MATCH="")
 	{
 		global $arrADV_KEYWORDS, $APPLICATION;
 		$arrReturn = $arrADV_KEYWORDS;
@@ -2958,7 +2987,7 @@ class CAdvBanner_all
 		}
 	}
 
-	function ResetKeywords($TYPE_SID="", $LOGIC="", $EXACT_MATCH="")
+	public static function ResetKeywords($TYPE_SID="", $LOGIC="", $EXACT_MATCH="")
 	{
 		global $arrADV_KEYWORDS;
 		if (strlen($TYPE_SID)>0)
@@ -2973,27 +3002,27 @@ class CAdvBanner_all
 		else $arrADV_KEYWORDS = array();
 	}
 
-	function SetRequiredKeywords($keywords, $TYPE_SID="")
+	public static function SetRequiredKeywords($keywords, $TYPE_SID="")
 	{
 		CAdvBanner::SetKeywords($keywords, $TYPE_SID, "REQUIRED");
 	}
 
-	function SetDesiredKeywords($keywords, $TYPE_SID="")
+	public static function SetDesiredKeywords($keywords, $TYPE_SID="")
 	{
 		CAdvBanner::SetKeywords($keywords, $TYPE_SID, "DESIRED");
 	}
 
-	function GetRequiredKeywords($TYPE_SID="", $EXACT_MATCH="")
+	public static function GetRequiredKeywords($TYPE_SID="", $EXACT_MATCH="")
 	{
 		return CAdvBanner::GetKeywords($TYPE_SID, "REQUIRED", $EXACT_MATCH);
 	}
 
-	function GetDesiredKeywords($TYPE_SID="", $EXACT_MATCH="")
+	public static function GetDesiredKeywords($TYPE_SID="", $EXACT_MATCH="")
 	{
 		return CAdvBanner::GetKeywords($TYPE_SID, "DESIRED", $EXACT_MATCH);
 	}
 
-	function arr_comp_uniform($a, $b)
+	public static function arr_comp_uniform($a, $b)
 	{
 		if ($a["val"] < $b["val"])
 			return -1;
@@ -3004,7 +3033,7 @@ class CAdvBanner_all
 	}
 
 	// возвращает массив описывающий произвольный баннер
-	function GetRandom($TYPE_SID)
+	public static function GetRandom($TYPE_SID)
 	{
 		$err_mess = (CAdvBanner_all::err_mess())."<br>Function: GetRandom<br>Line: ";
 		global $APPLICATION, $DB, $arrViewedBanners, $arrADV_VIEWED_BANNERS;
@@ -3869,7 +3898,7 @@ class CAdvBanner_all
 	}
 
 	// Uniformity coefficient
-	function GetUniformityCoef($arBanner)
+	public static function GetUniformityCoef($arBanner)
 	{
 		$arProgress = 0;
 		$rot = CAdvBanner_all::CalculateRotationProgress($arBanner);
@@ -3879,7 +3908,7 @@ class CAdvBanner_all
 		return $arProgress;
 	}
 
-	/*protected*/ function __innerExtractBitrixDates($arBanner)
+	public static function __innerExtractBitrixDates($arBanner)
 	{
 		$fs = array("to" => 0, "first" => 0, "from" => 0);
 		if (isset($arBanner["DATE_SHOW_TO"])) $fs["to"] = $arBanner["DATE_SHOW_TO"];
@@ -3893,7 +3922,7 @@ class CAdvBanner_all
 	}
 
 	// Returns TimeDifference in seconds beetween FROM,TO Dates of a banner
-	function CalculateTimeDiff($arBanner)
+	public static function CalculateTimeDiff($arBanner)
 	{
 		$dt = CAdvBanner_all::__innerExtractBitrixDates($arBanner);
 		if (!$dt["to"]) return 0;
@@ -3917,7 +3946,7 @@ class CAdvBanner_all
 	}
 
 	// Calculate progress in 0.0<x<1.0 format of banner rotation
-	function CalculateTimeProgress($arBanner)
+	public static function CalculateTimeProgress($arBanner)
 	{
 		$dt = CAdvBanner_all::__innerExtractBitrixDates($arBanner);
 
@@ -3940,7 +3969,7 @@ class CAdvBanner_all
 		return $stmpnow/$diff;
 	}
 
-	function CalculateRotationProgress($arBanner)
+	public static function CalculateRotationProgress($arBanner)
 	{
 		if (!isset($arBanner["MAX_SHOW_COUNT"]) or !isset($arBanner["SHOW_COUNT"]) or
 			intval($arBanner["MAX_SHOW_COUNT"])==0) return 0;
@@ -3951,7 +3980,7 @@ class CAdvBanner_all
 	//function CalculateActualRotationSpeed()
 	//function GetAverageRotationSpeed()
 
-	function PrepareHTML($text, $arBanner)
+	public static function PrepareHTML($text, $arBanner)
 	{
 		global $nRandom1, $nRandom2, $nRandom3, $nRandom4, $nRandom5;
 		static $search = array("#RANDOM1#", "#RANDOM2#", "#RANDOM3#", "#RANDOM4#", "#RANDOM5#", "#BANNER_NAME#", "#BANNER_ID#", "#CONTRACT_ID#", "#TYPE_SID#");
@@ -3969,7 +3998,7 @@ class CAdvBanner_all
 		return $text;
 	}
 
-	function GetRedirectURL($url, $arBanner)
+	public static function GetRedirectURL($url, $arBanner)
 	{
 		global $strClickURL;
 
@@ -3997,7 +4026,7 @@ class CAdvBanner_all
 		return $url;
 	}
 
-	function ReplaceURL($text, $arBanner)
+	public static function ReplaceURL($text, $arBanner)
 	{
 		if ($arBanner["FIX_CLICK"]=="Y")
 		{
@@ -4015,7 +4044,7 @@ class CAdvBanner_all
 	}
 
 	// возвращает HTML баннера по массиву
-	function GetHTML($arBanner, $bNoIndex=false)
+	public static function GetHTML($arBanner, $bNoIndex=false)
 	{
 		$strReturn = "";
 
@@ -4164,7 +4193,7 @@ class CAdvBanner_all
 		return $strReturn;
 	}
 
-	function FixShowAll()
+	public static function FixShowAll()
 	{
 		global $DB, $CACHE_ADVERTISING, $arrADV_VIEWED_BANNERS, $APPLICATION;
 		$err_mess = (CAdvBanner::err_mess())."<br>Function: FixShowAll<br>Line: ";
@@ -4332,7 +4361,7 @@ class CAdvBanner_all
 	}
 
 	// фиксируем показ баннера
-	function FixShow($arBanner)
+	public static function FixShow($arBanner)
 	{
 		global $DB, $CACHE_ADVERTISING;
 
@@ -4384,7 +4413,7 @@ class CAdvBanner_all
 		}
 	}
 
-	function BeforeRestartBuffer()
+	public static function BeforeRestartBuffer()
 	{
 		global $CACHE_ADVERTISING, $arrADV_VIEWED_BANNERS;
 		$CACHE_ADVERTISING = array(
@@ -4399,7 +4428,7 @@ class CAdvBanner_all
 	}
 
 	// устанавливаем cookie посетителю о просмотре баннера
-	function SetCookie($arBanner, &$inc_banner_counter, &$inc_contract_counter)
+	public static function SetCookie($arBanner, &$inc_banner_counter, &$inc_contract_counter)
 	{
 		global $arrADV_VIEWED_BANNERS, $APPLICATION;
 		if (intval($arBanner["ID"])>0)
@@ -4506,7 +4535,7 @@ class CAdvBanner_all
 	}
 
 	// возвращает HTML произвольного баннера по типу
-	function Show($TYPE_SID, $HTML_BEFORE="", $HTML_AFTER="")
+	public static function Show($TYPE_SID, $HTML_BEFORE="", $HTML_AFTER="")
 	{
 		global $APPLICATION, $USER;
 
@@ -4540,7 +4569,7 @@ class CAdvBanner_all
 		return false;
 	}
 
-	function GetEditIcons($arBanner, $TYPE_SID="", $arIcons = array())
+	public static function GetEditIcons($arBanner, $TYPE_SID="", $arIcons = array())
 	{
 		global $USER, $APPLICATION;
 		static $arContractTypes = false;
@@ -4674,7 +4703,7 @@ class CAdvBanner_all
 		return false;
 	}
 
-	function CheckDynamicFilter($arFilter)
+	public static function CheckDynamicFilter($arFilter)
 	{
 		global $strError;
 		$str = "";
@@ -4698,7 +4727,7 @@ class CAdvBanner_all
 	}
 
 	// возвращает массив описывающий динамику баннеров
-	function GetDynamicList($arFilter, &$arrLegend, &$is_filtered)
+	public static function GetDynamicList($arFilter, &$arrLegend, &$is_filtered)
 	{
 		$err_mess = (CAdvBanner::err_mess())."<br>Function: GetDynamicList<br>Line: ";
 		global $DB;
@@ -4907,7 +4936,7 @@ class CAdvBanner_all
 		return $arrDays;
 	}
 
-	function GetStatList($by, $order, $arFilter)
+	public static function GetStatList($by, $order, $arFilter)
 	{
 		$err_mess = (CAdvBanner::err_mess())."<br>Function: GetDynamicList<br>Line: ";
 		global $DB;
@@ -5040,13 +5069,13 @@ class CAdvBanner_all
 
 class CAdvType_all
 {
-	function err_mess()
+	public static function err_mess()
 	{
 		$module_id = "advertising";
 		return "<br>Module: ".$module_id."<br>Class: CAdvType_all<br>File: ".__FILE__;
 	}
 
-	function CheckFilter($arFilter)
+	public static function CheckFilter($arFilter)
 	{
 		global $strError;
 		$str = "";
@@ -5070,7 +5099,7 @@ class CAdvType_all
 	}
 
 	// получаем следующий порядок сортировки
-	function GetNextSort()
+	public static function GetNextSort()
 	{
 		global $DB;
 		$err_mess = (CAdvType_all::err_mess())."<br>Function: GetNextSort<br>Line: ";
@@ -5080,7 +5109,7 @@ class CAdvType_all
 		return intval($zr["MAX_SORT"])+100;
 	}
 
-	function CheckFields($arFields, $OLD_SID, $CHECK_RIGHTS)
+	public static function CheckFields($arFields, $OLD_SID, $CHECK_RIGHTS)
 	{
 		global $strError;
 		$str = "";
@@ -5114,8 +5143,13 @@ class CAdvType_all
 						{
 							$arFilter = array("SID" => $SID." & ~".$OLD_SID, "SID_EXACT_MATCH" => "Y");
 							$rs = CAdvType::GetList($v1, $v2, $arFilter, $v3);
-							$rs->NavStart();
-							$rows = intval($rs->SelectedRowsCount());
+							$rows = 0;
+							if (is_object($rs))
+							{
+								$rs->NavStart();
+								$rows = intval($rs->SelectedRowsCount());
+							}
+
 							if ($rows>=1 || $SID == "ALL" || $OLD_SID == "ALL")
 							{
 								$str .= str_replace("#SID#", ($OLD_SID == "ALL" ? $OLD_SID : $SID), GetMessage("AD_ERROR_SID_EXISTS"));
@@ -5136,7 +5170,7 @@ class CAdvType_all
 	}
 
 	// добавляем новый тип или модифицируем существующий
-	function Set($arFields, $OLD_SID, $CHECK_RIGHTS="Y")
+	public static function Set($arFields, $OLD_SID, $CHECK_RIGHTS="Y")
 	{
 		$err_mess = (CAdvType_all::err_mess())."<br>Function: Set<br>Line: ";
 		global $DB, $USER;
@@ -5241,7 +5275,7 @@ class CAdvType_all
 	}
 
 	// получаем тип баннера по ID
-	function GetByID($TYPE_SID)
+	public static function GetByID($TYPE_SID)
 	{
 		if (strlen(trim($TYPE_SID))<=0) return false;
 		$arFilter = array(
@@ -5253,7 +5287,7 @@ class CAdvType_all
 	}
 
 	// удаляем тип баннера
-	function Delete($TYPE_SID, $CHECK_RIGHTS="Y")
+	public static function Delete($TYPE_SID, $CHECK_RIGHTS="Y")
 	{
 		$err_mess = (CAdvType_all::err_mess())."<br>Function: Delete<br>Line: ";
 		global $DB, $strError;
@@ -5285,7 +5319,7 @@ class CAdvType_all
 	}
 
 	// удаляем связь типа с контрактом
-	function DeleteContractLink($TYPE_SID)
+	public static function DeleteContractLink($TYPE_SID)
 	{
 		$err_mess = (CAdvType_all::err_mess())."<br>Function: DeleteContractLink<br>Line: ";
 		global $DB;
@@ -5300,7 +5334,7 @@ class CAdvType_all
 	}
 
 	// получаем список типов баннеров
-	function GetList(&$by, &$order, $arFilter=Array(), &$is_filtered, $CHECK_RIGHTS="Y")
+	public static function GetList(&$by, &$order, $arFilter=Array(), &$is_filtered, $CHECK_RIGHTS="Y")
 	{
 		$err_mess = (CAdvType_all::err_mess())."<br>Function: GetList<br>Line: ";
 		global $DB;
@@ -5445,12 +5479,12 @@ class CAdvType_all
 
 class CAdvertising
 {
-	function GetAdv($TYPE_SID)
+	public static function GetAdv($TYPE_SID)
 	{
 		return CAdvBanner::Show($TYPE_SID);
 	}
 
-	function ClickAdv($BANNER_ID)
+	public static function ClickAdv($BANNER_ID)
 	{
 		return CAdvBanner::Click($BANNER_ID);
 	}

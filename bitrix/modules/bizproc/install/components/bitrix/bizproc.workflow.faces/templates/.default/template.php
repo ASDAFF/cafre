@@ -6,7 +6,7 @@ if (empty($arResult['WORKFLOW_ID'])):?>
 <div class="bp-short-process <?if (empty($arResult['TASKS']['COMPLETED']) && !$arResult['STATE_TITLE']) echo 'alone';?>">
 	<div class="bp-short-process-steps">
 		<?if ($arResult['STATE_TITLE']):?>
-		<span class="bp-short-process-finished <?if ($arResult['LAST_USER_STATUS'] != CBPTaskUserStatus::No):?>process-finished-ready<?endif?>">
+		<span class="bp-short-process-finished <?if ($arResult['LAST_USER_STATUS'] == CBPTaskUserStatus::Yes || $arResult['LAST_USER_STATUS'] == CBPTaskUserStatus::Ok):?>process-finished-ready<?endif?>">
 			<span>
 				<span title="<?=htmlspecialcharsbx($arResult['STATE_TITLE'])?>"><?=htmlspecialcharsbx($arResult['STATE_TITLE'])?></span>
 			</span>
@@ -43,7 +43,7 @@ if (empty($arResult['WORKFLOW_ID'])):?>
 
 			<div class="bp-short-process-step-wrapper">
 				<a href="javascript:void(0)" id="<?=$cmpId?>_face_2" class="bp-short-process-step <?if ($face['STATUS'] == CBPTaskUserStatus::Ok || $face['STATUS'] == CBPTaskUserStatus::Yes) echo 'bp-short-process-step-ready'?>
-			<?if ($face['STATUS'] == CBPTaskUserStatus::No) echo 'bp-short-process-step-cancel'?> <?if ($task['USERS_CNT'] > 1) echo 'bp-short-process-step-more'?>" title="<?=$task['NAME']?>">
+			<?if ($face['STATUS'] == CBPTaskUserStatus::No || $face['STATUS'] == CBPTaskUserStatus::Cancel) echo 'bp-short-process-step-cancel'?> <?if ($task['USERS_CNT'] > 1) echo 'bp-short-process-step-more'?>" title="<?=$task['NAME']?>">
 					<span class="bp-short-process-step-inner"><?if ($face['PHOTO_SRC']):?><img src="<?=$face['PHOTO_SRC']?>" border="0"/><?endif?></span>
 				</a>
 				<?if ($task['USERS_CNT'] > 1):?>
@@ -85,7 +85,7 @@ if (empty($arResult['WORKFLOW_ID'])):?>
 		<span class="bp-short-prosess-steps-arrow bp-short-prosess-steps-arrow-running <?if ($arResult['TASKS']['RUNNING_CNT'] > 1) echo 'steps-arrow-right-right'?>"></span>
 		<span class="bp-short-process-step-wrapper">
 			<a href="javascript:void(0)" id="<?=$cmpId?>_face_3" class="bp-short-process-step  <?if ($face['STATUS'] == CBPTaskUserStatus::Ok || $face['STATUS'] == CBPTaskUserStatus::Yes) echo 'bp-short-process-step-ready'?>
-			<?if ($face['STATUS'] == CBPTaskUserStatus::No) echo 'bp-short-process-step-cancel'?> <?if ($task['USERS_CNT'] > 1) echo 'bp-short-process-step-more'?>">
+			<?if ($face['STATUS'] == CBPTaskUserStatus::No || $face['STATUS'] == CBPTaskUserStatus::Cancel) echo 'bp-short-process-step-cancel'?> <?if ($task['USERS_CNT'] > 1) echo 'bp-short-process-step-more'?>">
 				<span class="bp-short-process-step-inner"><img id="<?=$cmpId?>_face_3_photo_src" src="<?=$photoSrc?>" border="0"/></span>
 			</a>
 			<? if ($allFaces >= 2):?>

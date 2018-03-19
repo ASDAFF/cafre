@@ -5,7 +5,7 @@ IncludeModuleLangFile($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/classes/g
 class CRatingRule
 {
 	// get specified rating rule
-	function GetByID($ID)
+	public static function GetByID($ID)
 	{
 		global $DB;
 
@@ -28,7 +28,7 @@ class CRatingRule
 	}
 
 	// get rating rule list
-	function GetList($aSort=array(), $arFilter=Array())
+	public static function GetList($aSort=array(), $arFilter=Array())
 	{
 		global $DB;
 
@@ -102,7 +102,7 @@ class CRatingRule
 	}
 
 	//Addition rating rule
-	function Add($arFields)
+	public static function Add($arFields)
 	{
 		global $DB;
 
@@ -156,7 +156,7 @@ class CRatingRule
 	}
 
 	//Update rating
-	function Update($ID, $arFields)
+	public static function Update($ID, $arFields)
 	{
 		global $DB;
 
@@ -230,7 +230,7 @@ class CRatingRule
 	}
 
 	// delete rating rule
-	function Delete($ID)
+	public static function Delete($ID)
 	{
 		global $DB;
 
@@ -250,7 +250,7 @@ class CRatingRule
 	}
 
 	// start rating rule action
-	function Apply($ID)
+	public static function Apply($ID)
 	{
 		global $DB;
 
@@ -280,7 +280,7 @@ class CRatingRule
 	}
 
 	// get vetting list
-	function GetVetting($arFilter, $arSort)
+	public static function GetVetting($arFilter, $arSort)
 	{
 		global $DB;
 		$err_mess = (CRatingRule::err_mess())."<br>Function: GetVetting<br>Line: ";
@@ -336,7 +336,7 @@ class CRatingRule
 	}
 
 	// apply vetting list
-	function ApplyVetting($arConfigs)
+	public static function ApplyVetting($arConfigs)
 	{
 		global $DB;
 
@@ -351,7 +351,7 @@ class CRatingRule
 	}
 
 	// queries modules and get all the available objects
-	function GetRatingRuleObjects()
+	public static function GetRatingRuleObjects()
 	{
 		$arObjects = array();
 
@@ -367,7 +367,7 @@ class CRatingRule
 	}
 
 	// queries modules and assemble an array of settings
-	function GetRatingRuleConfigs($objectType = null, $withRuleType = true)
+	public static function GetRatingRuleConfigs($objectType = null, $withRuleType = true)
 	{
 		$arConfigs = array();
 
@@ -401,7 +401,7 @@ class CRatingRule
 	}
 
 	// check only general field
-	function __CheckFields($arFields)
+	public static function __CheckFields($arFields)
 	{
 		$aMsg = array();
 
@@ -435,4 +435,3 @@ class CRatingRule
 		return "<br>Class: CRatingRule<br>File: ".__FILE__;
 	}
 }
-?>

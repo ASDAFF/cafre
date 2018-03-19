@@ -56,6 +56,9 @@ $arParams["NAV_TEMPLATE"] = (strlen($arParams["NAV_TEMPLATE"])>0 ? $arParams["NA
 $arParams["PAGE_SETTINGS"] = (!empty($arParams["PAGE_SETTINGS"]) ? $arParams["PAGE_SETTINGS"] :
 	array("bDescPageNumbering" => true, "nPageSize" => $arParams["MESSAGE_COUNT"], "bShowAll" => false));
 $arParams["PAGE_SETTINGS"]["bShowAll"] = false;
+if (isset($arParams["PAGE_SETTINGS"]["bDescPageNumbering"]) && is_string($arParams["PAGE_SETTINGS"]["bDescPageNumbering"]))
+	$arParams["PAGE_SETTINGS"]["bDescPageNumbering"] = ($arParams["PAGE_SETTINGS"]["bDescPageNumbering"] === "false" ? false :
+		($arParams["PAGE_SETTINGS"]["bDescPageNumbering"] === "true" ? true : false));
 /************** URL ************************************************/
 $arParams["BLOG_VAR"] = (empty($arParams["BLOG_VAR"]) ? "blog" : $arParams["BLOG_VAR"]);
 $arParams["PAGE_VAR"] = (empty($arParams["PAGE_VAR"]) ? "page" : $arParams["PAGE_VAR"]);
@@ -76,7 +79,7 @@ foreach(array(
 $arParams["DATE_TIME_FORMAT"] = trim(empty($arParams["DATE_TIME_FORMAT"]) ? $DB->DateFormatToPHP(CSite::GetDateFormat("FULL")) : $arParams["DATE_TIME_FORMAT"]);
 $arParams["NAME_TEMPLATE"] = (empty($arParams["NAME_TEMPLATE"]) ? CSite::GetNameFormat() : $arParams["NAME_TEMPLATE"]);
 $arParams["SHOW_LOGIN"] = ($arParams["SHOW_LOGIN"] == "Y");
-$arParams["AVATAR_SIZE"] = intval($arParams["AVATAR_SIZE"]);
+$arParams["AVATAR_SIZE"] = (isset($_REQUEST["avatar_size"]) && intval($_REQUEST["avatar_size"]) > 0 ? intval($_REQUEST["avatar_size"]) : intval($arParams["AVATAR_SIZE"]));
 $arParams["SET_TITLE"] = "N";
 CRatingsComponentsMain::GetShowRating($arParams); // $arParams["SHOW_RATING"]
 $arParams["MESSAGE_LENGTH"] = ($arParams["MESSAGE_LENGTH"] > 0 ? $arParams["MESSAGE_LENGTH"] : 90);

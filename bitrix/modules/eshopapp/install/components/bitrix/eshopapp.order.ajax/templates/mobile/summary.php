@@ -120,7 +120,7 @@
 	<div class="ordering_container">
 		<div class="ordering_li_container">
 			<p><?=GetMessage("SOA_TEMPL_SUM_COMMENTS")?></p>
-			<textarea rows="4" cols="40" name="ORDER_DESCRIPTION"><?=$arResult["USER_VALS"]["ORDER_DESCRIPTION"]?></textarea>
+			<textarea rows="4" cols="40" name="ORDER_DESCRIPTION"><?=htmlspecialcharsbx($arResult["USER_VALS"]["ORDER_DESCRIPTION"])?></textarea>
 		</div>
 	</div>
 </div>

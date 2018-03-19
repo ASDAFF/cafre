@@ -64,7 +64,7 @@ div.bx-html-editor-absolute{
 }
 
 .bxhtmled-top-bar-btn i {
-	background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png) no-repeat 100px 100px;
+	background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png?v=1) no-repeat 100px 100px;
 	display: block;
 	height: 20px;
 	margin: 2px 0 0 2px;
@@ -160,7 +160,7 @@ span.bxhtmled-top-bar-dd-active {
 }
 
 span.bxhtmled-top-bar-dd:before {
-	background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png) no-repeat center -438px;
+	background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png?v=1) no-repeat center -438px;
 	content: "";
 	right: 5px;
 	top: 11px;
@@ -207,7 +207,7 @@ span.bxhtmled-top-bar-dd-active:before {
 }
 
 .bxhtmled-top-bar-select:before {
-	background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png) no-repeat center -1257px;
+	background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png?v=1) no-repeat center -1257px;
 	content:'';
 	height: 3px;
 	top: 9px;
@@ -319,7 +319,7 @@ span.bxhtmled-top-bar-dd-active:before {
 	display: inline-block;
 	width: 10px;
 	height: 13px;
-	background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png) no-repeat -7px -30px;
+	background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png?v=1) no-repeat -7px -30px;
 	position: absolute;
 	top: 10px;
 	right: 2px;
@@ -369,6 +369,9 @@ span.bxhtmled-top-bar-dd-active:before {
 .bxhtmled-button-smile i {background-position: center -2499px; width: 21px;}
 .bxhtmled-button-quote i {background-position: center -2541px;}
 .bxhtmled-button-code i {background-position: center -2459px;}
+
+.bxhtmled-button-toolbar-pin i {background-position: center -2605px;}
+.bxhtmled-button-toolbar-pined i {background-position: center -2632px;}
 
 /* View mode button - list */
 .bxhtmled-button-viewmode-wysiwyg i{background-position: center -1504px !important;}
@@ -503,7 +506,7 @@ span.bxhtmled-top-bar-dd-active:before {
 	top: 0;
 }
 .bxhtmled-right-side-split-btn {
-	background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png) no-repeat center -58px;
+	background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png?v=1) no-repeat center -58px;
 	cursor: pointer!important;
 	height: 94px;
 	left: -11px;
@@ -521,7 +524,7 @@ span.bxhtmled-top-bar-dd-active:before {
 }
 
 .bxhtmled-taskbar-hidden .bxhtmled-right-side-split-btn {
-	background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png) no-repeat center -2151px;
+	background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png?v=1) no-repeat center -2151px;
 	left: 8px;
 	height: 9px;
 	width: 4px;
@@ -557,7 +560,7 @@ span.bxhtmled-top-bar-dd-active:before {
 	overflow: hidden;
 	padding-bottom: 1px;
 	position: relative;
-	vertical-align: top;
+	vertical-align: top !important;
 }
 
 .bxhtmled-split-btn-r {width: 21px;}
@@ -608,10 +611,11 @@ span.bxhtmled-top-bar-dd-active:before {
 .bxhtmled-split-btn-r .bxhtmled-split-btn-bg {
 	margin-left: -5px;
 	width: 24px;
+	vertical-align: middle;
 }
 
 .bxhtmled-split-btn-r .bxhtmled-split-btn-bg:before {
-	background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png) no-repeat center -171px;
+	background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png?v=1) no-repeat center -171px;
 	content: "";
 	height: 4px;
 	right: 7px;
@@ -651,7 +655,7 @@ span.bxhtmled-top-bar-dd-active:before {
 }
 
 .bxhtmled-toolbar{ text-align: left !important;}
-.bxhtmled-area-cnt{position: absolute; top: 34px; left: -5px; z-index: 100;}
+.bxhtmled-area-cnt{position: absolute; top: 34px; left: 0; z-index: 100;}
 .bxhtmled-iframe-cnt{
 	position: absolute; top: 0; left: 0; background-color: #FFF !important;
 	overflow: auto!important;
@@ -712,7 +716,7 @@ span.bxhtmled-top-bar-dd-active:before {
 	bottom: auto;
 	box-shadow: none;
 	clear: none;
-	display: inline;
+	display: block;
 	float: none;
 	left: auto;
 	margin: 0;
@@ -724,6 +728,7 @@ span.bxhtmled-top-bar-dd-active:before {
 	top: auto;
 	vertical-align: text-bottom;
 	z-index: auto;
+	line-height: 2px!important;
 }
 
 .bx-editor-css-iframe{
@@ -737,6 +742,8 @@ span.bxhtmled-top-bar-dd-active:before {
 .bxhtmled-textarea{
 	width: 100% !important;
 	height: 100% !important;
+	min-height: none!important;
+	max-height: none!important;
 	background-color: #fefefe !important;
 	color: #000000 !important;
 	cursor: text !important;
@@ -839,7 +846,7 @@ span.bxhtmled-top-bar-dd-active:before {
 }
 
 .bxhtmled-tskbr-element-icon {
-	background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png) no-repeat center 0;
+	background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png?v=1) no-repeat center 0;
 	display: none;
 	height: 11px;
 	top: 7px;
@@ -905,7 +912,7 @@ span.bxhtmled-top-bar-dd-active:before {
 }
 
 .bxhtmled-tskbr-sect-icon {
-	background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png) no-repeat center -32px;
+	background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png?v=1) no-repeat center -32px;
 	height: 8px;
 	left: 12px;
 	top: 9px;
@@ -951,7 +958,7 @@ span.bxhtmled-top-bar-dd-active:before {
 	position: absolute;
 }
 .bxhtmled-search-inp {
-	background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png) no-repeat right -1112px #fff !important;
+	background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png?v=1) no-repeat right -1112px #fff !important;
 	border: 1px solid !important;
 	border-color: #b9bcbe #bdc1c3 #c1c5c8 !important;
 	border-radius: 2px !important;
@@ -968,7 +975,7 @@ span.bxhtmled-top-bar-dd-active:before {
 .bxhtmled-search-cancel {width: 32px; height: 30px; position: absolute; right: 13px; top: 6px; display: none; cursor: pointer;}
 
 .bxhtmled-search-cont-res .bxhtmled-search-cancel{display: block;}
-.bxhtmled-search-cont-res .bxhtmled-search-inp {background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png) no-repeat right -1209px #fff !important;}
+.bxhtmled-search-cont-res .bxhtmled-search-inp {background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png?v=1) no-repeat right -1209px #fff !important;}
 
 .bxhtmled-taskbar-tree-cont-search .bxhtmled-tskbr-sect-outer,
 .bxhtmled-taskbar-tree-cont-search .bxhtmled-tskbr-element
@@ -1200,6 +1207,10 @@ span.bxhtmled-top-bar-dd-active:before {
 {
 	width: 90%;
 }
+
+.bxhtmled-video-error-cell{padding: 10px; text-align: center !important;}
+.bxhtmled-video-error{font-size: 110% !important;color: #790000 !important;font-weight: bold !important;}
+
 .bxhtmled-video-empty .bxhtmled-video-ext-row {display: none;}
 .bxhtmled-video-local .bxhtmled-video-ext-loc-row {display: none;}
 .bxhtmled-video-preview-cnt{
@@ -1336,7 +1347,7 @@ span.bxhtmled-top-bar-dd-active:before {
 }
 
 .bxhtmled-nav-item:before {
-	background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png) no-repeat center -1284px;
+	background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png?v=1) no-repeat center -1284px;
 	content: "";
 	height: 5px;
 	right: 7px;
@@ -1424,9 +1435,8 @@ border-radius: 2px; cursor: pointer;
 /* Colorpicker END */
 
 .bxhtmled-inp-popup {padding: 2px;}
-.bxhtmled-inp-popup-item{padding: 4px 7px; cursor: pointer;border-radius: 2px;}
+.bxhtmled-inp-popup-item{padding: 4px 7px; cursor: pointer; border-radius: 1px; width:100%;}
 .bxhtmled-inp-popup-item:hover{background-color: #bfe2f1 !important;}
-
 
 
 /* ~~~ Popup with corner ~~~ */
@@ -1443,7 +1453,7 @@ border-radius: 2px; cursor: pointer;
 }
 
 .bxhtmled-popup-corner {
-	background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png) no-repeat center -1959px;
+	background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png?v=1) no-repeat center -1959px;
 	height: 17px;
 	margin-left: -9px;
 	top: -9px;
@@ -1573,7 +1583,7 @@ border-radius: 2px; cursor: pointer;
 .bxhtmled-tskbr-element:hover .bxhtmled-right-side-item-edit-btn:before,
 .bxhtmled-tskbr-sect:hover .bxhtmled-right-side-item-edit-btn:before
 {
-   background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png) no-repeat center -293px;
+   background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png?v=1) no-repeat center -293px;
 }
 
 .bxhtmled-right-side-item-edit-btn:hover {
@@ -1634,7 +1644,7 @@ border-radius: 2px; cursor: pointer;
 }
 
 .bxhtmled-tskbr-sect:hover .bxhtmled-right-side-item-del-btn:before {
-	background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png) no-repeat center -1216px;
+	background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png?v=1) no-repeat center -1216px;
 }
 
 .bxhtmled-right-side-item-del-btn:hover {
@@ -1738,7 +1748,7 @@ border-radius: 2px; cursor: pointer;
 
 .bxhtmled-tskbr-sect-drag .bxhtmled-tskbr-sect-icon
 {
-	background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png) no-repeat center 0 !important;
+	background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png?v=1) no-repeat center 0 !important;
 	height: 11px !important;
 	top: 8px !important;
 	left: 8px !important;
@@ -1798,7 +1808,7 @@ border-radius: 2px; cursor: pointer;
 }
 
 .bxhtmled-snip-cat-add-but:before{
-	background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png) no-repeat center -670px !important;
+	background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png?v=1) no-repeat center -670px !important;
 	content: "";
 	display: inline-block;
 	height: 23px;
@@ -1946,7 +1956,7 @@ border-radius: 2px; cursor: pointer;
 	display: inline-block;
 	width: 24px;
 	height: 26px;
-	background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png) no-repeat center -1210px !important;
+	background: url(/bitrix/images/fileman/htmleditor/html-editor-sprite.png?v=1) no-repeat center -1210px !important;
 	vertical-align: bottom !important;
 	cursor: pointer;
 }
@@ -1958,6 +1968,141 @@ border-radius: 2px; cursor: pointer;
 
 .bxhtmled-settings-dialog-cnt .bxhtmled-dialog-tbl .bxhtmled-title-cell{white-space: nowrap; padding: 2px; font-weight: bold !important; text-align: center;}
 .bxhtmled-settings-dialog-cnt .bxhtmled-dialog-tbl .bxhtmled-left-c {min-width: 10% !important;}
+
+/*
+.bx-core-popup-menu-editor {
+	background-color: #fff!important;
+	border: 1px solid #d5e1e4!important;
+}
+.bx-core-popup-menu-editor .bx-core-popup-menu-item .bx-core-popup-menu-item-text{
+	color: #000;
+	text-shadow: none;
+}
+
+.bx-core-popup-menu-editor .bx-core-popup-menu-angle{
+	background: rgba(0, 0, 0, 0) url("/bitrix/panel/main/images/popup_menu_sprite_2.png") no-repeat scroll left -1480px!important;
+	top: -9px!important;
+}
+.bx-core-popup-menu-editor .bx-core-popup-menu-angle-bottom {
+	background: rgba(0, 0, 0, 0) url("/bitrix/panel/main/images/popup_menu_sprite_2.png") no-repeat scroll left -1460px!important;
+	bottom: -9px!important;
+}
+
+.bx-core-popup-menu-editor .bx-core-popup-menu-item:hover, .bx-core-popup-menu-editor .bx-core-popup-menu-item-opened {
+	background: #ebf2f4 none repeat scroll 0 0 !important;
+	border-top: 1px solid #e3eaec;
+	box-shadow: none;
+	text-decoration: none;
+}
+*/
+
+
+
+
+
+
+.bx-core-popup-menu-editor .bx-core-popup-menu, .bx-core-popup-menu-editor.bx-core-popup-menu {
+	background-color: #fff;
+	border: 1px solid #d5e1e4;
+	border-radius: 4px;
+	box-shadow: 0 18px 20px rgba(72, 93, 99, 0.3);
+	padding: 8px 0;
+}
+.bx-core-popup-menu-editor .bx-core-popup-menu-single-item, .bx-core-popup-menu-editor.bx-core-popup-menu-single-item {
+	padding: 3px 0;
+}
+.bx-core-popup-menu-editor .bx-core-popup-menu-level0, .bx-core-popup-menu-editor.bx-core-popup-menu-level0 {
+	background-color: #fff;
+}
+.bx-core-popup-menu-editor .bx-core-popup-menu-angle {
+	background: rgba(0, 0, 0, 0) url("/bitrix/panel/main/images/popup_menu_sprite_2.png") no-repeat scroll left -1480px;
+	top: -9px;
+}
+.bx-core-popup-menu-editor .bx-core-popup-menu-angle-bottom {
+	background: rgba(0, 0, 0, 0) url("/bitrix/panel/main/images/popup_menu_sprite_2.png") no-repeat scroll left -1460px;
+	bottom: -9px;
+}
+.bx-core-popup-menu-editor .bx-core-popup-menu-item {
+	-moz-border-bottom-colors: none;
+	-moz-border-left-colors: none;
+	-moz-border-right-colors: none;
+	-moz-border-top-colors: none;
+	border-color: transparent -moz-use-text-color -moz-use-text-color;
+	border-image: none;
+	border-style: solid none none;
+	border-width: 1px medium medium;
+	color: #2a2a2a !important;
+}
+.bx-core-popup-menu-editor .bx-core-popup-menu-item:hover, .bx-core-popup-menu-editor .bx-core-popup-menu-item-opened {
+	background: #ebf2f4 none repeat scroll 0 0 !important;
+	border-top: 1px solid #e3eaec;
+	border-right: 1px solid #e3eaec;
+	box-shadow: none;
+	text-decoration: none;
+}
+.bx-core-popup-menu-editor .bx-core-popup-menu-item-icon {
+	background: rgba(0, 0, 0, 0) url("/bitrix/panel/main/images/popup_menu_sprite_2.png") no-repeat scroll 6px -1080px;
+	width: 46px;
+}
+.bx-core-popup-menu-editor .bx-core-popup-menu-item-text {
+	font-size: 13px;
+	font-weight: normal;
+	height: 30px;
+	line-height: 27px;
+	padding: 0 20px 0 46px;
+	text-shadow: 0 1px white;
+}
+.bx-core-popup-menu-editor .bx-core-popup-menu-item:hover .bx-core-popup-menu-item-text, .bx-core-popup-menu-editor .bx-core-popup-menu-item-opened .bx-core-popup-menu-item-text{
+	text-decoration: none;
+	color: #000;
+	text-shadow: none;
+}
+
+
+.bx-core-popup-menu-editor .bx-core-popup-menu-item-default .bx-core-popup-menu-item-text {
+}
+.bx-core-popup-menu-editor .bx-core-popup-menu-no-icons .bx-core-popup-menu-item-text {
+	padding-left: 21px;
+}
+.bx-core-popup-menu-editor .bx-core-popup-menu-item-opener .bx-core-popup-menu-item-text {
+	padding-right: 30px;
+}
+.bx-core-popup-menu-editor .bx-core-popup-menu-item-opener:hover .bx-core-popup-menu-item-text, .bx-core-popup-menu-editor .bx-core-popup-menu-item-opened .bx-core-popup-menu-item-text {
+	background: rgba(0, 0, 0, 0) url("/bitrix/panel/main/images/popup_menu_sprite_2.png") no-repeat scroll right -270px;
+	color: #000;
+	text-shadow: none;
+}
+.bx-core-popup-menu-editor .bx-core-popup-menu-item-checked .bx-core-popup-menu-item-text {
+	background: rgba(0, 0, 0, 0) url("/bitrix/panel/main/images/popup_menu_sprite_2.png") no-repeat scroll left -600px;
+	color: #000;
+	text-shadow: none;
+}
+.bx-core-popup-menu-editor .bx-core-popup-menu-separator {
+	background: #ebebeb none repeat scroll 0 0;
+	display: block;
+	font-size: 1px;
+	height: 1px;
+	line-height: 1px;
+	margin: 7px 10px;
+	overflow: hidden;
+	padding: 0;
+}
+.bx-core-popup-menu-editor .bx-core-popup-menu-item-disabled .bx-core-popup-menu-item-text {
+	color: #a0a0a0;
+}
+
+
+
+
+
+
+
+.bxhtmled-paste-control .bx-core-popup-menu-angle{
+	display: none;
+}
+.bxhtmled-paste-control .bx-core-popup-menu-angle-bottom {
+	display: none;
+}
 
 
 

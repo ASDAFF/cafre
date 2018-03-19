@@ -113,9 +113,9 @@ if (!function_exists("__PrintForumGroupsAndForums"))
 				
 				if ($arParams["WORD_WRAP_CUT"] > 0):
 					$res["TITLE"] = (strLen($res["~TITLE"]) > $arParams["WORD_WRAP_CUT"] ? 
-						htmlspecialcharsEx(substr($res["~TITLE"], 0, $arParams["WORD_WRAP_CUT"]))."..." : $res["TITLE"]);
+						htmlspecialcharsbx(substr($res["~TITLE"], 0, $arParams["WORD_WRAP_CUT"]))."..." : $res["TITLE"]);
 					$res["LAST_POSTER_NAME"] = (strLen($res["~LAST_POSTER_NAME"]) > $arParams["WORD_WRAP_CUT"] ? 
-						htmlspecialcharsEx(substr($res["~LAST_POSTER_NAME"], 0, $arParams["WORD_WRAP_CUT"]))."..." : $res["LAST_POSTER_NAME"]);
+						htmlspecialcharsbx(substr($res["~LAST_POSTER_NAME"], 0, $arParams["WORD_WRAP_CUT"]))."..." : $res["LAST_POSTER_NAME"]);
 				endif;
 ?>
 			<tr class="<?=($iCountRows == 1 ? "forum-row-first " : "")?><?
@@ -175,7 +175,7 @@ if (!function_exists("__PrintForumGroupsAndForums"))
 ?>
 						<div class="forum-lastpost-box">
 							<span class="forum-lastpost-title"><?
-								?><noindex><a rel="nofollow" href="<?=$res["URL"]["MESSAGE"]?>" title="<?=htmlspecialcharsEx($res["~TITLE"]." (".$res["~LAST_POSTER_NAME"].")")?>"><?
+								?><noindex><a rel="nofollow" href="<?=$res["URL"]["MESSAGE"]?>" title="<?=htmlspecialcharsbx($res["~TITLE"]." (".$res["~LAST_POSTER_NAME"].")")?>"><?
 									?><?=$res["TITLE"]?> <span class="forum-lastpost-author">(<?=$res["LAST_POSTER_NAME"]?>)</span></a></noindex></span>
 							<span class="forum-lastpost-date"><?=$res["LAST_POST_DATE"]?></span>
 						</div>
@@ -285,7 +285,7 @@ if (!function_exists("__PrintForumGroupsAndForums"))
 ?>
 						<div class="forum-lastpost-box">
 							<span class="forum-lastpost-title"><?
-								?><noindex><a rel="nofollow" href="<?=$res["URL"]["MESSAGE"]?>" title="<?=htmlspecialcharsEx($res["~TITLE"]." (".$res["~LAST_POSTER_NAME"].")")?>"><?
+								?><noindex><a rel="nofollow" href="<?=$res["URL"]["MESSAGE"]?>" title="<?=htmlspecialcharsbx($res["~TITLE"]." (".$res["~LAST_POSTER_NAME"].")")?>"><?
 									?><?=$res["TITLE"]?> <span class="forum-lastpost-author">(<?=$res["LAST_POSTER_NAME"]?>)</span></a></noindex></span>
 							<span class="forum-lastpost-date"><?=$res["LAST_POST_DATE"]?></span>
 						</div>

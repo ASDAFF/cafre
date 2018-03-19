@@ -174,7 +174,7 @@ class CSubscriptionGeneral
 	}
 
 	//list of subscribed categories
-	function GetRubricList($ID)
+	public static function GetRubricList($ID)
 	{
 		global $DB;
 		$ID = intval($ID);
@@ -187,7 +187,7 @@ class CSubscriptionGeneral
 	}
 
 	//array of subscribed categories
-	function GetRubricArray($ID)
+	public static function GetRubricArray($ID)
 	{
 		$ID = intval($ID);
 		$aSubscrRub = array();
@@ -201,7 +201,7 @@ class CSubscriptionGeneral
 	}
 
 	//subscription of current user from cookies
-	function GetUserSubscription()
+	public static function GetUserSubscription()
 	{
 		global $USER;
 		$email_cookie = COption::GetOptionString("main", "cookie_name", "BITRIX_SM")."_SUBSCR_EMAIL";
@@ -217,7 +217,7 @@ class CSubscriptionGeneral
 	}
 
 	//get by ID
-	function GetByID($ID)
+	public static function GetByID($ID)
 	{
 		global $DB;
 		$ID = intval($ID);
@@ -234,7 +234,7 @@ class CSubscriptionGeneral
 	}
 
 	// deletion
-	function Delete($ID)
+	public static function Delete($ID)
 	{
 		global $DB;
 		$ID = intval($ID);
@@ -271,7 +271,7 @@ class CSubscriptionGeneral
 	}
 
 	//check fields before writing
-	function CheckFields(&$arFields, $ID, $SITE_ID=SITE_ID)
+	public function CheckFields(&$arFields, $ID, $SITE_ID=SITE_ID)
 	{
 		global $DB, $APPLICATION;
 
@@ -421,7 +421,7 @@ class CSubscriptionGeneral
 	}
 
 	//adding
-	function Add($arFields, $SITE_ID=SITE_ID)
+	public function Add($arFields, $SITE_ID=SITE_ID)
 	{
 		global $DB;
 
@@ -452,7 +452,7 @@ class CSubscriptionGeneral
 	}
 
 	//Updating record
-	function Update($ID, $arFields, $SITE_ID=SITE_ID)
+	public function Update($ID, $arFields, $SITE_ID=SITE_ID)
 	{
 		global $DB;
 		$ID = intval($ID);
@@ -538,7 +538,7 @@ class CSubscriptionGeneral
 	}
 
 	//message with subscription confirmation
-	function ConfirmEvent($ID, $SITE_ID=SITE_ID)
+	public static function ConfirmEvent($ID, $SITE_ID=SITE_ID)
 	{
 		static $SITE_DIR_CACHE = array();
 		CTimeZone::Disable();
@@ -586,7 +586,7 @@ class CSubscriptionGeneral
 	}
 
 	//checks and set user authorization
-	function Authorize($ID, $CONFIRM_CODE=false)
+	public static function Authorize($ID, $CONFIRM_CODE=false)
 	{
 		global $USER;
 
@@ -624,7 +624,7 @@ class CSubscriptionGeneral
 	}
 
 	//retuns user's subscription authorization
-	function IsAuthorized($ID)
+	public static function IsAuthorized($ID)
 	{
 		return ($_SESSION["SESS_SUBSCR_AUTH"][$ID] == "YES");
 	}
@@ -634,7 +634,7 @@ class CSubscriptionGeneral
 	//*****************************
 
 	//user deletion event
-	function OnUserDelete($user_id)
+	public static function OnUserDelete($user_id)
 	{
 		//clear user subscriptions on user deletion
 		global $DB;
@@ -664,7 +664,7 @@ class CSubscriptionGeneral
 	}
 
 	//user logout event
-	function OnUserLogout($user_id)
+	public static function OnUserLogout($user_id)
 	{
 		//let's reset subscriptions authorization on user logout
 		global $DB;
@@ -684,10 +684,9 @@ class CSubscriptionGeneral
 	//*****************************
 
 	//delete unconfirmed subscriptions
-	function CleanUp()
+	public static function CleanUp()
 	{
 		//must be inherited
 		return "CSubscription::CleanUp();";
 	}
 }
-?>

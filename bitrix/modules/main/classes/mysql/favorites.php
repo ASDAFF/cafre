@@ -3,7 +3,7 @@ require_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/classes/general/fa
 
 class CFavorites extends CAllFavorites
 {
-	function GetList($aSort=array(), $arFilter=Array())
+	public static function GetList($aSort=array(), $arFilter=Array())
 	{
 		$err_mess = (CFavorites::err_mess())."<br>Function: GetList<br>Line: ";
 		global $DB, $USER;
@@ -116,4 +116,3 @@ class CFavorites extends CAllFavorites
 		return $res;
 	}
 }
-?>

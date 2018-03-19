@@ -1,7 +1,7 @@
-<?
+<?php
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/statistic/prolog.php");
-
+/** @var CMain $APPLICATION */
 $STAT_RIGHT = $APPLICATION->GetGroupRight("statistic");
 if ($STAT_RIGHT=="D")
 	$APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
@@ -113,7 +113,7 @@ require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_popup_adm
 		<td valign="top" nowrap><?echo GetMessage("STAT_COOKIES")?></td>
 		<td>
 			<?if($f_COOKIES):?>
-				<div style="overflow:auto;"><?echo str_replace("\n", "<br>", htmlspecialcharsex(urldecode($f_COOKIES)))?></div>
+				<div style="overflow:auto;"><?echo str_replace("\n", "<br>", htmlspecialcharsEx(urldecode($f_COOKIES)))?></div>
 			<?else:?>
 				&nbsp;
 			<?endif?>
@@ -128,4 +128,4 @@ require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_popup_adm
 </table></td></tr></table>
 <input type="button" onClick="window.close()" value="<?echo GetMessage("STAT_CLOSE")?>">
 
-<?require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_popup_admin.php")?>
+<?require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_popup_admin.php");

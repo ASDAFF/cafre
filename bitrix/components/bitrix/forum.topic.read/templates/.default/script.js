@@ -4,7 +4,7 @@ function forumActionComment(link, action)
 	if (action == 'DEL' && (!confirm(oText['cdm']))) return false;
 	var href = link.getAttribute('href');
 	href = href.replace(/.AJAX_CALL=Y/g,'').replace(/.sessid=[^&]*/g, '')
-	href += ((href.indexOf('?') > -1) ? '&' : '?') + 'AJAX_CALL=Y&sessid=' + phpVars.bitrix_sessid;
+	href += ((href.indexOf('?') > -1) ? '&' : '?') + 'AJAX_CALL=Y&sessid=' + BX.bitrix_sessid();
 	
 	if (linkParent = BX.findParent(link, {'className': 'forum-action-links'}))
 		BX.hide(linkParent);
@@ -53,8 +53,8 @@ function forumActionComment(link, action)
 					BX.fx.hide(tmpDIV, 'scroll', {time: 0.35, callback_complete: function() {
 						BX.remove(tmpDIV);
 						var posts = BX.findChild(document, {'class': 'forum-post-table'}, true, true);
-						if ((!posts) || (posts.length < 1)) 
-							window.location = oForum.topic_read_url;
+						if (!posts || posts.length < 1)
+							window.location = BX.message("topic_read_url");
 						replyActionDone(linkParent);
 					}});
 				} else { // MODERATE

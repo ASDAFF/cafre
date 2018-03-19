@@ -31,7 +31,7 @@ class GroupTable extends Entity\DataManager
 		return 'b_sale_location_group';
 	}
 
-	public static function add($data = array())
+	public static function add(array $data)
 	{
 		if(isset($data['NAME']))
 		{
@@ -57,7 +57,7 @@ class GroupTable extends Entity\DataManager
 		return $addResult;
 	}
 	
-	public static function update($primary, $data = array())
+	public static function update($primary, array $data)
 	{
 		$primary = Assert::expectIntegerPositive($primary, '$primary');
 
@@ -92,6 +92,7 @@ class GroupTable extends Entity\DataManager
 		if($delResult->isSuccess())
 		{
 			Name\GroupTable::deleteMultipleForOwner($primary);
+			GroupLocationTable::deleteByGroupId($primary);
 
 			// set flag that indicates whether project still uses groups or not
 			self::checkGroupUsage();
@@ -147,7 +148,7 @@ class GroupTable extends Entity\DataManager
 			'SORT' => array(
 				'data_type' => 'integer',
 				'title' => Loc::getMessage('SALE_LOCATION_GROUP_ENTITY_SORT_FIELD'),
-				'default' => '100'
+				'default_value' => '100'
 			),
 
 			// virtual

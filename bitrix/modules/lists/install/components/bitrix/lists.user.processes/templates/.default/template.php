@@ -14,19 +14,13 @@
 
 use Bitrix\Main\Localization\Loc;
 
+CJSCore::Init(array('lists'));
 \Bitrix\Main\Page\Asset::getInstance()->addJs('/bitrix/js/bizproc/tools.js');
 \Bitrix\Main\Page\Asset::getInstance()->addCss('/bitrix/components/bitrix/bizproc.workflow.faces/templates/.default/style.css');
 
 $randString = $component->randString();
+$jsClass = 'ListsProcessesClass_'.$randString;
 ?>
-
-<div class="bx-bp-btn-panel">
-	<p id="bx-lists-create-processes" class="webform-small-button webform-small-button-accept bp-small-button"
-	   title="<?= GetMessage("CT_BLL_BUTTON_NEW_PROCESSES") ?>"
-	   onclick="javascript:BX['ListsProcessesClass_<?=$randString?>'].showProcesses();">
-		<?= GetMessage("CT_BLL_BUTTON_NEW_PROCESSES") ?>
-	</p>
-</div>
 
 <div id="bx-lists-store_items" class="bx-lists-store-items"></div>
 <input type="hidden" id="bx-lists-select-site" value="<?= SITE_DIR ?>" />
@@ -38,7 +32,7 @@ if (is_array($arResult["RECORDS"]))
 	{
 		if (strlen($record['data']["DOCUMENT_URL"]) > 0 && strlen($record['data']["DOCUMENT_NAME"]) > 0)
 		{
-			$record['data']['DOCUMENT_NAME'] = '<a href="'.$record['data']["DOCUMENT_URL"].'" class="bp-folder-title-link">'.htmlspecialcharsbx($record['data']['DOCUMENT_NAME']).'</a>';
+			$record['data']['DOCUMENT_NAME'] = '<a href="'.htmlspecialcharsbx($record['data']["DOCUMENT_URL"]).'" class="lists-folder-title-link">'.htmlspecialcharsbx($record['data']['DOCUMENT_NAME']).'</a>';
 		}
 
 		if($record['data']['DOCUMENT_STATE'])
@@ -63,29 +57,85 @@ if (is_array($arResult["RECORDS"]))
 	}
 }
 
+$isBitrix24Template = (SITE_TEMPLATE_ID == "bitrix24");
+$pagetitleFlexibleSpace = "lists-pagetitle-flexible-space";
+$pagetitleAlignRightContainer = "lists-align-right-container";
+if($isBitrix24Template)
+{
+	$bodyClass = $APPLICATION->GetPageProperty("BodyClass");
+	$APPLICATION->SetPageProperty("BodyClass", "pagetitle-toolbar-field-view");
+	$this->SetViewTarget("inside_pagetitle");
+	$pagetitleFlexibleSpace = "";
+	$pagetitleAlignRightContainer = "";
+}
+elseif(!IsModuleInstalled("intranet"))
+{
+	$APPLICATION->SetAdditionalCSS("/bitrix/js/lists/css/intranet-common.css");
+}
+?>
+<div class="pagetitle-container pagetitle-flexible-space <?=$pagetitleFlexibleSpace?>">
+	<? $APPLICATION->IncludeComponent(
+		"bitrix:main.ui.filter",
+		"",
+		array(
+			"FILTER_ID" => $arResult["FILTER_ID"],
+			"GRID_ID" => $arResult["GRID_ID"],
+			"FILTER" => $arResult["FILTER"],
+			"ENABLE_LABEL" => true
+		),
+		$component,
+		array("HIDE_ICONS" => true)
+	); ?>
+</div>
+<div class="pagetitle-container pagetitle-align-right-container <?=$pagetitleAlignRightContainer?>">
+	<span class="webform-small-button webform-small-button-blue" id="lists-title-action-add">
+		<span class="webform-small-button-text"><?=Loc::getMessage("CT_BLL_BUTTON_NEW_PROCESSES")?></span>
+	</span>
+</div>
+<?
+if($isBitrix24Template)
+{
+	$this->EndViewTarget();
+}
+
 $APPLICATION->IncludeComponent(
-	'bitrix:bizproc.interface.grid',
+	"bitrix:main.ui.grid",
 	"",
 	array(
-		"GRID_ID"=>$arResult["GRID_ID"],
-		"HEADERS"=>$arResult["HEADERS"],
-		"SORT"=>$arResult["SORT"],
-		"ROWS"=>$arResult["RECORDS"],
-		"FOOTER"=>array(array("title"=>Loc::getMessage("BPWC_WLCT_TOTAL"), "value"=>$arResult["ROWS_COUNT"])),
-		"ACTION_ALL_ROWS"=>true,
-		"EDITABLE"=>true,
-		"NAV_OBJECT"=>$arResult["NAV_RESULT"],
-		"AJAX_MODE"=>"Y",
-		"AJAX_OPTION_JUMP"=>"Y",
-		"FILTER"=>$arResult["FILTER"],
-		'ERROR_MESSAGES' => $arResult['ERRORS']
+		"GRID_ID" => $arResult["GRID_ID"],
+		"COLUMNS" => $arResult["HEADERS"],
+		"ROWS" => $arResult["RECORDS"],
+		"NAV_STRING" => $arResult["NAV_STRING"],
+		"TOTAL_ROWS_COUNT" => $arResult["NAV_OBJECT"]->NavRecordCount,
+		"PAGE_SIZES" => $arResult["GRID_PAGE_SIZES"],
+		"AJAX_MODE" => "Y",
+		"AJAX_ID" => CAjax::getComponentID('bitrix:main.ui.grid', '.default', ''),
+		"ENABLE_NEXT_PAGE" => $arResult["GRID_ENABLE_NEXT_PAGE"],
+		"ACTION_PANEL" => $arResult["GRID_ACTION_PANEL"],
+		"SHOW_CHECK_ALL_CHECKBOXES" => true,
+		"SHOW_ROW_CHECKBOXES" => false,
+		"SHOW_ROW_ACTIONS_MENU" => true,
+		"SHOW_GRID_SETTINGS_MENU" => true,
+		"SHOW_NAVIGATION_PANEL" => true,
+		"SHOW_PAGINATION" => true,
+		"SHOW_SELECTED_COUNTER" => false,
+		"SHOW_TOTAL_COUNTER" => true,
+		"SHOW_PAGESIZE" => true,
+		"SHOW_ACTION_PANEL" => false,
+		"ALLOW_COLUMNS_SORT" => true,
+		"ALLOW_COLUMNS_RESIZE" => true,
+		"ALLOW_HORIZONTAL_SCROLL" => true,
+		"ALLOW_SORT" => true,
+		"ALLOW_PIN_HEADER" => true,
+		"AJAX_OPTION_JUMP" => "N",
+		"AJAX_OPTION_HISTORY" => "N"
 	),
-	$component
+	$component, array("HIDE_ICONS" => "Y")
 );
 ?>
 
 <script type="text/javascript">
 	BX(function () {
-		BX['ListsProcessesClass_<?= $randString?>'] = new BX.ListsProcessesClass({});
+		BX.Lists['<?=$jsClass?>'] = new BX.Lists.ListsProcessesClass({});
 	});
 </script>

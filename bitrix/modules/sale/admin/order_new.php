@@ -176,6 +176,7 @@ if (isset($_REQUEST['dontsave']) && $_REQUEST['dontsave'] == 'Y')
 {
 	$intLockUserID = 0;
 	$strLockTime = '';
+	DiscountCouponsManager::clear(true);
 	if (!CSaleOrder::IsLocked($ID, $intLockUserID, $strLockTime))
 		CSaleOrder::UnLock($ID);
 	LocalRedirect("sale_order.php?lang=".LANGUAGE_ID.GetFilterParams("filter_", false));
@@ -184,6 +185,7 @@ if ($saleModulePermissions >= "W" && isset($_REQUEST['unlock']) && 'Y' == $_REQU
 {
 	$intLockUserID = 0;
 	$strLockTime = '';
+	DiscountCouponsManager::clear(true);
 	if (CSaleOrder::IsLocked($ID, $intLockUserID, $strLockTime))
 		CSaleOrder::UnLock($ID);
 	LocalRedirect("sale_order_new.php?ID=".$ID."&lang=".LANGUAGE_ID.GetFilterParams("filter_", false));
@@ -192,6 +194,14 @@ if ($saleModulePermissions >= "W" && isset($_REQUEST['unlock']) && 'Y' == $_REQU
 // include functions
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/sale/general/admin_tool.php");
 
+
+$callbackList = array(
+	'CALLBACK_FUNC',
+	'ORDER_CALLBACK_FUNC',
+	'CANCEL_CALLBACK_FUNC',
+	'PAY_CALLBACK_FUNC',
+	'PRODUCT_PROVIDER_CLASS'
+);
 /*****************************************************************************/
 /**************************** SAVE ORDER *************************************/
 /*****************************************************************************/
@@ -206,7 +216,7 @@ if (
 {
 	$ID = intval($ID);
 	$recalcOrder = "N";
-	$isOrderConverted = \Bitrix\Main\Config\Option::get("main", "~sale_converted_15", 'N');
+	$isOrderConverted = \Bitrix\Main\Config\Option::get("main", "~sale_converted_15", 'Y');
 
 	if (defined("SALE_DEBUG") && SALE_DEBUG)
 		CSaleHelper::WriteToLog("order_new.php", array("POST" => $_POST), "ORNW1");
@@ -680,7 +690,7 @@ if (
 		DiscountCouponsManager::init($couponsMode, $couponsParams, false);
 		unset($couponsParams, $couponsMode);
 
-		if ($isOrderConverted == 'Y')
+		if ($isOrderConverted != 'N')
 		{
 			$discountMode = ($ID > 0 ? Sale\Compatible\DiscountCompatibility::MODE_ORDER : Sale\Compatible\DiscountCompatibility::MODE_MANAGER);
 			$discountParams = array(
@@ -701,10 +711,59 @@ if (
 
 		foreach ($arOrderProductPrice as &$arItem)
 		{
+			if ($arItem['BASKET_ID'] > 0)
+			{
+				$basketIdList[] = $arItem['BASKET_ID'];
+			}
+			else
+			{
+				if (empty($arItem['BASKET_ID']) && empty($arItem['ID']))
+				{
+					foreach ($callbackList as $callbackName)
+					{
+						$arItem[$callbackName] = '';
+					}
+				}
+			}
 			$arItem["ID_TMP"] = $arItem["ID"];
 			unset($arItem["ID"]);
 		}
 		unset($arItem);
+
+		if (!empty($basketIdList))
+		{
+			$basketRes = Sale\Basket::getList(
+				array(
+					'filter' => array(
+						'=ID' => $basketIdList
+					),
+					'select' => array(
+						'ID',
+						'CALLBACK_FUNC',
+						'ORDER_CALLBACK_FUNC',
+						'CANCEL_CALLBACK_FUNC',
+						'PAY_CALLBACK_FUNC',
+						'PRODUCT_PROVIDER_CLASS'
+					)
+				)
+			);
+			while($data = $basketRes->fetch())
+			{
+				$basketList[$data['ID']] = $data;
+			}
+		
+			foreach ($arOrderProductPrice as &$itemData)
+			{
+				if (!empty($basketList[$itemData['BASKET_ID']]))
+				{
+					foreach ($callbackList as $callbackName)
+					{
+						$itemData[$callbackName] = $basketList[$itemData['BASKET_ID']][$callbackName];
+					}
+				}
+			}
+			unset($itemData);
+		}
 
 		$tmpOrderId = ($ID == 0) ? 0 : $ID;
 
@@ -997,7 +1056,7 @@ if (
 			if ($ID <= 0 || $arOldOrder["STATUS_ID"] == $str_STATUS_ID)
 				$arAdditionalFields["STATUS_ID"] = $str_STATUS_ID;
 
-			if ($isOrderConverted == "Y")
+			if ($isOrderConverted != 'N')
 			{
 				$arAdditionalFields = array_merge($arAdditionalFields, array(
 					'CANCELED' => (!empty($_POST["CANCELED"]) && trim($_POST["CANCELED"]) == "Y") ? "Y" : "N",
@@ -1114,7 +1173,7 @@ if (
 					}
 				}
 
-				
+
 			}
 			if ($ID > 0 AND empty($arErrors))
 			{
@@ -1137,8 +1196,8 @@ if (
 							continue;
 
 						$measure = (isset($val["MEASURE_TEXT"])) ? $val["MEASURE_TEXT"] : GetMessage("SOA_SHT");
-						$strOrderList .= $val["NAME"]." - ".$val["QUANTITY"]." ".$measure.": ".SaleFormatCurrency($val["PRICE"], $BASE_LANG_CURRENCY);
-						$strOrderList .= "\n";
+						$strOrderList .= $val["NAME"]." - ".$val["QUANTITY"]." ".$measure." x ".SaleFormatCurrency($val["PRICE"], $BASE_LANG_CURRENCY);
+						$strOrderList .= "</br>";
 					}
 
 					$arOrderNew = CSaleOrder::GetByID($ID);
@@ -1205,10 +1264,10 @@ if (
 	{
 		if ($crmMode)
 			CRMModeOutput($ID);
+		DiscountCouponsManager::clear(true);
 
 		if (isset($save) AND strlen($save) > 0)
 		{
-			DiscountCouponsManager::clear(true);
 			CSaleOrder::UnLock($ID);
 			LocalRedirect("/bitrix/admin/sale_order.php?lang=".LANGUAGE_ID."&LID=".urlencode($LID).GetFilterParams("filter_", false));
 		}
@@ -1222,6 +1281,7 @@ if (
 
 if (!empty($dontsave))
 {
+	DiscountCouponsManager::clear(true);
 	CSaleOrder::UnLock($ID);
 	if ($crmMode)
 		CRMModeOutput($ID);
@@ -2261,7 +2321,7 @@ if ((!isset($LID) OR $LID == "") AND (defined('BX_PUBLIC_MODE') OR BX_PUBLIC_MOD
 	$arSitesShop = array();
 	$arSitesTmp = array();
 	$rsSites = CSite::GetList($by="id", $order="asc", array("ACTIVE" => "Y"));
-	while ($arSite = $rsSites->Fetch())
+	while ($arSite = $rsSites->GetNext())
 	{
 		$site = COption::GetOptionString("sale", "SHOP_SITE_".$arSite["ID"], "");
 		if ($arSite["ID"] == $site)
@@ -2535,10 +2595,7 @@ function getLocation(country_id, region_id, city_id, arParams, site_id, admin_se
 	arParams.REGION = parseInt(region_id);
 	arParams.SITE_ID = '<?=LANGUAGE_ID?>';
 
-	if (admin_section && admin_section == "Y")
-	{
-		arParams.ADMIN_SECTION = "Y";
-	}
+	arParams.ADMIN_SECTION = "Y";
 
 	var url = '/bitrix/components/bitrix/sale.ajax.locations/templates/.default/ajax.php';
 	BX.ajax.post(url, arParams, getLocationResult);
@@ -2707,7 +2764,7 @@ if ($ID > 0)
 {
 	$arSitesShop = array();
 	$rsSites = CSite::GetList($by="id", $order="asc", array("ACTIVE" => "Y"));
-	while ($arSite = $rsSites->Fetch())
+	while ($arSite = $rsSites->GetNext())
 	{
 		$site = COption::GetOptionString("sale", "SHOP_SITE_".$arSite["ID"], "");
 		if ($arSite["ID"] == $site)
@@ -3166,6 +3223,12 @@ if ((isset($_REQUEST["PRODUCT"]) AND is_array($_REQUEST["PRODUCT"]) AND !empty($
 
 		if ($arParent)
 			$arElementId[] = $arParent["ID"];
+
+		foreach ($callbackList as $callbackName)
+		{
+			$arBasketItem[$callbackName] = '';
+		}
+
 	}
 }
 elseif (isset($ID) AND $ID > 0)
@@ -3796,7 +3859,7 @@ $tabControl->BeginCustomField("BASKET_CONTAINER", GetMessage("NEWO_BASKET_CONTAI
 			<tr>
 				<td width="88%" align="left" class="heading" ><?=GetMessage("NEWO_TITLE_ORDER")?></td>
 				<td align="right" nowrap>
-					<a title="<?=GetMessage("SOE_ADD_ITEMS")?>" onClick="AddProductSearch();" class="adm-btn adm-btn-green adm-btn-add"  style="white-space:nowrap;" href="javascript:void(0);"><?=GetMessage("SOE_ADD_ITEMS")?></a>
+					<span title="<?=GetMessage("SOE_ADD_ITEMS")?>" onClick="AddProductSearch();" class="adm-btn adm-btn-green adm-btn-add"  style="display:inline;white-space:nowrap;"><?=GetMessage("SOE_ADD_ITEMS")?></span>
 				</td>
 			</tr>
 		</table>
@@ -4097,7 +4160,7 @@ $tabControl->BeginCustomField("BASKET_CONTAINER", GetMessage("NEWO_BASKET_CONTAI
 		$settingsTemplate = CUtil::JSEscape($settingsTemplate);
 	?>
 	<br>
-	<input type="hidden" id="userColumns" name="userColumns" value="<?=CUtil::JSEscape($strUserColumns)?>" />
+	<input type="hidden" id="userColumns" name="userColumns" value="<?=htmlspecialcharsbx($strUserColumns)?>" />
 	<input type="hidden" id="ids" name="ids" value="<?=$IDs?>" />
 
 
@@ -4933,7 +4996,7 @@ $tabControl->BeginCustomField("BASKET_CONTAINER", GetMessage("NEWO_BASKET_CONTAI
 						store_id = params.store_id || '0';
 
 					var popup = new BX.CDialog({
-						content_url: '/bitrix/admin/cat_product_search_dialog.php?lang='+lang+'&LID='+site_id+'&caller=' + caller + '&func_name='+callback+'&STORE_FROM_ID='+store_id,
+						content_url: '/bitrix/tools/sale/product_search_dialog.php?lang='+lang+'&LID='+site_id+'&caller=' + caller + '&func_name='+callback+'&STORE_FROM_ID='+store_id,
 						height: Math.max(500, window.innerHeight-400),
 						width: Math.max(800, window.innerWidth-400),
 						draggable: true,
@@ -4953,9 +5016,9 @@ $tabControl->BeginCustomField("BASKET_CONTAINER", GetMessage("NEWO_BASKET_CONTAI
 			$productAddBool = COption::GetOptionString('sale', 'SALE_ADMIN_NEW_PRODUCT');
 			?>
 			<?if ($productAddBool == "Y"):?>
-				<a title="<?=GetMessage("SOE_NEW_ITEMS")?>" onClick="ShowProductEdit('', 'Y');" class="adm-btn adm-btn-green" href="javascript:void(0);"><?=GetMessage("SOE_NEW_ITEMS")?></a>
+				<span title="<?=GetMessage("SOE_NEW_ITEMS")?>" onClick="ShowProductEdit('', 'Y');" style="display:inline;" class="adm-btn adm-btn-green"><?=GetMessage("SOE_NEW_ITEMS")?></span>
 			<?endif;?>
-			<a title="<?=GetMessage("SOE_ADD_ITEMS")?>" onClick="AddProductSearch();" class="adm-btn adm-btn-green adm-btn-add" href="javascript:void(0);"><?=GetMessage("SOE_ADD_ITEMS")?></a>
+			<span title="<?=GetMessage("SOE_ADD_ITEMS")?>" onClick="AddProductSearch();" style="display:inline;" class="adm-btn adm-btn-green adm-btn-add"><?=GetMessage("SOE_ADD_ITEMS")?></span>
 		</div>
 
 <script type="text/javascript">
@@ -5089,6 +5152,7 @@ $tabControl->BeginCustomField("BASKET_CONTAINER", GetMessage("NEWO_BASKET_CONTAI
 		div.id = "product_edit";
 		div.style.visible = 'hidden';
 		div.style.position = 'absolute';
+		div.style.zIndex = 1000;
 		div.innerHTML = '<?=CUtil::JSEscape($formTemplateTableStart);?>' +
 			'<?=CUtil::JSEscape($formTemplateMain); ?>' +
 			'<?=CUtil::JSEscape($formTemplateProduct); ?>' +
@@ -6237,9 +6301,15 @@ $tabControl->BeginCustomField("BASKET_CONTAINER", GetMessage("NEWO_BASKET_CONTAI
 			if (!!obCartFix && obCartFix.value == 'Y')
 			{
 				if (!BX('PAYED') || !BX('PAYED').checked)
+				{
 					obCartFix.value = 'N';
+				}
 				else
+				{
 					recalcAllowed = false;
+					alert('<?=CUtil::JSEscape(GetMessage('COUPONS_RECALC_BLOCKED')); ?>');
+					obCoupon.value = '';
+				}
 			}
 			if (recalcAllowed)
 				fRecalProduct('', '', 'N', 'Y', { 'coupon' : obCoupon.value });

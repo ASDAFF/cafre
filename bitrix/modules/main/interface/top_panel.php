@@ -39,6 +39,7 @@ function _showTopPanelButtonsSection($arPanelButtons, $hkInstance, $section = nu
 
 		if ($bHasMenu || $item['TOOLTIP'] && $item['TOOLTIP_ID']):
 ?><script type="text/javascript"><?
+
 			if ($item['TOOLTIP']):
 				if ($item['TOOLTIP_ID']):
 
@@ -86,21 +87,12 @@ if($USER->IsAuthorized())
 	$section = $aActiveSection["help_section"]."/";
 	if (defined("HELP_FILE") && strpos(HELP_FILE, $section) === 0)
 		$section = "";
-
-	if(LANGUAGE_ID == "ru")
-		$help_link = "http://dev.1c-bitrix.ru/user_help/".$section.(defined("HELP_FILE") && strpos(HELP_FILE, '/') !== false?  HELP_FILE : $module."/".$page);
-	else
-		$help_link = "http://www.bitrixsoft.com/help/index.html?page=".urlencode("source/".$module."/help/en/".$page.".html");
-
-	$arPanelButtons[] = array(
-		"TEXT"=>GetMessage("top_panel_help"),
-		"TITLE"=>GetMessage("MAIN_HELP"),
-		"LINK"=>$help_link,
-		"TARGET"=>"_blank",
-		"ICON"=>"adm-header-help-btn",
-		"HK_ID"=>"top_panel_help",
-	);
 }
+
+
+/*
+ * @global \CAdminPage $adminPage
+ */
 
 $arLangs = CLanguage::GetLangSwitcherArray();
 
@@ -134,7 +126,6 @@ if (count($arLangMenu) > 1)
 }
 
 $arPanelButtons[] = $arLangButton;
-
 
 $sPubUrl = ($_SESSION["BACK_URL_PUB"] <> ""?
 	htmlspecialcharsbx($_SESSION["BACK_URL_PUB"]).(strpos($_SESSION["BACK_URL_PUB"], "?") !== false? "&amp;":"?") : '/?').
@@ -184,15 +175,35 @@ endif;
 
 if ($USER->IsAuthorized()):
 
+/*
+ * @global \CAdminPage $adminPage
+ */
+
+	$ssoSwitcher = $adminPage->getSSOSwitcherButton();
+	$bShowSSO = is_array($ssoSwitcher) && count($ssoSwitcher) > 0;
+
+	$userName = $USER->GetFormattedName();
+	if($bShowSSO)
+	{
+		$userName = '<span class="adm-header-separate-left">'.$userName.'</span><span class="adm-header-separate-right" id="bx-panel-sso"></span>';
+	}
+
 	if ($USER->CanDoOperation('view_own_profile') || $USER->CanDoOperation('edit_own_profile')):
 
-?><a hidefocus="true" href="/bitrix/admin/user_edit.php?lang=<?=LANGUAGE_ID?>&amp;ID=<?=$USER->GetID()?>" class="adm-header-user-block" id="bx-panel-user"><?=$USER->GetFormattedName();?></a><?
+?><a hidefocus="true" href="/bitrix/admin/user_edit.php?lang=<?=LANGUAGE_ID?>&amp;ID=<?=$USER->GetID()?>" class="adm-header-user-block<?=$bShowSSO ? ' adm-header-separate' : ''?>" onfocus="this.blur()"><?=$userName;?></a><?
 
 	else:
 
-?><span class="adm-header-user-block" id="bx-panel-user"><?=htmlspecialcharsbx($USER->GetFullName()).' ('.htmlspecialcharsbx($USER->GetLogin());?></span><?
+?><span class="adm-header-user-block<?=$bShowSSO ? ' adm-header-separate' : ''?>" id="bx-panel-user"><?=$userName?></span><?
 
 	endif;
+
+	if($bShowSSO)
+	{
+?>
+<script>BX.adminPanel.registerButton('bx-panel-sso', {MENU: <?=CUtil::PhpToJsObject($ssoSwitcher)?>});</script>
+<?
+	}
 
 ?><a hidefocus="true" href="<?=htmlspecialcharsbx((defined('BX_ADMIN_SECTION_404') && BX_ADMIN_SECTION_404 == 'Y' ? '/bitrix/admin/' : $APPLICATION->GetCurPage())).'?logout=yes'.htmlspecialcharsbx(($s=DeleteParam(array("logout"))) == ""? "":"&".$s)?>" class="adm-header-exit" id="bx-panel-logout" title="<?=GetMessage('admin_panel_logout_title')?>"><?=GetMessage("admin_panel_logout")?></a><?
 
@@ -215,6 +226,72 @@ if ($USER->IsAuthorized()):
 
 ?><a hidefocus="true" href="javascript:void(0)" id="bx-panel-pin" class="adm-header-pin" onclick="BX.adminPanel.Fix(this)" title="<?=GetMessage('top_panel_pin_'.($aUserOpt['fix'] == 'on' ? 'off' : 'on'))?>"></a><?
 
+	if(LANGUAGE_ID == "ru")
+	{
+		CJSCore::Init(array('helper'));
+		$helpUrl = CHTTP::urlAddParams('https://helpdesk.bitrix24.ru/widget2/dev/', array(
+				"url" => urlencode("https://".$_SERVER["HTTP_HOST"].$APPLICATION->GetCurPageParam()),
+				"user_id" => $USER->GetID(),
+				"is_admin" => $USER->IsAdmin() ? 1 : 0,
+				"help_url" => urlencode("http://dev.1c-bitrix.ru/user_help/".$section.(defined("HELP_FILE") && strpos(HELP_FILE, '/') !== false?  HELP_FILE : $module."/".$page))
+			)
+		);
+		$frameOpenUrl = CHTTP::urlAddParams($helpUrl, array(
+				"action" => "open",
+			)
+		);
+		$frameCloseUrl = CHTTP::urlAddParams($helpUrl, array(
+				"action" => "close",
+			)
+		);
+
+		$helperHeroOption = CUserOptions::GetOption("main", "helper_hero_admin");
+		$showHelperHero = true;
+		if (!empty($helperHeroOption))
+		{
+			if (
+				isset($helperHeroOption["show"])
+				|| (isset($helperHeroOption["time"]) && time() - $helperHeroOption["time"] < 3600)
+			)
+				$showHelperHero = false;
+		}
+		?>
+		<span class="adm-header-help-btn" id="bx_top_panel_button_helper" <?if (!isset($helperHeroOption["show"])):?>onclick="BX.userOptions.save('main', 'helper_hero_admin',  'show', 'Y');"<?endif?>>
+		   <span class="adm-header-help-btn-icon"></span>
+		   <span class="adm-header-help-btn-text"><?=GetMessage("top_panel_help")?></span>
+		</span>
+		<script>
+			BX.message({
+				HELPER_LOADER: '<?=GetMessageJS('top_panel_help_loader')?>',
+				HELPER_TITLE: '<?=GetMessageJS('top_panel_help_title')?>'
+			});
+			BX.Helper.init({
+				frameOpenUrl : '<?=$frameOpenUrl?>',
+				helpBtn : BX('bx_top_panel_button_helper'),
+				langId: '<?=LANGUAGE_ID?>',
+				needCheckNotify: 'N',
+				isAdmin: 'Y'
+			});
+			<?if ($showHelperHero):?>
+			BX.Helper.showAnimatedHero();
+			BX.userOptions.save('main', 'helper_hero_admin',  'time', '<?=time()?>');
+			<?endif?>
+		</script>
+		<?
+	}
+	else
+	{
+		$helpLink = "http://www.bitrixsoft.com/help/index.html?page=" . urlencode("source/" . $module . "/help/en/" . $page . ".html");
+		?>
+		<span onclick="document.location.href = '<?=$helpLink?>';" class="adm-header-help-btn" id="bx_top_panel_button_helper">
+		   <span class="adm-header-help-btn-icon"></span>
+		   <span class="adm-header-help-btn-text"><?=GetMessage("top_panel_help")?></span>
+		</span>
+		<?
+	}
+?>
+
+<?
 	$Execs = $hkInstance->GetCodeByClassName("bx-panel-pin",GetMessage('top_panel_pin'));
 	echo $hkInstance->PrintJSExecs($Execs);
 

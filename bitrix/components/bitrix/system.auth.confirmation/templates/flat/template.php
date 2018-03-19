@@ -66,7 +66,7 @@ if($arResult["MESSAGE_TEXT"] <> ''):
 		<div class="bx-authform-formgroup-container">
 			<div class="bx-authform-label-container"><?echo GetMessage("CT_BSAC_LOGIN")?></div>
 			<div class="bx-authform-input-container">
-				<input type="text" name="<?echo $arParams["LOGIN"]?>" maxlength="50" value="<?echo (strlen($arResult["LOGIN"]) > 0? $arResult["LOGIN"]: $arResult["USER"]["LOGIN"])?>" />
+				<input type="text" name="<?echo $arParams["LOGIN"]?>" maxlength="50" value="<?echo $arResult["LOGIN"]?>" />
 			</div>
 		</div>
 

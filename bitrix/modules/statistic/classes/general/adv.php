@@ -1,7 +1,8 @@
-<?
+<?php
+
 class CAllAdv
 {
-	function SetByReferer($referer1, $referer2, &$arrADV, &$ref1, &$ref2)
+	public static function SetByReferer($referer1, $referer2, &$arrADV, &$ref1, &$ref2)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -37,6 +38,7 @@ class CAllAdv
 
 		if(!$found)
 		{
+			$NA = "";
 			if(COption::GetOptionString("statistic", "ADV_NA") == "Y")
 			{
 				$NA_1 = COption::GetOptionString("statistic", "AVD_NA_REFERER1");
@@ -75,7 +77,7 @@ class CAllAdv
 		}
 	}
 
-	function SetByPage($page, &$arrADV, &$ref1, &$ref2, $type="TO")
+	public static function SetByPage($page, &$arrADV, &$ref1, &$ref2, $type="TO")
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -104,13 +106,12 @@ class CAllAdv
 	}
 
 	// returns arrays for graphics plot
-	function GetAnalysisGraphArray($arFilter, &$is_filtered, $DATA_TYPE="SESSION_SUMMA", &$arrLegend, &$summa, &$max)
+	public static function GetAnalysisGraphArray($arFilter, &$is_filtered, $DATA_TYPE="SESSION_SUMMA", &$arrLegend, &$summa, &$max)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
 
 		$arSqlSearch = Array();
-		$strSqlSearch = "";
 		switch ($DATA_TYPE)
 		{
 			case "SESSION_SUMMA":
@@ -195,7 +196,6 @@ class CAllAdv
 		$rsD = $DB->Query($strSql, false, $err_mess.__LINE__);
 		while ($arD = $rsD->Fetch())
 		{
-			$cnt = 0;
 			switch($DATA_TYPE)
 			{
 				default:				$cnt = intval($arD["SESSIONS"])+intval($arD["SESSIONS_BACK"]);			break;
@@ -233,6 +233,8 @@ class CAllAdv
 				$arrSum[$arD["ADV_ID"]] += $cnt;
 			}
 		}
+
+		$color = "";
 		reset($arrLegend);
 		$summa = 0;
 		$max = 0;
@@ -253,7 +255,7 @@ class CAllAdv
 		return $arrDays;
 	}
 
-	function Delete($ID)
+	public static function Delete($ID)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -270,7 +272,7 @@ class CAllAdv
 		return false;
 	}
 
-	function Reset($ID)
+	public static function Reset($ID)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -312,13 +314,15 @@ class CAllAdv
 		return false;
 	}
 
-	function DynamicDays($ADV_ID, $date1="", $date2="")
+	public static function DynamicDays($ADV_ID, $date1="", $date2="")
 	{
 		$arFilter = array("DATE1"=>$date1, "DATE2"=>$date2);
 		$d=0;
+		$by="";
+		$order="";
+		$arMaxMin=array();
 		$z = CAdv::GetDynamicList($ADV_ID, $by, $order, $arMaxMin, $arFilter);
 		while ($zr=$z->Fetch()) $d++;
 		return $d;
 	}
 }
-?>

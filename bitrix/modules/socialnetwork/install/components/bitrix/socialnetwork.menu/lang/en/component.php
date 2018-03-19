@@ -49,4 +49,5 @@ $MESS["SONET_SM_G_MICROBLOG"] = "Microblog";
 $MESS["SONET_SM_U_MICROBLOG"] = "Microblog";
 $MESS["SONET_SM_GENERAL_U"] = "Profile";
 $MESS["SONET_SM_GENERAL_G"] = "General";
+$MESS["SONET_MODULE_NOT_INSTALL"] = "The Social Network module is not installed.";
 ?>

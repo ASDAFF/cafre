@@ -112,6 +112,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && $_REQUEST["Reindex"]=="Y")
 			$index->endIndex();
 			\Bitrix\Iblock\PropertyIndex\Manager::checkAdminNotification();
 			CBitrixComponent::clearComponentCache("bitrix:catalog.smart.filter");
+			CIBlock::clearIblockTagCache($IBLOCK_ID);
 			unset($iblockDropDown[$IBLOCK_ID]);
 
 			if (empty($iblockDropDown) || $NS['iblock'] > 0)

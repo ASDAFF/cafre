@@ -173,7 +173,7 @@ class YandexBase extends BitrixEngine
 
 			if($http->getStatus() == 401 && !$skipRefreshAuth)
 			{
-				if($this->checkAuthExpired(false))
+				if($this->checkAuthExpired())
 				{
 					$this->query($scope, $method, $data, true);
 				}

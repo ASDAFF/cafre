@@ -12,4 +12,7 @@ $MESS["CC_BLFE_TITLE_EDIT"] = "Настройка поля: #NAME#";
 $MESS["CC_BLFE_TITLE_NEW"] = "Новое поле";
 $MESS["CC_BLFE_CHAIN_FIELDS"] = "Поля списка";
 $MESS["CC_BLFE_CHAIN_LIST_EDIT"] = "Настройка списка";
+$MESS["CC_BLFE_BAD_FIELD_ADD_READ_ONLY"] = "Значение по умолчанию должно быть заполнено";
+$MESS["CC_BLFE_INVALID_DEFAULT_VALUE"] = "Неверный формат поля \"Значение по умолчанию\"";
+$MESS["CC_BLFE_INVALID_LIST_VALUE"] = "Нельзя устанавливать два одинаковых значения списка";
 ?>

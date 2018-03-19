@@ -10,7 +10,6 @@ $MESS ['MAIN_AGENT_NAME'] = "Функция агента:";
 $MESS ['MAIN_AGENT_MODULE_ID'] = "Модуль:";
 $MESS ['MAIN_AGENT_USER_ID'] = "ID пользователя:";
 $MESS ['MAIN_AGENT_SORT'] = "Сортировка:";
-$MESS ['MAIN_AGENT_PERIOD'] = "Периодический:";
 $MESS ['MAIN_AGENT_INTERVAL'] = "Интервал (сек.):";
 $MESS ['MAIN_AGENT_SAVE_BUTTON'] = "Сохранить";
 $MESS ['MAIN_AGENT_START_EXEC'] = "Дата и время следующего запуска";
@@ -24,4 +23,7 @@ $MESS ['MAIN_AGENT_DEL_RECORD'] = "Удалить";
 $MESS ['MAIN_AGENT_DEL_RECORD_TITLE'] = "Удалить агента";
 $MESS ['MAIN_AGENT_DELETE_RECORD_CONF'] = "Вы уверенны что хотите удалить данного агента?";
 $MESS ['MAIN_AGENT_DEL_EXEC'] = "Агент был удален после успешного выполнения либо в результате ошибки!";
+$MESS["MAIN_AGENT_PERIODICAL1"] = "Периодичность выполнения:";
+$MESS["MAIN_AGENT_PERIODICAL_INTERVAL"] = "через заданный интервал";
+$MESS["MAIN_AGENT_PERIODICAL_TIME"] = "точно в указанное время";
 ?>

@@ -1,19 +1,29 @@
-<?if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();?>
-<?
+<?if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
+/** @var CBitrixComponentTemplate $this */
+/** @var array $arParams */
+/** @var array $arResult */
+/** @global CDatabase $DB */
+/** @global CUser $USER */
+/** @global CMain $APPLICATION */
+
+use Bitrix\Main\Localization\Loc;
+
 if ($arResult["NEED_AUTH"] == "Y")
+{
 	$APPLICATION->AuthForm("");
+}
 elseif (strlen($arResult["FatalError"])>0)
 {
 	?><span class='errortext'><?=$arResult["FatalError"]?></span><br /><br /><?
 }
 else
 {
-	CUtil::InitJSCore(array("tooltip", "popup"));
+	CUtil::InitJSCore(array("tooltip", "popup", "sidepanel"));
 	if(strlen($arResult["ErrorMessage"])>0)
 	{
 		?><span class='errortext'><?=$arResult["ErrorMessage"]?></span><br /><br /><?
 	}
-	
+
 	$APPLICATION->IncludeComponent("bitrix:main.user.link",
 		'',
 		array(
@@ -31,48 +41,22 @@ else
 		array("HIDE_ICONS" => "Y")
 	);
 
-	if ($arResult["CurrentUserPerms"]["UserCanInitiate"])
-	{
-		?><script type="text/javascript">
-		BX.message({
-			GUEGroupId: <?=intval($arParams["GROUP_ID"])?>,
-			GUEGroupName: '<?=CUtil::JSEscape($arResult["Group"]["NAME"])?>'
-		});		
-		</script><?
-		?><?
-			$APPLICATION->IncludeComponent(
-				"bitrix:socialnetwork.group.iframe.popup",
-				".default",
-				array(
-					"PATH_TO_GROUP_INVITE" => htmlspecialcharsback($arResult["Urls"]["GroupEdit"]).(strpos($arResult["Urls"]["GroupEdit"], "?") === false ? "?" : "&")."tab=invite",
-					"ON_GROUP_ADDED" => "BX.DoNothing",
-					"ON_GROUP_CHANGED" => "BX.DoNothing",
-					"ON_GROUP_DELETED" => "BX.DoNothing"
-				),
-				null,
-				array("HIDE_ICONS" => "Y")
-			);
-		?><?
-			$popupName = randString(6);
-			$APPLICATION->IncludeComponent(
-				"bitrix:socialnetwork.group_create.popup",
-				".default",
-				array(
-					"NAME" => $popupName,
-					"PATH_TO_GROUP_EDIT" => (strlen($arResult["Urls"]["GroupEdit"]) > 0 
-						? htmlspecialcharsback($arResult["Urls"]["GroupEdit"])
-						: ""
-					),
-					"GROUP_NAME" => $arResult["Group"]["NAME"]
-				),
-				null,
-				array("HIDE_ICONS" => "Y")
-			);
-			?><?		
-	}
+	?><script>
+		BX.ready(function() {
+			BX.SidePanel.Instance.bindAnchors({
+				rules: [
+					{
+						condition: [
+							"<?=$arResult["Urls"]["GroupEdit"]?>"
+						]
+					}
+				]
+			});
+		});
+	</script><?
 
 	?><div class="invite-main-wrap">
-		<div class="invite-title"><?=GetMessage("SONET_GRE_T_SUBTITLE_IN")?></div>
+		<div class="invite-title"><?=Loc::getMessage($arResult["Group"]["PROJECT"] == "Y" ? "SONET_GRE_T_SUBTITLE_IN_PROJECT" : "SONET_GRE_T_SUBTITLE_IN")?></div>
 		<form method="post" name="form1" action="<?=POST_FORM_ACTION_URI?>" enctype="multipart/form-data" id="form_requests"><?
 		if ($arResult["Requests"] && $arResult["Requests"]["List"])
 		{
@@ -124,7 +108,7 @@ else
 		}
 		else
 		{
-			?><span class="sonet-group-requests-info"><?=GetMessage("SONET_GRE_T_NO_REQUESTS")?><br /><?=GetMessage("SONET_GRE_T_NO_REQUESTS_DESCR")?></span><?
+			?><span class="sonet-group-requests-info"><?=GetMessage("SONET_GRE_T_NO_REQUESTS")?><br /><?=Loc::getMessage($arResult["Group"]["PROJECT"] == "Y" ? "SONET_GRE_T_NO_REQUESTS_DESCR_PROJECT" : "SONET_GRE_T_NO_REQUESTS_DESCR")?></span><?
 		}
 
 		?><div class="invite-buttons-block"><?
@@ -139,9 +123,9 @@ else
 				?><span class="popup-window-button-link-text"><?=GetMessage("SONET_GRE_T_REJECT")?></span><?
 			?></span><?
 		}
-		?><a class="sonet-group-requests-smbutton" href="#" onclick="if (BX.SGCP) { BX.SGCP.ShowForm('invite', '<?=$popupName?>', event); } else { return false; }"<?=($arResult["Requests"] && $arResult["Requests"]["List"] ? ' style="float: right;"' : '')?>><?
+		?><a class="sonet-group-requests-smbutton" href="<?=htmlspecialcharsback($arResult["PATH_TO_GROUP_INVITE"])?>" <?=($arResult["Requests"] && $arResult["Requests"]["List"] ? ' style="float: right;"' : '')?>><?
 			?><span class="sonet-group-requests-smbutton-left"></span><?
-			?><span class="sonet-group-requests-smbutton-text"><?=GetMessage("SONET_GRE_T_INVITE")?></span><?
+			?><span class="sonet-group-requests-smbutton-text"><?=Loc::getMessage($arResult["Group"]["PROJECT"] == "Y" ? "SONET_GRE_T_INVITE_PROJECT" : "SONET_GRE_T_INVITE")?></span><?
 			?><span class="sonet-group-requests-smbutton-right"></span><?
 		?></a><?
 		?></div><?
@@ -153,7 +137,7 @@ else
 	?></div><?
 
 	?><div class="invite-main-wrap invite-main-wrap-out">
-		<div class="invite-title"><?=GetMessage("SONET_GRE_T_SUBTITLE_OUT")?></div>
+		<div class="invite-title"><?=Loc::getMessage($arResult["Group"]["PROJECT"] == "Y" ? "SONET_GRE_T_SUBTITLE_OUT_PROJECT" : "SONET_GRE_T_SUBTITLE_OUT")?></div>
 		<form method="post" name="form2" action="<?=POST_FORM_ACTION_URI?>" enctype="multipart/form-data" id="form_requests_out"><?
 		if ($arResult["RequestsOut"] && $arResult["RequestsOut"]["List"])
 		{
@@ -197,14 +181,15 @@ else
 			?></table>
 
 			<div class="invite-list-nav"><?
-			if (StrLen($arResult["RequestsOut"]["NAV_STRING"]) > 0):
+			if (!empty($arResult["RequestsOut"]["NAV_STRING"]))
+			{
 				?><?=$arResult["RequestsOut"]["NAV_STRING"]?><br /><br /><?
-			endif;
+			}
 			?></div><?
 		}
 		else
 		{
-			?><span class="sonet-group-requests-info"><?=GetMessage("SONET_GRE_T_NO_REQUESTS_OUT")?><br /><?=GetMessage("SONET_GRE_T_NO_REQUESTS_OUT_DESCR")?></span><?
+			?><span class="sonet-group-requests-info"><?=GetMessage("SONET_GRE_T_NO_REQUESTS_OUT")?><br /><?=Loc::getMessage($arResult["Group"]["PROJECT"] == "Y" ? "SONET_GRE_T_NO_REQUESTS_OUT_DESCR_PROJECT" : "SONET_GRE_T_NO_REQUESTS_OUT_DESCR")?></span><?
 		}
 
 		?><div class="invite-buttons-block"><?
@@ -216,9 +201,9 @@ else
 				?><span class="sonet-group-requests-smbutton-right"></span><?
 			?></a><?
 		}
-		?><a class="sonet-group-requests-smbutton" href="#" onclick="if (BX.SGCP) { BX.SGCP.ShowForm('invite', '<?=$popupName?>', event); } else { return false; }"<?=($arResult["RequestsOut"] && $arResult["RequestsOut"]["List"] ? ' style="float: right;"' : '')?>><?
+		?><a class="sonet-group-requests-smbutton" href="<?=htmlspecialcharsback($arResult["PATH_TO_GROUP_INVITE"])?>" <?=($arResult["RequestsOut"] && $arResult["RequestsOut"]["List"] ? ' style="float: right;"' : '')?>><?
 			?><span class="sonet-group-requests-smbutton-left"></span><?
-			?><span class="sonet-group-requests-smbutton-text"><?=GetMessage("SONET_GRE_T_INVITE")?></span><?
+			?><span class="sonet-group-requests-smbutton-text"><?=Loc::getMessage($arResult["Group"]["PROJECT"] == "Y" ? "SONET_GRE_T_INVITE_PROJECT" : "SONET_GRE_T_INVITE")?></span><?
 			?><span class="sonet-group-requests-smbutton-right"></span><?
 		?></a><?
 		?></div><?

@@ -299,7 +299,16 @@ class CAllTest
 		global $DB, $USER;
 		$ID = intval($ID);
 		$SCORE = intval($SCORE);
-		$strSql = "SELECT * FROM b_learn_gradebook WHERE STUDENT_ID = ".$USER->GetID()." AND TEST_ID = ".$ID." AND 1.0*RESULT/MAX_RESULT*100 >= ".$SCORE;
+		$strSql = "
+			SELECT * 
+			FROM b_learn_gradebook 
+			WHERE 
+				STUDENT_ID = ".$USER->GetID()." AND 
+				COMPLETED=\"Y\" AND 
+				TEST_ID = ".$ID." AND 
+				1.0*RESULT/MAX_RESULT*100 >= ".$SCORE
+		;
+
 		$res = $DB->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
 
 		if ($res->Fetch())

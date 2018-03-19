@@ -1,13 +1,13 @@
 <?
 class CAllIBlockOffersTmp
 {
-	function Add($intProductIBlockID,$intOffersIBlockID)
+	public static function Add($intProductIBlockID,$intOffersIBlockID)
 	{
 		global $DB;
 
-		$intProductIBlockID = intval($intProductIBlockID);
-		$intOffersIBlockID = intval($intOffersIBlockID);
-		if ((0 >= $intProductIBlockID) || (0 >= $intOffersIBlockID))
+		$intProductIBlockID = (int)$intProductIBlockID;
+		$intOffersIBlockID = (int)$intOffersIBlockID;
+		if ($intProductIBlockID <= 0 || $intOffersIBlockID <= 0)
 			return false;
 		$arFields = array(
 			'PRODUCT_IBLOCK_ID' => $intProductIBlockID,
@@ -16,26 +16,25 @@ class CAllIBlockOffersTmp
 		return $DB->Add("b_iblock_offers_tmp", $arFields);
 	}
 
-	function Delete($ID)
+	public static function Delete($ID)
 	{
 		global $DB;
 
-		$ID = intval($ID);
-		if (0 >= $ID)
+		$ID = (int)$ID;
+		if ($ID <= 0)
 			return false;
 		if(!$DB->Query("DELETE FROM b_iblock_offers_tmp WHERE ID=".$ID))
 			return false;
 		return true;
 	}
 
-	function GetOldID($intProductIBlockID,$intOffersIBlockID)
+	public static function GetOldID($intProductIBlockID,$intOffersIBlockID)
 	{
 		return false;
 	}
 
-	function DeleteOldID($intProductIBlockID,$intOffersIBlockID,$intInterval = 86400)
+	public static function DeleteOldID($intProductIBlockID,$intOffersIBlockID,$intInterval = 86400)
 	{
 		return true;
 	}
 }
-?>

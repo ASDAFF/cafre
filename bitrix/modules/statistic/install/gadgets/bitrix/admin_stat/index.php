@@ -78,7 +78,7 @@ if ($arGadgetParams["HIDE_GRAPH"] != "Y")
 	$days = CTraffic::DynamicDays($dateGraph1, $dateGraph2, $arFilter["SITE_ID"]);
 	if ($days < 2)
 	{
-		?><div class="bx-gadgets-content-padding-rl bx-gadgets-content-padding-t"><?=CAdminMessage::ShowMessage(GetMessage("STAT_NOT_ENOUGH_DATA"));?></div><?
+		?><div class="bx-gadgets-content-padding-rl bx-gadgets-content-padding-t"><?CAdminMessage::ShowMessage(GetMessage("STAT_NOT_ENOUGH_DATA"));?></div><?
 	}
 	else
 	{

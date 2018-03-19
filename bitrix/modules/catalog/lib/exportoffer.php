@@ -1,6 +1,6 @@
 <?php
-
 namespace Bitrix\Catalog;
+
 use \Bitrix\Main\SystemException;
 
 class ExportOffer implements \Iterator
@@ -290,7 +290,7 @@ class ExportOffer implements \Iterator
 					$siteId
 				))
 				{
-					$minPrice = $arOptimalPrice['DISCOUNT_PRICE'];
+					$minPrice = $arOptimalPrice['RESULT_PRICE']['DISCOUNT_PRICE'];
 					$minPriceCurrency = $baseCurrency;
 					$minPriceRUR = \CCurrencyRates::ConvertCurrency($minPrice, $baseCurrency, $RUR);
 					$minPriceGroup = $arOptimalPrice['PRICE']['CATALOG_GROUP_ID'];
@@ -308,7 +308,7 @@ class ExportOffer implements \Iterator
 				$siteId
 			))
 			{
-				$minPrice = $arPrice['DISCOUNT_PRICE'];
+				$minPrice = $arPrice['RESULT_PRICE']['DISCOUNT_PRICE'];
 				$minPriceCurrency = $baseCurrency;
 				$minPriceRUR = \CCurrencyRates::ConvertCurrency($minPrice, $baseCurrency, $RUR);
 				$minPriceGroup = $arPrice['PRICE']['CATALOG_GROUP_ID'];
@@ -482,7 +482,7 @@ class ExportOffer implements \Iterator
 						$intValue = (int)$intValue;
 						if ($intValue > 0)
 						{
-							if ($ar_file = CFile::GetFileArray($intValue))
+							if ($ar_file = \CFile::GetFileArray($intValue))
 							{
 								if(substr($ar_file["SRC"], 0, 1) == "/")
 									$strFile = "http://".$this->arIblock["SERVER_NAME"].implode("/", array_map("rawurlencode", explode("/", $ar_file["SRC"])));
@@ -587,4 +587,4 @@ class ExportOffer implements \Iterator
 
 		return $arItem;
 	}
-} 
+}

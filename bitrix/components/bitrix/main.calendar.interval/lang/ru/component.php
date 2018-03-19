@@ -2,6 +2,7 @@
 $MESS["interface_grid_no_no_no_2"] = "(нет)";
 $MESS["inerface_grid_today"] = "сегодня";
 $MESS["inerface_grid_yesterday"] = "вчера";
+$MESS["inerface_grid_tomorrow"] = "завтра";
 $MESS["inerface_grid_week"] = "эта неделя";
 $MESS["inerface_grid_week_ago"] = "прошл. неделя";
 $MESS["inerface_grid_month"] = "этот месяц";

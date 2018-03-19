@@ -21,7 +21,7 @@ class CMenu
 	/** @var CDebugInfo */
 	var $debug = null;
 
-	function CMenu($type="left")
+	public function __construct($type="left")
 	{
 		$this->type = $type;
 	}
@@ -92,7 +92,7 @@ class CMenu
 			if($Dir == "")
 				break;
 
-			$pos = strrpos($Dir, "/");
+			$pos = bxstrrpos($Dir, "/");
 			if($pos===false || $onlyCurrentDir == true)
 				break;
 
@@ -126,7 +126,7 @@ class CMenu
 				if($Dir == "")
 					break;
 
-				$pos = strrpos($Dir, "/");
+				$pos = bxstrrpos($Dir, "/");
 				if($pos===false || $onlyCurrentDir == true)
 					break;
 

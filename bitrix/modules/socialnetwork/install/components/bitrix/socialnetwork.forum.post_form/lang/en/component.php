@@ -1,7 +1,6 @@
 <?
 $MESS["FPF_CREATE"] = "Create new topic";
 $MESS["FPF_GUEST"] = "Guest";
-$MESS["FPF_NO_ICON"] = "no icon";
 $MESS["FPF_SEND"] = "Post New Topic";
 $MESS["FPF_REPLY"] = "Reply";
 $MESS["FPF_EDIT"] = "Edit";

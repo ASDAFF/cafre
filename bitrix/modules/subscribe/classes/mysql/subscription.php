@@ -4,7 +4,7 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/subscribe/classes/genera
 class CSubscription extends CSubscriptionGeneral
 {
 	//get by e-mail
-	function GetByEmail($email, $user_id = false)
+	public static function GetByEmail($email, $user_id = false)
 	{
 		global $DB;
 
@@ -31,7 +31,7 @@ class CSubscription extends CSubscriptionGeneral
 	}
 
 	//agent to delete unconfirmed subscription
-	function CleanUp()
+	public static function CleanUp()
 	{
 		global $DB;
 		$interval = intval(COption::GetOptionString("subscribe", "subscribe_confirm_period"));
@@ -52,4 +52,3 @@ class CSubscription extends CSubscriptionGeneral
 		return "CSubscription::CleanUp();";
 	}
 }
-?>

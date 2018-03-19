@@ -79,7 +79,7 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
 			$fl = true;
 		}
 		?>};
-
+		BX.namespace('BX.Bizproc');
 		function BWFVCChangeFieldType(ind, field, value)
 		{
 			BX.showWait();
@@ -91,6 +91,10 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
 				{'Field':field, 'Form':'<?= $formName ?>'},
 				function(v){
 					valueTd.innerHTML = v;
+
+					if (typeof BX.Bizproc.Selector !== 'undefined')
+						BX.Bizproc.Selector.initSelectors(valueTd);
+
 					BX.closeWait();
 				},
 				true

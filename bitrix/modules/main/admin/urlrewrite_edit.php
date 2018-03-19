@@ -152,7 +152,7 @@ if($message)
 <input type="hidden" name="Update" value="Y">
 <input type="hidden" name="lang" value="<?= LANG ?>">
 <input type="hidden" name="site_id" value="<?= htmlspecialcharsbx($site_id) ?>">
-<input type="hidden" name="CONDITION_OLD" value="<?= htmlspecialcharsbx($str_CONDITION_OLD) ?>">
+<input type="hidden" name="CONDITION_OLD" value="<?= $str_CONDITION_OLD ?>">
 <?=bitrix_sessid_post()?>
 
 <?

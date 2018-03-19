@@ -6,6 +6,8 @@ if (empty($arResult["ALL_ITEMS"]))
 if (file_exists($_SERVER["DOCUMENT_ROOT"].$this->GetFolder().'/themes/'.$arParams["MENU_THEME"].'/colors.css'))
 	$APPLICATION->SetAdditionalCSS($this->GetFolder().'/themes/'.$arParams["MENU_THEME"].'/colors.css');
 
+CJSCore::Init();
+
 $menuBlockId = "catalog_menu_".$this->randString();
 ?>
 <div class="bx_vertical_menu_advanced bx_<?=$arParams["MENU_THEME"]?>" id="<?=$menuBlockId?>">

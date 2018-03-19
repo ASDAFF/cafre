@@ -59,6 +59,7 @@ $MESS["BPC_SMILES_COLS"] = "Количество столбцов для отображения всех смайлов";
 $MESS["BPC_SMILES_COUNT"] = "Количество постоянно отображаемых смайлов";
 $MESS["BPC_IMAGE_MAX_WIDTH"] = "Максимальная ширина изображения";
 $MESS["BPC_IMAGE_MAX_HEIGHT"] = "Максимальная высота изображения";
+$MESS["BPC_IMAGE_MAX_SIZES_TEXT"] = "по умолчанию";
 $MESS["BPC_EDITOR_RESIZABLE"] = "Разрешить изменять размер визуального редактора";
 $MESS["BPC_EDITOR_DEFAULT_HEIGHT"] = "Высота визуального редактора по умолчанию (пикселей)";
 $MESS["BPC_EDITOR_CODE_DEFAULT"] = "По умолчанию показывать невизуальный режим редактора";

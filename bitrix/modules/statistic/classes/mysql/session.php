@@ -1,7 +1,8 @@
-<?
+<?php
+
 class CSession
 {
-	function GetAttentiveness($DATE_STAT, $SITE_ID=false)
+	public static function GetAttentiveness($DATE_STAT, $SITE_ID=false)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -68,7 +69,7 @@ class CSession
 		return $ar;
 	}
 
-	function GetList(&$by, &$order, $arFilter=Array(), &$is_filtered)
+	public static function GetList(&$by, &$order, $arFilter=Array(), &$is_filtered)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -289,7 +290,7 @@ class CSession
 		return $res;
 	}
 
-	function GetByID($ID)
+	public static function GetByID($ID)
 	{
 		$statDB = CDatabase::GetModuleConnection('statistic');
 		$ID = intval($ID);
@@ -315,4 +316,3 @@ class CSession
 		return $res;
 	}
 }
-?>

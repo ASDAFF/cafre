@@ -35,4 +35,6 @@ $MESS["AJAX_OPTION_STYLE_TIP"] = "Specifies to download and process CSS styles o
 $MESS["AJAX_OPTION_HISTORY_TIP"] = "Allows \"Back\" and \"Forward\" browser buttons for AJAX transitions.";
 $MESS["CHECK_DATES_TIP"] = "Specifies that only active elements will be shown.";
 $MESS["SET_BROWSER_TITLE_TIP"] = "If selected, an information block element title (or SEO title if active) will be used as the browser window title.";
+$MESS["PREVENT_SEND_IF_NO_NEWS_TIP"] = "If specified, only new items that were added since the last newsletter message, will be selected. If the number of the new items is less than this value, newsletter message will not be sent.";
+$MESS["SENDER_CHAIN_ID_TIP"] = "The ID of scheduled newsletter message whose date will be used as left bound to found newer items. This value is usually set to default.";
 ?>

@@ -24,6 +24,8 @@ class CVoteCacheManager
 
 	function __construct()
 	{
+		$eventManager = \Bitrix\Main\EventManager::getInstance();
+
 		AddEventHandler("vote", "onAfterVoteChannelAdd", Array(&$this, "OnAfterVoteChannelChange"));
 		AddEventHandler("vote", "onAfterVoteChannelUpdate", Array(&$this, "OnAfterVoteChannelChange"));
 		AddEventHandler("vote", "onAfterChannelDelete", Array(&$this, "OnAfterVoteChannelChange"));
@@ -31,10 +33,13 @@ class CVoteCacheManager
 		AddEventHandler("vote", "onAfterVoteAdd", array(&$this, "OnAfterVoteChange"));
 		AddEventHandler("vote", "onAfterVoteUpdate", array(&$this, "OnAfterVoteChange"));
 		AddEventHandler("vote", "onAfterVoteDelete", array(&$this, "OnAfterVoteChange"));
+
+		$eventManager->addEventHandler("vote", "\\Bitrix\\Vote\\Vote::OnAfterAdd", array($this, "OnVoteChange"));
+		$eventManager->addEventHandler("vote", "\\Bitrix\\Vote\\Vote::OnAfterUpdate", array($this, "OnVoteChange"));
+		$eventManager->addEventHandler("vote", "\\Bitrix\\Vote\\Vote::OnAfterDelete", array($this, "OnVoteChange"));
+
 		AddEventHandler("vote", "onVoteReset", array(&$this, "OnAfterVoteChange"));
 		AddEventHandler("vote", "onAfterVoting", array(&$this, "OnAfterVoteChange"));
-
-
 
 		if(defined("BX_COMP_MANAGED_CACHE"))
 		{
@@ -50,7 +55,7 @@ class CVoteCacheManager
 		}
 	}
 
-	public function SetTag($path, $tag, $ID = 0)
+	public static function SetTag($path, $tag, $ID = 0)
 	{
 		global $CACHE_MANAGER;
 		if (! defined("BX_COMP_MANAGED_CACHE"))
@@ -74,7 +79,7 @@ class CVoteCacheManager
 		return true;
 	}
 
-	function ClearTag($type, $ID=0)
+	public static function ClearTag($type, $ID=0)
 	{
 		if (! defined("BX_COMP_MANAGED_CACHE"))
 			return false;
@@ -100,13 +105,18 @@ class CVoteCacheManager
 			$CACHE_MANAGER->CleanDir("b_vote");
 		endif;
 	}
-
+	function OnVoteChange(\Bitrix\Main\Entity\Event $event)
+	{
+		$data = $event->getParameter("primary");
+		$this->OnAfterVoteChange($data["ID"]);
+	}
 	function OnAfterVoteChange($ID)
 	{
 		self::ClearTag("V", $ID);
 		if (VOTE_CACHE_TIME !== false):
 			global $CACHE_MANAGER;
 			$CACHE_MANAGER->CleanDir("b_vote");
+			unset($GLOBALS["VOTE_CACHE"]["VOTE"][$ID]);
 		endif;
 	}
 

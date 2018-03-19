@@ -33,6 +33,8 @@ class CAllIBlockRSS
 	{
 		global $APPLICATION;
 
+		$text = "";
+
 		$cacheKey = md5($SITE.$PORT.$PATH.$QUERY_STR);
 
 		$bValid = False;
@@ -52,56 +54,34 @@ class CAllIBlockRSS
 
 		if (!$bValid)
 		{
-			$FP = fsockopen($SITE, $PORT, $errno, $errstr, 120);
+			$http = new \Bitrix\Main\Web\HttpClient(array(
+				"socketTimeout" => 120,
+			));
+			$http->setHeader("User-Agent", "BitrixSMRSS");
+			$text = $http->get($SITE.":".$PORT.$PATH.(strlen($QUERY_STR) > 0? "?".$QUERY_STR: ""));
 
-			if ($FP)
+			if ($text)
 			{
-				$strVars = $QUERY_STR;
-				$strRequest = "GET ".$PATH.(strlen($strVars) > 0? "?".$strVars: "")." HTTP/1.0\r\n";
-				$strRequest.= "User-Agent: BitrixSMRSS\r\n";
-				$strRequest.= "Accept: */*\r\n";
-				$strRequest.= "Host: $SITE\r\n";
-				$strRequest.= "Accept-Language: en\r\n";
-				$strRequest.= "\r\n";
-				fputs($FP, $strRequest);
-
-				$headers = "";
-				while(!feof($FP))
-				{
-					$line = fgets($FP, 4096);
-					if($line == "\r\n")
-						break;
-					$headers .= $line;
-				}
-
-				$text = "";
-				while(!feof($FP))
-					$text .= fread($FP, 4096);
-
 				$rss_charset = "windows-1251";
 				if (preg_match("/<"."\?XML[^>]{1,}encoding=[\"']([^>\"']{1,})[\"'][^>]{0,}\?".">/i", $text, $matches))
 				{
 					$rss_charset = Trim($matches[1]);
 				}
-				elseif($headers)
+				else
 				{
-					if(preg_match("#^Content-Type:.*?charset=([a-zA-Z0-9-]+)#m", $headers, $match))
+					$headers = $http->getHeaders();
+					$ct = $headers->get("Content-Type");
+					if (preg_match("#charset=([a-zA-Z0-9-]+)#m", $ct, $match))
 						$rss_charset = $match[1];
 				}
 
 				$text = preg_replace("/<!DOCTYPE.*?>/i", "", $text);
 				$text = preg_replace("/<"."\\?XML.*?\\?".">/i", "", $text);
 				$text = $APPLICATION->ConvertCharset($text, $rss_charset, SITE_CHARSET);
-
-				fclose($FP);
-			}
-			else
-			{
-				$text = "";
 			}
 		}
 
-		if (strlen($text) > 0)
+		if ($text != "")
 		{
 			require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/classes/general/xml.php");
 			$objXML = new CDataXML();

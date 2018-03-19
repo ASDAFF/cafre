@@ -160,7 +160,7 @@ final class CBPListenEventActivitySubscriber
 				$parentEventHandler = $listenActivity->arActivityState[$i];
 
 				$activity3 = $activity2->GetEventActivity();
-				if ($activity3)
+				if ($activity3 && $parentEventHandler)
 					$activity3->Unsubscribe($parentEventHandler);
 			}
 

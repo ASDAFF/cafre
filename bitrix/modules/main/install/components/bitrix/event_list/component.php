@@ -6,9 +6,9 @@ if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)
  * Bitrix vars
  * @global CUser $USER
  * @global CMain $APPLICATION
- * @param array $arParams
- * @param array $arResult
- * @param CBitrixComponent $this
+ * @var array $arParams
+ * @var array $arResult
+ * @var CBitrixComponent $this
  */
 
 if(!$USER->CanDoOperation('view_event_log'))
@@ -17,6 +17,17 @@ if(!$USER->CanDoOperation('view_event_log'))
 /** @var CEventMain[] $arModuleObjects */
 $arModuleObjects = array();
 $arAllFilter = array();
+
+$currentTemplateName = $this->getTemplateName();
+if ($currentTemplateName == "grid")
+{
+	$arResult["GRID_ID"] = "event_list_grid";
+	$arResult["ELEMENTS_ROWS"] = array();
+
+	$grid = new CGridOptions($arResult["GRID_ID"]);
+	$nav = $grid->GetNavParams();
+	$arParams["PAGE_NUM"] = $nav["nPageSize"];
+}
 
 foreach(GetModuleEvents("main", "OnEventLogGetAuditHandlers", true) as $arEvent)
 {
@@ -59,23 +70,53 @@ if (is_array($arResult["ActiveFeatures"]) && count($arResult["ActiveFeatures"]) 
 				CUserOptions::SetOption("main", "~event_list", $arParams["EVENT_ID"]);
 		}
 	}
-	$arObjectTypes = array();
-	$arFilter["MODULE_ITEM"] = array();           //filter for GetList
-	foreach($arModuleObjects as $key => $val)
-	{
-		$arObjectTypes[$key] = $val->GetAuditTypes();
 
-		$ar = $val->GetFilter();
-		$filters = array_keys($ar);
-		$var = array_intersect($filters, $flt_event_id);
-		if ($var)
+	$arObjectTypes = array(
+		"USER_AUTHORIZE" => "[USER_AUTHORIZE] ".GetMessage("MAIN_EVENTLOG_USER_AUTHORIZE"),
+		"USER_DELETE" => "[USER_DELETE] ".GetMessage("MAIN_EVENTLOG_USER_DELETE"),
+		"USER_INFO" => "[USER_INFO] ".GetMessage("MAIN_EVENTLOG_USER_INFO"),
+		"USER_LOGIN" => "[USER_LOGIN] ".GetMessage("MAIN_EVENTLOG_USER_LOGIN"),
+		"USER_LOGINBYHASH" => "[USER_LOGINBYHASH] ".GetMessage("MAIN_EVENTLOG_USER_LOGINBYHASH_FAILED"),
+		"USER_LOGOUT" => "[USER_LOGOUT] ".GetMessage("MAIN_EVENTLOG_USER_LOGOUT"),
+		"USER_PASSWORD_CHANGED" => "[USER_PASSWORD_CHANGED] ".GetMessage("MAIN_EVENTLOG_USER_PASSWORD_CHANGED"),
+		"USER_REGISTER" => "[USER_REGISTER] ".GetMessage("MAIN_EVENTLOG_USER_REGISTER"),
+		"USER_REGISTER_FAIL" => "[USER_REGISTER_FAIL] ".GetMessage("MAIN_EVENTLOG_USER_REGISTER_FAIL"),
+		"USER_GROUP_CHANGED" => "[USER_GROUP_CHANGED] ".GetMessage("MAIN_EVENTLOG_GROUP"),
+		"GROUP_POLICY_CHANGED" => "[GROUP_POLICY_CHANGED] ".GetMessage("MAIN_EVENTLOG_GROUP_POLICY"),
+		"MODULE_RIGHTS_CHANGED" => "[MODULE_RIGHTS_CHANGED] ".GetMessage("MAIN_EVENTLOG_MODULE"),
+		"FILE_PERMISSION_CHANGED" => "[FILE_PERMISSION_CHANGED] ".GetMessage("MAIN_EVENTLOG_FILE"),
+		"TASK_CHANGED" => "[TASK_CHANGED] ".GetMessage("MAIN_EVENTLOG_TASK"),
+		"MP_MODULE_INSTALLED" => "[MP_MODULE_INSTALLED] ".GetMessage("MAIN_EVENTLOG_MP_MODULE_INSTALLED"),
+		"MP_MODULE_UNINSTALLED" => "[MP_MODULE_UNINSTALLED] ".GetMessage("MAIN_EVENTLOG_MP_MODULE_UNINSTALLED"),
+		"MP_MODULE_DELETED" => "[MP_MODULE_DELETED] ".GetMessage("MAIN_EVENTLOG_MP_MODULE_DELETED"),
+		"MP_MODULE_DOWNLOADED" => "[MP_MODULE_DOWNLOADED] ".GetMessage("MAIN_EVENTLOG_MP_MODULE_DOWNLOADED"),
+	);
+
+	$arFilter["MODULE_ITEM"] = array();           //filter for GetList
+	if (\Bitrix\Main\ModuleManager::isModuleInstalled("bitrix24"))
+	{
+		$arFilter["MODULE_ITEM"][] = array(
+			"AUDIT_TYPE_ID" => "USER_AUTHORIZE"
+		);
+	}
+	else
+	{
+		foreach($arModuleObjects as $key => $val)
 		{
-			if(isset($ar["IBLOCK"]))
+			$arObjectTypes = array_merge($arObjectTypes, $val->GetAuditTypes());
+
+			$ar = $val->GetFilter();
+			$filters = array_keys($ar);
+			$var = array_intersect($filters, $flt_event_id);
+			if ($var)
 			{
-				//iblock has more complex structure because logs are kept for individual blocks
-				$var = $filters;
+				if(isset($ar["IBLOCK"]))
+				{
+					//iblock has more complex structure because logs are kept for individual blocks
+					$var = $filters;
+				}
+				$arFilter["MODULE_ITEM"] = array_merge($arFilter["MODULE_ITEM"], $val->GetFilterSQL($var));
 			}
-			$arFilter["MODULE_ITEM"] = array_merge($arFilter["MODULE_ITEM"], $val->GetFilterSQL($var));
 		}
 	}
 
@@ -97,6 +138,7 @@ if (is_array($arResult["ActiveFeatures"]) && count($arResult["ActiveFeatures"]) 
 				$find_user_id = key($arFoundUsers);
 		}
 	}
+
 	// for date
 	if (
 		array_key_exists("flt_date_datesel", $_REQUEST)
@@ -107,39 +149,45 @@ if (is_array($arResult["ActiveFeatures"]) && count($arResult["ActiveFeatures"]) 
 		switch($_REQUEST["flt_date_datesel"])
 		{
 			case "today":
-				$arParams["LOG_DATE_FROM"] = $arParams["LOG_DATE_TO"] = ConvertTimeStamp();
+				$arParams["LOG_DATE_FROM"] = ConvertTimeStamp(MakeTimeStamp(date("d.m.Y 00:00:00"), "DD.MM.YYYY HH:MI:SS"), "FULL");
+				$arParams["LOG_DATE_TO"] = ConvertTimeStamp(time(), "FULL");
+
 				break;
 			case "yesterday":
-				$arParams["LOG_DATE_FROM"] = $arParams["LOG_DATE_TO"] = ConvertTimeStamp(time()-86400);
+				$arParams["LOG_DATE_FROM"] = ConvertTimeStamp(MakeTimeStamp(date("d.m.Y 00:00:00", time() - 86400), "DD.MM.YYYY HH:MI:SS"), "FULL");
+				$arParams["LOG_DATE_TO"] = ConvertTimeStamp(MakeTimeStamp(date("d.m.Y 23:59:59", time() - 86400), "DD.MM.YYYY HH:MI:SS"), "FULL");
 				break;
 			case "week":
 				$day = date("w");
 				if($day == 0)
 					$day = 7;
-				$arParams["LOG_DATE_FROM"] = ConvertTimeStamp(time()-($day-1)*86400);
-				$arParams["LOG_DATE_TO"] = ConvertTimeStamp(time()+(7-$day)*86400);
+				$arParams["LOG_DATE_FROM"] = ConvertTimeStamp(time()-($day-1)*86400, "FULL");
+				$arParams["LOG_DATE_TO"] = ConvertTimeStamp(time()+(7-$day)*86400, "FULL");
 				break;
 			case "week_ago":
 				$day = date("w");
 				if($day == 0)
-				$day = 7;
-				$arParams["LOG_DATE_FROM"] = ConvertTimeStamp(time()-($day-1+7)*86400);
-				$arParams["LOG_DATE_TO"] = ConvertTimeStamp(time()-($day)*86400);
+					$day = 7;
+				$arParams["LOG_DATE_FROM"] = ConvertTimeStamp(time()-($day-1+7)*86400, "FULL");
+				$arParams["LOG_DATE_TO"] = ConvertTimeStamp(time()-($day)*86400, "FULL");
 				break;
 			case "month":
-				$arParams["LOG_DATE_FROM"] = ConvertTimeStamp(mktime(0, 0, 0, date("n"), 1));
-				$arParams["LOG_DATE_TO"] = ConvertTimeStamp(mktime(0, 0, 0, date("n")+1, 0));
+				$arParams["LOG_DATE_FROM"] = ConvertTimeStamp(mktime(0, 0, 0, date("n"), 1), "FULL");
+				$arParams["LOG_DATE_TO"] = ConvertTimeStamp(mktime(0, 0, 0, date("n")+1, 0), "FULL");
 				break;
 			case "month_ago":
-				$arParams["LOG_DATE_FROM"] = ConvertTimeStamp(mktime(0, 0, 0, date("n")-1, 1));
-				$arParams["LOG_DATE_TO"] = ConvertTimeStamp(mktime(0, 0, 0, date("n"), 0));
+				$arParams["LOG_DATE_FROM"] = ConvertTimeStamp(mktime(0, 0, 0, date("n")-1, 1), "FULL");
+				$arParams["LOG_DATE_TO"] = ConvertTimeStamp(mktime(0, 0, 0, date("n"), 0), "FULL");
 				break;
 			case "days":
-				$arParams["LOG_DATE_FROM"] = ConvertTimeStamp(time() - intval($_REQUEST["flt_date_days"])*86400);
+				$arParams["LOG_DATE_FROM"] = ConvertTimeStamp(time() - intval($_REQUEST["flt_date_days"])*86400, "FULL");
 				$arParams["LOG_DATE_TO"] = "";
 				break;
 			case "exact":
-				$arParams["LOG_DATE_FROM"] = $arParams["LOG_DATE_TO"] = $_REQUEST["flt_date_from"];
+				$day = ConvertDateTime($_REQUEST["flt_date_from"], "DD.MM.YYYY");
+				$arParams["LOG_DATE_FROM"] = ConvertTimeStamp(MakeTimeStamp($day." 00:00:00", "DD.MM.YYYY HH:MI:SS"), "FULL");
+				$arParams["LOG_DATE_TO"] = ConvertTimeStamp(MakeTimeStamp($day." 23:59:59", "DD.MM.YYYY HH:MI:SS"), "FULL");
+
 				break;
 			case "after":
 				$arParams["LOG_DATE_FROM"] = $_REQUEST["flt_date_from"];
@@ -150,8 +198,10 @@ if (is_array($arResult["ActiveFeatures"]) && count($arResult["ActiveFeatures"]) 
 				$arParams["LOG_DATE_TO"] = $_REQUEST["flt_date_to"];
 				break;
 			case "interval":
-				$arParams["LOG_DATE_FROM"] = $_REQUEST["flt_date_from"];
-				$arParams["LOG_DATE_TO"] = $_REQUEST["flt_date_to"];
+				$dayFrom = ConvertDateTime($_REQUEST["flt_date_from"], "DD.MM.YYYY");
+				$dayTo = ConvertDateTime($_REQUEST["flt_date_to"], "DD.MM.YYYY");
+				$arParams["LOG_DATE_FROM"] = ConvertTimeStamp(MakeTimeStamp($dayFrom." 00:00:00", "DD.MM.YYYY HH:MI:SS"), "FULL");
+				$arParams["LOG_DATE_TO"] = ConvertTimeStamp(MakeTimeStamp($dayTo." 23:59:59", "DD.MM.YYYY HH:MI:SS"), "FULL");
 				break;
 		}
 	}
@@ -195,19 +245,25 @@ if (is_array($arResult["ActiveFeatures"]) && count($arResult["ActiveFeatures"]) 
 		if ($arFilter["MODULE_ITEM"] != "")
 			$arEventFilter["=MODULE_ITEM"] = $arFilter["MODULE_ITEM"];
 		if ($arParams["LOG_DATE_FROM"] != "")
-			$arEventFilter["TIMESTAMP_X_1"] = $arParams["LOG_DATE_FROM"]." 00.00.00";
+			$arEventFilter["TIMESTAMP_X_1"] = $arParams["LOG_DATE_FROM"];
 		if ($arParams["LOG_DATE_TO"] != "")
-			$arEventFilter["TIMESTAMP_X_2"] = $arParams["LOG_DATE_TO"]." 23.59.59";
+			$arEventFilter["TIMESTAMP_X_2"] = $arParams["LOG_DATE_TO"];
 		$arEventFilter["USER_ID"] =  ($find != '' && $find_type == "user_id" ? $find : $find_user_id);
 
 		$nameFormat = CSite::GetNameFormat(false);
-		$dateFormat = CSite::GetDateFormat('SHORT');
-		$timeFormat = CSite::GetTimeFormat();
 
 		$arUsersTmp = array();
-
 		$arNavParams = array("nPageSize"=>$arParams["PAGE_NUM"], "bShowAll"=>false);
-		$results = CEventLog::GetList(array('TIMESTAMP_X' => 'DESC'), $arEventFilter, $arNavParams);
+
+		$arSort = array('TIMESTAMP_X' => 'DESC');
+		if ($currentTemplateName == "grid")
+		{
+			$arSort = $grid->GetSorting(array('sort' => array('TIMESTAMP_X' => 'DESC')));
+			$arSort = $arSort['sort'];
+		}
+		$arResult['SORT'] = $arSort;
+
+		$results = CEventLog::GetList($arResult['SORT'], $arEventFilter, $arNavParams);
 		$results->NavStart($arNavParams);  //page navigation
 		$arResult["NAV"] = $results;
 		while($row = $results->NavNext())
@@ -217,10 +273,15 @@ if (is_array($arResult["ActiveFeatures"]) && count($arResult["ActiveFeatures"]) 
 				$arUserInfo = array();
 				$rsUser = CUser::GetList(($by=""), ($ord=""),
 					array("ID_EQUAL_EXACT" => intval($row['USER_ID'])),
-					array("FIELDS" => array('ID', 'NAME', 'LAST_NAME', 'SECOND_NAME', 'LOGIN', 'EMAIL', 'PERSONAL_PHOTO'))
+					array("FIELDS" => array('ID', 'NAME', 'LAST_NAME', 'SECOND_NAME', 'LOGIN', 'EMAIL', 'PERSONAL_PHOTO', 'EXTERNAL_AUTH_ID'))
 				);
 				if($arUser = $rsUser->GetNext())
 				{
+					if (in_array($arUser["EXTERNAL_AUTH_ID"], array("bot", "email", "controller", "replica", "imconnector")))
+					{
+						continue;
+					}
+
 					$arUserInfo["ID"] = $row['USER_ID'];
 					$arUserInfo["FULL_NAME"] = CUser::FormatName($nameFormat, $arUser, true, false);
 					$arUserInfo['avatar'] = CFile::ResizeImageGet(
@@ -237,19 +298,54 @@ if (is_array($arResult["ActiveFeatures"]) && count($arResult["ActiveFeatures"]) 
 				$arUserInfo = $arUsersTmp[$row['USER_ID']];
 			}
 
-			$dateFormated = FormatDateFromDB($row["TIMESTAMP_X"], $dateFormat);
-			$time = FormatDateFromDB($row["TIMESTAMP_X"], $timeFormat);
+			$dateFormated = FormatDateFromDB($row["TIMESTAMP_X"], CSite::GetDateFormat('SHORT'));
+			$time = FormatDateFromDB($row["TIMESTAMP_X"], CSite::GetTimeFormat());
 			foreach($arModuleObjects as $key => $val)
 			{
-				if (isset($arObjectTypes[$key][$row['AUDIT_TYPE_ID']]))
+				if (isset($arObjectTypes[$row['AUDIT_TYPE_ID']]))
 				{
 					$res = $val->GetEventInfo($row, $arParams, $arUserInfo, $arResult["ActiveFeatures"]);
-					$res['time'] = $time;
-					$res['user'] = array(
-						"name" => $arUserInfo["FULL_NAME"],
-						"id" => $arUserInfo["ID"],
-						"avatar" => $arUserInfo["avatar"]["src"]);
-					$arResult['EVENT'][$dateFormated][] = $res;
+					$eventName = preg_replace("/^\\[.*?\\]\\s+/", "", $arObjectTypes[$row['AUDIT_TYPE_ID']]);
+
+					if (in_array($row['AUDIT_TYPE_ID'], array("PAGE_EDIT", "PAGE_ADD", "PAGE_DELETE")))
+					{
+						$path = unserialize($row["DESCRIPTION"]);
+						$path = $path["path"];
+						if ($path)
+						{
+							$eventName.= ": ".$path;
+						}
+					}
+
+					//for grid template
+					if ($currentTemplateName == "grid")
+					{
+						$userPath = CComponentEngine::MakePathFromTemplate($arParams["USER_PATH"], array("user_id" => $arUserInfo["ID"], "SITE_ID" => SITE_DIR));
+						$userVal = "<a href=\"".$userPath."\">".$arUserInfo["FULL_NAME"]."</a>";
+
+						$arResult["ELEMENTS_ROWS"][] = array("data" => array(
+							"ID" => $row["ID"],
+							"IP" => $row["REMOTE_ADDR"],
+							"DATE_TIME" => FormatDateFromDB($row["TIMESTAMP_X"], CSite::GetDateFormat()),
+							"USER_NAME" => $userVal,
+							"EVENT_NAME" => $eventName
+						));
+					}
+					else //for default template
+					{
+						$res['user'] = array(
+							"name" => $arUserInfo["FULL_NAME"],
+							"id" => $arUserInfo["ID"],
+							"avatar" => $arUserInfo["avatar"]["src"]
+						);
+						if (empty($res["eventType"]))
+						{
+							$res["eventType"] = $eventName;
+						}
+
+						$arResult['EVENT'][$dateFormated][] = $res;
+					}
+
 					break;
 				}
 			}

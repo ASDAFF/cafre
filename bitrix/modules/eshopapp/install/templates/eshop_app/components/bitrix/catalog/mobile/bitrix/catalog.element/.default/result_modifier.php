@@ -5,7 +5,7 @@ if(is_array($arResult["DETAIL_PICTURE"]))
 	$arFilter = '';
 	//if($arParams["SHARPEN"] != 0)
 	//{
-		$arFilter = array("name" => "sharpen", "precision" => 100/*$arParams["SHARPEN"]*/);
+		$arFilter = array(array("name" => "sharpen", "precision" => 100/*$arParams["SHARPEN"]*/));
 	//}
 	$arFileTmp = CFile::ResizeImageGet(
 		$arResult['DETAIL_PICTURE'],
@@ -41,7 +41,7 @@ if (is_array($arResult['MORE_PHOTO']) && count($arResult['MORE_PHOTO']) > 0)
 	foreach ($arResult['MORE_PHOTO'] as $key => $arFile)
 	{
 		$arFilter = '';
-		$arFilter = array("name" => "sharpen", "precision" => 100);
+		$arFilter = array(array("name" => "sharpen", "precision" => 100));
 
 		$arFileTmp = CFile::ResizeImageGet(
 			$arFile,

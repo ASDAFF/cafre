@@ -1,4 +1,4 @@
-<?
+<?php
 IncludeModuleLangFile(__FILE__);
 
 class CClusterWebnode
@@ -18,7 +18,7 @@ class CClusterWebnode
 		return $ID;
 	}
 
-	function Delete($ID)
+	public static function Delete($ID)
 	{
 		global $DB;
 		$ID = intval($ID);
@@ -93,7 +93,7 @@ class CClusterWebnode
 		return true;
 	}
 
-	function GetList($arOrder=false, $arFilter=false, $arSelect=false)
+	public static function GetList($arOrder=false, $arFilter=false, $arSelect=false)
 	{
 		global $DB;
 
@@ -214,7 +214,7 @@ class CClusterWebnode
 		return $DB->Query($strSql, false, '', array('fixed_connection'=>true));
 	}
 
-	function GetStatus($host, $port, $url)
+	public static function GetStatus($host, $port, $url)
 	{
 		self::$errno = 0;
 		self::$errstr = '';
@@ -271,7 +271,7 @@ class CClusterWebnode
 		return false;
 	}
 
-	public function getServerList()
+	public static function getServerList()
 	{
 		global $DB;
 		$result = array();
@@ -295,7 +295,7 @@ class CClusterWebnode
 		return $result;
 	}
 
-	function ParseDateTime($str)
+	public static function ParseDateTime($str)
 	{
 		static $search = false;
 		static $replace = false;
@@ -319,4 +319,3 @@ class CClusterWebnode
 			return false;
 	}
 }
-?>

@@ -6,4 +6,5 @@ $MESS["LISTS_LAC_SONET_GROUP_DISABLED"] = "Функционал списков для этой группы от
 $MESS["LISTS_LAC_UNKNOWN_ERROR"] = "Неизвестная ошибка.";
 $MESS["LISTS_LAC_ACCESS_DENIED"] = "Нет доступа.";
 $MESS["LISTS_LAC_MODULE_NOT_INSTALLED"] = "Модуль bizproc не установлен.";
+$MESS["LISTS_LAC_SECTION_NOT_GET_DATA"] = "Не удалось получить данные о разделе";
 ?>

@@ -14,4 +14,5 @@ $MESS ['BPAA_DESCR_TA1'] = "Автоматическое отклонение";
 $MESS ['BPAA_DESCR_CM'] = "Комментарии";
 $MESS ['BPAA_DESCR_APPROVERS'] = "Утвердили пользователи";
 $MESS ['BPAA_DESCR_REJECTERS'] = "Отклонили пользователи";
+$MESS ['BPAA_DESCR_TASKS'] = 'Задания';
 ?>

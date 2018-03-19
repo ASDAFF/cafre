@@ -24,7 +24,7 @@ if(is_array($arResult["CommentsResult"][0]))
 	usort($arResult["CommentsResult"][0], "offical_answer_blog_cmp");
 ?>
 <div class="blog-comments-official">
-<?if(!defined("IDEA_LIST_FORM") && false):?>
+<?if(!defined("IDEA_LIST_FORM") && false): /*dbg: wtf?*/?>
 <div id="form_comment_" >
 	<div id="form_c_del" style="display:none;">
 		<div class="blog-comment-form">

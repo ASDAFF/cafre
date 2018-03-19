@@ -244,7 +244,7 @@ $aTabs = array(
 		"TITLE" => GetMessage("PERFMON_ROW_CACHE_TAB_TITLE"),
 	),
 );
-$tabControl = new CAdminTabControl("tabControl", $aTabs);
+$tabControl = new CAdminTabControl("tabControl_".ToLower($table_name), $aTabs);
 $bVarsFromForm = false;
 $strError = '';
 

@@ -8,12 +8,9 @@ $conversionAvailable = Bitrix\Main\Loader::includeModule('conversion');
 
 $arLang = $APPLICATION->getLang();
 
-
-if (!$USER->canDoOperation('view_other_settings'))
+$MOD_RIGHT = $APPLICATION->getGroupRight('abtest');
+if ($MOD_RIGHT < 'R')
 	$APPLICATION->authForm(getMessage('ACCESS_DENIED'));
-
-$isAdmin = $USER->canDoOperation('edit_php');
-
 
 $ID = intval($ID);
 $abtest = Bitrix\ABTest\ABTestTable::getList(array(
@@ -290,7 +287,7 @@ $user_name = $abtest['USER_ID'] ? CUser::formatName(
 		<span class="ab-test-info ab-test-info-right"><?=getMessage($abtest['ACTIVE'] == 'Y' ? 'ABTEST_STARTED_BY' : 'ABTEST_STOPPED_BY'); ?>: <a href="/bitrix/admin/user_edit.php?ID=<?=intval($abtest['USER_ID']); ?>&amp;lang=<?=LANG; ?>"><?=$user_name; ?></a></span>
 		<? endif; ?>
 		<img style="float: left; margin-right: 15px; " src="/bitrix/images/abtest/ab-test-<?=($abtest['ACTIVE'] == 'Y' ? 'on' : 'off');?>.gif">
-		<? if ($isAdmin) : ?>
+		<? if ($MOD_RIGHT >= 'W') : ?>
 		<? if ($abtest['ACTIVE'] == 'Y') : ?>
 		<span class="adm-btn" style="vertical-align: baseline; " onclick="if (confirm('<?=CUtil::JSEscape(getMessage('ABTEST_STOP_CONFIRM')); ?>')) window.location='abtest_admin.php?action=stop&amp;ID=<?=intval($abtest['ID']); ?>&amp;lang=<?=LANG; ?>&amp;<?=bitrix_sessid_get(); ?>'; "><?=getMessage('ABTEST_BTN_STOP'); ?></span>
 		<? elseif (empty($active_test)) : ?>
@@ -714,10 +711,11 @@ $user_name = $abtest['USER_ID'] ? CUser::formatName(
 					</span>
 				</div>
 				<? endif; ?>
+				<? $value = floatval(isset($data['QUANTITY']) ? $data['QUANTITY'] : $data['NUMERATOR']); ?>
 				<div class="stat-item-block">
 					<span class="stat-item-block-inner">
 						<span class="stat-item-block-title"><?=getMessage('ABTEST_CONVERSION_CNT_TITLE'); ?></span>
-						<span class="stat-item-block-digit scale-num-cnt scale-num-30-2"><?=number_format(floatval($data['NUMERATOR']), 0, '', ' '); ?></span>
+						<span class="stat-item-block-digit scale-num-cnt scale-num-30-2"><?=number_format($value, 0, '', ' '); ?></span>
 					</span>
 				</div>
 			</div>
@@ -754,10 +752,11 @@ $user_name = $abtest['USER_ID'] ? CUser::formatName(
 					</span>
 				</div>
 				<? endif; ?>
+				<? $value = floatval(isset($data['QUANTITY']) ? $data['QUANTITY'] : $data['NUMERATOR']); ?>
 				<div class="stat-item-block">
 					<span class="stat-item-block-inner">
 						<span class="stat-item-block-title"><?=getMessage('ABTEST_CONVERSION_CNT_TITLE'); ?></span>
-						<span class="stat-item-block-digit scale-num-cnt scale-num-30-2"><?=number_format(floatval($data['NUMERATOR']), 0, '', ' '); ?></span>
+						<span class="stat-item-block-digit scale-num-cnt scale-num-30-2"><?=number_format($value, 0, '', ' '); ?></span>
 					</span>
 				</div>
 			</div>

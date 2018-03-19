@@ -1,6 +1,6 @@
-<?
+<?php
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
-
+/** @var CMain $APPLICATION */
 $sTableID = "tbl_graph_list";
 $oSort = new CAdminSorting($sTableID, "ID", "asc");
 $lAdmin = new CAdminList($sTableID, $oSort);
@@ -208,7 +208,6 @@ if (is_array($arrSEARCHERS))
 <?
 $oFilter->Buttons(array("table_id"=>$sTableID, "url"=>$APPLICATION->GetCurPage()));
 $oFilter->End();
-#############################################################
 ?>
 </form>
 
@@ -235,4 +234,4 @@ $context->Show();
 $lAdmin->DisplayList();
 ?>
 
-<?require_once ($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");?>
+<?require_once ($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");

@@ -43,7 +43,7 @@ if (CWikiSocnet::IsSocNet())
 			CComponentEngine::MakePathFromTemplate($this->GetParent()->arResult['PATH_TO_GROUP_WIKI_INDEX'],
 				array(
 					'group_id' => CWikiSocnet::$iSocNetId,
-					'wiki_name' => urlencode($arResult['ELEMENT']['NAME'])
+					'wiki_name' => rawurlencode($arResult['ELEMENT']['NAME'])
 				)
 			)
 		);
@@ -91,7 +91,7 @@ else
 		$APPLICATION->SetPageProperty('title', $sPageName, $arTitleOptions);
 		$APPLICATION->AddChainItem(htmlspecialcharsbx($sPageName), CComponentEngine::MakePathFromTemplate($arParams["PATH_TO_POST"],
 			array(
-				'wiki_name' => urlencode($arResult['ELEMENT']['NAME']),
+				'wiki_name' => rawurlencode($arResult['ELEMENT']['NAME']),
 				'group_id' => CWikiSocnet::$iSocNetId)
 			)
 		);

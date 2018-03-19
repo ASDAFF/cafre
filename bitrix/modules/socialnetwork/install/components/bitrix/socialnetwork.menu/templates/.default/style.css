@@ -1,6 +1,6 @@
 div.ddmenu {
 	position: relative;
-	z-index: 90;
+	z-index: 190;
 }
 
 div.ddmenu div.ddmenu-inactive, div.ddmenu div.ddmenu-active {

@@ -14,14 +14,30 @@ IncludeModuleLangFile(__FILE__);
 if (!isset($arFilter) || !is_array($arFilter))
 	die("Wrong use 1");
 
-$dbOrderList = CSaleOrder::GetList(
-		array($by => $order),
-		$arFilter,
-		false,
-		false,
-		array("ID", "LID", "PERSON_TYPE_ID", "PAYED", "DATE_PAYED", "EMP_PAYED_ID", "CANCELED", "DATE_CANCELED", "EMP_CANCELED_ID", "REASON_CANCELED", "STATUS_ID", "DATE_STATUS", "PAY_VOUCHER_NUM", "PAY_VOUCHER_DATE", "EMP_STATUS_ID", "PRICE_DELIVERY", "ALLOW_DELIVERY", "DATE_ALLOW_DELIVERY", "EMP_ALLOW_DELIVERY_ID", "PRICE", "CURRENCY", "DISCOUNT_VALUE", "SUM_PAID", "USER_ID", "PAY_SYSTEM_ID", "DELIVERY_ID", "DATE_INSERT", "DATE_INSERT_FORMAT", "DATE_UPDATE", "USER_DESCRIPTION", "ADDITIONAL_INFO", "PS_STATUS", "PS_STATUS_CODE", "PS_STATUS_DESCRIPTION", "PS_STATUS_MESSAGE", "PS_SUM", "PS_CURRENCY", "PS_RESPONSE_DATE", "COMMENTS", "TAX_VALUE", "STAT_GID", "RECURRING_ID")
-	);
 
+$filter = array(
+	'filter' => $arFilter,
+	'select' => array("ID", "LID", "PERSON_TYPE_ID", "PAYED", "DATE_PAYED", "EMP_PAYED_ID", "CANCELED", "DATE_CANCELED", "EMP_CANCELED_ID", "REASON_CANCELED", "STATUS_ID", "DATE_STATUS", "PAY_VOUCHER_NUM", "PAY_VOUCHER_DATE", "EMP_STATUS_ID", "PRICE_DELIVERY", "ALLOW_DELIVERY", "DATE_ALLOW_DELIVERY", "EMP_ALLOW_DELIVERY_ID", "PRICE", "CURRENCY", "DISCOUNT_VALUE", "SUM_PAID", "USER_ID", "PAY_SYSTEM_ID", "DELIVERY_ID", "DATE_INSERT", "DATE_INSERT_FORMAT", "DATE_UPDATE", "USER_DESCRIPTION", "ADDITIONAL_INFO",
+		'PS_STATUS' => 'PAYMENT.PS_STATUS',
+		'PS_STATUS_CODE' => 'PAYMENT.PS_STATUS_CODE',
+		'PS_STATUS_DESCRIPTION' => 'PAYMENT.PS_STATUS_DESCRIPTION',
+		'PS_STATUS_MESSAGE' => 'PAYMENT.PS_STATUS_MESSAGE',
+		'PS_SUM' => 'PAYMENT.PS_SUM',
+		'PS_CURRENCY' => 'PAYMENT.PS_CURRENCY',
+		'PS_RESPONSE_DATE' => 'PAYMENT.PS_RESPONSE_DATE',
+
+		"COMMENTS", "TAX_VALUE", "STAT_GID", "RECURRING_ID"),
+	'runtime' => $runtimeFields
+);
+
+
+if (!empty($by))
+{
+	$order = (!empty($order) && $order == "DESC" ? "DESC" : "ASC");
+	$filter['order'] = array($by => $order);
+}
+
+$dbOrderList = new CDBResult(\Bitrix\Sale\Internals\OrderTable::getList($filter));
 
 ob_start();
 
@@ -115,7 +131,7 @@ while ($dbOrderList->NavNext(true, "f_")):
 		echo "		<".GetMessage("Company")." ".GetMessage("ID")."=\"BC".$f_USER_ID."\" ".GetMessage("Name")."=\"".htmlspecialcharsbx($contra_name)."\" ".GetMessage("DisplayName")."=\"".htmlspecialcharsbx($contra_name)."\" ".GetMessage("Address")."=\"\" ".GetMessage("JuridicAddress")."=\"\" ".GetMessage("WWW")."=\"\" ".GetMessage("Comment")."=\"".htmlspecialcharsbx($contra_other)."\">\n";
 		echo "			<".GetMessage("Contact")." ".GetMessage("ID")."=\"B".$f_USER_ID."\" ".GetMessage("Name")."=\"".GetMessage("Contact")."\">\n";
 		echo "				<".GetMessage("ContactMan").">".htmlspecialcharsbx($arUser["NAME"]." ".$arUser["LAST_NAME"])." (".htmlspecialcharsbx($contra_name).")</".GetMessage("ContactMan").">\n";
-		echo "				<".GetMessage("E-mail").">".$contra_mail."</".GetMessage("E-mail").">\n";
+		echo "				<".GetMessage("E-mail").">".htmlspecialcharsbx($contra_mail)."</".GetMessage("E-mail").">\n";
 		echo "			</".GetMessage("Contact").">\n";
 		echo "		</".GetMessage("Company").">\n";
 	}

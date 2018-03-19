@@ -29,7 +29,7 @@ div.menu-sitemap-tree li li
 	padding:0;
 }
 
-div.menu-sitemap-tree li.close ul
+div.menu-sitemap-tree li.menu-close ul
 {
 	display: none;
 }
@@ -49,5 +49,5 @@ div.folder, div.page
 	vertical-align:top;
 }
 div.folder{cursor:pointer; cursor: hand;background-image:url(images/folder_open.gif);}
-div.menu-sitemap-tree li.close div.folder{background-image:url(images/folder_close.gif);}
+div.menu-sitemap-tree li.menu-close div.folder{background-image:url(images/folder_close.gif);}
 div.page{background-image:url(images/page.gif);}

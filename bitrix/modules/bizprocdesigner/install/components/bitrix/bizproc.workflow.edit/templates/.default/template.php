@@ -8,7 +8,7 @@ Asset::getInstance()->addCss("/bitrix/themes/.default/calendar.css");
 Asset::getInstance()->addJs('/bitrix/js/main/utils.js');
 Asset::getInstance()->addJs('/bitrix/js/main/popup_menu.js');
 Asset::getInstance()->addJs('/bitrix/js/main/admin_tools.js');
-CUtil::InitJSCore(array("window", "ajax"));
+CUtil::InitJSCore(array("window", "ajax", 'bp_selector'));
 Asset::getInstance()->addJs('/bitrix/js/main/public_tools.js');
 Asset::getInstance()->addJs('/bitrix/js/bizproc/bizproc.js');
 require_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/interface/admin_lib.php");
@@ -17,48 +17,51 @@ require_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/interface/admin_li
 $ID = $arResult["ID"];
 
 $aMenu = Array();
-$aMenu[] = array(
-	"TEXT"=>GetMessage("BIZPROC_WFEDIT_MENU_PARAMS"),
-	"TITLE"=>GetMessage("BIZPROC_WFEDIT_MENU_PARAMS_TITLE"),
-	"LINK"=>"javascript:BCPShowParams();",
-	"ICON"=>"btn_settings",
-);
 
-$aMenu[] = array("SEPARATOR"=>"Y");
-
-$aMenu[] = array(
-	"TEXT"=>((strlen($arParams["BIZPROC_EDIT_MENU_LIST_MESSAGE"]) > 0) ? htmlspecialcharsbx($arParams["BIZPROC_EDIT_MENU_LIST_MESSAGE"]) : GetMessage("BIZPROC_WFEDIT_MENU_LIST")),
-	"TITLE"=>((strlen($arParams["BIZPROC_EDIT_MENU_LIST_TITLE_MESSAGE"]) > 0) ? htmlspecialcharsbx($arParams["BIZPROC_EDIT_MENU_LIST_TITLE_MESSAGE"]) : GetMessage("BIZPROC_WFEDIT_MENU_LIST_TITLE")),
-	"LINK"=>$arResult['LIST_PAGE_URL'],
-	"ICON"=>"btn_list",
-);
-
-if (!array_key_exists("SKIP_BP_TYPE_SELECT", $arParams) || $arParams["SKIP_BP_TYPE_SELECT"] != "Y")
+if ($arResult['TEMPLATE_AUTOSTART'] != CBPDocumentEventType::Automation)
 {
-	$arSubMenu = Array();
-
-	$arSubMenu[] = array(
-		"TEXT"	=> GetMessage("BIZPROC_WFEDIT_MENU_ADD_STATE"),
-		"TITLE"	=> GetMessage("BIZPROC_WFEDIT_MENU_ADD_STATE_TITLE"),
-		"ONCLICK"=> "if(confirm('".GetMessage("BIZPROC_WFEDIT_MENU_ADD_WARN")."'))window.location='".str_replace("#ID#", "0", $arResult["EDIT_PAGE_TEMPLATE"]).(strpos($arResult["EDIT_PAGE_TEMPLATE"], "?")?"&":"?")."init=statemachine';"
+	$aMenu[] = array(
+		"TEXT"  => GetMessage("BIZPROC_WFEDIT_MENU_PARAMS"),
+		"TITLE" => GetMessage("BIZPROC_WFEDIT_MENU_PARAMS_TITLE"),
+		"LINK"  => "javascript:BCPShowParams();",
+		"ICON"  => "btn_settings",
 	);
 
-	$arSubMenu[] = array(
-		"TEXT"	=> GetMessage("BIZPROC_WFEDIT_MENU_ADD_SEQ"),
-		"TITLE"	=> GetMessage("BIZPROC_WFEDIT_MENU_ADD_SEQ_TITLE"),
-		"ONCLICK" => "if(confirm('".GetMessage("BIZPROC_WFEDIT_MENU_ADD_WARN")."'))window.location='".str_replace("#ID#", "0", $arResult["EDIT_PAGE_TEMPLATE"]).(strpos($arResult["EDIT_PAGE_TEMPLATE"], "?")?"&":"?")."';"
-	);
+	$aMenu[] = array("SEPARATOR" => "Y");
 
 	$aMenu[] = array(
-		"TEXT"=>GetMessage("BIZPROC_WFEDIT_MENU_ADD"),
-		"TITLE"=>GetMessage("BIZPROC_WFEDIT_MENU_ADD_TITLE"),
-		"ICON"=>"btn_new",
-		"MENU"=>$arSubMenu
+		"TEXT"  => ((strlen($arParams["BIZPROC_EDIT_MENU_LIST_MESSAGE"]) > 0) ? htmlspecialcharsbx($arParams["BIZPROC_EDIT_MENU_LIST_MESSAGE"]) : GetMessage("BIZPROC_WFEDIT_MENU_LIST")),
+		"TITLE" => ((strlen($arParams["BIZPROC_EDIT_MENU_LIST_TITLE_MESSAGE"]) > 0) ? htmlspecialcharsbx($arParams["BIZPROC_EDIT_MENU_LIST_TITLE_MESSAGE"]) : GetMessage("BIZPROC_WFEDIT_MENU_LIST_TITLE")),
+		"LINK"  => $arResult['LIST_PAGE_URL'],
+		"ICON"  => "btn_list",
 	);
+
+	if (!array_key_exists("SKIP_BP_TYPE_SELECT", $arParams) || $arParams["SKIP_BP_TYPE_SELECT"] != "Y")
+	{
+		$arSubMenu = Array();
+
+		$arSubMenu[] = array(
+			"TEXT"    => GetMessage("BIZPROC_WFEDIT_MENU_ADD_STATE"),
+			"TITLE"   => GetMessage("BIZPROC_WFEDIT_MENU_ADD_STATE_TITLE"),
+			"ONCLICK" => "if(confirm('".GetMessage("BIZPROC_WFEDIT_MENU_ADD_WARN")."'))window.location='".str_replace("#ID#", "0", $arResult["EDIT_PAGE_TEMPLATE"]).(strpos($arResult["EDIT_PAGE_TEMPLATE"], "?") ? "&" : "?")."init=statemachine';"
+		);
+
+		$arSubMenu[] = array(
+			"TEXT"    => GetMessage("BIZPROC_WFEDIT_MENU_ADD_SEQ"),
+			"TITLE"   => GetMessage("BIZPROC_WFEDIT_MENU_ADD_SEQ_TITLE"),
+			"ONCLICK" => "if(confirm('".GetMessage("BIZPROC_WFEDIT_MENU_ADD_WARN")."'))window.location='".str_replace("#ID#", "0", $arResult["EDIT_PAGE_TEMPLATE"]).(strpos($arResult["EDIT_PAGE_TEMPLATE"], "?") ? "&" : "?")."';"
+		);
+
+		$aMenu[] = array(
+			"TEXT"  => GetMessage("BIZPROC_WFEDIT_MENU_ADD"),
+			"TITLE" => GetMessage("BIZPROC_WFEDIT_MENU_ADD_TITLE"),
+			"ICON"  => "btn_new",
+			"MENU"  => $arSubMenu
+		);
+	}
+
+	$aMenu[] = array("SEPARATOR" => true);
 }
-
-$aMenu[] = array("SEPARATOR"=>true);
-
 $aMenu[] = array(
 	"TEXT"=>GetMessage("BIZPROC_WFEDIT_MENU_EXPORT"),
 	"TITLE"=>GetMessage("BIZPROC_WFEDIT_MENU_EXPORT_TITLE"),
@@ -124,8 +127,13 @@ function BCPProcessImport()
 	}).Show();
 }
 
-function BCPSaveTemplateComplete()
+function BCPSaveTemplateComplete(data)
 {
+	if (data != '<!--SUCCESS-->')
+	{
+		alert('<?=GetMessageJS('BIZPROC_WFEDIT_SAVE_ERROR')?>');
+		return;
+	}
 	BCPEmptyWorkflow = false;
 }
 
@@ -225,7 +233,6 @@ td.statset {background: url(/bitrix/images/bizproc/stat_sett.gif) 50% center no-
 
 .activityerr a.activitydel {background: url(/bitrix/images/bizproc/err_act_button_del.gif) 50% center no-repeat;}
 .activityerr a.activityset {background: url(/bitrix/images/bizproc/err_act_button_sett.gif) 50% center no-repeat;}
-
 </style>
 
 <?
@@ -269,6 +276,7 @@ var arWorkflowParameters = <?=CUtil::PhpToJSObject($arResult['PARAMETERS'])?>;
 var arWorkflowVariables = <?=CUtil::PhpToJSObject($arResult['VARIABLES'])?>;
 var arWorkflowConstants = <?=CUtil::PhpToJSObject($arResult['CONSTANTS'])?>;
 var arWorkflowTemplate = <?=CUtil::PhpToJSObject($arResult['TEMPLATE'][0])?>;
+var arDocumentFields = <?=CUtil::PhpToJSObject($arResult['DOCUMENT_FIELDS'])?>;
 
 var workflowTemplateName = <?=CUtil::PhpToJSObject($arResult['TEMPLATE_NAME'])?>;
 var workflowTemplateDescription = <?=CUtil::PhpToJSObject($arResult['TEMPLATE_DESC'])?>;
@@ -331,6 +339,7 @@ function ReDraw()
 		else
 		{
 			var d = rootActivity.Table.parentNode;
+			var modificationFlag = BPTemplateIsModified;
 
 			while(rootActivity.childActivities.length>0)
 				rootActivity.RemoveChild(rootActivity.childActivities[0]);
@@ -338,6 +347,8 @@ function ReDraw()
 			rootActivity.Init(arWorkflowTemplate);
 			rootActivity.RemoveResources();
 			rootActivity.Draw(d);
+
+			BPTemplateIsModified = modificationFlag;
 		}
 	}
 }
@@ -377,7 +388,7 @@ endif;
 <br>
 <input type="button" onclick="BCPSaveTemplate(true);" value="<?echo GetMessage("BIZPROC_WFEDIT_SAVE_BUTTON")?>">
 <input type="button" onclick="BCPSaveTemplate();" value="<?echo GetMessage("BIZPROC_WFEDIT_APPLY_BUTTON")?>">
-<input type="button" onclick="window.location='<?=htmlspecialcharsbx(CUtil::JSEscape($arResult['LIST_PAGE_URL']))?>';" value="<?echo GetMessage("BIZPROC_WFEDIT_CANCEL_BUTTON")?>">
+<input type="button" onclick="window.location='<?=htmlspecialcharsbx(CUtil::JSEscape(isset($arResult['BACK_URL']) ? $arResult['BACK_URL'] : $arResult['LIST_PAGE_URL']))?>';" value="<?echo GetMessage("BIZPROC_WFEDIT_CANCEL_BUTTON")?>">
 </div>
 
 </form>

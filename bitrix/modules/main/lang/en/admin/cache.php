@@ -1,8 +1,6 @@
 <?
 $MESS["MCACHE_TITLE"] = "Cache Settings";
-$MESS["MAIN_OPTION_HTML_CACHE"] = "HTML page generation";
 $MESS["MAIN_TAB_3"] = "Delete Cache Files";
-$MESS["MAIN_TAB_2"] = "HTML cache";
 $MESS["MAIN_TAB_4"] = "Component caching";
 $MESS["MAIN_OPTION_CLEAR_CACHE"] = "Delete Cache Files";
 $MESS["MAIN_OPTION_PUBL"] = "Components Cache settings";
@@ -16,24 +14,6 @@ $MESS["MAIN_OPTION_CACHE_ON"] = "Components Cache is enabled by default";
 $MESS["MAIN_OPTION_CACHE_OFF"] = "Components Cache is disabled by default";
 $MESS["MAIN_OPTION_CACHE_BUTTON_OFF"] = "Disable Caching";
 $MESS["MAIN_OPTION_CACHE_BUTTON_ON"] = "Enable Caching";
-$MESS["MAIN_OPTION_HTML_CACHE_WARNING"] = "Attention! The Statistics and/or Advertising modules detected. The data in the HTML cache will be tracked incorrectly.";
-$MESS["MAIN_OPTION_HTML_CACHE_WARNING_TRANSID"] = "Attention! session.use_trans_sid parameter is enabled. HTML caching will not work.";
-$MESS["MAIN_OPTION_HTML_CACHE_ON"] = "HTML cache is on";
-$MESS["MAIN_OPTION_HTML_CACHE_OFF"] = "HTML cache is off";
-$MESS["MAIN_OPTION_HTML_CACHE_BUTTON_OFF"] = "Disable HTML cache";
-$MESS["MAIN_OPTION_HTML_CACHE_BUTTON_ON"] = "Enable HTML cache";
-$MESS["MAIN_OPTION_HTML_CACHE_OPT"] = "HTML cache settings";
-$MESS["MAIN_OPTION_HTML_CACHE_INC_MASK"] = "Inclusion mask";
-$MESS["MAIN_OPTION_HTML_CACHE_EXC_MASK"] = "Exclusion mask";
-$MESS["MAIN_OPTION_HTML_CACHE_QUOTA"] = "Disk quote (MB)";
-$MESS["MAIN_OPTION_HTML_CACHE_SUCCESS"] = "The HTML cache mode has been changed successfully.";
-$MESS["MAIN_OPTION_HTML_CACHE_STAT"] = "Statistics";
-$MESS["MAIN_OPTION_HTML_CACHE_STAT_HITS"] = "Cache hits";
-$MESS["MAIN_OPTION_HTML_CACHE_STAT_MISSES"] = "Cache misses";
-$MESS["MAIN_OPTION_HTML_CACHE_STAT_QUOTA"] = "Cache cleanups caused by the lack of disk space";
-$MESS["MAIN_OPTION_HTML_CACHE_STAT_POSTS"] = "Cache cleanups caused by data modification";
-$MESS["MAIN_OPTION_HTML_CACHE_SAVE"] = "Save HTML cache settings";
-$MESS["MAIN_OPTION_HTML_CACHE_RESET"] = "Apply default settings";
 $MESS["cache_admin_note4"] = "<p>HTML caching is recommended for site section that change rarely and are mostly visited by anonymous users. The following processes take place when the HTML cache is enabled: </p>
 <ul style=\"font-size:100%\">
 <li>HTML cache processes only pages listed in the inclusion mask and not listed in exclusion mask;</li>

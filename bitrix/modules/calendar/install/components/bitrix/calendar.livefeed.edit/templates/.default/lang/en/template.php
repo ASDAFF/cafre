@@ -24,4 +24,7 @@ $MESS["ECLF_LHE_VIDEO"] = "Add video";
 $MESS["ECLF_DESTINATION"] = "Members";
 $MESS["ECLF_SHOW_ADD_SECT"] = "More";
 $MESS["ECLF_HIDE_ADD_SECT"] = "Hide extra parameters";
+$MESS["ECLF_PLANNER_FULL_FORM"] = "Details";
+$MESS["ECLF_PLANNER_TITLE"] = "Scheduler";
+$MESS["ECLF_PLANNER_PROPOSE_TIME"] = "Select time";
 ?>

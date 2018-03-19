@@ -244,7 +244,7 @@ var jsUtils =
 	
 	SetPageTitle: function(s)
 	{
-		document.title = phpVars.titlePrefix+s;
+		document.title = BX("FORUMJS_TITLE")+s;
 		var h1 = document.getElementsByTagName("H1");
 		if(h1)
 			h1[0].innerHTML = s;

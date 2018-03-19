@@ -19,7 +19,7 @@ if(!Loader::includeModule('iblock'))
 
 $FILTER_NAME = (string)$arParams["FILTER_NAME"];
 
-if($this->StartResultCache(false, ($arParams["CACHE_GROUPS"]? $USER->GetGroups(): false)))
+if($this->StartResultCache(false, 'v7'.($arParams["CACHE_GROUPS"]? $USER->GetGroups(): false)))
 {
 	$arResult["FACET_FILTER"] = false;
 	$arResult["COMBO"] = array();
@@ -67,7 +67,7 @@ if($this->StartResultCache(false, ($arParams["CACHE_GROUPS"]? $USER->GetGroups()
 					elseif ($arResult["ITEMS"][$PID]["PROPERTY_TYPE"] == "S")
 					{
 						$addedKey = $this->fillItemValues($arResult["ITEMS"][$PID], $this->facet->lookupDictionaryValue($row["VALUE"]), true);
-						if ($addedKey)
+						if (strlen($addedKey) > 0)
 						{
 							$arResult["ITEMS"][$PID]["VALUES"][$addedKey]["FACET_VALUE"] = $row["VALUE"];
 							$arResult["ITEMS"][$PID]["VALUES"][$addedKey]["ELEMENT_COUNT"] = $row["ELEMENT_COUNT"];
@@ -76,7 +76,7 @@ if($this->StartResultCache(false, ($arParams["CACHE_GROUPS"]? $USER->GetGroups()
 					else
 					{
 						$addedKey = $this->fillItemValues($arResult["ITEMS"][$PID], $row["VALUE"], true);
-						if ($addedKey)
+						if (strlen($addedKey) > 0)
 						{
 							$arResult["ITEMS"][$PID]["VALUES"][$addedKey]["FACET_VALUE"] = $row["VALUE"];
 							$arResult["ITEMS"][$PID]["VALUES"][$addedKey]["ELEMENT_COUNT"] = $row["ELEMENT_COUNT"];
@@ -91,9 +91,15 @@ if($this->StartResultCache(false, ($arParams["CACHE_GROUPS"]? $USER->GetGroups()
 						if ($arPrice["ID"] == $priceId && isset($arResult["ITEMS"][$NAME]))
 						{
 							$this->fillItemPrices($arResult["ITEMS"][$NAME], $row);
+
 							if (isset($arResult["ITEMS"][$NAME]["~CURRENCIES"]))
 							{
 								$arResult["CURRENCIES"] += $arResult["ITEMS"][$NAME]["~CURRENCIES"];
+							}
+
+							if ($row["VALUE_FRAC_LEN"] > 0)
+							{
+								$arResult["ITEMS"][$PID]["DECIMALS"] = $row["VALUE_FRAC_LEN"];
 							}
 						}
 					}
@@ -429,8 +435,28 @@ if ($_CHECK)
 							&& is_array($arResult["ITEMS"][$NAME]["VALUES"])
 						)
 						{
-							$arResult["ITEMS"][$NAME]["VALUES"]["MIN"]["FILTERED_VALUE"] = $row["MIN_VALUE_NUM"];
-							$arResult["ITEMS"][$NAME]["VALUES"]["MAX"]["FILTERED_VALUE"] = $row["MAX_VALUE_NUM"];
+							$currency = $row["VALUE"];
+							$existCurrency = strlen($currency) > 0;
+							if ($existCurrency)
+								$currency = $this->facet->lookupDictionaryValue($currency);
+
+							$priceValue = $this->convertPrice($row["MIN_VALUE_NUM"], $currency);
+							if (
+								!isset($arResult["ITEMS"][$NAME]["VALUES"]["MIN"]["FILTERED_VALUE"])
+								|| $arResult["ITEMS"][$NAME]["VALUES"]["MIN"]["FILTERED_VALUE"] > $priceValue
+							)
+							{
+								$arResult["ITEMS"][$NAME]["VALUES"]["MIN"]["FILTERED_VALUE"] = $priceValue;
+							}
+
+							$priceValue = $this->convertPrice($row["MAX_VALUE_NUM"], $currency);
+							if (
+									!isset($arResult["ITEMS"][$NAME]["VALUES"]["MAX"]["FILTERED_VALUE"])
+									|| $arResult["ITEMS"][$NAME]["VALUES"]["MAX"]["FILTERED_VALUE"] > $priceValue
+							)
+							{
+								$arResult["ITEMS"][$NAME]["VALUES"]["MAX"]["FILTERED_VALUE"] = $priceValue;
+							}
 						}
 					}
 				}
@@ -677,22 +703,35 @@ if($arParams["SAVE_IN_SESSION"])
 }
 
 $arResult["JS_FILTER_PARAMS"] = array();
-if ($arParams["SEF_MODE"] == "Y" && $this->SECTION_ID > 0)
+if ($arParams["SEF_MODE"] == "Y")
 {
-	$sectionList = CIBlockSection::GetList(array(), array(
-		"=ID" => $this->SECTION_ID,
-		"IBLOCK_ID" => $this->IBLOCK_ID,
-	), false, array("ID", "IBLOCK_ID", "SECTION_PAGE_URL"));
-	$sectionList->SetUrlTemplates($arParams["SEF_RULE"]);
-	$section = $sectionList->GetNext();
+	$section = false;
+	if ($this->SECTION_ID > 0)
+	{
+		$sectionList = CIBlockSection::GetList(array(), array(
+			"=ID" => $this->SECTION_ID,
+			"IBLOCK_ID" => $this->IBLOCK_ID,
+		), false, array("ID", "IBLOCK_ID", "SECTION_PAGE_URL"));
+		$sectionList->SetUrlTemplates($arParams["SEF_RULE"]);
+		$section = $sectionList->GetNext();
+	}
+
 	if ($section)
 	{
-		$arResult["JS_FILTER_PARAMS"]["SEF_SET_FILTER_URL"] = $this->makeSmartUrl($section["DETAIL_PAGE_URL"], true);
-		$arResult["JS_FILTER_PARAMS"]["SEF_DEL_FILTER_URL"] = $this->makeSmartUrl($section["DETAIL_PAGE_URL"], false);
+		$url = $section["DETAIL_PAGE_URL"];
 	}
+	else
+	{
+		$url = CIBlock::ReplaceSectionUrl($arParams["SEF_RULE"], array());
+	}
+
+	$arResult["JS_FILTER_PARAMS"]["SEF_SET_FILTER_URL"] = $this->makeSmartUrl($url, true);
+	$arResult["JS_FILTER_PARAMS"]["SEF_DEL_FILTER_URL"] = $this->makeSmartUrl($url, false);
 }
 
-$pageURL = $APPLICATION->GetCurPageParam();
+$uri = new \Bitrix\Main\Web\Uri($this->request->getRequestUri());
+$uri->deleteParams(\Bitrix\Main\HttpRequest::getSystemParameters());
+$pageURL = $uri->GetUri();
 $paramsToDelete = array("set_filter", "del_filter", "ajax", "bxajaxid", "AJAX_CALL", "mode");
 foreach($arResult["ITEMS"] as $PID => $arItem)
 {
@@ -789,7 +828,10 @@ $arInputNames = array();
 foreach($arResult["ITEMS"] as $PID => $arItem)
 {
 	foreach($arItem["VALUES"] as $key => $ar)
+	{
 		$arInputNames[$ar["CONTROL_NAME"]] = true;
+		$arInputNames[$ar["CONTROL_NAME_ALT"]] = true;
+	}
 }
 $arInputNames["set_filter"]=true;
 $arInputNames["del_filter"]=true;
@@ -851,9 +893,9 @@ if ($arParams["XML_EXPORT"] === "Y" && $_REQUEST["mode"] === "xml")
 	$APPLICATION->RestartBuffer();
 	while(ob_end_clean());
 	header("Content-Type: text/xml; charset=utf-8");
-	echo $APPLICATION->convertCharset($xml, LANG_CHARSET, "utf-8");
-	define("PUBLIC_AJAX_MODE", true);
-	require_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/include/epilog_after.php");
+	$error = "";
+	echo \Bitrix\Main\Text\Encoding::convertEncoding($xml, LANG_CHARSET, "utf-8", $error);
+	CMain::FinalActions();
 	die();
 }
 elseif(isset($_REQUEST["ajax"]) && $_REQUEST["ajax"] === "y")
@@ -866,8 +908,7 @@ elseif(isset($_REQUEST["ajax"]) && $_REQUEST["ajax"] === "y")
 	while(ob_end_clean());
 	header('Content-Type: application/x-javascript; charset='.LANG_CHARSET);
 	echo $json;
-	define("PUBLIC_AJAX_MODE", true);
-	require_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/include/epilog_after.php");
+	CMain::FinalActions();
 	die();
 }
 else

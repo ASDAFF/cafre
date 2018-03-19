@@ -115,7 +115,7 @@ class CAllSocNetSmile
 		return true;
 	}
 
-	function GetByID($ID)
+	public static function GetByID($ID)
 	{
 		global $DB;
 
@@ -154,7 +154,7 @@ class CAllSocNetSmile
 		return False;
 	}
 
-	function GetLangByID($SMILE_ID, $strLang)
+	public static function GetLangByID($SMILE_ID, $strLang)
 	{
 		global $DB;
 

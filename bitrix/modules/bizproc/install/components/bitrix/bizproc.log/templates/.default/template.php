@@ -42,21 +42,21 @@ else
 	?>
 	<div class="bizproc-page-log">
 		<div class="bizproc-item-title bizproc-workflow-state-template-name">
-			<?=$arResult["arWorkflowState"]["TEMPLATE_NAME"] ?>
+			<?=htmlspecialcharsbx($arResult["arWorkflowState"]["TEMPLATE_NAME"]) ?>
 		</div>
 		<?
 	if (!empty($arResult["arWorkflowState"]["STATE_MODIFIED"])):
 		?>
 		<div class="bizproc-item-date bizproc-workflow-state-modified">
 			<label><?= GetMessage("BPABL_STATE_MODIFIED")?>:</label>
-			<?=$arResult["arWorkflowState"]["STATE_MODIFIED"]?>
+			<?=htmlspecialcharsbx($arResult["arWorkflowState"]["STATE_MODIFIED"])?>
 		</div>
 		<?
 	endif;
 	if (!empty($arResult["arWorkflowState"]["TEMPLATE_DESCRIPTION"])):
 		?>
 		<div class="bizproc-item-description bizproc-workflow-state-template-description">
-			<?=$arResult["arWorkflowState"]["TEMPLATE_DESCRIPTION"]?>
+			<?=htmlspecialcharsbx($arResult["arWorkflowState"]["TEMPLATE_DESCRIPTION"])?>
 		</div>
 		<?
 	endif;
@@ -66,9 +66,13 @@ else
 			<label><?=GetMessage("BPABL_STATE_NAME")?>:</label>
 			<?
 			if (strlen($arResult["arWorkflowState"]["STATE_TITLE"]) > 0)
-				echo $arResult["arWorkflowState"]["STATE_TITLE"]." (".$arResult["arWorkflowState"]["STATE_NAME"].")";
+			{
+				echo htmlspecialcharsbx($arResult["arWorkflowState"]["STATE_TITLE"])." (".htmlspecialcharsbx($arResult["arWorkflowState"]["STATE_NAME"]).")";
+			}
 			else
-				echo $arResult["arWorkflowState"]["STATE_NAME"];
+			{
+				echo htmlspecialcharsbx($arResult["arWorkflowState"]["STATE_NAME"]);
+			}
 			?>
 		</div>
 	<?

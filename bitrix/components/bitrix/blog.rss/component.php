@@ -145,7 +145,7 @@ if (!empty($arBlog) || $bSoNet)
 	if(($arParams["MODE"] == "C" && !empty($arPost)) || $arParams["MODE"] == "P")
 	{
 		$APPLICATION->RestartBuffer();
-		header("Content-Type: text/xml");
+		header("Content-Type: text/xml; charset=".LANG_CHARSET);
 		header("Pragma: no-cache");
 
 		if ($arParams["CACHE_TIME"] > 0 && $cache->InitCache($arParams["CACHE_TIME"], $cache_id, $cache_path))

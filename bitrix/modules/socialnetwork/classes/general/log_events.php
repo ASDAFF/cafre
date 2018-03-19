@@ -132,7 +132,7 @@ class CAllSocNetLogEvents
 		return True;
 	}
 
-	function Delete($ID)
+	public static function Delete($ID)
 	{
 		global $DB;
 
@@ -151,7 +151,7 @@ class CAllSocNetLogEvents
 		return $bSuccess;
 	}
 
-	function DeleteNoDemand($userID)
+	public static function DeleteNoDemand($userID)
 	{
 		global $DB;
 
@@ -221,7 +221,7 @@ class CAllSocNetLogEvents
 	/***************************************/
 	/**********      UTIL        ***********/
 	/***************************************/
-	function AutoSubscribe($userID, $entityType, $entityID)
+	public static function AutoSubscribe($userID, $entityType, $entityID)
 	{
 		$dbRes = CSocNetLogEvents::GetList(
 			array(),
@@ -272,7 +272,7 @@ class CAllSocNetLogEvents
 		}
 	}
 
-	function GetSQL($user_id, $arMyEntities, $transport, $visible, $table_alias = "L")
+	public static function GetSQL($user_id, $arMyEntities, $transport, $visible, $table_alias = "L")
 	{
 		global $DB;
 

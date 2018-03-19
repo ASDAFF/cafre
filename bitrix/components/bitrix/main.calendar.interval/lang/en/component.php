@@ -2,6 +2,7 @@
 $MESS["interface_grid_no_no_no_2"] = "(no)";
 $MESS["inerface_grid_today"] = "today";
 $MESS["inerface_grid_yesterday"] = "yesterday";
+$MESS["inerface_grid_tomorrow"] = "tomorrow";
 $MESS["inerface_grid_week"] = "this week";
 $MESS["inerface_grid_week_ago"] = "last week";
 $MESS["inerface_grid_month"] = "this month";

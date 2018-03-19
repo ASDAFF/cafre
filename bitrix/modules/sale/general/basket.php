@@ -1,4 +1,5 @@
 <?
+use Bitrix\Main\Event;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Sale;
 use Bitrix\Sale\DiscountCouponsManager;
@@ -13,41 +14,46 @@ class CAllSaleBasket
 	protected static $currencySiteList = array();
 	protected static $currencyList = array();
 	/**
-	* Checks if the basket item has product provider class implementing IBXSaleProductProvider interface
-	*
-	* @param array $arBasketItem - array of basket item fields
-	* @return mixed
-	*/
+	 * Checks if the basket item has product provider class implementing IBXSaleProductProvider interface
+	 *
+	 * @param array $arBasketItem - array of basket item fields
+	 * @return mixed
+	 */
 	public static function GetProductProvider($arBasketItem)
 	{
-//		return \Bitrix\Sale\ProviderMediator::getProductProvider($arBasketItem);
-
 		if (!is_array($arBasketItem)
 			|| empty($arBasketItem)
 			|| !isset($arBasketItem["MODULE"])
 			|| !isset($arBasketItem["PRODUCT_PROVIDER_CLASS"])
 			|| (strlen($arBasketItem["PRODUCT_PROVIDER_CLASS"]) <= 0)
-			)
+		)
 			return false;
 
+		$productProviderClass = $arBasketItem["PRODUCT_PROVIDER_CLASS"];
+
 		if (CModule::IncludeModule($arBasketItem["MODULE"])
-			&& class_exists($arBasketItem["PRODUCT_PROVIDER_CLASS"])
-			&& (array_key_exists("IBXSaleProductProvider", class_implements($arBasketItem["PRODUCT_PROVIDER_CLASS"]))
-				|| $arBasketItem["PRODUCT_PROVIDER_CLASS"] instanceof \Bitrix\Sale\ProviderBase)
-			)
+			&& class_exists($productProviderClass)
+			&& ((array_key_exists("IBXSaleProductProvider", class_implements($productProviderClass))))
+		)
 		{
-			return $arBasketItem["PRODUCT_PROVIDER_CLASS"];
+			return $productProviderClass;
+		}
+
+		$providerClass = Sale\Internals\Catalog\Provider::getProviderEntity($arBasketItem["PRODUCT_PROVIDER_CLASS"]);
+		if ($providerClass instanceof Sale\SaleProviderBase)
+		{
+			return '\Bitrix\Catalog\Product\CatalogProviderCompatibility';
 		}
 
 		return false;
 	}
 
 	/**
-	* Removes old product subscription
-	*
-	* @param string $LID - site for cleaning
-	* @return bool
-	*/
+	 * Removes old product subscription
+	 *
+	 * @param string $LID - site for cleaning
+	 * @return bool
+	 */
 	function ClearProductSubscribe($LID)
 	{
 		CSaleBasket::_ClearProductSubscribe($LID);
@@ -56,13 +62,13 @@ class CAllSaleBasket
 	}
 
 	/**
-	* Sends product subscription letter
-	*
-	* @param integer $ID - code product
-	* @param string $MODULE - module product
-	* @return bool
-	*/
-	function ProductSubscribe($ID, $MODULE)
+	 * Sends product subscription letter
+	 *
+	 * @param integer $ID - code product
+	 * @param string $MODULE - module product
+	 * @return bool
+	 */
+	public static function ProductSubscribe($ID, $MODULE)
 	{
 		$ID = (int)$ID;
 		$MODULE = trim($MODULE);
@@ -76,18 +82,18 @@ class CAllSaleBasket
 			$arSubscribeProd = unserialize($subscribeProd);
 
 		$rsItemsBasket = CSaleBasket::GetList(
-				array("USER_ID" => "DESC", "LID" => "ASC"),
-				array(
-						"PRODUCT_ID" => $ID,
-						"SUBSCRIBE" => "Y",
-						"CAN_BUY" => "N",
-						"ORDER_ID" => "NULL",
-						">USER_ID" => "0",
-						"MODULE" => $MODULE
-				),
-				false,
-				false,
-				array('ID', 'FUSER_ID', 'USER_ID', 'MODULE', 'PRODUCT_ID', 'CURRENCY', 'DATE_INSERT', 'QUANTITY', 'LID', 'DELAY', 'CALLBACK_FUNC', 'SUBSCRIBE', 'PRODUCT_PROVIDER_CLASS')
+			array("USER_ID" => "DESC", "LID" => "ASC"),
+			array(
+				"PRODUCT_ID" => $ID,
+				"SUBSCRIBE" => "Y",
+				"CAN_BUY" => "N",
+				"ORDER_ID" => "NULL",
+				">USER_ID" => "0",
+				"MODULE" => $MODULE
+			),
+			false,
+			false,
+			array('ID', 'FUSER_ID', 'USER_ID', 'MODULE', 'PRODUCT_ID', 'CURRENCY', 'DATE_INSERT', 'QUANTITY', 'LID', 'DELAY', 'CALLBACK_FUNC', 'SUBSCRIBE', 'PRODUCT_PROVIDER_CLASS')
 		);
 		while ($arItemsBasket = $rsItemsBasket->Fetch())
 		{
@@ -194,13 +200,13 @@ class CAllSaleBasket
 				if ($productProvider = CSaleBasket::GetProductProvider($arItemsBasket))
 				{
 					$arCallback = $productProvider::GetProductData(array(
-						"PRODUCT_ID" => $ID,
-						"QUANTITY"   => 1,
-						"RENEWAL"    => "N",
-						"USER_ID"    => $USER_ID,
-						"SITE_ID"    => $LID,
-						"BASKET_ID" => $arItemsBasket["ID"]
-					));
+																	   "PRODUCT_ID" => $ID,
+																	   "QUANTITY"   => 1,
+																	   "RENEWAL"    => "N",
+																	   "USER_ID"    => $USER_ID,
+																	   "SITE_ID"    => $LID,
+																	   "BASKET_ID" => $arItemsBasket["ID"]
+																   ));
 				}
 				elseif (isset($arItemsBasket["CALLBACK_FUNC"]) && !empty($arItemsBasket["CALLBACK_FUNC"]))
 				{
@@ -258,7 +264,7 @@ class CAllSaleBasket
 
 	public static function DoGetUserShoppingCart($siteId, $userId, $shoppingCart, &$arErrors, $arCoupons = array(), $orderId = 0, $enableCustomCurrency = false)
 	{
-		$isOrderConverted = \Bitrix\Main\Config\Option::get("main", "~sale_converted_15", 'N');
+		$isOrderConverted = \Bitrix\Main\Config\Option::get("main", "~sale_converted_15", 'Y');
 
 		$siteId = trim($siteId);
 		if (empty($siteId))
@@ -350,7 +356,7 @@ class CAllSaleBasket
 		foreach ($shoppingCart as $itemIndex => $arShoppingCartItem)
 		{
 			if ((array_key_exists("CALLBACK_FUNC", $arShoppingCartItem) && !empty($arShoppingCartItem["CALLBACK_FUNC"]))
-			|| (array_key_exists("PRODUCT_PROVIDER_CLASS", $arShoppingCartItem) && !empty($arShoppingCartItem["PRODUCT_PROVIDER_CLASS"])))
+				|| (array_key_exists("PRODUCT_PROVIDER_CLASS", $arShoppingCartItem) && !empty($arShoppingCartItem["PRODUCT_PROVIDER_CLASS"])))
 			{
 				// get quantity difference to check its availability
 
@@ -424,26 +430,12 @@ class CAllSaleBasket
 					$arFieldsTmp = array("CAN_BUY" => "N");
 				}
 
-				if ($isOrderConverted == 'Y')
+				if ($isOrderConverted != 'N')
 				{
 					if (!Sale\Compatible\DiscountCompatibility::isInited())
 						Sale\Compatible\DiscountCompatibility::init();
 					$basketCode = (Sale\Compatible\DiscountCompatibility::usedByClient() ? $arShoppingCartItem['ID'] : $itemIndex);
-					if (isset($arFieldsTmp['BASE_PRICE']) && isset($arFieldsTmp['CURRENCY']))
-					{
-						Sale\Compatible\DiscountCompatibility::setBasketItemBasePrice(
-							$basketCode,
-							$arFieldsTmp['BASE_PRICE'],
-							$arFieldsTmp['CURRENCY']
-						);
-					}
-					if (!empty($arFieldsTmp['DISCOUNT_LIST']))
-					{
-						Sale\Compatible\DiscountCompatibility::setBasketItemDiscounts(
-							$basketCode,
-							$arFieldsTmp['DISCOUNT_LIST']
-						);
-					}
+					Sale\Compatible\DiscountCompatibility::setBasketItemData($basketCode, $arFieldsTmp);
 				}
 
 				if ($existBasketID)
@@ -498,7 +490,8 @@ class CAllSaleBasket
 					}
 				}
 
-				$arShoppingCartItem["PRICE"] = roundEx($arShoppingCartItem["PRICE"], SALE_VALUE_PRECISION);
+				$arShoppingCartItem["PRICE"] = \Bitrix\Sale\PriceMaths::roundPrecision($arShoppingCartItem["PRICE"]);
+
 				$arShoppingCartItem["QUANTITY"] = floatval($arShoppingCartItem["QUANTITY"]);
 				$arShoppingCartItem["WEIGHT"] = floatval($arShoppingCartItem["WEIGHT"]);
 				$arShoppingCartItem["DIMENSIONS"] = unserialize($arShoppingCartItem["DIMENSIONS"]);
@@ -506,8 +499,8 @@ class CAllSaleBasket
 				$arShoppingCartItem["DISCOUNT_PRICE"] = roundEx($arShoppingCartItem["DISCOUNT_PRICE"], SALE_VALUE_PRECISION);
 
 				if ($arShoppingCartItem["VAT_RATE"] > 0)
-					$arShoppingCartItem["VAT_VALUE"] = (($arShoppingCartItem["PRICE"] / ($arShoppingCartItem["VAT_RATE"] + 1)) * $arShoppingCartItem["VAT_RATE"]);
-					//$arShoppingCartItem["VAT_VALUE"] = roundEx((($arShoppingCartItem["PRICE"] / ($arShoppingCartItem["VAT_RATE"] + 1)) * $arShoppingCartItem["VAT_RATE"]), SALE_VALUE_PRECISION);
+					$arShoppingCartItem["VAT_VALUE"] = \Bitrix\Sale\PriceMaths::roundPrecision(($arShoppingCartItem["PRICE"] / ($arShoppingCartItem["VAT_RATE"] + 1)) * $arShoppingCartItem["VAT_RATE"]);
+				//$arShoppingCartItem["VAT_VALUE"] = roundEx((($arShoppingCartItem["PRICE"] / ($arShoppingCartItem["VAT_RATE"] + 1)) * $arShoppingCartItem["VAT_RATE"]), SALE_VALUE_PRECISION);
 
 				if ($arShoppingCartItem["DISCOUNT_PRICE"] > 0)
 					$arShoppingCartItem["DISCOUNT_PRICE_PERCENT"] = $arShoppingCartItem["DISCOUNT_PRICE"] * 100 / ($arShoppingCartItem["DISCOUNT_PRICE"] + $arShoppingCartItem["PRICE"]);
@@ -527,23 +520,23 @@ class CAllSaleBasket
 	}
 
 	/**
-	* Changes product quantity in the catalog.
-	* Used in the DoSaveOrderBasket to actualize basket items quantity
-	* after some operations with the order are made in the order_new form
-	*
-	* Depending on the state of the order (reserved/deducted)
-	* and the state of the product (reserved/deducted) calls appropriate provider methods
-	*
-	* If the quantity is 0 and CHECK_QUANTITY is N, this method is used only to call OrderProduct method to actualize coupon data
-	*
-	* @param array $arBasketItem - basket item data array
-	* @param int $deltaQuantity - quantity to be changed. Can be zero, in this case CHECK_QUANTITY should be N
-	* @param bool $isOrderReserved - order reservation flag
-	* @param bool $isOrderDeducted - order deduction flag
-	* @param array $arStoreBarcodeOrderFormData - array of barcode and stores from order_new form to be used for deduction
-	* @param array $arAdditionalParams - user id, site id, check_quantity flag
-	* @return bool
-	*/
+	 * Changes product quantity in the catalog.
+	 * Used in the DoSaveOrderBasket to actualize basket items quantity
+	 * after some operations with the order are made in the order_new form
+	 *
+	 * Depending on the state of the order (reserved/deducted)
+	 * and the state of the product (reserved/deducted) calls appropriate provider methods
+	 *
+	 * If the quantity is 0 and CHECK_QUANTITY is N, this method is used only to call OrderProduct method to actualize coupon data
+	 *
+	 * @param array $arBasketItem - basket item data array
+	 * @param int $deltaQuantity - quantity to be changed. Can be zero, in this case CHECK_QUANTITY should be N
+	 * @param bool $isOrderReserved - order reservation flag
+	 * @param bool $isOrderDeducted - order deduction flag
+	 * @param array $arStoreBarcodeOrderFormData - array of barcode and stores from order_new form to be used for deduction
+	 * @param array $arAdditionalParams - user id, site id, check_quantity flag
+	 * @return bool
+	 */
 	public static function DoChangeProductQuantity($arBasketItem, $deltaQuantity, $isOrderReserved = false, $isOrderDeducted = false, $arStoreBarcodeOrderFormData = array(), $arAdditionalParams = array())
 	{
 		global $APPLICATION;
@@ -746,19 +739,19 @@ class CAllSaleBasket
 	}
 
 	/**
-	* Updates information about basket products after changes have been made in the order_new form
-	* (saves newly added basket items, changes their quantity, saves barcodes etc)
-	*
-	* @param int $orderId - order ID
-	* @param string $siteId - site ID
-	* @param bool $userId - user ID
-	* @param array $arShoppingCart - array of basket items
-	* @param array $arErrors
-	* @param array $arCoupons
-	* @param array $arStoreBarcodeOrderFormData - array of stores and barcodes for deduction (from order_new form)
-	* @param bool $bSaveBarcodes - flat to save given barcode data. Used if the order is already deducted or at least has saved other barcodes
-	* @return bool
-	*/
+	 * Updates information about basket products after changes have been made in the order_new form
+	 * (saves newly added basket items, changes their quantity, saves barcodes etc)
+	 *
+	 * @param int $orderId - order ID
+	 * @param string $siteId - site ID
+	 * @param bool $userId - user ID
+	 * @param array $arShoppingCart - array of basket items
+	 * @param array $arErrors
+	 * @param array $arCoupons
+	 * @param array $arStoreBarcodeOrderFormData - array of stores and barcodes for deduction (from order_new form)
+	 * @param bool $bSaveBarcodes - flat to save given barcode data. Used if the order is already deducted or at least has saved other barcodes
+	 * @return bool
+	 */
 	public static function DoSaveOrderBasket($orderId, $siteId, $userId, &$arShoppingCart, &$arErrors, $arCoupons = array(), $arStoreBarcodeOrderFormData = array(), $bSaveBarcodes = false)
 	{
 		global $DB, $USER, $APPLICATION;
@@ -770,19 +763,19 @@ class CAllSaleBasket
 		if (defined("SALE_DEBUG") && SALE_DEBUG)
 		{
 			CSaleHelper::WriteToLog("DoSaveOrderBasket - Started",
-				array(
-					"orderId" => $orderId,
-					"siteId" => $siteId,
-					"userId" => $userId,
-					"arShoppingCart" => $arShoppingCart,
-					"bSaveBarcodes" => $bSaveBarcodes,
-					"arStoreBarcodeOrderFormData" => $arStoreBarcodeOrderFormData
-				),
-				"DSOB1"
+									array(
+										"orderId" => $orderId,
+										"siteId" => $siteId,
+										"userId" => $userId,
+										"arShoppingCart" => $arShoppingCart,
+										"bSaveBarcodes" => $bSaveBarcodes,
+										"arStoreBarcodeOrderFormData" => $arStoreBarcodeOrderFormData
+									),
+									"DSOB1"
 			);
 		}
 
-		$isOrderConverted = \Bitrix\Main\Config\Option::get("main", "~sale_converted_15", 'N');
+		$isOrderConverted = \Bitrix\Main\Config\Option::get("main", "~sale_converted_15", 'Y');
 
 		$orderId = (int)$orderId;
 		if ($orderId <= 0)
@@ -876,7 +869,7 @@ class CAllSaleBasket
 		$arTmpSetParentId = array();
 
 		//TODO: is orders converted?
-		if ($isOrderConverted != "Y")
+		if ($isOrderConverted == 'N')
 		{
 			// re-sort basket data so newly added Set parents come before Set items (used to correctly add Set items to the table)
 			usort($arShoppingCart, array("CSaleBasketHelper", "cmpSetData"));
@@ -937,7 +930,7 @@ class CAllSaleBasket
 				if (array_key_exists($arItem["ID"], $arOldItems))
 				{
 					//TODO: is order converted?
-					if ($isOrderConverted != "Y")
+					if ($isOrderConverted == 'N')
 					{
 						if (!CSaleBasketHelper::isSetParent($arItem))
 						{
@@ -982,7 +975,7 @@ class CAllSaleBasket
 				else
 				{
 					//TODO: is order converted?
-					if ($isOrderConverted != "Y")
+					if ($isOrderConverted == 'N')
 					{
 						if ($arItem["QUANTITY"] != 0 && !CSaleBasketHelper::isSetParent($arItem))
 						{
@@ -1009,7 +1002,7 @@ class CAllSaleBasket
 
 
 				//TODO: is order converted?
-				if ($isOrderConverted == "Y")
+				if ($isOrderConverted != 'N')
 				{
 					$fields = array("IGNORE_CALLBACK_FUNC" => "Y") + $arItem;
 
@@ -1057,6 +1050,10 @@ class CAllSaleBasket
 					}
 
 					$arItem["ID"] = CSaleBasket::Add(array("ORDER_ID" => $orderId, "IGNORE_CALLBACK_FUNC" => "Y") + $arItem);
+					if($APPLICATION->GetException())
+					{
+						return false;
+					}
 
 					if (isset($arItem["MANUAL_SET_ITEMS_INSERTION"]))
 						$arTmpSetParentId[$oldSetParentId] = $arItem["ID"];
@@ -1152,7 +1149,7 @@ class CAllSaleBasket
 		}
 		unset($arItem);
 
-		if ($isOrderConverted == "Y" && !empty($orderBasketPool))
+		if ($isOrderConverted != 'N' && !empty($orderBasketPool))
 		{
 			/** @var Sale\Result $r */
 			$r = Sale\Compatible\BasketCompatibility::setBasketFields($orderBasketPool);
@@ -1183,15 +1180,18 @@ class CAllSaleBasket
 			}
 			else
 			{
-				// the quantity is negative, so the product is canceled
-				self::DoChangeProductQuantity(
-					$arOldItem,
-					-$arOldItem["QUANTITY"],
-					$isOrderReserved,
-					$isOrderDeducted,
-					$arStoreBarcodeOrderFormData[$arOldItem["ID"]],
-					array("ORDER_ID" => $orderId, "USER_ID" => $userId, "SITE_ID" => $siteId)
-				);
+				if ($isOrderConverted == 'N')
+				{
+					// the quantity is negative, so the product is canceled
+					self::DoChangeProductQuantity(
+						$arOldItem,
+						-$arOldItem["QUANTITY"],
+						$isOrderReserved,
+						$isOrderDeducted,
+						$arStoreBarcodeOrderFormData[$arOldItem["ID"]],
+						array("ORDER_ID" => $orderId, "USER_ID" => $userId, "SITE_ID" => $siteId)
+					);
+				}
 			}
 
 			CSaleBasket::Delete($key);
@@ -1244,23 +1244,37 @@ class CAllSaleBasket
 		{
 			if ((array_key_exists("CALLBACK_FUNC", $arFields) && !empty($arFields["CALLBACK_FUNC"]))
 				|| (array_key_exists("PRODUCT_PROVIDER_CLASS", $arFields) && !empty($arFields["PRODUCT_PROVIDER_CLASS"]))
-				)
+			)
 			{
 				/** @var $productProvider IBXSaleProductProvider */
 				if ($productProvider = CSaleBasket::GetProductProvider(array("MODULE" => $arFields["MODULE"], "PRODUCT_PROVIDER_CLASS" => $arFields["PRODUCT_PROVIDER_CLASS"])))
 				{
-					$providerParams = array(
-						"PRODUCT_ID" => $arFields["PRODUCT_ID"],
-						"QUANTITY" => $arFields["QUANTITY"],
-						"RENEWAL" => $arFields["RENEWAL"],
-						"USER_ID" => (isset($arFields["USER_ID"]) ? $arFields["USER_ID"] : 0),
-						"SITE_ID" => (isset($arFields["LID"]) ? $arFields["LID"] : false),
-						"BASKET_ID" => $ID
-					);
-					if (isset($arFields['NOTES']))
-						$providerParams['NOTES'] = $arFields['NOTES'];
-					$arPrice = $productProvider::GetProductData($providerParams);
-					unset($providerParams);
+
+					if (array_key_exists("IBXSaleProductProvider", class_implements($productProvider)))
+					{
+						$providerParams = array(
+							"PRODUCT_ID" => $arFields["PRODUCT_ID"],
+							"QUANTITY" => $arFields["QUANTITY"],
+							"RENEWAL" => $arFields["RENEWAL"],
+							"USER_ID" => (isset($arFields["USER_ID"]) ? $arFields["USER_ID"] : 0),
+							"SITE_ID" => (isset($arFields["LID"]) ? $arFields["LID"] : false),
+							"BASKET_ID" => $ID
+						);
+						if (isset($arFields['NOTES']))
+							$providerParams['NOTES'] = $arFields['NOTES'];
+						$arPrice = $productProvider::GetProductData($providerParams);
+						unset($providerParams);
+					}
+					elseif (get_parent_class($productProvider) == 'Bitrix\Sale\SaleProviderBase')
+					{
+//						$productProvider::getCatalogData();
+//						$productProvider::getProviderData();
+//						$productProvider::getProviderData();
+					}
+
+
+
+
 				}
 				else
 				{
@@ -1278,19 +1292,13 @@ class CAllSaleBasket
 				if (!empty($arPrice) && is_array($arPrice))
 				{
 					if (isset($arPrice['BASE_PRICE']))
-					{
 						$arPrice['BASE_PRICE'] = roundEx($arPrice['BASE_PRICE'], SALE_VALUE_PRECISION);
-					}
 
 					if (isset($arPrice['DISCOUNT_PRICE']))
-					{
 						$arPrice['DISCOUNT_PRICE'] = roundEx($arPrice['DISCOUNT_PRICE'], SALE_VALUE_PRECISION);
-					}
 
 					if (isset($arPrice['PRICE']))
-					{
 						$arPrice['PRICE'] = roundEx($arPrice['PRICE'], SALE_VALUE_PRECISION);
-					}
 
 					$arFields["PRICE"] = $arPrice["PRICE"];
 					$arFields["CURRENCY"] = $arPrice["CURRENCY"];
@@ -1299,9 +1307,13 @@ class CAllSaleBasket
 					$arFields["NOTES"] = $arPrice["NOTES"];
 					if (!isset($arFields["NAME"]))
 						$arFields["NAME"] = $arPrice["NAME"];
+					if (isset($arPrice['DISCOUNT_LIST']))
+						$arFields['DISCOUNT_LIST'] = $arPrice['DISCOUNT_LIST'];
 				}
 				else
 				{
+					if ($ACTION == 'ADD')
+						return false;
 					$arFields["CAN_BUY"] = "N";
 				}
 			}
@@ -1373,8 +1385,8 @@ class CAllSaleBasket
 				if (empty(self::$currencyList))
 				{
 					$currencyIterator = Currency\CurrencyTable::getList(array(
-						'select' => array('CURRENCY'),
-					));
+																			'select' => array('CURRENCY'),
+																		));
 					while ($currency = $currencyIterator->fetch())
 						self::$currencyList[$currency['CURRENCY']] = $currency['CURRENCY'];
 				}
@@ -1638,7 +1650,7 @@ class CAllSaleBasket
 	{
 		global $APPLICATION;
 
-		$isOrderConverted = \Bitrix\Main\Config\Option::get("main", "~sale_converted_15", 'N');
+		$isOrderConverted = \Bitrix\Main\Config\Option::get("main", "~sale_converted_15", 'Y');
 
 		if (isset($arFields["ID"]))
 			unset($arFields["ID"]);
@@ -1646,7 +1658,7 @@ class CAllSaleBasket
 		$ID = (int)$ID;
 		CSaleBasket::Init();
 
-		if ($isOrderConverted != 'Y' || (is_set($arFields, "QUANTITY") && floatval($arFields["QUANTITY"])<=0))
+		if ($isOrderConverted == 'N')
 		{
 			foreach(GetModuleEvents("sale", "OnBeforeBasketUpdate", true) as $arEvent)
 				if (ExecuteModuleEventEx($arEvent, array($ID, &$arFields))===false)
@@ -1660,11 +1672,11 @@ class CAllSaleBasket
 		else
 		{
 
-			if ($isOrderConverted == 'Y')
+			if ($isOrderConverted != 'N')
 			{
 				/** @var \Bitrix\Sale\Result $r */
 				$r = \Bitrix\Sale\Compatible\BasketCompatibility::update($ID, $arFields);
-				if (!$r->isSuccess(true))
+				if (!$r->isSuccess())
 				{
 					foreach($r->getErrorMessages() as $error)
 					{
@@ -1759,7 +1771,7 @@ class CAllSaleBasket
 		}
 	}
 
-	function GetBasketUserID($bSkipFUserInit = false)
+	public static function GetBasketUserID($bSkipFUserInit = false)
 	{
 		$bSkipFUserInit = ($bSkipFUserInit !== false);
 
@@ -1780,7 +1792,9 @@ class CAllSaleBasket
 		{
 			if (!$bSkipFUserInit)
 			{
+				$GLOBALS["DB"]->StartUsingMasterOnly();
 				$ID = CSaleUser::Add();
+				$GLOBALS["DB"]->StopUsingMasterOnly();
 				$_SESSION["SALE_USER_ID"] = $ID;
 			}
 		}
@@ -1853,10 +1867,10 @@ class CAllSaleBasket
 		if (CSaleBasket::GetProductProvider(array("MODULE" => $module, "PRODUCT_PROVIDER_CLASS" => $productProvider)))
 		{
 			return $productProvider::GetProductData(array(
-				"PRODUCT_ID" => $productID,
-				"QUANTITY"   => $quantity,
-				"RENEWAL"    => $renewal
-			));
+														"PRODUCT_ID" => $productID,
+														"QUANTITY"   => $quantity,
+														"RENEWAL"    => $renewal
+													));
 		}
 		else
 			return CSaleBasket::ExecuteCallbackFunction($callbackFunc, $module, $productID, $quantity, $renewal);
@@ -1867,9 +1881,9 @@ class CAllSaleBasket
 		if (CSaleBasket::GetProductProvider(array("MODULE" => $module, "PRODUCT_PROVIDER_CLASS" => $productProvider)))
 		{
 			$productProvider::GetProductData(array(
-				"PRODUCT_ID" => $productID,
-				"QUANTITY"   => $quantity
-			));
+												 "PRODUCT_ID" => $productID,
+												 "QUANTITY"   => $quantity
+											 ));
 		}
 		else
 			CSaleBasket::ExecuteCallbackFunction($callbackFunc, $module, $productID, $quantity);
@@ -1938,16 +1952,17 @@ class CAllSaleBasket
 				$notes = $basket['NOTES'];
 			unset($basket, $basketIterator);
 		}
-
-		if (CSaleBasket::GetProductProvider(array("MODULE" => $module, "PRODUCT_PROVIDER_CLASS" => $productProvider)))
+		
+		$providerName = CSaleBasket::GetProductProvider(array("MODULE" => $module, "PRODUCT_PROVIDER_CLASS" => $productProvider));
+		if ($providerName)
 		{
-			$arFields = $productProvider::GetProductData(array(
-				"PRODUCT_ID" => $productID,
-				"QUANTITY"   => $quantity,
-				"RENEWAL"    => $renewal,
-				"BASKET_ID" => $ID,
-				"NOTES" => $notes
-			));
+			$arFields = $providerName::GetProductData(array(
+															 "PRODUCT_ID" => $productID,
+															 "QUANTITY"   => $quantity,
+															 "RENEWAL"    => $renewal,
+															 "BASKET_ID" => $ID,
+															 "NOTES" => $notes
+														 ));
 		}
 		else
 		{
@@ -1968,7 +1983,18 @@ class CAllSaleBasket
 		}
 	}
 
-	function OrderBasket($orderID, $fuserID = 0, $strLang = SITE_ID, $arDiscounts = False)
+	/**
+	 * @deprecated deprecated since sale 14.0.6
+	 * @see CSaleBasket::DoSaveOrderBasket
+	 *
+	 * @param int $orderID
+	 * @param int $fuserID
+	 * @param mixed|string $strLang
+	 * @param bool $arDiscounts
+	 * @return bool
+	 * @throws \Bitrix\Main\ArgumentNullException
+	 */
+	public static function OrderBasket($orderID, $fuserID = 0, $strLang = SITE_ID, $arDiscounts = False)
 	{
 		$orderID = (int)$orderID;
 		if ($orderID <= 0)
@@ -1979,6 +2005,8 @@ class CAllSaleBasket
 			$fuserID = (int)CSaleBasket::GetBasketUserID(true);
 		if ($fuserID <= 0)
 			return false;
+
+		$isOrderConverted = \Bitrix\Main\Config\Option::get("main", "~sale_converted_15", 'Y');
 
 		$arOrder = array();
 
@@ -1997,18 +2025,18 @@ class CAllSaleBasket
 		}
 		$boolRecurring = $arOrder['RECURRING_ID'] > 0;
 
-		$needSaveCoupons = false;
+		$found = false;
 		$dbBasketList = CSaleBasket::GetList(
-				array("PRICE" => "DESC"),
-				array("FUSER_ID" => $fuserID, "LID" => $strLang, "ORDER_ID" => 0),
-				false,
-				false,
-				array(
-					'ID', 'ORDER_ID', 'PRODUCT_ID', 'MODULE',
-					'CAN_BUY', 'DELAY', 'ORDER_CALLBACK_FUNC', 'PRODUCT_PROVIDER_CLASS',
-					'QUANTITY'
-				)
-			);
+			array("PRICE" => "DESC"),
+			array("FUSER_ID" => $fuserID, "LID" => $strLang, "ORDER_ID" => 0),
+			false,
+			false,
+			array(
+				'ID', 'ORDER_ID', 'PRODUCT_ID', 'MODULE',
+				'CAN_BUY', 'DELAY', 'ORDER_CALLBACK_FUNC', 'PRODUCT_PROVIDER_CLASS',
+				'QUANTITY', 'CUSTOM_PRICE'
+			)
+		);
 		while ($arBasket = $dbBasketList->Fetch())
 		{
 			$arFields = array();
@@ -2061,7 +2089,26 @@ class CAllSaleBasket
 					{
 						$arFields["CAN_BUY"] = "Y";
 						$arFields["ORDER_ID"] = $orderID;
-						$needSaveCoupons = true;
+						$arBasket['CUSTOM_PRICE'] = (string)$arBasket['CUSTOM_PRICE'];
+						if ($arBasket['CUSTOM_PRICE'] == 'Y')
+						{
+							if (array_key_exists('PRICE', $arFields))
+								unset($arFields['PRICE']);
+							if (array_key_exists('DISCOUNT_PRICE', $arFields))
+								unset($arFields['DISCOUNT_PRICE']);
+							if (array_key_exists('CURRENCY', $arFields))
+								unset($arFields['CURRENCY']);
+							if (array_key_exists('DISCOUNT_VALUE', $arFields))
+								unset($arFields['DISCOUNT_VALUE']);
+							if (array_key_exists('DISCOUNT_NAME', $arFields))
+								unset($arFields['DISCOUNT_NAME']);
+							if (array_key_exists('DISCOUNT_COUPON', $arFields))
+								unset($arFields['DISCOUNT_COUPON']);
+							if (array_key_exists('DISCOUNT_LIST', $arFields))
+								unset($arFields['DISCOUNT_LIST']);
+							if (array_key_exists('DISCOUNT', $arFields))
+								unset($arFields['DISCOUNT']);
+						}
 					}
 					else
 					{
@@ -2069,20 +2116,27 @@ class CAllSaleBasket
 							'CAN_BUY' => 'N'
 						);
 						$removeCoupon = DiscountCouponsManager::deleteApplyByProduct(array(
-							'MODULE' => $arBasket['MODULE'],
-							'PRODUCT_ID' => $arBasket['PRODUCT_ID'],
-							'BASKET_ID' => $arBasket['ID']
-						));
+																						 'MODULE' => $arBasket['MODULE'],
+																						 'PRODUCT_ID' => $arBasket['PRODUCT_ID'],
+																						 'BASKET_ID' => $arBasket['ID']
+																					 ));
 					}
 				}
 				else
 				{
 					$arFields["ORDER_ID"] = $orderID;
-					$needSaveCoupons = true;
 				}
 
 				if (!empty($arFields))
 				{
+					if ($isOrderConverted != 'N')
+					{
+						$found = true;
+						if (!\Bitrix\Sale\Compatible\DiscountCompatibility::isInited())
+							\Bitrix\Sale\Compatible\DiscountCompatibility::init();
+						if (\Bitrix\Sale\Compatible\DiscountCompatibility::isInited())
+							\Bitrix\Sale\Compatible\DiscountCompatibility::setRepeatSave(true);
+					}
 					if (CSaleBasket::Update($arBasket["ID"], $arFields))
 					{
 						$_SESSION["SALE_BASKET_NUM_PRODUCTS"][SITE_ID]--;
@@ -2099,10 +2153,17 @@ class CAllSaleBasket
 			ExecuteModuleEventEx($arEvent, array($orderID, $fuserID, $strLang, $arDiscounts));
 		}
 
-		if ($needSaveCoupons)
+		if ($isOrderConverted != 'N' && $found)
 		{
-			DiscountCouponsManager::finalApply();
-			DiscountCouponsManager::saveApplied();
+			if ($order = Sale\Order::load($orderID))
+			{
+				if (\Bitrix\Sale\Compatible\DiscountCompatibility::isInited())
+					\Bitrix\Sale\Compatible\DiscountCompatibility::setRepeatSave(false);
+				$discounts = $order->getDiscount();
+				$discounts->save();
+				unset($discounts);
+			}
+			unset($order);
 		}
 		//reservation
 		if ($arOrder['RESERVED'] != "Y" && COption::GetOptionString("sale", "product_reserve_condition") == "O")
@@ -2134,9 +2195,9 @@ class CAllSaleBasket
 		if ($arOrder)
 		{
 			$dbBasketList = CSaleBasket::GetList(
-					array("NAME" => "ASC"),
-					array("ORDER_ID" => $orderID)
-				);
+				array("NAME" => "ASC"),
+				array("ORDER_ID" => $orderID)
+			);
 
 			while ($arBasket = $dbBasketList->Fetch())
 			{
@@ -2148,12 +2209,12 @@ class CAllSaleBasket
 						if ($productProvider = CSaleBasket::GetProductProvider($arBasket))
 						{
 							$arFields = $productProvider::DeliverProduct(array(
-								"PRODUCT_ID" => $arBasket["PRODUCT_ID"],
-								"USER_ID"    => $arOrder["USER_ID"],
-								"PAID"       => $bPaid,
-								"ORDER_ID"   => $orderID,
-								'BASKET_ID' => $arBasket['ID']
-							));
+																			 "PRODUCT_ID" => $arBasket["PRODUCT_ID"],
+																			 "USER_ID"    => $arOrder["USER_ID"],
+																			 "PAID"       => $bPaid,
+																			 "ORDER_ID"   => $orderID,
+																			 'BASKET_ID' => $arBasket['ID']
+																		 ));
 						}
 						else
 						{
@@ -2190,34 +2251,34 @@ class CAllSaleBasket
 						if ($productProvider = CSaleBasket::GetProductProvider($arBasket))
 						{
 							$productProvider::DeliverProduct(array(
-								"PRODUCT_ID" => $arBasket["PRODUCT_ID"],
-								"USER_ID"    => $arOrder["USER_ID"],
-								"PAID"       => $bPaid,
-								"ORDER_ID"   => $orderID,
-								'BASKET_ID' => $arBasket['ID']
-							));
+																 "PRODUCT_ID" => $arBasket["PRODUCT_ID"],
+																 "USER_ID"    => $arOrder["USER_ID"],
+																 "PAID"       => $bPaid,
+																 "ORDER_ID"   => $orderID,
+																 'BASKET_ID' => $arBasket['ID']
+															 ));
 						}
 						else
 						{
 							CSaleBasket::ExecuteCallbackFunction(
-									$arBasket["PAY_CALLBACK_FUNC"],
-									$arBasket["MODULE"],
-									$arBasket["PRODUCT_ID"],
-									$arOrder["USER_ID"],
-									$bPaid,
-									$orderID,
-									$arBasket["QUANTITY"]
-								);
+								$arBasket["PAY_CALLBACK_FUNC"],
+								$arBasket["MODULE"],
+								$arBasket["PRODUCT_ID"],
+								$arOrder["USER_ID"],
+								$bPaid,
+								$orderID,
+								$arBasket["QUANTITY"]
+							);
 						}
 
 						$dbRecur = CSaleRecurring::GetList(
-								array(),
-								array(
-										"USER_ID" => $arOrder["USER_ID"],
-										"PRODUCT_ID" => $arBasket["PRODUCT_ID"],
-										"MODULE" => $arBasket["MODULE"]
-									)
-							);
+							array(),
+							array(
+								"USER_ID" => $arOrder["USER_ID"],
+								"PRODUCT_ID" => $arBasket["PRODUCT_ID"],
+								"MODULE" => $arBasket["MODULE"]
+							)
+						);
 						while ($arRecur = $dbRecur->Fetch())
 						{
 							CSaleRecurring::Delete($arRecur["ID"]);
@@ -2238,9 +2299,9 @@ class CAllSaleBasket
 
 		$bCancel = ($bCancel ? True : False);
 
-		$isOrderConverted = \Bitrix\Main\Config\Option::get("main", "~sale_converted_15", 'N');
+		$isOrderConverted = \Bitrix\Main\Config\Option::get("main", "~sale_converted_15", 'Y');
 
-		if ($isOrderConverted == "Y")
+		if ($isOrderConverted != 'N')
 		{
 			\Bitrix\Sale\Compatible\OrderCompatibility::cancel($orderID, $bCancel?'Y':'N');
 		}
@@ -2250,9 +2311,9 @@ class CAllSaleBasket
 			if ($arOrder)
 			{
 				$dbBasketList = CSaleBasket::GetList(
-						array("NAME" => "ASC"),
-						array("ORDER_ID" => $orderID)
-					);
+					array("NAME" => "ASC"),
+					array("ORDER_ID" => $orderID)
+				);
 				while ($arBasket = $dbBasketList->Fetch())
 				{
 					if (strlen($arBasket["CANCEL_CALLBACK_FUNC"]) > 0 && strlen($arBasket["PRODUCT_PROVIDER_CLASS"]) <= 0)
@@ -2271,12 +2332,12 @@ class CAllSaleBasket
 	}
 
 	/**
-	* Method is called to reserve all products in the order basket
-	*
-	* @param int $orderID
-	* @param bool $bUndoReservation
-	* @return mixed array
-	*/
+	 * Method is called to reserve all products in the order basket
+	 *
+	 * @param int $orderID
+	 * @param bool $bUndoReservation
+	 * @return mixed array
+	 */
 	function OrderReservation($orderID, $bUndoReservation = false)
 	{
 		global $APPLICATION;
@@ -2334,7 +2395,7 @@ class CAllSaleBasket
 								"PRODUCT_ID" => $arBasket["PRODUCT_ID"],
 								"QUANTITY_ADD" => $arBasket["QUANTITY"],
 								"UNDO_RESERVATION" => ($bUndoReservation) ? "Y" : "N"
-								),
+							),
 							"OR3"
 						);
 					}
@@ -2349,10 +2410,10 @@ class CAllSaleBasket
 					else
 					{
 						$res = $productProvider::ReserveProduct(array(
-							"PRODUCT_ID" => $arBasket["PRODUCT_ID"],
-							"QUANTITY_ADD" => $arBasket["QUANTITY"],
-							"UNDO_RESERVATION" => ($bUndoReservation) ? "Y" : "N",
-						));
+																	"PRODUCT_ID" => $arBasket["PRODUCT_ID"],
+																	"QUANTITY_ADD" => $arBasket["QUANTITY"],
+																	"UNDO_RESERVATION" => ($bUndoReservation) ? "Y" : "N",
+																));
 					}
 
 					if ($res["RESULT"])
@@ -2413,14 +2474,14 @@ class CAllSaleBasket
 	}
 
 	/**
-	* Method is called to reserve one product in the basket
-	* (it's a wrapper around product provider ReserveProduct method to use for the single product)
-	*
-	* @param int $basketID
-	* @param float $deltaQuantity - quantity to reserve
-	* @param bool $isOrderDeducted
-	* @return mixed array
-	*/
+	 * Method is called to reserve one product in the basket
+	 * (it's a wrapper around product provider ReserveProduct method to use for the single product)
+	 *
+	 * @param int $basketID
+	 * @param float $deltaQuantity - quantity to reserve
+	 * @param bool $isOrderDeducted
+	 * @return mixed array
+	 */
 	function ReserveBasketProduct($basketID, $deltaQuantity, $isOrderDeducted = false)
 	{
 		global $APPLICATION;
@@ -2473,17 +2534,17 @@ class CAllSaleBasket
 							"QUANTITY_ADD" => $deltaQuantity,
 							"UNDO_RESERVATION" => ($bUndoReservation) ? "Y" : "N",
 							"ORDER_DEDUCTED" => ($isOrderDeducted) ? "Y" : "N"
-							),
+						),
 						"RBP2"
 					);
 				}
 
 				$res = $productProvider::ReserveProduct(array(
-					"PRODUCT_ID" => $arBasket["PRODUCT_ID"],
-					"QUANTITY_ADD" => $deltaQuantity,
-					"UNDO_RESERVATION" => ($bUndoReservation) ? "Y" : "N",
-					"ORDER_DEDUCTED" => ($isOrderDeducted) ? "Y" : "N"
-				));
+															"PRODUCT_ID" => $arBasket["PRODUCT_ID"],
+															"QUANTITY_ADD" => $deltaQuantity,
+															"UNDO_RESERVATION" => ($bUndoReservation) ? "Y" : "N",
+															"ORDER_DEDUCTED" => ($isOrderDeducted) ? "Y" : "N"
+														));
 
 				$updateResult = true;
 				$arResult["RESULT"] = $res["RESULT"];
@@ -2532,25 +2593,25 @@ class CAllSaleBasket
 	}
 
 	/**
-	* Method is called to deduct one product in the basket
-	* (it's a wrapper around product provider DeductProduct method to use for the single product)
-	*
-	* @param int $basketID
-	* @param float $deltaQuantity - quantity to reserve
-	* @param array $arStoreBarcodeData
-	* @return mixed array
-	*/
+	 * Method is called to deduct one product in the basket
+	 * (it's a wrapper around product provider DeductProduct method to use for the single product)
+	 *
+	 * @param int $basketID
+	 * @param float $deltaQuantity - quantity to reserve
+	 * @param array $arStoreBarcodeData
+	 * @return mixed array
+	 */
 	function DeductBasketProduct($basketID, $deltaQuantity, $arStoreBarcodeData = array())
 	{
 		if (defined("SALE_DEBUG") && SALE_DEBUG)
 		{
 			CSaleHelper::WriteToLog("DeductBasketProduct",
-				array(
-					"basketId" => $basketID,
-					"deltaQuantity" => $deltaQuantity,
-					"storeBarcodeData" => $arStoreBarcodeData
-					),
-				"DBP1"
+									array(
+										"basketId" => $basketID,
+										"deltaQuantity" => $deltaQuantity,
+										"storeBarcodeData" => $arStoreBarcodeData
+									),
+									"DBP1"
 			);
 		}
 
@@ -2592,7 +2653,7 @@ class CAllSaleBasket
 							"EMULATE" => "N",
 							"PRODUCT_RESERVED" => $arBasket["RESERVED"],
 							"STORE_DATA" => $arStoreBarcodeData
-							),
+						),
 						"DBP2"
 					);
 				}
@@ -2611,13 +2672,13 @@ class CAllSaleBasket
 				}
 
 				$res = $productProvider::DeductProduct(array(
-					"PRODUCT_ID" => $arBasket["PRODUCT_ID"],
-					"QUANTITY" => (empty($arStoreBarcodeData)) ? $deltaQuantity : 0,
-					"UNDO_DEDUCTION" => ($bUndoDeduction) ? "Y" : "N",
-					"EMULATE" => "N",
-					"PRODUCT_RESERVED" => $arBasket["RESERVED"],
-					"STORE_DATA" => $arStoreBarcodeData
-				));
+														   "PRODUCT_ID" => $arBasket["PRODUCT_ID"],
+														   "QUANTITY" => (empty($arStoreBarcodeData)) ? $deltaQuantity : 0,
+														   "UNDO_DEDUCTION" => ($bUndoDeduction) ? "Y" : "N",
+														   "EMULATE" => "N",
+														   "PRODUCT_RESERVED" => $arBasket["RESERVED"],
+														   "STORE_DATA" => $arStoreBarcodeData
+													   ));
 
 				$arResult["RESULT"] = $res["RESULT"];
 
@@ -2649,15 +2710,15 @@ class CAllSaleBasket
 	}
 
 	/**
-	* Method is called to deduct all products of the order or undo deduction
-	*
-	* @param int $orderID
-	* @param bool $bUndoDeduction
-	* @param int $recurringID
-	* @param bool $bAutoDeduction
-	* @param array $arStoreBarcodeOrderFormData
-	* @return mixed array
-	*/
+	 * Method is called to deduct all products of the order or undo deduction
+	 *
+	 * @param int $orderID
+	 * @param bool $bUndoDeduction
+	 * @param int $recurringID
+	 * @param bool $bAutoDeduction
+	 * @param array $arStoreBarcodeOrderFormData
+	 * @return mixed array
+	 */
 	function OrderDeduction($orderID, $bUndoDeduction = false, $recurringID = 0, $bAutoDeduction = true, $arStoreBarcodeOrderFormData  = array())
 	{
 		global $APPLICATION;
@@ -2669,7 +2730,7 @@ class CAllSaleBasket
 		$arItems = array();
 		$arResult = array();
 
-		$isOrderConverted = \Bitrix\Main\Config\Option::get("main", "~sale_converted_15", 'N');
+		$isOrderConverted = \Bitrix\Main\Config\Option::get("main", "~sale_converted_15", 'Y');
 
 		if (defined("SALE_DEBUG") && SALE_DEBUG)
 		{
@@ -2693,7 +2754,7 @@ class CAllSaleBasket
 			return $arResult;
 		}
 
-		if ($isOrderConverted == "Y")
+		if ($isOrderConverted != 'N')
 		{
 			$ship = !$bUndoDeduction;
 			/** @var \Bitrix\Sale\Result $r */
@@ -2831,11 +2892,11 @@ class CAllSaleBasket
 							if ($bAutoDeduction) //get the only possible store to deduct from it
 							{
 								if (
-									$arProductStore = $productProvider::GetProductStores(array(
-										"PRODUCT_ID" => $arBasket["PRODUCT_ID"],
-										"SITE_ID" => $arBasket["LID"],
-										'BASKET_ID' => $arBasket['ID']
-									))
+								$arProductStore = $productProvider::GetProductStores(array(
+																						 "PRODUCT_ID" => $arBasket["PRODUCT_ID"],
+																						 "SITE_ID" => $arBasket["LID"],
+																						 'BASKET_ID' => $arBasket['ID']
+																					 ))
 								)
 								{
 									$arFields["STORE_DATA"] = array(
@@ -2863,11 +2924,11 @@ class CAllSaleBasket
 							if ($bAutoDeduction)
 							{
 								if (
-									$arProductStore = $productProvider::GetProductStores(array(
-										"PRODUCT_ID" => $arBasket["PRODUCT_ID"],
-										"SITE_ID" => $arBasket["LID"],
-										'BASKET_ID' => $arBasket['ID']
-									))
+								$arProductStore = $productProvider::GetProductStores(array(
+																						 "PRODUCT_ID" => $arBasket["PRODUCT_ID"],
+																						 "SITE_ID" => $arBasket["LID"],
+																						 'BASKET_ID' => $arBasket['ID']
+																					 ))
 								)
 								{
 									foreach ($arProductStore as $storeData)
@@ -3084,9 +3145,9 @@ class CAllSaleBasket
 						{
 							CSaleHelper::WriteToLog(
 								"Call ::DeductProduct - Revert deduction", array(
-									"storesCount" => $storesCount,
-									"arFields" => $arFields
-								),
+								"storesCount" => $storesCount,
+								"arFields" => $arFields
+							),
 								"OD13"
 							);
 						}
@@ -3132,7 +3193,6 @@ class CAllSaleBasket
 				$dbBasket = CSaleBasket::GetList(array(), array("FUSER_ID" => $TO_FUSER_ID, "ORDER_ID" => false));
 				while ($arBasket = $dbBasket->Fetch())
 				{
-
 					$arOldBasket[$arBasket["PRODUCT_ID"]] = $arBasket;
 					$_SESSION["SALE_BASKET_NUM_PRODUCTS"][SITE_ID]++;
 				}
@@ -3153,13 +3213,18 @@ class CAllSaleBasket
 						CSaleBasket::_Update($arBasket["ID"], $arUpdate);
 					}
 				}
+				Sale\BasketComponentHelper::updateFUserBasket($TO_FUSER_ID, SITE_ID);
+				Sale\BasketComponentHelper::updateFUserBasket($FROM_FUSER_ID, SITE_ID);
+
+				Sale\Discount\RuntimeCache\FuserCache::getInstance()->clean();
+
 				return true;
 			}
 		}
 		return false;
 	}
 
-	function UpdateBasketPrices($fuserID, $siteID)
+	public static function UpdateBasketPrices($fuserID, $siteID, array $options = array())
 	{
 		$fuserID = (int)$fuserID;
 		if ($fuserID <= 0)
@@ -3168,100 +3233,187 @@ class CAllSaleBasket
 		if ($siteID == '')
 			$siteID = SITE_ID;
 
-		$isOrderConverted = \Bitrix\Main\Config\Option::get("main", "~sale_converted_15", 'N');
+		$isOrderConverted = \Bitrix\Main\Config\Option::get("main", "~sale_converted_15", 'Y');
 
-		$dbBasketItems = CSaleBasket::GetList(
-			array("ALL_PRICE" => "DESC"),
-			array(
-				"FUSER_ID" => $fuserID,
-				"LID" => $siteID,
-				"ORDER_ID" => "NULL",
-				"SUBSCRIBE" => "N"
-			),
-			false,
-			false,
-			array(
-				"ID", "MODULE", "PRODUCT_ID", "QUANTITY",
-				"CALLBACK_FUNC", "PRODUCT_PROVIDER_CLASS",
-				"CAN_BUY", "DELAY", "NOTES",
-				"TYPE", "SET_PARENT_ID"
-			)
-		);
-		while ($arItem = $dbBasketItems->Fetch())
+		if ($isOrderConverted != 'N')
 		{
-			if ($arItem['CAN_BUY'] != 'Y')
-				continue;
+			self::refreshFUserBasket($fuserID, $siteID, $options);
+		}
+		else
+		{
 
-			$arFields = false;
-			$arItem['CALLBACK_FUNC'] = (string)$arItem['CALLBACK_FUNC'];
-			$arItem['PRODUCT_PROVIDER_CLASS'] = (string)$arItem['PRODUCT_PROVIDER_CLASS'];
-			if ('' != $arItem['PRODUCT_PROVIDER_CLASS'] || '' != $arItem['CALLBACK_FUNC'])
+			$dbBasketItems = CSaleBasket::GetList(
+				array("ALL_PRICE" => "DESC"),
+				array(
+					"FUSER_ID" => $fuserID,
+					"LID" => $siteID,
+					"ORDER_ID" => "NULL",
+					"SUBSCRIBE" => "N"
+				),
+				false,
+				false,
+				array(
+					"ID", "MODULE", "PRODUCT_ID", "QUANTITY",
+					"CALLBACK_FUNC", "PRODUCT_PROVIDER_CLASS",
+					"CAN_BUY", "DELAY", "NOTES",
+					"TYPE", "SET_PARENT_ID"
+				)
+			);
+			while ($arItem = $dbBasketItems->Fetch())
 			{
-				$arItem['MODULE'] = (string)$arItem['MODULE'];
-				$arItem['PRODUCT_ID'] = (int)$arItem['PRODUCT_ID'];
-				$arItem['QUANTITY'] = (float)$arItem['QUANTITY'];
+				$basketItems[] = $arItem;
+			}
 
-				if ($productProvider = CSaleBasket::GetProductProvider($arItem))
-				{
-					$arFields = $productProvider::GetProductData(array(
-						"PRODUCT_ID" => $arItem["PRODUCT_ID"],
-						"QUANTITY"   => $arItem["QUANTITY"],
-						"RENEWAL"    => "N",
-						"CHECK_COUPONS" => ('Y' == $arItem['CAN_BUY'] && 'N' == $arItem['DELAY'] ? 'Y' : 'N'),
-						"CHECK_DISCOUNT" => (CSaleBasketHelper::isSetItem($arItem) ? 'N' : 'Y'),
-						"BASKET_ID" => $arItem["ID"],
-						"NOTES" => $arItem["NOTES"]
-					));
-				}
-				else
-				{
-					$arFields = CSaleBasket::ExecuteCallbackFunction(
-						$arItem["CALLBACK_FUNC"],
-						$arItem["MODULE"],
-						$arItem["PRODUCT_ID"],
-						$arItem["QUANTITY"],
-						"N"
-					);
-				}
+			if (!empty($basketItems) && is_array($basketItems))
+			{
+				$basketItems = getRatio($basketItems);
 
-				if (!empty($arFields) && is_array($arFields))
+				foreach ($basketItems as $basketItem)
 				{
-					if ($isOrderConverted == 'Y' && $arItem['DELAY'] == 'N')
+					$fields = array();
+					$basketItem['CALLBACK_FUNC'] = (string)$basketItem['CALLBACK_FUNC'];
+					$basketItem['PRODUCT_PROVIDER_CLASS'] = (string)$basketItem['PRODUCT_PROVIDER_CLASS'];
+
+					if (strval(trim($basketItem['PRODUCT_PROVIDER_CLASS'])) !== '' || strval(trim($basketItem['CALLBACK_FUNC'])) !== '')
 					{
-						if (!Sale\Compatible\DiscountCompatibility::isInited())
-							Sale\Compatible\DiscountCompatibility::init();
-						if (Sale\Compatible\DiscountCompatibility::usedByClient())
+						$basketItem['MODULE'] = (string)$basketItem['MODULE'];
+						$basketItem['PRODUCT_ID'] = (int)$basketItem['PRODUCT_ID'];
+						$basketItem['QUANTITY'] = (float)$basketItem['QUANTITY'];
+
+						if ($productProvider = CSaleBasket::GetProductProvider($basketItem))
 						{
-							if (isset($arFields['BASE_PRICE']) && isset($arFields['CURRENCY']))
+							$fields = $productProvider::GetProductData(array(
+																			 "PRODUCT_ID" => $basketItem["PRODUCT_ID"],
+																			 "QUANTITY"   => $basketItem["QUANTITY"],
+																			 "RENEWAL"    => "N",
+																			 "CHECK_COUPONS" => ('Y' == $basketItem['CAN_BUY'] && 'N' == $basketItem['DELAY'] ? 'Y' : 'N'),
+																			 "CHECK_DISCOUNT" => (CSaleBasketHelper::isSetItem($basketItem) ? 'N' : 'Y'),
+																			 "BASKET_ID" => $basketItem["ID"],
+																			 "NOTES" => $basketItem["NOTES"]
+																		 ));
+						}
+						else
+						{
+							$fields = CSaleBasket::ExecuteCallbackFunction(
+								$basketItem["CALLBACK_FUNC"],
+								$basketItem["MODULE"],
+								$basketItem["PRODUCT_ID"],
+								$basketItem["QUANTITY"],
+								"N"
+							);
+						}
+
+						if (!empty($fields) && is_array($fields))
+						{
+							if ($isOrderConverted != 'N' && $basketItem['DELAY'] == 'N')
 							{
-								Sale\Compatible\DiscountCompatibility::setBasketItemBasePrice(
-									$arItem['ID'],
-									$arFields['BASE_PRICE'],
-									$arFields['CURRENCY']
-								);
+								if (!Sale\Compatible\DiscountCompatibility::isInited())
+									Sale\Compatible\DiscountCompatibility::init();
+								if (Sale\Compatible\DiscountCompatibility::usedByClient())
+									Sale\Compatible\DiscountCompatibility::setBasketItemData($basketItem['ID'], $fields);
 							}
-							if (!empty($arFields['DISCOUNT_LIST']))
-							{
-								Sale\Compatible\DiscountCompatibility::setBasketItemDiscounts(
-									$arItem['ID'],
-									$arFields['DISCOUNT_LIST']
-								);
-							}
+							$fields['CAN_BUY'] = 'Y';
+							$fields['TYPE'] = (int)$basketItem['TYPE'];
+							$fields['SET_PARENT_ID'] = (int)$basketItem['SET_PARENT_ID'];
+						}
+						else
+						{
+							$fields = array('CAN_BUY' => 'N');
+						}
+
+
+					}
+
+					if (array_key_exists('MEASURE_RATIO', $basketItem))
+					{
+						$basketItemQuantity = floatval($basketItem['QUANTITY']);
+						$basketItemRatio = floatval($basketItem['MEASURE_RATIO']);
+
+						$mod = roundEx(($basketItemQuantity / $basketItemRatio - round($basketItemQuantity / $basketItemRatio)), 6);
+
+						if ($mod != 0)
+						{
+							$fields['QUANTITY'] = floor(ceil($basketItemQuantity) / $basketItemRatio) * $basketItemRatio;
 						}
 					}
-					$arFields['CAN_BUY'] = 'Y';
-					$arFields['TYPE'] = (int)$arItem['TYPE'];
-					$arFields['SET_PARENT_ID'] = (int)$arItem['SET_PARENT_ID'];
-				}
-				else
-				{
-					$arFields = array('CAN_BUY' => 'N');
-				}
 
-				CSaleBasket::Update($arItem['ID'], $arFields);
+					if (!empty($fields) && is_array($fields))
+					{
+						CSaleBasket::Update($basketItem['ID'], $fields);
+					}
+				}
 			}
 		}
 		return true;
+	}
+
+	/**
+	 * @internal
+	 * @param $fuserID
+	 * @param $siteID
+	 * @param array $options
+	 *
+	 * @return Sale\Result
+	 */
+	public static function refreshFUserBasket($fuserID, $siteID, array $options = array())
+	{
+		$result = new Sale\Result();
+
+		/** @var Sale\Basket $basket */
+		$basket = Sale\Basket::loadItemsForFUser($fuserID, $siteID);
+		if ($basket->count() > 0)
+		{
+			if (!Sale\Compatible\DiscountCompatibility::isInited())
+				Sale\Compatible\DiscountCompatibility::init();
+
+			$select = array("PRICE", 'QUANTITY', "COUPONS");
+			$basket->refreshData($select);
+			$warnings = array();
+
+			if (!empty($options) && array_key_exists('CORRECT_RATIO', $options) && $options['CORRECT_RATIO'] === 'Y')
+			{
+				$r = Sale\BasketComponentHelper::correctQuantityRatio($basket);
+				if (!$r->isSuccess())
+				{
+					foreach ($r->getErrors() as $error)
+					{
+						if ($error instanceof Sale\ResultWarning)
+						{
+							$warnings[] = $error;
+						}
+						elseif ($error instanceof Sale\ResultError)
+						{
+							$result->addError($error);
+						}
+					}
+				}
+			}
+
+			if ($result->isSuccess())
+			{
+				$r = $basket->save();
+				if (!$r->isSuccess())
+				{
+					$result->addErrors($r->getErrors());
+				}
+			}
+
+			$basketList = array();
+			/** @var Sale\BasketItem $basketItem */
+			foreach ($basket as $basketItem)
+			{
+				$basketList[$basketItem->getId()] = $basketItem->getFieldValues();
+			}
+
+			$result->addData(array('BASKET_LIST' => $basketList));
+
+			if (!empty($warnings))
+			{
+				$result->addWarnings($warnings);
+			}
+		}
+
+		return $result;
 	}
 
 	/**
@@ -3358,10 +3510,13 @@ class CAllSaleBasket
 	 */
 	public static function getRoundFields()
 	{
-		$isOrderConverted = \Bitrix\Main\Config\Option::get("main", "~sale_converted_15", 'N');
-		if ($isOrderConverted == "Y")
+		$isOrderConverted = \Bitrix\Main\Config\Option::get("main", "~sale_converted_15", 'Y');
+		if ($isOrderConverted != 'N')
 		{
-			return Sale\Basket::getRoundFields();
+			$registry = Sale\Registry::getInstance(Sale\Registry::REGISTRY_TYPE_ORDER);
+			/** @var Sale\BasketItemBase $basketItemClassName */
+			$basketItemClassName = $registry->getBasketItemClassName();
+			return $basketItemClassName::getRoundFields();
 		}
 
 		return array(
@@ -3371,24 +3526,14 @@ class CAllSaleBasket
 	}
 }
 
-function TmpDumpToFile($txt)
-{
-	if (strlen($txt)>0)
-	{
-		$fp = fopen($_SERVER["DOCUMENT_ROOT"]."/!!!!!.txt", "ab+");
-		fputs($fp, $txt);
-		@fclose($fp);
-	}
-}
-
 class CAllSaleUser
 {
 	/**
-	* Creates new anonymous user with e-mail 'anonymous_some_number@example.com' and returns his ID
-	* Used mainly in CRM
-	*
-	* @return int - new user ID or ID of already existing anonymous user, 0 if error
-	*/
+	 * Creates new anonymous user with e-mail 'anonymous_some_number@example.com' and returns his ID
+	 * Used mainly in CRM
+	 *
+	 * @return int - new user ID or ID of already existing anonymous user, 0 if error
+	 */
 	public static function GetAnonymousUserID()
 	{
 		$bUserExists = false;
@@ -3413,7 +3558,10 @@ class CAllSaleUser
 				array("NAME" => Loc::getMessage("SU_ANONYMOUS_USER_NAME")),
 				SITE_ID,
 				$arErrors,
-				array("ACTIVE" => "N")
+				array(
+					'ACTIVE' => 'N',
+					'EXTERNAL_AUTH_ID' => 'saleanonymous',
+				)
 			);
 
 			if ($anonUserID > 0)
@@ -3442,15 +3590,15 @@ class CAllSaleUser
 
 	public static function DoAutoRegisterUser($autoEmail, $payerName, $siteId, &$arErrors, $arOtherFields = null)
 	{
-		$autoEmail = trim($autoEmail);
-		if (empty($autoEmail))
-			return null;
-
 		if ($siteId == null)
 			$siteId = SITE_ID;
 
+		$autoEmail = trim($autoEmail);
+
 		$autoName = "";
 		$autoLastName = "";
+		$autoSecondName = "";
+
 		if (!is_array($payerName) && (strlen($payerName) > 0))
 		{
 			$arNames = explode(" ", $payerName);
@@ -3465,17 +3613,24 @@ class CAllSaleUser
 			$autoSecondName = $payerName["SECOND_NAME"];
 		}
 
-		$autoLogin = $autoEmail;
+		if (!empty($autoEmail))
+		{
+			$autoLogin = $autoEmail;
 
-		$pos = strpos($autoLogin, "@");
-		if ($pos !== false)
-			$autoLogin = substr($autoLogin, 0, $pos);
+			$pos = strpos($autoLogin, "@");
+			if ($pos !== false)
+				$autoLogin = substr($autoLogin, 0, $pos);
 
-		if (strlen($autoLogin) > 47)
-			$autoLogin = substr($autoLogin, 0, 47);
+			if (strlen($autoLogin) > 47)
+				$autoLogin = substr($autoLogin, 0, 47);
 
-		while (strlen($autoLogin) < 3)
-			$autoLogin .= "_";
+			while (strlen($autoLogin) < 3)
+				$autoLogin .= "_";
+		}
+		else
+		{
+			$autoLogin = "buyer";
+		}
 
 		$idx = 0;
 		$loginTmp = $autoLogin;
@@ -3483,19 +3638,12 @@ class CAllSaleUser
 		while ($arUserLogin = $dbUserLogin->Fetch())
 		{
 			$idx++;
-			if ($idx == 10)
-			{
-				$autoLogin = $autoEmail;
-			}
-			elseif ($idx > 10)
-			{
-				$autoLogin = "buyer".time().GetRandomCode(2);
-				break;
-			}
-			else
-			{
+
+			if ($idx <= 10)
 				$autoLogin = $loginTmp.$idx;
-			}
+			else
+				$autoLogin = "buyer".time().GetRandomCode(2);
+
 			$dbUserLogin = CUser::GetByLogin($autoLogin);
 		}
 
@@ -3525,15 +3673,23 @@ class CAllSaleUser
 
 		$arFields = array(
 			"LOGIN" => $autoLogin,
-			"NAME" => $autoName,
-			"LAST_NAME" => $autoLastName,
-			"SECOND_NAME" => $autoSecondName,
 			"PASSWORD" => $autoPassword,
 			"PASSWORD_CONFIRM" => $autoPassword,
-			"EMAIL" => $autoEmail,
 			"GROUP_ID" => $arDefaultGroup,
 			"LID" => $siteId,
 		);
+
+		if(strlen($autoName) > 0)
+			$arFields["NAME"] = $autoName;
+
+		if(strlen($autoLastName) > 0)
+			$arFields["LAST_NAME"] = $autoLastName;
+
+		if(strlen($autoSecondName) > 0)
+			$arFields["SECOND_NAME"] = $autoSecondName;
+
+		if(strlen($autoEmail) > 0)
+			$arFields["EMAIL"] = $autoEmail;
 
 		$arFields["ACTIVE"] = (isset($arOtherFields["ACTIVE"]) && $arOtherFields["ACTIVE"] == "N") ? "N" : "Y";
 		if (isset($arOtherFields["ACTIVE"]))
@@ -3572,47 +3728,61 @@ class CAllSaleUser
 		$bSkipFUserInit = ($bSkipFUserInit !== false);
 
 		$cookie_name = COption::GetOptionString("main", "cookie_name", "BITRIX_SM");
-		$ID = '';
-		if (isset($_COOKIE[$cookie_name."_SALE_UID"]))
-			$ID = (string)$_COOKIE[$cookie_name."_SALE_UID"];
 
-		if ($ID !== '')
+		$ID = null;
+		$filter = array();
+
+		if (isset($_SESSION["SALE_USER_ID"]) && intval($_SESSION["SALE_USER_ID"]) > 0)
 		{
-			$filterID = (
-				COption::GetOptionString("sale", "encode_fuser_id", "N") == "Y"
-				? array("CODE" => $ID)
-				: array("ID" => $ID)
-			);
-			$arRes = CSaleUser::GetList($filterID);
-			if(!empty($arRes))
+			$ID = intval($_SESSION["SALE_USER_ID"]);
+		}
+
+		if (intval($ID) <= 0 && isset($_COOKIE[$cookie_name."_SALE_UID"]))
+		{
+			$CODE = (string)$_COOKIE[$cookie_name."_SALE_UID"];
+			if (COption::GetOptionString("sale", "encode_fuser_id", "N") == "Y")
 			{
-				$ID = $arRes["ID"];
-				CSaleUser::Update($ID);
+				$filter = (array("CODE" => $CODE));
 			}
 			else
 			{
-				$foundUser = false;
-				if ($USER && $USER->IsAuthorized())
-				{
-					$ID = CSaleUser::getFUserCode();
-				}
-
-				if ($foundUser === false && !$bSkipFUserInit)
-				{
-					$newID = CSaleUser::Add();
-					$ID = $newID;
-				}
+				$filter = (array("ID" => intval($CODE)));
 			}
 		}
-		elseif (!$bSkipFUserInit)
+
+		if (intval($ID) <= 0)
 		{
-			$ID = CSaleUser::Add();
+			if (!empty($filter))
+			{
+				$arRes = CSaleUser::GetList($filter);
+				if(!empty($arRes))
+				{
+					$ID = $arRes["ID"];
+					CSaleUser::Update($ID);
+				}
+				else
+				{
+					if ($USER && $USER->IsAuthorized())
+					{
+						$ID = CSaleUser::getFUserCode();
+					}
+
+						if (intval($ID) <= 0 && !$bSkipFUserInit)
+					{
+							$ID = CSaleUser::Add();
+					}
+				}
+			}
+			elseif (!$bSkipFUserInit)
+			{
+				$ID = CSaleUser::Add();
+			}
 		}
 
 		return (int)$ID;
 	}
 
-	function Update($ID)
+	function Update($ID, $allowUpdate = true)
 	{
 		global $DB, $USER;
 
@@ -3621,29 +3791,47 @@ class CAllSaleUser
 
 		$ID = IntVal($ID);
 
+		$cookie_name = COption::GetOptionString("main", "cookie_name", "BITRIX_SM");
+
 		$arFields = array(
-				"=DATE_UPDATE" => $DB->GetNowFunction(),
-			);
+			"=DATE_UPDATE" => $DB->GetNowFunction(),
+		);
 		if ($USER->IsAuthorized())
 			$arFields["USER_ID"] = IntVal($USER->GetID());
 
-		CSaleUser::_Update($ID, $arFields);
+		if ($allowUpdate)
+		{
+			CSaleUser::_Update($ID, $arFields);
+		}
 
 		$secure = false;
 		if(COption::GetOptionString("sale", "use_secure_cookies", "N") == "Y" && CMain::IsHTTPS())
 			$secure=1;
 
+		$_COOKIE[$cookie_name."_SALE_UID"] = $ID;
+
 		if(COption::GetOptionString("sale", "encode_fuser_id", "N") == "Y")
 		{
 			$arRes = CSaleUser::GetList(array("ID" => $ID));
 			if(!empty($arRes))
+			{
+				if(strval($arRes["CODE"]) == "")
+				{
+					$arRes["CODE"] = md5(time().randString(10));
+					if ($allowUpdate)
+					{
+						CSaleUser::_Update($arRes["ID"], array("CODE" => $arRes["CODE"]));
+					}
+				}
+
 				$GLOBALS["APPLICATION"]->set_cookie("SALE_UID", $arRes["CODE"], false, "/", false, $secure, "Y", false);
+				$_COOKIE[$cookie_name."_SALE_UID"] = $arRes["CODE"];
+			}
 		}
 		else
 		{
 			$GLOBALS["APPLICATION"]->set_cookie("SALE_UID", $ID, false, "/", false, $secure, "Y", false);
 		}
-
 
 		return true;
 	}
@@ -3697,7 +3885,6 @@ class CAllSaleUser
 		for ($i=0; $i < $countarFilter; $i++)
 		{
 			$val = $DB->ForSql($arFilter[$filter_keys[$i]]);
-			if (strlen($val)<=0) continue;
 
 			$key = $filter_keys[$i];
 			if ($key[0]=="!")
@@ -3708,17 +3895,20 @@ class CAllSaleUser
 			else
 				$bInvert = false;
 
+			if (strval($val) == "")
+				$val = 0;
+
 			switch(ToUpper($key))
 			{
-			case "ID":
-				$arSqlSearch[] = "ID ".($bInvert?"<>":"=")." ".IntVal($val)." ";
-				break;
-			case "USER_ID":
-				$arSqlSearch[] = "USER_ID ".($bInvert?"<>":"=")." ".IntVal($val)." ";
-				break;
-			case "CODE":
-				$arSqlSearch[] = "CODE ".($bInvert?"<>":"=")." '".$DB->ForSql($val)."' ";
-				break;
+				case "ID":
+					$arSqlSearch[] = "ID ".($bInvert?"<>":"=")." ".IntVal($val)." ";
+					break;
+				case "USER_ID":
+					$arSqlSearch[] = "USER_ID ".($bInvert?"<>":"=")." ".IntVal($val)." ";
+					break;
+				case "CODE":
+					$arSqlSearch[] = "CODE ".($bInvert?"<>":"=")." '".$DB->ForSql($val)."' ";
+					break;
 			}
 		}
 
@@ -3730,7 +3920,7 @@ class CAllSaleUser
 			$strSqlSearch .= " (".$arSqlSearch[$i].") ";
 		}
 
-		$strSql = "SELECT ID, DATE_INSERT, DATE_UPDATE, USER_ID, CODE FROM b_sale_fuser WHERE 1 = 1 ".$strSqlSearch;
+		$strSql = "SELECT ID, DATE_INSERT, DATE_UPDATE, USER_ID, CODE FROM b_sale_fuser WHERE 1 = 1 ".$strSqlSearch." ORDER BY ID DESC";
 		$db_res = $DB->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
 		return $db_res->Fetch();
 	}
@@ -3748,9 +3938,11 @@ class CAllSaleUser
 		return true;
 	}
 
-	function OnUserLogin($new_user_id)
+	function OnUserLogin($new_user_id, array $params = array())
 	{
 		$cookie_name = COption::GetOptionString("main", "cookie_name", "BITRIX_SM");
+
+		$allowUpdate = !array_key_exists('update', $params) || $params['update'] === true;
 
 		CSaleUser::UpdateSessionSaleUserID();
 		$ID = $_SESSION["SALE_USER_ID"];
@@ -3760,19 +3952,23 @@ class CAllSaleUser
 			$ID = IntVal($ID);
 		}
 
-		if (strlen($ID) <= 0 || $ID === 0)
+		if (intval($ID) <= 0 && isset($_COOKIE[$cookie_name."_SALE_UID"]))
 		{
-			$ID = $_COOKIE[$cookie_name."_SALE_UID"];
-		}
-
-		if(COption::GetOptionString("sale", "encode_fuser_id", "N") == "Y" && strlen($ID) > 0)
-		{
-			$arRes = CSaleUser::GetList(array("CODE" => $ID));
-			if(!empty($arRes))
+			$CODE = (string)$_COOKIE[$cookie_name."_SALE_UID"];
+			if (COption::GetOptionString("sale", "encode_fuser_id", "N") == "Y" && strval($CODE) != "")
 			{
-				$ID = $arRes["ID"];
+				$arRes = CSaleUser::GetList(array("CODE" => $CODE));
+				if(!empty($arRes))
+				{
+					$ID = $arRes["ID"];
+				}
+			}
+			elseif (intval($CODE) > 0)
+			{
+				$ID = intval($CODE);
 			}
 		}
+
 
 		$res = CSaleUser::GetList(array("!ID" => IntVal($ID), "USER_ID" => IntVal($new_user_id)));
 		if (!empty($res))
@@ -3786,42 +3982,16 @@ class CAllSaleUser
 			}
 			$ID = IntVal($res["ID"]);
 		}
-		CSaleUser::Update($ID);
 
-		$secure = false;
-		if(COption::GetOptionString("sale", "use_secure_cookies", "N") == "Y" && CMain::IsHTTPS())
-		{
-			$secure = true;
-		}
+		CSaleUser::Update($ID, $allowUpdate);
 
-		if(COption::GetOptionString("sale", "encode_fuser_id", "N") == "Y")
-		{
-			$arRes = CSaleUser::GetList(array("ID" => $ID));
-			if(!empty($arRes))
-			{
-				if(strlen($arRes["CODE"]) <= 0)
-				{
-					$arRes["CODE"] = md5(time().randString(10));
-					CSaleUser::_Update($arRes["ID"], array("CODE" => $arRes["CODE"]));
-				}
-				$_SESSION["SALE_USER_ID"] = $arRes["ID"];
-				$GLOBALS["APPLICATION"]->set_cookie("SALE_UID", $arRes["CODE"], false, "/", false, $secure, "Y", false);
-				$_COOKIE[$cookie_name."_SALE_UID"] = $arRes["CODE"];
-			}
-		}
-		else
-		{
-			$_SESSION["SALE_USER_ID"] = $ID;
-			$GLOBALS["APPLICATION"]->set_cookie("SALE_UID", $ID, false, "/", false, $secure, "Y", false);
-			$_COOKIE[$cookie_name."_SALE_UID"] = $ID;
-		}
-
+		$_SESSION["SALE_USER_ID"] = $ID;
 		$_SESSION["SALE_BASKET_NUM_PRODUCTS"] = Array();
 
 		return true;
 	}
 
-	function UpdateSessionSaleUserID()
+	public static function UpdateSessionSaleUserID()
 	{
 		global $USER;
 		if ((string)$_SESSION["SALE_USER_ID"] !== "" && intval($_SESSION["SALE_USER_ID"])."|" != $_SESSION["SALE_USER_ID"]."|")
@@ -3841,9 +4011,10 @@ class CAllSaleUser
 				}
 			}
 		}
+		return 0;
 	}
 
-	function getFUserCode()
+	public static function getFUserCode()
 	{
 		global $USER;
 
@@ -3853,8 +4024,11 @@ class CAllSaleUser
 			$_SESSION["SALE_USER_ID"] = $arRes['ID'];
 			$arRes["CODE"] = md5(time().randString(10));
 
+			$GLOBALS["DB"]->StartUsingMasterOnly();
 			CSaleUser::_Update($arRes["ID"], array("CODE" => $arRes["CODE"]));
 			CSaleUser::Update($arRes["ID"]);
+			$GLOBALS["DB"]->StopUsingMasterOnly();
+
 			return $arRes["ID"];
 		}
 		return 0;
@@ -3862,16 +4036,22 @@ class CAllSaleUser
 
 	function OnUserLogout($userID)
 	{
-		$_SESSION["SALE_USER_ID"] = 0;
+		global $APPLICATION;
+
+		unset($_SESSION["SALE_USER_ID"]);
 		$_SESSION["SALE_BASKET_NUM_PRODUCTS"] = Array();
+		$_SESSION["SALE_BASKET_PRICE"] = Array();
 
 		$secure = false;
 		if(COption::GetOptionString("sale", "use_secure_cookies", "N") == "Y" && CMain::IsHTTPS())
+		{
 			$secure=1;
-		$GLOBALS["APPLICATION"]->set_cookie("SALE_UID", 0, false, "/", false, $secure, "Y", false);
+		}
+
+		$APPLICATION->set_cookie("SALE_UID", 0, -1, "/", false, $secure, "Y", false);
 
 		$cookie_name = COption::GetOptionString("main", "cookie_name", "BITRIX_SM");
-		$_COOKIE[$cookie_name."_SALE_UID"] = 0;
+		unset($_COOKIE[$cookie_name."_SALE_UID"]);
 	}
 
 	function DeleteOldAgent($nDays, $speed = 0)
@@ -3894,4 +4074,3 @@ class CAllSaleUser
 		return true;
 	}
 }
-?>

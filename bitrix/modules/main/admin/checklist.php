@@ -223,6 +223,8 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 				$arFields['STATE'] = base64_encode(serialize($checklist->current_result));
 				$arFields['CHECKLIST'] = base64_encode(serialize($checklist->checklist));
 				$arFields['SITE'] = $_SERVER['HTTP_HOST'];
+				$arFields['SITES'] = $_POST["SITES"];
+				$arFields['SITES'] = array_filter($arFields['SITES'], 'trim');
 				SendReportToBitrix($arFields);
 				require($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/include/epilog_admin.php");
 				die();
@@ -958,10 +960,31 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 
 
 	</script>
-	<?} else {?>
+	<?}
+	else
+	{
+		$allowedDomains = array($_SERVER['HTTP_HOST']);
+		$langs = CLang::GetList($by, $order, Array());
+		while ($arLang = $langs->Fetch())
+		{
+			$domains = trim($arLang['DOMAINS']);
+			$domains = explode("\n", $domains);
+			$domains = array_map('trim', $domains);
+			$allowedDomains = array_merge($allowedDomains, $domains);
+		}
+		$allowedDomains = array_unique($allowedDomains);
+	?>
 	<div class="checklist-body">
 	<script>
 		var showHiddenReports = "<?=$showHiddenReports?>";
+		var allowedDomains = [];
+		<?foreach ($allowedDomains as $allowedDomain)
+		{
+			$allowedDomain = explode(':', $allowedDomain);
+			$allowedDomain = $allowedDomain[0];
+			?>allowedDomains.push('<?=CUtil::JSEscape($allowedDomain)?>');<?
+		}
+		?>
 		function ShowHideReports ()
 		{
 			if (showHiddenReports == 'Y')
@@ -1005,15 +1028,41 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 		function checkError()
 		{
 			var error_message = "";
+			var sites = BX.findChildrenByClassName(BX('SITES'), 'SITES');
 
-			if(BX("CLIENT").value == "" || BX("CLIENT_POST").value == "" || BX("PHONE").value == "" || BX("COMPANY_NAME").value == "" || BX("CITY").value == "" || BX("CALL_TIME_FROM").value == "" || BX("CALL_TIME_TO").value == "" || BX("WARNED").checked != true)
+			if (BX("CLIENT").value == "" || BX("CLIENT_POST").value == "" || BX("PHONE").value == "" || BX("COMPANY_NAME").value == "" || BX("CITY").value == "" || BX("CALL_TIME_FROM").value == "" || BX("CALL_TIME_TO").value == "" || BX("WARNED").checked != true)
 			{
 				error_message = '<?=GetMessageJS("CL_REQUIRE_FIELDS");?>';
 				alert(error_message);
 				return true;
 			}
 			else
-				return false;
+			{
+				var notEmptyExist = false;
+				for (var i = 0; i < sites.length; i++)
+				{
+					if (sites[i].value != '')
+					{
+						notEmptyExist = true;
+						if (BX.util.in_array(sites[i].value, allowedDomains) === false)
+						{
+							error_message = '<?=GetMessageJS("CL_REQUIRE_SITES");?>';
+							alert(error_message);
+							return true;
+						}
+					}
+				}
+				if (!notEmptyExist)
+				{
+					error_message = '<?=GetMessageJS("CL_REQUIRE_FIELDS");?>';
+					alert(error_message);
+					return true;
+				}
+				else
+				{
+					return false;
+				}
+			}
 		}
 
 		function SaveSendReport()
@@ -1067,7 +1116,7 @@ function ShowReportList()
 	}
 	$arReports = array();
 	$dbReport = CCheckListResult::GetList(Array(),$arFilter);
-	while ($arReport = $dbReport->Fetch())
+	while ($arReport = $dbReport->GetNext())
 		$arReports[]=$arReport;?>
 
 	<form id="bx_project_form" style="display:none;" action="" method="POST" enctype="multipart/form-data">
@@ -1075,6 +1124,7 @@ function ShowReportList()
 		<div class="checklist-result-form-content" >
 		<?=BeginNote()?>
 			<h2><?=GetMessage("CL_FORM_ABOUT_CLIENT_TITLE");?></h2>
+
 			<div class="checklist-result-form-content-field">
 				<input id="report_id" name="report_id" type="hidden"/>
 				<label><?=GetMessage("CL_REPORT_COMPANY_NAME");?></label><input id="COMPANY_NAME" name="COMPANY_NAME" type="text"/>
@@ -1088,6 +1138,21 @@ function ShowReportList()
 			<div class="checklist-result-form-content-field">
 				<label><?=GetMessage("CL_REPORT_CITY");?></label><input id="CITY" name="CITY" type="text"/>
 			</div>
+			<div class="checklist-result-form-content-field" id="SITES">
+				<label><?=GetMessage("CL_REPORT_SITES");?></label>
+				<input name="SITES[]" class="SITES" placeholder="domain.com" type="text"/>
+				<p>
+					<input name="SITES[]" class="SITES" placeholder="domain.com" type="text"/>
+				</p>
+				<span id="extra_sites"></span>
+				<a href="" id="add_extra_site">+ <?=GetMessage("CL_ADD_SITES_FIELDS");?></a>
+			</div>
+			<script>
+				BX.bind(BX('add_extra_site'), 'click', function (e) {
+					BX('extra_sites').innerHTML += '<p><input name="SITES[]" class="SITES" placeholder="domain.com" type="text"/></p>';
+					BX.PreventDefault(e);
+				});
+			</script>
 			<div class="checklist-result-form-content-field">
 				<label><?=GetMessage("CL_REPORT_WARNED");?><div><input id="WARNED" name="WARNED" type="checkbox" value="Y" style="width: auto; height: auto"/><span style="font-weight: normal;"><?=GetMessage("CL_REPORT_WARNED2");?></span></div></label>
 			</div>
@@ -1176,9 +1241,11 @@ function ShowReportList()
 						<td>
 							<?if ($arReport["SENDED_TO_BITRIX"] == 'N' && $k == 0) {?>
 								<?if(!$exists_sended_to_bitrix) {?>
-									<a href="" onmouseover="ShowHint(this)" onclick="showProjectForm(<?=$arReport["ID"]?>); return false;"><?=GetMessage("CL_SAVE_SEND_REPORT_CUT");?></a>
-								<?} else {?>
-									&nbsp;
+									<?if ((time() - MakeTimeStamp($arReport["DATE_CREATE"], FORMAT_DATETIME)) > 60*60*24*30) {?>
+										<?=GetMessage("CL_REPORT_OLD");?>
+									<?} else {?>
+										<a href="" onmouseover="ShowHint(this)" onclick="showProjectForm(<?=$arReport["ID"]?>); return false;"><?=GetMessage("CL_SAVE_SEND_REPORT_CUT");?></a>
+									<?}?>
 								<?}?>
 							<?} elseif ($arReport["SENDED_TO_BITRIX"] == 'Y') {?>
 								<?=GetMessage("CL_REPORT_SENDED");?>
@@ -1230,8 +1297,16 @@ function SendReportToBitrix ($arFields)
 	<?=GetMessage('CL_SENDING_QC_REPORT')?>
 	<form id="bx_project_tests_send" style="display:none;" action="http://partners.1c-bitrix.ru/personal/send_quality_control.php" method="POST">
 		<input type="hidden" name="charset" value="<?=htmlspecialcharsbx(LANG_CHARSET)?>" />
-		<?foreach ($arFields as $key=>$val) {?>
-			<input type="hidden" name="<?=$key?>" value="<?=htmlspecialcharsbx($val)?>" />
+		<?foreach ($arFields as $key=>$val)
+		{
+			if (is_array($val))
+			{
+				foreach ($val as $v) {?>
+					<input type="hidden" name="<?=$key?>[]" value="<?=htmlspecialcharsbx($v)?>" />
+				<?}
+			} else {?>
+				<input type="hidden" name="<?=$key?>" value="<?=htmlspecialcharsbx($val)?>" />
+			<?}?>
 		<?}?>
 	</form>
 	<script>

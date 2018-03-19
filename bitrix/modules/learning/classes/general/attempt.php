@@ -204,6 +204,18 @@ abstract class CAllTestAttempt
 				case "USER":
 					$arSqlSearch[] = GetFilterQuery("U.ID, U.LOGIN, U.NAME, U.LAST_NAME",$val);
 					break;
+
+				case "USER_LOGIN":
+					$arSqlSearch[] = CLearnHelper::FilterCreate("U.LOGIN", $val, "string_equal", $bFullJoin, $cOperationType);
+					break;
+
+				case "USER_NAME":
+					$arSqlSearch[] = CLearnHelper::FilterCreate("U.NAME", $val, "string_equal", $bFullJoin, $cOperationType);
+					break;
+
+				case "USER_LAST_NAME":
+					$arSqlSearch[] = CLearnHelper::FilterCreate("U.LAST_NAME", $val, "string_equal", $bFullJoin, $cOperationType);
+					break;
 			}
 		}
 
@@ -656,7 +668,7 @@ abstract class CAllTestAttempt
 		}
 		else
 		{
-			return "(unix_timestamp(A.DATE_END)-unix_timestamp(A.DATE_START)) / A.QUESTIONS";
+			return "round((unix_timestamp(A.DATE_END)-unix_timestamp(A.DATE_START)) / A.QUESTIONS)";
 		}
 	}
 

@@ -23,6 +23,23 @@ class Date extends Base
 	}
 
 	/**
+	 * Normalize single value.
+	 *
+	 * @param FieldType $fieldType Document field type.
+	 * @param mixed $value Field value.
+	 * @return mixed Normalized value
+	 */
+	public static function toSingleValue(FieldType $fieldType, $value)
+	{
+		if (is_array($value))
+		{
+			reset($value);
+			$value = current($value);
+		}
+		return $value;
+	}
+
+	/**
 	 * @param FieldType $fieldType Document field type.
 	 * @param mixed $value Field value.
 	 * @param string $toTypeClass Type class name.
@@ -70,6 +87,24 @@ class Date extends Base
 	}
 
 	/**
+	 * Return conversion map for current type.
+	 * @return array Map.
+	 */
+	public static function getConversionMap()
+	{
+		return array(
+			array(
+				FieldType::DOUBLE,
+				FieldType::INT,
+				FieldType::DATE,
+				FieldType::DATETIME,
+				FieldType::STRING,
+				FieldType::TEXT
+			)
+		);
+	}
+
+	/**
 	 * @param FieldType $fieldType
 	 * @param array $field
 	 * @param mixed $value
@@ -80,11 +115,19 @@ class Date extends Base
 	protected static function renderControl(FieldType $fieldType, array $field, $value, $allowSelection, $renderMode)
 	{
 		$name = static::generateControlName($field);
+		$className = static::generateControlClassName($fieldType, $field);
 		$renderResult = '';
 
-		if ($renderMode & FieldType::RENDER_MODE_ADMIN)
+		if ($renderMode & FieldType::RENDER_MODE_MOBILE)
 		{
-			require_once(Loader::getLocal('/modules/main/interface/init_admin.php'));
+			$renderResult = '<div><input type="hidden" value="'
+				.htmlspecialcharsbx($value).'" data-type="'
+				.htmlspecialcharsbx(static::getType()).'" name="'.htmlspecialcharsbx($name).'"/>'
+				.'<a href="#" onclick="return BX.BizProcMobile.showDatePicker(this, event);">'
+				.($value? htmlspecialcharsbx($value) : Loc::getMessage('BPDT_DATE_MOBILE_SELECT')).'</a></div>';
+		}
+		elseif ($renderMode & FieldType::RENDER_MODE_ADMIN)
+		{
 			$renderResult = \CAdminCalendar::calendarDate($name, $value, 19, static::getType() == FieldType::DATETIME);
 		}
 		else
@@ -100,7 +143,8 @@ class Date extends Base
 					'FORM_NAME' => $field['Form'],
 					'INPUT_NAME' => $name,
 					'INPUT_VALUE' => $value,
-					'SHOW_TIME' => static::getType() == FieldType::DATETIME ? 'Y' : 'N'
+					'SHOW_TIME' => static::getType() == FieldType::DATETIME ? 'Y' : 'N',
+					'INPUT_ADDITIONAL_ATTR' => 'class="'.htmlspecialcharsbx($className).'"'
 				),
 				false,
 				array('HIDE_ICONS' => 'Y')
@@ -111,6 +155,15 @@ class Date extends Base
 		}
 
 		return $renderResult;
+	}
+
+	/**
+	 * @param int $renderMode Control render mode.
+	 * @return bool
+	 */
+	public static function canRenderControl($renderMode)
+	{
+		return true;
 	}
 
 	/**
@@ -125,6 +178,9 @@ class Date extends Base
 
 		if ($value !== null && is_string($value) && strlen($value) > 0)
 		{
+			if (\CBPActivity::isExpression($value))
+				return $value;
+
 			$format = static::getType() == FieldType::DATETIME ? \FORMAT_DATETIME : \FORMAT_DATE;
 			if(!\CheckDateTime($value, $format))
 			{

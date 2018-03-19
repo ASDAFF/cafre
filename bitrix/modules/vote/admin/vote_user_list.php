@@ -134,31 +134,31 @@ if (CheckFilter())
 
 if(($arID = $lAdmin->GroupAction()) && $VOTE_RIGHT=="W" && check_bitrix_sessid())
 {
-		if($_REQUEST['action_target']=='selected')
-		{
-				$arID = Array();
-				$rsData = CVoteUser::GetList($by, $order, $arFilter, $is_filtered);
-				while($arRes = $rsData->Fetch())
-						$arID[] = $arRes['ID'];
-		}
+	if($_REQUEST['action_target']=='selected')
+	{
+			$arID = Array();
+			$rsData = CVoteUser::GetList($by, $order, $arFilter, $is_filtered);
+			while($arRes = $rsData->Fetch())
+					$arID[] = $arRes['ID'];
+	}
 
-		foreach($arID as $ID)
-		{
-				if(strlen($ID)<=0)
-						continue;
-				$ID = IntVal($ID);
+	foreach($arID as $ID)
+	{
+		if (strlen($ID)<=0)
+			continue;
+		$ID = intval($ID);
 		switch($_REQUEST['action'])
-				{
-				case "delete":
-						@set_time_limit(0);
+		{
+			case "delete":
+				@set_time_limit(0);
 				$DB->StartTransaction();
-						if(!CVoteUser::Delete($ID))
-						{
-								$DB->Rollback();
-								$lAdmin->AddGroupError(GetMessage("DELETE_ERROR"), $ID);
-						}
-						$DB->Commit();
-						break;
+				if(!CVoteUser::Delete($ID))
+				{
+						$DB->Rollback();
+						$lAdmin->AddGroupError(GetMessage("DELETE_ERROR"), $ID);
+				}
+				$DB->Commit();
+				break;
 		}
 	}
 }
@@ -170,66 +170,63 @@ $rsData->NavStart();
 $lAdmin->NavText($rsData->GetNavPrint(GetMessage("VOTE_PAGES")));
 
 $lAdmin->AddHeaders(array(
-				array("id"=>"ID", "content"=>"ID", "sort"=>"s_id", "default"=>true),
-				array("id"=>"DATE_FIRST", "content"=>GetMessage("VOTE_DATE_START"), "sort"=>"s_date_start", "default"=>true),
-				array("id"=>"DATE_LAST", "content"=>GetMessage("VOTE_DATE_END"), "sort"=>"s_date_end", "default"=>true),
-				array("id"=>"AUTH_USER_ID", "content"=>GetMessage("VOTE_USER"), "sort"=>"s_user", "default"=>true),
-				array("id"=>"LAST_IP", "content"=>"IP", "sort"=>"s_ip", "default"=>true),
-				array("id"=>"COUNTER", "content"=>GetMessage("VOTE_COUNTER"), "sort"=>"s_counter", "default"=>true, "align"=>"right"),
+	array("id"=>"ID", "content"=>"ID", "sort"=>"s_id", "default"=>true),
+	array("id"=>"DATE_FIRST", "content"=>GetMessage("VOTE_DATE_START"), "sort"=>"s_date_start", "default"=>true),
+	array("id"=>"DATE_LAST", "content"=>GetMessage("VOTE_DATE_END"), "sort"=>"s_date_end", "default"=>true),
+	array("id"=>"AUTH_USER_ID", "content"=>GetMessage("VOTE_USER"), "sort"=>"s_user", "default"=>true),
+	(CModule::IncludeModule("statistic") ? array("id"=>"STAT_GUEST_ID", "content"=>GetMessage("VOTE_VISITOR"), "sort"=>"s_stat_guest_id", "default"=>true) : null),
+	array("id"=>"LAST_IP", "content"=>"IP", "sort"=>"s_ip", "default"=>true),
+	array("id"=>"COUNTER", "content"=>GetMessage("VOTE_COUNTER"), "sort"=>"s_counter", "default"=>true, "align"=>"right"),
 ));
 
-$arrUsers = array();
-while($arRes = $rsData->NavNext(true, "f_"))
+$nameFormat = CSite::GetNameFormat(false);
+while ($res = $rsData->getNext())
 {
-		$row =& $lAdmin->AddRow($f_ID, $arRes);
+	$row =& $lAdmin->AddRow($res["ID"], $res);
 
-	if (!in_array($f_AUTH_USER_ID, array_keys($arrUsers)))
-	{
-		$rsUser = CUser::GetByID($f_AUTH_USER_ID);
-		$rsUser->ExtractFields("u_");
-		$f_LOGIN = $u_LOGIN;
-		$f_USER_NAME = $u_NAME." ".$u_LAST_NAME;
-		$arrUsers[$f_AUTH_USER_ID]["USER_NAME"] = $f_USER_NAME;
-		$arrUsers[$f_AUTH_USER_ID]["LOGIN"] = $f_LOGIN;
-	}
-	else
-	{
-		$f_USER_NAME = $arrUsers[$f_AUTH_USER_ID]["USER_NAME"];
-		$f_LOGIN = $arrUsers[$f_AUTH_USER_ID]["LOGIN"];
-	}
-
-	if ($f_AUTH_USER_ID>0)
-		$txt="[<a title=\"".GetMessage("VOTE_EDIT_USER")."\" href=\"user_edit.php?lang=".LANGUAGE_ID."&ID=$f_AUTH_USER_ID\">$f_AUTH_USER_ID</a>] ($f_LOGIN) $f_USER_NAME";
+	if ($res["AUTH_USER_ID"]>0)
+		$txt="[<a title=\"".GetMessage("VOTE_EDIT_USER")."\" href=\"user_admin.php?lang=".LANGUAGE_ID."&find_id={$res["AUTH_USER_ID"]}&set_filter=Y\">{$res["AUTH_USER_ID"]}</a>] ".CUser::FormatName($nameFormat, $res, true, false);
 	else
 		$txt=GetMessage("VOTE_NOT_AUTHORIZED");
-
-	if (CModule::IncludeModule("statistic"))
-		$txt.=" [<a title=\"".GetMessage("VOTE_GUEST_USER_INFO")."\" href=\"guest_list.php?lang=".LANGUAGE_ID."&find_id=$f_STAT_GUEST_ID&set_filter=Y\">$f_STAT_GUEST_ID</a>]";
-	else
-		$txt.="[$f_STAT_GUEST_ID]";
-
 	$row->AddViewField("AUTH_USER_ID", $txt);
-	$row->AddViewField("COUNTER", "<a title=\"".GetMessage("VOTE_USER_VOTES")."\" href=\"vote_user_votes.php?find_vote_user_id=$f_ID&lang=".LANGUAGE_ID."&set_filter=Y\">$f_COUNTER</a>");
 
-	$arActions = Array();
-		$arActions[] = array("ICON"=>"delete", "TEXT"=>GetMessage("MAIN_ADMIN_MENU_DELETE"), "ACTION"=>"if(confirm('".GetMessage("VOTE_CONFIRM_DEL")."')) window.location='vote_user_list.php?lang=".LANGUAGE_ID."&action=delete&ID=$f_ID&".bitrix_sessid_get()."'");
+	if ($res["STAT_GUEST_ID"] > 0)
+		$row->AddViewField("STAT_GUEST_ID", "[<a title=\"".GetMessage("VOTE_GUEST_USER_INFO")."\" href=\"guest_list.php?lang=".LANGUAGE_ID."&find_id={$res["STAT_GUEST_ID"]}&set_filter=Y\">{$res["STAT_GUEST_ID"]}</a>]");
+
+	$row->AddViewField("COUNTER", "<a title=\"".GetMessage("VOTE_USER_VOTES")."\" href=\"vote_user_votes.php?find_vote_user_id={$res["ID"]}&lang=".LANGUAGE_ID."&set_filter=Y\">{$res["COUNTER"]}</a>");
+
 	if ($VOTE_RIGHT=="W")
-			$row->AddActions($arActions);
-
-
+	{
+		$row->AddActions(
+			array(
+				array(
+					"ICON" => "delete",
+					"TEXT" => GetMessage("MAIN_ADMIN_MENU_DELETE"),
+					"ACTION" => "if(confirm('".GetMessage("VOTE_CONFIRM_DEL")."')) window.location='vote_user_list.php?lang=".LANGUAGE_ID."&action=delete&ID={$res["ID"]}&".bitrix_sessid_get()."'"
+				)
+			)
+		);
+	}
 }
 
 $lAdmin->AddFooter(
+	array(
 		array(
-				array("title"=>GetMessage("MAIN_ADMIN_LIST_SELECTED"), "value"=>$rsData->SelectedRowsCount()),
-				array("counter"=>true, "title"=>GetMessage("MAIN_ADMIN_LIST_CHECKED"), "value"=>"0"),
+			"title"=>GetMessage("MAIN_ADMIN_LIST_SELECTED"),
+			"value"=>$rsData->SelectedRowsCount()
+		),
+		array(
+			"counter"=>true,
+			"title"=>GetMessage("MAIN_ADMIN_LIST_CHECKED"),
+			"value"=>"0"
 		)
+	)
 );
 
 if ($VOTE_RIGHT=="W")
 	$lAdmin->AddGroupActionTable(Array(
-			"delete"=>GetMessage("VOTE_DELETE"),
-			)
+		"delete"=>GetMessage("VOTE_DELETE"),
+		)
 	);
 
 $lAdmin->AddAdminContextMenu(array());
@@ -246,16 +243,16 @@ require_once ($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_adm
 <form name="form1" method="GET" action="<?=$APPLICATION->GetCurPage()?>?">
 <?
 $oFilter = new CAdminFilter(
-		$sTableID."_filter",
-		array(
+	$sTableID."_filter",
+	array(
 		GetMessage("VOTE_FL_ID"),
 		GetMessage("VOTE_FL_DATE_ST"),
 		GetMessage("VOTE_FL_DATE_LS"),
 		GetMessage("VOTE_FL_ID_STAT"),
 		GetMessage("VOTE_FL_IP"),
 		GetMessage("VOTE_FL_COUNTER"),
-		GetMessage("VOTE_FL_VOTE"),
-		)
+		GetMessage("VOTE_FL_VOTE")
+	)
 );
 
 $oFilter->Begin();

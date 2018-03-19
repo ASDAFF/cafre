@@ -41,7 +41,7 @@
 					}
 					else if(result && result.ERROR)
 					{
-						alert(BX.message("SALE_EBAY_EXCHANGE_ERROR")+"."+result.ERROR);
+						alert(BX.message("SALE_EBAY_EXCHANGE_ERROR")+".\n"+result.ERROR);
 					}
 					else if(result)
 					{
@@ -181,6 +181,9 @@
 
 				for(var i in splitted)
 				{
+					if(!splitted.hasOwnProperty(i))
+						continue;
+
 					var keyValue = splitted[i].split("=");
 
 					if(!keyValue)

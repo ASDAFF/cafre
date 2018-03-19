@@ -84,7 +84,7 @@ class CCatalogRecommendedProductsComponent extends CCatalogViewedProductsCompone
 	{
 		if ($this->arParams['ID'] <= 0)
 		{
-			CIBlockFindTools::getElementID (
+			$this->arParams['ID'] = CIBlockFindTools::getElementID (
 				$this->arParams["ID"],
 				$this->arParams["CODE"],
 				false,
@@ -101,12 +101,9 @@ class CCatalogRecommendedProductsComponent extends CCatalogViewedProductsCompone
 			);
 		}
 		if ($this->arParams['ID'] <= 0)
-		{
 			throw new SystemException(Loc::getMessage("CATALOG_RECOMMENDED_PRODUCTS_COMPONENT_PRODUCT_ID_REQUIRED"));
-		}
-		{
-			parent::prepareData();
-		}
+
+		parent::prepareData();
 	}
 
 	protected function putDataToCache()
@@ -176,7 +173,6 @@ class CCatalogRecommendedProductsComponent extends CCatalogViewedProductsCompone
 
 		$info = CCatalogSku::GetProductInfo($this->arParams['ID']);
 
-		$ids = array();
 		if($info) // SKU
 		{
 			$ids = $this->getRecommendedIds($this->arParams['ID'], $this->arParams['OFFERS_PROPERTY_LINK']);
@@ -191,8 +187,22 @@ class CCatalogRecommendedProductsComponent extends CCatalogViewedProductsCompone
 			$ids = $this->getRecommendedIds($this->arParams['ID'], $this->arParams['PROPERTY_LINK']);
 		}
 
+		$this->arResult['RECOMMENDED_IDS'] = $ids;
+
 		return $ids;
 	}
 
+	/**
+	 * Check action variable.
+	 *
+	 * @param array $params			Component params.
+	 * @return string
+	 */
+	protected function prepareActionVariable($params)
+	{
+		$actionVariable = (isset($params['ACTION_VARIABLE']) ? trim($params['ACTION_VARIABLE']) : '');
+		if ($actionVariable === '' || !preg_match("/^[A-Za-z_][A-Za-z01-9_]*$/", $actionVariable))
+			$actionVariable = 'action_crp';
+		return $actionVariable;
+	}
 }
-?>

@@ -1,17 +1,6 @@
 <?
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
 
-use Bitrix\Main\Analytics\SiteSpeed;
-
-if (
-	SiteSpeed::isOn() 
-	&& $USER->CanDoOperation("view_other_settings")
-)
-{
-	include_once(dirname(__FILE__)."/site_speed.php");
-	return;
-}
-
 $APPLICATION->SetAdditionalCSS('/bitrix/gadgets/bitrix/admin_perfmon/styles.css');
 
 $bPerfmonModuleInstalled = IsModuleInstalled("perfmon");

@@ -1,10 +1,15 @@
-<?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();?>
-<?
+<?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
+/** @var CBitrixComponentTemplate $this */
+/** @var array $arParams */
+/** @var array $arResult */
+/** @global CDatabase $DB */
+/** @global CUser $USER */
+/** @global CMain $APPLICATION */
+
 $pageId = "group_log";
 include("util_group_menu.php");
 include("util_group_profile.php");
-?>
-<?
+
 $APPLICATION->IncludeComponent(
 	"bitrix:socialnetwork.log.ex", 
 	"", 
@@ -36,9 +41,11 @@ $APPLICATION->IncludeComponent(
 		"SUBSCRIBE_ONLY" => "N",
 		"SHOW_EVENT_ID_FILTER" => "Y",
 		"SHOW_FOLLOW_FILTER" => "N",
-		"CACHE_TYPE" => $arParams["CACHE_TYPE"],
-		"CACHE_TIME" => $arParams["CACHE_TIME"],
+		"AUTH" => $arParams["LOG_AUTH"],
+		"CHECK_COMMENTS_PERMS" => (isset($arParams["CHECK_COMMENTS_PERMS"]) && $arParams["CHECK_COMMENTS_PERMS"] == "Y" ? "Y" : "N"),
+		"BLOG_NO_URL_IN_COMMENTS" => $arParams["BLOG_NO_URL_IN_COMMENTS"],
+		"BLOG_NO_URL_IN_COMMENTS_AUTHORITY" => $arParams["BLOG_NO_URL_IN_COMMENTS_AUTHORITY"]
 	),
-	$component 
+	$this->getComponent()
 );
 ?>

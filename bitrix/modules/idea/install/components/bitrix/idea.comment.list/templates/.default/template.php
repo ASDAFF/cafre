@@ -1,4 +1,7 @@
-<?if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();?>
+<?if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
+
+CUtil::InitJSCore(array("ajax"));
+?>
 <div class="blog-comments">
 <a name="comments"></a><a name="comments-add"></a>
 <script type="text/javascript">
@@ -66,9 +69,9 @@ else
 				</div>
 				<?
 			}
-			
-						include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/lhe.php");
-			
+
+			include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/neweditor.php");
+
 			if(strlen($arResult["NoCommentReason"]) > 0)
 			{
 				?>
@@ -81,10 +84,14 @@ else
 				<div class="blog-comment-field blog-comment-field-captcha">
 					<div class="blog-comment-field-captcha-label">
 						<label for=""><?=GetMessage("B_B_MS_CAPTCHA_SYM")?></label><span class="blog-required-field">*</span><br>
-						<input type="hidden" name="captcha_code" id="captcha_code" value="<?=$arResult["CaptchaCode"]?>">
+						<input type="hidden" name="captcha_code" id="captcha_code" value="">
 						<input type="text" size="30" name="captcha_word" id="captcha_word" value=""  tabindex="7">
+					</div>
+					<div class="blog-comment-field-captcha-image">
+						<div id="div_captcha">
+							<img src="" width="180" height="40" id="captcha" style="display:none;">
 						</div>
-					<div class="blog-comment-field-captcha-image"><div id="div_captcha"></div></div>
+					</div>
 				</div>
 				<?
 			}
@@ -106,27 +113,6 @@ else
 	</div>
 	</div>
 
-	<?
-	if($arResult["use_captcha"]===true)
-	{
-		?>
-		<div id="captcha_del">
-		<script>
-			<!--
-			var cc;
-			if(document.cookie.indexOf('<?echo session_name()?>'+'=') == -1)
-				cc = Math.random();
-			else
-				cc ='<?=$arResult["CaptchaCode"]?>';
-
-			document.write('<img src="/bitrix/tools/captcha.php?captcha_code='+cc+'" width="180" height="40" id="captcha" style="display:none;">');
-			document.getElementById('captcha_code').value = cc;
-			//-->
-		</script>
-		</div>
-		<?
-	}
-	?>
 	<?
 	$prevTab = 0;
 		if(!function_exists('ShowCommentCommon')):
@@ -298,7 +284,7 @@ else
 					?>
 					<?=$comment["TextFormated"]?>
 
-										<div class="blog-post-meta<?if((strlen($comment["urlToShow"])==0 || strlen($comment["urlToHide"])==0) && $comment["CAN_EDIT"] != "Y" && strlen($comment["urlToDelete"])==0):?> blog-post-meta-empty<?endif?>">
+					<div class="blog-post-meta<?if((strlen($comment["urlToShow"])==0 || strlen($comment["urlToHide"])==0) && $comment["CAN_EDIT"] != "Y" && strlen($comment["urlToDelete"])==0):?> blog-post-meta-empty<?endif?>">
 					<?
 					if(strlen($comment["urlToShow"])>0)
 					{

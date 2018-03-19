@@ -116,7 +116,7 @@
 ?><form method="POST" action="<?=$APPLICATION->GetCurPage()?>" name="forum_edit">
 	<input type="hidden" name="Update" value="Y"><input type="hidden" name="lang" value="<?=LANG ?>">
 	<input type="hidden" name="ID" value="<?=$ID ?>">
-	<input type="hidden" name="DICTIONARY_ID" value="<?=htmlspecialcharsEx($str_DICTIONARY_ID)?>" />
+	<input type="hidden" name="DICTIONARY_ID" value="<?=htmlspecialcharsbx($str_DICTIONARY_ID)?>" />
 	<?=bitrix_sessid_post()?><?
 	$aTabs = array(array("DIV" => "edit", "TAB" => $sDocTitle, "ICON" => "forum", "TITLE" => "",));
 	$tabControl = new CAdminTabControl("tabControl", $aTabs);
@@ -125,7 +125,7 @@
 ?>
 <tr class="adm-detail-required-field">
 	<td width="40%"><?=GetMessage("FLTR_SEARCH")?>:</td>
-	<td width="60%"><input type="text" name="WORDS" maxlength="255" value="<?=htmlspecialcharsEx($str_WORDS)?>"></td></tr>
+	<td width="60%"><input type="text" name="WORDS" maxlength="255" value="<?=htmlspecialcharsbx($str_WORDS)?>"></td></tr>
 <tr>
 	<td><?=GetMessage("FLTR_USE_IT")?>: </td><td><input type="checkbox" name="USE_IT" value="Y" <?=$str_USE_IT == "Y" ? "checked" : ""?>></td></tr>
 <tr>
@@ -147,13 +147,13 @@
 	?>
 </td></tr>
 <tr><td><?=GetMessage("FLTR_REPLACEMENT")?>:</td>
-	<td><input type="text" name="REPLACEMENT" maxlength="255"  value="<?=htmlspecialcharsEx($str_REPLACEMENT)?>"></td></tr>
+	<td><input type="text" name="REPLACEMENT" maxlength="255"  value="<?=htmlspecialcharsbx($str_REPLACEMENT)?>"></td></tr>
 <tr class="heading">
 	<td colspan="2"><?=GetMessage("FLTR_DESCRIPTION")?>:</td>
 </tr>
 <tr valign="top">
 	<td colspan="2" align="center">
-		<textarea style="width:60%; height:150px;" name="DESCRIPTION" wrap="VIRTUAL"><?=htmlspecialcharsEx($str_DESCRIPTION)?></textarea>
+		<textarea style="width:60%; height:150px;" name="DESCRIPTION" wrap="VIRTUAL"><?=htmlspecialcharsbx($str_DESCRIPTION)?></textarea>
 	</td>
 </tr>
 <?$tabControl->EndTab();?>

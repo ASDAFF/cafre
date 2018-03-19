@@ -96,14 +96,24 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
 	</td>
 </tr>
 <tr>
+	<td align="right"><?= GetMessage("BPAR_PD_COMMENT_REQUIRED") ?>:</td>
+	<td>
+		<select name="comment_required">
+			<option value="N"><?= GetMessage("BPAA_PD_NO") ?></option>
+			<option value="Y"<?= $arCurrentValues["comment_required"] == "Y" ? " selected" : "" ?>><?= GetMessage("BPAA_PD_YES") ?></option>
+			<option value="YA"<?= $arCurrentValues["comment_required"] == "YA" ? " selected" : "" ?>><?= GetMessage("BPAR_PD_COMMENT_REQUIRED_YA") ?></option>
+			<option value="YR"<?= $arCurrentValues["comment_required"] == "YR" ? " selected" : "" ?>><?= GetMessage("BPAR_PD_COMMENT_REQUIRED_YR") ?></option>
+		</select>
+	</td>
+</tr>
+<tr>
 	<td align="right"><?= GetMessage("BPAR_PD_COMMENT_LABEL_MESSAGE") ?>:</td>
 	<td><?=CBPDocument::ShowParameterField("string", 'comment_label_message', $arCurrentValues['comment_label_message'], Array('size'=>'50'))?></td>
 </tr>
 <tr>
 	<td align="right"><?= GetMessage("BPAA_PD_TIMEOUT_DURATION") ?>:<br/><?= GetMessage("BPAA_PD_TIMEOUT_DURATION_HINT") ?></td>
 	<td valign="top">
-		<input type="text" name="timeout_duration" id="id_timeout_duration" value="<?= htmlspecialcharsbx($arCurrentValues["timeout_duration"]) ?>" size="20" />
-		<input type="button" value="..." onclick="BPAShowSelector('id_timeout_duration', 'int');" />
+		<?=CBPDocument::ShowParameterField('int', 'timeout_duration', $arCurrentValues["timeout_duration"], array('size' => 20))?>
 		<select name="timeout_duration_type">
 			<option value="s"<?= ($arCurrentValues["timeout_duration_type"] == "s") ? " selected" : "" ?>><?= GetMessage("BPAA_PD_TIME_S") ?></option>
 			<option value="m"<?= ($arCurrentValues["timeout_duration_type"] == "m") ? " selected" : "" ?>><?= GetMessage("BPAA_PD_TIME_M") ?></option>
@@ -126,6 +136,16 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
 		<select name="access_control">
 			<option value="Y"<?= $arCurrentValues["access_control"] == "Y" ? " selected" : "" ?>><?= GetMessage("BPAA_PD_YES") ?></option>
 			<option value="N"<?= $arCurrentValues["access_control"] != "Y" ? " selected" : "" ?>><?= GetMessage("BPAA_PD_NO") ?></option>
+		</select>
+	</td>
+</tr>
+<tr>
+	<td align="right"><?= GetMessage("BPAR_PD_DELEGATION_TYPE") ?>:</td>
+	<td>
+		<select name="delegation_type">
+			<?foreach (CBPTaskDelegationType::getSelectList() as $key => $label):?>
+			<option value="<?=htmlspecialcharsbx($key)?>>"<?= $arCurrentValues["delegation_type"] == $key ? " selected" : "" ?>><?=htmlspecialcharsbx($label)?></option>
+			<?endforeach;?>
 		</select>
 	</td>
 </tr>

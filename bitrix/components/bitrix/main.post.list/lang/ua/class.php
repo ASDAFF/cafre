@@ -1,0 +1,4 @@
+<?
+$MESS["MPL_PHOTO"] = "Ôîòî:";
+$MESS["MPL_FILES"] = "Ôàéëè:";
+?>

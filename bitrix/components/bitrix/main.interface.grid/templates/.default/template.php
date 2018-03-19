@@ -88,7 +88,23 @@ if($header["sort"] <> ''):
 ?>
 		<td class="bx-sortable<?=($header["sort_state"] <> ''? ' bx-sorted':'')?>"
 			onclick="bxGrid_<?=$arParams["GRID_ID"]?>.Sort('<?=CUtil::addslashes($header["sort_url"])?>', '<?=$header["sort"]?>', '<?=$header["sort_state"]?>', '<?=$header["order"]?>', arguments);"
-			oncontextmenu="return [{'TEXT': '<?=CUtil::JSEscape(GetMessage("interface_grid_sort_asc"))?>', 'ONCLICK':'bxGrid_<?=$arParams["GRID_ID"]?>.Sort(\'<?=CUtil::addslashes($header["sort_url"])?>\', \'desc\')', 'ICONCLASS':'grid-sort-asc'}, {'TEXT': '<?=CUtil::JSEscape(GetMessage("interface_grid_sort_desc"))?>', 'ONCLICK':'bxGrid_<?=$arParams["GRID_ID"]?>.Sort(\'<?=CUtil::addslashes($header["sort_url"])?>\', \'asc\')', 'ICONCLASS':'grid-sort-desc'}, {'TEXT': '<?=CUtil::JSEscape(GetMessage("interface_grid_hide_col"))?>', 'ONCLICK':'bxGrid_<?=$arParams["GRID_ID"]?>.HideColumn(\'<?=CUtil::JSEscape($id)?>\')', 'DISABLED':<?=($USER->IsAuthorized()? 'false':'true')?>}]"
+			oncontextmenu="return [
+				{
+					'TEXT': '<?=CUtil::JSEscape(GetMessage("interface_grid_sort_asc"))?>',
+					'ONCLICK':'bxGrid_<?=$arParams["GRID_ID"]?>.Sort(\'<?=CUtil::addslashes($header["sort_url"])?>\', \'desc\')',
+					'ICONCLASS':'grid-sort-asc'
+				},
+				{
+					'TEXT': '<?=CUtil::JSEscape(GetMessage("interface_grid_sort_desc"))?>',
+					'ONCLICK':'bxGrid_<?=$arParams["GRID_ID"]?>.Sort(\'<?=CUtil::addslashes($header["sort_url"])?>\', \'asc\')',
+					'ICONCLASS':'grid-sort-desc'
+				},
+				{
+					'TEXT': '<?=CUtil::JSEscape(GetMessage("interface_grid_hide_col"))?>',
+					'ONCLICK':'bxGrid_<?=$arParams["GRID_ID"]?>.HideColumn(\'<?=CUtil::JSEscape($id)?>\')',
+					'DISABLED':<?=($USER->IsAuthorized()? 'false':'true')?>
+				}
+			]"
 			title="<?=$order_title?>"
 		>
 			<table cellspacing="0" class="bx-grid-sorting">
@@ -99,7 +115,13 @@ if($header["sort"] <> ''):
 			</table>
 		</td>
 <?else:?>
-		<td oncontextmenu="return [{'TEXT': '<?=CUtil::JSEscape(GetMessage("interface_grid_hide_col"))?>', 'ONCLICK':'bxGrid_<?=$arParams["GRID_ID"]?>.HideColumn(\'<?=CUtil::JSEscape($id)?>\')', 'DISABLED':<?=($USER->IsAuthorized()? 'false':'true')?>}]">
+		<td oncontextmenu="return [
+			{
+				'TEXT': '<?=CUtil::JSEscape(GetMessage("interface_grid_hide_col"))?>',
+				'ONCLICK':'bxGrid_<?=$arParams["GRID_ID"]?>.HideColumn(\'<?=CUtil::JSEscape($id)?>\')',
+				'DISABLED':<?=($USER->IsAuthorized()? 'false':'true')?>
+			}
+		]">
 			<?=$header["name"]?>
 		</td>
 <?endif?>
@@ -147,7 +169,7 @@ foreach($arParams["ROWS"] as $index=>$aRow):
 			onclick="bxGrid_<?=$arParams["GRID_ID"]?>.ShowActionMenu(this, <?=$index?>);"
 			title="<?echo GetMessage("interface_grid_act")?>" class="bx-action"><div class="empty"></div></a></td>
 	<?else:?>
-		<td>&nbsp;</td>
+		<td class="bx-actions-col">&nbsp;</td>
 	<?endif?>
 <?foreach($arResult["HEADERS"] as $id=>$header):?>
 		<td<?=($header["sort_state"] <> ''? ' class="bx-sorted"':'')?><?

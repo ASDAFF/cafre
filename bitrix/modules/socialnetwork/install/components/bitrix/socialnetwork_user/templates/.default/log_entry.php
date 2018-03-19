@@ -1,9 +1,14 @@
-<?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();?>
-<?
+<?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
+/** @var CBitrixComponentTemplate $this */
+/** @var array $arParams */
+/** @var array $arResult */
+/** @global CDatabase $DB */
+/** @global CUser $USER */
+/** @global CMain $APPLICATION */
+
 $pageId = "user_log";
 include("util_menu.php");
-?>
-<?
+
 $APPLICATION->IncludeComponent(
 	"bitrix:socialnetwork.log.ex", 
 	"", 
@@ -51,6 +56,7 @@ $APPLICATION->IncludeComponent(
 		"NEW_TEMPLATE" => $arParams["LOG_NEW_TEMPLATE"],
 		"SUBSCRIBE_ONLY" => "N",
 		"AUTH" => $arParams["LOG_AUTH"],
+		"CHECK_COMMENTS_PERMS" => (isset($arParams["CHECK_COMMENTS_PERMS"]) && $arParams["CHECK_COMMENTS_PERMS"] == "Y" ? "Y" : "N")
 	),
 	$component 
 );

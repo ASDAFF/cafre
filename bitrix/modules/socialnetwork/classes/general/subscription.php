@@ -1,16 +1,19 @@
 <?
+
+use Bitrix\Socialnetwork\Integration;
+
 class CAllSocNetSubscription
 {
 	function CheckFields($ACTION, &$arFields, $ID = 0)
 	{
-		global $DB;
+		global $APPLICATION;
 
 		if (
 			$ACTION != "ADD" 
 			&& IntVal($ID) <= 0
 		)
 		{
-			$GLOBALS["APPLICATION"]->ThrowException("System error 870164", "ERROR");
+			$APPLICATION->ThrowException("System error 870164", "ERROR");
 			return false;
 		}
 
@@ -19,7 +22,7 @@ class CAllSocNetSubscription
 			&& IntVal($arFields["USER_ID"]) <= 0
 		)
 		{
-			$GLOBALS["APPLICATION"]->ThrowException(GetMessage("SONET_SS_EMPTY_USER_ID"), "EMPTY_USER_ID");
+			$APPLICATION->ThrowException(GetMessage("SONET_SS_EMPTY_USER_ID"), "EMPTY_USER_ID");
 			return false;
 		}
 		elseif (is_set($arFields, "USER_ID"))
@@ -27,7 +30,7 @@ class CAllSocNetSubscription
 			$dbResult = CUser::GetByID($arFields["USER_ID"]);
 			if (!$dbResult->Fetch())
 			{
-				$GLOBALS["APPLICATION"]->ThrowException(GetMessage("SONET_SS_ERROR_NO_USER_ID"), "ERROR_NO_USER_ID");
+				$APPLICATION->ThrowException(GetMessage("SONET_SS_ERROR_NO_USER_ID"), "ERROR_NO_USER_ID");
 				return false;
 			}
 		}
@@ -37,7 +40,7 @@ class CAllSocNetSubscription
 			&& strlen(trim($arFields["CODE"])) <= 0
 		)
 		{
-			$GLOBALS["APPLICATION"]->ThrowException(GetMessage("SONET_SS_EMPTY_CODE"), "EMPTY_CODE");
+			$APPLICATION->ThrowException(GetMessage("SONET_SS_EMPTY_CODE"), "EMPTY_CODE");
 			return false;
 		}
 
@@ -58,9 +61,9 @@ class CAllSocNetSubscription
 		return $bSuccess;
 	}
 
-	function DeleteEx($userID = false, $code = false)
+	public static function DeleteEx($userID = false, $code = false)
 	{
-		global $DB;
+		global $DB, $CACHE_MANAGER;
 
 		$userID = IntVal($userID);
 		$code = trim($code);
@@ -78,30 +81,31 @@ class CAllSocNetSubscription
 
 		if(defined("BX_COMP_MANAGED_CACHE"))
 		{
-			if ($code)
-				$GLOBALS["CACHE_MANAGER"]->ClearByTag("sonet_subscription_".$code);
-			else
-				$GLOBALS["CACHE_MANAGER"]->ClearByTag("sonet_subscription");
+			$CACHE_MANAGER->ClearByTag("sonet_subscription".($code ? '_'.$code : ''));
 		}
 
 		return true;
 	}
-	
-	function Set($userID, $code, $value = false)
+
+	public static function Set($userID, $code, $value = false)
 	{
-		global $DB;
+		global $CACHE_MANAGER;
 
 		if (!CSocNetGroup::__ValidateID($userID))
+		{
 			return false;
+		}
 
 		$userID = IntVal($userID);
 		$code = trim($code);
-		
+
 		if (
 			$userID <= 0
 			|| strlen($code) <= 0
 		)
+		{
 			return false;
+		}
 
 		$value = ($value == "Y" ? "Y" : "N");
 
@@ -113,39 +117,79 @@ class CAllSocNetSubscription
 			)
 		);
 
+		$result = false;
+
 		if ($arSubscription = $rsSubscription->Fetch())
 		{
 			if ($value != "Y")
-				CSocNetSubscription::Delete($arSubscription["ID"]);
+			{
+				$result = CSocNetSubscription::delete($arSubscription["ID"]);
+			}
 		}
 		else
 		{
 			if ($value == "Y")
-				CSocNetSubscription::Add(array(
+			{
+				$result = CSocNetSubscription::add(array(
 					"USER_ID" => $userID,
 					"CODE" => $code
 				));
+			}
+		}
+
+		if (
+			$result
+			&& preg_match('/^SG(\d+)$/i', $code, $matches)
+		)
+		{
+			$chatId = false;
+			$groupId = $matches[1];
+			$chatData = \Bitrix\Socialnetwork\Integration\Im\Chat\Workgroup::getChatData(Array(
+				'group_id' => $groupId
+			));
+			if (!empty($chatData[$groupId]) && intval($chatData[$groupId]) > 0)
+			{
+				$chatId = $chatData[$groupId];
+			}
+
+			if ($chatId)
+			{
+				$CIMChat = new CIMChat($userID);
+				$CIMChat->muteNotify($chatId, ($value != "Y"));
+			}
 		}
 
 		if(defined("BX_COMP_MANAGED_CACHE"))
-			$GLOBALS["CACHE_MANAGER"]->ClearByTag("sonet_subscription_".$code);
+		{
+			$CACHE_MANAGER->ClearByTag("sonet_subscription_".$code);
+		}
 
 		return true;
 	}	
 
-	function NotifyGroup($arFields)
+	public static function NotifyGroup($arFields)
 	{
+		$arUserIDSent = array();
+
 		if (!CModule::IncludeModule("im"))
-			return;
+		{
+			return $arUserIDSent;
+		}
 
 		if (!is_array($arFields["GROUP_ID"]))
+		{
 			$arFields["GROUP_ID"] = array($arFields["GROUP_ID"]);
+		}
 
 		if (empty($arFields["GROUP_ID"]))
-			return;
+		{
+			return $arUserIDSent;
+		}
 
 		if (empty($arFields["EXCLUDE_USERS"]))
+		{
 			$arFields["EXCLUDE_USERS"] = array();
+		}
 
 		if (intval($arFields["LOG_ID"]) > 0)
 		{
@@ -158,9 +202,65 @@ class CAllSocNetSubscription
 			);
 
 			while ($arUnFollower = $rsUnFollower->Fetch())
+			{
 				$arFields["EXCLUDE_USERS"][] = $arUnFollower["USER_ID"];
+			}
 
 			$arFields["EXCLUDE_USERS"] = array_unique($arFields["EXCLUDE_USERS"]);
+		}
+
+		$chatData = $chatIdList = array();
+		if (!empty($arFields["MESSAGE_CHAT"]))
+		{
+			$chatData = Integration\Im\Chat\Workgroup::getChatData(array(
+				'group_id' => $arFields["GROUP_ID"]
+			));
+		}
+
+		if (!empty($chatData))
+		{
+			$arFields["GROUP_ID"] = array_diff($arFields["GROUP_ID"], array_unique(array_keys($chatData)));
+			$chatIdList = array_unique(array_values($chatData));
+		}
+
+		if (!empty($chatIdList))
+		{
+			$tmp = \CSocNetLogTools::processPath(
+				array(
+					"URL" => $arFields["URL"],
+				),
+				(intval($arFields["FROM_USER_ID"]) > 0 ? $arFields["FROM_USER_ID"] : 1),
+				SITE_ID
+			);
+			$chatUrl = $tmp["URLS"]["URL"];
+
+			$chatMessageFields = array(
+				"MESSAGE" => str_replace(
+					array("#URL#", "#url#"),
+					$chatUrl,
+					$arFields["MESSAGE_CHAT"]
+				),
+			);
+
+			if (intval($arFields["FROM_USER_ID"]) > 0)
+			{
+				$chatMessageFields["FROM_USER_ID"] = intval($arFields["FROM_USER_ID"]);
+			}
+
+			foreach($chatIdList as $chatId)
+			{
+				\CIMChat::addMessage(array_merge(
+					$chatMessageFields, array(
+						"TO_CHAT_ID" => $chatId
+					)
+				));
+			}
+		}
+
+		// if all groups processed by chats
+		if (empty($arFields["GROUP_ID"]))
+		{
+			return $arUserIDSent;
 		}
 
 		$arMessageFields = array(
@@ -168,11 +268,26 @@ class CAllSocNetSubscription
 			"NOTIFY_TYPE" => IM_NOTIFY_FROM,
 			"NOTIFY_MODULE" => "socialnetwork",
 			"NOTIFY_EVENT" => "sonet_group_event",
-			"NOTIFY_TAG" => "SONET|EVENT|".(intval($arFields["LOG_ID"]) > 0 ? $arFields["LOG_ID"] : rand())
+			"NOTIFY_TAG" => ""
 		);
 
 		if (intval($arFields["FROM_USER_ID"]) > 0)
+		{
 			$arMessageFields["FROM_USER_ID"] = $arFields["FROM_USER_ID"];
+		}
+
+		if (!empty($arFields["NOTIFY_TAG"]))
+		{
+			$arMessageFields["NOTIFY_TAG"] = $arFields["NOTIFY_TAG"];
+			CIMNotify::DeleteByTag(
+				$arFields["NOTIFY_TAG"],
+				(intval($arFields["FROM_USER_ID"]) > 0 ? intval($arFields["FROM_USER_ID"]) : false)
+			);
+		}
+		elseif (intval($arFields["LOG_ID"]) > 0)
+		{
+			$arMessageFields["NOTIFY_TAG"] = "SONET|EVENT|".intval($arFields["LOG_ID"]);
+		}
 
 		$arUserToSend = array();
 		$arUserIDToSend = array();
@@ -180,7 +295,9 @@ class CAllSocNetSubscription
 		$arCodes = array();
 
 		foreach ($arFields["GROUP_ID"] as $group_id)
+		{
 			$arCodes[] = "SG".$group_id;
+		}
 
 		$rsSubscriber = CSocNetSubscription::GetList(
 			array(),
@@ -211,6 +328,8 @@ class CAllSocNetSubscription
 			}
 		}
 
+		$arGroups = array();
+
 		$rsGroup = CSocNetGroup::GetList(
 			array(),
 			array("ID" => $arGroupID),
@@ -220,7 +339,9 @@ class CAllSocNetSubscription
 		);
 
 		while($arGroup = $rsGroup->GetNext())
+		{
 			$arGroups[$arGroup["ID"]] = $arGroup;
+		}
 
 		$workgroupsPage = COption::GetOptionString("socialnetwork", "workgroups_page", "/workgroups/", SITE_ID);
 		$groupUrlTemplate = COption::GetOptionString("socialnetwork", "group_path_template", "/workgroups/group/#group_id#/", SITE_ID);
@@ -229,22 +350,27 @@ class CAllSocNetSubscription
 		foreach($arUserToSend as $arUser)
 		{
 			$arMessageFields["TO_USER_ID"] = $arUser["USER_ID"];
+			if (intval($arFields["LOG_ID"]) > 0)
+			{
+				$arMessageFields["NOTIFY_SUB_TAG"] = "SONET|EVENT|".intval($arFields["LOG_ID"])."|".intval($arUser["USER_ID"]);
+			}
+
 			$arTmp = CSocNetLogTools::ProcessPath(
 				array(
 					"URL" => $arFields["URL"],
 					"GROUP_URL" => str_replace(array("#group_id#", "#GROUP_ID#"), $arUser["GROUP_ID"], $groupUrlTemplate)
 				),
-				$arUser["USER_ID"]
+				$arUser["USER_ID"],
+				SITE_ID
 			);
 			$url = $arTmp["URLS"]["URL"];
 
-			if (
+			$serverName = (
 				strpos($url, "http://") === 0
 				|| strpos($url, "https://") === 0
-			)
-				$serverName = "";
-			else
-				$serverName = $arTmp["SERVER_NAME"];
+					? ""
+					: $arTmp["SERVER_NAME"]
+			);
 
 			$groupUrl = $serverName.$arTmp["URLS"]["GROUP_URL"];
 
@@ -271,18 +397,28 @@ class CAllSocNetSubscription
 			}
 
 			CIMNotify::Add($arMessageFields2Send);
+
+			$arUserIDSent[] = $arUser["USER_ID"];
 		}
+
+		return $arUserIDSent;
 	}
 
-	function IsUserSubscribed($userID, $code)
+	public static function IsUserSubscribed($userID, $code)
 	{
+		global $CACHE_MANAGER;
+
 		$userID = intval($userID);
 		if ($userID <= 0)
+		{
 			return false;
-			
+		}
+
 		$code = trim($code);
 		if (strlen($code) <= 0)
+		{
 			return false;
+		}
 
 		$cache = new CPHPCache;
 		$cache_time = 31536000;
@@ -309,9 +445,9 @@ class CAllSocNetSubscription
 
 			if (defined("BX_COMP_MANAGED_CACHE"))
 			{
-				$GLOBALS["CACHE_MANAGER"]->StartTagCache($cache_path);
-				$GLOBALS["CACHE_MANAGER"]->RegisterTag("sonet_subscription_".$code);
-				$GLOBALS["CACHE_MANAGER"]->RegisterTag("sonet_group");
+				$CACHE_MANAGER->StartTagCache($cache_path);
+				$CACHE_MANAGER->RegisterTag("sonet_subscription_".$code);
+				$CACHE_MANAGER->RegisterTag("sonet_group");
 			}
 			
 			$arCacheData = Array(
@@ -320,10 +456,35 @@ class CAllSocNetSubscription
 			$cache->EndDataCache($arCacheData);
 
 			if(defined("BX_COMP_MANAGED_CACHE"))
-				$GLOBALS["CACHE_MANAGER"]->EndTagCache();
+			{
+				$CACHE_MANAGER->EndTagCache();
+			}
 		}
 
 		return (in_array($userID, $arSubscriberID));
+	}
+
+	public static function OnAfterChatMuteNotify($fields)
+	{
+		$result = false;
+
+		if (
+			!is_array($fields)
+			|| empty($fields['USER_ID'])
+			|| empty($fields['MUTE'])
+			|| empty($fields['CHAT'])
+			|| !isset($fields['CHAT']['ENTITY_TYPE'])
+			|| $fields['CHAT']['ENTITY_TYPE'] != Integration\Im\Chat\Workgroup::CHAT_ENTITY_TYPE
+			|| empty($fields['CHAT']['ENTITY_ID'])
+		)
+		{
+			return $result;
+		}
+
+		$groupId = intval($fields['CHAT']['ENTITY_ID']);
+		$userId = intval($fields['USER_ID']);
+
+		return self::set($userId, "SG".$groupId, ($fields['MUTE'] != "Y" ? "Y" : "N"));
 	}
 }
 ?>

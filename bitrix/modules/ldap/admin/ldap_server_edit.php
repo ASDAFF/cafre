@@ -2,7 +2,7 @@
 /*
 ##############################################
 # Bitrix: SiteManager                        #
-# Copyright (c) 2002-2005 Bitrix             #
+# Copyright (c) 2002-2016 Bitrix             #
 # http://www.bitrixsoft.com                  #
 # mailto:admin@bitrixsoft.com                #
 ##############################################
@@ -92,7 +92,6 @@ if($_SERVER['REQUEST_METHOD'] == "POST" && (strlen($save)>0 || strlen($apply)>0)
 		// add groups, which import is forbidden, to common mapping with an id of -1
 		foreach ($noimportGroups as $ldapGroupId)
 			$arGroups[] = array("LDAP_GROUP_ID"=>$ldapGroupId,"GROUP_ID"=>-1);
-
 	}
 
 	$arFields = Array(
@@ -128,7 +127,8 @@ if($_SERVER['REQUEST_METHOD'] == "POST" && (strlen($save)>0 || strlen($apply)>0)
 		"DEFAULT_DEPARTMENT_NAME"	=>	$_REQUEST['DEFAULT_DEPARTMENT_NAME'],
 		"FIELD_MAP"	=>	$arUserFieldMap,
 		"MAX_PAGE_SIZE" => $_REQUEST['MAX_PAGE_SIZE'],
-		"SYNC_USER_ADD" => $_REQUEST['SYNC_USER_ADD']
+		"SYNC_USER_ADD" => $_REQUEST['SYNC_USER_ADD'],
+		"CONNECTION_TYPE" => $_REQUEST['CONNECTION_TYPE']
 	);
 
 	if(is_array($arGroups))
@@ -171,13 +171,14 @@ $str_IMPORT_STRUCT="Y";
 $str_STRUCT_HAVE_DEFAULT = "Y";
 $str_DEFAULT_DEPARTMENT_NAME = (GetMessage('LDAP_DEFAULT_DEPARTMENT')!=''? GetMessage('LDAP_DEFAULT_DEPARTMENT') : 'My company');
 $str_PORT="389";
+
 $arGroups = Array();
 
+ClearVars("str_");
 if($ID>0)
 {
 	$ld = CLdapServer::GetByID($ID);
 
-	ClearVars("str_");
 	if(!($arFields = $ld->ExtractFields("str_")))
 	{
 		$ID=0;
@@ -203,11 +204,13 @@ if($ID>0)
 				"USER_GROUP_ACCESSORY"=>	$arFields['USER_GROUP_ACCESSORY'],
 				"USER_DEPARTMENT_ATTR"	=>	$arFields['USER_DEPARTMENT_ATTR'],
 				"USER_MANAGER_ATTR"	=>	$arFields['USER_MANAGER_ATTR'],
-				"MAX_PAGE_SIZE"	=>	$arFields['MAX_PAGE_SIZE']
+				"MAX_PAGE_SIZE"	=>	$arFields['MAX_PAGE_SIZE'],
+				"CONNECTION_TYPE" => $arFields['CONNECTION_TYPE'],
 			)
 		);
 
 		$db_groups = CLdapServer::GetGroupMap($ID);
+
 		while($arGroup = $db_groups->Fetch())
 			$arGroups[$arGroup['GROUP_ID'].' '.md5($arGroup['LDAP_GROUP_ID'])] = $arGroup;
 
@@ -215,6 +218,7 @@ if($ID>0)
 		{
 			$noimportGroups = Array();
 			$db_groups = CLdapServer::GetGroupBan($ID);
+
 			while($arGroup = $db_groups->Fetch())
 				$noimportGroups[md5($arGroup['LDAP_GROUP_ID'])] = $arGroup['LDAP_GROUP_ID'];
 		}
@@ -224,7 +228,6 @@ if($ID>0)
 			$arUserFieldMap = $arFields["FIELD_MAP"];
 	}
 }
-
 
 //if(strlen($Add)<=0)
 $DB->InitTableVarsForEdit("b_ldap_server", "", "str_");
@@ -237,6 +240,7 @@ if(is_array($_REQUEST['LDAP_GROUP']))
 			$arGroups[$t_id] = $arGroup;
 	}
 }
+
 $arGroups[md5(uniqid(rand(), true))] = Array();
 $arGroups[md5(uniqid(rand(), true))] = Array();
 $arGroups[md5(uniqid(rand(), true))] = Array();
@@ -303,19 +307,46 @@ if(strlen($SERVER)>0)
 			"USER_FILTER"	=>	$USER_FILTER,
 			"USER_GROUP_ATTR"=>	$USER_GROUP_ATTR,
 			"USER_GROUP_ACCESSORY"=>	$USER_GROUP_ACCESSORY,
-			"MAX_PAGE_SIZE"	=>	$MAX_PAGE_SIZE
+			"MAX_PAGE_SIZE"	=>	$MAX_PAGE_SIZE,
 			//"USER_DEPARTMENT_ATTR"	=>	$USER_DEPARTMENT_ATTR,
 			//"USER_MANAGER_ATTR"	=>	$USER_MANAGER_ATTR,
-			)
-		);
+			"CONNECTION_TYPE" => $CONNECTION_TYPE
+		)
+	);
 }
 
 if($bPostback)
 {
 	if(!$ldp)
-		$message = new CAdminMessage(Array("MESSAGE" => GetMessage("LDAP_ERROR"), "DETAILS" => GetMessage("LDAP_EDIT_ERR_CON"), "TYPE"=>"ERROR"));
+	{
+		$errorDetails = '';
+
+		if($e = $APPLICATION->GetException())
+			$errorDetails = $e->GetString();
+
+		$message = new CAdminMessage(
+			Array(
+				"MESSAGE" => GetMessage("LDAP_ERROR"),
+				"DETAILS" => GetMessage("LDAP_EDIT_ERR_CON")."\n".$errorDetails,
+				"TYPE"=>"ERROR"
+			)
+		);
+	}
 	elseif(!$ldp->BindAdmin())
-		$message = new CAdminMessage(Array("MESSAGE" => GetMessage("LDAP_ERROR"), "DETAILS" => GetMessage("LDAP_EDIT_ERR_AUT"), "TYPE"=>"ERROR"));
+	{
+		$errorDetails = '';
+
+		if($e = $APPLICATION->GetException())
+			$errorDetails = $e->GetString();
+
+		$message = new CAdminMessage(
+			Array(
+				"MESSAGE" => GetMessage("LDAP_ERROR"),
+				"DETAILS" => GetMessage("LDAP_EDIT_ERR_AUT")."\n".$errorDetails,
+				"TYPE"=>"ERROR"
+			)
+		);
+	}
 	elseif(strlen($_REQUEST['refresh_groups'])<=0)
 	{
 		$message = new CAdminMessage(Array("MESSAGE" => GetMessage("LDAP_EDIT_OK_CON"), "TYPE"=>"OK"));
@@ -362,7 +393,7 @@ else
 		<td><?echo $str_ID?></td>
 	</tr>
 	<?endif?>
-	<?if(strlen($str_TIMESTAMP_X)>0):?>
+	<?if(strlen($str_TIMESTAMP_X) > 0):?>
 	<tr>
 		<td><?echo GetMessage("LDAP_EDIT_TSTAMP")?></td>
 		<td><?echo $str_TIMESTAMP_X?></td>
@@ -401,8 +432,61 @@ else
 	</tr>
 	<tr class="adm-detail-required-field">
 		<td><?echo GetMessage("LDAP_EDIT_SERV_PORT")?></td>
-		<td><input type="text" name="SERVER" size="42" maxlength="255" value="<?=$str_SERVER?>">:<input type="text" name="PORT" size="4" maxlength="5" value="<?=$str_PORT?>"></td>
+		<td>
+			<input type="text" name="SERVER" id="adm-ldap-srv-edit-server" size="42" maxlength="255" value="<?=$str_SERVER?>">:
+			<input type="text" name="PORT" id="adm-ldap-srv-edit-port" size="4" maxlength="5" value="<?=$str_PORT?>">
+		</td>
 	</tr>
+
+	<tr>
+		<td><?=GetMessage("LDAP_EDIT_CONNECTION_TYPE")?></td>
+		<td>
+			<select name="CONNECTION_TYPE" id="adm-ldap-srv-edit-conn-type" onchange="onLdapSrvEditConnType();">
+				<option value="<?=CLDAP::CONNECTION_TYPE_SIMPLE?>"<?=intval($str_CONNECTION_TYPE) == CLDAP::CONNECTION_TYPE_SIMPLE ? ' selected' : ''?>><?=GetMessage("LDAP_EDIT_NO_CRYPT")?></option>
+				<option value="<?=CLDAP::CONNECTION_TYPE_SSL?>"<?=intval($str_CONNECTION_TYPE) == CLDAP::CONNECTION_TYPE_SSL ? ' selected' : ''?>>SSL</option>
+				<option value="<?=CLDAP::CONNECTION_TYPE_TLS?>"<?=intval($str_CONNECTION_TYPE) == CLDAP::CONNECTION_TYPE_TLS ? ' selected' : ''?>>TLS</option>
+			</select>
+			<script type="text/javascript">
+				function onLdapSrvEditConnType()
+				{
+					var type = BX('adm-ldap-srv-edit-conn-type'),
+						typeValue = 0;
+
+					if(type.selectedIndex != -1)
+					{
+						typeValue = type.options[type.selectedIndex].value;
+					}
+
+					var server = BX('adm-ldap-srv-edit-server'),
+						port = BX('adm-ldap-srv-edit-port');
+
+					if(typeValue == '<?=CLDAP::CONNECTION_TYPE_SSL?>')
+					{
+						port.value = 636;
+						server.value = setLdapScheeme(server.value, 'ldaps');
+					}
+					else
+					{
+						port.value = 389;
+						server.value = setLdapScheeme(server.value, 'ldap');
+					}
+				}
+
+				function setLdapScheeme(address, scheeme)
+				{
+					var result;
+
+					if(address.search('://') != -1)
+						result = address.replace(/(.*):\/\/(.*)/, scheeme+'://$2');
+					else
+						result = scheeme+'://'+address;
+
+					return result;
+				}
+			</script>
+		</td>
+	</tr>
+
 	<tr class="adm-detail-required-field">
 		<td><?echo GetMessage("LDAP_EDIT_ADM_LOGIN")?></td>
 		<td><input type="text" name="ADMIN_LOGIN" size="53" maxlength="255" value="<?=$str_ADMIN_LOGIN?>"></td>
@@ -750,7 +834,9 @@ else
 		$arLDAPGroups = Array();
 
 		while($ar_group = $gr_res->GetNext())
+		{
 			$arLDAPGroups[$ar_group['ID']] = (is_set($ar_group, 'NAME') ? $ar_group['NAME'] : $ar_group['ID']);
+		}
 
 		uasort($arLDAPGroups, create_function('$a, $b', '$a=ToUpper($a);$b=ToUpper($b); if($a==$b) return 0; return $a>$b?1:-1;'));
 	}
@@ -792,8 +878,8 @@ else
 					<td>
 						<select name="LDAP_GROUP[<?=htmlspecialcharsbx($t_id)?>][LDAP_GROUP_ID]" style="width:360px;">
 							<option value=""></option>
-						<?foreach($arLDAPGroups as $gid=>$gname):?>
-							<option value="<?=$gid?>" title="<?=$gname?>" <?if(htmlspecialcharsbx($arGroup['LDAP_GROUP_ID'])==$gid)echo ' selected'?>><?=$gname?></option>
+						<?foreach($arLDAPGroups as $gid => $gname):?>
+							<option value="<?=$gid?>" title="<?=$gname?>" <?if(htmlspecialcharsEx($arGroup['LDAP_GROUP_ID'])==$gid)echo ' selected'?>><?=$gname?></option>
 						<?endforeach?>
 						</select>
 					</td>
@@ -856,6 +942,7 @@ function _SCh(c)
 	document.getElementById('sc2').disabled = !c;
 	document.getElementById('sc3').disabled = !c;
 }
+
 </script>
 <?
 if($str_SYNC=="Y")

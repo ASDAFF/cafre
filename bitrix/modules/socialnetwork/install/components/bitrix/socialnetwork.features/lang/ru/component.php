@@ -6,6 +6,7 @@ $MESS["SONET_C3_NO_GROUP_ID"] = "Код группы не задан";
 $MESS["SONET_C3_PERMS"] = "У вас нет прав на эту операцию";
 $MESS["SONET_C3_NO_GROUP"] = "Группа не найдена";
 $MESS["SONET_C3_GROUP_SETTINGS"] = "Настройки группы";
+$MESS["SONET_C3_GROUP_SETTINGS_PROJECT"] = "Настройки проекта";
 $MESS["SONET_C3_USER_SETTINGS"] = "Настройки пользователя";
 $MESS["SONET_C3_PVG_OWNER"] = "Только владелец группы";
 $MESS["SONET_C3_PVG_MOD"] = "Владелец группы и модераторы группы";

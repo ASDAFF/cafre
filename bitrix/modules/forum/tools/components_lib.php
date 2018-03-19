@@ -2,7 +2,7 @@
 IncludeModuleLangFile(__FILE__); 
 class CForumParameters
 {
-	function GetDateTimeFormat($name="", $parent="")
+	public static function GetDateTimeFormat($name="", $parent="")
 	{
 		$timestamp = mktime(7,30,45,2,22,2007);
 		return array(
@@ -28,7 +28,7 @@ class CForumParameters
 		);
 	}
 	
-	function GetDateFormat($name="", $parent="")
+	public static function GetDateFormat($name="", $parent="")
 	{
 		$timestamp = mktime(7,30,45,2,22,2007);
 		return array(
@@ -52,7 +52,7 @@ class CForumParameters
 		);
 	}
 	
-	function GetForumsMultiSelect($name="", $parent="")
+	public static function GetForumsMultiSelect($name="", $parent="")
 	{
 		return array(
 			"PARENT" => $parent,
@@ -64,7 +64,7 @@ class CForumParameters
 		);
 	}
 	
-	function GetForumsList()
+	public static function GetForumsList()
 	{
 		$arGroup = array();
 		$arForum = array();
@@ -96,7 +96,7 @@ class CForumParameters
 		return $arForum;
 	}
 	
-	function GetSendMessageRights($name="", $parent="", $default = "A", $object = "MAIL")
+	public static function GetSendMessageRights($name="", $parent="", $default = "A", $object = "MAIL")
 	{
 		if ($object == "ICQ")
 		{
@@ -139,7 +139,7 @@ class CForumParameters
 		);
 	}
 	
-	function GetSetNavigation($name="", $parent="")
+	public static function GetSetNavigation($name="", $parent="")
 	{
 		return array(
 			"PARENT" => $parent,
@@ -149,7 +149,8 @@ class CForumParameters
 			"DEFAULT" => "Y"
 		);
 	}
-	function GetWordLength($name="", $parent="ADDITIONAL_SETTINGS")
+
+	public static function GetWordLength($name="", $parent="ADDITIONAL_SETTINGS")
 	{
 		if (empty($name))
 			$name = GetMessage("F_WORD_LENGTH");
@@ -161,7 +162,8 @@ class CForumParameters
 		);
 		
 	}
-	function GetWordWrapCut($name="", $parent="ADDITIONAL_SETTINGS")
+
+	public static function GetWordWrapCut($name="", $parent="ADDITIONAL_SETTINGS")
 	{
 		if (empty($name))
 			$name = GetMessage("F_WORD_WRAP_CUT");
@@ -180,7 +182,7 @@ class CForumParameters
 		
 	}
 	
-	function GetAjaxType($name="", $parent="ADDITIONAL_SETTINGS")
+	public static function GetAjaxType($name="", $parent="ADDITIONAL_SETTINGS")
 	{
 		if (empty($name))
 			$name = GetMessage("F_AJAX_TYPE");
@@ -191,7 +193,7 @@ class CForumParameters
 			"DEFAULT" => "Y");
 	}
 	
-	function AddPagerSettings(&$arComponentParameters, $sTitle = "", $arParams = array(
+	public static function AddPagerSettings(&$arComponentParameters, $sTitle = "", $arParams = array(
 			// "bAddGroupOnly" => false,
 			// "bDescNumbering" => true
 	))
@@ -239,7 +241,7 @@ class CForumParameters
 
 class CForumFormat
 {
-	function DateFormat($format="", $timestamp="")
+	public static function DateFormat($format="", $timestamp="")
 	{
 		global $DB;
 
@@ -254,7 +256,7 @@ class CForumFormat
 		}
 	}
 	
-	function FormatDate($strDate, $format="DD.MM.YYYY HH:MI:SS", $new_format="DD.MM.YYYY HH:MI:SS")
+	public static function FormatDate($strDate, $format="DD.MM.YYYY HH:MI:SS", $new_format="DD.MM.YYYY HH:MI:SS")
 	{
 		$strDate = trim($strDate);
 
@@ -409,4 +411,3 @@ GetMessage("FORUM_NAVIGATION");
 GetMessage("FORUM_TOP_PAGER");
 
 */
-?>

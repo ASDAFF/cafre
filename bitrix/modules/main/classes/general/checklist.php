@@ -242,9 +242,9 @@ class CCheckList
 		}
 		$arDesc = array(
 			"NAME" => GetMessage("CL_".$ID),
-			"DESC" => GetMessage("CL_".$ID."_DESC"),
+			"DESC" => GetMessage("CL_".$ID."_DESC", array('#LANG#' => LANG)),
 			"AUTOTEST_DESC" => GetMessage("CL_".$ID."_AUTOTEST_DESC"),
-			"HOWTO" => (strlen($arHowTo)>0)?$arHowTo:"",
+			"HOWTO" => (strlen($arHowTo)>0)?(str_ireplace('#LANG#', LANG, $arHowTo)):"",
 			"LINKS" => GetMessage("CL_".$ID."_LINKS")
 		);
 
@@ -418,7 +418,7 @@ class CCheckList
 
 class CCheckListResult
 {
-	function Save($arFields = array())
+	public static function Save($arFields = array())
 	{
 		global $DB;
 
@@ -450,7 +450,7 @@ class CCheckListResult
 		{
 			$arInsert = $DB->PrepareInsert("b_checklist", $arFields);
 			$strSql ="INSERT INTO b_checklist(".$arInsert[0].", DATE_CREATE) ".
-					"VALUES(".$arInsert[1].", '".ConvertTimeStamp(mktime(), "FULL")."')";
+					"VALUES(".$arInsert[1].", '".ConvertTimeStamp(time(), "FULL")."')";
 		}
 
 		$arBinds = array(
@@ -462,32 +462,37 @@ class CCheckListResult
 
 	}
 
-	function GetList($arOrder = array(), $arFilter = array())
+	public static function GetList($arOrder = array(), $arFilter = array())
 	{
 		global $DB;
 
 		$arSqlWhereStr = '';
 		if (is_array($arFilter) && count($arFilter)>0)
 		{
-			$arSqlWhere = "";
-			$arSqlFields=array("ID", "REPORT", "HIDDEN", "SENDED_TO_BITRIX");
-			foreach($arFilter as $key => $value):
+			$arSqlWhere = array();
+			$arSqlFields = array("ID", "REPORT", "HIDDEN", "SENDED_TO_BITRIX");
+			foreach($arFilter as $key => $value)
+			{
 				if (in_array($key, $arSqlFields))
+				{
 					$arSqlWhere[] = $key."='".$DB->ForSql($value)."'";
-			endforeach;
+				}
+			}
 			$arSqlWhereStr = GetFilterSqlSearch($arSqlWhere);
 		}
 
 		$strSql = "SELECT * FROM b_checklist";
 		if ($arSqlWhereStr <> '')
+		{
 			$strSql.= " WHERE ".$arSqlWhereStr;
-			$strSql.= " ORDER BY ID desc";
+		}
+		$strSql.= " ORDER BY ID desc";
 		$arResult = $DB->Query($strSql, false, "FILE: ".__FILE__."<br> LINE: ".__LINE__);
 
 		return $arResult;
 	}
 
-	function Update($ID, $arFields)
+	public static function Update($ID, $arFields)
 	{
 		global $DB;
 		$ID = IntVal($ID);
@@ -500,7 +505,7 @@ class CCheckListResult
 		return $ID;
 	}
 
-	function Delete($ID)
+	public static function Delete($ID)
 	{
 		global $DB;
 		$ID = intval($ID);
@@ -516,7 +521,7 @@ class CCheckListResult
 
 class CAutoCheck
 {
-	function CheckCustomComponents($arParams)
+	public static function CheckCustomComponents($arParams)
 	{
 		$arResult["STATUS"] = false;
 		$arComponentFolders = array(
@@ -615,12 +620,12 @@ class CAutoCheck
 		return $arResult;
 	}
 
-	function CheckBackup()
+	public static function CheckBackup()
 	{
 		$arCount = 0;
 		$arResult = array();
 		$arResult["STATUS"] = false;
-		$bMcrypt = function_exists('mcrypt_encrypt');
+		$bMcrypt = function_exists('mcrypt_encrypt') || function_exists('openssl_encrypt');
 		$bBitrixCloud = $bMcrypt && CModule::IncludeModule('bitrixcloud') && CModule::IncludeModule('clouds');
 
 		$site = CSite::GetSiteByFullPath(DOCUMENT_ROOT);
@@ -662,7 +667,7 @@ class CAutoCheck
 		return $arResult;
 	}
 
-	function CheckTemplates()
+	public static function CheckTemplates()
 	{
 		$arFolders = array(
 			$_SERVER['DOCUMENT_ROOT']."/bitrix/templates",
@@ -737,7 +742,7 @@ class CAutoCheck
 		return $arResult;
 	}
 
-	function CheckKernel($arParams)
+	public static function CheckKernel($arParams)
 	{
 
 		$time_start = time();
@@ -771,23 +776,14 @@ class CAutoCheck
 		$module_id = $NS["MLIST"][$NS["MNUM"]];
 		$module_folder = $_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/".$module_id."/";
 		$dbtype = strtolower($DB->type);
-		if ($module_id == "main")
-		{
-			$ver = SM_VERSION;
-		}
-		else
-		{
-			$arModuleVersion = array();
-			@include($module_folder."install/version.php");
-			$ver = $arModuleVersion["VERSION"];
-		}
-
 		$arFilesCount = 0;
 		$arModifiedFilesCount = 0;
 		$state = array();
 		$Skip = false;
 
-		if (!$ver)
+		$ver = \Bitrix\Main\ModuleManager::getVersion($module_id);
+
+		if ($ver === false)
 		{
 			$state = array(
 				"STATUS" => false,
@@ -925,7 +921,7 @@ class CAutoCheck
 		return $arResult;
 	}
 
-	function CheckSecurity($arParams)
+	public static function CheckSecurity($arParams)
 	{
 		global $DB;
 		$err = 0;
@@ -989,7 +985,7 @@ class CAutoCheck
 		return $arResult;
 	}
 
-	function CheckErrorReport()
+	public static function CheckErrorReport()
 	{
 		global $DBDebug;
 		$err = 0;
@@ -1011,7 +1007,7 @@ class CAutoCheck
 		return $arResult;
 	}
 
-	function IsCacheOn()
+	public static function IsCacheOn()
 	{
 		$arResult["STATUS"] = true;
 		if (COption::GetOptionString("main", "component_cache_on", "Y") == "N")
@@ -1029,12 +1025,12 @@ class CAutoCheck
 		return $arResult;
 	}
 
-	function CheckDBPassword()
+	public static function CheckDBPassword()
 	{
 		global $DBPassword;
 		$err = 0;
 		$arMessage = "";
-		$sign = ",.#!*%$:-";
+		$sign = ",.#!*%$:-^@{}[]()'\"-+=<>?`&;";
 		$dit = "1234567890";
 		$have_sign = false;
 		$have_dit = false;
@@ -1078,7 +1074,7 @@ class CAutoCheck
 		return $arResult;
 	}
 
-	function CheckPerfomance($arParams)
+	public static function CheckPerfomance($arParams)
 	{
 		if (!IsModuleInstalled("perfmon"))
 			return array(
@@ -1134,7 +1130,7 @@ class CAutoCheck
 		return $arResult;
 	}
 
-	function CheckQueryString($arParams = array())
+	public static function CheckQueryString($arParams = array())
 	{
 		$time = time();
 		$arPath = array(
@@ -1223,7 +1219,7 @@ class CAutoCheck
 		return $arResult;
 	}
 
-	function KeyCheck()
+	public static function KeyCheck()
 	{
 		$arResult = array("STATUS" => false);
 		require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/classes/general/update_client.php");
@@ -1240,11 +1236,87 @@ class CAutoCheck
 
 		return $arResult;
 	}
+
+	public static function CheckVMBitrix(){
+		$arResult = array();
+		$arResult["STATUS"] = false;
+
+		$http = new \Bitrix\Main\Web\HttpClient();
+		$ver = $http->get("http://www.1c-bitrix.ru/download/vm_bitrix.ver");
+
+		if (version_compare(getenv('BITRIX_VA_VER'), $ver) >= 0)
+		{
+			$arResult["STATUS"] = true;
+			$arResult["MESSAGE"] = array(
+				'PREVIEW' => GetMessage("CL_VMBITRIX_ACTUAL"),
+			);
+		}
+		else
+		{
+			$arResult["MESSAGE"] = array(
+				'PREVIEW' => GetMessage("CL_VMBITRIX_NOT_ACTUAL"),
+			);
+		}
+
+		return $arResult;
+	}
+
+	public static function CheckSiteCheckerStatus(){
+		$arResult = array();
+		$arResult["STATUS"] = false;
+
+		$checkerStatus = COption::GetOptionString('main', 'site_checker_success', 'N');
+		if ($checkerStatus == 'Y')
+		{
+			$arResult["STATUS"] = true;
+			$arResult["MESSAGE"] = array(
+				'PREVIEW' => GetMessage("CL_SITECHECKER_OK", array("#LANG#" => LANG)),
+			);
+		}
+		else
+		{
+			$arResult["MESSAGE"] = array(
+				'PREVIEW' => GetMessage("CL_SITECHECKER_NOT_OK", array("#LANG#" => LANG)),
+			);
+		}
+
+		return $arResult;
+	}
+
+	public static function CheckSecurityScannerStatus(){
+		$arResult = array();
+		$arResult["STATUS"] = false;
+
+		$lastTestingInfo = CSecuritySiteChecker::getLastTestingInfo();
+		$criticalResultsCount = CSecuritySiteChecker::calculateCriticalResults($lastTestingInfo["results"]);
+
+		if ( (time()-MakeTimeStamp($lastTestingInfo['test_date'], FORMAT_DATE)) > 60*60*24*30 )
+		{
+			$arResult["MESSAGE"] = array(
+				'PREVIEW' => GetMessage("CL_SECURITYSCANNER_OLD", array("#LANG#" => LANG)),
+			);
+		}
+		elseif ($criticalResultsCount === 0)
+		{
+			$arResult["STATUS"] = true;
+			$arResult["MESSAGE"] = array(
+				'PREVIEW' => GetMessage("CL_SECURITYSCANNER_OK"),
+			);
+		}
+		else
+		{
+			$arResult["MESSAGE"] = array(
+				'PREVIEW' => GetMessage("CL_SECURITYSCANNER_NOT_OK", array("#LANG#" => LANG)),
+			);
+		}
+
+		return $arResult;
+	}
 }
 
 class CCheckListTools
 {
-	function __scandir($pwd, &$arFiles, $arExept = false)
+	public static function __scandir($pwd, &$arFiles, $arExept = false)
 	{
 		if(file_exists($pwd))
 		{
@@ -1269,7 +1341,7 @@ class CCheckListTools
 		}
 	}
 
-	function AdminPolicyLevel()
+	public static function AdminPolicyLevel()
 	{
 		$arGroupPolicy = array(
 			"parent" => array(

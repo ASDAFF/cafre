@@ -5,11 +5,10 @@ $MESS["STATWIZ_STEP1_TITLE"] = "IP address index wizard";
 $MESS["STATWIZ_STEP1_CONTENT"] = "Welcome to IP address index creation Wizard! This wizard will help you to create IP address index for City and Country lookup.<br />Choose  action:";
 $MESS["STATWIZ_STEP1_COUNTRY"] = "IP address index for <b>City</b> lookup.";
 $MESS["STATWIZ_STEP1_CITY"] = "IP address index for <b>City</b> and <b>Country</b> lookup.";
-$MESS["STATWIZ_STEP1_COUNTRY_NOTE"] = "Supported formats:
+$MESS["STATWIZ_STEP1_COUNTRY_NOTE_V2"] = "Supported formats:
 <ul>
 <li><a target=\"_blank\" href=\"#GEOIP_HREF#\">GeoIP Country</a>.</li>
 <li><a target=\"_blank\" href=\"#GEOIPLITE_HREF#\">GeoLite Country</a>.</li>
-<li><a target=\"_blank\" href=\"#IPTOCOUNTRY_HREF#\">ip-to-country</a>.</li>
 </ul>";
 $MESS["STATWIZ_STEP1_CITY_NOTE"] = "Supported formats:
 <ul>

@@ -1,0 +1,1 @@
+/var/www/www-root/data/www/test.cafre.ru/bitrix/modules/sale/install/components/bitrix/sale.personal.order/templates/.default/bitrix//var/www/www-root/data/www/test.cafre.ru/bitrix/components/bitrix/sale.personal.order/templates/.default/bitrix/

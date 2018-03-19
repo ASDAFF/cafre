@@ -3,9 +3,10 @@ global $DOCUMENT_ROOT, $MESS;
 
 IncludeModuleLangFile(__FILE__);
 
-if (class_exists("calendar")) return;
+if (class_exists("calendar"))
+	return;
 
-Class calendar extends CModule
+class calendar extends CModule
 {
 	var $MODULE_ID = "calendar";
 	var $MODULE_VERSION;
@@ -15,7 +16,7 @@ Class calendar extends CModule
 	var $MODULE_CSS;
 	var $MODULE_GROUP_RIGHTS = "Y";
 
-	function calendar()
+	function __construct()
 	{
 		$arModuleVersion = array();
 
@@ -143,6 +144,8 @@ Class calendar extends CModule
 			return false;
 		}
 
+		CAgent::AddAgent("CCalendarSync::doSync();", "calendar", "N", 120);
+
 		if (!$DB->Query("SELECT 'x' FROM b_calendar_access ", true))
 			$errors = $DB->RunSQLBatch($_SERVER["DOCUMENT_ROOT"].'/bitrix/modules/'.$this->MODULE_ID.'/install/db/'.strtolower($DB->type).'/install.sql');
 		$this->InstallTasks();
@@ -154,20 +157,42 @@ Class calendar extends CModule
 		}
 
 		RegisterModule("calendar");
-		RegisterModuleDependences("pull", "OnGetDependentModule", "calendar", "CCalendarPullSchema", "OnGetDependentModule");
-		RegisterModuleDependences("im", "OnGetNotifySchema", "calendar", "CCalendarNotifySchema", "OnGetNotifySchema");
-		RegisterModuleDependences("im", "OnBeforeConfirmNotify", "calendar", "CCalendar", "HandleImCallback");
-		RegisterModuleDependences('intranet', 'OnPlannerInit', 'calendar', 'CCalendarEventHandlers', 'OnPlannerInit');
-		RegisterModuleDependences('intranet', 'OnPlannerAction', 'calendar', 'CCalendarEventHandlers', 'OnPlannerAction');
-		RegisterModuleDependences('rest', 'OnRestServiceBuildDescription', 'calendar', 'CCalendarRestService', 'OnRestServiceBuildDescription');
-		RegisterModuleDependences('socialnetwork', 'OnFillSocNetFeaturesList', 'calendar', 'CCalendarLiveFeed', 'AddEvent');
-		RegisterModuleDependences('socialnetwork', 'OnSonetLogEntryMenuCreate', 'calendar', 'CCalendarLiveFeed', 'OnSonetLogEntryMenuCreate');
-		RegisterModuleDependences('socialnetwork', 'OnAfterSonetLogEntryAddComment', 'calendar', 'CCalendarLiveFeed', 'OnAfterSonetLogEntryAddComment');
-		RegisterModuleDependences('socialnetwork', 'OnForumCommentIMNotify', 'calendar', 'CCalendarLiveFeed', 'OnForumCommentIMNotify');
-		RegisterModuleDependences('socialnetwork', 'onAfterCommentAddAfter', 'calendar', 'CCalendarLiveFeed', 'onAfterCommentAddAfter');
-		RegisterModuleDependences('socialnetwork', 'onAfterCommentUpdateAfter', 'calendar', 'CCalendarLiveFeed', 'onAfterCommentUpdateAfter');
-		RegisterModuleDependences('search', 'BeforeIndex', 'calendar', 'CCalendarLiveFeed', 'FixForumCommentURL');
-		RegisterModuleDependences("main", "OnAfterRegisterModule", "main", "calendar", "InstallUserFields", 100, "/modules/calendar/install/index.php"); // check webdav UF
+		$eventManager = \Bitrix\Main\EventManager::getInstance();
+
+		$eventManager->registerEventHandlerCompatible("pull", "OnGetDependentModule", "calendar", "CCalendarPullSchema", "OnGetDependentModule");
+		$eventManager->registerEventHandlerCompatible("im", "OnGetNotifySchema", "calendar", "CCalendarNotifySchema", "OnGetNotifySchema");
+		$eventManager->registerEventHandlerCompatible("im", "OnBeforeConfirmNotify", "calendar", "CCalendar", "HandleImCallback");
+		$eventManager->registerEventHandlerCompatible('intranet', 'OnPlannerInit', 'calendar', 'CCalendarEventHandlers', 'OnPlannerInit');
+		$eventManager->registerEventHandlerCompatible('intranet', 'OnPlannerAction', 'calendar', 'CCalendarEventHandlers', 'OnPlannerAction');
+		$eventManager->registerEventHandlerCompatible('rest', 'OnRestServiceBuildDescription', 'calendar', 'CCalendarRestService', 'OnRestServiceBuildDescription');
+		$eventManager->registerEventHandlerCompatible('socialnetwork', 'OnFillSocNetFeaturesList', 'calendar', 'CCalendarLiveFeed', 'AddEvent');
+		$eventManager->registerEventHandlerCompatible('socialnetwork', 'OnSonetLogEntryMenuCreate', 'calendar', 'CCalendarLiveFeed', 'OnSonetLogEntryMenuCreate');
+		$eventManager->registerEventHandlerCompatible('socialnetwork', 'OnAfterSonetLogEntryAddComment', 'calendar', 'CCalendarLiveFeed', 'OnAfterSonetLogEntryAddComment');
+		$eventManager->registerEventHandlerCompatible('socialnetwork', 'OnForumCommentIMNotify', 'calendar', 'CCalendarLiveFeed', 'OnForumCommentIMNotify');
+		$eventManager->registerEventHandlerCompatible('socialnetwork', 'onAfterCommentAddAfter', 'calendar', 'CCalendarLiveFeed', 'OnAfterCommentAddAfter');
+		$eventManager->registerEventHandlerCompatible('socialnetwork', 'onAfterCommentUpdateAfter', 'calendar', 'CCalendarLiveFeed', 'OnAfterCommentUpdateAfter');
+		$eventManager->registerEventHandlerCompatible('socialnetwork', 'onAfterCommentAddBefore', 'calendar', 'CCalendarLiveFeed', 'OnAfterCommentAddBefore');
+		$eventManager->registerEventHandlerCompatible('socialnetwork', 'OnSocNetGroupDelete', 'calendar', 'CCalendar', 'OnSocNetGroupDelete');
+		$eventManager->registerEventHandlerCompatible('search', 'BeforeIndex', 'calendar', 'CCalendarLiveFeed', 'FixForumCommentURL');
+		$eventManager->registerEventHandlerCompatible("main", "OnAfterRegisterModule", "main", "calendar", "InstallUserFields", 100, "/modules/calendar/install/index.php"); // check webdav UF
+
+		$eventManager->registerEventHandler("dav", "OnDavCalendarProperties", "calendar", "CCalendar", "OnDavCalendarSync");
+		$eventManager->registerEventHandler("dav", "OnExchandeCalendarDataSync", "calendar", "CCalendar", "OnExchangeCalendarSync");
+		$eventManager->registerEventHandler('socialnetwork', 'onLogIndexGetContent', 'calendar', '\Bitrix\Calendar\Integration\Socialnetwork\Log', 'onIndexGetContent');
+
+		if($DB->type === "MYSQL"
+			&& $DB->Query("CREATE fulltext index IXF_B_CALENDAR_EVENT_SEARCHABLE_CONTENT on b_calendar_event (SEARCHABLE_CONTENT)", true))
+		{
+			COption::SetOptionString("calendar", "~ft_b_calendar_event", true);
+		}
+
+		$pushOptionEnabled = COption::GetOptionString('calendar', 'sync_by_push', false);
+		if ($pushOptionEnabled || \Bitrix\Main\ModuleManager::isModuleInstalled('bitrix24'))
+		{
+			\CAgent::AddAgent("\\Bitrix\\Calendar\\Sync\\GoogleApiPush::createWatchChannels(0);", "calendar", "N", 60);
+			\CAgent::AddAgent("\\Bitrix\\Calendar\\Sync\\GoogleApiPush::processPush();", "calendar", "N", 180);
+			\CAgent::AddAgent("\\Bitrix\\Calendar\\Sync\\GoogleApiPush::renewWatchChannels();", "calendar", "N", 14400);
+		}
 
 		return true;
 	}
@@ -177,6 +202,9 @@ Class calendar extends CModule
 		global $DB, $APPLICATION;
 		CAgent::RemoveModuleAgents('calendar');
 		$errors = null;
+
+		CAgent::RemoveAgent("CCalendarSync::DoSync();", "calendar");
+
 		if ((true == array_key_exists("savedata", $arParams)) && ($arParams["savedata"] != 'Y'))
 		{
 			$GLOBALS["USER_FIELD_MANAGER"]->OnEntityDelete("CALENDAR_EVENT");
@@ -190,20 +218,26 @@ Class calendar extends CModule
 			$this->UnInstallTasks();
 		}
 
-		UnRegisterModuleDependences("pull", "OnGetDependentModule", "calendar", "CCalendarPullSchema", "OnGetDependentModule");
-		UnRegisterModuleDependences("im", "OnGetNotifySchema", "calendar", "CCalendarNotifySchema", "OnGetNotifySchema");
-		UnRegisterModuleDependences("im", "OnBeforeConfirmNotify", "calendar", "CCalendar", "HandleImCallback");
-		UnRegisterModuleDependences('intranet', 'OnPlannerInit', 'calendar', 'CCalendarEventHandlers', 'OnPlannerInit');
-		UnRegisterModuleDependences('intranet', 'OnPlannerAction', 'calendar', 'CCalendarEventHandlers', 'OnPlannerAction');
-		UnRegisterModuleDependences('rest', 'OnRestServiceBuildDescription', 'calendar', 'CCalendarRestService', 'OnRestServiceBuildDescription');
-		UnRegisterModuleDependences('socialnetwork', 'OnFillSocNetFeaturesList', 'calendar', 'CCalendarLiveFeed', 'AddEvent');
-		UnRegisterModuleDependences('socialnetwork', 'OnSonetLogEntryMenuCreate', 'calendar', 'CCalendarLiveFeed', 'OnSonetLogEntryMenuCreate');
-		UnRegisterModuleDependences('socialnetwork', 'OnAfterSonetLogEntryAddComment', 'calendar', 'CCalendarLiveFeed', 'OnAfterSonetLogEntryAddComment');
-		UnRegisterModuleDependences('socialnetwork', 'OnForumCommentIMNotify', 'calendar', 'CCalendarLiveFeed', 'OnForumCommentIMNotify');
-		UnRegisterModuleDependences('socialnetwork', 'onAfterCommentAddAfter', 'calendar', 'CCalendarLiveFeed', 'onAfterCommentAddAfter');
-		UnRegisterModuleDependences('socialnetwork', 'onAfterCommentUpdateAfter', 'calendar', 'CCalendarLiveFeed', 'onAfterCommentUpdateAfter');
-		UnRegisterModuleDependences('search', 'BeforeIndex', 'calendar', 'CCalendarLiveFeed', 'FixForumCommentURL');
-		UnRegisterModuleDependences("main", "OnAfterRegisterModule", "main", "calendar", "InstallUserFields", "/modules/calendar/install/index.php"); // check webdav UF
+		$eventManager = \Bitrix\Main\EventManager::getInstance();
+		$eventManager->unRegisterEventHandler("pull", "OnGetDependentModule", "calendar", "CCalendarPullSchema", "OnGetDependentModule");
+		$eventManager->unRegisterEventHandler("im", "OnGetNotifySchema", "calendar", "CCalendarNotifySchema", "OnGetNotifySchema");
+		$eventManager->unRegisterEventHandler("im", "OnBeforeConfirmNotify", "calendar", "CCalendar", "HandleImCallback");
+		$eventManager->unRegisterEventHandler('intranet', 'OnPlannerInit', 'calendar', 'CCalendarEventHandlers', 'OnPlannerInit');
+		$eventManager->unRegisterEventHandler('intranet', 'OnPlannerAction', 'calendar', 'CCalendarEventHandlers', 'OnPlannerAction');
+		$eventManager->unRegisterEventHandler('rest', 'OnRestServiceBuildDescription', 'calendar', 'CCalendarRestService', 'OnRestServiceBuildDescription');
+		$eventManager->unRegisterEventHandler('socialnetwork', 'OnFillSocNetFeaturesList', 'calendar', 'CCalendarLiveFeed', 'AddEvent');
+		$eventManager->unRegisterEventHandler('socialnetwork', 'OnSonetLogEntryMenuCreate', 'calendar', 'CCalendarLiveFeed', 'OnSonetLogEntryMenuCreate');
+		$eventManager->unRegisterEventHandler('socialnetwork', 'OnAfterSonetLogEntryAddComment', 'calendar', 'CCalendarLiveFeed', 'OnAfterSonetLogEntryAddComment');
+		$eventManager->unRegisterEventHandler('socialnetwork', 'OnForumCommentIMNotify', 'calendar', 'CCalendarLiveFeed', 'OnForumCommentIMNotify');
+		$eventManager->unRegisterEventHandler('socialnetwork', 'onAfterCommentAddAfter', 'calendar', 'CCalendarLiveFeed', 'OnAfterCommentAddAfter');
+		$eventManager->unRegisterEventHandler('socialnetwork', 'onAfterCommentUpdateAfter', 'calendar', 'CCalendarLiveFeed', 'OnAfterCommentUpdateAfter');
+		$eventManager->unRegisterEventHandler('socialnetwork', 'onAfterCommentAddBefore', 'calendar', 'CCalendarLiveFeed', 'OnAfterCommentAddBefore');
+		$eventManager->unRegisterEventHandler('socialnetwork', 'OnSocNetGroupDelete', 'calendar', 'CCalendar', 'OnSocNetGroupDelete');
+		$eventManager->unRegisterEventHandler('search', 'BeforeIndex', 'calendar', 'CCalendarLiveFeed', 'FixForumCommentURL');
+		$eventManager->unRegisterEventHandler("main", "OnAfterRegisterModule", "main", "calendar", "InstallUserFields", "/modules/calendar/install/index.php"); // check webdav UF
+		$eventManager->unRegisterEventHandler("dav", "OnDavCalendarProperties", "calendar", "CCalendar", "OnDavCalendarSync");
+		$eventManager->unRegisterEventHandler("dav", "OnExchandeCalendarDataSync", "calendar", "CCalendar", "OnExchangeCalendarSync");
+		$eventManager->unRegisterEventHandler('socialnetwork', 'onLogIndexGetContent', 'calendar', '\Bitrix\Calendar\Integration\Socialnetwork\Log', 'onIndexGetContent');
 
 		UnRegisterModule("calendar");
 
@@ -380,6 +414,12 @@ Class calendar extends CModule
 		if($_ENV["COMPUTERNAME"]!='BX')
 		{
 			CopyDirFiles(
+				$_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/calendar/install/tools",
+				$_SERVER["DOCUMENT_ROOT"]."/bitrix/tools",
+				true, true
+			);
+
+			CopyDirFiles(
 				$_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/calendar/install/components",
 				$_SERVER["DOCUMENT_ROOT"]."/bitrix/components",
 				true, true
@@ -408,6 +448,19 @@ Class calendar extends CModule
 				$_SERVER["DOCUMENT_ROOT"]."/bitrix/activities",
 				true, true
 			);
+
+			CopyDirFiles(
+				$_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/calendar/install/services",
+				$_SERVER["DOCUMENT_ROOT"]."/bitrix/services",
+				true, true
+			);
+
+			CUrlRewriter::Add(array(
+				"CONDITION" => "#^/stssync/calendar/#",
+				"RULE" => "",
+				"ID" => "bitrix:stssync.server",
+				"PATH" => "/bitrix/services/stssync/calendar/index.php",
+			));
 		}
 
 		return true;

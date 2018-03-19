@@ -17,4 +17,5 @@ $MESS["LDAP_BITRIXVM_NET"] = "Restrict NTLM redirection to this subnet:";
 $MESS["LDAP_BITRIXVM_HINT"] = "Specify here the subnet whose users will be redirected when authenticating via NTLM.<br> For example: <b>192.168.1.0/24</b> or <b>192.168.1.0/255.255.255.0</b>.<br>Separate multiple IP ranges with a semicolon.<br> Leave the field empty to redirect all users.";
 $MESS["LDAP_WRONG_NET_MASK"] = "NTLM authentication subnet address and mark are incorrect.<br> Use the following format:<br> subnet/mask <br> xxx.xxx.xxx.xxx/xxx.xxx.xxx.xxx <br> xxx.xxx.xxx.xxx/xx<br>Separate multiple IP ranges with a semicolon.";
 $MESS["LDAP_WITHOUT_PREFIX"] = "Check authentication at all available LDAP servers if login doesn't include prefix";
+$MESS["LDAP_DUPLICATE_LOGIN_USER"] = "Create a user even if a user with specified login name exists:";
 ?>

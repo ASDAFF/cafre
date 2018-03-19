@@ -18,7 +18,8 @@ class CSocNetSmile extends CAllSocNetSmile
 		$DB->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
 		$ID = IntVal($DB->LastID());
 
-		for ($i = 0; $i<count($arFields["LANG"]); $i++)
+		$cnt = count($arFields["LANG"]);
+		for ($i = 0; $i<$cnt; $i++)
 		{
 			$arInsert = $DB->PrepareInsert("b_sonet_smile_lang", $arFields["LANG"][$i]);
 			$strSql =
@@ -48,7 +49,8 @@ class CSocNetSmile extends CAllSocNetSmile
 		{
 			$DB->Query("DELETE FROM b_sonet_smile_lang WHERE SMILE_ID = ".$ID."");
 
-			for ($i = 0; $i<count($arFields["LANG"]); $i++)
+			$cnt = count($arFields["LANG"]);
+			for ($i = 0; $i<$cnt; $i++)
 			{
 				$arInsert = $DB->PrepareInsert("b_sonet_smile_lang", $arFields["LANG"][$i]);
 				$strSql =
@@ -62,7 +64,7 @@ class CSocNetSmile extends CAllSocNetSmile
 		return $ID;
 	}
 
-	function GetList($arOrder = Array("ID" => "DESC"), $arFilter = Array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array())
+	public static function GetList($arOrder = Array("ID" => "DESC"), $arFilter = Array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array())
 	{
 		global $DB;
 
@@ -145,7 +147,7 @@ class CSocNetSmile extends CAllSocNetSmile
 			}
 			else
 			{
-				// ÒÎËÜÊÎ ÄËß MYSQL!!! ÄËß ORACLE ÄÐÓÃÎÉ ÊÎÄ
+				// MYSQL only, ORACLE has another code
 				$cnt = $dbRes->SelectedRowsCount();
 			}
 

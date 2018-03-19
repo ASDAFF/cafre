@@ -26,42 +26,37 @@ Class translate extends CModule
 			$this->MODULE_VERSION = $arModuleVersion["VERSION"];
 			$this->MODULE_VERSION_DATE = $arModuleVersion["VERSION_DATE"];
 		}
-		else
-		{
-			$this->MODULE_VERSION = TRANSLATE_VERSION;
-			$this->MODULE_VERSION_DATE = TRANSLATE_VERSION_DATE;
-		}
 
 		$this->MODULE_NAME = GetMessage("TRANS_MODULE_NAME");
 		$this->MODULE_DESCRIPTION = GetMessage("TRANS_MODULE_DESCRIPTION");
 		$this->MODULE_CSS = "/bitrix/modules/translate/translate.css";
 	}
-	
+
 	function InstallDB()
 	{
-		RegisterModule("translate");		
-		RegisterModuleDependences('main', 'OnPanelCreate', 'translate', 'CTranslateEventHandlers', 'TranslatOnPanelCreate');		
+		RegisterModule("translate");
+		RegisterModuleDependences('main', 'OnPanelCreate', 'translate', 'CTranslateEventHandlers', 'TranslatOnPanelCreate');
 		return true;
 	}
-	
+
 	function UnInstallDB()
 	{
 		COption::RemoveOption("translate");
-		UnRegisterModuleDependences('main', 'OnPanelCreate', 'translate');
-		UnRegisterModule("translate");		
+		UnRegisterModuleDependences('main', 'OnPanelCreate', 'translate', 'CTranslateEventHandlers', 'TranslatOnPanelCreate');
+		UnRegisterModule("translate");
 		return true;
 	}
-	
+
 	function InstallEvents()
 	{
 		return true;
 	}
-	
+
 	function UnInstallEvents()
 	{
 		return true;
 	}
-	
+
 	function InstallFiles()
 	{
 		if($_ENV["COMPUTERNAME"]!='BX')
@@ -72,7 +67,7 @@ Class translate extends CModule
 		}
 		return true;
 	}
-	
+
 	function UnInstallFiles()
 	{
 		DeleteDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/translate/install/admin", $_SERVER["DOCUMENT_ROOT"]."/bitrix/admin");
@@ -84,7 +79,7 @@ Class translate extends CModule
 
 	function DoInstall()
 	{
-		global $DB, $APPLICATION;
+		global $APPLICATION;
 		$this->InstallDB();
 		$this->InstallFiles();
 		$APPLICATION->IncludeAdminFile(GetMessage("TRANSLATE_INSTALL_TITLE"), $_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/translate/install/step.php");
@@ -92,7 +87,7 @@ Class translate extends CModule
 
 	function DoUninstall()
 	{
-		global $APPLICATION, $DB;
+		global $APPLICATION;
 		$this->UnInstallFiles();
 		$this->UnInstallDB();
 		$APPLICATION->IncludeAdminFile(GetMessage("TRANSLATE_UNINSTALL_TITLE"), $_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/translate/install/unstep.php");

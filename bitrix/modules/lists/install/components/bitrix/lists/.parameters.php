@@ -88,11 +88,6 @@ $arComponentParameters = array(
 				"DEFAULT" => "#list_id#/bp_start/#element_id#/",
 				"VARIABLES" => array("list_id", "element_id"),
 			),
-			"bizproc_workflow_delete" => array(
-				"NAME" => GetMessage("CP_BL_PAGE_BIZPROC_WORKFLOW_DELETE"),
-				"DEFAULT" => "#list_id#/bp_delete/#element_id#/",
-				"VARIABLES" => array("list_id", "element_id"),
-			),
 			"bizproc_task" => array(
 				"NAME" => GetMessage("CP_BL_PAGE_BIZPROC_TASK"),
 				"DEFAULT" => "#list_id#/bp_task/#section_id#/#element_id#/#task_id#/",

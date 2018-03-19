@@ -9,11 +9,16 @@ namespace Bitrix\Report;
 
 use Bitrix\Main\Entity;
 use Bitrix\Main\Localization\Loc;
+use Bitrix\Main\Type\DateTime;
 
 Loc::loadMessages(__FILE__);
 
 class ReportTable extends Entity\DataManager
 {
+	/**
+	 * Returns entity map definition.
+	 * @return array
+	 */
 	public static function getMap()
 	{
 		$fieldsMap = array(
@@ -31,7 +36,8 @@ class ReportTable extends Entity\DataManager
 				'data_type' => 'string'
 			),
 			'CREATED_DATE' => array(
-				'data_type' => 'datetime'
+				'data_type' => 'datetime',
+				'default_value' => new DateTime(),
 			),
 			'CREATED_BY' => array(
 				'data_type' => 'integer'

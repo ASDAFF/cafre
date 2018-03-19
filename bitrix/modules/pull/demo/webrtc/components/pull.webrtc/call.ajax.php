@@ -29,7 +29,7 @@ if (check_bitrix_sessid())
 	$errorMessage = "";
 	if ($_POST['COMMAND'] == 'signaling')
 	{
-		CPullStack::AddByUser(intval($_POST['USER_ID']), Array(
+		\Bitrix\Pull\Event::add(intval($_POST['USER_ID']), Array(
 			'module_id' => 'ycp',
 			'command' => 'call',
 			'params' => Array(
@@ -41,7 +41,7 @@ if (check_bitrix_sessid())
 	}
 	else
 	{
-		CPullStack::AddByUser(intval($_POST['USER_ID']), Array(
+		\Bitrix\Pull\Event::add(intval($_POST['USER_ID']), Array(
 			'module_id' => 'ycp',
 			'command' => 'call',
 			'params' => Array(

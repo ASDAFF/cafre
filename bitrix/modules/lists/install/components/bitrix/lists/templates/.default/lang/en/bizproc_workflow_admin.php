@@ -5,4 +5,5 @@ $MESS["CT_BL_STATE_BIZPROC"] = "State-driven business process";
 $MESS["CT_BL_SEQ_BIZPROC"] = "Sequential business process";
 $MESS["CT_BL_ELEMENTS_TITLE"] = "Open List";
 $MESS["BIZPROC_MODULE_NOT_INSTALLED"] = "The Business Processes module is not installed.";
+$MESS["CT_BL_TOOLBAR_RETURN_LIST_ELEMENT"] = "Back to list";
 ?>

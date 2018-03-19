@@ -3,19 +3,6 @@ if (!CModule::IncludeModule('bizproc')):
 	return false;
 endif;
 
-if (!function_exists("BPWSInitParam"))
-{
-	function BPWSInitParam(&$arParams, $name)
-	{
-		$arParams[$name] = trim($arParams[$name]);
-		if ($arParams[$name] <= 0)
-			$arParams[$name] = trim($_REQUEST[$name]);
-		if ($arParams[$name] <= 0)
-			$arParams[$name] = trim($_REQUEST[strtolower($name)]);
-	}
-}
-
-global $order, $by;
 /********************************************************************
 				Input params
 ********************************************************************/
@@ -101,11 +88,14 @@ if (empty($arError))
 		CBPCanUserOperateOperation::ViewWorkflow,
 		$GLOBALS["USER"]->GetID(),
 		$arParams["DOCUMENT_ID"],
-		array("DocumentStates" => $arDocumentStates))):
+		array("DocumentStates" => $arDocumentStates)
+	))
+	{
 		$arError[] = array(
-			"id" => "access_denied",
-			"text" => GetMessage("BPADH_NO_PERMS"));
-	endif;
+			"id"   => "access_denied",
+			"text" => GetMessage("BPADH_NO_PERMS")
+		);
+	}
 }
 if (!empty($arError))
 {
@@ -192,15 +182,8 @@ else
 		}
 		else 
 		{
-			$ar = array();
-			if (isset($arDocumentStates[$_REQUEST['id']]['WORKFLOW_STATUS']) && $arDocumentStates[$_REQUEST['id']]['WORKFLOW_STATUS'] !== null)
-			{
-				CBPDocument::TerminateWorkflow(
-					$_REQUEST["id"],
-					$arParams["DOCUMENT_ID"],
-					$ar
-				);
-			}
+			$terminateWorkflow = isset($arDocumentStates[$_REQUEST['id']]['WORKFLOW_STATUS']) && $arDocumentStates[$_REQUEST['id']]['WORKFLOW_STATUS'] !== null;
+			$ar = CBPDocument::killWorkflow($_REQUEST["id"], $terminateWorkflow, $arParams["DOCUMENT_ID"]);
 
 			if (count($ar) > 0)
 			{
@@ -210,12 +193,6 @@ else
 				$arError[] = array(
 					"id" => "stop_bizproc",
 					"text" => $str);
-			}
-			else
-			{
-				CBPTaskService::DeleteByWorkflow($_REQUEST["id"]);
-				CBPTrackingService::DeleteByWorkflow($_REQUEST["id"]);
-				CBPStateService::DeleteWorkflow($_REQUEST["id"]);
 			}
 		}
 	}

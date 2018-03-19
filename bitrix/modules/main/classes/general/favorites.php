@@ -10,12 +10,12 @@ IncludeModuleLangFile(__FILE__);
 
 class CAllFavorites extends CDBResult
 {
-	function err_mess()
+	public static function err_mess()
 	{
 		return "<br>Class: CFavorites<br>File: ".__FILE__;
 	}
 
-	function GetIDByUrl($url)
+	public static function GetIDByUrl($url)
 	{
 		global $USER;
 
@@ -42,7 +42,7 @@ class CAllFavorites extends CDBResult
 		return 0;
 	}
 
-	function GetByID($ID)
+	public static function GetByID($ID)
 	{
 		global $DB;
 
@@ -60,7 +60,7 @@ class CAllFavorites extends CDBResult
 		);
 	}
 
-	function CheckFields($arFields)
+	public static function CheckFields($arFields)
 	{
 		global $APPLICATION;
 
@@ -105,7 +105,7 @@ class CAllFavorites extends CDBResult
 		return true;
 	}
 
-	function IsExistDuplicate($arFields)
+	public static function IsExistDuplicate($arFields)
 	{
 		if(!isset($arFields["MENU_ID"]) && !isset($arFields["URL"]) && !isset($arFields["NAME"]))
 			return false;
@@ -137,7 +137,7 @@ class CAllFavorites extends CDBResult
 	}
 
 	//Addition
-	function Add($arFields, $checkDuplicate = false)
+	public static function Add($arFields, $checkDuplicate = false)
 	{
 		global $DB;
 
@@ -171,7 +171,7 @@ class CAllFavorites extends CDBResult
 	}
 
 	//Update
-	function Update($ID, $arFields)
+	public static function Update($ID, $arFields)
 	{
 		global $DB;
 		$ID = intval($ID);
@@ -190,7 +190,7 @@ class CAllFavorites extends CDBResult
 	}
 
 	// delete by ID
-	function Delete($ID)
+	public static function Delete($ID)
 	{
 		global $DB;
 		$codes = new CHotKeysCode;
@@ -208,14 +208,14 @@ class CAllFavorites extends CDBResult
 	//*****************************
 
 	//user deletion event
-	function OnUserDelete($user_id)
+	public static function OnUserDelete($user_id)
 	{
 		global $DB;
 		return ($DB->Query("DELETE FROM b_favorite WHERE USER_ID=". intval($user_id), false, "File: ".__FILE__."<br>Line: ".__LINE__));
 	}
 
 	//interface language delete event
-	function OnLanguageDelete($language_id)
+	public static function OnLanguageDelete($language_id)
 	{
 		global $DB;
 		return ($DB->Query("DELETE FROM b_favorite WHERE LANGUAGE_ID='".$DB->ForSQL($language_id, 2)."'", false, "File: ".__FILE__."<br>Line: ".__LINE__));
@@ -233,7 +233,7 @@ class CBXFavAdmMenu
 
 	private function Init()
 	{
-		global $USER, $adminPage, $adminMenu;
+		global $APPLICATION, $USER, $adminPage, $adminMenu;
 
 		//for ajax requests, and menu autoupdates
 		$adminPage->Init();
@@ -251,7 +251,14 @@ class CBXFavAdmMenu
 		);
 
 		while ($arFav = $dbFav->GetNext())
+		{
+			if($arFav["COMMON"] == "Y" && $arFav["MODULE_ID"] <> "" && $APPLICATION->GetGroupRight($arFav["MODULE_ID"]) < "R")
+			{
+				continue;
+			}
+
 			$this->arItems[] = $arFav;
+		}
 
 		return true;
 	}
@@ -467,7 +474,7 @@ class CBXFavUrls
 	const FILTER_ID_VALUE = "adm_filter_applied";
 	const PRESET_ID_VALUE = "adm_filter_preset";
 
-	public function Compare($url1, $url2, $arReqVals=array(), $arSkipVals=array())
+	public static function Compare($url1, $url2, $arReqVals=array(), $arSkipVals=array())
 	{
 		if($url1=='' && $url2 == '')
 			return false;
@@ -552,7 +559,7 @@ class CBXFavUrls
 		return true;
 	}
 
-	public function ParseDetail($url)
+	public static function ParseDetail($url)
 	{
 		$parts = parse_url($url);
 
@@ -562,7 +569,7 @@ class CBXFavUrls
 		return $parts;
 	}
 
-	public function GetFilterId($url)
+	public static function GetFilterId($url)
 	{
 		$urlParams = self::ParseDetail($url);
 
@@ -572,7 +579,7 @@ class CBXFavUrls
 		return false;
 	}
 
-	public function GetPresetId($url)
+	public static function GetPresetId($url)
 	{
 		$urlParams = self::ParseDetail($url);
 

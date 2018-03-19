@@ -331,9 +331,9 @@ class CSOAPCodec
             			if ($decoded)
             				$this->_validateClassType("CXMLCreator", $decoded);
 
-            			if (!$decoded and !$strict)
+            			if (!$decoded and $strict)
 						{
-							CSOAPServer::ShowSOAPFault("Request has no enought params of strict type to be decoded. ");
+							CSOAPServer::ShowSOAPFault("Request has not enough params of strict type to be decoded. ");
 			            	exit();
 						}
 

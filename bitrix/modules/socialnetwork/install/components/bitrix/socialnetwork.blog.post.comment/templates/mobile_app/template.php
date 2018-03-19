@@ -5,20 +5,19 @@
  * @var CMain $APPLICATION
  * @var CUser $USER
  */
-
 $rights = "N";
-if (\CSocNetUser::IsCurrentUserModuleAdmin() ||$APPLICATION->GetGroupRight("blog") >= "W")
+if (
+	\CSocNetUser::IsCurrentUserModuleAdmin()
+	|| $APPLICATION->GetGroupRight("blog") >= "W"
+)
 {
 	$rights = "ALL";
 }
-else if ( IsModuleInstalled("intranet") && $USER->IsAuthorized() )
+else if ($USER->IsAuthorized())
 {
 	$rights = "OWN";
 }
-else if (!IsModuleInstalled("intranet"))
-{
-	$rights = ($arResult["Perm"] < BLOG_PERMS_FULL ? "OWNLAST" : "ALL");
-}
+
 $eventHandlerID = AddEventHandler('main', 'system.field.view.file', Array('CBlogTools', 'blogUFfileShow'));
 $arResult["OUTPUT_LIST"] = $APPLICATION->IncludeComponent(
 	"bitrix:main.post.list",
@@ -34,9 +33,18 @@ $arResult["OUTPUT_LIST"] = $APPLICATION->IncludeComponent(
 		"RIGHTS" => array(
 			"MODERATE" => ($arResult["Perm"] >= BLOG_PERMS_MODERATE ? "Y" : "N"),
 			"EDIT" => $rights,
-			"DELETE" => $rights
+			"DELETE" => $rights,
+			"CREATETASK" => ($arResult["bTasksAvailable"] ? "Y" : "N")
 		),
-		"VISIBLE_RECORDS_COUNT" => $arResult["newCount"],
+		"VISIBLE_RECORDS_COUNT" => (
+			$arResult["newCount"] > $arParams["PAGE_SIZE"]
+				? $arParams["PAGE_SIZE"]
+				: (
+					$arResult["newCount"] < $arParams["PAGE_SIZE_MIN"]
+						? $arParams["PAGE_SIZE_MIN"]
+						: $arResult["newCount"]
+				)
+		),
 
 		"ERROR_MESSAGE" => ($arResult["ERROR_MESSAGE"] ?: $arResult["COMMENT_ERROR"]),
 		"OK_MESSAGE" => $arResult["MESSAGE"],
@@ -73,7 +81,11 @@ $arResult["OUTPUT_LIST"] = $APPLICATION->IncludeComponent(
 					"sessid", "comment_post_id", "act", "post", "comment",
 					"decode", "ACTION", "ENTITY_TYPE_ID", "ENTITY_ID",
 					"empty_get_form", "empty_get_comments"))
-		)
+		),
+		"AUTHOR_URL_PARAMS" => array(
+			"entityType" => 'LOG_ENTRY',
+			"entityId" => $arParams["LOG_ID"]
+		),
 	),
 	$this->__component
 );

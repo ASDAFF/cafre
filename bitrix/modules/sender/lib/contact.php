@@ -10,6 +10,7 @@ namespace Bitrix\Sender;
 use Bitrix\Main\Entity;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Type;
+use Bitrix\Main\DB\SqlExpression;
 
 Loc::loadMessages(__FILE__);
 
@@ -63,7 +64,11 @@ class ContactTable extends Entity\DataManager
 			),
 			'MAILING_SUBSCRIPTION' => array(
 				'data_type' => 'Bitrix\Sender\MailingSubscriptionTable',
-				'reference' => array('=this.ID' => 'ref.CONTACT_ID'),
+				'reference' => array('=this.ID' => 'ref.CONTACT_ID', 'ref.IS_UNSUB' => new SqlExpression('?', 'N')),
+			),
+			'MAILING_UNSUBSCRIPTION' => array(
+				'data_type' => 'Bitrix\Sender\MailingSubscriptionTable',
+				'reference' => array('=this.ID' => 'ref.CONTACT_ID', 'ref.IS_UNSUB' =>  new SqlExpression('?', 'Y')),
 			),
 		);
 	}
@@ -92,6 +97,40 @@ class ContactTable extends Entity\DataManager
 			return true;
 		else
 			return Loc::getMessage('SENDER_ENTITY_CONTACT_VALID_EMAIL');
+	}
+
+	/**
+	 * Handler of before add event
+	 * @param Entity\Event $event Event object
+	 * @return Entity\EventResult
+	 */
+	public static function onBeforeAdd(Entity\Event $event)
+	{
+		$result = new Entity\EventResult;
+		$data = $event->getParameters();
+		if(isset($data['fields']['EMAIL']))
+		{
+			$result->modifyFields(array('EMAIL' => strtolower($data['fields']['EMAIL'])));
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Handler of before update event
+	 * @param Entity\Event $event Event object
+	 * @return Entity\EventResult
+	 */
+	public static function onBeforeUpdate(Entity\Event $event)
+	{
+		$result = new Entity\EventResult;
+		$data = $event->getParameters();
+		if(isset($data['fields']['EMAIL']))
+		{
+			$result->modifyFields(array('EMAIL' => strtolower($data['fields']['EMAIL'])));
+		}
+
+		return $result;
 	}
 
 	/**
@@ -127,13 +166,14 @@ class ContactTable extends Entity\DataManager
 			unset($ar['LIST_CODE'], $ar['LIST_NAME']);
 		}
 
+		$ar['EMAIL'] = strtolower($ar['EMAIL']);
 		$contactDb = ContactTable::getList(array(
 			'select' => array('ID'),
 			'filter' => array('EMAIL' => $ar['EMAIL'])
 		));
-		if($arContact = $contactDb->fetch())
+		if($contact = $contactDb->fetch())
 		{
-			$id = $arContact['ID'];
+			$id = $contact['ID'];
 		}
 		else
 		{
@@ -185,7 +225,21 @@ class ContactTable extends Entity\DataManager
 		$countAdded = 0;
 		$countError = 0;
 
-		$dataDb = $connector->getData();
+		$dataDb = $connector->getResult();
+		if($dataDb->resourceCDBResult)
+		{
+			$dataDb = $dataDb->resourceCDBResult;
+		}
+		elseif($dataDb->resource)
+		{
+			$dataDb = new \CDBResult($dataDb->resource);
+		}
+		else
+		{
+			$dataDb = new \CDBResult();
+			$dataDb->InitFromArray(array());
+		}
+
 		if(!is_subclass_of($dataDb, 'CDBResultMysql'))
 		{
 			$rowsInPage = 50;

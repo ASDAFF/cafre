@@ -113,7 +113,7 @@ if (!empty($arParams["UID"]))
 }
 if (!$bUserFound):
 	CHTTP::SetStatus("404 Not Found");
-	ShowError(empty($arParams["UID"]) ? GetMessage("F_NO_UID") : GetMessage("F_NO_DUSER", array("#UID#" => htmlspecialcharsEx($arParams["UID"]))));
+	ShowError(empty($arParams["UID"]) ? GetMessage("F_NO_UID") : GetMessage("F_NO_DUSER", array("#UID#" => htmlspecialcharsbx($arParams["UID"]))));
 	return false;
 endif;
 
@@ -128,7 +128,7 @@ $arResult["FORUM_USER"] = CForumUser::GetByUSER_ID($arParams["UID"]);
 $arResult["FORUM_USER"] = (empty($arResult["FORUM_USER"]) ? array() : $arResult["FORUM_USER"]);
 foreach ($arResult["FORUM_USER"] as $key => $val):
 	$arResult["FORUM_USER"]["~".$key] = $val;
-	$arResult["FORUM_USER"][$key] = (is_string($val) ? $parser->wrap_long_words(htmlspecialcharsEx($val)) : $val);
+	$arResult["FORUM_USER"][$key] = (is_string($val) ? $parser->wrap_long_words(htmlspecialcharsbx($val)) : $val);
 endforeach;
 /********************************************************************
 				Default values
@@ -274,7 +274,7 @@ $arResult["~SHOW_NAME"] = CForumUser::GetFormattedNameByUserID(
 		"SECOND_NAME" => $arResult["USER"]["~SECOND_NAME"],
 		"LAST_NAME" => $arResult["USER"]["~LAST_NAME"]
 	));
-$arResult["SHOW_NAME"] = htmlspecialcharsEx($arResult["~SHOW_NAME"]);
+$arResult["SHOW_NAME"] = htmlspecialcharsbx($arResult["~SHOW_NAME"]);
 
 $arResult["SHOW_EDIT_PROFILE_TITLE"] = (intVal($USER->GetID())!=$arParams["UID"]) ? GetMessage("F_EDIT_THIS_PROFILE") : GetMessage("F_EDIT_YOUR_PROFILE");
 $arResult["SHOW_EDIT_PROFILE_TITLE_BOTTOM"] = ((intVal($USER->GetID())!=$arParams["UID"]) ? GetMessage("F_TO_CHANGE2") : GetMessage("F_TO_CHANGE3"))." ".GetMessage("F_TO_CHANGE4");
@@ -416,7 +416,7 @@ if (!empty($arParams["USER_PROPERTY"]))
 			if (!in_array($FIELD_NAME, $arParams["USER_PROPERTY"]))
 				continue;
 			$arUserField["~EDIT_FORM_LABEL"] = (!empty($arUserField["EDIT_FORM_LABEL"]) ? $arUserField["EDIT_FORM_LABEL"] : $arUserField["FIELD_NAME"]);
-			$arUserField["EDIT_FORM_LABEL"] = htmlspecialcharsEx($arUserField["~EDIT_FORM_LABEL"]);
+			$arUserField["EDIT_FORM_LABEL"] = htmlspecialcharsbx($arUserField["~EDIT_FORM_LABEL"]);
 			$arResult["USER_PROPERTIES"]["DATA"][$FIELD_NAME] = $arUserField;
 		}
 	}

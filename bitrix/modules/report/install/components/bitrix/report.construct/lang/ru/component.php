@@ -15,4 +15,6 @@ $MESS["REPORT_CHART_TYPE_LINE1"] = "Линейная";
 $MESS["REPORT_CHART_TYPE_BAR1"] = "Столбчатая";
 $MESS["REPORT_HELPER_NOT_DEFINED"] = "Не задан вспомогательный класс.";
 $MESS["REPORT_DEFAULT_CAN_NOT_BE_EDITED"] = "Редактирование типового отчёта запрещено.";
+$MESS["REPORT_DEFAULT_CAN_NOT_BE_DELETED"] = "Удаление типового отчёта запрещено.";
+$MESS["REPORT_ERROR_ACCESS_DENIED"] = "Нет доступа";
 ?>

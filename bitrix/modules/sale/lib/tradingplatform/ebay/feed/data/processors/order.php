@@ -2,6 +2,7 @@
 
 namespace Bitrix\Sale\TradingPlatform\Ebay\Feed\Data\Processors;
 
+use Bitrix\Catalog;
 use Bitrix\Main\Localization\Loc;
 use \Bitrix\Main\SystemException;
 use \Bitrix\Main\ArgumentNullException;
@@ -262,7 +263,10 @@ class Order extends DataProcessor
 
 			/** @var \Bitrix\Sale\Basket $basket */
 			if(!$basket)
-				$basket = \Bitrix\Sale\Basket::create($this->siteId, $fUserId);
+			{
+				$basket = \Bitrix\Sale\Basket::create($this->siteId);
+				$basket->setFUserId($fUserId);
+			}
 
 			$items = array();
 			$isVariation = false;
@@ -293,27 +297,46 @@ class Order extends DataProcessor
 					continue;
 				}
 
-				$item = $basket->createItem('catalog',	$ebaySku);
-				$item->setField("PRODUCT_PROVIDER_CLASS", "CCatalogProductProvider");
-
+				$item = null;
 				$itemData = array(
+					"PRODUCT_ID" => $ebaySku,
+					"QUANTITY" => floatval($transaction["QuantityPurchased"]),
 					"CUSTOM_PRICE" => "Y",
 					"PRICE" => floatval($transaction["TransactionPrice"]),
 					"QUANTITY" => floatval($transaction["QuantityPurchased"]),
 					"NAME" => !empty($transactionItem["VariationTitle"]) ? $transactionItem["VariationTitle"] : $transactionItem["Title"],
+				);
+
+				$context = array(
+					'SITE_ID' => $this->siteId,
 					"CURRENCY" => SiteCurrencyTable::getSiteCurrency($this->siteId)
 				);
 
-				$data = Provider::getProductData($basket);
-
-				if(!empty($data[$item->getBasketCode()]))
+				if ($order->getUserId() > 0)
 				{
-					$itemData = array_merge($data[$item->getBasketCode()], $itemData);
+					$context['USER_ID'] = $order->getUserId();
 				}
-				else
+
+
+				$res = Catalog\Product\Basket::addProductToBasket($basket, $itemData, $context);
+				$resultData = $res->getData();
+				if (!empty($resultData['BASKET_ITEM']))
 				{
-					$item->delete();
-					$item = $basket->createItem('',	$ebaySku);
+					/** @var \Bitrix\Sale\BasketItemBase $item */
+					$item = $resultData['BASKET_ITEM'];
+				}
+
+				if (!$res->isSuccess())
+				{
+					if ($item)
+					{
+						$item->delete();
+					}
+
+					$itemData['MODULE'] = '';
+					$itemData['PRODUCT_PROVIDER_CLASS'] = '';
+
+					$res = Catalog\Product\Basket::addProductToBasket($basket, $itemData, $context);
 				}
 
 				$res = $item->setFields($itemData);
@@ -405,7 +428,7 @@ class Order extends DataProcessor
 				"EBAY_DATA_PROCESSOR_ORDER_SHIPPING_ERROR",
 				$orderEbay["ExtendedOrderID"],
 				Loc::getMessage(
-					"SALE_TP_EBAY_FDPO_NOT_MAPPED_SHIPPINGs",
+					"SALE_TP_EBAY_FDPO_NOT_MAPPED_SHIPPING",
 					array(
 						"#ORDER_ID#" => $orderEbay["ExtendedOrderID"],
 						"#EBAY_SHIPPING#" => $orderEbay["ShippingServiceSelected"]["ShippingService"]

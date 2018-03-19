@@ -10,8 +10,7 @@ $MESS["SEC_REDIRECT_NOTE"] = "<p><a href=\"http://en.wikipedia.org/wiki/Phishing
 
 <p>Two methods exist to prevent redirect phishing:</p>
 <ul style=\"font-size:100%\">
-<li>detect malicious redirects by screening for the lack of the referring page in the HTTP
-  header.</li>
+<li>detect malicious redirects by screening for the lack of the referring page in the HTTP header.</li>
 <li>sign links with a digital signature and verify it upon redirect attempt.</li>
 </ul>
 <p>The following can be used as protection:
@@ -42,4 +41,5 @@ $MESS["SEC_REDIRECT_TIMEOUT_SEC"] = "sec.";
 $MESS["SEC_REDIRECT_LOG"] = "Add phishing attempt to the log";
 $MESS["SEC_REDIRECT_ACTION_REDIRECT"] = "Redirect to specified URL.";
 $MESS["SEC_REDIRECT_ACTION_REDIRECT_URL"] = "URL:";
+$MESS["SEC_REDIRECT_SHOW_MESSAGE_AND_STAY"] = "Show redirect to another URL notification message.";
 ?>

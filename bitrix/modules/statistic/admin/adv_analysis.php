@@ -1,15 +1,7 @@
-<?
-/*
-##############################################
-# Bitrix: SiteManager                        #
-# Copyright (c) 2004 Bitrix                  #
-# http://www.bitrix.ru                       #
-# mailto:admin@bitrix.ru                     #
-##############################################
-*/
-
+<?php
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/statistic/prolog.php");
+/** @var CMain $APPLICATION */
 include($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/statistic/colors.php");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/img.php");
 $STAT_RIGHT = $APPLICATION->GetGroupRight("statistic");
@@ -209,7 +201,8 @@ $lAdmin->BeginPrologContent();
 
 $arrDays = CAdv::GetAnalysisGraphArray($arFilter, $is_filtered, $find_data_type, $arrLegend, $total, $max);
 if(count($arrDays) < 2) :
-	CAdminMessage::ShowMessage(GetMessage("STAT_NOT_ENOUGH_DATA"));
+	$m = new CAdminMessage(GetMessage("STAT_NOT_ENOUGH_DATA"));
+	echo $m->Show();
 else:
 ?>
 <div class="graph">

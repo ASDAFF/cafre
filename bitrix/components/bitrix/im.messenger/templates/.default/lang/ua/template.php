@@ -6,4 +6,5 @@ $MESS["IM_MESSENGER_OPEN_LF"] = "Перейти до живої стрічки";
 $MESS["IM_MESSENGER_OPEN_MESSENGER_CP"] = "Відкрити Бізнес-чат";
 $MESS["IM_MESSENGER_OPEN_CALL"] = "Здійснити дзвінок";
 $MESS["IM_MESSENGER_OPEN_NETWORK"] = "Перейти до Бітрікс24.Network";
+$MESS["IM_MESSENGER_OPEN_MESSENGER_2"] = "Відкрити чат і дзвінки";
 ?>

@@ -10,12 +10,12 @@ class CUrlRewriter
 {
 	static $arRules = array();
 
-	function GetKey($arRule)
+	public static function GetKey($arRule)
 	{
 		return md5($arRule["CONDITION"]."|".$arRule["RULE"]."|".$arRule["ID"]."|".$arRule["PATH"]);
 	}
 
-	function GetList($arFilter = array(), $arOrder = array())
+	public static function GetList($arFilter = array(), $arOrder = array())
 	{
 		global $APPLICATION;
 
@@ -111,8 +111,7 @@ class CUrlRewriter
 		return $arResult;
 	}
 
-
-	function printArray($arr)
+	public static function printArray($arr)
 	{
 		$output = "\$arUrlRewrite = array(\n";
 
@@ -129,7 +128,7 @@ class CUrlRewriter
 		return $output;
 	}
 
-	function __RecordsCompare($a, $b)
+	public static function __RecordsCompare($a, $b)
 	{
 		$len_a = strlen($a["CONDITION"]);
 		$len_b = strlen($b["CONDITION"]);
@@ -141,7 +140,7 @@ class CUrlRewriter
 			return 0;
 	}
 
-	function Add($arFields)
+	public static function Add($arFields)
 	{
 		if (!array_key_exists("SITE_ID", $arFields))
 			$arFields["SITE_ID"] = SITE_ID;
@@ -174,7 +173,7 @@ class CUrlRewriter
 		return false;
 	}
 
-	function Update($arFilter, $arFields)
+	public static function Update($arFilter, $arFields)
 	{
 		global $APPLICATION;
 
@@ -250,7 +249,7 @@ class CUrlRewriter
 		}
 	}
 
-	function Delete($arFilter)
+	public static function Delete($arFilter)
 	{
 		global $APPLICATION;
 
@@ -330,7 +329,7 @@ class CUrlRewriter
 		}
 	}
 
-	function ReIndexAll($max_execution_time = 0, $NS = array())
+	public static function ReIndexAll($max_execution_time = 0, $NS = array())
 	{
 		@set_time_limit(0);
 		if(!is_array($NS))
@@ -417,7 +416,7 @@ class CUrlRewriter
 		return $NS["CNT"];
 	}
 
-	function RecurseIndex($path=array(), $max_execution_time = 0, &$NS)
+	public static function RecurseIndex($path=array(), $max_execution_time = 0, &$NS)
 	{
 		CMain::InitPathVars($site, $path);
 		$DOC_ROOT = CSite::GetSiteDocRoot($site);
@@ -437,8 +436,14 @@ class CUrlRewriter
 
 			if(is_dir($abs_path."/".$file))
 			{
-				if($full_path == "/bitrix" || $full_path == "/".COption::GetOptionString("main", "upload_dir", "upload"))
+				if(
+					$full_path == "/bitrix"
+					|| $full_path == "/".COption::GetOptionString("main", "upload_dir", "upload")
+					|| $full_path == "/local"
+				)
+				{
 					continue;
+				}
 
 				//this is not first step and we had stopped here, so go on to reindex
 				if($max_execution_time<=0 || strlen($NS["FLG"])<=0 || (strlen($NS["FLG"]) > 0 && substr($NS["ID"]."/", 0, strlen($site."|".$full_path."/")) == $site."|".$full_path."/"))
@@ -448,7 +453,9 @@ class CUrlRewriter
 						return false;
 				}
 				else //all done
+				{
 					continue;
+				}
 			}
 			else
 			{
@@ -481,7 +488,7 @@ class CUrlRewriter
 		return true;
 	}
 
-	function ReindexFile($path, $SEARCH_SESS_ID="", $max_file_size = 0)
+	public static function ReindexFile($path, $SEARCH_SESS_ID="", $max_file_size = 0)
 	{
 		global $APPLICATION;
 
@@ -533,7 +540,7 @@ class CUrlRewriter
 		return true;
 	}
 
-	function CheckPath($path)
+	public static function CheckPath($path)
 	{
 		static $SEARCH_MASKS_CACHE = false;
 		if(is_array($SEARCH_MASKS_CACHE))

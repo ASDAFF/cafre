@@ -1,7 +1,8 @@
 <?
 if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) die();
 
-__IncludeLang(dirname(__FILE__).'/lang/'.LANGUAGE_ID.'/template.php');
+/** @var CBitrixComponentTemplate $this */
+$this->IncludeLangFile('template.php');
 
 ?>
 <html>

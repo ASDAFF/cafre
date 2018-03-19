@@ -1907,11 +1907,8 @@ if(typeof(BX.InterfaceGridFilterSaveAsDialog) === "undefined")
 					offsetTop: 0,
 					bindOptions: { forceBindPosition: false },
 					closeByEsc: true,
-					closeIcon: { top: '10px', right: '15px' },
-					titleBar:
-					{
-						content: BX.create("span", {"text": BX.InterfaceGridFilter.getMessage('saveAsDialogTitle')})
-					},
+					closeIcon: true,
+					titleBar: BX.InterfaceGridFilter.getMessage('saveAsDialogTitle'),
 					events:
 					{
 						onPopupClose: BX.delegate(this._handleDialogClose, this)
@@ -2349,6 +2346,8 @@ if(typeof(BX.CrmUserSearchPopup) === 'undefined')
 		this._searchKeyHandler = BX.delegate(this._handleSearchKey, this);
 		this._searchFocusHandler = BX.delegate(this._handleSearchFocus, this);
 		this._externalClickHandler = BX.delegate(this._handleExternalClick, this);
+		this._clearButtonClickHandler = BX.delegate(this._hadleClearButtonClick, this);
+
 		this._userSelectorInitCounter = 0;
 	};
 
@@ -2369,6 +2368,7 @@ if(typeof(BX.CrmUserSearchPopup) === 'undefined')
 				throw  "BX.CrmUserSearchPopup: 'search_input' is not defined!";
 			}
 			this._search_input = settings['searchInput'];
+			this._clearButton = BX.findPreviousSibling(this._search_input, { className: "bizproc-user-search-filter-clean" });
 
 			if(!BX.type.isElementNode(settings['dataInput']))
 			{
@@ -2410,13 +2410,19 @@ if(typeof(BX.CrmUserSearchPopup) === 'undefined')
 			this._componentObj.onSelect = BX.delegate(this._handleUserSelect, this);
 			this._componentObj.searchInput = this._search_input;
 
-			if(this._currentUser)
+			if(this._currentUser && this._currentUser['id'] > 0)
 			{
 				this._componentObj.setSelected([ this._currentUser ]);
 			}
 
 			BX.bind(this._search_input, 'keyup', this._searchKeyHandler);
 			BX.bind(this._search_input, 'focus', this._searchFocusHandler);
+
+			if(BX.type.isElementNode(this._clearButton))
+			{
+				BX.bind(this._clearButton, 'click', this._clearButtonClickHandler);
+			}
+
 			BX.bind(document, 'click', this._externalClickHandler);
 		},
 		open: function()
@@ -2519,7 +2525,25 @@ if(typeof(BX.CrmUserSearchPopup) === 'undefined')
 				BX.unbind(this._search_input, 'keyup', this._searchKeyHandler);
 				BX.unbind(this._search_input, 'focus', this._searchFocusHandler);
 			}
+
+			if(BX.type.isElementNode(this._clearButton))
+			{
+				BX.bind(this._clearButton, 'click', this._clearButtonClickHandler);
+			}
+
 			BX.unbind(document, 'click', this._externalClickHandler);
+
+			if(this._componentContainer)
+			{
+				this._componentContainer.parentNode.removeChild(this._componentContainer);
+				this._serviceContainer.appendChild(this._componentContainer);
+				this._componentContainer.style.display = 'none';
+				this._componentContainer = null;
+			}
+		},
+		_hadleClearButtonClick: function(e)
+		{
+			this._data_input.value = this._search_input.value = '';
 		},
 		_handleExternalClick: function(e)
 		{

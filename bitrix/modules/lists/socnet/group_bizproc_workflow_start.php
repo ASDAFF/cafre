@@ -25,8 +25,8 @@ include($_SERVER["DOCUMENT_ROOT"]."/bitrix/components/bitrix/socialnetwork_group
 	$component
 );?>
 <?$APPLICATION->IncludeComponent("bitrix:bizproc.workflow.start", ".default", array(
-	"MODULE_ID" => "iblock",
-	"ENTITY" => "CIBlockDocument",
+	"MODULE_ID" => "lists",
+	"ENTITY" => 'Bitrix\Lists\BizprocDocumentLists',
 	"DOCUMENT_TYPE" => "iblock_".$arResult["VARIABLES"]["list_id"],
 	"DOCUMENT_ID" => $arResult["VARIABLES"]["element_id"],
 	),

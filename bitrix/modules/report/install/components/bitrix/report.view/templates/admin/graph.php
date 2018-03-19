@@ -5,7 +5,7 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/img.php");
 
 if (!check_bitrix_sessid()) exit;
 
-__IncludeLang(dirname(__FILE__).'/lang/'.LANGUAGE_ID.'/'.basename(__FILE__));
+Bitrix\Main\Localization\Loc::loadMessages(__FILE__);
 
 function checkPostChartData(&$postData, $chartXValueTypes, $chartTypes)
 {
@@ -379,7 +379,8 @@ if ($errorCode === 0)
 					$sumTrifle = 0;
 					if ($offset > 0)
 					{
-						$arTrifle = array_splice($arCounting, $offset);
+						$arTrifle = array_slice($arCounting, $offset, null, true);
+						$arCounting = array_slice($arCounting, 0, $offset, true);
 						foreach (array_keys($arTrifle) as $k) $sumTrifle += $arConsolidated[$k];
 					}
 					if (round($prcntCount,2) < 100.0)

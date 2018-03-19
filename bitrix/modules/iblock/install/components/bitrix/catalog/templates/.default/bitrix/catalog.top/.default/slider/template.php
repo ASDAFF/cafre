@@ -10,6 +10,8 @@
 /** @var string $templateFolder */
 /** @var string $componentPath */
 /** @var CBitrixComponent $component */
+/** @var array $skuTemplate */
+/** @var array $templateData */
 $this->setFrameMode(true);
 
 $intRowsCount = count($arResult['ITEMS']);
@@ -469,12 +471,35 @@ if ($arParams['DISPLAY_COMPARE'])
 ?>
 		<div class="bx_catalog_item_scu" id="<? echo $arItemIDs['PROP_DIV']; ?>">
 <?
-					foreach ($arSkuTemplate as $code => $strTemplate)
+					foreach ($skuTemplate as $propId => $propTemplate)
 					{
-						if (!isset($arItem['OFFERS_PROP'][$code]))
+						if (!isset($arItem['SKU_TREE_VALUES'][$propId]))
 							continue;
-						echo '<div>', str_replace('#ITEM#_prop_', $arItemIDs['PROP'], $strTemplate), '</div>';
+						$valueCount = count($arItem['SKU_TREE_VALUES'][$propId]);
+						if ($valueCount > 5)
+						{
+							$fullWidth = ($valueCount*20).'%';
+							$itemWidth = (100/$valueCount).'%';
+							$rowTemplate = $propTemplate['SCROLL'];
+						}
+						else
+						{
+							$fullWidth = '100%';
+							$itemWidth = '20%';
+							$rowTemplate = $propTemplate['FULL'];
+						}
+						unset($valueCount);
+						echo '<div>', str_replace(array('#ITEM#_prop_', '#WIDTH#'), array($arItemIDs['PROP'], $fullWidth), $rowTemplate['START']);
+						foreach ($propTemplate['ITEMS'] as $value => $valueItem)
+						{
+							if (!isset($arItem['SKU_TREE_VALUES'][$propId][$value]))
+								continue;
+							echo str_replace(array('#ITEM#_prop_', '#WIDTH#'), array($arItemIDs['PROP'], $itemWidth), $valueItem);
+						}
+						unset($value, $valueItem);
+						echo str_replace('#ITEM#_prop_', $arItemIDs['PROP'], $rowTemplate['FINISH']), '</div>';
 					}
+					unset($propId, $propTemplate);
 					foreach ($arResult['SKU_PROPS'] as $arOneProp)
 					{
 						if (!isset($arItem['OFFERS_PROP'][$arOneProp['CODE']]))

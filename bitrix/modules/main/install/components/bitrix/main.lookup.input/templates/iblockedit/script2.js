@@ -22,12 +22,12 @@ JCMainLookupAdminSelector.prototype.SetTokenInput = function(arParams, arEventPa
 
 	if (arEventParams.TOKEN.ACTIVE && !arEventParams.TOKEN.INPUT.parentNode)
 	{
-		this.VALUE_CONTAINER.appendChild(arEventParams.TOKEN.INPUT);
+		this.AddInput(arEventParams.TOKEN.INPUT);
 		jsUtils.onCustomEvent('onLookupInputChange', {'CONTROL_ID': this.arParams.CONTROL_ID, 'ACTION': 'add', 'DATA': arEventParams.TOKEN.DATA});
 	}
 	else if (!arEventParams.TOKEN.ACTIVE && !!arEventParams.TOKEN.INPUT.parentNode)
 	{
-		this.VALUE_CONTAINER.removeChild(arEventParams.TOKEN.INPUT);
+		this.DeleteInput(arEventParams.TOKEN.INPUT);
 		jsUtils.onCustomEvent('onLookupInputChange', {'CONTROL_ID': this.arParams.CONTROL_ID, 'ACTION': 'remove', 'DATA': arEventParams.TOKEN.DATA});
 	}
 };

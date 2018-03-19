@@ -27,8 +27,8 @@ class Server
 	 * Return filtered values or null if auditors not triggered (by default)
 	 *
 	 * @example tests/security/filter/serverfilter.php
-	 * @param array $values
-	 * @param bool $isReturnChangedOnly if true - return values only if it changed by some auditors, otherwise return null
+	 * @param array $values Array of values to be checked.
+	 * @param bool $isReturnChangedOnly If true - return values only if it changed by some auditors, otherwise return null.
 	 * @return array|null
 	 */
 	public function filter(array $values, $isReturnChangedOnly = true)

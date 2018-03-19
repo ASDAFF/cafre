@@ -32,7 +32,6 @@ if ($bSocialNetwork)
 	if(!defined("BXMAINUSERLINK"))
 	{
 		define("BXMAINUSERLINK", true);
-		$APPLICATION->AddHeadScript('/bitrix/js/main/utils.js');
 		if ($bUseTooltip)
 			CJSCore::Init(array("ajax", "tooltip"));
 		else
@@ -53,25 +52,26 @@ if ($bSocialNetwork)
 		$arParams["SHOW_FIELDS"] = unserialize(COption::GetOptionString("socialnetwork", "tooltip_fields", 's:0:"";'));
 		if (!is_array($arParams["SHOW_FIELDS"]))
 		{
-			if ($bIntranet)
-				$arParams["SHOW_FIELDS"] = array(
-					"EMAIL",
-					"WORK_PHONE",
-					"PERSONAL_PHOTO",
-					"PERSONAL_CITY",
-					"WORK_COMPANY",
-					"WORK_POSITION",
-					"MANAGERS",
-				);
-			else
-				$arParams["SHOW_FIELDS"] = array(
-					"PERSONAL_ICQ",
-					"PERSONAL_BIRTHDAY",
-					"PERSONAL_PHOTO",
-					"PERSONAL_CITY",
-					"WORK_COMPANY",
-					"WORK_POSITION"
-				);
+			$arParams["SHOW_FIELDS"] = (
+				$bIntranet
+					? array(
+						"EMAIL",
+						"WORK_PHONE",
+						"PERSONAL_PHOTO",
+						"PERSONAL_CITY",
+						"WORK_COMPANY",
+						"WORK_POSITION",
+						"MANAGERS",
+					)
+					: array(
+						"PERSONAL_ICQ",
+						"PERSONAL_BIRTHDAY",
+						"PERSONAL_PHOTO",
+						"PERSONAL_CITY",
+						"WORK_COMPANY",
+						"WORK_POSITION"
+					)
+			);
 		}
 	}
 
@@ -107,9 +107,28 @@ if (
 }
 
 if (intval($_GET["USER_ID"]) > 0)
+{
 	$arParams["ID"] = $_GET["USER_ID"];
+}
 
 $arParams["ID"] = IntVal($arParams["ID"]);
+
+$arContext = array();
+if (
+	isset($_GET["entityType"])
+	&& strlen($_GET["entityType"]) > 0
+)
+{
+	$arContext["ENTITY_TYPE"] = $_GET["entityType"];
+}
+
+if (
+	isset($_GET["entityId"])
+	&& intval($_GET["entityId"]) > 0
+)
+{
+	$arContext["ENTITY_ID"] = intval($_GET["entityId"]);
+}
 
 if ($arParams["ID"] <= 0 && $arParams["AJAX_ONLY"] != "Y")
 	$arResult["FatalError"] = GetMessage("MAIN_UL_NO_ID").". ";
@@ -156,32 +175,50 @@ if (strlen($arResult["FatalError"]) <= 0)
 	}
 	elseif(intval($arParams["ID"]) > 0)
 	{
-		if (!array_key_exists("NAME", $arParams) || !array_key_exists("LAST_NAME", $arParams) || !array_key_exists("SECOND_NAME", $arParams)  || !array_key_exists("LOGIN", $arParams))
+		if (
+			!array_key_exists("NAME", $arParams)
+			|| !array_key_exists("LAST_NAME", $arParams)
+			|| !array_key_exists("SECOND_NAME", $arParams)
+			|| !array_key_exists("LOGIN", $arParams)
+			|| (
+				$arParams['USE_THUMBNAIL_LIST'] == "Y"
+				&& !array_key_exists("PERSONAL_PHOTO_IMG", $arParams)
+			)
+		)
+		{
 			$bNeedGetUser = true;
-		if ($arParams['USE_THUMBNAIL_LIST'] == "Y" && !array_key_exists("PERSONAL_PHOTO_IMG", $arParams))
-			$bNeedGetUser = true;
+		}
 	}
 
-	if ($bSocialNetwork && CModule::IncludeModule('socialnetwork'))
+	if (
+		$bSocialNetwork
+		&& CModule::IncludeModule('socialnetwork')
+	)
 	{
-		if ($arParams['AJAX_CALL'] == 'INFO')
-			$arResult["CurrentUserPerms"] = CSocNetUserPerms::InitUserPerms($USER->GetID(), $arParams["ID"], CSocNetUser::IsCurrentUserModuleAdmin());
-		else
-			$arResult["CurrentUserPerms"] = array(
-				"Operations" => array(
-					"viewprofile" => true,
-					"videocall" => true,
-					"message" => true
+		$arResult["CurrentUserPerms"] = (
+			$arParams['AJAX_CALL'] == 'INFO'
+				? CSocNetUserPerms::InitUserPerms($USER->GetID(), $arParams["ID"], CSocNetUser::IsCurrentUserModuleAdmin())
+				: array(
+					"Operations" => array(
+						"viewprofile" => true,
+						"videocall" => true,
+						"message" => true
+					)
 				)
-			);
+		);
 
 		if (!$bUseTooltip)
+		{
 			$arResult["USE_TOOLTIP"] = false;
+		}
 
-		if(!CModule::IncludeModule("video"))
+		if (
+			!CModule::IncludeModule("video")
+			|| !CVideo::CanUserMakeCall()
+		)
+		{
 			$arResult["CurrentUserPerms"]["Operations"]["videocall"] = false;
-		elseif(!CVideo::CanUserMakeCall())
-			$arResult["CurrentUserPerms"]["Operations"]["videocall"] = false;
+		}
 
 		if ($arParams['AJAX_CALL'] != 'INFO' && strlen($arParams["PROFILE_URL_LIST"]) > 0) // don't use PROFILE_URL in ajax call because it could be another component inclusion
 			$arResult["Urls"]["SonetProfile"] = $arParams["~PROFILE_URL_LIST"];
@@ -196,7 +233,9 @@ if (strlen($arResult["FatalError"]) <= 0)
 			$arParams['DETAIL_URL'] = str_replace(array('#ID#', '#USER_ID#'), array($arParams["ID"], $arParams["ID"]), $arParams['DETAIL_URL']);
 		}
 		else
+		{
 			$arParams['DETAIL_URL'] = $arResult["Urls"]["SonetProfile"];
+		}
 	}
 	else
 	{
@@ -215,9 +254,15 @@ if (strlen($arResult["FatalError"]) <= 0)
 
 		$path = "/user_card_new_".intval($arParams["ID"] / TAGGED_user_card_size);
 
-		if($arParams['AJAX_CALL'] == 'INFO' || $obCache->StartDataCache($arParams["CACHE_TIME"], $strCacheID, $path))
+		if (
+			$arParams['AJAX_CALL'] == 'INFO'
+			|| $obCache->StartDataCache($arParams["CACHE_TIME"], $strCacheID, $path)
+		)
 		{
-			if ($arParams['AJAX_CALL'] != 'INFO' && defined("BX_COMP_MANAGED_CACHE"))
+			if (
+				$arParams['AJAX_CALL'] != 'INFO'
+				&& defined("BX_COMP_MANAGED_CACHE")
+			)
 			{
 				$CACHE_MANAGER->StartTagCache($path);
 				$CACHE_MANAGER->RegisterTag("USER_CARD_".intval($arParams["ID"] / TAGGED_user_card_size));
@@ -227,13 +272,17 @@ if (strlen($arResult["FatalError"]) <= 0)
 			$arResult["User"] = $dbUser->Fetch();
 
 			if (!$arResult["User"])
+			{
 				$arResult["FatalError"] = GetMessage("MAIN_UL_NO_ID").". ";
+			}
 			elseif(
 				$arParams['AJAX_CALL'] == 'INFO'
-				&& CModule::IncludeModule("extranet")
-				&& !CExtranet::IsProfileViewable($arResult["User"], SITE_ID)
+				&& CModule::IncludeModule("socialnetwork")
+				&& !CSocNetUser::CanProfileView($USER->GetID(), $arResult["User"], SITE_ID, $arContext)
 			)
+			{
 				$arResult["FatalError"] = GetMessage("MAIN_UL_NO_ID").". ";
+			}
 
 			if (
 				strlen($arResult["FatalError"]) <= 0 
@@ -371,6 +420,19 @@ if (strlen($arResult["FatalError"]) <= 0)
 				"DETAIL_URL" => $arResult["User"]["DETAIL_URL"],
 			);
 
+			if (
+				isset($_GET["entityType"])
+				&& strlen($_GET["entityType"]) > 0
+				&& isset($_GET["entityId"])
+				&& intval($_GET["entityId"]) > 0
+			)
+			{
+				$arTmpUser["DETAIL_URL"] .= (strpos($arTmpUser["DETAIL_URL"], '?') === false ? '?' : '&')."entityType=".urlencode($_GET["entityType"])."&entityId=".intval($_GET["entityId"]);
+			}
+
+			$rsCurrentUser = CUser::GetById($USER->GetId());
+			$arResult["CurrentUser"] = $rsCurrentUser->Fetch();
+
 			if($this->InitComponentTemplate())
 			{
 				$template = &$this->GetTemplate();
@@ -396,32 +458,48 @@ if (strlen($arResult["FatalError"]) <= 0)
 			$strOnmouseover = "BX.addClass(this, 'bx-icon-underline');";
 			$strOnmouseout = "BX.removeClass(this, 'bx-icon-underline');";
 
-			if(IsModuleInstalled("im"))
-			{
-				if (
-					$USER->IsAuthorized()
-					&& $arResult["User"]["ID"] != $USER->GetID()
-					&& $arResult["User"]["ACTIVE"] != "N"
-					&& $arResult["CurrentUserPerms"]["Operations"]["message"]
+			if (
+				!IsModuleInstalled('mail')
+				|| (
+					(
+						!isset($arResult["User"]["EXTERNAL_AUTH_ID"])
+						|| !in_array($arResult["User"]["EXTERNAL_AUTH_ID"], array('email'))
+					)
+					&& (
+						$USER->IsAuthorized()
+						&& $arResult["CurrentUser"]
+						&& !in_array($arResult["CurrentUser"]["EXTERNAL_AUTH_ID"], array('email'))
+					)
 				)
-				{
-					$strOnclick = "if (top.BXIM) { top.BXIM.openMessenger(".$arResult["User"]["ID"]."); return false; } else { window.open('".$arResult["Urls"]["SonetMessageChat"]."', '', 'location=yes,status=no,scrollbars=yes,resizable=yes,width=700,height=550,top='+Math.floor((screen.height - 550)/2-14)+',left='+Math.floor((screen.width - 700)/2-5)); return false; }";
-					$strToolbar2 .= '<li class="bx-icon bx-icon-message"><span onmouseover="'.$strOnmouseover.'" onmouseout="'.$strOnmouseout.'" onclick="'.$strOnclick.'">'.GetMessage("MAIN_UL_TOOLBAR_MESSAGES_CHAT").'</span></li>';
-
-					$strOnclick = "if (top.BXIM) { top.BXIM.callTo(".$arResult["User"]["ID"]."); return false; }";
-					$strToolbar2 .= '<li id="im-video-call-button" class="bx-icon bx-icon-video"><span onmouseover="'.$strOnmouseover.'" onmouseout="'.$strOnmouseout.'" onclick="'.$strOnclick.'">'.GetMessage("MAIN_UL_TOOLBAR_VIDEO_CALL").'</span></li>';
-					$strToolbar2 .= "<script type='text/javascript'>BX.ready(function(){ if (!top.BXIM || !top.BXIM.checkCallSupport()) { BX.remove(BX('im-video-call-button')); } });</script>";
-				}
-			}
-			elseif (
-				$USER->IsAuthorized()
-				&& $arResult["User"]["ID"] != $USER->GetID()
-				&& $arResult["CurrentUserPerms"]["Operations"]["videocall"]
-				&& strlen($arResult["Urls"]["VideoCall"]) > 0
 			)
 			{
-				$strOnclick = "window.open('".$arResult["Urls"]["VideoCall"]."', '', 'location=yes,status=no,scrollbars=yes,resizable=yes,width=1000,height=600,top='+Math.floor((screen.height - 600)/2-14)+',left='+Math.floor((screen.width - 1000)/2-5)); return false;";
-				$strToolbar2 .= '<li class="bx-icon bx-icon-video"><span onmouseover="'.$strOnmouseover.'" onmouseout="'.$strOnmouseout.'" onclick="'.$strOnclick.'">'.GetMessage("MAIN_UL_TOOLBAR_VIDEO_CALL").'</span></li>';
+				if(IsModuleInstalled("im"))
+				{
+					if (
+						$USER->IsAuthorized()
+						&& $arResult["User"]["ID"] != $USER->GetID()
+						&& $arResult["User"]["ACTIVE"] != "N"
+						&& $arResult["CurrentUserPerms"]["Operations"]["message"]
+					)
+					{
+						$strOnclick = "return BX.tooltip.openIM(".$arResult["User"]["ID"].");";
+						$strToolbar2 .= '<li class="bx-icon bx-icon-message"><span onmouseover="'.$strOnmouseover.'" onmouseout="'.$strOnmouseout.'" onclick="'.$strOnclick.'">'.GetMessage("MAIN_UL_TOOLBAR_MESSAGES_CHAT").'</span></li>';
+
+						$strOnclick = "return BX.tooltip.openCallTo(".$arResult["User"]["ID"].");";
+						$strToolbar2 .= '<li id="im-video-call-button'.$arResult["User"]["ID"].'" class="bx-icon bx-icon-video"><span onmouseover="'.$strOnmouseover.'" onmouseout="'.$strOnmouseout.'" onclick="'.$strOnclick.'">'.GetMessage("MAIN_UL_TOOLBAR_VIDEO_CALL").'</span></li>';
+						$strToolbar2 .= '<script type="text/javascript">BX.ready(function() {BX.tooltip.checkCallTo(\'im-video-call-button'.$arResult["User"]["ID"].'\'); };</script>';
+					}
+				}
+				elseif (
+					$USER->IsAuthorized()
+					&& $arResult["User"]["ID"] != $USER->GetID()
+					&& $arResult["CurrentUserPerms"]["Operations"]["videocall"]
+					&& strlen($arResult["Urls"]["VideoCall"]) > 0
+				)
+				{
+					$strOnclick = "return BX.tooltip.openVideoCall(".$arResult["User"]["ID"].");";
+					$strToolbar2 .= '<li class="bx-icon bx-icon-video"><span onmouseover="'.$strOnmouseover.'" onmouseout="'.$strOnmouseout.'" onclick="'.$strOnclick.'">'.GetMessage("MAIN_UL_TOOLBAR_VIDEO_CALL").'</span></li>';
+				}
 			}
 
 			if ($arResult['IS_BIRTHDAY'])
@@ -443,10 +521,14 @@ if (strlen($arResult["FatalError"]) <= 0)
 			}
 
 			if (strlen($strToolbar) > 0)
+			{
 				$strToolbar = "<ul>".$strToolbar."</ul>";
+			}
 
 			if (strlen($strToolbar2) > 0)
+			{
 				$strToolbar2 = "<div class='bx-user-info-data-separator'></div><ul>".$strToolbar2."</ul>";
+			}
 
 			$arResult = array(
 				"Toolbar" => $strToolbar,
@@ -454,6 +536,7 @@ if (strlen($arResult["FatalError"]) <= 0)
 				"Toolbar2" => $strToolbar2,
 				"Card" => $strCard,
 				"Photo" => $strPhoto,
+				"Scripts" => (!empty($arScripts) ? $arScripts : array())
 			);
 
 			$APPLICATION->RestartBuffer();

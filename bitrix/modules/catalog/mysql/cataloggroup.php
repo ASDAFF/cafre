@@ -1,10 +1,11 @@
 <?
-/** global array $CATALOG_BASE_GROUP */
+use Bitrix\Catalog;
+
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/catalog/general/cataloggroup.php");
 
 class CCatalogGroup extends CAllCatalogGroup
 {
-	function GetByID($ID, $lang = LANGUAGE_ID)
+	public static function GetByID($ID, $lang = LANGUAGE_ID)
 	{
 		$ID = (int)$ID;
 		if ($ID <= 0)
@@ -15,17 +16,20 @@ class CCatalogGroup extends CAllCatalogGroup
 		$strUserGroups = (CCatalog::IsUserExists() ? $USER->GetGroups() : '2');
 
 		$strSql =
-			"SELECT CG.ID, CG.NAME, CG.BASE, CG.SORT, CG.XML_ID, IF(CGG.ID IS NULL, 'N', 'Y') as CAN_ACCESS, CGL.NAME as NAME_LANG, IF(CGG1.ID IS NULL, 'N', 'Y') as CAN_BUY, ".
-			"CG.CREATED_BY, CG.MODIFIED_BY, ".$DB->DateToCharFunction('CG.TIMESTAMP_X', 'FULL').' as TIMESTAMP_X, '.$DB->DateToCharFunction('CG.DATE_CREATE', 'FULL')." as DATE_CREATE ".
+			"SELECT CG.ID, CG.NAME, CG.BASE, CG.SORT, CG.XML_ID, ".
+			"CG.CREATED_BY, CG.MODIFIED_BY, ".$DB->DateToCharFunction('CG.TIMESTAMP_X', 'FULL').' as TIMESTAMP_X, '.$DB->DateToCharFunction('CG.DATE_CREATE', 'FULL')." as DATE_CREATE, ".
+			"CGL.NAME as NAME_LANG, IF(CGG.ID IS NULL, 'N', 'Y') as CAN_ACCESS,  IF(CGG1.ID IS NULL, 'N', 'Y') as CAN_BUY ".
 			"FROM b_catalog_group CG ".
 			"	LEFT JOIN b_catalog_group2group CGG ON (CG.ID = CGG.CATALOG_GROUP_ID AND CGG.GROUP_ID IN (".$strUserGroups.") AND CGG.BUY <> 'Y') ".
 			"	LEFT JOIN b_catalog_group2group CGG1 ON (CG.ID = CGG1.CATALOG_GROUP_ID AND CGG1.GROUP_ID IN (".$strUserGroups.") AND CGG1.BUY = 'Y') ".
 			"	LEFT JOIN b_catalog_group_lang CGL ON (CG.ID = CGL.CATALOG_GROUP_ID AND CGL.LANG = '".$DB->ForSql($lang)."') ".
-			"WHERE CG.ID = ".$ID." GROUP BY CG.ID, CG.NAME, CG.BASE, CG.XML_ID, CG.MODIFIED_BY, CG.CREATED_BY, CG.DATE_CREATE, CG.TIMESTAMP_X, CGL.NAME";
+			"WHERE CG.ID = ".$ID." GROUP BY CG.ID, CG.NAME, CG.BASE, CG.SORT, CG.XML_ID, CG.CREATED_BY, CG.MODIFIED_BY, CG.TIMESTAMP_X, CG.DATE_CREATE, ".
+			"CGL.NAME, IF(CGG.ID IS NULL, 'N', 'Y'),  IF(CGG1.ID IS NULL, 'N', 'Y')";
 
 		$db_res = $DB->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
 		if ($res = $db_res->Fetch())
 			return $res;
+
 		return false;
 	}
 
@@ -54,6 +58,7 @@ class CCatalogGroup extends CAllCatalogGroup
 			self::$arBaseGroupCache = array();
 			if (defined('CATALOG_GLOBAL_VARS') && 'Y' == CATALOG_GLOBAL_VARS)
 			{
+				/** @global array $CATALOG_BASE_GROUP */
 				global $CATALOG_BASE_GROUP;
 				$CATALOG_BASE_GROUP = self::$arBaseGroupCache;
 			}
@@ -98,7 +103,6 @@ class CCatalogGroup extends CAllCatalogGroup
 			$CACHE_MANAGER->Clean("catalog_group_perms");
 		}
 
-		$stackCacheManager->Clear("catalog_GetQueryBuildArrays");
 		$stackCacheManager->Clear("catalog_discount");
 
 		foreach(GetModuleEvents("catalog", "OnGroupAdd", true) as $arEvent)
@@ -146,6 +150,7 @@ class CCatalogGroup extends CAllCatalogGroup
 				self::$arBaseGroupCache = array();
 				if (defined('CATALOG_GLOBAL_VARS') && 'Y' == CATALOG_GLOBAL_VARS)
 				{
+					/** @global array $CATALOG_BASE_GROUP */
 					global $CATALOG_BASE_GROUP;
 					$CATALOG_BASE_GROUP = self::$arBaseGroupCache;
 				}
@@ -196,7 +201,6 @@ class CCatalogGroup extends CAllCatalogGroup
 			$CACHE_MANAGER->Clean("catalog_group_perms");
 		}
 
-		$stackCacheManager->Clear("catalog_GetQueryBuildArrays");
 		$stackCacheManager->Clear("catalog_discount");
 
 		foreach(GetModuleEvents("catalog", "OnGroupUpdate", true) as $arEvent)
@@ -236,12 +240,12 @@ class CCatalogGroup extends CAllCatalogGroup
 					$CACHE_MANAGER->Clean("catalog_group_perms");
 				}
 
-				$stackCacheManager->Clear("catalog_GetQueryBuildArrays");
 				$stackCacheManager->Clear("catalog_discount");
 
 				$DB->Query("DELETE FROM b_catalog_price WHERE CATALOG_GROUP_ID = ".$ID);
 				$DB->Query("DELETE FROM b_catalog_group2group WHERE CATALOG_GROUP_ID = ".$ID);
 				$DB->Query("DELETE FROM b_catalog_group_lang WHERE CATALOG_GROUP_ID = ".$ID);
+				Catalog\RoundingTable::deleteByPriceType($ID);
 				return $DB->Query("DELETE FROM b_catalog_group WHERE ID = ".$ID, true);
 			}
 			else
@@ -253,7 +257,15 @@ class CCatalogGroup extends CAllCatalogGroup
 		return false;
 	}
 
-	function GetList($arOrder = array(), $arFilter = array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array())
+	/**
+	 * @param array $arOrder
+	 * @param array $arFilter
+	 * @param bool|array $arGroupBy
+	 * @param bool|array $arNavStartParams
+	 * @param array $arSelectFields
+	 * @return bool|CDBResult
+	 */
+	public static function GetList($arOrder = array(), $arFilter = array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array())
 	{
 		global $DB, $USER;
 
@@ -282,9 +294,9 @@ class CCatalogGroup extends CAllCatalogGroup
 		$strUserGroups = (CCatalog::IsUserExists() ? $USER->GetGroups() : '2');
 
 		if (empty($arSelectFields))
-			$arSelectFields = array("ID", "NAME", "BASE", "SORT", "NAME_LANG", "CAN_ACCESS", "CAN_BUY", "XML_ID", "MODIFIED_BY", "CREATED_BY", "DATE_CREATE", "TIMESTAMP_X");
+			$arSelectFields = array("ID", "NAME", "BASE", "SORT", "XML_ID", "MODIFIED_BY", "CREATED_BY", "DATE_CREATE", "TIMESTAMP_X", "NAME_LANG", "CAN_ACCESS", "CAN_BUY");
 		if ($arGroupBy == false)
-			$arGroupBy = array("ID", "NAME", "BASE", "SORT", "XML_ID", "MODIFIED_BY", "CREATED_BY", "DATE_CREATE", "TIMESTAMP_X", "NAME_LANG");
+			$arGroupBy = array("ID", "NAME", "BASE", "SORT", "XML_ID", "MODIFIED_BY", "CREATED_BY", "DATE_CREATE", "TIMESTAMP_X", "NAME_LANG", "CAN_ACCESS", "CAN_BUY");
 
 		$arFields = array(
 			"ID" => array("FIELD" => "CG.ID", "TYPE" => "int"),
@@ -387,7 +399,15 @@ class CCatalogGroup extends CAllCatalogGroup
 		return $dbRes;
 	}
 
-	function GetListEx($arOrder = array(), $arFilter = array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array())
+	/**
+	 * @param array $arOrder
+	 * @param array $arFilter
+	 * @param bool|array $arGroupBy
+	 * @param bool|array $arNavStartParams
+	 * @param array $arSelectFields
+	 * @return bool|CDBResult
+	 */
+	public static function GetListEx($arOrder = array(), $arFilter = array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array())
 	{
 		global $DB;
 
@@ -488,7 +508,7 @@ class CCatalogGroup extends CAllCatalogGroup
 		return $dbRes;
 	}
 
-	function GetGroupsList($arFilter = array())
+	public static function GetGroupsList($arFilter = array())
 	{
 		global $DB;
 
@@ -499,7 +519,7 @@ class CCatalogGroup extends CAllCatalogGroup
 			"BUY" => array("FIELD" => "CGG.BUY", "TYPE" => "char")
 		);
 
-		$arSqls = CCatalog::PrepareSql($arFields, array(), $arFilter, false, false);
+		$arSqls = CCatalog::PrepareSql($arFields, array(), $arFilter, false, array());
 
 		$arSqls["SELECT"] = str_replace("%%_DISTINCT_%%", "", $arSqls["SELECT"]);
 
@@ -511,12 +531,10 @@ class CCatalogGroup extends CAllCatalogGroup
 		if (!empty($arSqls["ORDERBY"]))
 			$strSql .= " ORDER BY ".$arSqls["ORDERBY"];
 
-		$dbRes = $DB->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
-
-		return $dbRes;
+		return $DB->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
 	}
 
-	function GetLangList($arFilter = array())
+	public static function GetLangList($arFilter = array())
 	{
 		global $DB;
 
@@ -528,7 +546,7 @@ class CCatalogGroup extends CAllCatalogGroup
 			"NAME" => array("FIELD" => "CGL.NAME", "TYPE" => "string")
 		);
 
-		$arSqls = CCatalog::PrepareSql($arFields, array(), $arFilter, false, false);
+		$arSqls = CCatalog::PrepareSql($arFields, array(), $arFilter, false, array());
 
 		$arSqls["SELECT"] = str_replace("%%_DISTINCT_%%", "", $arSqls["SELECT"]);
 
@@ -540,9 +558,6 @@ class CCatalogGroup extends CAllCatalogGroup
 		if (!empty($arSqls["ORDERBY"]))
 			$strSql .= " ORDER BY ".$arSqls["ORDERBY"];
 
-		$dbRes = $DB->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
-
-		return $dbRes;
+		return $DB->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
 	}
 }
-?>

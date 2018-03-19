@@ -36,11 +36,13 @@ $MESS["CURRENCY_NEW_TITLE"] = "Создать курс валют";
 $MESS["CURRENCY_EDIT_TITLE"] = "Редактировать курс валют";
 $MESS["SAVE_ERROR"] = "Ошибка при изменении курса #";
 $MESS["ERROR_SESSID"] = "Ваша сессия истекла. Перегрузите страницу.";
-$MESS["CURRENCY_A_EDIT_TITLE"] = "Редактировать параметры валюты";
 $MESS["CURRENCY_RATES_A_EDIT_TITLE"] = "Редактировать курс валюты";
 $MESS["CURRENCY_RATES_A_EDIT"] = "редактировать курс валюты";
 $MESS["BX_CURRENCY_RATE_EDIT_ERR_ADD"] = "Ошибка при добавлении курса валюты";
 $MESS["BX_CURRENCY_RATE_EDIT_ERR_UPDATE"] = "Ошибка при редактировании курса валюты с кодом #ID#";
 $MESS["BX_CURRENCY_GET_RATE_ERR_UNKNOWN"] = "Неизвестная ошибка при запросе курса";
 $MESS["BX_CURRENCY_RATE_EDIT_MESS_AMOUNT"] = "Модуль валют работает с <b>прямыми котировками</b> валют по отношению к базовой. Для корректной работы необходимой указывать стоимость единицы (1 либо 10, 100, 1000 - при низкой стоимости) редактируемой валюты в базовой валюте. Для базовой валюты не должно быть записей в списке курсов валют.";
+$MESS["BX_CURRENCY_RATE_BASE_CURRENCY"] = "Базовая валюта";
+$MESS["BX_CURRENCY_RATE_BASE_BASE_CURRENCY_FIELD_ABSENT"] = "не указана";
+$MESS["ERROR_BASE_CURRENCY_RATE"] = "Отсутствует базовая валюта";
 ?>

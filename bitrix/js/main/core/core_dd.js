@@ -134,7 +134,7 @@ BX.DD.dropFiles.prototype._drop = function(e)
 	BX.PreventDefault(e);
 	var dt = e.dataTransfer;
 	var files = dt.files;
-	BX.onCustomEvent(this, 'dropFiles', [files]);
+	BX.onCustomEvent(this, 'dropFiles', [files, e]);
 	BX.onCustomEvent(this, 'dragLeave')
 	return false;
 }

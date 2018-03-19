@@ -5,6 +5,7 @@ function JCSmartFilter(ajaxURL, viewMode, params)
 	this.timer = null;
 	this.cacheKey = '';
 	this.cache = [];
+	this.popups = [];
 	this.viewMode = viewMode;
 	if (params && params.SEF_SET_FILTER_URL)
 	{
@@ -164,6 +165,15 @@ JCSmartFilter.prototype.postHandler = function (result, fromCache)
 
 	if (!!result && !!result.ITEMS)
 	{
+		for(var popupId in this.popups)
+		{
+			if (this.popups.hasOwnProperty(popupId))
+			{
+				this.popups[popupId].destroy();
+			}
+		}
+		this.popups = [];
+
 		for(var PID in result.ITEMS)
 		{
 			if (result.ITEMS.hasOwnProperty(PID))
@@ -398,15 +408,16 @@ JCSmartFilter.prototype.hideFilterProps = function(element)
 JCSmartFilter.prototype.showDropDownPopup = function(element, popupId)
 {
 	var contentNode = element.querySelector('[data-role="dropdownContent"]');
-	BX.PopupWindowManager.create("smartFilterDropDown"+popupId, element, {
+	this.popups["smartFilterDropDown"+popupId] = BX.PopupWindowManager.create("smartFilterDropDown"+popupId, element, {
 		autoHide: true,
 		offsetLeft: 0,
 		offsetTop: 3,
 		overlay : false,
 		draggable: {restrict:true},
 		closeByEsc: true,
-		content: contentNode
-	}).show();
+		content: BX.clone(contentNode)
+	});
+	this.popups["smartFilterDropDown"+popupId].show();
 };
 
 JCSmartFilter.prototype.selectDropDownItem = function(element, controlId)
@@ -423,6 +434,25 @@ JCSmartFilter.prototype.selectDropDownItem = function(element, controlId)
 BX.namespace("BX.Iblock.SmartFilter");
 BX.Iblock.SmartFilter = (function()
 {
+	/** @param {{
+			leftSlider: string,
+			rightSlider: string,
+			tracker: string,
+			trackerWrap: string,
+			minInputId: string,
+			maxInputId: string,
+			minPrice: float|int|string,
+			maxPrice: float|int|string,
+			curMinPrice: float|int|string,
+			curMaxPrice: float|int|string,
+			fltMinPrice: float|int|string|null,
+			fltMaxPrice: float|int|string|null,
+			precision: int|null,
+			colorUnavailableActive: string,
+			colorAvailableActive: string,
+			colorAvailableInactive: string
+		}} arParams
+	 */
 	var SmartFilter = function(arParams)
 	{
 		if (typeof arParams === 'object')
@@ -613,6 +643,7 @@ BX.Iblock.SmartFilter = (function()
 			this.minInput.value = newMinPrice;
 		else
 			this.minInput.value = "";
+		/** @global JCSmartFilter smartFilter */
 		smartFilter.keyup(this.minInput);
 	};
 
@@ -625,6 +656,7 @@ BX.Iblock.SmartFilter = (function()
 			this.maxInput.value = newMaxPrice;
 		else
 			this.maxInput.value = "";
+		/** @global JCSmartFilter smartFilter */
 		smartFilter.keyup(this.maxInput);
 	};
 

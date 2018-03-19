@@ -145,23 +145,30 @@ class Storage
 	{
 		$connection = \Bitrix\Main\Application::getConnection();
 
-		$connection->query("
-			INSERT INTO ".$this->getTableName()." (
-				SECTION_ID
-				,ELEMENT_ID
-				,FACET_ID
-				,VALUE
-				,VALUE_NUM
-				,INCLUDE_SUBSECTIONS
-			) VALUES (
-				".intval($sectionId)."
-				,".intval($elementId)."
-				,".intval($facetId)."
-				,".intval($value)."
-				,".doubleval($valueNum)."
-				,".($includeSubsections > 0? 1: 0)."
-			)
-		");
+		try
+		{
+			$connection->query("
+				INSERT INTO ".$this->getTableName()." (
+					SECTION_ID
+					,ELEMENT_ID
+					,FACET_ID
+					,VALUE
+					,VALUE_NUM
+					,INCLUDE_SUBSECTIONS
+				) VALUES (
+					".intval($sectionId)."
+					,".intval($elementId)."
+					,".intval($facetId)."
+					,".intval($value)."
+					,".doubleval($valueNum)."
+					,".($includeSubsections > 0? 1: 0)."
+				)
+			");
+		}
+		catch (\Bitrix\Main\DB\SqlException $e)
+		{
+			return false;
+		}
 
 		return true;
 	}
@@ -205,7 +212,7 @@ class Storage
 	}
 
 	/**
-	 * Returns true if given identifier is iblock property one.
+	 * Returns true if given identifier is catalog price one.
 	 *
 	 * @param integer $facetId Internal storage facet identifier.
 	 *
@@ -217,7 +224,7 @@ class Storage
 	}
 
 	/**
-	 * Returns true if given identifier is catalog price one.
+	 * Returns true if given identifier is iblock property one.
 	 *
 	 * @param integer $facetId Internal storage facet identifier.
 	 *

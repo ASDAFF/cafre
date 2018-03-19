@@ -26,6 +26,7 @@ create table b_mail_mailbox
    AUTH_RELAY char(1) NOT NULL DEFAULT 'Y',
    USER_ID int(11) NOT NULL DEFAULT 0,
    SYNC_LOCK INT NULL,
+   OPTIONS TEXT NULL,
    primary key (ID),
    index IX_B_MAIL_MAILBOX_USER_ID (USER_ID)
 );
@@ -100,7 +101,8 @@ create table b_mail_message
    MSG_ID varchar(255) NULL,
    IN_REPLY_TO varchar(255) NULL,
    primary key (ID),
-   index IX_MAIL_MESSAGE (MAILBOX_ID)
+   index IX_MAIL_MESSAGE (MAILBOX_ID),
+   index IX_MAIL_MESSAGE_DATE (DATE_INSERT, MAILBOX_ID)
 );
 
 
@@ -108,12 +110,15 @@ create table b_mail_message_uid
 (
    ID varchar(32) not null,
    MAILBOX_ID int(18) not null,
+   HEADER_MD5 VARCHAR(32) NULL,
+   IS_SEEN CHAR(1) NOT NULL DEFAULT 'N',
    SESSION_ID varchar(32) not null,
    TIMESTAMP_X timestamp,
    DATE_INSERT datetime not null,
    MESSAGE_ID int(18) not null,
    primary key (ID, MAILBOX_ID),
-   index IX_MAIL_MSG_UID (MAILBOX_ID)
+   index IX_MAIL_MSG_UID (MAILBOX_ID),
+   index IX_MAIL_MSG_UID_2 (HEADER_MD5)
 );
 
 create table b_mail_msg_attachment
@@ -175,8 +180,34 @@ CREATE TABLE IF NOT EXISTS `b_mail_mailservices` (
   INDEX IX_B_MAIL_MAILSERVICE_ACTIVE (ACTIVE)
 );
 
+CREATE TABLE IF NOT EXISTS `b_mail_user_relations` (
+  `TOKEN` VARCHAR(32) NOT NULL,
+  `SITE_ID` CHAR(2) NULL,
+  `USER_ID` INT NOT NULL,
+  `ENTITY_TYPE` VARCHAR(255) NOT NULL,
+  `ENTITY_ID` VARCHAR(255) NULL,
+  `ENTITY_LINK` VARCHAR(255) NULL,
+  `BACKURL` VARCHAR(255) NULL,
+  PRIMARY KEY (`TOKEN`),
+  UNIQUE UX_B_MAIL_USER_RELATION (USER_ID, ENTITY_TYPE(50), ENTITY_ID(50), SITE_ID)
+);
+
+CREATE TABLE IF NOT EXISTS `b_mail_blacklist` (
+  `ID` INT NOT NULL AUTO_INCREMENT,
+  `SITE_ID` CHAR(2) NOT NULL,
+  `MAILBOX_ID` INT NOT NULL DEFAULT 0,
+  `ITEM_TYPE` INT NOT NULL,
+  `ITEM_VALUE` VARCHAR(255) NOT NULL,
+  PRIMARY KEY (`ID`),
+  INDEX IX_B_MAIL_BLACKLIST (MAILBOX_ID, SITE_ID)
+);
+
+CREATE TABLE IF NOT EXISTS `b_mail_domain_email` (
+  `DOMAIN` VARCHAR(255) NOT NULL,
+  `LOGIN` VARCHAR(255) NOT NULL,
+  PRIMARY KEY (LOGIN(50), DOMAIN(50)),
+  INDEX IX_B_MAIL_DOMAIN_EMAIL (DOMAIN(50))
+);
 
 CREATE INDEX mail_spam_good ON b_mail_spam_weight(GOOD_CNT);
-
 CREATE INDEX mail_spam_bad ON b_mail_spam_weight(BAD_CNT);
-

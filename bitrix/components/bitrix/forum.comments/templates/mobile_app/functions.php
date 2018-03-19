@@ -15,6 +15,7 @@ function forumCommentsCommentMobile(
 		$parser->bMobile = true;
 		$parser->LAZYLOAD = ($arParams["LAZYLOAD"] == "Y");
 		$parser->arFiles = $arResult["FILES"];
+		$parser->userPath = "/mobile/users/?user_id=#UID#";
 	}
 
 	$parser->arUserfields = $comment["PROPS"];
@@ -32,6 +33,7 @@ function forumCommentsCommentMobile(
 			"NAME" => $comment["~NAME"],
 			"LAST_NAME" => $comment["~LAST_NAME"],
 			"SECOND_NAME" => $comment["~SECOND_NAME"],
+			"LOGIN" => $comment["~LOGIN"],
 			"AVATAR" => ($comment["AVATAR"] && $comment["AVATAR"]["FILE"] ? $comment["AVATAR"]["FILE"]['src'] : "")
 		),
 		"FILES" => $comment["FILES"],

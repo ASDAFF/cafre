@@ -1,6 +1,9 @@
 <?
 IncludeModuleLangFile(__FILE__);
 
+use Bitrix\Main\ArgumentException;
+use Bitrix\Main\NotSupportedException;
+
 abstract class CListField
 {
 	/** @var int */
@@ -159,7 +162,10 @@ abstract class CListField
 					"WIDTH" => $width,
 					"HEIGHT" => $height,
 					"SHOW_ADD_FORM" => $arSettings["SHOW_ADD_FORM"],
-					"SHOW_EDIT_FORM" => $arSettings["SHOW_EDIT_FORM"]
+					"SHOW_EDIT_FORM" => $arSettings["SHOW_EDIT_FORM"],
+					"ADD_READ_ONLY_FIELD" => $arSettings["ADD_READ_ONLY_FIELD"],
+					"EDIT_READ_ONLY_FIELD" => $arSettings["EDIT_READ_ONLY_FIELD"],
+					"SHOW_FIELD_PREVIEW" => $arSettings["SHOW_FIELD_PREVIEW"]
 				);
 				break;
 			default:
@@ -254,6 +260,7 @@ class CListElementField extends CListField
 	public function GetArray()
 	{
 		return array(
+			"FIELD_ID" => $this->_field_id,
 			"SORT" => $this->_sort,
 			"NAME" => $this->_label,
 			"IS_REQUIRED" => $this->_iblock_field["IS_REQUIRED"],
@@ -413,6 +420,7 @@ class CListPropertyField extends CListField
 		if(is_array($this->_property))
 		{
 			return array(
+				"FIELD_ID" => $this->_field_id,
 				"SORT" => $this->_sort,
 				"NAME" => $this->_property["NAME"],
 				"IS_REQUIRED" => $this->_property["IS_REQUIRED"],
@@ -452,6 +460,26 @@ class CListPropertyField extends CListField
 		return true;
 	}
 
+	private static function generatePropertyCode($name, $code, $iblockId, $propertyId = 0)
+	{
+		if(empty($code))
+		{
+			$code = CUtil::translit($name, LANGUAGE_ID, array("change_case" => "U"));
+		}
+
+		$object = CIBlockProperty::getList(array(), array("IBLOCK_ID" => $iblockId));
+		while($property = $object->fetch())
+		{
+			if($property["CODE"] == $code && $property["ID"] != $propertyId)
+			{
+				$code = $code.'_'.CLists::generateMnemonicCode();
+				break;
+			}
+		}
+
+		return $code;
+	}
+
 	public function Update($arFields)
 	{
 		if(isset($arFields["TYPE"]))
@@ -461,6 +489,11 @@ class CListPropertyField extends CListField
 
 		if(is_array($this->_property) && !CListFieldTypeList::IsField($newType))
 		{
+			if (self::existPropertyCode($this->_iblock_id, $arFields["CODE"], $this->_property["ID"]))
+			{
+				throw new NotSupportedException(GetMessage("LIST_PROPERTY_FIELD_DUPLICATE_CODE"));
+			}
+
 			foreach($this->GetArray() as $id => $val)
 				if(array_key_exists($id, $arFields) && $id != "IBLOCK_ID")
 					$this->_property[$id] = $arFields[$id];
@@ -486,6 +519,10 @@ class CListPropertyField extends CListField
 
 				return new CListPropertyField($this->_property["IBLOCK_ID"], "PROPERTY_".$this->_property["ID"], $arFields["NAME"], $arFields["SORT"]);
 			}
+			elseif (!empty($obProperty->LAST_ERROR))
+			{
+				throw new ArgumentException($obProperty->LAST_ERROR);
+			}
 		}
 
 		return null;
@@ -495,6 +532,10 @@ class CListPropertyField extends CListField
 	{
 		if($iblock_id > 0)
 		{
+			if (self::existPropertyCode($iblock_id, $arFields["CODE"]))
+			{
+				throw new NotSupportedException(GetMessage("LIST_PROPERTY_FIELD_DUPLICATE_CODE"));
+			}
 			$property_id = intval($arFields["ID"]);
 			if($property_id > 0)
 			{
@@ -509,10 +550,13 @@ class CListPropertyField extends CListField
 					$arFields["PROPERTY_TYPE"] = $arFields["TYPE"];
 				$arFields["MULTIPLE_CNT"] = 1;
 				$arFields["CHECK_PERMISSIONS"] = "N";
-				$arFields["CODE"] = $arFields["CODE"] ? $arFields["CODE"] : CLists::generateMnemonicCode();
 
 				$obProperty = new CIBlockProperty;
 				$res = $obProperty->Add($arFields);
+				if (!empty($obProperty->LAST_ERROR))
+				{
+					throw new ArgumentException($obProperty->LAST_ERROR);
+				}
 				if($res)
 				{
 					self::resetPropertyArrayCache();
@@ -525,6 +569,31 @@ class CListPropertyField extends CListField
 			}
 		}
 		return null;
+	}
+
+	private static function existPropertyCode($iblockId, $code, $propertyId = 0)
+	{
+		$iblockId = intval($iblockId);
+		if (!$iblockId)
+		{
+			throw new ArgumentException("Required parameter \"iblockId\" is missing.");
+		}
+		if (empty($code))
+		{
+			return false;
+		}
+
+		$queryObject = \CIBlockProperty::getList(array(), array("IBLOCK_ID" => $iblockId, "CODE" => $code));
+		$property = $queryObject->fetch();
+
+		if (!empty($property) && is_array($property))
+		{
+			return $property["ID"] != $propertyId;
+		}
+		else
+		{
+			return false;
+		}
 	}
 }
 ?>

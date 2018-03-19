@@ -40,7 +40,7 @@ class CComponentAjax
 
 	var $__nav_params = null;
 
-	function CComponentAjax($componentName, $componentTemplate, &$arParams, $parentComponent)
+	public function __construct($componentName, $componentTemplate, &$arParams, $parentComponent)
 	{
 		/** @global CMain $APPLICATION */
 		global $APPLICATION, $USER;
@@ -317,7 +317,7 @@ class CComponentAjax
 	{
 		$add_param = CAjax::GetSessionParam($this->componentID);
 
-		$regexp_links = '/(<a[^>]*?>.*?<\/a>)/is'.BX_UTF_PCRE_MODIFIER;
+		$regexp_links = '/(<a\s[^>]*?>.*?<\/a>)/is'.BX_UTF_PCRE_MODIFIER;
 		$regexp_params = '/([\w\-]+)\s*=\s*([\"\'])(.*?)\2/is'.BX_UTF_PCRE_MODIFIER;
 
 		$this->_checkPcreLimit($data);
@@ -338,7 +338,7 @@ class CComponentAjax
 
 		for($iData = 1; $iData < $cData; $iData += 2)
 		{
-			if(!preg_match('/^<a([^>]*?)>(.*?)<\/a>$/is'.BX_UTF_PCRE_MODIFIER, $arData[$iData], $match))
+			if(!preg_match('/^<a\s([^>]*?)>(.*?)<\/a>$/is'.BX_UTF_PCRE_MODIFIER, $arData[$iData], $match))
 				continue;
 
 			$params = $match[1];
@@ -370,7 +370,7 @@ class CComponentAjax
 
 			if ($url_key >= 0 && !$bIgnoreLink)
 			{
-				$url = str_replace('&amp;', '&', $arLinkParams[3][$url_key]);
+				$url = \Bitrix\Main\Text\Converter::getHtmlConverter()->decode($arLinkParams[3][$url_key]);
 				$url = str_replace($arSearch, '', $url);
 
 				if ($this->__isAjaxURL($url))
@@ -384,7 +384,7 @@ class CComponentAjax
 					$real_url .= strpos($url, '?') === false ? '?' : '&';
 					$real_url .= $add_param;
 
-					$url_str = CAjax::GetLinkEx($real_url, $url, $match[2], 'comp_'.$this->componentID, $strAdditional, true, $this->bShadow);
+					$url_str = CAjax::GetLinkEx($real_url, $url, $match[2], 'comp_'.$this->componentID, $strAdditional);
 
 					$arData[$iData] = $url_str;
 					$bDataChanged = true;

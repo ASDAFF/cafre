@@ -1,9 +1,12 @@
 <?
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
 
-class CBPMailActivity
-	extends CBPActivity
+use Bitrix\Main\Mail;
+
+class CBPMailActivity extends CBPActivity
 {
+	const DEFAULT_SEPARATOR = ',';
+
 	public function __construct($name)
 	{
 		parent::__construct($name);
@@ -16,9 +19,12 @@ class CBPMailActivity
 			"MailSubject" => "",
 			"MailText" => "",
 			"MailMessageType" => "plain",
+			"MailMessageEncoded" => 0,
 			"MailCharset" => "windows-1251",
 			"DirrectMail" => "Y",
 			"MailSite" => null,
+			"MailSeparator" => static::DEFAULT_SEPARATOR,
+			"File" => null,
 		);
 	}
 
@@ -60,6 +66,9 @@ class CBPMailActivity
 		$documentService = $this->workflow->GetService("DocumentService");
 
 		$strMailUserFrom = "";
+		$separator = $this->MailSeparator;
+		if (empty($separator))
+			$separator = static::DEFAULT_SEPARATOR;
 
 		list($mailUserFromArray, $mailUserFromArrayString) = static::ExtractEmails($this->MailUserFromArray);
 
@@ -70,26 +79,26 @@ class CBPMailActivity
 			if ($arUser = $dbUser->Fetch())
 			{
 				if (strlen($strMailUserFrom) > 0)
-					$strMailUserFrom .= ", ";
+					$strMailUserFrom .= $separator;
+				$userName = '';
+				$userEmail = preg_replace("#[\r\n]+#", "", $arUser["EMAIL"]);
+
 				if (!defined("BX_MS_SMTP") || BX_MS_SMTP!==true)
 				{
 					if (strlen($arUser["NAME"]) > 0 || strlen($arUser["LAST_NAME"]) > 0)
-						$strMailUserFrom .= "'".preg_replace("#['\r\n]+#", "", CUser::FormatName(COption::GetOptionString("bizproc", "name_template", CSite::GetNameFormat(false), SITE_ID), $arUser))."' <";
+					{
+						$userName = preg_replace("#['\r\n]+#", "", CUser::FormatName(COption::GetOptionString("bizproc", "name_template", CSite::GetNameFormat(false), SITE_ID), $arUser));
+					}
 				}
-				$strMailUserFrom .= preg_replace("#[\r\n]+#", "", $arUser["EMAIL"]);
-				if (!defined("BX_MS_SMTP") || BX_MS_SMTP!==true)
-				{
-					if (strlen($arUser["NAME"]) > 0 || strlen($arUser["LAST_NAME"]) > 0)
-						$strMailUserFrom .= ">";
-				}
+				$strMailUserFrom .= $userName? $userName.' <'.$userEmail.'>' : $userEmail;
 			}
 		}
 
-		$mailUserFromTmp = $this->MailUserFrom;
+		$mailUserFromTmp = str_replace(', ', $separator, $this->MailUserFrom);
 		if (strlen($mailUserFromTmp) > 0)
 		{
 			if (strlen($strMailUserFrom) > 0)
-				$strMailUserFrom .= ", ";
+				$strMailUserFrom .= $separator;
 			$strMailUserFrom .= preg_replace("#[\r\n]+#", "", $mailUserFromTmp);
 		}
 
@@ -98,7 +107,7 @@ class CBPMailActivity
 			foreach ($mailUserFromArrayString as $s)
 			{
 				if (strlen($strMailUserFrom) > 0)
-					$strMailUserFrom .= ", ";
+					$strMailUserFrom .= $separator;
 				$strMailUserFrom .= $s;
 			}
 		}
@@ -115,16 +124,16 @@ class CBPMailActivity
 			if ($arUser = $dbUser->Fetch())
 			{
 				if (strlen($strMailUserTo) > 0)
-					$strMailUserTo .= ", ";
+					$strMailUserTo .= $separator;
 				$strMailUserTo .= preg_replace("#[\r\n]+#", "", $arUser["EMAIL"]);
 			}
 		}
 
-		$mailUserToTmp = $this->MailUserTo;
+		$mailUserToTmp = str_replace(', ', $separator, $this->MailUserTo);
 		if (strlen($mailUserToTmp) > 0)
 		{
 			if (strlen($strMailUserTo) > 0)
-				$strMailUserTo .= ", ";
+				$strMailUserTo .= $separator;
 			$strMailUserTo .= preg_replace("#[\r\n]+#", "", $mailUserToTmp);
 		}
 
@@ -133,12 +142,18 @@ class CBPMailActivity
 			foreach ($MailUserToArrayString as $s)
 			{
 				if (strlen($strMailUserTo) > 0)
-					$strMailUserTo .= ", ";
+					$strMailUserTo .= $separator;
 				$strMailUserTo .= $s;
 			}
 		}
 
 		$charset = $this->MailCharset;
+
+		$mailText = $this->MailText;
+		if ($this->MailMessageEncoded)
+		{
+			$mailText = htmlspecialcharsback($mailText);
+		}
 
 		if (!$this->IsPropertyExists("DirrectMail") || $this->DirrectMail == "Y")
 		{
@@ -153,11 +168,14 @@ class CBPMailActivity
 			$mailSubject = $APPLICATION->ConvertCharset($this->MailSubject, SITE_CHARSET, $charset);
 			$mailSubject = CBPMailActivity::EncodeSubject($mailSubject, $charset);
 
-			$mailText = $APPLICATION->ConvertCharset(CBPHelper::ConvertTextForMail($this->MailText), SITE_CHARSET, $charset);
+			$mailText = $APPLICATION->ConvertCharset(CBPHelper::ConvertTextForMail($mailText), SITE_CHARSET, $charset);
 
 			$eol = CAllEvent::GetMailEOL();
 
-			mail(
+			$context = new Mail\Context();
+			$context->setCategory(Mail\Context::CAT_EXTERNAL);
+
+			bxmail(
 				$strMailUserTo,
 				$mailSubject,
 				$mailText,
@@ -165,7 +183,9 @@ class CBPMailActivity
 				"Reply-To: ".$strMailUserFrom.$eol.
 				"X-Priority: 3 (Normal)".$eol.
 				"Content-Type: text/".($this->MailMessageType == "html" ? "html" : "plain")."; charset=".$charset.$eol.
-				"X-Mailer: PHP/".phpversion()
+				"X-Mailer: PHP/".phpversion(),
+				"",
+				$context
 			);
 		}
 		else
@@ -178,13 +198,18 @@ class CBPMailActivity
 
 			$arFields = array(
 				"SENDER" => $strMailUserFrom,
+				"REPLY_TO" => $strMailUserFrom,
 				"RECEIVER" => $strMailUserTo,
 				"TITLE" => $this->MailSubject,
-				"MESSAGE" => CBPHelper::ConvertTextForMail($this->MailText),
+				"MESSAGE" => CBPHelper::ConvertTextForMail($mailText),
 			);
 
+			$files = (array)$this->ParseValue($this->getRawProperty('File'), 'file');
+			$files = array_filter($files);
+
+			$eventName = ($this->MailMessageType == "html") ? "BIZPROC_HTML_MAIL_TEMPLATE" : "BIZPROC_MAIL_TEMPLATE";
 			$event = new CEvent;
-			$event->Send("BIZPROC_MAIL_TEMPLATE", $siteId, $arFields, "N");
+			$event->Send($eventName, $siteId, $arFields, "N", '', $files);
 		}
 
 		return CBPActivityExecutionStatus::Closed;
@@ -264,9 +289,12 @@ class CBPMailActivity
 			"MailSubject" => "mail_subject",
 			"MailText" => "mail_text",
 			"MailMessageType" => "mail_message_type",
+			"MailMessageEncoded" => "mail_message_encoded",
 			"MailCharset" => "mail_charset",
 			"DirrectMail" => "dirrect_mail",
 			"MailSite" => "mail_site",
+			'MailSeparator' => 'mail_separator',
+			'File' => 'file',
 		);
 
 		if (!is_array($arWorkflowParameters))
@@ -312,6 +340,9 @@ class CBPMailActivity
 		if (($arCurrentValues['dirrect_mail'] != "Y") && ($arCurrentValues['dirrect_mail'] != "N"))
 			$arCurrentValues['dirrect_mail'] = "Y";
 
+		if (empty($arCurrentValues['mail_separator']))
+			$arCurrentValues['mail_separator'] = static::DEFAULT_SEPARATOR;
+
 		return $runtime->ExecuteResourceFile(
 			__FILE__,
 			"properties_dialog.php",
@@ -325,9 +356,6 @@ class CBPMailActivity
 	public static function GetPropertiesDialogValues($documentType, $activityName, &$arWorkflowTemplate, &$arWorkflowParameters, &$arWorkflowVariables, $arCurrentValues, &$arErrors)
 	{
 		$arErrors = array();
-
-		$runtime = CBPRuntime::GetRuntime();
-
 		$arMap = array(
 			"mail_user_from" => "MailUserFrom",
 			"mail_user_to" => "MailUserTo",
@@ -337,6 +365,8 @@ class CBPMailActivity
 			"mail_charset" => "MailCharset",
 			"dirrect_mail" => "DirrectMail",
 			"mail_site" => "MailSite",
+			'mail_separator' => 'MailSeparator',
+			'file' => 'File',
 		);
 
 		$arProperties = array();
@@ -349,6 +379,10 @@ class CBPMailActivity
 
 		if (strlen($arProperties["MailSite"]) <= 0)
 			$arProperties["MailSite"] = $arCurrentValues["mail_site_x"];
+
+		$arProperties["MailSeparator"] = trim($arProperties["MailSeparator"]);
+		if (strlen($arProperties["MailSeparator"]) <= 0)
+			$arProperties["MailSeparator"] = static::DEFAULT_SEPARATOR;
 
 		list($mailUserFromArray, $mailUserFrom) = CBPHelper::UsersStringToArray($arCurrentValues["mail_user_from"], $documentType, $arErrors, array(__CLASS__, "CheckEmailUserValue"));
 		if (count($arErrors) > 0)
@@ -366,6 +400,19 @@ class CBPMailActivity
 		if (count($arErrors) > 0)
 			return false;
 
+		$arProperties['MailMessageEncoded'] = 0;
+		if ($arProperties['MailMessageType'] === 'html')
+		{
+			$request = \Bitrix\Main\Application::getInstance()->getContext()->getRequest();
+			$rawData = $request->getPostList()->getRaw('mail_text');
+			if ($request->isAjaxRequest())
+			{
+				\CUtil::decodeURIComponent($rawData);
+			}
+			$arProperties['MailText'] = htmlspecialcharsbx($rawData);
+			$arProperties['MailMessageEncoded'] = 1;
+		}
+
 		$arCurrentActivity = &CBPWorkflowTemplateLoader::FindActivityByName($arWorkflowTemplate, $activityName);
 		$arCurrentActivity["Properties"] = $arProperties;
 
@@ -380,4 +427,3 @@ class CBPMailActivity
 		return null;
 	}
 }
-?>

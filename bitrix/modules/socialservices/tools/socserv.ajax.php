@@ -125,6 +125,13 @@ BX.loadScript('/bitrix/js/socialservices/ss_timeman.js?<?=$t?>', function(){
 		Header('Content-Type: application/json');
 		echo \Bitrix\Main\Web\Json::encode($res);
 	}
+	elseif($_REQUEST['action'] == "networkclosepopup")
+	{
+		\Bitrix\Socialservices\Network::setAdminPopupSession();
+
+		Header('Content-Type: application/json');
+		echo \Bitrix\Main\Web\Json::encode(array("result" => 1));
+	}
 }
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_after.php");
 ?>

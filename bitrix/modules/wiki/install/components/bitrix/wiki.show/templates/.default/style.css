@@ -51,6 +51,8 @@ div#wiki_category .ilike-light .bx-ilike-text {
 	padding: 0;
 }
 
+.wiki_post_feed h1 {line-height:25px;}
+
 #wiki-post-content pre,
 .wiki_post_feed pre{
 

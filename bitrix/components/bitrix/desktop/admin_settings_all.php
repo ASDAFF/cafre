@@ -15,6 +15,8 @@ if (false == check_bitrix_sessid() || !$GLOBALS["USER"]->IsAuthorized())
 	die();
 }
 
+$APPLICATION->SetAdditionalCSS('/bitrix/themes/.default/pubstyles.css');
+
 $strWarning = "";
 
 $arUserOptions = CUserOptions::GetOption("intranet", "~gadgets_admin_index", array(), false);
@@ -98,7 +100,7 @@ div.bx-core-dialog-content div.bx-desktopset-current-row div.edit-field {border:
 div.bx-core-dialog-content div.bx-desktopset-current-row div.edit-field-active {border-color: #434B50 #ADC0CF #ADC0CF #434B50 !important; background-color: white !important;}
 </style>
 <input type="hidden" name="save" value="Y" />
-<table border="0" cellpadding="0" cellspacing="0" class="bx-width100 internal" class="desktopset-table">
+<table border="0" cellpadding="0" cellspacing="0" class="bx-width100 internal">
 <thead>
 	<tr class="heading">
 		<td width="0"></td>
@@ -116,7 +118,7 @@ $itemcnt = 0;
 for($i=1; $i<=count($arUserOptions); $i++):
 	$itemcnt++;
 	$arUserOption = $arUserOptions[$i-1];
-	?><div class="bx-desktopset-placement" id="bx_desktopset_placement_<?=$i?>"><div class="bx-edit-desktopset-item" id="bx_desktopset_row_<?=$i?>"><table border="0" cellpadding="0" cellspacing="0" class="bx-width100 internal" class="desktopset-table"><tbody>
+	?><div class="bx-desktopset-placement" id="bx_desktopset_placement_<?=$i?>"><div class="bx-edit-desktopset-item" id="bx_desktopset_row_<?=$i?>"><table border="0" cellpadding="0" cellspacing="0" class="bx-width100 internal"><tbody>
 	<tr>
 		<td>
 			<input type="hidden" name="ids[]" value="<?=$i?>" />
@@ -125,7 +127,7 @@ for($i=1; $i<=count($arUserOptions); $i++):
 		</td>
 		</td>
 		<td>
-			<div onmouseout="rowMouseOut(this)" onmouseover="rowMouseOver(this)" class="edit-field view-area" id="view_area_text_<?=$i?>" style="width: 220px; padding: 2px; display: block; border: 1px solid white; cursor: text; -moz-box-sizing: border-box; background-position: right center; background-repeat: no-repeat;" onclick="editArea('text_<?=$i?>')" title="<?=GetMessage('CMDESKTOP_ADMIN_SETTINGS_ALL_TOOLTIP_TEXT_EDIT')?>"><?=(strlen($arUserOption["NAME"])>0?htmlspecialcharsbx($arUserOption["NAME"]):GetMessage('CMDESKTOP_ADMIN_SETTINGS_ALL_DIALOG_DESKTOP').$i)?></div>
+			<div onmouseout="rowMouseOut(this)" onmouseover="rowMouseOver(this)" class="edit-field view-area" id="view_area_text_<?=$i?>" onclick="editArea('text_<?=$i?>')" title="<?=GetMessage('CMDESKTOP_ADMIN_SETTINGS_ALL_TOOLTIP_TEXT_EDIT')?>"><?=(strlen($arUserOption["NAME"])>0?htmlspecialcharsbx($arUserOption["NAME"]):GetMessage('CMDESKTOP_ADMIN_SETTINGS_ALL_DIALOG_DESKTOP').$i)?></div>
 			<div class="edit-area" id="edit_area_text_<?=$i?>" style="display: none;"><input type="text" style="width: 220px;" name="text_<?echo $i?>" value="<?=(strlen($arUserOption["NAME"])>0?htmlspecialcharsbx($arUserOption["NAME"]):GetMessage('CMDESKTOP_ADMIN_SETTINGS_ALL_DIALOG_DESKTOP').$i)?>" onblur="viewArea('text_<?=$i?>')" /></div>
 		</td>
 		<td><span onclick="dsMoveUp(<?=$i?>)" class="rowcontrol up" style="visibility: <?=($i == 1 ? 'hidden' : 'visible')?>" title="<?=GetMessage('CMDESKTOP_ADMIN_SETTINGS_ALL_TOOLTIP_UP')?>"></span></td>
@@ -317,8 +319,8 @@ function rowMouseOver (obArea)
 	if (GLOBAL_bDisableActions || jsDD.bPreStarted)
 		return;
 
-	obArea.className = 'edit-field-active view-area';
-	obArea.style.backgroundColor = 'white';
+	//obArea.className = 'edit-field-active view-area';
+	//obArea.style.backgroundColor = 'white';
 }
 
 /* DD handlers */

@@ -1,4 +1,5 @@
 <?
+/** @global CMain $APPLICATION */
 require_once ($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 CModule::IncludeModule("iblock");
 require_once ($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/iblock/prolog.php");
@@ -454,7 +455,7 @@ class CAssocData extends CCSVData
 		{
 			if (strlen($file_name) > 0)
 			{
-				if (preg_match("/^(http|https):\\/\\//", $file_name))
+				if (preg_match("/^(ftp|ftps|http|https):\\/\\//", $file_name))
 					$arFile = CFile::MakeFileArray($file_name);
 				else
 					$arFile = CFile::MakeFileArray($io->GetPhysicalName($_SERVER["DOCUMENT_ROOT"].$PATH2PROP_FILES."/".$file_name));
@@ -467,7 +468,7 @@ class CAssocData extends CCSVData
 	}
 }
 /////////////////////////////////////////////////////////////////////
-if (($REQUEST_METHOD == "POST" || $CUR_FILE_POS > 0) && $STEP > 1 && check_bitrix_sessid())
+if (($_SERVER['REQUEST_METHOD'] == "POST" || $CUR_FILE_POS > 0) && $STEP > 1 && check_bitrix_sessid())
 {
 	//*****************************************************************//
 	if ($STEP > 1)
@@ -1070,7 +1071,7 @@ if (!$bAllLinesLoaded)
 ?>
 
 	<?echo GetMessage("IBLOCK_ADM_IMP_AUTO_REFRESH"); ?>
-	<a href="<?echo $APPLICATION->GetCurPage(); ?>?lang=<?echo LANG ?>&<?echo $strParams ?>"><?echo GetMessage("IBLOCK_ADM_IMP_AUTO_REFRESH_STEP"); ?></a><br>
+	<a href="<?echo $APPLICATION->GetCurPage(); ?>?lang=<?echo LANGUAGE_ID; ?>&<?echo $strParams ?>"><?echo GetMessage("IBLOCK_ADM_IMP_AUTO_REFRESH_STEP"); ?></a><br>
 
 	<script type="text/javascript">
 	function DoNext()
@@ -1083,7 +1084,7 @@ if (!$bAllLinesLoaded)
 }
 ?>
 
-<form method="POST" action="<?echo $sDocPath ?>?lang=<?echo LANG ?>" ENCTYPE="multipart/form-data" name="dataload" id="dataload">
+<form method="POST" action="<?=$APPLICATION->GetCurPage();?>?lang=<?=LANGUAGE_ID; ?>" ENCTYPE="multipart/form-data" name="dataload" id="dataload">
 
 <?$aTabs = array(
 	array(
@@ -1113,9 +1114,8 @@ if (!$bAllLinesLoaded)
 );
 $tabControl = new CAdminTabControl("tabControl", $aTabs, false, true);
 $tabControl->Begin();
-?>
 
-<?$tabControl->BeginNextTab();
+$tabControl->BeginNextTab();
 if ($STEP == 1)
 {
 ?>
@@ -1155,9 +1155,8 @@ if ($STEP == 1)
 	<?
 }
 $tabControl->EndTab();
-?>
 
-<?$tabControl->BeginNextTab();
+$tabControl->BeginNextTab();
 if ($STEP == 2)
 {
 ?>
@@ -1175,7 +1174,6 @@ if ($STEP == 2)
 				document.getElementById("table_f2").disabled = true;
 
 				document.dataload.metki_f.disabled = true;
-				/*document.dataload.first_names_f.disabled = true; */
 				document.getElementById("first_names_f_Y").disabled = true;
 
 				var i;
@@ -1184,12 +1182,12 @@ if ($STEP == 2)
 					document.dataload.delimiter_r[i].disabled = true;
 				}
 				document.dataload.delimiter_other_r.disabled = true;
-				/*document.dataload.first_names_r.disabled = true; */
 				document.getElementById("first_names_r_Y").disabled = true;
 			}
 
 			function ChangeExtra()
 			{
+				var i;
 				if (document.dataload.fields_type[0].checked)
 				{
 					document.getElementById("table_r").disabled = false;
@@ -1199,17 +1197,14 @@ if ($STEP == 2)
 					document.getElementById("table_f1").disabled = true;
 					document.getElementById("table_f2").disabled = true;
 
-					var i;
 					for (i = 0 ; i < document.dataload.delimiter_r.length; i++)
 					{
 						document.dataload.delimiter_r[i].disabled = false;
 					}
 					document.dataload.delimiter_other_r.disabled = false;
-					/* document.dataload.first_names_r.disabled = false; */
 					document.getElementById("first_names_r_Y").disabled = false;
 
 					document.dataload.metki_f.disabled = true;
-					/* document.dataload.first_names_f.disabled = true; */
 					document.getElementById("first_names_f_Y").disabled = true;
 
 					document.dataload.submit_btn.disabled = false;
@@ -1225,17 +1220,14 @@ if ($STEP == 2)
 						document.getElementById("table_f1").disabled = false;
 						document.getElementById("table_f2").disabled = false;
 
-						var i;
 						for (i = 0 ; i < document.dataload.delimiter_r.length; i++)
 						{
 							document.dataload.delimiter_r[i].disabled = true;
 						}
 						document.dataload.delimiter_other_r.disabled = true;
-						/* document.dataload.first_names_r.disabled = true; */
 						document.getElementById("first_names_r_Y").disabled = true;
 
 						document.dataload.metki_f.disabled = false;
-						/* document.dataload.first_names_f.disabled = false; */
 						document.getElementById("first_names_f_Y").disabled = false;
 
 						document.dataload.submit_btn.disabled = false;
@@ -1333,15 +1325,14 @@ if ($STEP == 2)
 		}
 	}
 ?>
-			<textarea name="data" wrap="OFF" rows="10" cols="80" style="width:100%"><?echo htmlspecialcharsbx($sContent); ?></textarea>
+			<textarea name="data" rows="10" cols="80" style="width:100%"><?echo htmlspecialcharsbx($sContent); ?></textarea>
 		</td>
 	</tr>
 	<?
 }
 $tabControl->EndTab();
-?>
 
-<?$tabControl->BeginNextTab();
+$tabControl->BeginNextTab();
 if ($STEP == 3)
 {
 ?>
@@ -1406,7 +1397,7 @@ if ($STEP == 3)
 			if (!$bSelected && !isset(${"field_".$i}))
 				$bSelected = $ar["code"] == $field;
 ?>
-						<option value="<?echo $ar["value"] ?>" <?
+						<option value="<?echo htmlspecialcharsbx($ar["value"]); ?>" <?
 			if ($bSelected)
 				echo "selected" ?>><?echo htmlspecialcharsbx($ar["name"]); ?></option>
 						<?
@@ -1498,21 +1489,20 @@ if ($STEP == 3)
 		}
 	}
 ?>
-			<textarea name="data" wrap="OFF" rows="10" cols="80" style="width:100%"><?echo htmlspecialcharsbx($sContent); ?></textarea>
+			<textarea name="data" rows="10" cols="80" style="width:100%"><?echo htmlspecialcharsbx($sContent); ?></textarea>
 		</td>
 	</tr>
 	<?
 }
 $tabControl->EndTab();
-?>
 
-<?$tabControl->BeginNextTab();
+$tabControl->BeginNextTab();
 if ($STEP == 4)
 {
 ?>
 	<tr>
 		<td>
-		<?echo CAdminMessage::ShowMessage(array(
+		<? CAdminMessage::ShowMessage(array(
 			"TYPE" => "PROGRESS",
 			"MESSAGE" => !$bAllLinesLoaded? GetMessage("IBLOCK_ADM_IMP_AUTO_REFRESH_CONTINUE"): GetMessage("IBLOCK_ADM_IMP_SUCCESS"),
 			"DETAILS" =>
@@ -1534,12 +1524,9 @@ if ($STEP == 4)
 <?
 }
 $tabControl->EndTab();
-?>
 
-<?$tabControl->Buttons();
-?>
+$tabControl->Buttons();
 
-<?
 if ($STEP < 4): ?>
 	<input type="hidden" name="STEP" value="<?echo $STEP + 1; ?>">
 	<?echo bitrix_sessid_post(); ?>
@@ -1593,10 +1580,10 @@ if ($STEP < 4): ?>
 	<?if ($STEP == 2)
 	{
 ?>
-		<SCRIPT LANGUAGE="JavaScript">
+		<script type="text/javascript">
 			DeactivateAllExtra();
 			ChangeExtra();
-		</SCRIPT>
+		</script>
 		<?
 	}
 ?>
@@ -1604,15 +1591,12 @@ if ($STEP < 4): ?>
 	else: ?>
 	<input type="submit" name="backButton2" value="&lt;&lt; <?echo GetMessage("IBLOCK_ADM_IMP_2_1_STEP"); ?>" class="adm-btn-save">
 <?
-	endif; ?>
+	endif;
 
-<?$tabControl->End();
+$tabControl->End();
 ?>
-
 </form>
-
-<script language="JavaScript">
-<!--
+<script type="text/javascript">
 <?if ($STEP < 2): ?>
 tabControl.SelectTab("edit1");
 tabControl.DisableTab("edit2");
@@ -1634,8 +1618,5 @@ tabControl.DisableTab("edit1");
 tabControl.DisableTab("edit2");
 tabControl.DisableTab("edit3");
 <?endif; ?>
-//-->
 </script>
-
 <?require ($DOCUMENT_ROOT."/bitrix/modules/main/include/epilog_admin.php");
-?>

@@ -1,4 +1,4 @@
-<?
+<?php
 IncludeModuleLangFile(__FILE__);
 
 class CClusterGroup
@@ -92,7 +92,7 @@ class CClusterGroup
 		return true;
 	}
 
-	function GetList($arOrder=false, $arFilter=false, $arSelect=false)
+	public static function GetList($arOrder=false, $arFilter=false, $arSelect=false)
 	{
 		global $DB;
 
@@ -181,10 +181,9 @@ class CClusterGroup
 		return $DB->Query($strSql, false, '', array('fixed_connection'=>true));
 	}
 
-	function GetArrayByID($ID)
+	public static function GetArrayByID($ID)
 	{
 		$rs = CClusterGroup::GetList(array(), array("=ID"=>$ID));
 		return $rs->Fetch();
 	}
 }
-?>

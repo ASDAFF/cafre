@@ -20,9 +20,11 @@ if(!CModule::IncludeModule('lists'))
 	return;
 }
 
+CUtil::JSPostUnescape();
+
 $IBLOCK_ID = intval($arParams["~IBLOCK_ID"]);
-if(isset($_GET["list_section_id"]))
-	$section_id = intval($_GET["list_section_id"]);
+if(isset($_REQUEST["list_section_id"]))
+	$section_id = intval($_REQUEST["list_section_id"]);
 else
 	$section_id = intval($arParams["~SECTION_ID"]);
 
@@ -101,7 +103,6 @@ $arResult["CAN_READ"] = (
 	&& (
 		$lists_perm > CListPermissions::CAN_READ
 		|| CIBlockSectionRights::UserHasRightTo($IBLOCK_ID, $section_id, "element_read")
-		|| CIBlockSectionRights::UserHasRightTo($IBLOCK_ID, $section_id, "section_element_bind")
 	)
 );
 $arResult["CAN_EDIT_SECTIONS"] = (
@@ -116,18 +117,19 @@ $arResult["IBLOCK_PERM"] = $lists_perm;
 $arResult["USER_GROUPS"] = $USER->GetUserGroupArray();
 $arIBlock = CIBlock::GetArrayByID(intval($arParams["~IBLOCK_ID"]));
 $arResult["~IBLOCK"] = $arIBlock;
-$arResult["IBLOCK"] = htmlspecialcharsex($arIBlock);
+$arResult["IBLOCK"] = $arIBlock;
 $arResult["IBLOCK_ID"] = $arIBlock["ID"];
 $arResult["PROCESSES"] = false;
 $arResult["USE_COMMENTS"] = false;
 $arResult["RAND_STRING"] = $this->randString();
+$arResult['JS_OBJECT'] = 'ListClass_'.$arResult['RAND_STRING'];
 if($arParams["IBLOCK_TYPE_ID"] == COption::GetOptionString("lists", "livefeed_iblock_type_id"))
 {
 	$arResult["USE_COMMENTS"] = (bool)CModule::includeModule("forum");
 	$arResult["PROCESSES"] = true;
 }
 
-if ($arResult["IBLOCK"]["BIZPROC"] == "Y" && CModule::IncludeModule('bizproc'))
+if ($arResult["IBLOCK"]["BIZPROC"] == "Y" && CModule::IncludeModule('bizproc') && CBPRuntime::isFeatureEnabled())
 {
 	$arParams["CAN_EDIT_BIZPROC"] = (
 		!$arResult["IS_SOCNET_GROUP_CLOSED"]
@@ -135,7 +137,7 @@ if ($arResult["IBLOCK"]["BIZPROC"] == "Y" && CModule::IncludeModule('bizproc'))
 			CBPCanUserOperateOperation::CreateWorkflow,
 			$USER->GetID(),
 			BizProcDocument::generateDocumentComplexType($arParams["IBLOCK_TYPE_ID"], $IBLOCK_ID),
-			array("UserGroups" => $USER->GetUserGroupArray())
+			array("UserGroups" => $arResult["USER_GROUPS"])
 		)
 	);
 }
@@ -149,17 +151,30 @@ else
 	$arParams["SOCNET_GROUP_ID"] = "";
 }
 
+$APPLICATION->SetTitle(htmlspecialcharsbx($arResult["IBLOCK"]["NAME"]));
 
 $arResult["GRID_ID"] = "lists_list_elements_".$arResult["IBLOCK_ID"];
+$arResult["FILTER_ID"] = "lists_list_elements_".$arResult["IBLOCK_ID"];
 
-$arResult["ANY_SECTION"] = isset($_GET["list_section_id"]) && strlen($_GET["list_section_id"]) == 0;
+$arResult["ANY_SECTION"] = (isset($_REQUEST["list_section_id"]) && strlen($_REQUEST["list_section_id"]) == 0)
+	|| (!isset($_REQUEST["list_section_id"]));
 $arResult["SECTION"] = false;
 $arResult["SECTION_ID"] = false;
 $arResult["PARENT_SECTION_ID"] = false;
-$arResult["SECTIONS"] = array();
-$arResult["LIST_SECTIONS"] = array("0" => GetMessage("CC_BLL_UPPER_LEVEL"));
-$arResult["~LIST_SECTIONS"] = array("0" => GetMessage("CC_BLL_UPPER_LEVEL"));
+$sectionUpperUrl = CHTTP::urlAddParams(str_replace(array("#list_id#", "#section_id#", "#group_id#"),
+	array($arResult["IBLOCK_ID"], 0, $arParams["SOCNET_GROUP_ID"]),
+	$arParams['LIST_URL']), array('list_section_id' => ""));
+$arResult["SECTIONS"] = array(
+	array(
+		"NAME" => GetMessage("CC_BLL_UPPER_LEVEL"),
+		"NAME_HTML" => '<a href="'.$sectionUpperUrl .'">'.GetMessage("CC_BLL_UPPER_LEVEL").'</a>',
+	)
+);
+$arResult["LIST_SECTIONS"] = array("" => GetMessage("CC_BLL_UPPER_LEVEL"));
+$arResult["~LIST_SECTIONS"] = array("" => GetMessage("CC_BLL_UPPER_LEVEL"));
 $arResult["SECTION_PATH"] = array();
+$sectionTreeId = array();
+$sectionListParentId = array();
 
 $rsSections = CIBlockSection::GetList(
 	array("left_margin" => "asc"),
@@ -167,44 +182,58 @@ $rsSections = CIBlockSection::GetList(
 		"IBLOCK_ID" => $arIBlock["ID"],
 		"GLOBAL_ACTIVE" => "Y",
 		"CHECK_PERMISSIONS" => ($lists_perm >= CListPermissions::CAN_READ? "N": "Y"),
-	)
+	),
+	false,
+	array()
 );
 while($arSection = $rsSections->GetNext())
 {
 	if($section_id && !$arResult["SECTION"])
 	{
-		while(count($arResult["SECTION_PATH"]) && $arSection["DEPTH_LEVEL"] <= $arResult["SECTION_PATH"][count($arResult["SECTION_PATH"])-1]["DEPTH_LEVEL"])
+		while(count($arResult["SECTION_PATH"]) && $arSection["DEPTH_LEVEL"] <= $arResult["SECTION_PATH"]
+			[count($arResult["SECTION_PATH"])-1]["DEPTH_LEVEL"])
 			array_pop($arResult["SECTION_PATH"]);
 
-		if(!count($arResult["SECTION_PATH"])|| $arSection["DEPTH_LEVEL"] > $arResult["SECTION_PATH"][count($arResult["SECTION_PATH"])-1]["DEPTH_LEVEL"])
+		if(!count($arResult["SECTION_PATH"])|| $arSection["DEPTH_LEVEL"] > $arResult["SECTION_PATH"]
+			[count($arResult["SECTION_PATH"])-1]["DEPTH_LEVEL"])
 			array_push($arResult["SECTION_PATH"], $arSection);
 	}
 
 	if($arSection["ID"] == $section_id)
 	{
 		$arResult["SECTION"] = $arSection;
-		$arResult["SECTION_ID"] = $arSection["ID"];
+		$arResult["SECTION_ID"] = intval($arSection["ID"]);
 		$arResult["PARENT_SECTION_ID"] = $arSection["IBLOCK_SECTION_ID"];
 	}
 
+	$arResult["LIST_SECTIONS"][$arSection["ID"]] = str_repeat(" . ", $arSection["DEPTH_LEVEL"]).$arSection["NAME"];
+	$arResult["~LIST_SECTIONS"][$arSection["ID"]] = str_repeat(" . ", $arSection["DEPTH_LEVEL"]).$arSection["~NAME"];
+
+	$sectionUrl = CHTTP::URN2URI(CHTTP::urlAddParams(str_replace(array("#list_id#", "#section_id#", "#group_id#"),
+		array($arResult["IBLOCK_ID"], 0, $arParams["SOCNET_GROUP_ID"]),
+		$arParams['LIST_URL']), array('list_section_id' => $arSection["ID"])));
+
 	$arResult["SECTIONS"][$arSection["ID"]] = array(
 		"ID" => $arSection["ID"],
-		"NAME"=>$arSection["NAME"],
-		"LIST_URL"=>str_replace(
+		"NAME" => $arSection["NAME"],
+		"LIST_URL" => str_replace(
 			array("#list_id#", "#section_id#", "#group_id#"),
 			array($arSection["IBLOCK_ID"], $arSection["ID"], $arParams["SOCNET_GROUP_ID"]),
 			$arParams['LIST_URL']
 		),
+		"PARENT_ID" => intval($arSection["IBLOCK_SECTION_ID"]),
+		"SECTION_URL" => $sectionUrl,
+		"NAME_HTML_LABLE" => '<a href="'.$sectionUrl .'">'.htmlspecialcharsbx($arSection["~NAME"]).'</a>',
+		"NAME_HTML" => '<a href="'.$sectionUrl .'">'.htmlspecialcharsbx(str_repeat(
+			" . ", ($arSection["DEPTH_LEVEL"])).$arSection["~NAME"]).'</a>',
+		"DEPTH_LEVEL" => intval($arSection["DEPTH_LEVEL"])
 	);
-
-	$arResult["LIST_SECTIONS"][$arSection["ID"]] = str_repeat(" . ", $arSection["DEPTH_LEVEL"]).$arSection["NAME"];
-	$arResult["~LIST_SECTIONS"][$arSection["ID"]] = str_repeat(" . ", $arSection["DEPTH_LEVEL"]).$arSection["~NAME"];
 }
 
 foreach($arResult["SECTION_PATH"] as $i => $arSection)
 {
 	$arResult["SECTION_PATH"][$i] = array(
-		"NAME" => htmlspecialcharsex($arSection["NAME"]),
+		"NAME" => $arSection["NAME"],
 		"URL" => str_replace(
 			array("#list_id#", "#section_id#", "#group_id#"),
 			array($arIBlock["ID"], intval($arSection["ID"]), $arParams["SOCNET_GROUP_ID"]),
@@ -227,6 +256,13 @@ $arResult["~LIST_EDIT_URL"] = str_replace(
 );
 $arResult["LIST_EDIT_URL"] = htmlspecialcharsbx($arResult["~LIST_EDIT_URL"]);
 
+$arResult["~LIST_FIELDS_URL"] = str_replace(
+	array("#list_id#", "#group_id#"),
+	array($arResult["IBLOCK_ID"], $arParams["SOCNET_GROUP_ID"]),
+	$arParams["~LIST_FIELDS_URL"]
+);
+$arResult["LIST_FIELDS_URL"] = htmlspecialcharsbx($arResult["~LIST_FIELDS_URL"]);
+
 $arResult["~LIST_URL"] = str_replace(
 	array("#list_id#", "#section_id#", "#group_id#"),
 	array($arResult["IBLOCK_ID"], intval($arResult["SECTION_ID"]), $arParams["SOCNET_GROUP_ID"]),
@@ -241,11 +277,10 @@ $arResult["~LIST_SECTION_URL"] = str_replace(
 );
 $arResult["LIST_SECTION_URL"] = htmlspecialcharsbx($arResult["~LIST_SECTION_URL"]);
 
-$arResult["~LIST_PARENT_URL"] = str_replace(
-	array("#list_id#", "#section_id#", "#group_id#"),
-	array($arResult["IBLOCK_ID"], intval($arResult["PARENT_SECTION_ID"]), $arParams["SOCNET_GROUP_ID"]),
-	$arParams["~LIST_URL"]
-);
+$parentSectionUrl = $arResult["PARENT_SECTION_ID"] ? $arResult["PARENT_SECTION_ID"] : "";
+$arResult["~LIST_PARENT_URL"] = CHTTP::urlAddParams(str_replace(array("#list_id#", "#section_id#", "#group_id#"),
+	array($arResult["IBLOCK_ID"], 0, $arParams["SOCNET_GROUP_ID"]),
+	$arParams['LIST_URL']), array('list_section_id' => $parentSectionUrl));
 $arResult["LIST_PARENT_URL"] = htmlspecialcharsbx($arResult["~LIST_PARENT_URL"]);
 
 $arResult["~BIZPROC_WORKFLOW_ADMIN_URL"] = str_replace(
@@ -296,27 +331,7 @@ if(
 	}
 
 	/*Take action*/
-	if($_POST["action_button_".$arResult["GRID_ID"]]  == "section")
-	{
-		if(
-			!$arResult["IS_SOCNET_GROUP_CLOSED"]
-			&& (
-				$lists_perm >= CListPermissions::CAN_WRITE
-				|| CIBlockSectionRights::UserHasRightTo($arIBlock["ID"], $_POST["section_to_move"], "section_element_bind")
-			)
-		)
-		{
-			$rsElements = CIBlockElement::GetList(array(), $arFilter, false, false, array("ID"));
-			while($arElement = $rsElements->Fetch())
-				$obElement->SetElementSection(
-					$arElement["ID"],
-					array($_POST["section_to_move"]),
-					false,
-					($arIBlock["RIGHTS_MODE"]=="E"? $arIBlock["ID"]: 0)
-				);
-		}
-	}
-	elseif($_POST["action_button_".$arResult["GRID_ID"]] == "delete" && isset($_POST["ID"]) && is_array($_POST["ID"]))
+	if($_POST["action_button_".$arResult["GRID_ID"]] == "delete" && isset($_POST["ID"]) && is_array($_POST["ID"]))
 	{
 		$rsElements = CIBlockElement::GetList(array(), $arFilter, false, false, array("ID"));
 		while($arElement = $rsElements->Fetch())
@@ -347,19 +362,6 @@ if(
 			}
 		}
 	}
-
-	if(!isset($_POST["AJAX_CALL"]))
-	{
-		if ($strError)
-		{
-			$_SESSION[$errorID] = $strError;
-			LocalRedirect(CHTTP::urlAddParams($arResult["~LIST_URL"], array("error" => $errorID)));
-		}
-		else
-		{
-			LocalRedirect($arResult["~LIST_URL"]);
-		}
-	}
 }
 
 //Show error message if required
@@ -381,11 +383,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['error']))
 	}
 }
 
-$grid_options = new CGridOptions($arResult["GRID_ID"]);
+$grid_options = new Bitrix\Main\Grid\Options($arResult["GRID_ID"]);
 $grid_columns = $grid_options->GetVisibleColumns();
 $grid_sort = $grid_options->GetSorting(array("sort"=>array("name"=>"asc")));
 
-if($arResult["IBLOCK"]["BIZPROC"]=="Y" && CModule::IncludeModule('bizproc'))
+if($arResult["IBLOCK"]["BIZPROC"]=="Y" && CModule::IncludeModule('bizproc') && CBPRuntime::isFeatureEnabled())
 {
 	$arDocumentTemplates = CBPDocument::GetWorkflowTemplatesForDocumentType(
 		BizProcDocument::generateDocumentComplexType($arParams["IBLOCK_TYPE_ID"], $arResult["IBLOCK_ID"])
@@ -399,12 +401,19 @@ else
 }
 
 /* FIELDS */
-$arResult["ELEMENTS_HEADERS"] = array();
+$arResult["ELEMENTS_HEADERS"] = array(
+	array(
+		"id" => "ID",
+		"name" => "ID",
+		"default" => false,
+		"sort" => "ID"
+	)
+);
+$ignoreSortFields = array("S:Money", "PREVIEW_TEXT", "DETAIL_TEXT", "S:ECrm", "S:map_yandex");
 $arSelect = array("ID", "IBLOCK_ID");
 $arProperties = array();
-
-$arResult["FIELDS"] = $arListFields = $obList->GetFields();
-foreach($arListFields as $FIELD_ID => $arField)
+$arResult["FIELDS"] = $listFields = $obList->GetFields();
+foreach($listFields as $FIELD_ID => $arField)
 {
 	if(!count($grid_columns) || in_array($FIELD_ID, $grid_columns))
 	{
@@ -422,12 +431,11 @@ foreach($arListFields as $FIELD_ID => $arField)
 
 	$arResult["ELEMENTS_HEADERS"][] = array(
 		"id" => $FIELD_ID,
-		"name" => htmlspecialcharsex($arField["NAME"]),
+		"name" => $arField["NAME"],
 		"default" => true,
-		"sort" => $arField["MULTIPLE"]=="Y"? "": $FIELD_ID,
+		"sort" => $arField["MULTIPLE"] == "Y" || in_array($arField["TYPE"], $ignoreSortFields)? "": $FIELD_ID,
 	);
 }
-
 if(!count($grid_columns) || in_array("IBLOCK_SECTION_ID", $grid_columns))
 {
 	$arSelect[] = "IBLOCK_SECTION_ID";
@@ -438,7 +446,6 @@ $arResult["ELEMENTS_HEADERS"][] = array(
 	"default" => true,
 	"sort" => false,
 );
-
 if(count($arDocumentTemplates) > 0)
 {
 	$arSelect[] = "CREATED_BY";
@@ -449,7 +456,6 @@ if(count($arDocumentTemplates) > 0)
 		"sort" => false,
 	);
 }
-
 if($arResult["PROCESSES"] && $arResult["USE_COMMENTS"])
 {
 	$arResult["ELEMENTS_HEADERS"][] = array(
@@ -458,18 +464,8 @@ if($arResult["PROCESSES"] && $arResult["USE_COMMENTS"])
 		"default" => true,
 		"sort" => false,
 		'hideName' => true,
-		'iconCls' => 'bp-comments-icon'
+		'iconCls' => 'bp-comments-icon',
 	);
-}
-
-if(empty($grid_columns))
-{
-	foreach($arResult["ELEMENTS_HEADERS"] as $elementHeader)
-		$columnGrid[] = $elementHeader["id"];
-
-	$columns = implode(',', $columnGrid);
-	$grid_options->SetColumns($columns);
-	$grid_options->Save();
 }
 
 /* FILTER */
@@ -478,6 +474,12 @@ foreach($arResult["~LIST_SECTIONS"] as $id => $name)
 	$sections[$id] = $name;
 
 $arResult["FILTER"] = array(
+	array(
+		"id" => "ID",
+		"name" => "ID",
+		"type" => "number",
+		"filterable" => ""
+	),
 	array(
 		"id" => "list_section_id",
 		"name" => GetMessage("CC_BLL_SECTION"),
@@ -488,150 +490,85 @@ $arResult["FILTER"] = array(
 		"value" => $arResult["SECTION_ID"],
 	),
 );
-$i = 1;
 
-$arFilterable = array();
-$arCustomFilter = array();
-$arDateFilter = array();
-
-foreach($arListFields as $FIELD_ID => $arField)
+$filterable = array("ID" => "");
+$dateFilter = array();
+$customFilter = array();
+$listNotFilterField = array("PREVIEW_PICTURE", "DETAIL_PICTURE", "F", "S:DiskFile");
+$arResult["FILTER_CUSTOM_ENTITY"] = array();
+foreach($listFields as $fieldId => $field)
 {
-	if(
-		$arField["TYPE"] == "ACTIVE_FROM"
-		|| $arField["TYPE"] == "ACTIVE_TO"
-	)
-	{
-		$arResult["FILTER"][$i] = array(
-			"id" => "DATE_".$FIELD_ID,
-			"name" => htmlspecialcharsex($arField["NAME"]),
-			"type" => "date",
-		);
-		$arFilterable["DATE_".$FIELD_ID] = "";
-		$arDateFilter["DATE_".$FIELD_ID] = true;
-	}
-	elseif(
-		$arField["TYPE"] == "DATE_CREATE"
-		|| $arField["TYPE"] == "TIMESTAMP_X"
-	)
-	{
-		$arResult["FILTER"][$i] = array(
-			"id" => $FIELD_ID,
-			"name" => htmlspecialcharsex($arField["NAME"]),
-			"type" => "date",
-		);
-		$arFilterable[$FIELD_ID] = "";
-		$arDateFilter[$FIELD_ID] = true;
-	}
-	elseif($arField["TYPE"] == "PREVIEW_PICTURE" || $arField["TYPE"] == "DETAIL_PICTURE")
-	{
-	}
-	elseif(is_array($arField["PROPERTY_USER_TYPE"]) && array_key_exists("GetPublicFilterHTML", $arField["PROPERTY_USER_TYPE"]))
-	{
-		$arResult["FILTER"][$i] = array(
-			"id" => $FIELD_ID,
-			"name" => htmlspecialcharsex($arField["NAME"]),
-			"type" => "custom",
-			"fieldsType" => $arField["TYPE"],
-			"enable_settings" => false,
-			"value" => call_user_func_array($arField["PROPERTY_USER_TYPE"]["GetPublicFilterHTML"], array(
-				$arField,
-				array(
-					"VALUE"=>$FIELD_ID,
-					"FORM_NAME"=>"filter_".$arResult["GRID_ID"],
-					"GRID_ID" => $arResult["GRID_ID"],
-				),
-			)),
-		);
-		$arFilterable[$FIELD_ID] = "";
-		if(array_key_exists("AddFilterFields", $arField["PROPERTY_USER_TYPE"]))
-			$arCustomFilter[$FIELD_ID] = array(
-				"callback" => $arField["PROPERTY_USER_TYPE"]["AddFilterFields"],
-				"filter" => &$arResult["FILTER"][$i],
-			);
-	}
-	elseif($arField["TYPE"] == "F")
-	{
-	}
-	elseif($arField["TYPE"] == "SORT" || $arField["TYPE"] == "N")
-	{
-		$arResult["FILTER"][$i] = array(
-			"id" => $FIELD_ID,
-			"name" => htmlspecialcharsex($arField["NAME"]),
-			"type" => "number",
-		);
-		$arFilterable[$FIELD_ID] = "";
-	}
-	elseif($arField["TYPE"] == "G")
-	{
-		$items = array();
-		$prop_secs = CIBlockSection::GetList(array("left_margin" => "asc"), array("IBLOCK_ID" => $arField["LINK_IBLOCK_ID"]));
-		while($ar_sec = $prop_secs->Fetch())
-			$items[$ar_sec["ID"]] = str_repeat(". ", $ar_sec["DEPTH_LEVEL"]-1).$ar_sec["NAME"];
+	if(in_array($field["TYPE"], $listNotFilterField)) continue;
 
-		$arResult["FILTER"][$i] = array(
-			"id" => $FIELD_ID,
-			"name" => htmlspecialcharsex($arField["NAME"]),
-			"type" => "list",
-			"items" => $items,
-			"params" => array("size"=>5, "multiple"=>"multiple"),
-			"valign" => "top",
-		);
-		$arFilterable[$FIELD_ID] = "";
-	}
-	elseif($arField["TYPE"] == "L")
+	if(is_array($field["PROPERTY_USER_TYPE"])
+		&& array_key_exists("GetPublicFilterHTML", $field["PROPERTY_USER_TYPE"]))
 	{
-		$items = array();
-		$prop_enums = CIBlockProperty::GetPropertyEnum($arField["ID"]);
-		while($ar_enum = $prop_enums->Fetch())
-			$items[$ar_enum["ID"]] = $ar_enum["VALUE"];
+		$field["GRID_ID"] = $arResult["GRID_ID"];
+		$field["FILTER_ID"] = $arResult["FILTER_ID"];
+	}
 
-		$arResult["FILTER"][$i] = array(
-			"id" => $FIELD_ID,
-			"name" => htmlspecialcharsex($arField["NAME"]),
-			"type" => "list",
-			"items" => $items,
-			"params" => array("size"=>5, "multiple"=>"multiple"),
-			"valign" => "top",
-		);
-		$arFilterable[$FIELD_ID] = "";
-	}
-	elseif(in_array($arField["TYPE"], array("S", "S:HTML", "NAME", "DETAIL_TEXT", "PREVIEW_TEXT")))
+	// todo Temporary condition
+	if($field["TYPE"] == "S:ECrm" && !empty($field["USER_TYPE_SETTINGS"]["VISIBLE"]))
+		unset($field["USER_TYPE_SETTINGS"]["VISIBLE"]);
+
+	$preparedField = Bitrix\Lists\Field::prepareFieldDataForFilter($field);
+
+	$filterable[$preparedField["id"]] = $preparedField["filterable"];
+	if(!empty($preparedField["dateFilter"]))
 	{
-		$arResult["FILTER"][$i] = array(
-			"id" => $FIELD_ID,
-			"name" => htmlspecialcharsex($arField["NAME"]),
-		);
-		$arFilterable[$FIELD_ID] = "?";
+		$dateFilter[$preparedField["id"]] = true;
 	}
-	else
+	if(!empty($preparedField["customFilter"]))
 	{
-		$arResult["FILTER"][$i] = array(
-			"id" => $FIELD_ID,
-			"name" => htmlspecialcharsex($arField["NAME"]),
-			"fieldsType" => $arField["TYPE"]
-		);
-		$arFilterable[$FIELD_ID] = "";
+		$customFilter[$preparedField["id"]] = $preparedField["customFilter"];
 	}
-	$i++;
+	if($preparedField["type"] == "custom_entity")
+	{
+		if(!empty($field["PROPERTY_USER_TYPE"]["USER_TYPE"]))
+			$fieldType = $field["PROPERTY_USER_TYPE"]["USER_TYPE"];
+		else
+			$fieldType = $field["TYPE"];
+		$field["IBLOCK_ID"] = $arResult["IBLOCK_ID"];
+		$field["IBLOCK_TYPE_ID"] = $arParams["IBLOCK_TYPE_ID"];
+		if(!is_array($arResult["FILTER_CUSTOM_ENTITY"][$fieldType]))
+			$arResult["FILTER_CUSTOM_ENTITY"][$fieldType] = array();
+		$arResult["FILTER_CUSTOM_ENTITY"][$fieldType][] = $field;
+	}
+
+	$arResult["FILTER"][] = $preparedField;
 }
 
 $arFilter = array();
-$arResult["GRID_FILTER"] = $grid_filter = $grid_options->GetFilter($arResult["FILTER"]);
-foreach($grid_filter as $key => $value)
+$filterOption = new Bitrix\Main\UI\Filter\Options($arResult["FILTER_ID"]);
+$filterData = $filterOption->getFilter($arResult["FILTER"]);
+foreach($filterData as $key => $value)
 {
+	if (is_array($value))
+	{
+		if (empty($value))
+			continue;
+	}
+	elseif(strlen($value) <= 0)
+		continue;
+
 	if(substr($key, -5) == "_from")
 	{
-		$op = ">=";
 		$new_key = substr($key, 0, -5);
+		$op = (!empty($filterData[$new_key."_numsel"]) && $filterData[$new_key."_numsel"] == "more") ? ">" : ">=";
 	}
 	elseif(substr($key, -3) == "_to")
 	{
-		$op = "<=";
 		$new_key = substr($key, 0, -3);
-		if(array_key_exists($new_key, $arDateFilter))
+		$op = (!empty($filterData[$new_key."_numsel"]) && $filterData[$new_key."_numsel"] == "less") ? "<" : "<=";
+		if(array_key_exists($new_key, $dateFilter))
 		{
-			if(!preg_match("/\\d\\d:\\d\\d:\\d\\d\$/", $value))
-				$value .= " 23:59:59";
+			$dateFormat = $DB->dateFormatToPHP(Csite::getDateFormat());
+			$dateParse = date_parse_from_format($dateFormat, $value);
+			if(!strlen($dateParse["hour"]) && !strlen($dateParse["minute"]) && !strlen($dateParse["second"]))
+			{
+				$timeFormat = $DB->dateFormatToPHP(CSite::getTimeFormat());
+				$value .= " ".date($timeFormat, mktime(23, 59, 59, 0, 0, 0));
+			}
 		}
 	}
 	else
@@ -646,88 +583,132 @@ foreach($grid_filter as $key => $value)
 		{
 			$userId = array();
 			$userQuery = CUser::GetList(
-				$by = 'ID',
-				$order = 'ASC',
+				$by = "ID",
+				$order = "ASC",
 				array("NAME" => $value),
 				array("FIELDS" => array("ID"))
 			);
 			while($user = $userQuery->fetch())
-			{
 				$userId[] = $user["ID"];
-			}
 			if(!empty($userId))
-			{
 				$value = $userId;
-			}
 		}
 	}
 
-	foreach($arResult["FILTER"] as $filterArray)
-	{
-		if(array_search($key, $filterArray))
-		{
-			if(
-				isset($filterArray["fieldsType"]) &&
-				($filterArray["fieldsType"] == "E" || $filterArray["fieldsType"] == "E:EList")
-			)
-			{
-				if(!intval($value))
-				{
-					$elementId = array();
-					$elementQuery = CIBlockElement::getList(
-						array("SORT" => "ASC"),
-						array("NAME" => "%".$value."%")
-					);
-					while($element = $elementQuery->fetch())
-					{
-						$elementId[] = $element["ID"];
-					}
-					if(!empty($elementId))
-					{
-						$value = $elementId;
-					}
-				}
-			}
-		}
-	}
-
-	if(array_key_exists($new_key, $arFilterable))
+	if(array_key_exists($new_key, $filterable))
 	{
 		if($op == "")
-			$op = $arFilterable[$new_key];
+			$op = $filterable[$new_key];
 		$arFilter[$op.$new_key] = $value;
+	}
+
+	if($key == "FIND" && trim($value))
+	{
+		$op = "*";
+		$arFilter[$op."SEARCHABLE_CONTENT"] = $value;
 	}
 }
 
-foreach($arCustomFilter as $FIELD_ID => $arCallback)
+foreach($customFilter as $fieldId => $callback)
 {
 	$filtered = false;
-	call_user_func_array($arCallback["callback"], array(
-		$arListFields[$FIELD_ID],
+	call_user_func_array($callback, array(
+		$arResult["FIELDS"][$fieldId],
 		array(
-			"VALUE" => $FIELD_ID,
-			"GRID_ID" => $arResult["GRID_ID"],
+			"VALUE" => $fieldId,
+			"FILTER_ID" => $arResult["FILTER_ID"],
 		),
 		&$arFilter,
 		&$filtered,
 	));
 }
 
+if(!empty($filterData["list_section_id"]))
+{
+	$arResult["ANY_SECTION"] = false;
+	$arResult["SECTION_ID"] = $filterData["list_section_id"];
+}
+
 $arFilter["IBLOCK_ID"] = $arIBlock["ID"];
 $arFilter["CHECK_PERMISSIONS"] = ($lists_perm >= CListPermissions::CAN_READ? "N": "Y");
 if(!$arResult["ANY_SECTION"])
-	$arFilter["SECTION_ID"] = $arResult["SECTION_ID"];
+{
+	$listChildSection = array();
+	CLists::getChildSection($arResult["SECTION_ID"], $arResult["SECTIONS"], $listChildSection);
+	$arFilter["SECTION_ID"] = $listChildSection;
+}
 
-/** @var CIBlockResult $rsElements */
+$arResult["ELEMENTS_ROWS"] = array();
+$arResult["SHOW_SECTION_GRID"] = CUserOptions::getOption("lists_show_section_grid", $arResult["GRID_ID"], "N");
+if($arResult["SHOW_SECTION_GRID"] == "Y")
+{
+	foreach($arResult["SECTIONS"] as $section)
+	{
+		if($arResult["ANY_SECTION"])
+		{
+			if($section["DEPTH_LEVEL"] != 1)
+				continue;
+		}
+		else
+		{
+			if($section["DEPTH_LEVEL"] <= $arResult["SECTION"]["DEPTH_LEVEL"]
+				|| !in_array($section["ID"], $listChildSection))
+			{
+				continue;
+			}
+		}
+		$sectionActions = array();
+		if(!$arResult["IS_SOCNET_GROUP_CLOSED"] && ($lists_perm >= CListPermissions::CAN_WRITE
+				|| CIBlockSectionRights::userHasRightTo($arIBlock["ID"], $section["ID"], "section_read")))
+		{
+			$sectionActions[] = array(
+				"text" => GetMessage("CC_BLL_ELEMENT_ACTION_MENU_OPEN"),
+				"onclick" => 'document.location.href="'.$section["SECTION_URL"].'"',
+				"default" => true,
+			);
+		}
+		if(!$arResult["IS_SOCNET_GROUP_CLOSED"] && ($lists_perm >= CListPermissions::CAN_WRITE
+				|| CIBlockSectionRights::userHasRightTo($arIBlock["ID"], $section["ID"], "section_edit")))
+		{
+			$sectionActions[] = array(
+				"text" => GetMessage("CC_BLL_ELEMENT_ACTION_MENU_EDIT"),
+				"onclick" => "BX.Lists['".$arResult['JS_OBJECT']."'].editSection('".$section["ID"]."')",
+			);
+		}
+		if(!$arResult["IS_SOCNET_GROUP_CLOSED"] && ($lists_perm >= CListPermissions::CAN_WRITE
+				|| CIBlockSectionRights::userHasRightTo($arIBlock["ID"], $section["ID"], "section_delete")))
+		{
+			$sectionActions[] = array(
+				"text" => GetMessage("CC_BLL_ELEMENT_ACTION_MENU_DELETE"),
+				"onclick" => "BX.Lists['".$arResult['JS_OBJECT']."'].deleteSection('".
+					$arResult["GRID_ID"]."', '".$section["ID"]."')",
+			);
+		}
+		$arResult["ELEMENTS_ROWS"][] = array(
+			"id" => $section["ID"],
+			'editable' => false,
+			"data" => array(),
+			"actions" => $sectionActions,
+			"columns" => array(
+				"NAME" => '<table><tr><td class="lists-section-icon"><span></span></td>
+				<td class="lists-section-text">'.$section["NAME_HTML_LABLE"].'</td></tr></table>',
+			),
+		);
+	}
+}
+
+if($arParams["CAN_EDIT"])
+	$arFilter["SHOW_NEW"] = "Y";
+
+	/** @var CIBlockResult $rsElements */
 $rsElements = CIBlockElement::GetList(
 	$grid_sort["sort"], $arFilter, false, $grid_options->GetNavParams(), $arSelect
 );
-
 if ($arResult["BIZPROC"] == "Y")
 {
 	$arUserGroupsForBP = CUser::GetUserGroup($USER->GetID());
 	$arDocumentStatesForBP = CBPWorkflowTemplateLoader::GetDocumentTypeStates(
-		BizProcDocument::generateDocumentComplexType($arParams["IBLOCK_TYPE_ID"], $arIBlock["ID"])
+		BizprocDocument::generateDocumentComplexType($arParams["IBLOCK_TYPE_ID"], $arIBlock["ID"])
 	);
 }
 else
@@ -736,70 +717,89 @@ else
 	$arDocumentStatesForBP = array();
 }
 
-$arResult["ELEMENTS_CAN_DELETE"] = array();
-$arResult["ELEMENTS_CAN_MOVE"] = array();
-$arResult["ELEMENTS_ROWS"] = array();
+$check = false;
+$listValues = array();
 while($obElement = $rsElements->GetNextElement())
 {
+	$check = true;
+	$columns = array();
 	$data = $obElement->GetFields();
-	$aCols = array();
+	if(!is_array($data))
+		continue;
+
+	if(!is_array($listValues[$data["ID"]]))
+		$listValues[$data["ID"]] = array();
+
+	foreach($data as $fieldId => $fieldValue)
+		$listValues[$data["ID"]][$fieldId] = $fieldValue;
 
 	if(!empty($arProperties))
 	{
-		$rsProp = CIBlockElement::GetProperty($arIBlock["ID"], $data["ID"]);
-		while($arProp = $rsProp->Fetch())
+		$propertyValuesObject = \CIblockElement::getPropertyValues($arIBlock["ID"],
+			array("ID" => $data["ID"], "SHOW_NEW" => ($arParams["CAN_EDIT"] ? "Y" : "N")));
+		while($propertyValues = $propertyValuesObject->fetch())
 		{
-			$FIELD_ID = "PROPERTY_".$arProp["ID"];
-			if(in_array($FIELD_ID, $arProperties))
+			foreach($propertyValues as $propertyId => $propertyValue)
 			{
-				$arField = $arResult["FIELDS"][$FIELD_ID];
-
-				if(!isset($data[$FIELD_ID]))
-					$data[$FIELD_ID] = array();
-
-				if(is_array($arField["PROPERTY_USER_TYPE"]) && is_array($arField["PROPERTY_USER_TYPE"]["GetPublicViewHTML"]))
-				{
-					$strHTMLControlName = array();
-					if($arField["PROPERTY_USER_TYPE"]["USER_TYPE"] == "EList")
-						$strHTMLControlName["MODE"] = "CSV_EXPORT";
-					$data[$FIELD_ID][] = call_user_func_array($arField["PROPERTY_USER_TYPE"]["GetPublicViewHTML"], array(
-						$arField,
-						array("VALUE" => $arProp["VALUE"]),
-						$strHTMLControlName,
-					));
-				}
-				elseif($arField["PROPERTY_TYPE"] == "L")
-				{
-					$data[$FIELD_ID][] = htmlspecialcharsex($arProp["VALUE_ENUM"]);
-				}
-				else
-				{
-					$data[$FIELD_ID][] = htmlspecialcharsex($arProp["VALUE"]);
-				}
+				if($propertyId == "IBLOCK_ELEMENT_ID")
+					continue;
+				$listValues[$data["ID"]]['PROPERTY_'.$propertyId] = $propertyValue;
 			}
 		}
 	}
 
-	if(isset($data["CREATED_BY"]))
-		$data["CREATED_BY"] = "[".$data["CREATED_BY"]."] ".$data["CREATED_USER_NAME"];
+	$iblockSectionId = 0;
+	if(!empty($data["IBLOCK_SECTION_ID"]) && array_key_exists($data["IBLOCK_SECTION_ID"], $arResult["SECTIONS"]))
+		$iblockSectionId = $data["IBLOCK_SECTION_ID"];
 
-	if(isset($data["MODIFIED_BY"]))
-		$data["MODIFIED_BY"] = "[".$data["MODIFIED_BY"]."] ".$data["USER_NAME"];
-
-	if(isset($data["ACTIVE_FROM"]))
-		$data['ACTIVE_FROM'] = FormatDateFromDB($data['ACTIVE_FROM']);
-	if(isset($data["ACTIVE_TO"]))
-		$data['ACTIVE_TO'] = FormatDateFromDB($data['ACTIVE_TO']);
-	if(isset($data["DATE_CREATE"]))
-		$data['DATE_CREATE'] = FormatDateFromDB($data['DATE_CREATE']);
-	if(isset($data["TIMESTAMP_X"]))
-		$data['TIMESTAMP_X'] = FormatDateFromDB($data['TIMESTAMP_X']);
-
-	if(CModule::IncludeModule("bizproc"))
+	foreach($arResult["FIELDS"] as $fieldId => $field)
 	{
-		$documentStates = CBPDocument::GetDocumentStates(
-			BizProcDocument::generateDocumentComplexType($arIBlock["IBLOCK_TYPE_ID"], $arIBlock["ID"]),
-			BizProcDocument::getDocumentComplexId($arIBlock["IBLOCK_TYPE_ID"], $data["ID"])
+		$field["LIST_SECTIONS_URL"] = $arParams["LIST_SECTIONS_URL"];
+		$field["LIST_URL"] = $arParams["LIST_URL"];
+		$field["SOCNET_GROUP_ID"] = $arParams["SOCNET_GROUP_ID"];
+		$field["LIST_ELEMENT_URL"] = $arParams["~LIST_ELEMENT_URL"];
+		$field["LIST_FILE_URL"] = $arParams["~LIST_FILE_URL"];
+		$field["IBLOCK_ID"] = $arResult["IBLOCK_ID"];
+		$field["SECTION_ID"] = $iblockSectionId;
+		$field["ELEMENT_ID"] = $data["ID"];
+		$field["FIELD_ID"] = $fieldId;
+		$valueKey = (substr($fieldId, 0, 9) == "PROPERTY_") ? $fieldId : "~".$fieldId;
+		$field["VALUE"] = $listValues[$data["ID"]][$valueKey];
+		$columns[$fieldId] = \Bitrix\Lists\Field::renderField($field);
+	}
+
+	if($iblockSectionId)
+	{
+		$sectionName = array();
+		$columns["IBLOCK_SECTION_ID"] = $arResult["SECTIONS"][0]["NAME_HTML"];
+		$parentId = $arResult["SECTIONS"][$iblockSectionId]["PARENT_ID"];
+		if($parentId)
+		{
+			for($count = 1; $count < $arResult["SECTIONS"][$iblockSectionId]["DEPTH_LEVEL"]; $count++)
+			{
+				foreach($arResult["SECTIONS"] as $sectionId => $sectionData)
+				{
+					if($sectionId == $parentId)
+					{
+						$sectionName[] = $sectionData["NAME_HTML"];
+						if($sectionData["PARENT_ID"])
+							$parentId = $sectionData["PARENT_ID"];
+					}
+				}
+			}
+			krsort($sectionName);
+			foreach($sectionName as $name)
+				$columns["IBLOCK_SECTION_ID"] .= "<br>".$name;
+		}
+		$columns["IBLOCK_SECTION_ID"] .= "<br>".$arResult["SECTIONS"][$iblockSectionId]["NAME_HTML"];
+	}
+
+	$arBPStart = array();
+	if($arResult["BIZPROC"] == "Y")
+	{
+		$documentStates = CBPDocument::getDocumentStates(
+			BizprocDocument::generateDocumentComplexType($arIBlock["IBLOCK_TYPE_ID"], $arIBlock["ID"]),
+			BizprocDocument::getDocumentComplexId($arIBlock["IBLOCK_TYPE_ID"], $data["ID"])
 		);
 		if($arResult["PROCESSES"] && $arResult["USE_COMMENTS"])
 		{
@@ -813,28 +813,26 @@ while($obElement = $rsElements->GetNextElement())
 				$data["WORKFLOW_ID"] = '';
 			}
 		}
-	}
 
-	$arUserGroupsForBPTmp = $arUserGroupsForBP;
-	if ($USER->GetID() == $data["CREATED_BY"])
-		$arUserGroupsForBPTmp[] = "Author";
-
-	$arBPStart = array();
-	if(CModule::IncludeModule('bizproc'))
-	{
+		$backUrl = $APPLICATION->GetCurPageParam(
+			"", array("bxajaxid", "grid_action", "grid_id", "internal", "sessid"));
+		$arUserGroupsForBPTmp = $arUserGroupsForBP;
+		if ($USER->GetID() == $data["CREATED_BY"])
+			$arUserGroupsForBPTmp[] = "Author";
 		foreach($arDocumentTemplates as $arWorkflowTemplate)
 		{
 			if (CBPDocument::CanUserOperateDocument(
 				CBPCanUserOperateOperation::StartWorkflow,
 				$USER->GetID(),
-				BizProcDocument::getDocumentComplexId($arParams["IBLOCK_TYPE_ID"], intval($data["~ID"])),
-				array("IBlockId" => $arIBlock["ID"], "AllUserGroups" => $arUserGroupsForBPTmp, "DocumentStates" => $arDocumentStatesForBP, "WorkflowId" => $arWorkflowTemplate["ID"])
+				BizprocDocument::getDocumentComplexId($arParams["IBLOCK_TYPE_ID"], intval($data["~ID"])),
+				array("IBlockId" => $arIBlock["ID"], "AllUserGroups" => $arUserGroupsForBPTmp,
+					"DocumentStates" => $arDocumentStatesForBP, "WorkflowId" => $arWorkflowTemplate["ID"])
 			))
 			{
-				$backUrl = $APPLICATION->GetCurPageParam();
 				$url = CHTTP::urlAddParams(str_replace(
 					array("#list_id#", "#section_id#", "#element_id#", "#workflow_template_id#", "#group_id#"),
-					array($arIBlock["ID"], intval($arResult["SECTION_ID"]), intval($data["~ID"]), $arWorkflowTemplate["ID"], $arParams["SOCNET_GROUP_ID"]),
+					array($arIBlock["ID"], intval($arResult["SECTION_ID"]), intval($data["~ID"]),
+						$arWorkflowTemplate["ID"], $arParams["SOCNET_GROUP_ID"]),
 					$arParams["BIZPROC_WORKFLOW_START_URL"]
 				), array("workflow_template_id" => $arWorkflowTemplate["ID"], "back_url" => $backUrl));
 				$url .= ((strpos($url, "?") === false) ? "?" : "&").bitrix_sessid_get();
@@ -844,6 +842,74 @@ while($obElement = $rsElements->GetNextElement())
 				);
 			}
 		}
+
+		/* Fields BIZPROC and COMMENTS */
+		$ii = 0;
+		$html = "";
+		$proccesses = false;
+		$workflows = array();
+		if($arResult["PROCESSES"] && $arResult["USE_COMMENTS"])
+			$proccesses = true;
+
+		foreach ($documentStates as $kk => $vv)
+		{
+			if(!$vv["ID"])
+				continue;
+
+			if($proccesses && !empty($data["WORKFLOW_ID"]))
+				$workflows[] = 'WF_'.$vv["ID"];
+
+			$canViewWorkflow = BizprocDocument::canUserOperateDocument(
+				CBPCanUserOperateOperation::ViewWorkflow,
+				$USER->GetID(),
+				$data["ID"],
+				array(
+					"IBlockPermission" => $arResult["IBLOCK_PERM"],
+					"AllUserGroups" => $arUserGroupsForBPTmp,
+					"DocumentStates" => $documentStates,
+					"WorkflowId" => $kk,
+				)
+			);
+			if (!$canViewWorkflow)
+				continue;
+
+			if(strlen($vv["TEMPLATE_NAME"]) > 0)
+				$html .= "<b>".$vv["TEMPLATE_NAME"]."</b>:<br />";
+			else
+				$html .= "<b>".(++$ii)."</b>:<br />";
+
+			$url = CHTTP::urlAddParams(str_replace(
+				array("#list_id#", "#document_state_id#", "#group_id#"),
+				array($arResult["IBLOCK_ID"], $vv["ID"], $arParams["SOCNET_GROUP_ID"]),
+				$arParams["~BIZPROC_LOG_URL"]
+			),
+				array("back_url" => $backUrl),
+				array("skip_empty" => true, "encode" => true)
+			);
+
+			$html .= "<a href=\"".htmlspecialcharsbx($url)."\">".(strlen($vv["STATE_TITLE"]) > 0 ?
+					$vv["STATE_TITLE"] : $vv["STATE_NAME"])."</a><br />";
+		}
+
+		if ($proccesses)
+		{
+			$workflows = array_unique($workflows);
+			if ($workflows)
+			{
+				$iterator = CForumTopic::getList(array(), array("@XML_ID" => $workflows));
+				while ($row = $iterator->fetch())
+					$arResult["COMMENTS_COUNT"][$row["XML_ID"]] = $row["POSTS"];
+
+				$columns["COMMENTS"] = '<div class="bp-comments"><a href="#" onclick="
+					if(BX.Bizproc.showWorkflowInfoPopup) return BX.Bizproc.showWorkflowInfoPopup(\''.
+					$data["WORKFLOW_ID"].'\')"><span class="bp-comments-icon"></span>'
+					.(!empty($arResult["COMMENTS_COUNT"]['WF_'.$data["WORKFLOW_ID"]]) ?
+						(int) $arResult["COMMENTS_COUNT"]['WF_'.$data["WORKFLOW_ID"]] : '0')
+					.'</a></div>';
+			}
+		}
+		$columns["BIZPROC"] = $html;
+		/* *** */
 	}
 
 	$url = str_replace(
@@ -855,40 +921,26 @@ while($obElement = $rsElements->GetNextElement())
 		$url = CHTTP::urlAddParams($url, array("list_section_id" => ""));
 
 	$aActions = array();
-
-	if(
-		!$arResult["IS_SOCNET_GROUP_CLOSED"]
-		&& (
-			$lists_perm >= CListPermissions::CAN_WRITE
-			|| CIBlockElementRights::UserHasRightTo($IBLOCK_ID, $data["~ID"], "element_edit")
-		)
-	)
+	if(!$arResult["IS_SOCNET_GROUP_CLOSED"]
+		&& ($lists_perm >= CListPermissions::CAN_WRITE
+			|| CIBlockElementRights::UserHasRightTo($IBLOCK_ID, $data["~ID"], "element_edit")))
 	{
 		$aActions[] = array(
-			"ICONCLASS" => "edit",
 			"TEXT" => GetMessage("CC_BLL_ELEMENT_ACTION_MENU_EDIT"),
 			"ONCLICK" =>"jsUtils.Redirect(arguments, '".CUtil::JSEscape($url)."')",
 			"DEFAULT" => true,
 		);
-		$arResult["ELEMENTS_CAN_MOVE"][] = $data["ID"];
 	}
 	else
 	{
 		$aActions[] = array(
-			"ICONCLASS" => "view",
 			"TEXT" => GetMessage("CC_BLL_ELEMENT_ACTION_MENU_VIEW"),
 			"ONCLICK" =>"jsUtils.Redirect(arguments, '".CUtil::JSEscape($url)."')",
 			"DEFAULT" => true,
 		);
 	}
-
-	if(
-		!$arResult["IS_SOCNET_GROUP_CLOSED"]
-		&& (
-			$lists_perm > CListPermissions::CAN_READ
-			|| CIBlockSectionRights::UserHasRightTo($IBLOCK_ID, intval($arResult["SECTION_ID"]), "section_element_bind")
-		)
-	)
+	if(!$arResult["IS_SOCNET_GROUP_CLOSED"] && ($lists_perm > CListPermissions::CAN_READ
+		|| CIBlockSectionRights::UserHasRightTo($IBLOCK_ID, intval($arResult["SECTION_ID"]), "section_element_bind")))
 	{
 		$urlCopy = CHTTP::urlAddParams(str_replace(
 				array("#list_id#", "#section_id#", "#element_id#", "#group_id#"),
@@ -898,122 +950,115 @@ while($obElement = $rsElements->GetNextElement())
 			array("copy_id" => $data["~ID"]),
 			array("skip_empty" => true, "encode" => true)
 		);
-
 		$aActions[] = array(
 			"TEXT"=>GetMessage("CC_BLL_ELEMENT_ACTION_MENU_COPY"),
 			"ONCLICK" =>"jsUtils.Redirect(arguments, '".CUtil::JSEscape($urlCopy)."')",
 		);
 	}
 
-	if(
-		count($arBPStart)
-		&& !$arResult["IS_SOCNET_GROUP_CLOSED"]
-		&& (
-			$lists_perm >= CListPermissions::CAN_BIZPROC
-			|| CIBlockElementRights::UserHasRightTo($IBLOCK_ID, $data["~ID"], "element_bizproc_start")
-		)
-	)
+	if($arResult["BIZPROC"] == "Y")
 	{
-		$aActions[] = array(
-			"TEXT" => GetMessage("CC_BLL_ELEMENT_ACTION_MENU_START_BP"),
-			"MENU" => $arBPStart,
-		);
-	}
-
-	if(CModule::IncludeModule("bizproc") && $arIBlock["IBLOCK_TYPE_ID"] != COption::GetOptionString("lists", "livefeed_iblock_type_id"))
-	{
+		if(count($arBPStart) && !$arResult["IS_SOCNET_GROUP_CLOSED"] && ($lists_perm >= CListPermissions::CAN_BIZPROC
+				|| CIBlockElementRights::UserHasRightTo($IBLOCK_ID, $data["~ID"], "element_bizproc_start")))
+		{
+			$aActions[] = array(
+				"TEXT" => GetMessage("CC_BLL_ELEMENT_ACTION_MENU_START_BP"),
+				"MENU" => $arBPStart,
+			);
+		}
 		if(!empty($documentStates))
 		{
-			$currentUserGroups = $GLOBALS["USER"]->GetUserGroupArray();
+			$currentUserGroups = $arResult["USER_GROUPS"];
 			if($data["CREATED_BY"] == $GLOBALS["USER"]->GetID())
 				$currentUserGroups[] = "author";
 
 			$listProcesses = array();
-			$backUrl = $APPLICATION->GetCurPageParam();
 			foreach($documentStates as $documentState)
 			{
+				if(!$documentState["ID"])
+					continue;
+
 				$actionsProcess = array();
 				$canViewWorkflow = CBPDocument::CanUserOperateDocument(
 					CBPCanUserOperateOperation::ViewWorkflow,
 					$GLOBALS["USER"]->GetID(),
-					BizProcDocument::getDocumentComplexId($arIBlock["IBLOCK_TYPE_ID"], $data["ID"]),
+					BizprocDocument::getDocumentComplexId($arIBlock["IBLOCK_TYPE_ID"], $data["ID"]),
 					array(
 						"AllUserGroups" => $currentUserGroups,
 						"DocumentStates" => $documentStates,
 						"WorkflowId" => $documentState["ID"]
 					)
 				);
-				if($canViewWorkflow)
+				if(!$canViewWorkflow)
+					continue;
+
+				/* Stop workflow */
+				if(
+					strlen($documentState["ID"]) &&
+					CIBlockElementRights::userHasRightTo($arIBlock["ID"], $data["ID"], "element_edit") &&
+					strlen($documentState["WORKFLOW_STATUS"])
+				)
 				{
-					/* Stop workflow */
-					if(
-						strlen($documentState["ID"]) &&
-						CIBlockElementRights::UserHasRightTo($arIBlock["ID"], $data["ID"], "element_rights_edit") &&
-						strlen($documentState["WORKFLOW_STATUS"])
+					$actionsProcess[] = array(
+						"TEXT" => GetMessage("CT_BLL_BIZPROC_STOP"),
+						"ONCLICK" => "javascript:BX.Lists['".$arResult['JS_OBJECT']."']
+							.performActionBp('".$documentState['ID']."', ".$data["ID"].", 'stop');",
+					);
+				}
+				/* Removal workflow */
+				if(strlen($documentState["STATE_NAME"]) && strlen($documentState["ID"]))
+				{
+					if(CBPDocument::CanUserOperateDocumentType(
+						CBPCanUserOperateOperation::CreateWorkflow,
+						$GLOBALS["USER"]->GetID(),
+						BizprocDocument::getDocumentComplexId($arIBlock["IBLOCK_TYPE_ID"], $arResult["IBLOCK_ID"]),
+						array("UserGroups" => $currentUserGroups))
 					)
 					{
 						$actionsProcess[] = array(
-							"TEXT" => GetMessage("CT_BLL_BIZPROC_STOP"),
-							"ONCLICK" => "javascript:BX['ListClass_".$arResult["RAND_STRING"]."']
-								.performActionBp('".$documentState['ID']."', ".$data["ID"].", 'stop');",
+							"TEXT" => GetMessage("CT_BLL_BIZPROC_DELETE"),
+							"ONCLICK" => "javascript:BX.Lists['".$arResult['JS_OBJECT']."']
+							.performActionBp('".$documentState['ID']."', ".$data["ID"].", 'delete');",
 						);
 					}
-
-					/* Removal workflow */
-					if(strlen($documentState["STATE_NAME"]) && strlen($documentState["ID"]))
+				}
+				/* Tasks workflow */
+				if(strlen($documentState["ID"]))
+				{
+					$tasks = CBPDocument::getUserTasksForWorkflow($GLOBALS["USER"]->GetID(), $documentState["ID"]);
+					if(!empty($tasks))
 					{
-						if(CBPDocument::CanUserOperateDocumentType(
-							CBPCanUserOperateOperation::CreateWorkflow,
-							$GLOBALS["USER"]->GetID(),
-							BizProcDocument::getDocumentComplexId($arIBlock["IBLOCK_TYPE_ID"], $data["ID"]),
-							array("UserGroups" => $currentUserGroups))
-						)
+						foreach($tasks as $task)
 						{
+							$url = CHTTP::urlAddParams(str_replace(
+								array("#list_id#", "#section_id#", "#element_id#", "#task_id#", "#group_id#"),
+								array($arIBlock["ID"], intval($arResult["SECTION_ID"]), $data["ID"],
+									$task["ID"], $arParams["SOCNET_GROUP_ID"]),
+								$arParams["~BIZPROC_TASK_URL"]
+							),
+								array("back_url" => $backUrl),
+								array("skip_empty" => true, "encode" => true)
+							);
 							$actionsProcess[] = array(
-								"TEXT" => GetMessage("CT_BLL_BIZPROC_DELETE"),
-								"ONCLICK" => "javascript:BX['ListClass_".$arResult["RAND_STRING"]."']
-								.performActionBp('".$documentState['ID']."', ".$data["ID"].", 'delete');",
+								"TEXT" => $task["NAME"],
+								"ONCLICK" =>"jsUtils.Redirect(arguments, '".CUtil::JSEscape($url)."')",
 							);
 						}
 					}
+				}
 
-					/* Tasks workflow */
-					if(strlen($documentState["ID"]))
-					{
-						$tasks = CBPDocument::getUserTasksForWorkflow($GLOBALS["USER"]->GetID(), $documentState["ID"]);
-						if(!empty($tasks))
-						{
-							foreach($tasks as $task)
-							{
-								$url = CHTTP::urlAddParams(str_replace(
-									array("#list_id#", "#section_id#", "#element_id#", "#task_id#", "#group_id#"),
-									array($arIBlock["ID"], intval($arResult["SECTION_ID"]), $data["ID"], $task["ID"], $arParams["SOCNET_GROUP_ID"]),
-									$arParams["~BIZPROC_TASK_URL"]
-								),
-									array("back_url" => $backUrl),
-									array("skip_empty" => true, "encode" => true)
-								);
-								$actionsProcess[] = array(
-									"TEXT" => $task["NAME"],
-									"ONCLICK" =>"jsUtils.Redirect(arguments, '".CUtil::JSEscape($url)."')",
-								);
-							}
-						}
-					}
-
-					if(!empty($actionsProcess))
-					{
-						$listProcesses[] = array(
-							"TEXT" => $documentState["TEMPLATE_NAME"] ." (". $documentState["STARTED"].")",
-							"MENU" => $actionsProcess,
-						);
-					}
-					else
-					{
-						$listProcesses[] = array(
-							"TEXT" => $documentState["TEMPLATE_NAME"] ." (". $documentState["STARTED"].")",
-						);
-					}
+				if(!empty($actionsProcess))
+				{
+					$listProcesses[] = array(
+						"TEXT" => $documentState["TEMPLATE_NAME"] ." (". $documentState["STARTED"].")",
+						"MENU" => $actionsProcess,
+					);
+				}
+				else
+				{
+					$listProcesses[] = array(
+						"TEXT" => $documentState["TEMPLATE_NAME"] ." (". $documentState["STARTED"].")",
+					);
 				}
 			}
 			if(!empty($listProcesses))
@@ -1026,19 +1071,14 @@ while($obElement = $rsElements->GetNextElement())
 		}
 	}
 
-	if(
-		!$arResult["IS_SOCNET_GROUP_CLOSED"]
-		&& (
-			$lists_perm >= CListPermissions::CAN_WRITE
-			|| CIBlockElementRights::UserHasRightTo($IBLOCK_ID, $data["~ID"], "element_delete")
-		)
-	)
+	if(!$arResult["IS_SOCNET_GROUP_CLOSED"] && ($lists_perm >= CListPermissions::CAN_WRITE
+			|| CIBlockElementRights::UserHasRightTo($IBLOCK_ID, $data["~ID"], "element_delete")))
 	{
-		$aActions[] = array("SEPARATOR" => true);
 		$aActions[] = array(
-			"ICONCLASS" => "delete",
+			"ID" => "delete",
 			"TEXT" => GetMessage("CC_BLL_ELEMENT_ACTION_MENU_DELETE"),
-			"ONCLICK" => "bxGrid_".$arResult["GRID_ID"].".DeleteItem('".$data["ID"]."', '".GetMessage("CC_BLL_ELEMENT_ACTION_MENU_DELETE_CONF")."')",
+			"ONCLICK" => "bxGrid_".$arResult["GRID_ID"].".DeleteItem('".$data["ID"]."', '".
+				GetMessage("CC_BLL_ELEMENT_ACTION_MENU_DELETE_CONF")."')",
 		);
 		$arResult["ELEMENTS_CAN_DELETE"][] = $data["ID"];
 	}
@@ -1047,13 +1087,46 @@ while($obElement = $rsElements->GetNextElement())
 		"id" => $data["ID"],
 		"data" => $data,
 		"actions" => $aActions,
-		"columns" => $aCols,
+		"columns" => $columns,
 	);
 }
 
+if(!$arResult["CAN_READ"] && $check)
+	$arResult["CAN_READ"] = true;
+
+if (!$arResult["IS_SOCNET_GROUP_CLOSED"] && ($lists_perm >= CListPermissions::CAN_WRITE
+	|| CIBlockRights::UserHasRightTo($IBLOCK_ID, $IBLOCK_ID, "element_delete")))
+{
+	/* Create sctructure group actions for grid  */
+	$snippet = new \Bitrix\Main\Grid\Panel\Snippet();
+	$actionsPanel = array(
+		"GROUPS" => array(
+			array(
+				"ITEMS" => array(
+					$snippet->getRemoveButton(),
+				)
+			)
+		)
+	);
+	$arResult["GRID_ACTION_PANEL"] = $actionsPanel;
+}
+
+/* Grid navigation */
 $rsElements->bShowAll = false;
 $arResult["NAV_OBJECT"] = $rsElements;
 $arResult["SORT"] = $grid_sort["sort"];
+$componentObject = null;
+$arResult["GRID_ENABLE_NEXT_PAGE"] = ($arResult["NAV_OBJECT"]->PAGEN < $arResult["NAV_OBJECT"]->NavPageCount);
+$arResult["NAV_STRING"] = $arResult["NAV_OBJECT"]->getPageNavStringEx(
+	$componentObject, "", "grid", false, null, $grid_options->GetNavParams());
+$arResult["GRID_PAGE_SIZES"] = array(
+	array("NAME" => "5", "VALUE" => "5"),
+	array("NAME" => "10", "VALUE" => "10"),
+	array("NAME" => "20", "VALUE" => "20"),
+	array("NAME" => "50", "VALUE" => "50"),
+	array("NAME" => "100", "VALUE" => "100")
+);
+/* *** */
 
 $arResult["LIST_NEW_ELEMENT_URL"] = str_replace(
 	array("#list_id#", "#section_id#", "#element_id#", "#group_id#"),
@@ -1062,11 +1135,6 @@ $arResult["LIST_NEW_ELEMENT_URL"] = str_replace(
 );
 if($arResult["ANY_SECTION"])
 	$arResult["LIST_NEW_ELEMENT_URL"] = CHTTP::urlAddParams($arResult["LIST_NEW_ELEMENT_URL"], array("list_section_id" => ""));
-
-if($arParams["IBLOCK_TYPE_ID"] == COption::GetOptionString("lists", "livefeed_iblock_type_id"))
-	$APPLICATION->SetTitle(GetMessage("CC_BLL_TITLE_PROCESS", array("#NAME#" => $arResult["IBLOCK"]["NAME"])));
-else
-	$APPLICATION->SetTitle(GetMessage("CC_BLL_TITLE", array("#NAME#" => $arResult["IBLOCK"]["NAME"])));
 
 $APPLICATION->AddChainItem($arResult["IBLOCK"]["NAME"], CHTTP::urlAddParams(str_replace(
 	array("#list_id#", "#section_id#", "#group_id#"),

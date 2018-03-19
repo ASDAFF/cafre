@@ -42,4 +42,6 @@ $MESS["LISTS_SEAC_MARKETPLACE_NOT_PROCESSES"] = "No workflows are available for 
 $MESS["LISTS_SEAC_INCORRECT_DATA"] = "Incorrect data";
 $MESS["LISTS_SEAC_MESSAGE_SUCCESS"] = "Success";
 $MESS["LISTS_NOT_BIZPROC_TEMPLATE_NEW"] = "Cannot run the workflow. Please make sure the workflow template exists and it is set to auto start.";
+$MESS["LISTS_BIZPROC_PARAMETERS"] = "Input parameters";
+$MESS["LISTS_SET_RESPONSIBLE_POPUP_DESCRIPTION"] = "You have multiple templates. Pick one you want to configure.";
 ?>

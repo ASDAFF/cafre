@@ -162,16 +162,22 @@ class BizprocWorkflowInstances extends \CBitrixComponent
 		return $filter;
 	}
 
-	protected function getSorting()
+	protected function getSorting($useAliases = false)
 	{
 		$gridSort = $this->getGridOptions()->getSorting(array('sort' => array('MODIFIED' => 'desc')));
 		$orderRule = $gridSort['sort'];
 		$orderKeys  = array_keys($orderRule);
-		if ($this->getFieldName($orderKeys[0]) === null)
-		{
-			$orderRule = array('MODIFIED' => 'desc');
-		}
-		return $orderRule;
+		$fieldName = $this->getFieldName($orderKeys[0]);
+		if ($fieldName === null)
+			$fieldName = 'MODIFIED';
+		elseif ($useAliases)
+			$fieldName = $orderKeys[0];
+
+		$direction = strtoupper($orderRule[$orderKeys[0]]);
+		if ($direction !== 'DESC')
+			$direction = 'ASC';
+
+		return array($fieldName => $direction);
 	}
 
 	protected function getPaginationInfo()
@@ -215,6 +221,9 @@ class BizprocWorkflowInstances extends \CBitrixComponent
 
 	public function executeComponent()
 	{
+		if (!Loader::includeModule('bizproc'))
+			return false;
+
 		if ($this->arParams['SET_TITLE'])
 		{
 			$this->setPageTitle(Loc::getMessage('BPWI_PAGE_TITLE'));
@@ -308,13 +317,13 @@ class BizprocWorkflowInstances extends \CBitrixComponent
 
 		list ($currentPage, $pageSize, $offset) = $this->getPaginationInfo();
 
-		$this->arResult['SORT'] = $this->getSorting();
+		$this->arResult['SORT'] = $this->getSorting(true);
 		$this->arResult['CURRENT_PAGE'] = $currentPage;
 		$this->arResult['SHOW_NEXT_PAGE'] = false;
 		$this->arResult['RECORDS'] = array();
 
 		$iterator = WorkflowInstanceTable::getList(array(
-			'order' => $this->arResult['SORT'],
+			'order' => $this->getSorting(),
 			'select' => $selectFields,
 			'filter' => $filter,
 			'limit' => $pageSize + 1,
@@ -367,14 +376,17 @@ class BizprocWorkflowInstances extends \CBitrixComponent
 				}
 			}
 
-			$rowActions = array(
-				array(
-					"ICONCLASS"=>"edit",
+			$rowActions = array();
+			if ($row['DOCUMENT_URL'])
+			{
+				$rowActions[] = array(
+					"ICONCLASS" => "edit",
 					"DEFAULT" => true,
-					"TEXT"=>Loc::getMessage("BPWI_OPEN_DOCUMENT"),
-					"ONCLICK"=> $row['DOCUMENT_URL']? "window.open('".$row["DOCUMENT_URL"]."');" : 'alert(\''.Loc::getMessage('BPWI_NO_DOCUMENT').'\')'
-				)
-			);
+					"TEXT" => Loc::getMessage("BPWI_OPEN_DOCUMENT"),
+					"ONCLICK" => "window.open('".$row["DOCUMENT_URL"]."');"
+				);
+			}
+
 			if ($this->isAdmin())
 				$rowActions[] = array(
 					"ICONCLASS"=>"delete",
@@ -392,7 +404,7 @@ class BizprocWorkflowInstances extends \CBitrixComponent
 		$this->includeComponentTemplate();
 	}
 
-	public static function getModuleName($moduleId, $entity)
+	public static function getModuleName($moduleId, $entity = null)
 	{
 		if ($moduleId == 'lists' && $entity == 'Bitrix\Lists\BizprocDocumentLists')
 		{

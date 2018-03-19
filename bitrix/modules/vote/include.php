@@ -30,14 +30,48 @@ CModule::AddAutoloadClasses("vote", array(
 	"CVoteUser" => "classes/".strtolower($DB->type)."/user.php",
 	"CVote" => "classes/".strtolower($DB->type)."/vote.php",
 	"CVoteCacheManager" => "classes/general/functions.php",
-	"CUserTypeVote" => "classes/general/usertypevote.php",
-	"CVoteNotifySchema" => "classes/general/im.php"));
+	"CVoteNotifySchema" => "classes/general/im.php",
+	"bitrix\\vote\\answertable" => "lib/answer.php",
+	"bitrix\\vote\\answer" => "lib/answer.php",
+	"bitrix\\vote\\attachtable" => "lib/attach.php",
+	"bitrix\\vote\\attach" => "lib/attach.php",
+	"bitrix\\vote\\attachment\\attach" => "lib/attachment/attach.php",
+	"bitrix\\vote\\attachment\\blogpostconnector" => "lib/attachment/blogpostconnector.php",
+	"bitrix\\vote\\attachment\\connector" => "lib/attachment/connector.php",
+	"bitrix\\vote\\attachment\\controller" => "lib/attachment/controller.php",
+	"bitrix\\vote\\attachment\\defaultconnector" => "lib/attachment/defaultconnector.php",
+	"bitrix\\vote\\attachment\\forummessageconnector" => "lib/attachment/forummessageconnector.php",
+	"bitrix\\vote\\base\\baseobject" => "lib/base/baseobject.php",
+	"bitrix\\vote\\base\\controller" => "lib/base/controller.php",
+	"bitrix\\vote\\base\\diag" => "lib/base/diag.php",
+	"bitrix\\vote\\channeltable" => "lib/channel.php",
+	"bitrix\\vote\\channelgrouptable" => "lib/channel.php",
+	"bitrix\\vote\\channelsitetable" => "lib/channel.php",
+	"bitrix\\vote\\channel" => "lib/channel.php",
+	"bitrix\\vote\\dbresult" => "lib/dbresult.php",
+	"bitrix\\vote\\voteeventtable" => "lib/event.php",
+	"bitrix\\vote\\eventtable" => "lib/event.php",
+	"bitrix\\vote\\eventquestiontable" => "lib/event.php",
+	"bitrix\\vote\\eventanswertable" => "lib/event.php",
+	"bitrix\\vote\\event" => "lib/event.php",
+	"bitrix\\vote\\questiontable" => "lib/question.php",
+	"bitrix\\vote\\question" => "lib/question.php",
+	"bitrix\\vote\\uf\\manager" => "lib/uf/manager.php",
+	"bitrix\\vote\\uf\\voteusertype" => "lib/uf/voteusertype.php",
+	"bitrix\\vote\\usertable" => "lib/user.php",
+	"bitrix\\vote\\voteeventquestiontable" => "lib/user.php",
+	"bitrix\\vote\\voteeventanswertable" => "lib/user.php",
+	"bitrix\\vote\\voteeventanswer" => "lib/user.php",
+	"bitrix\\vote\\user" => "lib/user.php",
+	"bitrix\\vote\\votetable" => "lib/vote.php",
+	"bitrix\\vote\\vote" => "lib/vote.php"
+));
 
 $voteCache = new CVoteCacheManager();
 
 function VoteVoteEditFromArray($CHANNEL_ID, $VOTE_ID = false, $arFields = array(), $params = array())
 {
-	$CHANNEL_ID = intVal($CHANNEL_ID);
+	$CHANNEL_ID = intval($CHANNEL_ID);
 	if ($CHANNEL_ID <= 0 || empty($arFields)):
 		return false;
 	elseif (CVote::UserGroupPermission($CHANNEL_ID) <= 0):
@@ -45,9 +79,7 @@ function VoteVoteEditFromArray($CHANNEL_ID, $VOTE_ID = false, $arFields = array(
 	endif;
 	$aMsg = array();
 	$params = (is_array($params) ? $params : array());
-	$params["UNIQUE_TYPE"] = (is_set($params, "UNIQUE_TYPE") ? intVal($params["UNIQUE_TYPE"]) : 20);
-	$params["DELAY"] = (is_set($params, "DELAY") ? intVal($params["DELAY"]) : 10);
-	$params["DELAY_TYPE"] = ((is_set($params, "DELAY_TYPE") && in_array($params['DELAY_TYPE'], array("S", "M", "H", "D")))? ($params["DELAY_TYPE"]) : "D");
+	$params["UNIQUE_TYPE"] = (is_set($params, "UNIQUE_TYPE") ? intval($params["UNIQUE_TYPE"]) : 20);
 
 	$arVote = array();
 	$arQuestions = array();
@@ -57,8 +89,8 @@ function VoteVoteEditFromArray($CHANNEL_ID, $VOTE_ID = false, $arFields = array(
 		"CHANNEL_ID" => $CHANNEL_ID,
 		"AUTHOR_ID" => $GLOBALS["USER"]->GetID(),
 		"UNIQUE_TYPE" => $params["UNIQUE_TYPE"],
-		"DELAY" => $params["DELAY"],
-		"DESCRIPTION_TYPE" => $params["DELAY_TYPE"]);
+		"DELAY" => $params["DELAY"] ?: 10,
+		"DELAY_TYPE" => $params['DELAY_TYPE'] ?: "D");
 	if (!empty($arFields["DATE_START"]))
 		$arFieldsVote["DATE_START"] = $arFields["DATE_START"];
 	if (!empty($arFields["DATE_END"]))
@@ -129,7 +161,7 @@ function VoteVoteEditFromArray($CHANNEL_ID, $VOTE_ID = false, $arFields = array(
 			$arAnswers = ($arQuestion["ID"] > 0 ? $arQuestions[$arQuestion["ID"]]["ANSWERS"] : array());
 			foreach ($arQuestion["ANSWERS"] as $keya => $arAnswer)
 			{
-				$arAnswer["ID"] = intVal($arAnswer["ID"]);
+				$arAnswer["ID"] = intval($arAnswer["ID"]);
 				$arAnswer["MESSAGE"] = trim($arAnswer["MESSAGE"]);
 				if (!empty($arAnswer["MESSAGE"]) && $arAnswer["DEL"] != "Y")
 				{
@@ -200,10 +232,6 @@ function VoteVoteEditFromArray($CHANNEL_ID, $VOTE_ID = false, $arFields = array(
 	}
 	if (empty($arVote))
 	{
-		$arFieldsVote["UNIQUE_TYPE"] = $params["UNIQUE_TYPE"];
-		$arFieldsVote["DELAY"] = $params["DELAY"];
-		$arFieldsVote["DELAY_TYPE"] = $params["DELAY_TYPE"];
-
 		$arVote["ID"] = intval(CVote::Add($arFieldsVote));
 	}
 	else
@@ -225,7 +253,7 @@ function VoteVoteEditFromArray($CHANNEL_ID, $VOTE_ID = false, $arFields = array(
 			else:
 				$arQuestion["C_SORT"] = ($iQuestions + 1) * 10;
 				$arQuestion["VOTE_ID"] = $arVote["ID"];
-				$arQuestion["ID"] = intVal(CVoteQuestion::Add($arQuestion));
+				$arQuestion["ID"] = intval(CVoteQuestion::Add($arQuestion));
 				if ($arQuestion["ID"] <= 0):
 					continue;
 				endif;
@@ -245,7 +273,7 @@ function VoteVoteEditFromArray($CHANNEL_ID, $VOTE_ID = false, $arFields = array(
 				else:
 					$arAnswer["QUESTION_ID"] = $arQuestion["ID"];
 					$arAnswer["C_SORT"] = ($iAnswers + 1)* 10;
-					$arAnswer["ID"] = intVal(CVoteAnswer::Add($arAnswer));
+					$arAnswer["ID"] = intval(CVoteAnswer::Add($arAnswer));
 					if ($arAnswer["ID"] <= 0):
 						continue;
 					endif;
@@ -261,7 +289,7 @@ function VoteVoteEditFromArray($CHANNEL_ID, $VOTE_ID = false, $arFields = array(
 		}
 	}
 
-	if (intVal($arVote["ID"]) <= 0)
+	if (intval($arVote["ID"]) <= 0)
 	{
 		return false;
 	}
@@ -321,45 +349,5 @@ function VoteVoteEditFromArray($CHANNEL_ID, $VOTE_ID = false, $arFields = array(
 */
 
 
-}
-
-function VoteIsUserVoteForVote($VOTE_ID, $USER_ID = 0)
-{
-	if (!empty($VOTE_ID))
-	{
-		$res = (is_array($_SESSION["VOTE_ARRAY"]) && in_array($VOTE_ID, $_SESSION["VOTE_ARRAY"]));
-		if (!$res)
-		{
-			$_SESSION["VOTE"] = (is_array($_SESSION["VOTE"]) ? $_SESSION["VOTE"] : array());
-			$_SESSION["VOTE"]["VOTES"] = (is_array($_SESSION["VOTE"]["VOTES"]) ? $_SESSION["VOTE"]["VOTES"] : array());
-
-			if (!in_array($VOTE_ID, $_SESSION["VOTE"]["VOTES"]))
-			{
-				$_SESSION["VOTE"]["VOTES"][$VOTE_ID] = false;
-
-				$USER_ID = intval($USER_ID);
-				$USER_ID = ($USER_ID > 0 ? $USER_ID : $GLOBALS["USER"]->GetID());
-				$arFilter = array();
-				if ($USER_ID > 0)
-					$arFilter["USER_ID"] = $USER_ID;
-				else
-				{
-					$voteUserID = ($_SESSION["VOTE_USER_ID"] ? $_SESSION["VOTE_USER_ID"] : intval($GLOBALS["APPLICATION"]->get_cookie("VOTE_USER_ID")));
-					if ($voteUserID > 0)
-						$arFilter["VOTE_USER"] = ($_SESSION["VOTE_USER_ID"] ? $_SESSION["VOTE_USER_ID"] : $GLOBALS["APPLICATION"]->get_cookie("VOTE_USER_ID"));
-				}
-				if (!empty($arFilter))
-				{
-					$arFilter["VOTE_ID"] = $VOTE_ID;
-					$db_res = CVoteEvent::GetList($by, $order, $arFilter, $is_filtered, "Y");
-					if ($db_res && $res = $db_res->Fetch())
-						$_SESSION["VOTE"]["VOTES"][$VOTE_ID] = $res["ID"];
-				}
-			}
-			$res = $_SESSION["VOTE"]["VOTES"][$VOTE_ID];
-		}
-		return $res;
-	}
-	return false;
 }
 ?>

@@ -10,13 +10,6 @@ class CSocServDropboxAuth extends CSocServAuth
 	/** @var CDropboxOAuthInterface null  */
 	protected $entityOAuth = null;
 
-	protected $userId = null;
-
-	function __construct($userId = null)
-	{
-		$this->userId = $userId;
-	}
-
 	/**
 	 * @param string $code=false
 	 * @return CDropboxOAuthInterface
@@ -110,10 +103,10 @@ class CSocServDropboxAuth extends CSocServAuth
 	{
 		$first_name = "";
 		$last_name = "";
-		if(is_array($arDropboxUser['name_details']))
+		if(is_array($arDropboxUser['name']))
 		{
-			$first_name = $arDropboxUser['name_details']['given_name'];
-			$last_name = $arDropboxUser['name_details']['surname'];
+			$first_name = $arDropboxUser['name']['given_name'];
+			$last_name = $arDropboxUser['name']['surname'];
 		}
 
 		$id = $arDropboxUser['uid'];
@@ -269,10 +262,10 @@ class CDropboxOAuthInterface extends CSocServOAuthTransport
 {
 	const SERVICE_ID = "Dropbox";
 
-	const AUTH_URL = "https://www.dropbox.com/1/oauth2/authorize";
-	const TOKEN_URL = "https://www.dropbox.com/1/oauth2/token";
+	const AUTH_URL = "https://www.dropbox.com/oauth2/authorize";
+	const TOKEN_URL = "https://www.dropbox.com/oauth2/token";
 
-	const ACCOUNT_URL = "https://api.dropbox.com/1/account/info";
+	const ACCOUNT_URL = "https://api.dropboxapi.com/2/users/get_current_account";
 
 	protected $oauthResult;
 
@@ -293,7 +286,7 @@ class CDropboxOAuthInterface extends CSocServOAuthTransport
 
 	public function GetRedirectURI()
 	{
-		return CSocServUtil::ServerName(true)."/bitrix/tools/oauth/dropbox.php";
+		return \CHTTP::URN2URI("/bitrix/tools/oauth/dropbox.php");
 	}
 
 	public function GetAuthUrl($redirect_uri, $state = '')
@@ -361,13 +354,15 @@ class CDropboxOAuthInterface extends CSocServOAuthTransport
 
 		$h = new \Bitrix\Main\Web\HttpClient();
 		$h->setHeader("Authorization", "Bearer ".$this->access_token);
+		$h->setHeader("Content-Type", ""); // !!! Dropbox doest not accept empty POST requests with application/json or application/x-www-form-urlencoded types
 
-		$result = $h->get(static::ACCOUNT_URL);
+		$result = $h->post(static::ACCOUNT_URL);
 
 		$result = \Bitrix\Main\Web\Json::decode($result);
 
 		if(is_array($result))
 		{
+			$result["uid"] = $this->oauthResult['uid'];
 			$result["access_token"] = $this->access_token;
 		}
 

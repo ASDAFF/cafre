@@ -4,9 +4,9 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/blog/general/blog_commen
 class CBlogComment extends CAllBlogComment
 {
 	/*************** ADD, UPDATE, DELETE *****************/
-	function Add($arFields)
+	function Add($arFields, $bSearchIndex = true)
 	{
-		global $DB;
+		global $DB, $USER_FIELD_MANAGER;
 
 		$arFields1 = array();
 		foreach ($arFields as $key => $value)
@@ -20,7 +20,7 @@ class CBlogComment extends CAllBlogComment
 
 		if (!CBlogComment::CheckFields("ADD", $arFields))
 			return false;
-		elseif(!$GLOBALS["USER_FIELD_MANAGER"]->CheckFields("BLOG_COMMENT", 0, $arFields))
+		elseif(!$USER_FIELD_MANAGER->CheckFields("BLOG_COMMENT", 0, $arFields, (isset($arFields["AUTHOR_ID"]) && intval($arFields["AUTHOR_ID"]) > 0 ? intval($arFields["AUTHOR_ID"]) : false)))
 			return false;
 
 		foreach(GetModuleEvents("blog", "OnBeforeCommentAdd", true) as $arEvent)
@@ -54,26 +54,43 @@ class CBlogComment extends CAllBlogComment
 
 		if ($ID)
 		{
-			$GLOBALS["USER_FIELD_MANAGER"]->Update("BLOG_COMMENT", $ID, $arFields);
+			$USER_FIELD_MANAGER->Update("BLOG_COMMENT", $ID, $arFields, (isset($arFields["AUTHOR_ID"]) && intval($arFields["AUTHOR_ID"]) > 0 ? intval($arFields["AUTHOR_ID"]) : false));
 
 			$arComment = CBlogComment::GetByID($ID);
-			if($arComment["PUBLISH_STATUS"] == BLOG_PUBLISH_STATUS_PUBLISH)
-				CBlogPost::Update($arComment["POST_ID"], array("=NUM_COMMENTS" => "NUM_COMMENTS + 1"), false);
+
+			$arPostFields = array("=NUM_COMMENTS_ALL" => "NUM_COMMENTS_ALL + 1");
+			if ($arComment["PUBLISH_STATUS"] == BLOG_PUBLISH_STATUS_PUBLISH)
+			{
+				$arPostFields["=NUM_COMMENTS"] = "NUM_COMMENTS + 1";
+			}
+			CBlogPost::Update($arComment["POST_ID"], $arPostFields, false);
 		}
 
 		$arBlog = CBlog::GetByID($arComment["BLOG_ID"]);
-		if($arBlog["USE_SOCNET"] == "Y")
+		if ($arBlog["USE_SOCNET"] == "Y")
+		{
 			$arFields["SC_PERM"] = CBlogComment::GetSocNetCommentPerms($arComment["POST_ID"]);
+		}
 
 		foreach(GetModuleEvents("blog", "OnCommentAdd", true) as $arEvent)
+		{
 			ExecuteModuleEventEx($arEvent, Array($ID, &$arFields));
-		if (CModule::IncludeModule("search"))
+		}
+
+		if (
+			$bSearchIndex
+			&& CModule::IncludeModule("search")
+		)
 		{
 			if (CBlogUserGroup::GetGroupPerms(1, $arComment["BLOG_ID"], $arComment["POST_ID"], BLOG_PERMS_POST) >= BLOG_PERMS_READ)
 			{
-				if($arBlog["SEARCH_INDEX"] == "Y" && $arComment["PUBLISH_STATUS"] == BLOG_PUBLISH_STATUS_PUBLISH)
+				if (
+					$arBlog["SEARCH_INDEX"] == "Y"
+					&& $arComment["PUBLISH_STATUS"] == BLOG_PUBLISH_STATUS_PUBLISH
+				)
 				{
-					$arGroup = CBlogGroup::GetByID($arBlog["GROUP_ID"]);
+					$arGroup = CBlogGroup::GetByID(isset($arFields["SEARCH_GROUP_ID"]) && intval($arFields["SEARCH_GROUP_ID"]) > 0 ? $arFields["SEARCH_GROUP_ID"] : $arBlog["GROUP_ID"]);
+
 					if(strlen($arFields["PATH"]) > 0)
 					{
 						$arFields["PATH"] = str_replace("#comment_id#", $ID, $arFields["PATH"]);
@@ -83,18 +100,37 @@ class CBlogComment extends CAllBlogComment
 					{
 						$arCommentSite = array(
 							$arGroup["SITE_ID"] => CBlogPost::PreparePath(
-									$arBlog["URL"],
-									$arComment["POST_ID"],
-									$arGroup["SITE_ID"],
-									false,
-									$arBlog["OWNER_ID"],
-									$arBlog["SOCNET_GROUP_ID"]
-								)
+								$arBlog["URL"],
+								$arComment["POST_ID"],
+								$arGroup["SITE_ID"],
+								false,
+								$arBlog["OWNER_ID"],
+								$arBlog["SOCNET_GROUP_ID"]
+							)
 						);
 					}
 
+					if (
+						$arBlog["USE_SOCNET"] == "Y"
+						&& CModule::IncludeModule("extranet")
+					)
+					{
+						$arPostSiteExt = CExtranet::GetSitesByLogDestinations($arFields["SC_PERM"]);
+						foreach($arPostSiteExt as $lid)
+						{
+							if (!array_key_exists($lid, $arCommentSite))
+							{
+								$arCommentSite[$lid] = str_replace(
+									array("#user_id#", "#post_id#"),
+									array($arBlog["OWNER_ID"], $arComment["POST_ID"]),
+									COption::GetOptionString("socialnetwork", "userblogpost_page", false, $lid)
+								);
+							}
+						}
+					}
+
 					$searchContent = blogTextParser::killAllTags($arComment["POST_TEXT"]);
-					$searchContent .= "\r\n" . $GLOBALS["USER_FIELD_MANAGER"]->OnSearchIndex("BLOG_COMMENT", $arComment["ID"]);
+					$searchContent .= "\r\n" . $USER_FIELD_MANAGER->OnSearchIndex("BLOG_COMMENT", $arComment["ID"]);
 
 					$arSearchIndex = array(
 						"SITE_ID" => $arCommentSite,
@@ -102,8 +138,8 @@ class CBlogComment extends CAllBlogComment
 						"PARAM1" => "COMMENT",
 						"PARAM2" => $arComment["BLOG_ID"]."|".$arComment["POST_ID"],
 						"PERMISSIONS" => array(2),
-						"TITLE" => $arComment["TITLE"],
-						"BODY" => $searchContent,
+						"TITLE" => CSearch::KillTags($arComment["TITLE"]),
+						"BODY" => CSearch::KillTags($searchContent),
 						"INDEX_TITLE" => false,
 						"USER_ID" => (IntVal($arComment["AUTHOR_ID"]) > 0) ? $arComment["AUTHOR_ID"] : false,
 						"ENTITY_TYPE_ID" => "BLOG_COMMENT",
@@ -112,33 +148,7 @@ class CBlogComment extends CAllBlogComment
 
 					if($arBlog["USE_SOCNET"] == "Y")
 					{
-						if(is_array($arFields["SC_PERM"]))
-						{
-							$arSearchIndex["PERMISSIONS"] = $arFields["SC_PERM"];
-							$sgId = array();
-							foreach($arFields["SC_PERM"] as $perm)
-							{
-								if(strpos($perm, "SG") !== false)
-								{
-									$sgIdTmp = str_replace("SG", "", substr($perm, 0, strpos($perm, "_")));
-									if(!in_array($sgIdTmp, $sgId) && IntVal($sgIdTmp) > 0)
-										$sgId[] = $sgIdTmp;
-								}
-							}
-
-							if(!empty($sgId))
-							{
-								$arSearchIndex["PARAMS"] = array(
-									"socnet_group" => $sgId,
-									"entity" => "socnet_group",
-								);
-							}
-
-							if(!in_array("U".$arComment["AUTHOR_ID"], $arSearchIndex["PERMISSIONS"]))
-							{
-								$arSearchIndex["PERMISSIONS"][] = "U".$arComment["AUTHOR_ID"];
-							}
-						}
+						CBlogSearch::fillSearchPermsWithSonetGroupData($arFields["SC_PERM"], $arComment["AUTHOR_ID"], $arSearchIndex, array("INIT_PERMISSIONS" => "Y"));
 					}
 					
 					if (
@@ -147,20 +157,12 @@ class CBlogComment extends CAllBlogComment
 					)
 					{
 						// get mentions
-						$arMentionedUserID = CBlogComment::GetMentionedUserID($arComment);
-						if (!empty($arMentionedUserID))
-						{
-							if (!isset($arSearchIndex["PARAMS"]))
-							{
-								$arSearchIndex["PARAMS"] = array();
-							}
-							$arSearchIndex["PARAMS"]["mentioned_user_id"] = $arMentionedUserID;
-						}
+						CBlogSearch::fillSearchParamsWithMentionData(CBlogComment::GetMentionedUserID($arComment), $arSearchIndex);
 					}
 
 					if(strlen($arComment["TITLE"]) <= 0)
 					{
-						$arSearchIndex["TITLE"] = substr($arSearchIndex["BODY"], 0, 100);
+						$arSearchIndex["TITLE"] = substr(CSearch::KillTags($searchContent), 0, 100);
 					}
 
 					CSearch::Index("blog", "C".$ID, $arSearchIndex);
@@ -173,7 +175,7 @@ class CBlogComment extends CAllBlogComment
 
 	function Update($ID, $arFields, $bSearchIndex = true)
 	{
-		global $DB;
+		global $DB, $USER_FIELD_MANAGER;
 
 		$ID = IntVal($ID);
 		
@@ -192,7 +194,7 @@ class CBlogComment extends CAllBlogComment
 
 		if (!CBlogComment::CheckFields("UPDATE", $arFields, $ID))
 			return false;
-		elseif(!$GLOBALS["USER_FIELD_MANAGER"]->CheckFields("BLOG_COMMENT", $ID, $arFields))
+		elseif(!$USER_FIELD_MANAGER->CheckFields("BLOG_COMMENT", $ID, $arFields, (isset($arFields["AUTHOR_ID"]) && intval($arFields["AUTHOR_ID"]) > 0 ? intval($arFields["AUTHOR_ID"]) : false)))
 			return false;
 
 		foreach(GetModuleEvents("blog", "OnBeforeCommentUpdate", true) as $arEvent)
@@ -227,10 +229,10 @@ class CBlogComment extends CAllBlogComment
 				"WHERE ID = ".$ID." ";
 			$DB->Query($strSql, False, "File: ".__FILE__."<br>Line: ".__LINE__);
 			unset($GLOBALS["BLOG_COMMENT"]["BLOG_COMMENT_CACHE_".$ID]);
-			
-			$GLOBALS["USER_FIELD_MANAGER"]->Update("BLOG_COMMENT", $ID, $arFields);
 
-			$arComment = CBlogComment::GetByID($ID);			
+			$USER_FIELD_MANAGER->Update("BLOG_COMMENT", $ID, $arFields, (isset($arFields["AUTHOR_ID"]) && intval($arFields["AUTHOR_ID"]) > 0 ? intval($arFields["AUTHOR_ID"]) : false));
+
+			$arComment = CBlogComment::GetByID($ID);
 			$arBlog = CBlog::GetByID($arComment["BLOG_ID"]);
 			if($arBlog["USE_SOCNET"] == "Y")
 				$arFields["SC_PERM"] = CBlogComment::GetSocNetCommentPerms($arComment["POST_ID"]);
@@ -253,7 +255,7 @@ class CBlogComment extends CAllBlogComment
 				}
 				else
 				{
-					$arGroup = CBlogGroup::GetByID($arBlog["GROUP_ID"]);
+					$arGroup = CBlogGroup::GetByID(isset($arFields["SEARCH_GROUP_ID"]) && intval($arFields["SEARCH_GROUP_ID"]) > 0 ? $arFields["SEARCH_GROUP_ID"] : $arBlog["GROUP_ID"]);
 
 					if(strlen($arFields["PATH"]) > 0)
 					{
@@ -280,7 +282,7 @@ class CBlogComment extends CAllBlogComment
 					}
 
 					$searchContent = blogTextParser::killAllTags($arComment["POST_TEXT"]);
-					$searchContent .= "\r\n" . $GLOBALS["USER_FIELD_MANAGER"]->OnSearchIndex("BLOG_COMMENT", $arComment["ID"]);
+					$searchContent .= "\r\n" . $USER_FIELD_MANAGER->OnSearchIndex("BLOG_COMMENT", $arComment["ID"]);
 
 					$arSearchIndex = array(
 						"SITE_ID" => $arPostSite,
@@ -288,8 +290,8 @@ class CBlogComment extends CAllBlogComment
 						"PARAM1" => "COMMENT",
 						"PARAM2" => $arComment["BLOG_ID"]."|".$arComment["POST_ID"],
 						"PERMISSIONS" => array(2),
-						"TITLE" => $arComment["TITLE"],
-						"BODY" => $searchContent,
+						"TITLE" => CSearch::KillTags($arComment["TITLE"]),
+						"BODY" => CSearch::KillTags($searchContent),
 						"USER_ID" => (IntVal($arComment["AUTHOR_ID"]) > 0) ? $arComment["AUTHOR_ID"] : false,
 						"ENTITY_TYPE_ID" => "BLOG_COMMENT",
 						"ENTITY_ID" => $arComment["ID"],
@@ -297,30 +299,7 @@ class CBlogComment extends CAllBlogComment
 
 					if($arBlog["USE_SOCNET"] == "Y")
 					{
-						if(is_array($arFields["SC_PERM"]))
-						{
-							$arSearchIndex["PERMISSIONS"] = $arFields["SC_PERM"];
-							$sgId = array();
-							foreach($arFields["SC_PERM"] as $perm)
-							{
-								if(strpos($perm, "SG") !== false)
-								{
-									$sgIdTmp = str_replace("SG", "", substr($perm, 0, strpos($perm, "_")));
-									if(!in_array($sgIdTmp, $sgId) && IntVal($sgIdTmp) > 0)
-										$sgId[] = $sgIdTmp;
-								}
-							}
-
-							if(!empty($sgId))
-							{
-								$arSearchIndex["PARAMS"] = array(
-									"socnet_group" => $sgId,
-									"entity" => "socnet_group",
-								);
-							}
-							if(!in_array("U".$arComment["AUTHOR_ID"], $arSearchIndex["PERMISSIONS"]))
-								$arSearchIndex["PERMISSIONS"][] = "U".$arComment["AUTHOR_ID"];
-						}
+						CBlogSearch::fillSearchPermsWithSonetGroupData($arFields["SC_PERM"], $arComment["AUTHOR_ID"], $arSearchIndex, array("INIT_PERMISSIONS" => "Y"));
 					}
 
 					if (
@@ -329,21 +308,13 @@ class CBlogComment extends CAllBlogComment
 					)
 					{
 						// get mentions
-						$arMentionedUserID = CBlogComment::GetMentionedUserID($arComment);
-						if (!empty($arMentionedUserID))
-						{
-							if (!isset($arSearchIndex["PARAMS"]))
-							{
-								$arSearchIndex["PARAMS"] = array();
-							}
-							$arSearchIndex["PARAMS"]["mentioned_user_id"] = $arMentionedUserID;
-						}
+						CBlogSearch::fillSearchParamsWithMentionData(CBlogComment::GetMentionedUserID($arComment), $arSearchIndex);
 					}
 
 					if(strlen($arComment["TITLE"]) <= 0)
 					{
 						//$arPost = CBlogPost::GetByID($arComment["POST_ID"]);
-						$arSearchIndex["TITLE"] = substr($arSearchIndex["BODY"], 0, 100);
+						$arSearchIndex["TITLE"] = substr(CSearch::KillTags($searchContent), 0, 100);
 					}
 
 					CSearch::Index("blog", "C".$ID, $arSearchIndex, True);
@@ -359,7 +330,7 @@ class CBlogComment extends CAllBlogComment
 	//*************** SELECT *********************/
 	function GetList($arOrder = Array("ID" => "DESC"), $arFilter = Array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array())
 	{
-		global $DB, $USER_FIELD_MANAGER;
+		global $DB, $USER_FIELD_MANAGER, $APPLICATION, $USER;
 
 		$obUserFieldsSql = new CUserTypeSQL;
 		$obUserFieldsSql->SetEntity("BLOG_COMMENT", "C.ID");
@@ -482,10 +453,10 @@ class CBlogComment extends CAllBlogComment
 		}
 
 		$bNeedDistinct = false;
-		$blogModulePermissions = $GLOBALS["APPLICATION"]->GetGroupRight("blog");
+		$blogModulePermissions = $APPLICATION->GetGroupRight("blog");
 		if ($blogModulePermissions < "W")
 		{	
-			$arUserGroups = CBlogUser::GetUserGroups(($GLOBALS["USER"]->IsAuthorized() ? $GLOBALS["USER"]->GetID() : 0), 0, "Y", BLOG_BY_USER_ID);
+			$arUserGroups = CBlogUser::GetUserGroups(($USER->IsAuthorized() ? $USER->GetID() : 0), 0, "Y", BLOG_BY_USER_ID);
 			$strUserGroups = "0";
 			foreach($arUserGroups as $v)
 				$strUserGroups .= ",".IntVal($v);

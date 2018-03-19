@@ -1,7 +1,7 @@
-<?
+<?php
 class CPhrase
 {
-	function GetList(&$by, &$order, $arFilter=Array(), &$is_filtered, &$total, &$grby, &$max)
+	public static function GetList(&$by, &$order, $arFilter=Array(), &$is_filtered, &$total, &$grby, &$max)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -9,7 +9,8 @@ class CPhrase
 		$s = "S.NAME as SEARCHER_NAME, S.ID as SEARCHER_ID";
 		$strSqlGroup =  "GROUP BY S.ID, S.NAME, S.PHRASES_HITS, S.PHRASES";
 		$arSqlSearch = Array("PH.SEARCHER_ID <> 1");
-		$strSqlSearch = "";
+		$find_group = "";
+
 		if (is_array($arFilter))
 		{
 			foreach ($arFilter as $key => $val)
@@ -85,7 +86,7 @@ class CPhrase
 
 		$strSqlSearch = GetFilterSqlSearch($arSqlSearch);
 		$grby = ($find_group=="P" || $find_group=="S") ? $find_group : "";
-		$strSqlOrder = "";
+
 		if (strlen($grby)<=0)
 		{
 			if ($by == "s_id")					$strSqlOrder = "ORDER BY PH.ID";
@@ -197,7 +198,7 @@ class CPhrase
 				";
 			}
 		}
-		elseif ($grby=="S")
+		else//if ($grby=="S")
 		{
 			if ($by == "s_name")				$strSqlOrder = "ORDER BY S.ID";
 			elseif ($by == "s_quantity")		$strSqlOrder = "ORDER BY QUANTITY";
@@ -237,4 +238,3 @@ class CPhrase
 		return $res;
 	}
 }
-?>

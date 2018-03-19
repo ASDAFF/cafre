@@ -152,7 +152,7 @@ if(!$bDesignMode)
 
 	$APPLICATION->RestartBuffer();
 	header("Pragma: no-cache");
-	header("Content-type: text/xml");
+	header("Content-type: text/xml; charset=".LANG_CHARSET);
 	header("Content-Length: ".strlen($content));
 	echo $content;
 	die();

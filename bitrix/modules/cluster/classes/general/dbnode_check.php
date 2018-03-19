@@ -1,4 +1,5 @@
-<?
+<?php
+
 class CAllClusterDBNodeCheck
 {
 	function MainNode()
@@ -6,4 +7,3 @@ class CAllClusterDBNodeCheck
 		return array();
 	}
 }
-?>

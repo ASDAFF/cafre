@@ -1,4 +1,5 @@
 <?
+/** @global CUser $USER */
 
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
 
@@ -73,6 +74,8 @@ $fieldList = array();
 
 try
 {
+	$userId = $USER->GetID();
+
 	// <editor-fold defaultstate="collapsed" desc="common initiazlize">
 	$ownerId = call_user_func(array($arParams['REPORT_HELPER_CLASS'], 'getOwnerId'));
 	$entityName = call_user_func(array($arParams['REPORT_HELPER_CLASS'], 'getEntityName'));
@@ -109,19 +112,105 @@ try
 			throw new BXUserException(sprintf(GetMessage('REPORT_NOT_FOUND'), $arParams['REPORT_ID']));
 		}
 
-		if ($report['CREATED_BY'] != $USER->GetID())
-		{
+		$rightsManager = new Bitrix\Report\RightsManager($userId);
+		if(!$rightsManager->canRead($report['ID']))
 			throw new BXUserException(GetMessage('REPORT_VIEW_PERMISSION_DENIED'));
+
+		if ($arParams['ACTION'] === 'edit')
+		{
+			if(!$rightsManager->canEdit($report['ID']) || isset($report['MARK_DEFAULT']) &&
+				intval($report['MARK_DEFAULT']) > 0)
+				throw new BXUserException(GetMessage('REPORT_DEFAULT_CAN_NOT_BE_EDITED'));
 		}
 
-		if ($arParams['ACTION'] === 'edit' && isset($report['MARK_DEFAULT']) && intval($report['MARK_DEFAULT']) > 0)
+		if($arParams['ACTION'] === 'delete' && !$rightsManager->canDelete($report['ID']))
 		{
-			throw new BXUserException(GetMessage('REPORT_DEFAULT_CAN_NOT_BE_EDITED'));
+			throw new BXUserException(GetMessage('REPORT_DEFAULT_CAN_NOT_BE_DELETED'));
 		}
 
 		$arResult['report'] = $report;
 	}
 	// </editor-fold>
+
+	// <editor-fold defaultstate="collapsed" desc="sharing initiazlize">
+	if($arParams['ACTION'] == 'edit' || $arParams['ACTION'] == 'create' || $arParams['ACTION'] == 'copy')
+	{
+		$selected = array();
+		$reportId = intval($arParams['REPORT_ID']);
+		$entitySharing = Bitrix\Report\Sharing::getEntityOfSharing($reportId);
+		$entityList = array();
+		foreach($entitySharing as $entity)
+		{
+			list($type, $id) = Bitrix\Report\Sharing::parseEntityValue($entity['ENTITY']);
+			$typeData = Bitrix\Report\Sharing::getTypeData($type, $id);
+			$entityList[] = array(
+				'entityId' => $entity['ENTITY'],
+				'name' => $typeData['name'],
+				'right' => $entity['RIGHTS'],
+				'avatar' => $typeData['avatar'],
+				'type' => $type,
+			);
+		}
+		if($arParams['ACTION'] == 'copy')
+			$entityList = array();
+		foreach($entityList as $entity)
+			$selected[] = $entity['entityId'];
+		$destination = Bitrix\Report\Sharing::getSocNetDestination($userId, $selected);
+		$arResult['SHARING_DATA'] = array(
+			'members' => $entityList,
+			'maxAccess' => Bitrix\Report\RightsManager::ACCESS_READ,
+			'destination' => array(
+				'items' => array(
+					'users' => $destination['USERS'],
+					'groups' => array(),
+					'sonetgroups' => $destination['SONETGROUPS'],
+					'department' => $destination['DEPARTMENT'],
+					'departmentRelation' => $destination['DEPARTMENT_RELATION'],
+				),
+				'itemsLast' => array(
+					'users' => $destination['LAST']['USERS'],
+					'groups' => array(),
+					'sonetgroups' => $destination['LAST']['SONETGROUPS'],
+					'department' => $destination['LAST']['DEPARTMENT'],
+				),
+				'itemsSelected' => $destination['SELECTED']
+			)
+		);
+	}
+	// </editor-fold>
+
+	if($isPost && isset($_POST['EXPORT_REPORT']))
+	{
+		if (!check_bitrix_sessid())
+		{
+			throw new BXFormException(GetMessage('REPORT_CSRF'));
+		}
+		$reportId = intval($_POST['EXPORT_REPORT']);
+		$rightsmanager = new Bitrix\Report\RightsManager($USER->GetID());
+		if(!$rightsmanager->canRead($reportId))
+		{
+			$_SESSION['REPORT_LIST_ERROR'] = GetMessage('REPORT_ERROR_ACCESS_DENIED');
+			LocalRedirect($arParams['PATH_TO_REPORT_LIST']);
+		}
+
+		$queryObject = Bitrix\Report\ReportTable::getById($reportId);
+		if($report = $queryObject->fetch())
+		{
+			unset($report['ID']);
+			unset($report['CREATED_BY']);
+			unset($report['CREATED_DATE']);
+			unset($report['MARK_DEFAULT']);
+			$arResult['REPORT'] = $report;
+		}
+
+		$APPLICATION->RestartBuffer();
+
+		Header('Content-Type: text/csv');
+		Header('Content-Disposition: attachment;filename=report'.$reportId.'.csv');
+
+		$this->IncludeComponentTemplate('csv');
+		die();
+	}
 
 	if (!empty($_POST) && (!empty($_POST['report_select_columns']) || $arParams['ACTION'] == 'delete_confirmed'))
 	{
@@ -428,6 +517,17 @@ try
 		}
 		// </editor-fold>
 
+		// <editor-fold defaultstate="collapsed" desc="prepare sharing data">
+		$sharingData = array();
+		if(!empty($_POST['sharing_entity']) && is_array($_POST['sharing_entity']))
+		{
+			foreach($_POST['sharing_entity'] as $entityId => $entity)
+			{
+				$sharingData[$entityId]['right'] = $entity;
+			}
+		}
+		// </editor-fold>
+
 		// combine
 		$reportSettings = array(
 			'title'  => $title,
@@ -453,6 +553,7 @@ try
 		}
 
 		// save
+		$ID = false;
 		if ($arParams['ACTION'] == 'create' || $arParams['ACTION'] == 'copy')
 		{
 			$ID = CReport::Add($reportSettings);
@@ -461,6 +562,12 @@ try
 		{
 			$ID = $arParams['REPORT_ID'];
 			CReport::Update($ID, $reportSettings);
+		}
+
+		if($ID)
+		{
+			$sharing = new Bitrix\Report\Sharing($ID);
+			$sharing->changeSharing($sharingData);
 		}
 
 		$url = CComponentEngine::MakePathFromTemplate(
@@ -540,6 +647,8 @@ catch (Exception $e)
 		$arResult['ERROR'] = GetMessage('REPORT_UNKNOWN_ERROR');
 	}*/
 }
+
+$arResult['randomString'] = $this->randString();
 
 $this->IncludeComponentTemplate();
 

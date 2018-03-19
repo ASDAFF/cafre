@@ -145,7 +145,6 @@ insert into b_stat_searcher (ID,SAVE_STATISTIC,NAME,USER_AGENT,DIAGRAM_DEFAULT,C
 insert into b_stat_searcher (ID,SAVE_STATISTIC,NAME,USER_AGENT,DIAGRAM_DEFAULT,CHECK_ACTIVITY) values (119,'N','Knowledge.com','Knowledge.com','N','Y');
 insert into b_stat_searcher (ID,SAVE_STATISTIC,NAME,USER_AGENT,DIAGRAM_DEFAULT,CHECK_ACTIVITY) values (120,'N','Jyxobot','Jyxobot/','N','Y');
 insert into b_stat_searcher (ID,SAVE_STATISTIC,NAME,USER_AGENT,DIAGRAM_DEFAULT,CHECK_ACTIVITY) values (121,'N','JetBrains Omea Reader','JetBrains Omea Reader','N','Y');
-insert into b_stat_searcher (ID,SAVE_STATISTIC,NAME,USER_AGENT,DIAGRAM_DEFAULT,CHECK_ACTIVITY) values (122,'N','Java','Java/','N','Y');
 insert into b_stat_searcher (ID,SAVE_STATISTIC,NAME,USER_AGENT,DIAGRAM_DEFAULT,CHECK_ACTIVITY) values (123,'N','James Bond','James Bond','N','Y');
 insert into b_stat_searcher (ID,SAVE_STATISTIC,NAME,USER_AGENT,DIAGRAM_DEFAULT,CHECK_ACTIVITY) values (124,'N','Jakarta Commons','Jakarta Commons','N','Y');
 insert into b_stat_searcher (ID,SAVE_STATISTIC,NAME,USER_AGENT,DIAGRAM_DEFAULT,CHECK_ACTIVITY) values (125,'N','itLocation-URLChecker','itLocation-URLChecker','N','Y');

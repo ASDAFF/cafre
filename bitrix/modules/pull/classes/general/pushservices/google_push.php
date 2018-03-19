@@ -21,8 +21,10 @@ class CGoogleMessage extends CPushMessage
 			"data" => array(
 				'contentTitle' => $this->title,
 				"contentText" => $this->text,
+				"badge"=>$this->badge,
 				"messageParams" => $this->customProperties,
-				"category" => $this->getCategory()
+				"category" => $this->getCategory(),
+				"sound"=>$this->getSound(),
 			),
 			"time_to_live" => $this->expiryValue,
 			"registration_ids" => $this->deviceTokens
@@ -80,6 +82,16 @@ class CGooglePush extends CPushService
 	{
 		return new CGoogleMessage($token);
 	}
+}
+
+class CGooglePushInteractive extends CGooglePush
+{
+	function __construct()
+	{
+		parent::__construct();
+		$this->allowEmptyMessage = true;
+	}
+
 }
 
 ?>

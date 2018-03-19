@@ -6,6 +6,14 @@ include($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/interface/lang_files.php
 ?>
 <?
 //End of Content
+
+if(COption::GetOptionString("main", "update_devsrv", "") == "Y")
+{
+	?><br><br><?
+	echo BeginNote('style="position: relative; top: -15px;"');
+	?><span class="required"><?echo GetMessage("DEVSERVER_ADMIN_MESSAGE");?></span><?
+	echo EndNote();
+}
 ?>
 				</div><?//adm-workarea?>
 			</td><?//adm-workarea-wrap?>

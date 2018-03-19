@@ -54,7 +54,7 @@ foreach ($arFieldConditionCount as $i)
 	<tr>
 		<td align="right" width="40%" class="adm-detail-content-cell-l"><?= GetMessage("BPFC_PD_FIELD") ?>:</td>
 		<td width="60%" class="adm-detail-content-cell-r">
-			<select name="field_condition_field_<?= $i ?>" onchange="BWFFCChangeFieldType(<?= $i ?>, this.options[this.selectedIndex].value, null)">
+			<select name="field_condition_field_<?= $i ?>" data-old="<?=htmlspecialcharsbx($arCurrentValues["field_condition_field_".$i])?>" onchange="BWFFCSetAndChangeFieldType(<?= $i ?>, this)">
 				<?
 				foreach ($arDocumentFields as $key => $value)
 				{
@@ -105,6 +105,7 @@ foreach ($arFieldConditionCount as $i)
 		?>};
 
 		var bwffc_counter = <?= $bwffcCounter + 1 ?>;
+		BX.namespace('BX.Bizproc');
 
 		function BWFFCChangeFieldType(ind, field, value)
 		{
@@ -117,11 +118,40 @@ foreach ($arFieldConditionCount as $i)
 				{'Field':"field_condition_value_" + ind, 'Form':'<?= $formName ?>'},
 				function(v){
 					valueTd.innerHTML = v;
+
+					if (typeof BX.Bizproc.Selector !== 'undefined')
+						BX.Bizproc.Selector.initSelectors(valueTd);
+
 					BX.closeWait();
 				},
 				true
 			);
 
+		}
+
+		function BWFFCSetAndChangeFieldType(ind, select)
+		{
+			BX.showWait();
+
+			var field = select.value;
+			var oldField = select.getAttribute('data-old');
+
+			if (!oldField)
+				oldField = select.options[0].value;
+
+			objFieldsFC.GetFieldInputValue(
+					objFieldsFC.arDocumentFields[oldField],
+					{'Field':"field_condition_value_" + ind, 'Form':'<?= $formName ?>'},
+					function(value)
+					{
+						if (typeof value == "object")
+							value = value[0];
+
+						select.setAttribute('data-old', field);
+						BWFFCChangeFieldType(ind, field, value);
+						BX.closeWait();
+					}
+			);
 		}
 
 		function BWFFCChangeCondition(ind, value)
@@ -173,7 +203,7 @@ foreach ($arFieldConditionCount as $i)
 				newCell.className="adm-detail-content-cell-r";
 				var newSelect = document.createElement("select");
 				newSelect.setAttribute('bwffc_counter', bwffc_counter);
-				newSelect.onchange = function(){BWFFCChangeFieldType(this.getAttribute("bwffc_counter"), this.options[this.selectedIndex].value, null)};
+				newSelect.onchange = function(){BWFFCSetAndChangeFieldType(this.getAttribute("bwffc_counter"), this)};
 				newSelect.name = "field_condition_field_" + bwffc_counter;
 				<?
 				$i = -1;

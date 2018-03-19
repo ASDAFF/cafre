@@ -11,6 +11,10 @@ BX["UI"]["FileInput"] = function(id, uploadParams, elementParams, values, templa
 	this.uploadParams = (uploadParams || {});
 	this.uploadParams["urlUpload"] = '/bitrix/tools/upload.php?lang=' + BX.message("LANGUAGE_ID");
 	this.uploadParams["urlCloud"] = '/bitrix/admin/clouds_file_search.php?lang=' + BX.message("LANGUAGE_ID") + '&n=';
+	this.uploadParams["maxCount"] = parseInt(this.uploadParams["maxCount"]) || 0;
+	this.onUploadDoneCounter = parseInt(this.uploadParams["maxIndex"]);
+	if (this.onUploadDoneCounter > 0)
+		this.onUploadDoneCounter++;
 	this.template = template;
 	this.elementParams = elementParams;
 	this.menu = [];
@@ -28,6 +32,12 @@ BX["UI"].FileInput.prototype = {
 			setTimeout(BX.proxy(function(){ this.init(values); }, this), 1000);
 			return;
 		}
+		if (repo[this.id])
+		{
+			if (repo[this.id].container === this.container)
+				return;
+			repo[this.id].destruct();
+		}
 
 		if (!this.container["fileInputIsAppended"])
 		{
@@ -37,7 +47,7 @@ BX["UI"].FileInput.prototype = {
 					className : "adm-fileinput-drag-area-input",
 					type : "file",
 					id : this.id + '_input',
-					multiple : (this.uploadParams['maxCount'] != 1),
+					multiple : (this.uploadParams['maxCount'] !== 1),
 					"data-fileinput" : "Y"
 				}
 			}));
@@ -50,18 +60,19 @@ BX["UI"].FileInput.prototype = {
 				setTimeout(BX.proxy(function(){ this.init(values); }, this), 500);
 			return;
 		}
+
 		this.initFrameCounters();
 		this.agent = BX.Uploader.getInstance({
 			id : this.id,
 			streams : 1,
-			uploadMaxFilesize : (this.uploadParams["uploadType"] == "file" ? BX.message("phpUploadMaxFilesize") : this.uploadParams['maxSize']),
+			uploadMaxFilesize : (this.uploadParams["uploadType"] === "file" ? BX.message("phpUploadMaxFilesize") : this.uploadParams['maxSize']),
 			allowUpload : this.uploadParams['allowUpload'],
 			allowUploadExt : this.uploadParams['allowUploadExt'],
 			uploadFormData : "N",
 			uploadMethod : "immediate",
 			uploadFileUrl : this.uploadParams["urlUpload"],
 			showImage : true,
-			sortItems : (this.uploadParams["allowSort"] == "Y"),
+			sortItems : (this.uploadParams["allowSort"] === "Y"),
 			deleteFileOnServer : false,
 			pasteFileHashInForm : false,
 			input : BX(this.id + '_input'),
@@ -94,27 +105,37 @@ BX["UI"].FileInput.prototype = {
 			onUploadRestore : BX.delegate(this.onUploadRestore, this)
 		};
 
-		BX.addCustomEvent(this.agent, "onAttachFiles", BX.delegate(this.onAttachFiles, this));
-		BX.addCustomEvent(this.agent, "onQueueIsChanged", BX.delegate(this.onQueueIsChanged, this));
-		BX.addCustomEvent(this.agent, "onFileIsCreated", BX.delegate(this.onFileIsCreated, this));
-		BX.addCustomEvent(this.agent, "onFileIsInited", BX.delegate(this.onFileIsInited, this));
-		BX.addCustomEvent(this.agent, "onFileIsReadyToFrame", BX.delegate(this.onFileIsReadyToFrame, this));
-		BX.addCustomEvent(this.agent, "onFilesPropsAreModified", BX.delegate(this.onFilesPropsAreModified, this));
-		BX.addCustomEvent(this.agent, "onFileIsFramed", BX.delegate(this.onFileIsFramed, this));
-		BX.addCustomEvent(this.agent, "onFilesAreFramed", BX.delegate(this.onFilesAreFramed, this));
-		BX.addCustomEvent(this.agent, "onBxDragStart", BX.delegate(this.onFileIsDragged, this));
-		BX.addCustomEvent(this.agent, "onError", BX.delegate(this.onError, this));
-
+		this.agentEvents = {
+			onAttachFiles : BX.delegate(this.onAttachFiles, this),
+			onQueueIsChanged : BX.delegate(this.onQueueIsChanged, this),
+			onFileIsCreated : BX.delegate(this.onFileIsCreated, this),
+			onFileIsInited : BX.delegate(this.onFileIsInited, this),
+			onFileIsReadyToFrame : BX.delegate(this.onFileIsReadyToFrame, this),
+			onFilesPropsAreModified : BX.delegate(this.onFilesPropsAreModified, this),
+			onFileIsFramed : BX.delegate(this.onFileIsFramed, this),
+			onFilesAreFramed : BX.delegate(this.onFilesAreFramed, this),
+			onBxDragStart : BX.delegate(this.onFileIsDragged, this),
+			onError : BX.delegate(this.onError, this)
+		};
 		if (this.uploadParams['upload'])
 		{
 			var signature = this.uploadParams['upload'];
-			BX.addCustomEvent(this.agent, "onPackageIsInitialized", BX.delegate(function(pack, raw)
+			this.agentEvents["onPackageIsInitialized"] = BX.delegate(function(pack, raw)
 			{
 				pack.post.data['signature'] = signature;
 				pack.post.size += ('signature' + signature).length;
 				this.onUploadStart(raw);
-			}, this));
+			}, this);
 		}
+		for (ii in this.agentEvents)
+		{
+			if (this.agentEvents.hasOwnProperty(ii))
+			{
+				BX.addCustomEvent(this.agent, ii, this.agentEvents[ii]);
+			}
+		}
+
+
 /*		if (false && this.uploadParams["uploadType"] == "file")
 		{
 			var isFile = function(file)
@@ -151,6 +172,7 @@ BX["UI"].FileInput.prototype = {
 				BX.bind(this.agent.form, "submit", this.__onsubmit);
 			}
 		}
+
 */		if (values.length > 0)
 		{
 			var ar1 = [], ar2 = [];
@@ -161,7 +183,7 @@ BX["UI"].FileInput.prototype = {
 				ar1.push(values[ii]);
 				ar2.push(BX(values[ii]['id'] + 'Block'));
 			}
-			this.agent.onAttach(ar1, ar2);
+			this.agent.onAttach(ar1, ar2, false);
 		}
 		this.initMenu(BX(this.id + '_add'), this.uploadParams);
 		this.checkUploadControl();
@@ -192,15 +214,40 @@ BX["UI"].FileInput.prototype = {
 		}
 		this.inited = true;
 	},
-	checkUploadControl : function()
-	{
+	destruct : function() {
+		var ii;
+		for (ii in this.agentEvents)
+		{
+			if (this.agentEvents.hasOwnProperty(ii))
+			{
+				BX.removeCustomEvent(this.agent, ii, this.agentEvents[ii]);
+			}
+		}
+		this.agent.destruct();
+		this.deinitMenu(BX(this.id + '_add'));
+
+		BX.remove(BX(this.id + '_input'));
+
+		delete this.noticeNode;
+		delete this.nativeNoticeMessage;
+		delete this.container;
+		delete this.framedItems;
+
+		BX.unbindAll(BX(this.id + 'ThumbModePreview'));
+		BX.unbindAll(BX(this.id + 'ThumbModeNonPreview'));
+
+		this.agent = null;
+		delete this.agent;
+
+		delete repo[this.id];
+	},
+	checkUploadControl : function() {
 		// drag&drop area
 		if (!this['noticeNode'])
 		{
 			this.noticeNode = BX(this.id + 'Notice');
 			this.nativeNoticeMessage = BX(this.id + 'Notice').innerHTML;
 		}
-
 		var possibleClasses = "adm-fileinput-drag-area " +
 			"adm-fileinput-drag-area-error " +
 			"adm-fileinput-drag-notification-count " +
@@ -216,9 +263,8 @@ BX["UI"].FileInput.prototype = {
 		{
 			this.noticeNode.innerHTML = this.nativeNoticeMessage;
 			BX.addClass(this.container, "adm-fileinput-drag-area");
-
 		}
-		else if (this.uploadParams["maxCount"] == this.agent.getItems().length)
+		else if (this.uploadParams["maxCount"] === this.agent.getItems().length)
 		{
 			this.noticeNode.innerHTML = BX.message("JS_CORE_FI_TOO_MANY_FILES2");
 			BX.addClass(this.container, "adm-fileinput-drag-area adm-fileinput-drag-notification-count");
@@ -233,8 +279,7 @@ BX["UI"].FileInput.prototype = {
 	{
 		BX.userOptions.save('main', 'fileinput', name, value);
 	},
-	initMenu : function(node, uploadParams)
-	{
+	initMenu : function(node, uploadParams) {
 		node = BX(node);
 		if (!node || node.OPENER)
 			return;
@@ -245,7 +290,7 @@ BX["UI"].FileInput.prototype = {
 			inputID = this.id + '_menu' + this.initMenuCounter;
 			menu.push({
 				ID : "upload",
-				TEXT : BX.message("JS_CORE_FILE_UPLOAD") + '<input type="file" id="' + inputID + '"' + ' class="adm-fileinput-area-input" />',
+				HTML : BX.message("JS_CORE_FILE_UPLOAD") + '<input type="file" id="' + inputID + '"' + ' class="adm-fileinput-area-input" />',
 				GLOBAL_ICON: "adm-menu-upload-pc"});
 		}
 		if (uploadParams['medialib'] || uploadParams['file_dialog'])
@@ -279,7 +324,7 @@ BX["UI"].FileInput.prototype = {
 			menu.push({TEXT : BX.message("JS_CORE_FILE_CLOUD"), GLOBAL_ICON : "adm-menu-upload-cloud", ONCLICK : this.__cloudClick});
 		}
 
-		if (BX.type.isArray(uploadParams['menu']))
+		if (uploadParams['menu'] && BX.type.isArray(uploadParams['menu']))
 		{
 			menu.push({SEPARATOR : true});
 			for (var ii = 0; ii <= uploadParams['menu'].length; ii++)
@@ -337,6 +382,15 @@ BX["UI"].FileInput.prototype = {
 			}
 		}
 	},
+	deinitMenu : function(node) {
+		node = BX(node);
+		if (!node || !node.OPENER)
+			return;
+		BX.removeCustomEvent(node.OPENER, 'onOpenerMenuOpen', node.__onOpenerMenuOpen);
+		BX.unbindAll(node.OPENER.DIV);
+		delete node.OPENER.DIV;
+		delete node.OPENER;
+	},
 	handlerFilePathPopup : null,
 	handlerFilePath : function(data)
 	{
@@ -348,7 +402,7 @@ BX["UI"].FileInput.prototype = {
 			{
 				if (BX.type.isNotEmptyString(data[ii]))
 				{
-					result.push({tmp_url : data[ii], real_url : decodeURIComponent(data[ii])});
+					result.push({tmp_url : BX.util.htmlspecialchars(data[ii]), real_url : decodeURIComponent(data[ii])});
 				}
 			}
 			this.agent.onAttach(result, {});
@@ -374,7 +428,7 @@ BX["UI"].FileInput.prototype = {
 			{
 				result.push({
 					name : BX.UploaderUtils.getFileNameOnly(data[ii]['src']),
-					description : data[ii]['name'],
+					description : data[ii]['description'],
 					type : data[ii]['type'] + '/medialib',
 					size : data[ii]['file_size'],
 					sizeFormatted : data[ii]['file_size'],
@@ -461,12 +515,11 @@ BX["UI"].FileInput.prototype = {
 							BX.addCustomEvent(frameMaster, "onDeleteItem", BX.delegate(function(item) {
 								this.deleteFile(item);
 							}, this));
-							BX.addCustomEvent(frameMaster, "onpR", BX.delegate(function(item) {
-								this.deleteFile(item);
-							}, this));
 						}
 						this.frameFlags.hasNew = false;
-						frameMaster.start(this.agent, (activeId || this.counters.newItemId), this.uploadParams);
+						var p = BX.clone(this.uploadParams, true);
+						p["description"] = this.elementParams["description"];
+						frameMaster.start(this.agent, (activeId || this.counters.newItemId), p);
 
 						this['__frameFiles'] = null;
 						delete this['__frameFiles'];
@@ -518,9 +571,8 @@ BX["UI"].FileInput.prototype = {
 				null,
 				{
 					autoHide : true,
-					titleBar: {
-						content: BX.create("span", {html: BX.message("JS_CORE_LOADING"),
-						draggable: true})},
+					titleBar: BX.message("JS_CORE_LOADING"),
+					contentColor : 'white',
 					closeIcon : true,
 					closeByEsc : true,
 					zIndex : getZIndex(1),
@@ -664,7 +716,7 @@ BX["UI"].FileInput.prototype = {
 
 		if (item.file["preview_url"] && item.file["width"] > 0 && item.file["height"] > 0)
 		{
-			BX.addCustomEvent(item, "onFileCanvasIsLoaded", BX.proxy(function(id, it, ag, image) {
+			BX.addCustomEvent(item, "onFileCanvasIsLoaded", BX.proxy(function(/*id, it, ag, image*/) {
 				item.file["tmp_url"] = item.file["~tmp_url"];
 				delete item.file["~tmp_url"];
 				item.file["width"] = item.file["~width"];
@@ -682,12 +734,12 @@ BX["UI"].FileInput.prototype = {
 		}
 		else if (item.dialogName == "BX.UploaderImage")
 		{
-			BX.addCustomEvent(item, "onFileCanvasIsLoaded", BX.proxy(function(id, it, ag, image) {
+			BX.addCustomEvent(item, "onFileCanvasIsLoaded", BX.proxy(function(/*id, it, ag, image*/) {
 				item.canvasIsLoaded = true;
 				this.replaceHint(item);
 			}, this));
 		}
-
+		item.description = (BX.type.isNotEmptyString(item.file["description"]) ? item.file["description"] : "");
 		this.incrementFrameCounter(id, item);
 		for (var ii in this['fileEvents'])
 		{
@@ -821,7 +873,7 @@ BX["UI"].FileInput.prototype = {
 		{
 			input.parentNode.insertBefore(BX.create("INPUT", { attrs : { type : "hidden", name : input_name + '[name]', id : input.id, value : item.name }}), input);
 			input.parentNode.insertBefore(BX.create("INPUT", { attrs : { type : "hidden", name : input_name + '[type]', value : file['type'] }}), input);
-			input.parentNode.insertBefore(BX.create("INPUT", { attrs : { type : "hidden", name : input_name + '[tmp_name]', value : file['tmp_url'] }}), input);
+			input.parentNode.insertBefore(BX.create("INPUT", { attrs : { type : "hidden", name : input_name + '[tmp_name]', value : file['path'] }}), input);
 			input.parentNode.insertBefore(BX.create("INPUT", { attrs : { type : "hidden", name : input_name + '[size]', value : file['size'] }}), input);
 			input.parentNode.insertBefore(BX.create("INPUT", { attrs : { type : "hidden", name : input_name + '[error]', value : 0 }}), input);
 		}
@@ -836,12 +888,21 @@ BX["UI"].FileInput.prototype = {
 			BX.remove(input);
 			input = tmp;
 		}
-		if (input_name.indexOf('[') < 0)
-		{
-			BX.remove(BX.findChild(this.agent.form, {tagName : "INPUT", attr : {name : (input_name)}}, false));
-			BX.remove(BX.findChild(this.agent.form, {tagName : "INPUT", attr : {name : (input_name + '_del')}}, false));
-		}
 
+		if (this.uploadParams["maxCount"] <= 1)
+		{
+			var n = BX.findChild(this.agent.form, {tagName : "INPUT", attr : {name : (input_name)}}, false);
+			if (n)
+			{
+				BX.adjust(n, { attrs : { disabled : true }});
+				var nDelName = input_name + '_del';
+				if (input_name.indexOf('[') > 0)
+					nDelName = input_name.substr(0, input_name.indexOf('[')) + '_del' + input_name.substr(input_name.indexOf('['));
+				n = BX.findChild(this.agent.form, {tagName : "INPUT", attr : {name : nDelName}}, false);
+				if (n)
+					BX.adjust(n, { attrs : { disabled : true } } );
+			}
+		}
 	},
 	onUploadDone : function(it, data)
 	{
@@ -852,9 +913,6 @@ BX["UI"].FileInput.prototype = {
 		if (item && BX(node))
 		{
 			var file = (data && data['file'] && data['file']['files'] && data['file']['files']['default'] ? data['file']['files']['default'] : false);
-			this.replaceInput(item, data);
-			if (node.firstChild && BX.hasClass(node.firstChild, "adm-fileinput-item-saved"))
-				BX.removeClass(node.firstChild, "adm-fileinput-item-saved");
 
 			this.counters.uploaded.setItem(item.id, item.dialogName);
 
@@ -866,6 +924,10 @@ BX["UI"].FileInput.prototype = {
 			{
 				this.amountFrameCounter(item.id, item);
 			}
+
+			this.replaceInput(item, data);
+			if (node.firstChild && BX.hasClass(node.firstChild, "adm-fileinput-item-saved"))
+				BX.removeClass(node.firstChild, "adm-fileinput-item-saved");
 
 			node.removeAttribute("bx-progress-bound");
 			BX.removeClass(node, "adm-fileinput-item-uploading");
@@ -890,6 +952,9 @@ BX["UI"].FileInput.prototype = {
 			}
 			node.innerHTML = data["error"];
 		}
+	},
+	onUploadRestore : function () {
+
 	},
 	onError : function(errorText, errorModal)
 	{
@@ -991,7 +1056,7 @@ BX["UI"].FileInput.prototype = {
 			node = this.agent.getItem(item.id).node;
 		if (node.hint)
 			node.hint.Destroy();
-		var hint = '<span class="adm-fileinput-drag-area-popup-title">' + item.name + '</span>';
+		var hint = '<span class="adm-fileinput-drag-area-popup-title">' + BX.util.htmlspecialchars(item.name) + '</span>';
 		if (item.size)
 			hint += '<span class="adm-fileinput-drag-area-popup-param">' + BX.message('JS_CORE_FILE_INFO_SIZE') + ':&nbsp;<span>' + item.size + '</span></span>';
 		if (item.dialogName == "BX.UploaderImage")
@@ -1013,9 +1078,12 @@ BX["UI"].FileInput.prototype = {
 			item.description = (BX(id + 'Description') && BX(id + 'Description').value ? BX(id + 'Description').value : '');
 		if (item.description)
 			hint +=  '<span class="adm-fileinput-drag-area-popup-param">' + BX.message('JS_CORE_FILE_DESCRIPTION') + ':&nbsp;<span>' + item.description + '</span></span>';
-		var path = (item["file"] ? (item["file"]["real_url"] || item["file"]["tmp_url"]) : '');
+		var path = item["file"] ? (item["file"]["real_url"] || item["file"]["tmp_url"]) : '';
 		if (path)
-			hint +=  '<span class="adm-fileinput-drag-area-popup-param">' + BX.message('JS_CORE_FILE_INFO_LINK') + ':&nbsp;<span><a href="' + path + '">' + path + '</a></span></span>';
+		{
+			path = BX.util.htmlspecialchars(path);
+			hint += '<span class="adm-fileinput-drag-area-popup-param">' + BX.message('JS_CORE_FILE_INFO_LINK') + ':&nbsp;<span><a target="_blank" href="' + path.replace(/[%]/g, "%25") + '">' + path + '</a></span></span>';
+		}
 
 		node.hint = new BX.CHint({
 				parent: node,
@@ -1056,14 +1124,15 @@ BX["UI"].FileInput.prototype = {
 				BX.addClass(node, "adm-fileinput-item-remove");
 		}
 
+		var name = (item['file']['input_name'] || node["__replaceInputName"]),
+			nDelName = name + '_del';
+		if (name && name.indexOf('[') > 0)
+			nDelName = name.substr(0, name.indexOf('[')) + '_del' + name.substr(name.indexOf('['));
+
 		if (item['file']['input_name'])
 		{
-			var name = item['file']['input_name'],
-				nDelName = name + '_del';
-			if (name.indexOf('[') > 0)
-				nDelName = name.substr(0, name.indexOf('[')) + '_del' + name.substr(name.indexOf('['));
 			node = BX.create("INPUT", { props : {
-				name : item['file']['input_name'],
+				name : name,
 				type : "hidden",
 				value : item['file']['input_value']}});
 			this.agent.form.appendChild(node);
@@ -1072,6 +1141,15 @@ BX["UI"].FileInput.prototype = {
 				type : "hidden",
 				value : "Y"}});
 			this.agent.form.appendChild(node);
+		}
+		else
+		{
+			var n = BX.findChild(this.agent.form, {tagName : "INPUT", attr : { name : name, disabled : true }}, false);
+			if (n)
+			{
+				BX.adjust(n, { attrs : { disabled : false } } );
+				BX.adjust(BX.findChild(this.agent.form, {tagName : "INPUT", attr : { name : nDelName, disabled : true }}, false), { attrs : { disabled : false } } );
+			}
 		}
 
 		if (immediate !== true)
@@ -1100,7 +1178,8 @@ var filePath = function(id, events, maxCount)
 				'<input id="#id#_#number#_path" type="text" value="" />',
 			'</div>'
 		].join("").replace(/#id#/gi, this.id);
-	var v1 = (this.number++), v2 = (this.number++);
+	var v1 = (this.number++);
+	this.number++;
 	this.template = [
 		'<div class="adm-fileinput-urls-container" id="#id#_container">',
 			'<ol class="adm-fileinput-list adm-fileinput-urls" id="#id#_list">',
@@ -1253,271 +1332,273 @@ filePath.prototype = {
 };
 var
 FramePresetID = 0,
-FramePreset = function(params)
-{
-	this.id = 'framePreset' + (FramePresetID++);
-	this.onAfterShow = BX.delegate(this.onAfterShow, this);
-	this.addRow = BX.delegate(this.addRow, this);
-	this.delRow = BX.delegate(this.delRow, this);
-	if (params)
-	{
-		this.init(params);
-	}
-};
-FramePreset.prototype = {
-	active : null,
-	id : 'framePreset0',
-	values : [],
-	valuesInner : [],
-	popup : null,
-	number : 0,
-	maxLength : 10,
-	getTemplateNode : function()
-	{
-		return [
-			'<li>',
+FramePreset = function() {
+	var d = function(params) {
+		this.id = 'framePreset' + (FramePresetID++);
+		this.onAfterShow = BX.delegate(this.onAfterShow, this);
+		this.addRow = BX.delegate(this.addRow, this);
+		this.delRow = BX.delegate(this.delRow, this);
+		if (params)
+		{
+			this.init(params);
+		}
+	};
+	d.prototype = {
+		active : null,
+		id : 'framePreset0',
+		values : [],
+		valuesInner : [],
+		popup : null,
+		number : 0,
+		maxLength : 10,
+		getTemplateNode : function()
+		{
+			return [
+				'<li>',
 				'<div class="adm-fileinput-item-panel">',
-					'<span class="adm-fileinput-item-panel-btn adm-btn-del" id="#classId##id#_del">&nbsp;</span>',
+				'<span class="adm-fileinput-item-panel-btn adm-btn-del" id="#classId##id#_del">&nbsp;</span>',
 				'</div>',
 				'<div class="adm-fileinput-presets-item">',
-					'<input class="adm-fileinput-presets-title" id="presets_#id#__title_" name="presets[#id#][title]" type="text" value="#title#" placeholder="', BX.message("JS_CORE_FI_TITLE"), '" />',
-					'<input class="adm-fileinput-presets-width" name="presets[#id#][width]" type="text" value="#width#" placeholder="', BX.message("JS_CORE_FI_WIDTH"), '" />',
-					'<input class="adm-fileinput-presets-hight" name="presets[#id#][height]" type="text" value="#height#" placeholder="', BX.message("JS_CORE_FI_HEIGHT"), '" />',
+				'<input class="adm-fileinput-presets-title" id="presets_#id#__title_" name="presets[#id#][title]" type="text" value="#title#" placeholder="', BX.message("JS_CORE_FI_TITLE"), '" />',
+				'<input class="adm-fileinput-presets-width" name="presets[#id#][width]" type="text" value="#width#" placeholder="', BX.message("JS_CORE_FI_WIDTH"), '" />',
+				'<input class="adm-fileinput-presets-hight" name="presets[#id#][height]" type="text" value="#height#" placeholder="', BX.message("JS_CORE_FI_HEIGHT"), '" />',
 				'</div>',
-			'</li>'
-		].join("").replace(/#classId#/gi, this.id);
-	},
-	getTemplate : function()
-	{
-		return [
-			'<div class="adm-fileinput-presets-container" id="#classId#_container">',
+				'</li>'
+			].join("").replace(/#classId#/gi, this.id);
+		},
+		getTemplate : function()
+		{
+			return [
+				'<div class="adm-fileinput-presets-container" id="#classId#_container">',
 				'<form id="#classId#_form">',
-					'<ol class="adm-fileinput-list adm-fileinput-presets" id="#classId#_list">',
-						'#nodes#',
-					'</ol>',
+				'<ol class="adm-fileinput-list adm-fileinput-presets" id="#classId#_list">',
+				'#nodes#',
+				'</ol>',
 				'</form>',
 				'<a href="#" id="#classId#_add_point" class="adm-fileinput-item-add">', BX.message("JS_CORE_FI_ADD_PRESET"), '</a>',
 				'<div style="clear:both;"></div>',
-			'</div>'
-		].join("");
-	},
-	init : function(params)
-	{
-		this.values = [];
-		this.length = 0;
-		if (BX.type.isArray(params["presets"]))
+				'</div>'
+			].join("");
+		},
+		init : function(params)
 		{
-			var id;
-			for (var ii = 0; ii < params["presets"].length; ii++)
+			this.values = [];
+			this.length = 0;
+			if (BX.type.isArray(params["presets"]))
 			{
-				id = this.values.length;
-				this.values.push({id : id,
-					title : params["presets"][ii]["title"],
-					width : params["presets"][ii]["width"],
-					height : params["presets"][ii]["height"]});
-			}
-
-			this.length = this.values.length;
-			this.setActive(params["presetActive"]);
-		}
-	},
-	setActive : function(id)
-	{
-		id = parseInt(id);
-		this.activeId = this.values[id] ? id : 0;
-		this.active = (this.values[this.activeId] || null);
-	},
-	edit : function(params)
-	{
-		var
-			node = BX.proxy_context,
-			html = '',
-			values = this.values;
-		for (var ii = 0; ii < values.length; ii ++)
-		{
-			html += this.getTemplateNode()
-				.replace(/#id#/gi, values[ii]["id"])
-				.replace(/#title#/gi, values[ii]["title"])
-				.replace(/#width#/gi, values[ii]["width"])
-				.replace(/#height#/gi, values[ii]["height"]);
-		}
-
-		if (this.values.length < this.maxLength && params && params["width"] && params["height"])
-		{
-			html += this.getTemplateNode()
-				.replace(/#id#/gi, ii)
-				.replace(/#title#/gi, "")
-				.replace(/#width#/gi, params["width"])
-				.replace(/#height#/gi, params["height"]);
-		}
-
-		if (!!this.popup)
-			this.popup.close();
-		var res = BX.pos(node);
-
-		this.popup = new BX.PopupWindow('bx-preset-popup-' + node.id, node, {
-			lightShadow : true,
-			offsetTop: -3,
-			className : "bxu-poster-popup",
-			offsetLeft: Math.ceil(res.width / 2),
-			autoHide: true,
-			closeByEsc: true,
-			zIndex : getZIndex(30 + BX.PopupWindow.getOption("popupOverlayZindex") - BX.PopupWindow.getOption("popupZindex")),
-			bindOptions: {position: "top"},
-			overlay : false,
-			events : {
-				onAfterPopupShow : this.onAfterShow,
-				onPopupClose : function() { this.destroy() },
-				onPopupDestroy : BX.proxy(function() { this.popup = null; }, this)
-			},
-			buttons : [
-				new BX.PopupWindowButton( {text : BX.message('CANVAS_OK'), className : "popup-window-button-accept", events : { click : BX.delegate(function() {
-					var data = BX.UploaderUtils.FormToArray(BX(this.id + '_form'));
-					this.onApply(data.data);
-					this.popup.close();
-				}, this) } } ),
-				new BX.PopupWindowButtonLink( {text : BX.message('CANVAS_CANCEL'), className : "popup-window-button-link-cancel", events : { click : BX.delegate(function(){this.popup.close();}, this) } } )
-			],
-			content : this.getTemplate().replace(/#classId#/gi, this.id).replace(/#nodes#/i, html)
-		});
-		this.popup.show();
-		this.popup.setAngle({position:'bottom'});
-		this.popup.bindOptions.forceBindPosition = true;
-		this.popup.adjustPosition();
-		BX.focus(BX('popupText' + node.id));
-		this.popup.bindOptions.forceBindPosition = false;
-	},
-	onAfterShow : function()
-	{
-		BX.bind(BX(this.id + "_add_point"), "click", this.addRow);
-		var node, notEmpty = false;
-		for (var ii = 0; ii < this.length; ii++)
-		{
-			node = BX(this.id + ii + "_del");
-			if (node)
-			{
-				BX.bind(node, "click", this.delRow);
-				notEmpty = (notEmpty===false ? 0 : notEmpty) + 1;
-			}
-		}
-		if (notEmpty === false)
-			this.addRow();
-		this.checkAddButton();
-		if (BX('presets_' + ii + '__title_'))
-			BX.focus(BX('presets_' + ii + '__title_'))
-
-	},
-	checkAddButton : function()
-	{
-		var list = BX(this.id + '_list'),
-			active = (this.maxLength > list.childNodes.length);
-		if (active)
-			BX.removeClass(BX(this.id + "_add_point"), "disabled");
-		else
-			BX.addClass(BX(this.id + "_add_point"), "disabled");
-		return active;
-	},
-	addRow : function(e)
-	{
-		BX.PreventDefault(e);
-		var list = BX(this.id + '_list'), id;
-		if (list && this.checkAddButton())
-		{
-			id = this.length++;
-			list.appendChild(BX.create('LI', {html :  this.getTemplateNode()
-				.replace(/^<li(.*?)>/gi, "")
-				.replace(/<\/li(.*?)>$/gi, "")
-				.replace(/#id#/gi, id)
-				.replace(/#title#/gi, "")
-				.replace(/#width#/gi, "")
-				.replace(/#height#/gi, "") }));
-			BX.defer_proxy(function(){
-				BX.bind(BX(this.id + id + "_del"), "click", this.delRow);
-			}, this)();
-		}
-		this.checkAddButton();
-		return false;
-	},
-	delRow : function()
-	{
-		var node = BX.proxy_context;
-		if (BX(node))
-		{
-			var li = BX.findParent(node, {tagName : "LI"});
-			if (li)
-			{
-				BX.remove(li);
-			}
-		}
-		this.checkAddButton();
-	},
-	onApply : function(data)
-	{
-		this.values = [];
-		if (data && data["presets"])
-		{
-
-			for (var id, ii = 0; ii < data["presets"].length; ii++)
-			{
-				if (data["presets"][ii] && data["presets"][ii]["width"] > 0 && data["presets"][ii]["height"] > 0)
+				var id;
+				for (var ii = 0; ii < params["presets"].length; ii++)
 				{
 					id = this.values.length;
-					this.values.push({
-						id : id,
-						width : data["presets"][ii]["width"],
-						height : data["presets"][ii]["height"],
-						title : (data["presets"][ii]["title"] ||
-							(data["presets"][ii]["width"] + 'x' + data["presets"][ii]["height"]))
-					});
+					this.values.push({id : id,
+						title : params["presets"][ii]["title"],
+						width : params["presets"][ii]["width"],
+						height : params["presets"][ii]["height"]});
+				}
+
+				this.length = this.values.length;
+				this.setActive(params["presetActive"]);
+			}
+		},
+		setActive : function(id)
+		{
+			id = parseInt(id);
+			this.activeId = this.values[id] ? id : 0;
+			this.active = (this.values[this.activeId] || null);
+		},
+		edit : function(params)
+		{
+			var
+				node = BX.proxy_context,
+				html = '',
+				values = this.values;
+			for (var ii = 0; ii < values.length; ii ++)
+			{
+				html += this.getTemplateNode()
+					.replace(/#id#/gi, values[ii]["id"])
+					.replace(/#title#/gi, values[ii]["title"])
+					.replace(/#width#/gi, values[ii]["width"])
+					.replace(/#height#/gi, values[ii]["height"]);
+			}
+
+			if (this.values.length < this.maxLength && params && params["width"] && params["height"])
+			{
+				html += this.getTemplateNode()
+					.replace(/#id#/gi, ii)
+					.replace(/#title#/gi, "")
+					.replace(/#width#/gi, params["width"])
+					.replace(/#height#/gi, params["height"]);
+			}
+
+			if (!!this.popup)
+				this.popup.close();
+			var res = BX.pos(node);
+
+			this.popup = new BX.PopupWindow('bx-preset-popup-' + node.id, node, {
+				lightShadow : true,
+				offsetTop: -3,
+				className : "bxu-poster-popup",
+				offsetLeft: Math.ceil(res.width / 2),
+				autoHide: true,
+				closeByEsc: true,
+				zIndex : getZIndex(30 + BX.PopupWindow.getOption("popupOverlayZindex") - BX.PopupWindow.getOption("popupZindex")),
+				bindOptions: {position: "top"},
+				overlay : false,
+				events : {
+					onAfterPopupShow : this.onAfterShow,
+					onPopupClose : function() { this.destroy() },
+					onPopupDestroy : BX.proxy(function() { this.popup = null; }, this)
+				},
+				buttons : [
+					new BX.PopupWindowButton( {text : BX.message('CANVAS_OK'), className : "popup-window-button-accept", events : { click : BX.delegate(function() {
+						var data = BX.UploaderUtils.FormToArray(BX(this.id + '_form'));
+						this.onApply(data.data);
+						this.popup.close();
+					}, this) } } ),
+					new BX.PopupWindowButtonLink( {text : BX.message('CANVAS_CANCEL'), className : "popup-window-button-link-cancel", events : { click : BX.delegate(function(){this.popup.close();}, this) } } )
+				],
+				content : this.getTemplate().replace(/#classId#/gi, this.id).replace(/#nodes#/i, html)
+			});
+			this.popup.show();
+			this.popup.setAngle({position:'bottom'});
+			this.popup.bindOptions.forceBindPosition = true;
+			this.popup.adjustPosition();
+			BX.focus(BX('popupText' + node.id));
+			this.popup.bindOptions.forceBindPosition = false;
+		},
+		onAfterShow : function()
+		{
+			BX.bind(BX(this.id + "_add_point"), "click", this.addRow);
+			var node, notEmpty = false;
+			for (var ii = 0; ii < this.length; ii++)
+			{
+				node = BX(this.id + ii + "_del");
+				if (node)
+				{
+					BX.bind(node, "click", this.delRow);
+					notEmpty = (notEmpty===false ? 0 : notEmpty) + 1;
 				}
 			}
-		}
-		this.save();
-		BX.onCustomEvent(this, "onApply", [this.values, this]);
-	},
-	savedLastTime : '',
-	save : function()
-	{
-		var sParam = '';
-		sParam += '&p[0][c]=main&p[0][n]=fileinput';
-		if (this.values.length > 0)
+			if (notEmpty === false)
+				this.addRow();
+			this.checkAddButton();
+			if (BX('presets_' + ii + '__title_'))
+				BX.focus(BX('presets_' + ii + '__title_'))
+
+		},
+		checkAddButton : function()
 		{
-			for (var jj, ii = 0; ii < this.values.length; ii++)
+			var list = BX(this.id + '_list'),
+				active = (this.maxLength > list.childNodes.length);
+			if (active)
+				BX.removeClass(BX(this.id + "_add_point"), "disabled");
+			else
+				BX.addClass(BX(this.id + "_add_point"), "disabled");
+			return active;
+		},
+		addRow : function(e)
+		{
+			BX.PreventDefault(e);
+			var list = BX(this.id + '_list'), id;
+			if (list && this.checkAddButton())
 			{
-				for (jj in this.values[ii])
+				id = this.length++;
+				list.appendChild(BX.create('LI', {html :  this.getTemplateNode()
+					.replace(/^<li(.*?)>/gi, "")
+					.replace(/<\/li(.*?)>$/gi, "")
+					.replace(/#id#/gi, id)
+					.replace(/#title#/gi, "")
+					.replace(/#width#/gi, "")
+					.replace(/#height#/gi, "") }));
+				BX.defer_proxy(function(){
+					BX.bind(BX(this.id + id + "_del"), "click", this.delRow);
+				}, this)();
+			}
+			this.checkAddButton();
+			return false;
+		},
+		delRow : function()
+		{
+			var node = BX.proxy_context;
+			if (BX(node))
+			{
+				var li = BX.findParent(node, {tagName : "LI"});
+				if (li)
 				{
-					if (this.values[ii].hasOwnProperty(jj))
+					BX.remove(li);
+				}
+			}
+			this.checkAddButton();
+		},
+		onApply : function(data)
+		{
+			this.values = [];
+			if (data && data["presets"])
+			{
+				data["presets"] = BX.util.array_values(data["presets"]);
+				for (var id, ii = 0; ii < data["presets"].length; ii++)
+				{
+					if (data["presets"][ii] && data["presets"][ii]["width"] > 0 && data["presets"][ii]["height"] > 0)
 					{
-						if (jj != "id")
-							sParam += "&p[0][v][presets][" + ii + "][" + jj + "]=" + BX.util.urlencode(this.values[ii][jj]);
+						id = this.values.length;
+						this.values.push({
+							id : id,
+							width : data["presets"][ii]["width"],
+							height : data["presets"][ii]["height"],
+							title : (data["presets"][ii]["title"] ||
+							(data["presets"][ii]["width"] + 'x' + data["presets"][ii]["height"]))
+						});
 					}
 				}
 			}
-		}
-		else
+			this.save();
+			BX.onCustomEvent(this, "onApply", [this.values, this]);
+		},
+		savedLastTime : '',
+		save : function()
 		{
-			sParam += "&p[0][v][presets]=";
-		}
-		if (this.savedLastTime != sParam)
+			var sParam = '';
+			sParam += '&p[0][c]=main&p[0][n]=fileinput';
+			if (this.values.length > 0)
+			{
+				for (var jj, ii = 0; ii < this.values.length; ii++)
+				{
+					for (jj in this.values[ii])
+					{
+						if (this.values[ii].hasOwnProperty(jj))
+						{
+							if (jj != "id")
+								sParam += "&p[0][v][presets][" + ii + "][" + jj + "]=" + BX.util.urlencode(this.values[ii][jj]);
+						}
+					}
+				}
+			}
+			else
+			{
+				sParam += "&p[0][v][presets]=";
+			}
+			if (this.savedLastTime != sParam)
+			{
+				BX.ajax({
+					'method': 'GET',
+					'dataType': 'html',
+					'processData': false,
+					'cache': false,
+					'url': BX.userOptions.path+sParam+'&sessid='+BX.bitrix_sessid()
+				});
+			}
+		},
+		getActive : function()
 		{
-			BX.ajax({
-				'method': 'GET',
-				'dataType': 'html',
-				'processData': false,
-				'cache': false,
-				'url': BX.userOptions.path+sParam+'&sessid='+BX.bitrix_sessid()
-			});
+			this.activeId = (this.values[this.activeId] ? this.activeId : 0);
+			var res = this.values[this.activeId];
+			if (res)
+				res["id"] = this.activeId;
+			return (res || null);
 		}
-	},
-	getActive : function()
-	{
-		this.activeId = (this.values[this.activeId] ? this.activeId : 0);
-		var res = this.values[this.activeId];
-		if (res)
-			res["id"] = this.activeId;
-		return (res || null);
-	}
-};
+	};
+	return d;
+} ();
 
 var preset, cnv,
 	FrameMaster = function(params)
@@ -1549,6 +1630,8 @@ FrameMaster.prototype = {
 			this.params = params;
 			this.preset.init(params);
 		}
+		this.params = (this.params || {});
+		this.params["description"] = (this.params["description"] !== false);
 	},
 	start : function(agent, activeId, params)
 	{
@@ -1612,16 +1695,28 @@ FrameMaster.prototype = {
 		this.items = null;
 		this.activeItem = null;
 	},
-	onShow : function()
-	{
-	},
-	bindThumbItem : function(item)
-	{
+	onShow : function() { },
+	bindThumbItem : function(item) {
 		var node = BX(item.id + 'EditorItemCanvas');
 		node.parentNode.replaceChild(item.canvas, node);
+
 		BX.addClass(item.canvas, "adm-photoeditor-preview-panel-container-img");
+
 		item.canvas.setAttribute("id", item.id + 'EditorItemCanvas');
-		item.canvas.getContext("2d").drawImage(item.item.canvas, 0, 0);
+		var i = 0,
+			f = function(id) {
+			i++;
+			if (id)
+			{
+				if (i > 1)
+					BX.adjust(item.canvas, { props : { width : item.item.canvas.width, height : item.item.canvas.height} });
+				BX.removeCustomEvent(item.item, "onFileIsInited", f);
+			}
+			item.canvas.getContext("2d").drawImage(item.item.canvas, 0, 0);
+		};
+		BX.addCustomEvent(item.item, "onFileIsInited", f);
+		f();
+
 		BX.removeClass(BX(item.id + 'EditorItem'), "adm-photoeditor-preview-panel-container-wait");
 		BX.bind(BX(item.id + 'EditorItem'), "click", BX.proxy(function() { if (this.activeItem !== item) { this.setActiveItem(item); } }, this));
 		BX.bind(BX(item.id + 'EditorItemDelete'), "click", BX.proxy(function(e){
@@ -1641,8 +1736,7 @@ FrameMaster.prototype = {
 		item = this.items.removeItem(item.id);
 		BX.onCustomEvent(this, "onDeleteItem", [item.item]);
 	},
-	saveActiveItem : function(canvas)
-	{
+	saveActiveItem : function(canvas) {
 		if (this.activeItem !== null)
 		{
 			var item = this.activeItem,
@@ -1678,14 +1772,12 @@ FrameMaster.prototype = {
 		}
 		return null;
 	},
-	clearActiveItem : function()
-	{
+	clearActiveItem : function() {
 		this.activeItem = this.saveActiveItemChanges();
 		this.canvas.set(BX.create('CANVAS'), { props : { width : 100, height : 100 } });
 		this.description.value = '';
 	},
-	setActiveItem : function(item)
-	{
+	setActiveItem : function(item) {
 		if (this.activeItem != item)
 		{
 			BX.onCustomEvent(this, "onActiveItemIsChanged", [item, this.activeItem]);
@@ -1732,8 +1824,7 @@ FrameMaster.prototype = {
 			BX.defer_proxy(function(){cnv.push(file, item.__onload, item.__onerror);})();
 		}
 	},
-	onAfterShow : function()
-	{
+	onAfterShow : function() {
 		try
 		{
 			this.bindTemplate();
@@ -1767,12 +1858,20 @@ FrameMaster.prototype = {
 		BX.bind(BX(this.id + 'sign'), "click", BX.proxy(function(){ this.poster(BX.proxy_context); }, this.canvas));
 
 		BX.bind(BX(this.id + 'scaleIndicator'), "mousedown", BX.proxy(this.canvas.scale, this.canvas));
-		BX.bind(BX(this.id + 'scaleWidthPlus'), "mousedown", BX.proxy(function(){ this.scaleChange("width", true) }, this));
-		BX.bind(BX(this.id + 'scaleWidth'), "change", BX.proxy(function(){ this.scaleChange("width", null) }, this));
-		BX.bind(BX(this.id + 'scaleWidthMinus'), "mousedown", BX.proxy(function(){ this.scaleChange("width", false)}, this));
-		BX.bind(BX(this.id + 'scaleHeightPlus'), "mousedown", BX.proxy(function(){ this.scaleChange("height", true) }, this));
-		BX.bind(BX(this.id + 'scaleHeight'), "change", BX.proxy(function(){ this.scaleChange("height", null) }, this));
-		BX.bind(BX(this.id + 'scaleHeightMinus'), "mousedown", BX.proxy(function(){ this.scaleChange("height", false)}, this));
+
+		BX.bind(BX(this.id + 'scaleWidthPlus'), "mousedown", BX.proxy(function(){ this.increaseScale("width", true)}, this));
+		BX.bind(BX(this.id + 'scaleWidthPlus'), "mouseup", BX.proxy(function(){ this.scaleChange("width", true)}, this));
+		BX.bind(BX(this.id + 'scaleWidth'), "focus", BX.proxy(function(){ this.startTraceScale("width"); }, this));
+		BX.bind(BX(this.id + 'scaleWidth'), "blur", BX.proxy(function(){ this.stopTraceScale("width"); }, this));
+		BX.bind(BX(this.id + 'scaleWidthMinus'), "mousedown", BX.proxy(function(){ this.increaseScale("width", false)}, this));
+		BX.bind(BX(this.id + 'scaleWidthMinus'), "mouseup", BX.proxy(function(){ this.scaleChange("width", false)}, this));
+
+		BX.bind(BX(this.id + 'scaleHeightPlus'), "mousedown", BX.proxy(function(){ this.increaseScale("height", true)}, this));
+		BX.bind(BX(this.id + 'scaleHeightPlus'), "mouseup", BX.proxy(function(){ this.scaleChange("height", true)}, this));
+		BX.bind(BX(this.id + 'scaleHeight'), "focus", BX.proxy(function(){ this.startTraceScale("height"); }, this));
+		BX.bind(BX(this.id + 'scaleHeight'), "blur", BX.proxy(function(){ this.stopTraceScale("height"); }, this));
+		BX.bind(BX(this.id + 'scaleHeightMinus'), "mousedown", BX.proxy(function(){ this.increaseScale("height", false)}, this));
+		BX.bind(BX(this.id + 'scaleHeightMinus'), "mouseup", BX.proxy(function(){ this.scaleChange("height", false)}, this));
 
 		this.onPresetsApply();
 		BX.bind(BX(this.id + 'presetsValues'), "change", BX.proxy(function()
@@ -1804,8 +1903,7 @@ FrameMaster.prototype = {
 		BX.bind(BX(this.id + 'editorQueueUp'), "click", BX.proxy(this.up, this));
 		BX.bind(BX(this.id + 'editorQueueDown'), "click", BX.proxy(this.down, this));
 	},
-	onPresetsApply : function()
-	{
+	onPresetsApply : function() {
 		var node = BX(this.id + 'presetsValues');
 		if (node)
 		{
@@ -1819,18 +1917,15 @@ FrameMaster.prototype = {
 			node.innerHTML = presets;
 		}
 	},
-	onApply : function()
-	{
+	onApply : function() {
 		this.saveActiveItemChanges();
 		this.popup['onApplyFlag'] = true;
 		this.popup.close();
 	},
-	onCancel : function()
-	{
+	onCancel : function() {
 		this.popup.close();
 	},
-	onClose : function()
-	{
+	onClose : function() {
 		this.finish((this.popup['onApplyFlag'] === true));
 
 		BX.removeCustomEvent(this.popup, "onPopupShow", this.handlers.show);
@@ -1843,8 +1938,7 @@ FrameMaster.prototype = {
 		this.popup = null;
 		this.slider = null;
 	},
-	bindTemplate : function()
-	{
+	bindTemplate : function() {
 		this.canvas = new CanvasMaster(
 			this.id + 'editorActive',
 			{
@@ -1859,8 +1953,7 @@ FrameMaster.prototype = {
 		this.canvas.registerWheel(BX(this.id  + 'editorActiveBlock'));
 		this.description = BX(this.id + 'editorDescription');
 	},
-	getTemplate : function()
-	{
+	getTemplate : function() {
 		var thumbs='';
 		var iTemplate = [
 			/*jshint multistr: true */
@@ -1936,7 +2029,7 @@ FrameMaster.prototype = {
 			</div> \
 			<div class="adm-photoeditor-sidebar-options"> \
 				<div class="sidebar-options-checkbox-container"> \
-					<input type="checkbox" value="Y" id="', this.id , 'scaleChained" /> \
+					<input type="checkbox" value="Y" id="', this.id , 'scaleChained" checked /> \
 					<label for="', this.id , 'scaleChained"><span class="label-icon"></span></label> \
 				</div> \
 			</div> \
@@ -1979,8 +2072,7 @@ FrameMaster.prototype = {
 		</div> \
 	</div>'].join('').replace(/[\n\t]/gi, '').replace(/>\s</gi, '><');
 	},
-	showEditor : function()
-	{
+	showEditor : function() {
 		if (!this.popup || this.popup === null)
 		{
 			var editorNode = BX.create("DIV", {
@@ -1995,7 +2087,7 @@ FrameMaster.prototype = {
 				'popup' + this.id,
 				null,
 				{
-					className : "bxu-popup",
+					className : "bxu-popup" + (this.params["description"] !== false ? "" : " bxu-popup-nondescription"),
 					autoHide : false,
 					lightShadow : true,
 					closeIcon : false,
@@ -2019,8 +2111,7 @@ FrameMaster.prototype = {
 		this.popup.adjustPosition();
 	},
 	slider : null,
-	initSliderParams : function()
-	{
+	initSliderParams : function() {
 		if (this.slider == null)
 		{
 			this.slider = {
@@ -2035,8 +2126,7 @@ FrameMaster.prototype = {
 		}
 		return this.slider;
 	},
-	up : function(e)
-	{
+	up : function(e) {
 		if (this.initSliderParams())
 		{
 			this.slider.top = Math.min((this.slider.top + this.slider.step), 0);
@@ -2044,8 +2134,7 @@ FrameMaster.prototype = {
 		}
 		return BX.PreventDefault(e);
 	},
-	down : function(e)
-	{
+	down : function(e) {
 		if (this.initSliderParams())
 		{
 			this.slider.top = Math.max(this.slider.maxHeight, (this.slider.top - this.slider.step));
@@ -2060,26 +2149,69 @@ FrameMaster.prototype = {
 		"~height" : 0,
 		timeout : null
 	},
-	scaleChange : function(name, direction)
-	{
+	increaseScale : function(name, direction) {
+		if (this.increaseScaleTimeout > 0)
+			clearTimeout(this.increaseScaleTimeout);
+
 		name = (name == "width" ? "width" : "height");
+		var node = (name == "width" ? BX(this.id + 'scaleWidth') : BX(this.id + 'scaleHeight')),
+			_this = this,
+			f = function() {
+			if (direction === false)
+			{
+				node.value = (++_this.lastProportion[name]);
+			}
+			else if (direction === true)
+			{
+				node.value = Math.max((--_this.lastProportion[name]), 1);
+			}
+
+			_this.lastProportion[name]= parseInt(node.value);
+			_this.increaseScaleTimeoutCounter++;
+			_this.increaseScaleTimeout = setTimeout(f, (150 - Math.min(100, _this.increaseScaleTimeoutCounter*_this.increaseScaleTimeoutCounter)));
+		};
+		this.increaseScaleTimeoutCounter = 0;
+		this.increaseScaleTimeout = setTimeout(f, 50);
+	},
+	startTraceScale : function(name) {
+		if (this.traceScaleTimeout > 0)
+			clearTimeout(this.traceScaleTimeout);
+		this.traceScaleTimeout = (this.traceScaleTimeout > 0 ? this.traceScaleTimeout : 0);
+
+		name = (name == "width" ? "width" : "height");
+
 		var node = (name == "width" ? BX(this.id + 'scaleWidth') : BX(this.id + 'scaleHeight'));
-		if (direction === false)
+		if (this.lastProportion[name] === parseInt(node.value))
 		{
-			node.value = (++this.lastProportion[name]);
+			this.traceScaleTimeout++;
+			if (this.traceScaleTimeout > 5)
+			{
+				this.traceScaleTimeout = 0;
+				this.scaleAdjust(name, null);
+			}
 		}
-		else if (direction === true)
+		else
 		{
-			node.value = Math.max((--this.lastProportion[name]), 1);
+			this.traceScaleTimeout = 0;
+			this.lastProportion[name] = parseInt(node.value);
 		}
-
-		this.lastProportion[name]= parseInt(node.value);
-
+		this.traceScaleTimeout = setTimeout(BX.proxy(function(){ this.startTraceScale(name); }, this), 500);
+	},
+	stopTraceScale : function(name) {
+		if (this.traceScaleTimeout > 0)
+			clearTimeout(this.traceScaleTimeout);
+		this.traceScaleTimeout = 0;
+		this.scaleAdjust(name, null);
+	},
+	scaleChange : function(name, direction) {
+		if (this.increaseScaleTimeout > 0)
+			clearTimeout(this.increaseScaleTimeout);
+		if (this.traceScaleTimeout > 0)
+			clearTimeout(this.traceScaleTimeout);
 		if (this.lastProportion.timeout === null)
 			this.lastProportion.timeout = setTimeout(BX.proxy(this.scaleAdjust, this), 500);
 	},
-	scaleAdjust : function(width)
-	{
+	scaleAdjust : function(width) {
 		this.lastProportion.timeout = null;
 		if (width > 0)
 		{
@@ -2100,16 +2232,13 @@ FrameMaster.prototype = {
 			}
 		}
 	},
-	scaleIsChained : function()
-	{
+	scaleIsChained : function() {
 		return (!!BX(this.id + 'scaleChained').checked);
 	},
-	scaleChained : function()
-	{
+	scaleChained : function() {
 		BX(this.id + 'scaleWidth').value = this.lastProportion.width;
 	},
-	scaleChangeSize : function(canvas)
-	{
+	scaleChangeSize : function(canvas) {
 		this.lastProportion["~width"] =
 			this.lastProportion.width =
 				BX(this.id + 'scaleWidth').value = (canvas.width || 0);
@@ -2167,8 +2296,7 @@ CanvasStack.prototype = {
 		}
 	}
 };
-var CanvasMaster = function(id, nodes)
-{
+var CanvasMaster = function(id, nodes) {
 	this.block = nodes.block;
 	this.block.pos = BX.pos(this.block);
 	this.canvas = nodes.canvas;
@@ -3961,8 +4089,7 @@ CanvasCrop.prototype = {
 		this.overlayLeft.style.top = this.pointer.top + 'px';
 	}
 };
-var CanvasMapMaster = function(block, params)
-{
+var CanvasMapMaster = function(block, params) {
 	this.block = block;
 	this.id = this.block.id + 'Map';
 	if (BX(this.id + 'Root'))
@@ -4009,8 +4136,7 @@ var CanvasMapMaster = function(block, params)
 };
 CanvasMapMaster.prototype = {
 	bindNodesCounter : 0,
-	bindNodes : function(params)
-	{
+	bindNodes : function(params) {
 		this.bindNodesCounter++;
 		if (this.bindNodesCounter > 100 || !BX(this.id + 'Canvas'))
 		{
@@ -4034,12 +4160,12 @@ CanvasMapMaster.prototype = {
 
 		BX.onCustomEvent(this, "onMapIsInitialised", [this]);
 	},
-	init : function(canvas, canvasParams)
-	{
+	init : function(canvas, canvasParams) {
 		if (canvasParams)
 		{
 			var res = BX.UploaderUtils.scaleImage(canvasParams, this.canvasMapPointer.params);
 			this.root.style.display = 'none';
+			this.collapsedNode.style.display = 'none';
 			BX.adjust(
 				this.canvasMap, {
 					props : res.destin
@@ -4087,8 +4213,7 @@ CanvasMapMaster.prototype = {
 	},
 	animationV: null,
 	animationC: null,
-	show : function()
-	{
+	show : function() {
 		if (this.options.visible)
 			return;
 		else if (this.animationV)
@@ -4110,6 +4235,7 @@ CanvasMapMaster.prototype = {
 		this.root.style.width = this.root.pos.width + 'px';
 		this.root.style.height = this.root.pos.height + 'px';
 		this.root.style.display = (this.options.collapsed ? 'none' : 'block');
+		this.collapsedNode.style.display = '';
 
 		this.canvasMapBlock.style.top = "-" + (this.canvasMap.height + 1) + 'px';
 		this.canvasMapBlock.style.left = 0;
@@ -4138,10 +4264,10 @@ CanvasMapMaster.prototype = {
 		});
 		this.animationV.animate();
 	},
-	hide : function(slow)
-	{
+	hide : function(slow) {
 		var func = BX.delegate(function(){
 			this.root.style.display = 'none';
+			this.collapsedNode.style.display = 'none';
 			delete this.root.pos;
 			this.canvasMapBlock.y = false;
 			this.canvasMapBlock.x = false;
@@ -4176,12 +4302,14 @@ CanvasMapMaster.prototype = {
 				}, this),
 				complete : func
 			});
-
 			this.animationV.animate();
 		}
+		else
+		{
+			func();
+		}
 	},
-	zoom : function(visPart)
-	{
+	zoom : function(visPart) {
 		var show = (visPart && (
 			visPart["~top"] > 0 ||
 			visPart["~left"] > 0 ||
@@ -4238,8 +4366,7 @@ CanvasMapMaster.prototype = {
 	moveEventParams : {top : 0, left : 0},
 	moveCursor : null,
 	wSize : null,
-	moveStart : function(e)
-	{
+	moveStart : function(e) {
 		this.moveCursor = null;
 
 		if (e.target == this.canvasMapPointer)
@@ -4348,7 +4475,12 @@ CanvasMapMaster.prototype = {
 					{
 						this.collapse(false);
 					}
+					else
+					{
+						this.collapse(true);
+					}
 			}, this));
+
 			BX.bind(this.canvasMapBlock, "dblclick", BX.delegate(this.collapse, this));
 		}
 		this.collapseEnd();
@@ -4392,7 +4524,7 @@ CanvasMapMaster.prototype = {
 
 		this.options.collapsing = true;
 		this.options.collapsed = collapse;
-		var posB, pos, shiftX, shiftY, scale, func;
+		var posB, pos, shiftX, scale;
 		if (collapse)
 		{
 			if (!this.collapsedNode || !this.root.pos)

@@ -13,7 +13,9 @@ $MESS ['SALE_NAME'] = "Название";
 $MESS ['SALE_LID'] = "Сайт";
 $MESS ['SALE_H_CURRENCY'] = "Валюта";
 $MESS ['SALE_ACTIVE'] = "Акт.";
+$MESS ['SALE_LOGOTIP'] = "Логотип";
 $MESS ['SALE_SORT'] = "Сорт.";
+$MESS ['SALE_ALLOW_EDIT_PAYMENT'] = "Разрешить автопересчет оплаты";
 $MESS ['SALE_ACTION'] = "Действия";
 $MESS ['SALE_EDIT'] = "Изменить";
 $MESS ['SALE_CONFIRM_DEL_MESSAGE'] = "Вы уверены, что хотите удалить платежную систему? Платежные системы, к которым привязаны заказы, удалить невозможно.";
@@ -34,4 +36,6 @@ $MESS ['SALE_F_PERSON_TYPE'] = "Тип плательщика";
 $MESS ['SALE_H_DESCRIPTION'] = "Описание";
 $MESS ['SALE_H_PERSON_TYPES'] = "Типы плательщиков";
 $MESS ['SALE_H_ACTION_FILES'] = "Обработчики";
+$MESS ['SPSAN_MARKETPLACE_ADD_NEW'] = "Установить из Маркетплейс";
+$MESS ['SPSAN_MARKETPLACE_ADD_NEW_ALT'] = "Нажмите для установки из Маркетплейс";
 ?>

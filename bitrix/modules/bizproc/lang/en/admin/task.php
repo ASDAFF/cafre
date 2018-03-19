@@ -1,6 +1,6 @@
 <?
 $MESS["BPAT_BACK"] = "Back";
-$MESS["BPAT_GOTO_DOC"] = "Go to Document";
+$MESS["BPAT_GOTO_DOC"] = "Go to Element";
 $MESS["BPAT_TAB"] = "Task";
 $MESS["BPAT_TAB_TITLE"] = "Task";
 $MESS["BPAT_TITLE"] = "Task #ID#";

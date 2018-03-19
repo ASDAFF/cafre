@@ -20,4 +20,5 @@ $MESS["BLOG_MOD_PUB"] = "Опубликовать";
 $MESS["BLOG_MOD_DELETE"] = "Удалить";
 $MESS["BLOG_MOD_DELETE_CONFIRM"] = "Вы уверены, что хотите удалить сообщение?";
 $MESS["BLOG_MOD_NO_SOCNET_USER"] = "Вы не можете просматривать чужие сообщения на модерацию";
+$MESS["BLOG_MOD_EMPTY_SOCNET_USER"] = "Профиль пользователя не задан";
 ?>

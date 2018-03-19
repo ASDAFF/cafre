@@ -15,4 +15,6 @@ $MESS["opt_unsub_link"] = "Custom unsubscription page:";
 $MESS["opt_auto_agent_interval"] = "Delay between subsequent sending jobs (sec., 0 - don't wait):";
 $MESS["opt_sub_link"] = "Custom subscription page:";
 $MESS["opt_link_protocol"] = "Message URL log:";
+$MESS["opt_max_per_cron"] = "Number of e-mails to send at once using cron:";
+$MESS["opt_mail_headers"] = "Message headers (ex.: \"List-Post: NO\"):";
 ?>

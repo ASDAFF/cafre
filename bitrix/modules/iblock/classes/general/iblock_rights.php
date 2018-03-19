@@ -40,7 +40,7 @@ class CIBlockRights
 		return $this->IBLOCK_ID == $this->id;
 	}
 
-	function Post2Array($ar)
+	public static function Post2Array($ar)
 	{
 		$arRights = array();
 		$RIGHT_ID = "";
@@ -181,7 +181,7 @@ class CIBlockRights
 		return $arRights;
 	}
 
-	function GetRightsList($bTitle = true)
+	public static function GetRightsList($bTitle = true)
 	{
 		global $DB;
 		$arResult = array();
@@ -416,8 +416,6 @@ class CIBlockRights
 
 	function SetRights($arRights)
 	{
-		global $DB;
-
 		if(!$this->_self_check())
 			return false;
 
@@ -455,6 +453,7 @@ class CIBlockRights
 			$ID = intval($RIGHT_ID);
 			$GROUP_CODE = $arRightSet["GROUP_CODE"];
 			$bInherit = true;//$arRightSet["DO_INHERIT"] == "Y";
+			$bChildrenSet = false;
 
 			if(strlen($GROUP_CODE) <= 0 || is_array($arRightSet["TASK_ID"]))
 				continue;
@@ -469,6 +468,7 @@ class CIBlockRights
 			)
 			{
 				$obStorage->DeleteChildrenSet($GROUP_CODE, CIBlockRights::GROUP_CODE);
+				$bChildrenSet = true;
 				$bCleanUp = true;
 			}
 
@@ -497,10 +497,9 @@ class CIBlockRights
 			)
 			{
 				$this->_update($ID, $GROUP_CODE, $bInherit, $arRightSet["TASK_ID"]);
-				//This not possible to change group code in _update
-				//$obStorage->DeleteChildrenSet($ID, CIBlockRights::RIGHT_ID);
-				//if($bInherit)
-				//	$obStorage->AddChildrenSet($ID, $GROUP_CODE, /*$bInherited=*/true);
+
+				if($bInherit && $bChildrenSet)
+					$obStorage->AddChildrenSet($ID, $GROUP_CODE, /*$bInherited=*/true);
 
 				unset($arDBRights[$ID]);
 			}
@@ -508,7 +507,6 @@ class CIBlockRights
 
 		foreach($arDBRights as $RIGHT_ID => $arRightSet)
 		{
-
 			if($arRightSet["IS_INHERITED"] == "Y")
 				continue;
 
@@ -594,6 +592,13 @@ class CIBlockRights
 		return CIBlockRights::_check_if_user_has_right($obRights, $ID, $permission, $flags);
 	}
 
+	/**
+	 * @param CIBlockRights $obRights
+	 * @param array|integer $ID
+	 * @param string $permission
+	 * @param integer $flags
+	 * @return array|boolean
+	 */
 	static function _check_if_user_has_right($obRights, $ID, $permission, $flags = 0)
 	{
 		global $DB, $USER;
@@ -628,15 +633,15 @@ class CIBlockRights
 		$RIGHTS_MODE = CIBlock::GetArrayByID($obRights->GetIBlockID(), "RIGHTS_MODE");
 		if($RIGHTS_MODE === "E")
 		{
-			static $Ecache;
 			if(is_array($ID))
 				$arOperations = $obRights->GetUserOperations($ID, $user_id);
 			else
 			{
-				$cache_id = $user_id."|".$ID;
-				if(!isset($Ecache[$cache_id]))
-					$Ecache[$cache_id] = $obRights->GetUserOperations($ID, $user_id);
-				$arOperations = $Ecache[$cache_id];
+				static $cache;
+				$cache_id = get_class($obRights).$user_id."|".$ID;
+				if(!isset($cache[$cache_id]))
+					$cache[$cache_id] = $obRights->GetUserOperations($ID, $user_id);
+				$arOperations = $cache[$cache_id];
 			}
 
 			if($flags & CIBlockRights::RETURN_OPERATIONS)
@@ -1881,7 +1886,7 @@ class CIBlockRightsStorage
 		}
 	}
 
-	function OnTaskOperationsChanged($TASK_ID, $arOld, $arNew)
+	public static function OnTaskOperationsChanged($TASK_ID, $arOld, $arNew)
 	{
 		global $DB;
 		$TASK_ID = intval($TASK_ID);
@@ -1897,7 +1902,7 @@ class CIBlockRightsStorage
 			$DB->Query("UPDATE b_iblock_right SET OP_SREAD = 'N' WHERE TASK_ID = ".$TASK_ID);
 	}
 
-	function OnGroupDelete($GROUP_ID)
+	public static function OnGroupDelete($GROUP_ID)
 	{
 		global $DB;
 		$GROUP_ID = intval($GROUP_ID);
@@ -1917,7 +1922,7 @@ class CIBlockRightsStorage
 		");
 	}
 
-	function OnUserDelete($USER_ID)
+	public static function OnUserDelete($USER_ID)
 	{
 		global $DB;
 		$USER_ID = intval($USER_ID);
@@ -1937,7 +1942,4 @@ class CIBlockRightsStorage
 		");
 	}
 }
-//d m p(array($this, __CLASS__, __METHOD__, func_get_args()));
-//d m p(array_shift(debug_backtrace()));
-//if(CModule::IncludeModule('perfmon')) CPerfomanceSQL::_console_explain($strSql.$strSqlOrder);
 ?>

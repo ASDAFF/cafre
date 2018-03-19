@@ -41,105 +41,145 @@ foreach ($arFilter as $key => $value)
 		unset($arFilter[$key]);
 }
 
-$lAdmin->AddHeaders(array(
-	array(
+$arHeaders = array();
+
+if ($group !== "Y")
+{
+	$arHeaders[] = array(
 		"id" => "ID",
 		"content" => GetMessage("PERFMON_COMP_ID"),
 		"sort" => "ID",
 		"align" => "right",
-	),
-	array(
+	);
+	$arHeaders[] = array(
 		"id" => "HIT_ID",
 		"content" => GetMessage("PERFMON_COMP_HIT_ID"),
 		"sort" => "HIT_ID",
 		"align" => "right",
-	),
-	array(
+	);
+	$arHeaders[] = array(
 		"id" => "NN",
 		"content" => GetMessage("PERFMON_COMP_NN"),
 		"sort" => "NN",
 		"align" => "right",
 		"default" => true,
-	),
-	array(
-		"id" => "COMPONENT_NAME",
-		"content" => GetMessage("PERFMON_COMP_COMPONENT_NAME"),
-		"sort" => "COMPONENT_NAME",
-		"default" => true,
-	),
-	array(
+	);
+}
+
+$arHeaders[] = array(
+	"id" => "COMPONENT_NAME",
+	"content" => GetMessage("PERFMON_COMP_COMPONENT_NAME"),
+	"sort" => "COMPONENT_NAME",
+	"default" => true,
+);
+
+if ($group !== "Y")
+{
+	$arHeaders[] = array(
 		"id" => "COMPONENT_TIME",
 		"content" => GetMessage("PERFMON_COMP_COMPONENT_TIME"),
 		"sort" => "COMPONENT_TIME",
 		"align" => "right",
 		"default" => true,
-	),
-	array(
+	);
+	$arHeaders[] = array(
 		"id" => "QUERIES",
 		"content" => GetMessage("PERFMON_COMP_QUERIES"),
 		"sort" => "QUERIES",
 		"align" => "right",
 		"default" => true,
-	),
-	array(
+	);
+	$arHeaders[] = array(
 		"id" => "QUERIES_TIME",
 		"content" => GetMessage("PERFMON_COMP_QUERIES_TIME"),
 		"sort" => "QUERIES_TIME",
 		"align" => "right",
 		"default" => true,
-	),
-	array(
-		"id" => "CACHE_TYPE",
-		"content" => GetMessage("PERFMON_COMP_CACHE_TYPE"),
-		"sort" => "CACHE_TYPE",
-		"align" => "right",
-		"default" => true,
-	),
-	array(
+	);
+}
+
+$arHeaders[] = array(
+	"id" => "CACHE_TYPE",
+	"content" => GetMessage("PERFMON_COMP_CACHE_TYPE"),
+	"sort" => "CACHE_TYPE",
+	"align" => "right",
+	"default" => true,
+);
+
+if ($group !== "Y")
+{
+	$arHeaders[] = array(
 		"id" => "CACHE_SIZE",
 		"content" => GetMessage("PERFMON_COMP_CACHE_SIZE"),
 		"sort" => "CACHE_SIZE",
 		"align" => "right",
-	),
-	array(
+	);
+	$arHeaders[] = array(
 		"id" => "CACHE_COUNT",
 		"content" => GetMessage("PERFMON_COMP_CACHE_COUNT"),
 		"sort" => "CACHE_COUNT",
 		"align" => "right",
-	),
-	array(
+	);
+	$arHeaders[] = array(
 		"id" => "CACHE_COUNT_R",
 		"content" => GetMessage("PERFMON_COMP_CACHE_COUNT_R"),
 		"sort" => "CACHE_COUNT_R",
 		"align" => "right",
-	),
-	array(
+	);
+	$arHeaders[] = array(
 		"id" => "CACHE_COUNT_W",
 		"content" => GetMessage("PERFMON_COMP_CACHE_COUNT_W"),
 		"sort" => "CACHE_COUNT_W",
 		"align" => "right",
-	),
-	array(
+	);
+	$arHeaders[] = array(
 		"id" => "CACHE_COUNT_C",
 		"content" => GetMessage("PERFMON_COMP_CACHE_COUNT_C"),
 		"sort" => "CACHE_COUNT_C",
 		"align" => "right",
-	),
-));
+	);
+}
+
+if ($group === "Y")
+{
+	$arHeaders[] = array(
+		"id" => "COUNT",
+		"content" => GetMessage("PERFMON_COMP_COUNT"),
+		"align" => "right",
+		"sort" => "COUNT",
+		"default" => true,
+	);
+}
+
+$lAdmin->AddHeaders($arHeaders);
 
 $arSelectedFields = $lAdmin->GetVisibleHeaderColumns();
 if (!is_array($arSelectedFields) || (count($arSelectedFields) < 1))
-	$arSelectedFields = array(
-		"ID",
-		"HIT_ID",
-		"NN",
-		"CACHE_TYPE",
-		"COMPONENT_NAME",
-		"COMPONENT_TIME",
-		"QUERIES",
-		"QUERIES_TIME",
-	);
-$arSelectedFields[] = "ID";
+{
+	if ($group !== "Y")
+	{
+		$arSelectedFields = array(
+			"ID",
+			"HIT_ID",
+			"NN",
+			"CACHE_TYPE",
+			"COMPONENT_NAME",
+			"COMPONENT_TIME",
+			"QUERIES",
+			"QUERIES_TIME",
+		);
+	}
+	else
+	{
+		$arSelectedFields = array(
+			"COMPONENT_NAME",
+			"CACHE_TYPE",
+			"COUNT",
+		);
+	}
+}
+
+$arSelectedFields[] = $group !== "Y"? "ID": "COMPONENT_NAME";
 
 $arNumCols = array(
 	"CACHE_SIZE" => 0,
@@ -159,7 +199,7 @@ $cData = new CPerfomanceComponent;
 $rsData = $cData->GetList(
 	array($by => $order),
 	$arFilter,
-	false,
+	$group === "Y",
 	array("nPageSize" => CAdminResult::GetNavSize($sTableID)),
 	$arSelectedFields
 );
@@ -176,6 +216,8 @@ while ($arRes = $rsData->NavNext(true, "f_"))
 	{
 		$row->AddViewField($column_name, perfmon_NumberFormat($arRes[$column_name], $precision));
 	}
+	if ($group === "Y" && $f_COMPONENT_NAME)
+		$row->AddViewField("COMPONENT_NAME", '<a href="perfmon_comp_list.php?lang='.LANGUAGE_ID.'&amp;set_filter=Y&amp;find_component_name='.$f_COMPONENT_NAME.'">'.$f_COMPONENT_NAME.'</a>');
 	if ($f_QUERIES > 0)
 		$row->AddViewField("QUERIES", '<a href="perfmon_sql_list.php?lang='.LANGUAGE_ID.'&amp;set_filter=Y&amp;find_component_id='.$f_ID.'">'.$f_QUERIES.'</a>');
 	$row->AddViewField("HIT_ID", '<a href="perfmon_hit_list.php?lang='.LANGUAGE_ID.'&amp;set_filter=Y&amp;find_id='.$f_HIT_ID.'">'.$f_HIT_ID.'</a>');
@@ -204,8 +246,29 @@ $lAdmin->AddFooter(
 	)
 );
 
-$aContext = array();
+$aContext = array(
+	array(
+		"TEXT" => GetMessage("PERFMON_COMP_GROUP"),
+		"MENU" => array(
+			array(
+				"TEXT" => GetMessage("PERFMON_COMP_GROUP_ON"),
+				"ACTION" => $lAdmin->ActionDoGroup(0, "", "group=Y&by=COUNT&order=DESC"),
+				"ICON" => ($group === "Y"? "checked": ""),
+			),
+			array(
+				"TEXT" => GetMessage("PERFMON_COMP_GROUP_OFF"),
+				"ACTION" => $lAdmin->ActionDoGroup(0, "", "group=N"),
+				"ICON" => ($group !== "Y"? "checked": ""),
+			),
+		),
+	),
+);
+
 $lAdmin->AddAdminContextMenu($aContext);
+
+$lAdmin->BeginPrologContent();
+echo '<script>BX.ready(function(){BX("list_group_mode").value="'.CUtil::JSEscape($group).'";});</script>';
+$lAdmin->EndPrologContent();
 
 $lAdmin->CheckListMode();
 
@@ -244,6 +307,7 @@ $oFilter = new CAdminFilter(
 			);
 			echo SelectBoxFromArray("find_type", $arr, $find_type, "", "");
 			?>
+			<input type="hidden" id="list_group_mode" name="group" value="<? echo htmlspecialcharsbx($group) ?>">
 		</td>
 	</tr>
 	<tr>

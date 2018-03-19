@@ -420,7 +420,7 @@ while($banner = $data->NavNext())
 				$rowActions[] = array(
 					"ICON" => "moderate",
 					"TEXT" => Loc::getMessage("SEO_BANNER_MODERATE"),
-					"ACTION" => $adminList->ActionDoGroup($banner['ID'], 'moderate', 'campaign='.$campaignId),
+					"ACTION" => "BX.adminPanel.showWait(BX('banner_update_button_".$banner['ID']."'));".$adminList->ActionDoGroup($banner['ID'], 'moderate', 'campaign='.$campaignId),
 				);
 			}
 			else
@@ -430,7 +430,7 @@ while($banner = $data->NavNext())
 					$rowActions[] = array(
 						"ICON" => "stop",
 						"TEXT" => Loc::getMessage("SEO_BANNER_STOP"),
-						"ACTION" => $adminList->ActionDoGroup($banner['ID'], 'stop', 'campaign='.$campaignId),
+						"ACTION" => "BX.adminPanel.showWait(BX('banner_update_button_".$banner['ID']."'));".$adminList->ActionDoGroup($banner['ID'], 'stop', 'campaign='.$campaignId),
 					);
 				}
 				else
@@ -438,7 +438,7 @@ while($banner = $data->NavNext())
 					$rowActions[] = array(
 						"ICON" => "start",
 						"TEXT" => Loc::getMessage("SEO_BANNER_RESUME"),
-						"ACTION" => $adminList->ActionDoGroup($banner['ID'], 'resume', 'campaign='.$campaignId),
+						"ACTION" => "BX.adminPanel.showWait(BX('banner_update_button_".$banner['ID']."'));".$adminList->ActionDoGroup($banner['ID'], 'resume', 'campaign='.$campaignId),
 					);
 				}
 			}

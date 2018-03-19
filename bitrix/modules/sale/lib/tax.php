@@ -9,13 +9,9 @@
 namespace Bitrix\Sale;
 
 
-use Bitrix\Main\ArgumentNullException;
-use Bitrix\Main\Entity\EntityError;
-use Bitrix\Main\Localization\Loc;
-use Bitrix\Main\ObjectNotFoundException;
-use Bitrix\Sale;
+use Bitrix\Main;
 
-Loc::loadMessages(__FILE__);
+Main\Localization\Loc::loadMessages(__FILE__);
 
 class Tax
 {
@@ -31,7 +27,18 @@ class Tax
 	/** @var array */
 	protected $changedValues = array();
 
+	/** @var bool  */
+	protected $deliveryTax = null;
 
+	/** @var bool  */
+	protected $isClone = false;
+
+	/** @var bool  */
+	protected $isExternal = false;
+
+	/**
+	 * Tax constructor.
+	 */
 	protected function __construct()
 	{
 
@@ -47,6 +54,28 @@ class Tax
 			$this->list = $this->loadList();
 		}
 
+		$event = new Main\Event('sale', EventActions::EVENT_ON_TAX_GET_LIST, array(
+			'ENTITY' => $this,
+			'VALUES' => $this->list,
+		));
+		$event->send();
+
+		if ($event->getResults())
+		{
+			/** @var Main\EventResult $evenResult */
+			foreach($event->getResults() as $eventResult)
+			{
+				if($eventResult->getType() == Main\EventResult::SUCCESS)
+				{
+					$eventResultData = $eventResult->getParameters();
+					if (!empty($eventResultData['VALUES']))
+					{
+						$this->list = $eventResultData['VALUES'];
+					}
+				}
+			}
+		}
+
 		return $this->list;
 	}
 
@@ -57,7 +86,10 @@ class Tax
 	public function initTaxList(array $list)
 	{
 		if (!empty($list))
+		{
 			$this->list = $list;
+			$this->isExternal = true;
+		}
 	}
 
 	/**
@@ -73,7 +105,7 @@ class Tax
 	 * Calculation of taxes
 	 *
 	 * @return Result
-	 * @throws ObjectNotFoundException
+	 * @throws Main\ObjectNotFoundException
 	 */
 	public function calculate()
 	{
@@ -83,28 +115,13 @@ class Tax
 		/** @var Order $order */
 		if (!$order = $this->getOrder())
 		{
-			throw new ObjectNotFoundException('Entity "Order" not found');
-		}
-
-		/** @var Basket $basket */
-		if (!$basket = $order->getBasket())
-		{
-			throw new ObjectNotFoundException('Entity "Basket" not found');
+			throw new Main\ObjectNotFoundException('Entity "Order" not found');
 		}
 
 		$taxResult = array();
 
 		$taxList = $this->getTaxList();
-
-//		if ($order->getId() > 0)
-//		{
-//			$taxList = $this->getTaxList();
-//		}
-//		else
-//		{
-//			$taxList = $this->getAvailableList();
-//		}
-
+		
 		$taxExempt = static::loadExemptList($order->getUserId());
 
 		$fields = array(
@@ -117,12 +134,12 @@ class Tax
 			"VAT_SUM" => $order->getVatSum(),
 		);
 
-		if (!empty($taxExempt))
+		if (is_array($taxExempt))
 		{
 			$fields['TAX_EXEMPT'] = $taxExempt;
 		}
 
-		if (!empty($taxList))
+		if (is_array($taxList) && !empty($taxList))
 		{
 			$fields['TAX_LIST'] = $taxList;
 		}
@@ -141,7 +158,7 @@ class Tax
 			$fields['BASKET_ITEMS'][] = $basketItem->getFieldValues();
 		}
 
-		\CSaleTax::DoProcessOrderBasket($fields, array(), $errors = array());
+		\CSaleTax::calculateTax($fields, array(), $errors = array());
 
 		if (!$order->isUsedVat() && is_array($fields['TAX_LIST']))
 		{
@@ -151,6 +168,11 @@ class Tax
 		if (array_key_exists('TAX_PRICE', $fields) && floatval($fields['TAX_PRICE']) >= 0)
 		{
 			$taxResult['TAX_PRICE'] = $fields['TAX_PRICE'];
+		}
+
+		if (array_key_exists('VAT_SUM', $fields) && floatval($fields['VAT_SUM']) > 0)
+		{
+			$taxResult['VAT_SUM'] = $fields['VAT_SUM'];
 		}
 
 		if (array_key_exists('TAX_LIST', $fields))
@@ -176,22 +198,20 @@ class Tax
 
 	/**
 	 * @return Result
-	 * @throws ObjectNotFoundException
+	 * @throws Main\ObjectNotFoundException
 	 */
 	public function calculateDelivery()
 	{
 		/** @var Result $result */
 		$result = new Result();
 
-		$taxResult = array();
-
 		/** @var Order $order */
 		if (!$order = $this->getOrder())
 		{
-			throw new ObjectNotFoundException('Entity "Order" not found');
+			throw new Main\ObjectNotFoundException('Entity "Order" not found');
 		}
-
-		if ($order->getId() > 0)
+		
+		if ($order->getId() > 0 || (!empty($this->list) && is_array($this->list)))
 		{
 			$taxList = $this->getTaxList();
 		}
@@ -202,13 +222,15 @@ class Tax
 
 		$taxExempt = static::loadExemptList($order->getUserId());
 
+		/** @var Basket $basket */
+		if (!$basket = $order->getBasket())
+		{
+			throw new Main\ObjectNotFoundException('Entity "Basket" not found');
+		}
+
 		$fields = array(
 			"TAX_LOCATION" => $order->getTaxLocation(),
-			"DELIVERY_PRICE" => $order->getDeliveryPrice(),
-			"USE_VAT" => $order->isUsedVat(),
-
-			"VAT_RATE" => $order->getVatRate(),
-
+			"VAT_SUM" => $basket->getVatSum(),
 			"CURRENCY" => $order->getCurrency(),
 		);
 
@@ -223,7 +245,46 @@ class Tax
 			$fields['TAX_LIST'] = $taxList;
 		}
 
-		\CSaleTax::DoProcessOrderDelivery($fields, $options = array(), $errors = array());
+		$options = array();
+
+		if (($isDeliveryCalculate = $this->isDeliveryCalculate()))
+		{
+			$options['COUNT_DELIVERY_TAX'] = ($isDeliveryCalculate === true ? "Y" : "N");
+		}
+
+		$shipmentCollection = $order->getShipmentCollection();
+		if (!$shipmentCollection)
+		{
+			throw new Main\ObjectNotFoundException('Entity "ShipmentCollection" not found');
+		}
+
+		/** @var Shipment $shipment */
+		foreach ($shipmentCollection as $shipment)
+		{
+			if ($shipment->isSystem())
+				continue;
+
+			$service = $shipment->getDelivery();
+			if ($service === null)
+				continue;
+
+			$additionalFields = array(
+				"DELIVERY_PRICE" => $shipment->getPrice()
+			);
+
+			$vatRate = $shipment->getVatRate();
+			if ($vatRate)
+			{
+				$additionalFields["USE_VAT"] = true;
+				$additionalFields["VAT_RATE"] = $vatRate;
+			}
+
+			$fields = array_merge($fields, $additionalFields);
+			\CSaleTax::calculateDeliveryTax($fields, $options, $errors = array());
+		}
+
+
+		$taxResult = array();
 
 		if (array_key_exists('TAX_PRICE', $fields) && floatval($fields['TAX_PRICE']) > 0)
 		{
@@ -241,7 +302,7 @@ class Tax
 		}
 
 
-		if (array_key_exists('TAX_LIST', $fields) && !empty($fields['TAX_LIST']) && is_array($fields['TAX_LIST']))
+		if ($isDeliveryCalculate && array_key_exists('TAX_LIST', $fields) && !empty($fields['TAX_LIST']) && is_array($fields['TAX_LIST']))
 		{
 			$newTaxList = $this->checkModifyTaxList($fields['TAX_LIST']);
 			$this->list = $newTaxList;
@@ -327,6 +388,7 @@ class Tax
 						'VALUE_MONEY' => $taxValue['VALUE_MONEY'],
 						'APPLY_ORDER' => $taxValue['APPLY_ORDER'],
 						'IS_IN_PRICE' => $taxValue['IS_IN_PRICE'],
+						'TAX_VAL' => $taxValue['TAX_VAL'],
 						'CODE' => $taxValue['CODE'],
 					);
 
@@ -335,6 +397,21 @@ class Tax
 	//					$this->changedValues[$taxCode] = true;
 	//				}
 				}
+			}
+
+			// one tax to order
+			$taxListModify1C = array();
+			foreach($oldTaxList as $taxOrder)
+			{
+				if($taxOrder['CODE'] == 'VAT1C')
+				{
+					$taxListModify1C[] = $taxOrder;
+				}
+			}
+
+			if(count($taxListModify1C)>0)
+			{
+				$oldTaxList = $taxListModify1C;
 			}
 		}
 		else
@@ -348,13 +425,17 @@ class Tax
 
 	/**
 	 * @return Result
+	 * @throws Main\ObjectNotFoundException
 	 */
 	public function save()
 	{
 
 		$result = new Result();
 		/** @var Order $order */
-		$order = $this->getOrder();
+		if (!$order = $this->getOrder())
+		{
+			throw new Main\ObjectNotFoundException('Entity "Order" not found');
+		}
 
 		//DoSaveOrderTax
 		\CSaleTax::DoSaveOrderTax($order->getId(), $this->getTaxList(), $errors = array());
@@ -363,25 +444,43 @@ class Tax
 		{
 			foreach ($errors as $error)
 			{
-				$result->addError(new EntityError($error));
+				$result->addError(new Main\Entity\EntityError($error));
 			}
+		}
+
+
+		if ($order->getId() > 0)
+		{
+			OrderHistory::collectEntityFields('TAX', $order->getId());
 		}
 
 		return $result;
 	}
 
 	/**
+	 * @return Tax
+	 */
+	protected static function createTaxObject()
+	{
+		$registry = Registry::getInstance(Registry::REGISTRY_TYPE_ORDER);
+		$taxClassName = $registry->getTaxClassName();
+
+		return new $taxClassName();
+	}
+
+	/**
 	 * @param OrderBase $order
-	 * @return array|null
+	 *
+	 * @return Tax
 	 */
 	public static function load(OrderBase $order)
 	{
-		$tax = new static();
+		$tax = static::createTaxObject();
 		$tax->order = $order;
 
 		if ($order->getId() > 0)
 		{
-			$tax->list = $tax->loadList($order);
+			$tax->getTaxList();
 		}
 		else
 		{
@@ -420,21 +519,46 @@ class Tax
 	{
 		$this->list = array();
 	}
+
+	public function resetAvailableTaxList()
+	{
+		$this->availableList = null;
+	}
 	/**
 	 *
 	 */
 	public function refreshData()
 	{
-		$this->resetTaxList();
+		$result = new Result();
+
+		if (!$this->isExternal)
+		{
+			$this->resetTaxList();
+		}
+
+		$this->resetAvailableTaxList();
 
 		/** @var Result $r */
 		$r = $this->calculate();
 		if (!$r->isSuccess())
 		{
-			return $r;
+			$result->addErrors($r->getErrors());
+			return $result;
 		}
 
-		return $this->calculateDelivery();
+		$taxResult = $r->getData();
+
+		$r = $this->calculateDelivery();
+		if (!$r->isSuccess())
+		{
+			$result->addErrors($r->getErrors());
+			return $result;
+		}
+		$taxResult = array_merge($taxResult, $r->getData());
+
+		$result->setData($taxResult);
+
+		return $result;
 	}
 
 	/**
@@ -461,7 +585,7 @@ class Tax
 
 		$proxyTaxExemptKey = md5(join('|', $userGroups));
 
-		if (!empty($proxyTaxExemptList[$proxyTaxExemptKey]))
+		if (array_key_exists($proxyTaxExemptKey, $proxyTaxExemptList))
 		{
 			$exemptList = $proxyTaxExemptList[$proxyTaxExemptKey];
 		}
@@ -507,6 +631,8 @@ class Tax
 		if (!$basket)
 			return null;
 
+		$availableList = array();
+
 		if (!$order->isUsedVat())
 		{
 			$taxExemptList = static::loadExemptList($order->getUserId());
@@ -517,7 +643,7 @@ class Tax
 					"LID" => $order->getSiteId(),
 					"PERSON_TYPE_ID" => $order->getPersonTypeId(),
 					"ACTIVE" => "Y",
-					"LOCATION" => $order->getTaxLocation(),
+					"LOCATION_CODE" => $order->getTaxLocation(),
 				)
 			);
 			while ($taxRate = $taxRateRes->GetNext())
@@ -526,17 +652,17 @@ class Tax
 				{
 					if ($taxRate["IS_PERCENT"] != "Y")
 					{
-						$taxRate["VALUE"] = RoundEx(\CCurrencyRates::convertCurrency($taxRate["VALUE"], $taxRate["CURRENCY"], $order->getCurrency()), SALE_VALUE_PRECISION);
+						$taxRate["VALUE"] = PriceMaths::roundPrecision(\CCurrencyRates::convertCurrency($taxRate["VALUE"], $taxRate["CURRENCY"], $order->getCurrency()));
 						$taxRate["CURRENCY"] = $order->getCurrency();
 					}
-					$this->availableList[] = $taxRate;
+					$availableList[] = $taxRate;
 				}
 			}
 		}
 		else
 		{
-			$this->availableList[] = array(
-				"NAME" => Loc::getMessage("SOA_VAT"),
+			$availableList[] = array(
+				"NAME" => Main\Localization\Loc::getMessage("SOA_VAT"),
 				"IS_PERCENT" => "Y",
 				"VALUE" => $order->getVatRate() * 100,
 				"VALUE_FORMATED" => "(".($order->getVatRate() * 100)."%, ".GetMessage("SOA_VAT_INCLUDED").")",
@@ -548,7 +674,63 @@ class Tax
 			);
 		}
 
-		return $this->availableList;
+		return $availableList;
+	}
+
+	/**
+	 * @param $value
+	 */
+	public function setDeliveryCalculate($value)
+	{
+		$this->deliveryTax = ($value === true? true : false);
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function isDeliveryCalculate()
+	{
+		return $this->deliveryTax;
+	}
+
+	/**
+	 * @internal
+	 * @param \SplObjectStorage $cloneEntity
+	 *
+	 * @return Tax
+	 */
+	public function createClone(\SplObjectStorage $cloneEntity)
+	{
+		if ($this->isClone() && $cloneEntity->contains($this))
+		{
+			return $cloneEntity[$this];
+		}
+
+		$taxClone = clone $this;
+		$taxClone->isClone = true;
+
+		if (!$cloneEntity->contains($this))
+		{
+			$cloneEntity[$this] = $taxClone;
+		}
+
+		if ($this->order)
+		{
+			if ($cloneEntity->contains($this->order))
+			{
+				$taxClone->order = $cloneEntity[$this->order];
+			}
+		}
+
+		return $taxClone;
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function isClone()
+	{
+		return $this->isClone;
 	}
 
 }

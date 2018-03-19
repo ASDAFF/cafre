@@ -157,13 +157,14 @@
 .bx-lists-table-title tr td:last-child {
 	text-align: right;
 }
-.bx-lists-table-content tr td:first-child {
+.bx-lists-table-first-td {
+	width: 30%;
 	font-size: 14px;
 	line-height: 22px;
 	font-weight: bold;
 	color: #000;
 	text-align: right;
-	padding-right: 30px;
+	padding-right: 30px !important;
 }
 .bx-lists-table-content tr td {
 	padding: 6px 0px;
@@ -257,6 +258,7 @@
 .bx-lists-table-content {
 	width: 100%;
 	margin: auto;
+	padding: 0 20px 0 30px;
 }
 .bx-lists-table-td-title {
 	position: relative;
@@ -494,7 +496,6 @@ td .bx-lists-required {color:red;}
 	height: 36px;
 	border-radius: 50%;
 	margin: auto;
-	vertical-align: middle;
 }
 .bp-question-item-avatar i {
 	background-color: #baed21;
@@ -528,15 +529,16 @@ td .bx-lists-required {color:red;}
 .bx-lists-bizproc-parameters-title {
 	position: relative;
 	padding: 15px 20px 50px;
-	background: #e8e8e8;
+	background: #e8f9fe;
 	border-radius: 2px;
-	color: #000;
+	color: #535c69;
 	font-size: 13px;
 	margin-top: 20px;
+	font-weight: bold;
 }
 .bx-lists-div-list .bx-lists-bizproc-parameters-title {
-	margin: 25px 20px 25px 30px;
-	padding: 20px 20px 15px;
+	margin: 25px 20px 10px 30px;
+	padding: 20px 20px 20px;
 	font-size: 14px;
 }
 .bx-lists-div-list .bx-lists-bizproc-parameters-title p {margin: 0 0 10px;}
@@ -556,3 +558,58 @@ td .bx-lists-required {color:red;}
 .bx-lists-marketplace-tr-mouseover {background-color: #A4E4F9;}
 .bx-lists-marketplace-tr-mousedown {background-color: #A4E4F9;}
 .bx-lists-marketplace-tr-mouseout {background-color: #EEF2F4;}
+
+.bx-lists-template-name {
+	font-weight: bold;
+	font-size: 14px;
+	color: #000;
+	margin: 0 0 10px;
+	display: block;
+	padding: 0 15px 0;
+}
+.bx-lists-constants-form-hr {
+	width: 97%;
+}
+
+.bx-lists-bp-parameters-template {
+	background: #e8e8e8;
+	height: 30px;
+}
+.bx-lists-bp-parameters-template td {
+	color: #535c69 !important;
+	text-align: left !important;
+	padding-left: 20px !important;
+}
+
+/* Popup location designer template */
+.bx-lists-designer-template-popup-content
+{
+	background: #eef2f4;
+	padding: 5px 10px 10px 10px;
+	width: 370px;
+}
+.bx-lists-designer-template-popup-content p
+{
+	font-size: 14px;
+	color: #000;
+	padding: 0 10px 0 10px;
+}
+.bx-lists-designer-item {
+	font-weight: bold;
+	font-size: 13px;
+	padding: 10px;
+	overflow: hidden;
+	line-height: 25px;
+	cursor: pointer;
+	color: #000;
+}
+.bx-lists-designer-item:hover {
+	background: #e8f9fe;
+}
+
+.bx-lists-table-content .diskuf-selectdialog {
+	max-width: 800px;
+}
+.bx-lists-table-content .diskuf-selectdialog-switcher {
+	display:block;
+}

@@ -18,6 +18,7 @@ namespace Bitrix\Sale\Delivery\AdminPage\DeliveryRestrictions
 	 */
 
 	use Bitrix\Main\Localization\Loc;
+	use Bitrix\Sale\Delivery\Restrictions;
 	use Bitrix\Sale\Delivery\Services;
 	use Bitrix\Sale\Internals\Input;
 
@@ -27,11 +28,12 @@ namespace Bitrix\Sale\Delivery\AdminPage\DeliveryRestrictions
 	$tableId = 'table_delivery_restrictions';
 	$oSort = new \CAdminSorting($tableId);
 	$lAdmin = new \CAdminList($tableId, $oSort);
- 	$restrictionClassNames = Services\Manager::getRestrictionClassNames();
+ 	$restrictionClassNames = Restrictions\Manager::getClassesList();
 
-	$res = \Bitrix\Sale\Delivery\Restrictions\Table::getList(array(
+	$res = \Bitrix\Sale\Internals\ServiceRestrictionTable::getList(array(
 		'filter' => array(
-			'DELIVERY_ID' => $ID
+			'=SERVICE_ID' => $ID,
+			'=SERVICE_TYPE' => Restrictions\Manager::SERVICE_TYPE_SHIPMENT
 		),
 		'select' => array('ID', 'CLASS_NAME', 'SORT', 'PARAMS'),
 		'order' => array('SORT' => 'ASC', 'ID' => 'DESC')
@@ -57,6 +59,12 @@ namespace Bitrix\Sale\Delivery\AdminPage\DeliveryRestrictions
 
 	while ($record = $dbRecords->Fetch())
 	{
+		if(empty($record['CLASS_NAME']) || !class_exists($record['CLASS_NAME']))
+			continue;
+
+		if(!is_subclass_of($record['CLASS_NAME'], 'Bitrix\Sale\Delivery\Restrictions\Base'))
+			continue;
+
 		if(strlen($record['CLASS_NAME']) > 0)
 		{
 			$restrictionClassNamesUsed[] = $record['CLASS_NAME'];
@@ -77,7 +85,7 @@ namespace Bitrix\Sale\Delivery\AdminPage\DeliveryRestrictions
 			"',deliveryId: ".$ID.
 			",title: '".$className.
 			"',restrictionId: ".$record["ID"].
-			",params: ".\CUtil::PhpToJSObject($record["PARAMS"]).
+			",params: ".htmlspecialcharsbx(\CUtil::PhpToJSObject($record["PARAMS"])).
 			",sort: ".$record["SORT"].
 			",lang: '".LANGUAGE_ID."'".
 		"});";
@@ -87,15 +95,14 @@ namespace Bitrix\Sale\Delivery\AdminPage\DeliveryRestrictions
 		$row->AddField('SORT', $record['SORT']);
 		$row->AddField('CLASS_NAME', $className);
 
-		$restriction = Services\Manager::getRestrictionObject($record['CLASS_NAME']);
-		$paramsStructure = $restriction->getParamsStructure($ID);
-		$record["PARAMS"] = $restriction->prepareParamsValues($record["PARAMS"], $ID);
+		$paramsStructure = $record['CLASS_NAME']::getParamsStructure($ID);
+		$record["PARAMS"] = $record['CLASS_NAME']::prepareParamsValues($record["PARAMS"], $ID);
 
 		$paramsField = "";
 
 		foreach($paramsStructure as $name => $params)
 		{
-			$paramsField .= (isset($params["LABEL"]) && strlen($params["LABEL"]) >0 ? $params["LABEL"].": " : "").
+			$paramsField .= (isset($params["LABEL"]) && strlen($params["LABEL"]) > 0 ? $params["LABEL"].": " : "").
 				Input\Manager::getViewHtml($params, (isset($record["PARAMS"][$name]) ? $record["PARAMS"][$name] : null)).
 				"<br>";
 		}
@@ -151,6 +158,8 @@ namespace Bitrix\Sale\Delivery\AdminPage\DeliveryRestrictions
 
 		if(!empty($restrictionsMenu))
 		{
+			sortByColumn($restrictionsMenu, array("TEXT" => SORT_ASC));
+
 			$aContext[] = array(
 				"TEXT" => Loc::getMessage("SALE_RDL_BUT_ADD_NEW"),
 				"TITLE" => Loc::getMessage("SALE_RDL_BUT_ADD_NEW"),

@@ -155,7 +155,7 @@ $lAdmin->AddAdminContextMenu($aContext);
 $lAdmin->CheckListMode();
 
 $APPLICATION->SetTitle(GetMessage("MAIN_RATING_LIST"));
-require_once ($DOCUMENT_ROOT.BX_ROOT."/modules/main/include/prolog_admin_after.php");
+require_once ($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/include/prolog_admin_after.php");
 
 $oFilter = new CAdminFilter(
 	$sTableID."_filter",

@@ -11,7 +11,6 @@ if(
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/prolog.php");
 define("HELP_FILE", "settings/settings/cache.php");
-require_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/classes/general/cache_html.php");
 /** @var CUser $USER */
 /** @var CMain $APPLICATION */
 
@@ -59,7 +58,7 @@ if(
 			|| ($_REQUEST["cachetype"] === "managed")
 			|| ($_REQUEST["cachetype"] === "html");
 
-		$curentTime = mktime();
+		$curentTime = time();
 		$endTime = time()+5;
 
 		$obCacheCleaner = new CFileCacheCleaner($_REQUEST["cachetype"]);
@@ -84,7 +83,7 @@ if(
 		{
 			if(
 				is_string($file)
-				&& !preg_match("/(\\.enabled|.config\\.php)\$/", $file)
+				&& !preg_match("/(\\.enabled|\\.size|.config\\.php)\$/", $file)
 			)
 			{
 				$file_size = filesize($file);
@@ -109,7 +108,7 @@ if(
 			//no more than 200 files per second
 			usleep(5000);
 		}
-		CHTMLPagesCache::writeStatistic(0, 0, 0, 0, -$space_freed);
+		\Bitrix\Main\Composite\Helper::updateCacheFileSize(-$space_freed);
 	}
 	elseif(\Bitrix\Main\Data\Cache::getCacheEngineType() == "cacheenginefiles")
 	{
@@ -195,16 +194,16 @@ if(
 		}
 		elseif($_REQUEST["cachetype"] == "html")
 		{
-			$staticHtmlCache = \Bitrix\Main\Data\StaticHtmlCache::getInstance();
-			$staticHtmlCache->deleteAll();
+			$page = \Bitrix\Main\Composite\Page::getInstance();
+			$page->deleteAll();
 		}
 		elseif($_REQUEST["cachetype"] == "all")
 		{
 			BXClearCache(true);
 			$GLOBALS["CACHE_MANAGER"]->CleanAll();
 			$GLOBALS["stackCacheManager"]->CleanAll();
-			$staticHtmlCache = \Bitrix\Main\Data\StaticHtmlCache::getInstance();
-			$staticHtmlCache->deleteAll();
+			$page = \Bitrix\Main\Composite\Page::getInstance();
+			$page->deleteAll();
 		}
 
 		if ($_SESSION["CACHE_STAT"])
@@ -281,40 +280,6 @@ if($REQUEST_METHOD=="POST" && ($managed_cache_on=="Y" || $managed_cache_on=="N")
 }
 if($_REQUEST["res"] == "managed_saved")
 	$okMessage .= GetMessage("main_cache_managed_saved");
-
-if ($REQUEST_METHOD=="POST" && strlen($html_cache_siteb) && ($html_cache_on=="Y" || $html_cache_on=="N") && check_bitrix_sessid() && $isAdmin)
-{
-	if(CHTMLPagesCache::IsOn())
-	{
-		if ($html_cache_on == "N")
-		{
-			CHTMLPagesCache::setEnabled(false);
-			$okMessage .= GetMessage("MAIN_OPTION_HTML_CACHE_SUCCESS")." ";
-		}
-	}
-	else
-	{
-		if ($html_cache_on == "Y")
-		{
-			CHTMLPagesCache::setEnabled(true);
-			$okMessage .= GetMessage("MAIN_OPTION_HTML_CACHE_SUCCESS")." ";
-		}
-	}
-}
-
-if ($REQUEST_METHOD=="POST" && strlen($html_cache_save_opt) && check_bitrix_sessid() && $isAdmin)
-{
-	$arHTMLCacheOptions = CHTMLPagesCache::getOptions();
-	$arHTMLCacheOptions["INCLUDE_MASK"] = $html_cache_include_mask;
-	$arHTMLCacheOptions["EXCLUDE_MASK"] = $html_cache_exclude_mask;
-	$arHTMLCacheOptions["FILE_QUOTA"] = $html_cache_quota;
-	CHTMLPagesCache::setOptions($arHTMLCacheOptions);
-}
-
-if ($REQUEST_METHOD=="POST" && strlen($html_cache_reset_opt) && check_bitrix_sessid() && $isAdmin)
-{
-	CHTMLPagesCache::resetOptions();
-}
 
 $APPLICATION->SetTitle(GetMessage("MCACHE_TITLE"));
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_after.php");
@@ -409,7 +374,6 @@ function EndClearCache()
 </div>
 
 <?
-$arHTMLCacheOptions = CHTMLPagesCache::getOptions();
 $aTabs = array(
 	array(
 		"DIV" => "fedit1",
@@ -424,15 +388,7 @@ $aTabs = array(
 		"TITLE" => GetMessage("main_cache_managed_sett"),
 	),
 );
-if ($arHTMLCacheOptions["COMPOSITE"] !== "Y")
-{
-	$aTabs[] = array(
-		"DIV" => "fedit3",
-		"TAB" => GetMessage("MAIN_TAB_2"),
-		"ICON" => "main_settings",
-		"TITLE" => GetMessage("MAIN_OPTION_HTML_CACHE"),
-	);
-}
+
 $aTabs[] = array(
 	"DIV" => "fedit2",
 	"TAB" => GetMessage("MAIN_TAB_3"),
@@ -474,12 +430,14 @@ $tabControl->Begin();
 		<?echo EndNote(); ?>
 	</td>
 </tr>
-<?$tabControl->EndTab();?>
 </form>
+
+<?$tabControl->EndTab()?>
+<?$tabControl->BeginNextTab()?>
 
 <form method="POST" action="<?echo $APPLICATION->GetCurPage()?>?lang=<?echo LANG?>&amp;tabControl_active_tab=fedit4">
 <?=bitrix_sessid_post()?>
-<?$tabControl->BeginNextTab();?>
+
 <?
 	$component_managed_cache = COption::GetOptionString("main", "component_managed_cache_on", "Y");
 ?>
@@ -512,106 +470,11 @@ $tabControl->Begin();
 		<?echo EndNote(); ?>
 	</td>
 </tr>
-<?$tabControl->EndTab();?>
 </form>
-<?if ($arHTMLCacheOptions["COMPOSITE"] !== "Y"):?>
-<form method="POST" action="<?echo $APPLICATION->GetCurPage()?>?lang=<?echo LANG?>&amp;tabControl_active_tab=fedit3">
-<?=bitrix_sessid_post()?>
-<?$tabControl->BeginNextTab();?>
-<tr>
-	<td valign="top" colspan="2" align="left">
-		<?if(IsModuleInstalled('statistic') || IsModuleInstalled('advertising')):?>
-			<div id="cache_warning" style="color:red;"><b><?echo GetMessage("MAIN_OPTION_HTML_CACHE_WARNING")?></b></div><br>
-		<?endif?>
-		<?
-		if(ini_get_bool("session.use_trans_sid")):?>
-			<div style="color:red;"><b><?echo GetMessage("MAIN_OPTION_HTML_CACHE_WARNING_TRANSID")?></b></div><br>
-		<?endif?>
-		<?if(CHTMLPagesCache::IsOn()):?>
-			<div style="color:green;"><b><?echo GetMessage("MAIN_OPTION_HTML_CACHE_ON")?>.</b></div><br>
-			<input type="hidden" name="html_cache_on" value="N">
-			<input type="submit" name="html_cache_siteb" value="<?echo GetMessage("MAIN_OPTION_HTML_CACHE_BUTTON_OFF")?>"<?if(!$isAdmin || (defined("FIRST_EDITION") && FIRST_EDITION=="Y")) echo " disabled"?>>
-		<?else:?>
-			<div style="color:red;"><b><?echo GetMessage("MAIN_OPTION_HTML_CACHE_OFF")?>.</b></div><br>
-			<input type="hidden" name="html_cache_on" value="Y">
-			<input type="submit" name="html_cache_siteb" value="<?echo GetMessage("MAIN_OPTION_HTML_CACHE_BUTTON_ON")?>"<?if(!$isAdmin) echo " disabled"?> class="adm-btn-save">
-		<?endif?>
-	</td>
-</tr>
-<?if(CHTMLPagesCache::IsOn()):
-		$arStatistic = CHTMLPagesCache::readStatistic();?>
-<tr class="heading">
-	<td colspan="2"><?echo GetMessage("MAIN_OPTION_HTML_CACHE_STAT");?></td>
-</tr>
-<tr>
-	<td valign="top" colspan="2" align="center">
-		<table border="0" cellpadding="0" cellspacing="0" class="internal">
-		<tr class="heading">
-			<td align="center"><?echo GetMessage("MAIN_OPTION_HTML_CACHE_STAT_HITS")?></td>
-			<td align="center"><?echo GetMessage("MAIN_OPTION_HTML_CACHE_STAT_MISSES")?></td>
-			<td align="center"><?echo GetMessage("MAIN_OPTION_HTML_CACHE_STAT_QUOTA")?></td>
-			<td align="center"><?echo GetMessage("MAIN_OPTION_HTML_CACHE_STAT_POSTS")?></td>
-		</tr>
-		<tr>
-			<td align="right"><?echo $arStatistic["HITS"]?></td>
-			<td align="right"><?echo $arStatistic["MISSES"]?></td>
-			<td align="right"><?echo $arStatistic["QUOTA"]?></td>
-			<td align="right"><?echo $arStatistic["POSTS"]?></td>
-		</tr>
-		</table>
-	</td>
-</tr>
-<?endif?>
-<tr class="heading">
-	<td colspan="2"><?echo GetMessage("MAIN_OPTION_HTML_CACHE_OPT");?></td>
-	<?$arHTMLCacheOptions = CHTMLPagesCache::getOptions();?>
-</tr>
-<tr>
-	<td><?echo GetMessage("MAIN_OPTION_HTML_CACHE_INC_MASK");?>:</td>
-	<td>
-		<input type="text" size="45" name="html_cache_include_mask" value="<?echo htmlspecialcharsbx($arHTMLCacheOptions["INCLUDE_MASK"])?>">
-	</td>
-</tr>
-<tr>
-	<td><?echo GetMessage("MAIN_OPTION_HTML_CACHE_EXC_MASK");?>:</td>
-	<td>
-		<input type="text" size="45" name="html_cache_exclude_mask" value="<?echo htmlspecialcharsbx($arHTMLCacheOptions["EXCLUDE_MASK"])?>">
-	</td>
-</tr>
-<tr>
-	<td><?echo GetMessage("MAIN_OPTION_HTML_CACHE_QUOTA");?>:</td>
-	<td>
-		<input type="text" size="8" name="html_cache_quota" value="<?echo intval($arHTMLCacheOptions["FILE_QUOTA"])?>">
-	</td>
-</tr>
-<tr>
-	<td valign="top" colspan="2" align="left">
-		<input type="submit" name="html_cache_save_opt" value="<?echo GetMessage("MAIN_OPTION_HTML_CACHE_SAVE");?>"<?if(!$isAdmin) echo " disabled"?>>
-		<input type="submit" name="html_cache_reset_opt" value="<?echo GetMessage("MAIN_OPTION_HTML_CACHE_RESET");?>"<?if(!$isAdmin) echo " disabled"?>>
-	</td>
-</tr>
-<?if(defined("FIRST_EDITION") && FIRST_EDITION=="Y"):?>
-<tr>
-	<td colspan="2">
-		<?echo BeginNote();?><?echo GetMessage("cache_admin_note5")?>
-		<?echo EndNote(); ?>
-	</td>
-</tr>
-<?endif;?>
-<tr>
-	<td colspan="2">
-		<?echo BeginNote();?><?echo GetMessage("cache_admin_note4")?>
-		<?echo EndNote(); ?>
-	</td>
-</tr>
-<?$tabControl->EndTab();?>
-</form>
-<?endif;?>
+<?$tabControl->EndTab()?>
+<? $tabControl->BeginNextTab(); ?>
 <form method="POST" action="<?echo $APPLICATION->GetCurPage()?>?lang=<?echo LANG?>">
 <?=bitrix_sessid_post()?>
-<?
-$tabControl->BeginNextTab();
-?>
 <tr>
 	<td colspan="2" valign="top" align="left">
 		<input type="hidden" name="clearcache" value="Y">
@@ -637,9 +500,8 @@ $tabControl->BeginNextTab();
 		<?echo EndNote(); ?>
 	</td>
 </tr>
-<?$tabControl->End();?>
 </form>
-
+<?$tabControl->End();?>
 <?
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");
 }

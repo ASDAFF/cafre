@@ -1,6 +1,14 @@
 <?
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
-require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/socialnetwork/include.php");
+
+/** @global CMain $APPLICATION */
+/** @global CDatabase $DB */
+/** @global CUser $USER */
+
+use Bitrix\Main\Loader;
+use Bitrix\Socialnetwork\Item\UserToGroup;
+
+Loader::includeModule('socialnetwork');
 
 $socialnetworkModulePermissions = $APPLICATION->GetGroupRight("socialnetwork");
 if ($socialnetworkModulePermissions < "R")
@@ -107,9 +115,9 @@ if ($lAdmin->EditAction() && $socialnetworkModulePermissions >= "W")
 		{
 			$arUpdateFields = array(
 				"ROLE" => SONET_ROLES_USER,
-				"=DATE_UPDATE" => $GLOBALS["DB"]->CurrentTimeFunction(),
+				"=DATE_UPDATE" => $DB->CurrentTimeFunction(),
 				"INITIATED_BY_TYPE" => SONET_INITIATED_BY_USER,
-				"INITIATED_BY_USER_ID" => $GLOBALS["USER"]->GetID()
+				"INITIATED_BY_USER_ID" => $USER->GetID()
 			);
 
 			if (!CSocNetUserToGroup::Update($arOwnerOld[$ID]["RELATION_ID"], $arUpdateFields))
@@ -132,9 +140,9 @@ if ($lAdmin->EditAction() && $socialnetworkModulePermissions >= "W")
 				{
 					$arUpdateFields = array(
 						"ROLE" => SONET_ROLES_OWNER,
-						"=DATE_UPDATE" => $GLOBALS["DB"]->CurrentTimeFunction(),
+						"=DATE_UPDATE" => $DB->CurrentTimeFunction(),
 						"INITIATED_BY_TYPE" => SONET_INITIATED_BY_USER,
-						"INITIATED_BY_USER_ID" => $GLOBALS["USER"]->GetID(),
+						"INITIATED_BY_USER_ID" => $USER->GetID(),
 					);
 
 					if (!CSocNetUserToGroup::Update($arRelation["ID"], $arUpdateFields))
@@ -156,10 +164,10 @@ if ($lAdmin->EditAction() && $socialnetworkModulePermissions >= "W")
 						"USER_ID" => intval($arFields["OWNER_ID"]),
 						"GROUP_ID" => $ID,
 						"ROLE" => SONET_ROLES_OWNER,
-						"=DATE_CREATE" => $GLOBALS["DB"]->CurrentTimeFunction(),
-						"=DATE_UPDATE" => $GLOBALS["DB"]->CurrentTimeFunction(),
+						"=DATE_CREATE" => $DB->CurrentTimeFunction(),
+						"=DATE_UPDATE" => $DB->CurrentTimeFunction(),
 						"INITIATED_BY_TYPE" => SONET_INITIATED_BY_USER,
-						"INITIATED_BY_USER_ID" => $GLOBALS["USER"]->GetID(),
+						"INITIATED_BY_USER_ID" => $USER->GetID(),
 						"MESSAGE" => false,
 					);
 
@@ -174,6 +182,14 @@ if ($lAdmin->EditAction() && $socialnetworkModulePermissions >= "W")
 						{
 							$lAdmin->AddUpdateError(GetMessage("SONET_ERROR_UPDATE"), $ID);
 						}
+					}
+					else
+					{
+						UserToGroup::addInfoToChat(array(
+							'group_id' => $ID,
+							'user_id' => $arFields["OWNER_ID"],
+							'action' => UserToGroup::CHAT_ACTION_IN
+						));
 					}
 				}
 			}

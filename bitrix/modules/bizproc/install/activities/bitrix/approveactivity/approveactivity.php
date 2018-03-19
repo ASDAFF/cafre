@@ -50,7 +50,9 @@ class CBPApproveActivity
 			"TaskButton2Message" => "",
 			"CommentLabelMessage" => "",
 			"ShowComment" => "Y",
+			'CommentRequired' => 'N',
 			'AccessControl' => 'N',
+			'DelegationType' => 0,
 		);
 
 		$this->SetPropertiesTypes(array(
@@ -150,8 +152,18 @@ class CBPApproveActivity
 		$arParameters["ShowComment"] = $this->IsPropertyExists("ShowComment") ? $this->ShowComment : "Y";
 		if ($arParameters["ShowComment"] != "Y" && $arParameters["ShowComment"] != "N")
 			$arParameters["ShowComment"] = "Y";
+
+		$arParameters["CommentRequired"] = $this->IsPropertyExists("CommentRequired") ? $this->CommentRequired : "N";
 		$arParameters["AccessControl"] = $this->IsPropertyExists("AccessControl") && $this->AccessControl == 'Y' ? 'Y' : 'N';
 
+		$overdueDate = $this->OverdueDate;
+		$timeoutDuration = $this->CalculateTimeoutDuration();
+		if ($timeoutDuration > 0)
+		{
+			$overdueDate = ConvertTimeStamp(time() + max($timeoutDuration, CBPSchedulerService::getDelayMinLimit()), "FULL");
+		}
+
+		/** @var CBPTaskService $taskService */
 		$taskService = $this->workflow->GetService("TaskService");
 		$this->taskId = $taskService->CreateTask(
 			array(
@@ -159,11 +171,12 @@ class CBPApproveActivity
 				"WORKFLOW_ID" => $this->GetWorkflowInstanceId(),
 				"ACTIVITY" => "ApproveActivity",
 				"ACTIVITY_NAME" => $this->name,
-				"OVERDUE_DATE" => $this->OverdueDate,
+				"OVERDUE_DATE" => $overdueDate,
 				"NAME" => $this->Name,
 				"DESCRIPTION" => $this->Description,
 				"PARAMETERS" => $arParameters,
 				'IS_INLINE' => $arParameters["ShowComment"] == "Y" ? 'N' : 'Y',
+				'DELEGATION_TYPE' => (int)$this->DelegationType,
 				'DOCUMENT_NAME' => $documentService->GetDocumentName($documentId)
 			)
 		);
@@ -181,9 +194,9 @@ class CBPApproveActivity
 			));
 		}
 
-		$timeoutDuration = $this->CalculateTimeoutDuration();
 		if ($timeoutDuration > 0)
 		{
+			/** @var CBPSchedulerService $schedulerService */
 			$schedulerService = $this->workflow->GetService("SchedulerService");
 			$this->subscriptionId = $schedulerService->SubscribeOnTime($this->workflow->GetInstanceId(), $this->name, time() + $timeoutDuration);
 		}
@@ -255,6 +268,22 @@ class CBPApproveActivity
 		if (!$this->isInEventActivityMode && $this->taskId > 0)
 			$this->Unsubscribe($this);
 
+		for ($i = count($this->arActivities) - 1; $i >= 0; $i--)
+		{
+			$activity = $this->arActivities[$i];
+			if ($activity->executionStatus == CBPActivityExecutionStatus::Executing)
+			{
+				$this->workflow->CancelActivity($activity);
+				return CBPActivityExecutionStatus::Canceling;
+			}
+
+			if (($activity->executionStatus == CBPActivityExecutionStatus::Canceling)
+				|| ($activity->executionStatus == CBPActivityExecutionStatus::Faulting))
+				return CBPActivityExecutionStatus::Canceling;
+
+			if ($activity->executionStatus == CBPActivityExecutionStatus::Closed)
+				return CBPActivityExecutionStatus::Closed;
+		}
 		return CBPActivityExecutionStatus::Closed;
 	}
 
@@ -367,7 +396,7 @@ class CBPApproveActivity
 		{
 			$result = ($approve ? "Approve" : "NonApprove");
 		}
-		elseif ($this->ApproveType == "all" || ($this->ApproveType == "vote" && $this->ApproveMinPercent>=100))
+		elseif ($this->ApproveType == "all")
 		{
 			if (!$approve)
 			{
@@ -392,7 +421,7 @@ class CBPApproveActivity
 			{
 				if($this->VotedPercent==100)
 				{
-					if ($this->ApprovedPercent > $this->ApproveMinPercent)
+					if ($this->ApprovedPercent > $this->ApproveMinPercent || $this->ApprovedPercent == 100 && $this->ApproveMinPercent == 100)
 						$result = "Approve";
 					else
 						$result = "NonApprove";
@@ -400,9 +429,10 @@ class CBPApproveActivity
 			}
 			else
 			{
-				if ($this->ApprovedPercent > $this->ApproveMinPercent)
+				$noneApprovedPercent = ($this->VotedCount-$this->ApprovedCount)/$this->TotalCount*100;
+				if ($this->ApprovedPercent > $this->ApproveMinPercent || $this->ApprovedPercent == 100 && $this->ApproveMinPercent == 100)
 					$result = "Approve";
-				elseif(($this->VotedCount-$this->ApprovedCount)/$this->TotalCount*100 >= 100 - $this->ApproveMinPercent)
+				elseif($noneApprovedPercent > 0 && $noneApprovedPercent >= 100 - $this->ApproveMinPercent)
 					$result = "NonApprove";
 			}
 		}
@@ -522,8 +552,30 @@ class CBPApproveActivity
 
 		if (!array_key_exists("ShowComment", $arTask["PARAMETERS"]) || ($arTask["PARAMETERS"]["ShowComment"] != "N"))
 		{
+			$required = '';
+			if (isset($arTask['PARAMETERS']['CommentRequired']))
+			{
+				switch ($arTask['PARAMETERS']['CommentRequired'])
+				{
+					case 'Y':
+						$required = '<span>*</span>';
+						break;
+					case 'YA':
+						$required = '<span style="color: green;">*</span>';
+						break;
+					case 'YR':
+						$required = '<span style="color: red">*</span>';
+						break;
+					default:
+						break;
+				}
+			}
+
 			$form .=
-				'<tr><td valign="top" width="40%" align="right" class="bizproc-field-name">'.(strlen($arTask["PARAMETERS"]["CommentLabelMessage"]) > 0 ? $arTask["PARAMETERS"]["CommentLabelMessage"] : GetMessage("BPAA_ACT_COMMENT")).':</td>'.
+				'<tr><td valign="top" width="40%" align="right" class="bizproc-field-name">'
+					.(strlen($arTask["PARAMETERS"]["CommentLabelMessage"]) > 0 ? $arTask["PARAMETERS"]["CommentLabelMessage"] : GetMessage("BPAA_ACT_COMMENT"))
+					.$required
+				.':</td>'.
 				'<td valign="top" width="60%" class="bizproc-field-value">'.
 				'<textarea rows="3" cols="50" name="task_comment"></textarea>'.
 				'</td></tr>';
@@ -572,7 +624,7 @@ class CBPApproveActivity
 				"USER_ID" => $userId,
 				"REAL_USER_ID" => $realUserId,
 				"USER_NAME" => $userName,
-				"COMMENT" => isset($arRequest["task_comment"]) ? $arRequest["task_comment"] : '',
+				"COMMENT" => isset($arRequest["task_comment"]) ? trim($arRequest["task_comment"]) : '',
 			);
 
 			if (isset($arRequest['approve']) && strlen($arRequest["approve"]) > 0
@@ -583,6 +635,27 @@ class CBPApproveActivity
 				$arEventParameters["APPROVE"] = false;
 			else
 				throw new CBPNotSupportedException(GetMessage("BPAA_ACT_NO_ACTION"));
+
+			if (
+				isset($arTask['PARAMETERS']['ShowComment'])
+				&& $arTask['PARAMETERS']['ShowComment'] === 'Y'
+				&& isset($arTask['PARAMETERS']['CommentRequired'])
+				&& empty($arEventParameters['COMMENT'])
+				&&
+				($arTask['PARAMETERS']['CommentRequired'] === 'Y'
+					|| $arTask['PARAMETERS']['CommentRequired'] === 'YA' && $arEventParameters["APPROVE"]
+					|| $arTask['PARAMETERS']['CommentRequired'] === 'YR' && !$arEventParameters["APPROVE"]
+				)
+			)
+			{
+				$label = strlen($arTask["PARAMETERS"]["CommentLabelMessage"]) > 0 ? $arTask["PARAMETERS"]["CommentLabelMessage"] : GetMessage("BPAA_ACT_COMMENT");
+				throw new CBPArgumentNullException(
+					'task_comment',
+					GetMessage("BPAA_ACT_COMMENT_ERROR", array(
+						'#COMMENT_LABEL#' => $label
+					))
+				);
+			}
 
 			CBPRuntime::SendExternalEvent($arTask["WORKFLOW_ID"], $arTask["ACTIVITY_NAME"], $arEventParameters);
 
@@ -694,7 +767,9 @@ class CBPApproveActivity
 			"TaskButton2Message" => "task_button2_message",
 			"CommentLabelMessage" => "comment_label_message",
 			"ShowComment" => "show_comment",
+			'CommentRequired' => 'comment_required',
 			"AccessControl" => "access_control",
+			"DelegationType" => "delegation_type",
 		);
 
 		if (!is_array($arWorkflowParameters))
@@ -814,7 +889,9 @@ class CBPApproveActivity
 			"task_button2_message" => "TaskButton2Message",
 			"comment_label_message" => "CommentLabelMessage",
 			"show_comment" => "ShowComment",
+			'comment_required' => 'CommentRequired',
 			"access_control" => "AccessControl",
+			"delegation_type" => "DelegationType",
 		);
 
 		$arProperties = array();

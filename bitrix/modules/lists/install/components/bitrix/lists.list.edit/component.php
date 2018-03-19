@@ -71,7 +71,7 @@ $arParams["CAN_EDIT"] =
 	)
 ;
 
-$bBizProc = IsModuleInstalled('bizproc');
+$bBizProc = CModule::IncludeModule('bizproc') && CBPRuntime::isFeatureEnabled();
 $arIBlock = CIBlock::GetArrayByID(intval($arParams["~IBLOCK_ID"]));
 
 if($arIBlock)
@@ -171,11 +171,11 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && check_bitrix_sessid())
 			$arFields["PICTURE"]["del"] = "Y";
 
 		if(is_array($_POST["RIGHTS"]))
-			$arPOSTRights = CIBlockRights::Post2Array($_POST["RIGHTS"]);
+			$postRights = CIBlockRights::Post2Array($_POST["RIGHTS"]);
 		else
-			$arPOSTRights = array();
+			$postRights = array();
 
-		$arDBRights = array();
+		$rights = array();
 		if($arIBlock)
 		{
 			$RIGHTS_MODE = CIBlock::GetArrayByID($arIBlock["ID"], "RIGHTS_MODE");
@@ -186,7 +186,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && check_bitrix_sessid())
 				foreach($arIBlockPerms as $group_id => $letter)
 				{
 					if($letter > "W")
-						$arDBRights['n_'.($i++)] = array(
+						$rights['n_'.($i++)] = array(
 							"GROUP_CODE" => "G".$group_id,
 							"IS_INHERITED" => "N",
 							"TASK_ID" => CIBlockRights::LetterToTask($letter),
@@ -196,17 +196,20 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && check_bitrix_sessid())
 			else
 			{
 				$obIBlockRights = new CIBlockRights($arIBlock["ID"]);
-				$arDBRights = $obIBlockRights->GetRights();
+				$rights = $obIBlockRights->GetRights();
 			}
 		}
 
 		//For existing iblock add rights to rule
 		$arFields["RIGHTS_MODE"] = "E";
-		$arFields["RIGHTS"] = CListPermissions::MergeRights(
-			$arParams["~IBLOCK_TYPE_ID"],
-			$arDBRights,
-			$arPOSTRights
-		);
+		$arFields["RIGHTS"] = array();
+		foreach($rights as $rightId => $right)
+		{
+			if(array_key_exists($rightId, $postRights))
+				$arFields["RIGHTS"][$rightId] = $right;
+		}
+		foreach($postRights as $rightId => $right)
+			$arFields["RIGHTS"][$rightId] = $right;
 
 		//Update existing or add new
 		$ob = new CIBlock;
@@ -241,6 +244,13 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && check_bitrix_sessid())
 				CSocNetGroup::SetLastActivity($arFields["SOCNET_GROUP_ID"]);
 			}
 
+			$list = new CList($res);
+			$list->ActualizeDocumentAdminPage(str_replace(
+				array("#list_id#", "#group_id#"),
+				array($arResult["IBLOCK_ID"], $arParams["SOCNET_GROUP_ID"]),
+				$arParams["LIST_ELEMENT_URL"]
+			));
+
 			//Clear components cache
 			$CACHE_MANAGER->ClearByTag("lists_list_".$res);
 			$CACHE_MANAGER->ClearByTag("lists_list_any");
@@ -249,23 +259,32 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && check_bitrix_sessid())
 			$tab_name = $arResult["FORM_ID"]."_active_tab";
 
 			//And go to proper page
-			if(isset($_POST["save"]))
-				LocalRedirect($arResult["LISTS_URL"]);
-			elseif($arIBlock)
+			if($arIBlock)
+			{
+				$url = $arResult["LIST_URL"];
+				if(isset($_POST["apply"]))
+					$url = $arResult["LIST_EDIT_URL"];
 				LocalRedirect(CHTTP::urlAddParams(
-					$arResult["LIST_EDIT_URL"],
+					$url,
 					array($tab_name => $_POST[$tab_name]),
 					array("skip_empty" => true, "encode" => true)
 				));
+			}
+			elseif(isset($_POST["save"]))
+			{
+				LocalRedirect($arResult["LISTS_URL"]);
+			}
 			else
+			{
 				LocalRedirect(CHTTP::urlAddParams(str_replace(
 					array("#list_id#", "#group_id#"),
 					array($res, $arParams["SOCNET_GROUP_ID"]),
 					$arParams["LIST_EDIT_URL"]
-					),
+				),
 					array($tab_name => $_POST[$tab_name]),
 					array("skip_empty" => true, "encode" => true)
 				));
+			}
 		}
 		else
 		{
@@ -289,11 +308,25 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && check_bitrix_sessid())
 	{
 		if($arParams["IBLOCK_TYPE_ID"] != COption::GetOptionString("lists", "livefeed_iblock_type_id"))
 		{
-			if(CModule::includeModule('bizproc'))
+			if(CModule::includeModule('bizproc') && CBPRuntime::isFeatureEnabled())
+			{
 				\Bitrix\Lists\Importer::migrateList($arResult["IBLOCK_ID"]);
+
+				CLists::deleteListsUrl($arResult["IBLOCK_ID"]);
+				$processesUrl = COption::GetOptionString('lists', 'livefeed_url');
+				$listElementUrl = str_replace($arParams["LISTS_URL"], $processesUrl, $arParams["LIST_ELEMENT_URL"]);
+				$list = new CList($arResult["IBLOCK_ID"]);
+				$list->ActualizeDocumentAdminPage(str_replace(
+					array("#list_id#", "#group_id#"),
+					array($arResult["IBLOCK_ID"], $arParams["SOCNET_GROUP_ID"]),
+					$listElementUrl
+				));
+
+				$path = rtrim(SITE_DIR, '/');
+				LocalRedirect($path.$processesUrl);
+			}
 		}
-		$path = rtrim(SITE_DIR, '/');
-		LocalRedirect($path.COption::GetOptionString('lists', 'livefeed_url'));
+		LocalRedirect($arResult["~LISTS_URL"]);
 	}
 	else
 	{
@@ -385,28 +418,6 @@ else
 	$RIGHTS_MODE = 'E';
 
 $arResult["RIGHTS"] = array();
-$arResult["SELECTED"] = array();
-if (IsModuleInstalled('bitrix24') && defined('BX24_HOST_NAME'))
-{
-	if ($arParams["SOCNET_GROUP_ID"])
-		$arResult["HIGHLIGHT"] = array(
-			"socnetgroup" => array("group_id" => $arParams["SOCNET_GROUP_ID"]),
-			"groups" => array("disabled" => true),
-		);
-	else
-		$arResult["HIGHLIGHT"] = array(
-			"groups" => array("disabled" => true),
-		);
-}
-else
-{
-	if ($arParams["SOCNET_GROUP_ID"])
-		$arResult["HIGHLIGHT"] = array(
-			"socnetgroup" => array("group_id" => $arParams["SOCNET_GROUP_ID"]),
-		);
-	else
-		$arResult["HIGHLIGHT"] = null;
-}
 if($RIGHTS_MODE != 'E')
 {
 	$i = 0;
@@ -462,46 +473,8 @@ elseif($arResult["IBLOCK_ID"] > 0)
 	$arResult["RIGHTS"] = $obIBlockRights->GetRights(array("count_overwrited" => true));
 }
 
-$arListsPerm = CLists::GetPermission($arParams["~IBLOCK_TYPE_ID"]);
-foreach($arResult["RIGHTS"] as $RIGHT_ID => $arRight)
-{
-	//1) protect groups from module settings
-	if(
-		preg_match("/^G(\\d)\$/", $arRight["GROUP_CODE"], $match)
-		&& is_array($arListsPerm) && in_array($match[1], $arListsPerm)
-	)
-	{
-		unset($arResult["RIGHTS"][$RIGHT_ID]);
-		$arResult["SELECTED"][$arRight["GROUP_CODE"]] = true;
-	}
-	else
-	{
-		//2) protect groups with iblock_% operations
-		$arOperations = CTask::GetOperations($arRight['TASK_ID'], true);
-		foreach($arOperations as $operation)
-		{
-			if(preg_match("/^iblock_(?!admin)/", $operation))
-			{
-				unset($arResult["RIGHTS"][$RIGHT_ID]);
-				$arResult["SELECTED"][$arRight["GROUP_CODE"]] = true;
-				break;
-			}
-		}
-	}
-}
-
 $arResult["TASKS"] = CIBlockRights::GetRightsList();
-foreach($arResult["TASKS"] as $TASK_ID => $label)
-{
-	//2) protect tasks with iblock_% operations
-	$arOperations = CTask::GetOperations($TASK_ID, true);
-	foreach($arOperations as $operation)
-		if(preg_match("/^iblock_(?!admin)/", $operation))
-		{
-			unset($arResult["TASKS"][$TASK_ID]);
-			break;
-		}
-}
+$arResult['RAND_STRING'] = $this->randString();
 
 $this->IncludeComponentTemplate();
 

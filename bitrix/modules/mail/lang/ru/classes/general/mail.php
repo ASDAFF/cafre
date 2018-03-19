@@ -46,6 +46,7 @@ $MESS ['MAIL_ERR_DB'] = "Ошибка базы данных";
 
 $MESS ['MAIL_ERR_API_DEFAULT'] = "Неизвестная ошибка (mail api)";
 $MESS ['MAIL_ERR_API_OP_DENIED'] = "Операция не доступна";
+$MESS ['MAIL_ERR_API_OLD_TOKEN'] = "Токен устарел, получите новый";
 $MESS ['MAIL_ERR_API_DENIED'] = "Доступ к сервису запрещен";
 $MESS ['MAIL_ERR_API_NAME_OCCUPIED'] = "Логин занят";
 $MESS ['MAIL_ERR_API_USER_NOTFOUND'] = "Логин не существует";
@@ -62,5 +63,6 @@ $MESS ['MAIL_ERR_API_LONG_PASSWORD'] = "Слишком длинный пароль (максимум 20 симв
 $MESS ['MAIL_ERR_API_DOMAIN_OCCUPIED'] = "Домен уже используется";
 $MESS ['MAIL_ERR_API_BAD_DOMAIN'] = "Недопустимое имя домена";
 $MESS ['MAIL_ERR_API_PROHIBITED_DOMAIN'] = "Доменное имя запрещено для подключения";
+$MESS ['MAIL_ERR_ENTRY_NOT_FOUND'] = "Ссылка недействительна";
 
 ?>

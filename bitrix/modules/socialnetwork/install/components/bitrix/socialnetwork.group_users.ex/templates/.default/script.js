@@ -1,363 +1,502 @@
-var waitDiv = null;
-var waitPopup = null;
-var waitTimeout = null;
-var waitTime = 500;
+(function(){
 
-function __GUEtoggleCheckbox(ev, block, user_code)
-{
-	ev = ev || window.event;
+	if (!!BX.BXGUE)
+	{
+		return;
+	}
 
-	if (user_code == 'undefined' || !user_code)
-		return false;
+	BX.BXGUE =
+	{
+		menuPopup: null,
+		waitPopup: null,
+		waitTimeout: null,
+		waitTime: 500
+	};
 
-	var type = user_code.substr(0, 1);
-	var user_id_tmp = parseInt(user_code.substr(1));
+	BX.BXGUE.toggleCheckbox = function(ev, block, user_code)
+	{
+		ev = ev || window.event;
 
-	switch (type) {
-		case 'M':
-			if (BX.util.in_array(user_id_tmp, actionUsers['Moderators']))
-				actionUsers['Moderators'].splice(BX.util.array_search(user_id_tmp, actionUsers['Moderators']), 1);
-			else
-				actionUsers['Moderators'][actionUsers['Moderators'].length] = user_id_tmp;
-			break;
-		case 'U':
-			if (BX.util.in_array(user_id_tmp, actionUsers['Users']))
-				actionUsers['Users'].splice(BX.util.array_search(user_id_tmp, actionUsers['Users']), 1);
-			else
-				actionUsers['Users'][actionUsers['Users'].length] = user_id_tmp;
-			break;
-		case 'B':
-			if (BX.message("GUEUseBan") == "Y")
-			{
-				if (BX.util.in_array(user_id_tmp, actionUsers['Banned']))
-					actionUsers['Banned'].splice(BX.util.array_search(user_id_tmp, actionUsers['Banned']), 1);
-				else
-					actionUsers['Banned'][actionUsers['Banned'].length] = user_id_tmp;
-			}
-			break;
-		default:
+		if (
+			user_code == 'undefined'
+			|| !user_code
+		)
+		{
 			return false;
-	}
+		}
 
-	var check_box = BX.findChild(block, { tagName: 'input' }, true, false);
+		var type = user_code.substr(0, 1);
+		var user_id_tmp = parseInt(user_code.substr(1));
 
-	if(ev.target == check_box || ev.srcElement == check_box){
-		BX.toggleClass(block.parentNode, 'sonet-members-member-block-active');
-		return false;
-	}
-	else{
-		BX.toggleClass(block.parentNode, 'sonet-members-member-block-active');
-		check_box.checked = check_box.checked == true ? false : true;
-	}
-
-	BX.PreventDefault(ev);
-}
-
-function __GUEShowMenu(bindElement, type, invitePopupName)
-{
-	if (!type)
-		type = 'users';
-
-	var arItems = [];
-
-	if (type == 'users')
-	{
-		if (BX.message("GUEUserCanInitiate"))
-			arItems[arItems.length] = { text : BX.message('GUEAddToUsersTitle'), className : "menu-popup-no-icon", onclick : function(e) {
-				if (BX.SGCP)
+		switch (type) {
+			case 'M':
+				if (BX.util.in_array(user_id_tmp, actionUsers['Moderators']))
+					actionUsers['Moderators'].splice(BX.util.array_search(user_id_tmp, actionUsers['Moderators']), 1);
+				else
+					actionUsers['Moderators'][actionUsers['Moderators'].length] = user_id_tmp;
+				break;
+			case 'U':
+				if (BX.util.in_array(user_id_tmp, actionUsers['Users']))
+					actionUsers['Users'].splice(BX.util.array_search(user_id_tmp, actionUsers['Users']), 1);
+				else
+					actionUsers['Users'][actionUsers['Users'].length] = user_id_tmp;
+				break;
+			case 'A':
+				if (BX.util.in_array(user_id_tmp, actionUsers['UsersAuto']))
+					actionUsers['UsersAuto'].splice(BX.util.array_search(user_id_tmp, actionUsers['UsersAuto']), 1);
+				else
+					actionUsers['UsersAuto'][actionUsers['UsersAuto'].length] = user_id_tmp;
+				break;
+			case 'B':
+				if (BX.message("GUEUseBan") == "Y")
 				{
-					BX.SGCP.ShowForm('invite', invitePopupName, e); 
+					if (BX.util.in_array(user_id_tmp, actionUsers['Banned']))
+						actionUsers['Banned'].splice(BX.util.array_search(user_id_tmp, actionUsers['Banned']), 1);
+					else
+						actionUsers['Banned'][actionUsers['Banned'].length] = user_id_tmp;
 				}
-				return BX.PreventDefault(e); 
-			} };
-
-		if (BX.message("GUEUserCanModifyGroup"))
-		{
-			arItems[arItems.length] = { text : BX.message('GUEAddToModeratorsTitle'), className : "menu-popup-no-icon", onclick : function(e) {__GUEAddToModerators(this.popupWindow); return BX.PreventDefault(e); } };
-			arItems[arItems.length] = { text : BX.message('GUEExcludeFromGroupTitle'), className : "menu-popup-no-icon", onclick : function(e) { __GUEExcludeFromGroup(this.popupWindow); return BX.PreventDefault(e); } };
+				break;
+			case 'D':
+				if (BX.util.in_array(user_id_tmp, actionUsers['Departments']))
+				{
+					actionUsers['Departments'].splice(BX.util.array_search(user_id_tmp, actionUsers['Departments']), 1);
+				}
+				else
+				{
+					actionUsers['Departments'][actionUsers['Departments'].length] = user_id_tmp;
+				}
+				break;
+			default:
+				return false;
 		}
 
-		if (BX.message("GUEUserCanModifyGroup"))
-			arItems[arItems.length] = { text : BX.message('GUESetGroupOwnerTitle'), className : "menu-popup-no-icon", onclick : function(e) { __GUESetGroupOwner(this.popupWindow); return BX.PreventDefault(e); } };
-	}
-	else if (type == 'moderators')
-	{
-		if (BX.message("GUEUserCanModifyGroup"))
+		var check_box = BX.findChild(block, { tagName: 'input' }, true, false);
+
+		if (ev.target == check_box || ev.srcElement == check_box)
 		{
-			arItems[arItems.length] = { text : BX.message('GUEExcludeFromModeratorsTitle'), className : "menu-popup-no-icon", onclick : function(e) { __GUEExcludeFromModerators(this.popupWindow); return BX.PreventDefault(e); } };
-			arItems[arItems.length] = { text : BX.message('GUEExcludeFromGroupTitle'), className : "menu-popup-no-icon", onclick : function(e) { __GUEExcludeFromGroup(this.popupWindow); return BX.PreventDefault(e); } };
+			BX.toggleClass(block.parentNode, 'sonet-members-member-block-active');
+			return false;
+		}
+		else
+		{
+			BX.toggleClass(block.parentNode, 'sonet-members-member-block-active');
+			check_box.checked = (check_box.checked != true);
 		}
 
-		if (BX.message("GUEUserCanModifyGroup"))
-			arItems[arItems.length] = { text : BX.message('GUESetGroupOwnerTitle'), className : "menu-popup-no-icon", onclick : function(e) { __GUESetGroupOwner(this.popupWindow); return BX.PreventDefault(e); } };
-	}
-	else if (type == 'ban')
+		BX.PreventDefault(ev);
+	};
+
+	BX.BXGUE.showMenu = function(bindElement, type, invitePopupName)
 	{
-		if (BX.message("GUEUserCanModerateGroup"))
-			arItems[arItems.length] = { text : BX.message('GUEUnBanFromGroupTitle'), className : "menu-popup-no-icon", onclick : function(e) { __GUEUnBanFromGroup(this.popupWindow); return BX.PreventDefault(e); } };
-	}
-
-	if (arItems.length > 0)
-	{
-		var arParams = {
-			offsetLeft: -32,
-			offsetTop: 4,
-			lightShadow: false,
-			angle: {position: 'top', offset : 60}
-		};
-
-		BX.PopupMenu.show("gue-menu-" + type, bindElement, arItems, arParams);
-	}
-
-}
-
-function __GUEAddToModerators(popup)
-{
-	if (actionUsers['Users'].length > 0)
-	{
-		__GUEShowWait();
-		BX.ajax({
-			url: '/bitrix/components/bitrix/socialnetwork.group_users.ex/ajax.php',
-			method: 'POST',
-			dataType: 'json',
-			data: {'ACTION': 'U2M', 'GROUP_ID': parseInt(BX.message('GUEGroupId')), 'USER_ID' : actionUsers['Users'], 'sessid': BX.bitrix_sessid(), 'site': BX.util.urlencode(BX.message('GUESiteId'))},
-			onsuccess: function(data) { __GUEProcessAJAXResponse(data, popup); }
-		});
-	}
-	else
-		__GUEShowError(BX.message('GUEErrorUserIDNotDefined'));
-}
-
-function __GUEExcludeFromModerators(popup)
-{
-	if (actionUsers['Moderators'].length > 0)
-	{
-		__GUEShowWait();
-		BX.ajax({
-			url: '/bitrix/components/bitrix/socialnetwork.group_users.ex/ajax.php',
-			method: 'POST',
-			dataType: 'json',
-			data: {'ACTION': 'M2U', 'GROUP_ID': parseInt(BX.message('GUEGroupId')), 'USER_ID' : actionUsers['Moderators'], 'sessid': BX.bitrix_sessid(), 'site': BX.util.urlencode(BX.message('GUESiteId'))},
-			onsuccess: function(data) { __GUEProcessAJAXResponse(data, popup); }
-		});
-	}
-	else
-		__GUEShowError(BX.message('GUEErrorUserIDNotDefined'));
-}
-
-function __GUEExcludeFromGroup(popup)
-{
-	if(confirm(BX.message('GUEExcludeFromGroupConfirmTitle')))
-	{
-		if (actionUsers['Moderators'].length > 0 || actionUsers['Users'].length > 0)
+		if (!type)
 		{
-			var arTmp = BX.util.array_merge(actionUsers['Moderators'], actionUsers['Users']);
-			__GUEShowWait();
+			type = 'users';
+		}
+
+		var arItems = [];
+
+		if (type == 'users')
+		{
+			if (BX.message("GUEUserCanInitiate"))
+			{
+				arItems[arItems.length] = {
+					text : BX.message('GUEAddToUsersTitle'),
+					className : "menu-popup-no-icon",
+					href: BX.message('GUEPathToGroupInvite')
+				};
+			}
+
+			if (BX.message("GUEUserCanModifyGroup"))
+			{
+				arItems[arItems.length] = {
+					text : BX.message('GUEAddToModeratorsTitle'),
+					className : "menu-popup-no-icon",
+					onclick : BX.proxy(function(e) {
+						this.sendAjax({
+							popup : this.menuPopup.popupWindow,
+							action : 'U2M',
+							items: BX.util.array_merge(actionUsers['Users'], actionUsers['UsersAuto'])
+						});
+						return BX.PreventDefault(e);
+					}, this)
+				};
+				arItems[arItems.length] = {
+					text : BX.message('GUEExcludeFromGroupTitle'),
+					className : "menu-popup-no-icon",
+					onclick : BX.proxy(function(e) {
+						if(confirm(BX.message('GUEExcludeFromGroupConfirmTitle')))
+						{
+							this.sendAjax({
+								popup : this.menuPopup.popupWindow,
+								action : 'EX',
+								items: BX.util.array_merge(actionUsers['Moderators'], actionUsers['Users'])
+							});
+						}
+						return BX.PreventDefault(e);
+					}, this)
+				};
+				arItems[arItems.length] = {
+					text : BX.message('GUESetGroupOwnerTitle'),
+					className : "menu-popup-no-icon",
+					onclick : BX.proxy(function(e) {
+						this.setGroupOwner(this.menuPopup.popupWindow);
+						return BX.PreventDefault(e);
+					}, this)
+				};
+			}
+		}
+		else if (type == 'users_auto')
+		{
+			if (BX.message("GUEUserCanInitiate"))
+			{
+				arItems[arItems.length] = {
+					text : BX.message('GUEAddToUsersTitle'),
+					className : "menu-popup-no-icon",
+					href: BX.message('GUEPathToGroupInvite')
+				};
+			}
+
+			if (BX.message("GUEUserCanModifyGroup"))
+			{
+				arItems[arItems.length] = {
+					text : BX.message('GUEAddToModeratorsTitle'),
+					className : "menu-popup-no-icon",
+					onclick : BX.proxy(function(e) {
+						this.sendAjax({
+							popup : this.menuPopup.popupWindow,
+							action : 'U2M',
+							items: BX.util.array_merge(actionUsers['Users'], actionUsers['UsersAuto'])
+						});
+						return BX.PreventDefault(e);
+					}, this)
+				};
+				arItems[arItems.length] = {
+					text : BX.message('GUESetGroupOwnerTitle'),
+					className : "menu-popup-no-icon",
+					onclick : BX.proxy(function(e) {
+						this.setGroupOwner(this.menuPopup.popupWindow);
+						return BX.PreventDefault(e);
+					}, this)
+				};
+			}
+		}
+		else if (type == 'moderators')
+		{
+			if (BX.message("GUEUserCanModifyGroup"))
+			{
+				arItems[arItems.length] = {
+					text : BX.message('GUEExcludeFromModeratorsTitle'),
+					className : "menu-popup-no-icon",
+					onclick : BX.proxy(function(e) {
+						this.sendAjax({
+							popup : this.menuPopup.popupWindow,
+							action : 'M2U',
+							items: actionUsers['Moderators']
+						});
+						return BX.PreventDefault(e);
+					}, this)
+				};
+				arItems[arItems.length] = {
+					text : BX.message('GUEExcludeFromGroupTitle'),
+					className : "menu-popup-no-icon",
+					onclick : BX.proxy(function(e) {
+						this.sendAjax({
+							popup : this.menuPopup.popupWindow,
+							action : 'EX',
+							items: BX.util.array_merge(actionUsers['Moderators'], actionUsers['Users'])
+						});
+						return BX.PreventDefault(e);
+					}, this)
+				};
+				arItems[arItems.length] = {
+					text : BX.message('GUESetGroupOwnerTitle'),
+					className : "menu-popup-no-icon",
+					onclick : BX.proxy(function(e) {
+						this.setGroupOwner(this.menuPopup.popupWindow);
+						return BX.PreventDefault(e);
+					}, this)
+				};
+			}
+		}
+		else if (type == 'ban')
+		{
+			if (BX.message("GUEUserCanModerateGroup"))
+			{
+				arItems[arItems.length] = {
+					text : BX.message('GUEUnBanFromGroupTitle'),
+					className : "menu-popup-no-icon",
+					onclick : BX.proxy(function(e) {
+						this.sendAjax({
+							popup : this.menuPopup.popupWindow,
+							action : 'UNBAN',
+							items: actionUsers['Banned']
+						});
+						return BX.PreventDefault(e);
+					}, this)
+				};
+			}
+		}
+		else if (type == 'departments')
+		{
+			if (BX.message("GUEUserCanModifyGroup"))
+			{
+				arItems[arItems.length] = {
+					text : BX.message('GUESetGroupUnconnectDeptTitle'),
+					className : "menu-popup-no-icon",
+					onclick : BX.proxy(function(e) {
+						this.sendAjax({
+							popup : this.menuPopup.popupWindow,
+							action : 'UNCONNECT_DEPT',
+							items: actionUsers['Departments']
+						});
+						return BX.PreventDefault(e);
+					}, this)
+				};
+			}
+		}
+
+		if (arItems.length > 0)
+		{
+			var arParams = {
+				offsetLeft: -32,
+				offsetTop: 4,
+				lightShadow: false,
+				angle: {position: 'top', offset : 60}
+			};
+
+			this.menuPopup = BX.PopupMenu.create("gue-menu-" + type, bindElement, arItems, arParams);
+			this.menuPopup.popupWindow.show();
+		}
+	};
+
+	BX.BXGUE.sendAjax = function(data)
+	{
+		if (data.items.length > 0)
+		{
+			this.showWait();
+			var requestData = {
+				ACTION: data.action,
+				GROUP_ID: parseInt(BX.message('GUEGroupId')),
+				sessid: BX.bitrix_sessid(),
+				site: BX.util.urlencode(BX.message('SITE_ID'))
+			};
+
+			if (data.action == 'UNCONNECT_DEPT')
+			{
+				requestData.DEPARTMENT_ID = data.items;
+			}
+			else
+			{
+				requestData.USER_ID = data.items;
+			}
+
 			BX.ajax({
 				url: '/bitrix/components/bitrix/socialnetwork.group_users.ex/ajax.php',
 				method: 'POST',
 				dataType: 'json',
-				data: {'ACTION': 'EX', 'GROUP_ID': parseInt(BX.message('GUEGroupId')), 'USER_ID' : arTmp, 'sessid': BX.bitrix_sessid(), 'site': BX.util.urlencode(BX.message('GUESiteId'))},
-				onsuccess: function(data) { __GUEProcessAJAXResponse(data, popup); }
+				data: requestData,
+				onsuccess: BX.proxy(function(responseData) {
+					this.processAJAXResponse(responseData, data.popup);
+				}, this)
 			});
 		}
 		else
-			__GUEShowError(BX.message('GUEErrorUserIDNotDefined'));
-	}
-}
-
-function __GUEBanFromGroup(popup)
-{
-	if (actionUsers['Moderators'].length > 0 || actionUsers['Users'].length > 0)
-	{
-		var arTmp = BX.util.array_merge(actionUsers['Moderators'], actionUsers['Users']);
-		__GUEShowWait();
-		BX.ajax({
-			url: '/bitrix/components/bitrix/socialnetwork.group_users.ex/ajax.php',
-			method: 'POST',
-			dataType: 'json',
-			data: {'ACTION': 'BAN', 'GROUP_ID': parseInt(BX.message('GUEGroupId')), 'USER_ID' : arTmp, 'sessid': BX.bitrix_sessid(), 'site': BX.util.urlencode(BX.message('GUESiteId'))},
-			onsuccess: function(data) { __GUEProcessAJAXResponse(data, popup); }
-		});
-	}
-	else
-		__GUEShowError(BX.message('GUEErrorUserIDNotDefined'));
-}
-
-function __GUEUnBanFromGroup(popup)
-{
-	if (actionUsers['Banned'].length > 0)
-	{
-		__GUEShowWait();
-		BX.ajax({
-			url: '/bitrix/components/bitrix/socialnetwork.group_users.ex/ajax.php',
-			method: 'POST',
-			dataType: 'json',
-			data: {'ACTION': 'UNBAN', 'GROUP_ID': parseInt(BX.message('GUEGroupId')), 'USER_ID' : actionUsers['Banned'], 'sessid': BX.bitrix_sessid(), 'site': BX.util.urlencode(BX.message('GUESiteId'))},
-			onsuccess: function(data) { __GUEProcessAJAXResponse(data, popup); }
-		});
-	}
-	else
-		__GUEShowError(BX.message('GUEErrorUserIDNotDefined'));
-}
-
-function __GUESetGroupOwner(popup)
-{
-	if (
-		(actionUsers['Moderators'].length === 1 || actionUsers['Users'].length === 1)
-		&& !(actionUsers['Moderators'].length === 1 && actionUsers['Users'].length === 1)
-	)
-	{
-		var newOwnerID = parseInt((actionUsers['Moderators'].length === 1) ? actionUsers['Moderators'][0] : actionUsers['Users'][0]);
-		if (newOwnerID == parseInt(oldOwnerID))
-			__GUEShowError(BX.message('GUEErrorSameOwner'));
-		else if(confirm(BX.message('GUESetGroupOwnerConfirmTitle')))
 		{
-			__GUEShowWait();
-			BX.ajax({
-				url: '/bitrix/components/bitrix/socialnetwork.group_users.ex/ajax.php',
-				method: 'POST',
-				dataType: 'json',
-				data: {
-					'ACTION': 'SETOWNER', 
-					'GROUP_ID': parseInt(BX.message('GUEGroupId')), 
-					'USER_ID' : [ newOwnerID ], 
-					'sessid': BX.bitrix_sessid(), 
-					'site': BX.util.urlencode(BX.message('GUESiteId'))
-				},
-				onsuccess: function(data) { __GUEProcessAJAXResponse(data, popup); }
-			});
+			this.showError(BX.message(data.action == 'UNCONNECT_DEPT' ? 'GUEErrorDepartmentIDNotDefined' : 'GUEErrorUserIDNotDefined'));
 		}
-	}
-	else
-		__GUEShowError(BX.message('GUEErrorUserIDIncorrect'));
-}
+	};
 
-function __GUEProcessAJAXResponse(data, popup)
-{
-	if (popup == 'undefined' || popup == null || !popup.isShown())
-		return false;
-
-	if (data["SUCCESS"] != "undefined" && data["SUCCESS"] == "Y")
+	BX.BXGUE.setGroupOwner = function(popup)
 	{
-		popup.close();
-		BX.reload();
-	}
-	else if (data["ERROR"] != "undefined" && data["ERROR"].length > 0)
-	{
-		if (data["ERROR"].indexOf("USER_ACTION_FAILED", 0) === 0)
+		if (
+			actionUsers['Moderators'].length === 1
+			|| actionUsers['Users'].length === 1
+			|| actionUsers['UsersAuto'].length === 1
+		)
 		{
-			__GUEShowError(BX.message('GUEErrorActionFailedPattern').replace("#ERROR#", data["ERROR"].substr(20)));
+			var newOwnerID = parseInt(
+				actionUsers['Moderators'].length === 1
+					? actionUsers['Moderators'][0]
+					: actionUsers['Users'].length === 1
+						? actionUsers['Users'][0]
+						: actionUsers['UsersAuto'][0]
+			);
+			if (
+				typeof oldOwnerID != 'undefined'
+				&& newOwnerID == parseInt(oldOwnerID)
+			)
+			{
+				this.showError(BX.message('GUEErrorSameOwner'));
+			}
+			else if(confirm(BX.message('GUESetGroupOwnerConfirmTitle')))
+			{
+				this.showWait();
+				BX.ajax({
+					url: '/bitrix/components/bitrix/socialnetwork.group_users.ex/ajax.php',
+					method: 'POST',
+					dataType: 'json',
+					data: {
+						'ACTION': 'SETOWNER',
+						'GROUP_ID': parseInt(BX.message('GUEGroupId')),
+						'USER_ID' : [ newOwnerID ],
+						'sessid': BX.bitrix_sessid(),
+						'site': BX.util.urlencode(BX.message('SITE_ID'))
+					},
+					onsuccess: BX.proxy(function(data) {
+						this.processAJAXResponse(data, popup);
+					}, this)
+				});
+			}
+		}
+		else
+		{
+			this.showError(BX.message('GUEErrorUserIDIncorrect'));
+		}
+	};
+
+	BX.BXGUE.processAJAXResponse = function(data, popup)
+	{
+		if (popup == 'undefined' || popup == null || !popup.isShown())
 			return false;
-		}
-		else if (data["ERROR"].indexOf("SESSION_ERROR", 0) === 0)
+
+		if (data["SUCCESS"] != "undefined" && data["SUCCESS"] == "Y")
 		{
-			__GUEShowError(BX.message('GUEErrorSessionWrong'));
+			popup.close();
 			BX.reload();
 		}
-		else if (data["ERROR"].indexOf("USER_GROUP_NO_PERMS", 0) === 0)
+		else if (data["ERROR"] != "undefined" && data["ERROR"].length > 0)
 		{
-			__GUEShowError(BX.message('GUEErrorNoPerms'));
-			return false;
+			if (data["ERROR"].indexOf("USER_ACTION_FAILED", 0) === 0)
+			{
+				this.showError(BX.message('GUEErrorActionFailedPattern').replace("#ERROR#", data["ERROR"].substr(20)));
+				return false;
+			}
+			else if (data["ERROR"].indexOf("SESSION_ERROR", 0) === 0)
+			{
+				this.showError(BX.message('GUEErrorSessionWrong'));
+				BX.reload();
+			}
+			else if (data["ERROR"].indexOf("USER_GROUP_NO_PERMS", 0) === 0)
+			{
+				this.showError(BX.message('GUEErrorNoPerms'));
+				return false;
+			}
+			else if (data["ERROR"].indexOf("USER_ID_NOT_DEFINED", 0) === 0)
+			{
+				this.showError(BX.message('GUEErrorUserIDNotDefined'));
+				return false;
+			}
+			else if (data["ERROR"].indexOf("DEPARTMENT_ID_NOT_DEFINED", 0) === 0)
+			{
+				this.showError(BX.message('GUEErrorDepartmentIDNotDefined'));
+				return false;
+			}
+			else if (data["ERROR"].indexOf("GROUP_ID_NOT_DEFINED", 0) === 0)
+			{
+				this.showError(BX.message('GUEErrorGroupIDNotDefined'));
+				return false;
+			}
+			else if (data["ERROR"].indexOf("CURRENT_USER_NOT_AUTH", 0) === 0)
+			{
+				this.showError(BX.message('GUEErrorCurrentUserNotAuthorized'));
+				return false;
+			}
+			else if (data["ERROR"].indexOf("SONET_MODULE_NOT_INSTALLED", 0) === 0)
+			{
+				this.showError(BX.message('GUEErrorModuleNotInstalled'));
+				return false;
+			}
+			else if (data["ERROR"].indexOf("SONET_GUE_T_OWNER_CANT_EXCLUDE_HIMSELF", 0) === 0)
+			{
+				this.showError(BX.message('GUEErrorOwnerCantExcludeHimself'));
+				return false;
+			}
+			else if (data["ERROR"].indexOf("SONET_GUE_T_CANT_EXCLUDE_AUTO_MEMBER", 0) === 0)
+			{
+				this.showError(BX.message('GUEErrorCantExcludeAutoMember'));
+				return false;
+			}
+			else if (data["ERROR"].indexOf("DEPARTMENT_ACTION_FAILED", 0) === 0)
+			{
+				this.showError(BX.message('GUEErrorActionFailedPattern').replace("#ERROR#", data["ERROR"].substr(26)));
+				return false;
+			}
+			else
+			{
+				this.showError(data["ERROR"]);
+				return false;
+			}
 		}
-		else if (data["ERROR"].indexOf("USER_ID_NOT_DEFINED", 0) === 0)
+	};
+
+	BX.BXGUE.showError = function(errorText)
+	{
+		this.closeWait();
+		var errorPopup = new BX.PopupWindow('gue-error' + Math.random(), window, {
+			autoHide: true,
+			lightShadow: false,
+			zIndex: 2,
+			content: BX.create('DIV', {props: {'className': 'sonet-members-error-text-block'}, html: errorText}),
+			closeByEsc: true,
+			closeIcon: true
+		});
+		errorPopup.show();
+	};
+
+	BX.BXGUE.showWait = function(timeout)
+	{
+		if (timeout !== 0)
 		{
-			__GUEShowError(BX.message('GUEErrorUserIDNotDefined'));
-			return false;
+			return (this.waitTimeout = setTimeout(BX.proxy(function(){
+				this.showWait(0)
+			}, this), 50));
 		}
-		else if (data["ERROR"].indexOf("GROUP_ID_NOT_DEFINED", 0) === 0)
+
+		if (!this.waitPopup)
 		{
-			__GUEShowError(BX.message('GUEErrorGroupIDNotDefined'));
-			return false;
-		}
-		else if (data["ERROR"].indexOf("CURRENT_USER_NOT_AUTH", 0) === 0)
-		{
-			__GUEShowError(BX.message('GUEErrorCurrentUserNotAuthorized'));
-			return false;
-		}
-		else if (data["ERROR"].indexOf("SONET_MODULE_NOT_INSTALLED", 0) === 0)
-		{
-			__GUEShowError(BX.message('GUEErrorModuleNotInstalled'));
-			return false;
-		}
-		else if (data["ERROR"].indexOf("SONET_GUE_T_OWNER_CANT_EXCLUDE_HIMSELF", 0) === 0)
-		{
-			__GUEShowError(BX.message('GUEErrorOwnerCantExcludeHimself'));
-			return false;
+			this.waitPopup = new BX.PopupWindow('gue_wait', window, {
+				autoHide: true,
+				lightShadow: true,
+				zIndex: 2,
+				content: BX.create('DIV', {
+					props: {
+						className: 'sonet-members-wait-cont'
+					},
+					children: [
+						BX.create('DIV', {
+							props: {
+								className: 'sonet-members-wait-icon'
+							}
+						}),
+						BX.create('DIV', {
+							props: {
+								className: 'sonet-members-wait-text'
+							},
+							html: BX.message('GUEWaitTitle')
+						})
+					]
+				})
+			});
 		}
 		else
 		{
-			__GUEShowError(data["ERROR"]);
-			return false;
+			this.waitPopup.setBindElement(window);
+		}
+
+		this.waitPopup.show();
+	};
+
+	BX.BXGUE.closeWait = function()
+	{
+		if (this.waitTimeout)
+		{
+			clearTimeout(this.waitTimeout);
+			this.waitTimeout = null;
+		}
+
+		if (this.waitPopup)
+		{
+			this.waitPopup.close();
 		}
 	}
-}
-
-function __GUEShowError(errorText)
-{
-	__GUECloseWait();
-
-	var errorPopup = new BX.PopupWindow('gue-error' + Math.random(), window, {
-		autoHide: true,
-		lightShadow: false,
-		zIndex: 2,
-		content: BX.create('DIV', {props: {'className': 'sonet-members-error-text-block'}, html: errorText}),
-		closeByEsc: true,
-		closeIcon: true
-	});
-	errorPopup.show();
-
-}
-
-function __GUEShowWait(timeout)
-{
-	if (timeout !== 0)
-	{
-		return (waitTimeout = setTimeout(function(){
-			__GUEShowWait(0)
-		}, 50));
-	}
-
-	if (!waitPopup)
-	{
-		waitPopup = new BX.PopupWindow('gue_wait', window, {
-			autoHide: true,
-			lightShadow: true,
-			zIndex: 2,
-			content: BX.create('DIV', {
-				props: {
-					className: 'sonet-members-wait-cont'
-				},
-				children: [
-					BX.create('DIV', {
-						props: {
-							className: 'sonet-members-wait-icon'
-						}
-					}),
-					BX.create('DIV', {
-						props: {
-							className: 'sonet-members-wait-text'
-						},
-						html: BX.message('GUEWaitTitle')
-					})
-				]
-			})
-		});
-	}
-	else
-		waitPopup.setBindElement(window);
-
-	waitPopup.show();
-}
-
-function __GUECloseWait()
-{
-	if (waitTimeout)
-	{
-		clearTimeout(waitTimeout);
-		waitTimeout = null;
-	}
-
-	if (waitPopup)
-		waitPopup.close();
-}
+})();

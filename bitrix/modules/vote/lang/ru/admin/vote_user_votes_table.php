@@ -2,7 +2,7 @@
 $MESS["VOTE_WRONG_DATE_FROM"] = "Введите в фильтре правильную дату \"c\" для поля \"Дата\"";
 $MESS["VOTE_WRONG_DATE_TILL"] = "Введите в фильтре правильную дату \"по\" для поля \"Дата\"";
 $MESS["VOTE_WRONG_FROM_TILL"] = "В фильтре дата \"по\" должна быть больше чем дата \"с\"";
-$MESS["VOTE_PAGE_TITLE"] = "Голосования посетителей";
+$MESS["VOTE_PAGE_TITLE"] = "Список голосов опроса ##ID#";
 $MESS["VOTE_F_VALID_TITLE"] = "Валидность:";
 $MESS["VOTE_F_VALID"] = "валидно";
 $MESS["VOTE_F_DATE"] = "Дата";
@@ -12,7 +12,8 @@ $MESS["VOTE_PAGES"] = "Голосования";
 $MESS["VOTE_DATE"] = "Дата";
 $MESS["VOTE_VALID"] = "Валидность";
 $MESS["VOTE_SESSION"] = "Сессия";
-$MESS["VOTE_USER"] = "Посетитель";
+$MESS["VOTE_VISITOR"] = "Посетитель";
+$MESS["VOTE_USER"] = "Пользователь";
 $MESS["VOTE_RESULT"] = "Посмотреть";
 $MESS["VOTE_DELETE_CONFIRMATION"] = "Вы уверены что хотите удалить результат?";
 $MESS["VOTE_FL_USER_ID"] = "ID посетителя";
@@ -35,4 +36,7 @@ $MESS["VOTE_NOT_FOUND"] = "Опрос не найден";
 $MESS["VOTE_LIST"] = "Список опросов";
 $MESS["MAIN_ADMIN_LIST_SELECTED"] = "Выбрано:";
 $MESS["MAIN_ADMIN_LIST_CHECKED"] = "Отмечено:";
+$MESS["VOTE_BACK_TO_VOTE"] = "Перейти к опросу";
+$MESS["VOTE_NONAUTHORIZED"] = "Не авторизован";
+$MESS["VOTE_VIEW_RESULTS"] = "Результаты";
 ?>

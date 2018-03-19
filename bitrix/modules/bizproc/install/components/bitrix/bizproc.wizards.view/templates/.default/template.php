@@ -99,7 +99,12 @@ else
 		$arSort["sort"],
 		array(
 			"WORKFLOW_ID" => $arResult["BP"]["DOCUMENT_STATE"]["ID"],
-			"TYPE" => array(CBPTrackingType::Custom, CBPTrackingType::FaultActivity, CBPTrackingType::Report)
+			"TYPE" => array(
+				CBPTrackingType::Custom,
+				CBPTrackingType::FaultActivity,
+				CBPTrackingType::Report,
+				CBPTrackingType::Error
+			)
 		)
 	);
 

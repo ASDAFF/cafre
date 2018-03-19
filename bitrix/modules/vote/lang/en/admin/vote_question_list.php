@@ -1,6 +1,5 @@
 <?
 $MESS["VOTE_ADD_QUESTION"] = "Add a question";
-$MESS["VOTE_PAGE_TITLE"] = "Question list";
 $MESS["VOTE_VOTE_LIST"] = "Poll list";
 $MESS["VOTE_F_ACTIVE"] = "Active:";
 $MESS["VOTE_F_DIAGRAM"] = "Included in chart:";
@@ -30,4 +29,7 @@ $MESS["DELETE_ERROR"] = "An error occurred while deleting an object.";
 $MESS["VOTE_FLT_REQUIRED"] = "Required question";
 $MESS["VOTE_F_REQUIRED"] = "Required";
 $MESS["VOTE_REQUIRED"] = "Required";
+$MESS["VOTE_PAGE_TITLE"] = "Questions in poll ##ID#";
+$MESS["VOTE_BACK_TO_VOTE"] = "Go to poll";
+$MESS["VOTE_IMAGE_ID"] = "Poll image";
 ?>

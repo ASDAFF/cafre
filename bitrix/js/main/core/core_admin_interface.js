@@ -1677,12 +1677,19 @@ BX.adminList.prototype.Init = function()
 
 	if(!!this.FORM)
 	{
-		this.ACTION_SELECTOR = this.FORM.action;
-		this.ACTION_BUTTON = this.FORM.apply;
-		this.ACTION_TARGET = this.FORM.action_target;
+		this.ACTION_SELECTOR = this.FORM.elements.action;
+		this.ACTION_BUTTON = this.FORM.elements.apply;
+		this.ACTION_TARGET = this.FORM.elements.action_target;
 
-		BX.bind(this.ACTION_SELECTOR, 'change', BX.proxy(this.UpdateCheckboxCounter, this));
-		BX.bind(this.ACTION_TARGET, 'click', BX.proxy(this.UpdateCheckboxCounter, this));
+		if(this.ACTION_SELECTOR)
+		{
+			BX.bind(this.ACTION_SELECTOR, 'change', BX.proxy(this.UpdateCheckboxCounter, this));
+		}
+
+		if(this.ACTION_TARGET)
+		{
+			BX.bind(this.ACTION_TARGET, 'click', BX.proxy(this.UpdateCheckboxCounter, this));
+		}
 	}
 
 	if (!!this.TABLE && this.TABLE.tBodies[0] && this.TABLE.tBodies[0].rows.length > 0)
@@ -1823,8 +1830,7 @@ BX.adminList.prototype.ReInit = function()
 
 BX.adminList.prototype.GetAdminList = function(url, callback)
 {
-	url = BX.util.remove_url_param(url, ['mode', 'table_id']);
-	url += (url.indexOf('?') >= 0 ? '&' : '?') + 'mode=list&table_id='+BX.util.urlencode(this.table_id);
+	url = BX.util.add_url_param(url, {'mode': 'list', 'table_id': BX.util.urlencode(this.table_id)});
 
 	BX.ajax({
 		method: 'GET',
@@ -2145,6 +2151,19 @@ BX.adminList.prototype.DeleteSettings = function(bCommon)
 	}, this));
 };
 
+/****************************** For new grid ********************************/
+BX.adminList.SendSelected = function(gridId)
+{
+	var gridInstance = BX.Main.gridManager.getById(gridId).instance;
+	var values = gridInstance.getActionsPanel().getValues();
+	var selectedRows = gridInstance.getRows().getSelectedIds();
+	var data = {
+		ID: selectedRows,
+		action: values
+	};
+	gridInstance.reloadTable("POST", data);
+};
+
 BX.adminList._onpopupmenushow = function(){BX.addClass(this, 'adm-list-row-active');};
 BX.adminList._onpopupmenuclose = function(){BX.removeClass(this, 'adm-list-row-active');};
 
@@ -2384,92 +2403,110 @@ BX.adminTabControl.prototype.SelectTab = function(tab_id)
 	{
 		var div = BX(tab_id);
 		if (div.style.display != 'none')
-			return;
-
-		var oldHeight = 0;
-		var newHeight = 0;
-		var contentBlockPaddings = 40;
-		for (var i = 0, cnt = this.aTabs.length; i < cnt; i++)
 		{
-			var tab = BX(this.aTabs[i]["DIV"]);
-			if(tab.style.display != 'none')
+			//already visible or expanded tab
+			if(this.bExpandTabs)
 			{
-				oldHeight = this.aTabs[i].CONTENT_BLOCK.offsetHeight - contentBlockPaddings;
-				this.ShowTab(this.aTabs[i]["DIV"], false);
-				tab.style.display = 'none';
-				break;
-			}
-		}
-
-		this.ShowTab(tab_id, true);
-		div.style.display = 'block';
-
-		BX(this.name+'_active_tab').value = tab_id;
-
-		var currentTab = null;
-		for (i = 0, cnt = this.aTabs.length; i < cnt; i++)
-		{
-			if(this.aTabs[i]["DIV"] == tab_id)
-			{
-				this.aTabs[i]["_ACTIVE"] = true;
-
-				if(this.aTabs[i]["ONSELECT"])
-				{
-					BX.evalGlobal(this.aTabs[i]["ONSELECT"]);
-				}
-
-				if (!this.bPublicMode)
-				{
-					currentTab = this.aTabs[i];
-					var currentContentBlock = this.aTabs[i].CONTENT_BLOCK;
-					newHeight = currentContentBlock.offsetHeight - contentBlockPaddings;
-					if (oldHeight > 0)
-					{
-						currentContentBlock.style.height = oldHeight + "px";
-						currentContentBlock.style.overflowY = "hidden";
-						this.aTabs[i].EDIT_TABLE.style.opacity = 0;
-					}
-				}
-
-				break;
-			}
-		}
-
-		if (!!this.TABS_BLOCK)
-		{
-			if (BX.hasClass(this.TABS_BLOCK, 'adm-detail-tabs-block-fixed'))
-			{
+				//let's scroll to the expanded tab
 				var pos = BX.pos(div), wndScroll = BX.GetWindowScrollPos();
-				window.scrollTo(wndScroll.scrollLeft, pos.top - this.TABS_BLOCK.offsetHeight - parseInt(this.TABS_BLOCK.style.top));
+				if (!!this.TABS_BLOCK && this.bFixed['top'])
+				{
+					pos.top -= this.TABS_BLOCK.offsetHeight;
+				}
+				window.scrollTo(wndScroll.scrollLeft, pos.top);
 			}
-		}
-
-		if (!this.bPublicMode && oldHeight > 0 && newHeight > 0 && currentTab)
-		{
-			var easing = new BX.easing({
-				duration : 500,
-				start : { height: oldHeight, opacity : 0 },
-				finish : { height: newHeight, opacity : 100 },
-				transition : BX.easing.makeEaseOut(BX.easing.transitions.quart),
-
-				step : BX.proxy(function(state){
-					this.CONTENT_BLOCK.style.height = state.height + 'px';
-					this.EDIT_TABLE.style.opacity = state.opacity / 100;
-					BX.onCustomEvent('onAdminTabsChange');
-				}, currentTab),
-
-				complete : BX.proxy(function(){
-					this.CONTENT_BLOCK.style.height = "auto";
-					this.CONTENT_BLOCK.style.overflowY = "visible";
-					BX.onCustomEvent('onAdminTabsChange');
-
-				}, currentTab)
-
-			});
-			easing.animate();
 		}
 		else
-			BX.onCustomEvent('onAdminTabsChange');
+		{
+			//invisible tab - need to show it
+			var oldHeight = 0;
+			var newHeight = 0;
+			var contentBlockPaddings = 40;
+			for (var i = 0, cnt = this.aTabs.length; i < cnt; i++)
+			{
+				var tab = BX(this.aTabs[i]["DIV"]);
+				if(tab.style.display != 'none')
+				{
+					oldHeight = this.aTabs[i].CONTENT_BLOCK.offsetHeight - contentBlockPaddings;
+					this.ShowTab(this.aTabs[i]["DIV"], false);
+					tab.style.display = 'none';
+					break;
+				}
+			}
+
+			this.ShowTab(tab_id, true);
+			div.style.display = 'block';
+
+			BX(this.name+'_active_tab').value = tab_id;
+
+			var currentTab = null;
+			for (i = 0, cnt = this.aTabs.length; i < cnt; i++)
+			{
+				if(this.aTabs[i]["DIV"] == tab_id)
+				{
+					this.aTabs[i]["_ACTIVE"] = true;
+
+					if(this.aTabs[i]["ONSELECT"])
+					{
+						BX.evalGlobal(this.aTabs[i]["ONSELECT"]);
+					}
+
+					if (!this.bPublicMode)
+					{
+						currentTab = this.aTabs[i];
+						var currentContentBlock = this.aTabs[i].CONTENT_BLOCK;
+						newHeight = currentContentBlock.offsetHeight - contentBlockPaddings;
+						if (oldHeight > 0)
+						{
+							currentContentBlock.style.height = oldHeight + "px";
+							currentContentBlock.style.overflowY = "hidden";
+							this.aTabs[i].EDIT_TABLE.style.opacity = 0;
+						}
+					}
+
+					break;
+				}
+			}
+
+			if (!!this.TABS_BLOCK)
+			{
+				if (BX.hasClass(this.TABS_BLOCK, 'adm-detail-tabs-block-fixed'))
+				{
+					pos = BX.pos(div);
+					wndScroll = BX.GetWindowScrollPos();
+					window.scrollTo(wndScroll.scrollLeft, pos.top - this.TABS_BLOCK.offsetHeight - parseInt(this.TABS_BLOCK.style.top));
+				}
+			}
+
+			if (!this.bPublicMode && oldHeight > 0 && newHeight > 0 && currentTab)
+			{
+				var easing = new BX.easing({
+					duration : 500,
+					start : { height: oldHeight, opacity : 0 },
+					finish : { height: newHeight, opacity : 100 },
+					transition : BX.easing.makeEaseOut(BX.easing.transitions.quart),
+
+					step : BX.proxy(function(state){
+						this.CONTENT_BLOCK.style.height = state.height + 'px';
+						this.EDIT_TABLE.style.opacity = state.opacity / 100;
+						BX.onCustomEvent('onAdminTabsChange');
+					}, currentTab),
+
+					complete : BX.proxy(function(){
+						this.CONTENT_BLOCK.style.height = "auto";
+						this.CONTENT_BLOCK.style.overflowY = "visible";
+						BX.onCustomEvent('onAdminTabsChange');
+
+					}, currentTab)
+
+				});
+				easing.animate();
+			}
+			else
+			{
+				BX.onCustomEvent('onAdminTabsChange');
+			}
+		}
 	}
 };
 
@@ -2524,22 +2561,17 @@ BX.adminTabControl.prototype.ToggleTabs = function()
 	if (this.bExpandTabs)
 	{
 		BX.addClass(a, 'adm-detail-title-setting-active');
-		this.ToggleFix('top', false);
 	}
 	else
 	{
 		BX.removeClass(a, 'adm-detail-title-setting-active');
-		this.ToggleFix('top', true);
 	}
 
 	for(var i=0; i < this.aTabs.length; i++)
 	{
 		var tab_id = this.aTabs[i]["DIV"];
-		this.ShowTab(tab_id, false);
-
-		this.ShowDisabledTab(tab_id, (this.bExpandTabs || this.aTabsDisabled[tab_id]));
-
 		var div = BX(tab_id);
+		this.ShowTab(tab_id, false);
 		div.style.display = (this.bExpandTabs && !this.aTabsDisabled[tab_id]? 'block':'none');
 	}
 
@@ -2835,7 +2867,7 @@ BX.adminViewTabControl.prototype.DisableTab = function(tab_id)
 					j--;
 				}
 			}
-			
+
 			if (!bFound)
 			{
 				j = parseInt(i) + 1;
@@ -2986,6 +3018,12 @@ BX.adminHistory.prototype._get = function(e)
 
 /*************************** fixed elements *********************************/
 
+BX.FixOffsets = {
+	top: 0,
+	bottom: 0,
+	right: 0
+};
+
 BX.Fix = function(el, params)
 {
 	if (!el.BXFIXER)
@@ -3021,6 +3059,10 @@ BX.CFixer = function(node, params)
 	this.bFixed = false;
 
 	this.gutter = null;
+
+	this.clingTop = null;
+	this.clingBottom = null;
+	this.clingRight = null;
 };
 
 BX.CFixer.prototype.Start = function()
@@ -3109,6 +3151,14 @@ BX.CFixer.prototype._Fix = function()
 			this.node.style[this.params.type] = this['position_' + this.params.type] + 'px';
 
 		this.bFixed = true;
+
+		if(this.params.type == 'top')
+		{
+			this.clingTop = BX.FixOffsets.top;
+			BX.FixOffsets.top += this.pos.height;
+		}
+
+		BX.addCustomEvent('onAdminFixerUnfix', BX.proxy(this._cling_offset_correction, this));
 	}
 };
 
@@ -3132,6 +3182,19 @@ BX.CFixer.prototype._UnFix = function(bRefix)
 
 			this._check_scroll(this.pos.left, this.pos.top);
 		}
+
+		var clingPoint, offsetSize;
+
+		if(this.params.type == 'top')
+		{
+			clingPoint = this.clingTop;
+			offsetSize = this.pos.height;
+			this.clingTop = null;
+			BX.FixOffsets.top -= this.pos.height;
+		}
+
+		BX.removeCustomEvent('onAdminFixerUnfix', BX.proxy(this._cling_offset_correction, this));
+		BX.onCustomEvent('onAdminFixerUnfix', [{type: this.params.type, clingPoint: clingPoint, offsetSize: offsetSize}]);
 	}
 };
 
@@ -3140,6 +3203,17 @@ BX.CFixer.prototype._ReFix = function()
 	if (this.bFixed)
 	{
 		this._UnFix(true); BX.defer(this._Fix, this)();
+	}
+};
+
+BX.CFixer.prototype._cling_offset_correction = function(params)
+{
+	if(this.params.type == params.type)
+	{
+		if(this.params.type == 'top' && params.clingPoint < this.clingTop )
+			this.clingTop -= params.offsetSize;
+
+		this._scroll_listener();
 	}
 };
 
@@ -3175,9 +3249,10 @@ BX.CFixer.prototype._scroll_listener = function()
 		switch(this.params.type)
 		{
 			case 'top':
-				this.position_top = BX.adminPanel.isFixed() ? BX.adminPanel.panel.offsetHeight : 0;
+				var additive = this.clingTop !== null ? this.clingTop : BX.FixOffsets.top;
+				this.position_top = BX.adminPanel.isFixed() ? BX.adminPanel.panel.offsetHeight + additive : additive;
 
-				if (this.limit > 0 && wndScroll.scrollTop + this.position_top > this.limit)
+				if (this.limit > additive && wndScroll.scrollTop + this.position_top > this.limit)
 					this._UnFix();
 				else if (!this.bFixed && wndScroll.scrollTop + this.position_top >= pos.top)
 					this._Fix();
@@ -3187,7 +3262,6 @@ BX.CFixer.prototype._scroll_listener = function()
 			break;
 			case 'bottom':
 				wndSize = BX.GetWindowInnerSize();
-
 				wndScroll.scrollBottom = wndScroll.scrollTop + wndSize.innerHeight;
 
 				if (this.limit > 0 && wndScroll.scrollBottom < this.limit)
@@ -3558,50 +3632,14 @@ BX.AdminFilter = function(filter_id, aRows)
 		if(!this.ApplyFilter(flterId))
 			return false;
 
-		//required filter exists
-		if(flterId)
+		if(this.state.folded)
 		{
-			if(this.state.folded)
-			{
-				this.oOptions["0"]["tab"].UnSetActive();
-				this.oOptions[flterId]["tab"].SetActive();
-			}
-
-			var setFilterButton = this.GetFormButton('set_filter');
-
-			if(this.filter_id  && this.url)
-			{
-				this.OnSet(this.table_id, this.url, setFilterButton);
-			}
-			else
-			{
-				if(setFilterButton)
-				{
-					setFilterButton.onclick();
-				}
-			}
-
-			this.oOptions[flterId]["tab"].SetFiltered(true);
-			return true;
+			this.oOptions["0"]["tab"].UnSetActive();
+			this.oOptions[flterId]["tab"].SetActive();
 		}
-		else //not exist
-		{
-			var delFilterButt = this.GetFormButton('del_filter');
 
-			if(this.filter_id  && this.url)
-			{
-				this.OnClear(this.table_id, this.url, delFilterButt);
-			}
-			else
-			{
-				if(delFilterButt)
-				{
-					delFilterButt.onclick();
-				}
-			}
-
-			return false;
-		}
+		this.oOptions[flterId]["tab"].SetFiltered(true);
+		return true;
 	};
 
 	this.InitOpenedTab = function(tabIdUri, tabIdSes)
@@ -3811,7 +3849,7 @@ BX.AdminFilter = function(filter_id, aRows)
 
 			window[table_id].GetAdminList(filterUrl);
 		})();
-		
+
 		return false;
 	};
 
@@ -3846,7 +3884,6 @@ BX.AdminFilter = function(filter_id, aRows)
 
 	this.ApplyFilter = function(id)
 	{
-
 		if(this.state.requesting && !this.state.init)
 			return false;
 
@@ -5321,7 +5358,10 @@ BX.admFltWrap = {
 		switch (el.type)
 		{
 			case "select-one":
-				wrap = BX.admFltWrap.Element(el,"adm-select","span","adm-select-wrap");
+				if(el.size && el.size > 1)
+					wrap = BX.admFltWrap.Element(el,"adm-select-multiple","span","adm-select-wrap-multiple");
+				else
+					wrap = BX.admFltWrap.Element(el,"adm-select","span","adm-select-wrap");
 				break;
 
 			case "select-multiple":
@@ -5335,7 +5375,7 @@ BX.admFltWrap = {
 			case "checkbox":
 
 				var label = BX.findChild(el.parentNode, {tagName: "label", htmlFor: el.id});
-				if(label)
+				if(!label)
 				{
 					var wraplabel = BX.admFltWrap.Element(el, "", "label", "");
 
@@ -5447,8 +5487,7 @@ BX.admFltWrap = {
 		row.cells[0].className = "adm-filter-item-left";
 		row.cells[1].className = "adm-filter-item-center";
 		row.cells[2].className = 'adm-filter-item-right';
-
-		row.cells[0].innerHTML = row.cells[0].textContent || row.cells[0].innerText;
+		row.cells[0].innerHTML = row.cells[0].innerHTML.replace(/<\/?[^>]+>/gi, ''); // strip_tags
 
 		var calendarInput = ( !!BX.findChild(row.cells[1], {'className': 'adm-input adm-input-calendar'}, true));
 

@@ -35,10 +35,13 @@ div.blog-post-quote table.blogquote, div.blog-post-code table.blogcode {margin: 
 	text-decoration: none;
 }
 
+.blog-p-user-name-extranet {
+	color: #d9930a !important;
+}
+
 .blog-p-user-name:hover {
 	border-bottom: 1px solid;
 }
-
 
 /*div.blog-post-quote table span, div.blog-post-code table span {display: block;}*/
 div.blog-post-code table.blogcode { border-color: #E8E8E8; color: #7D7D7D; background-color: #F7F7F7;}
@@ -139,7 +142,7 @@ div.feed-com-block table.blogcode {
 .feed-com-answer-avatar.feed-com-answer-noavatar {background: url('images/answer_sprite.png') 1px 1px no-repeat;}
 
 .bx-notifyManager-animation-spbc {position: fixed !important;}
-.bx-notifyManager-animation-spbc .popup-window-light {background: #f4f8f9; border: 1px solid #f4f8f9; border-radius: 1px; box-shadow: 1px 1px 2px 0 rgba(0, 0, 0, .18); }
+
 .bx-spbc-notifier-item {width: 200px; padding: 0; display:block; padding: 0; font: 11px "Helvetica Neue",Helvetica,Arial,sans-serif; color: #76797a;}
 .bx-spbc-notifier-item-avatar { float: left; margin-right: 6px; background: url('images/answer_sprite.png') 0 0 no-repeat; background-color: #FFF; display: inline-block; width: 21px; height: 21px; padding: 0px; vertical-align: top; margin-top: 2px; margin-bottom:-2px }
 .bx-spbc-notifier-item-avatar-img { display: inline-block; width: inherit; height: inherit; border:0 }
@@ -156,7 +159,7 @@ div.feed-com-block table.blogcode {
 .feed-add-post-buttons-post {
 	padding-top: 12px;
 }
-.feed-add-post-buttons-post .feed-cancel-com {margin-top: 15px;}
+.feed-add-post-buttons-post .feed-cancel-com {margin-top: 25px;}
 
 .feed-add-post-destination-wrap .feed-add-post-destination-undelete {padding-right:11px !important;}
 .feed-post-block-new .feed-add-destination-inp {background-color: #fdf9e5;}

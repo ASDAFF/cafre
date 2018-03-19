@@ -118,7 +118,7 @@ else:
 			$res["~FORUM_LINK"] = CComponentEngine::MakePathFromTemplate($arParams["~URL_TEMPLATES_LIST"], array("FID" => $res["ID"]));
 			$res["FORUM_LINK"] = CComponentEngine::MakePathFromTemplate($arParams["URL_TEMPLATES_LIST"], array("FID" => $res["ID"]));
 			$res["~URL"] = "http://".$arResult["SERVER_NAME"].$res["~FORUM_LINK"];
-			$res["URL"] = "http://".htmlspecialcharsEx($arResult["SERVER_NAME"]).$res["FORUM_LINK"];
+			$res["URL"] = "http://".htmlspecialcharsbx($arResult["SERVER_NAME"]).$res["FORUM_LINK"];
 			$arResult["FORUMS"][$res["ID"]] = $res;
 		}while ($res = $db_res->Fetch());
 	}
@@ -229,8 +229,8 @@ $arResult["~DESCRIPTION"] = str_replace(
 		$arResult["TOPIC"]["~TITLE"], $arResult["TOPIC"]["~DESCRIPTION"],
 		$arResult["SITE"]["SITE_NAME"], $arResult["SERVER_NAME"]), $arResult["~DESCRIPTION"]);
 
-$arResult["TITLE"] = htmlspecialcharsEx($arResult["~TITLE"]);
-$arResult["DESCRIPTION"] = htmlspecialcharsEx($arResult["~DESCRIPTION"]);
+$arResult["TITLE"] = htmlspecialcharsbx($arResult["~TITLE"]);
+$arResult["DESCRIPTION"] = htmlspecialcharsbx($arResult["~DESCRIPTION"]);
 
 $arResult["URL"] = array(
 	"~ALTERNATE" => "http://".$arResult["SERVER_NAME"],
@@ -341,13 +341,13 @@ if($this->StartResultCache($arParams["CACHE_TIME"], array($cache_id_array, $arPa
 				array("FID" => $res["FORUM_ID"], "TID" => $res["TOPIC_ID"], "TITLE_SEO" => $res["TITLE_SEO"], "MID" => $res["ID"]));
 
 			$res["~AUTHOR_URL"] = "http://".$arResult["SERVER_NAME"].$res["~AUTHOR_LINK"];
-			$res["AUTHOR_URL"] = "http://".htmlspecialcharsEx($arResult["SERVER_NAME"]).$res["AUTHOR_LINK"];
+			$res["AUTHOR_URL"] = "http://".htmlspecialcharsbx($arResult["SERVER_NAME"]).$res["AUTHOR_LINK"];
 			$res["~URL"] = "http://".$arResult["SERVER_NAME"].$res["~POST_LINK"];
-			$res["URL"] = "http://".htmlspecialcharsEx($arResult["SERVER_NAME"]).$res["POST_LINK"];
+			$res["URL"] = "http://".htmlspecialcharsbx($arResult["SERVER_NAME"]).$res["POST_LINK"];
 
 			$res["~URL_RSS"] = "http://".$arResult["SERVER_NAME"].CComponentEngine::MakePathFromTemplate($arParams["~URL_TEMPLATES_RSS"],
 				array("TYPE" => strToLower($arParams["TYPE"]), "MODE" => "topic", "IID" => $res["TOPIC_ID"]));
-			$res["URL_RSS"] = "http://".htmlspecialcharsEx($arResult["SERVER_NAME"]).
+			$res["URL_RSS"] = "http://".htmlspecialcharsbx($arResult["SERVER_NAME"]).
 				CComponentEngine::MakePathFromTemplate($arParams["URL_TEMPLATES_RSS"],
 				array("TYPE" => strToLower($arParams["TYPE"]), "MODE" => "topic", "IID" => $res["TOPIC_ID"]));
 			$res["UUID"] = __create_uuid($res["~URL"]);
@@ -388,9 +388,9 @@ if($this->StartResultCache($arParams["CACHE_TIME"], array($cache_id_array, $arPa
 			);
 
 			$topic["~AUTHOR_URL"] = "http://".$arResult["SERVER_NAME"].$topic["~AUTHOR_LINK"];
-			$topic["AUTHOR_URL"] = "http://".htmlspecialcharsEx($arResult["SERVER_NAME"]).$topic["AUTHOR_LINK"];
+			$topic["AUTHOR_URL"] = "http://".htmlspecialcharsbx($arResult["SERVER_NAME"]).$topic["AUTHOR_LINK"];
 			$topic["~URL"] = "http://".$arResult["SERVER_NAME"].$topic["~TOPIC_LINK"];
-			$topic["URL"] = "http://".htmlspecialcharsEx($arResult["SERVER_NAME"]).$topic["TOPIC_LINK"];
+			$topic["URL"] = "http://".htmlspecialcharsbx($arResult["SERVER_NAME"]).$topic["TOPIC_LINK"];
 
 			if (empty($arItems[$res["FORUM_ID"]]["TOPICS"][$res["TOPIC_ID"]]))
 				$arItems[$res["FORUM_ID"]]["TOPICS"][$res["TOPIC_ID"]] = $topic;
@@ -484,7 +484,7 @@ else
 	ob_start();
 	$this->IncludeComponentTemplate();
 	$contents = ob_get_clean();
-	echo "<pre>",htmlspecialcharsEx($contents),"</pre>";
+	echo "<pre>",htmlspecialcharsbx($contents),"</pre>";
 }
 }
 if ($arParams["DESIGN_MODE"] != "Y")

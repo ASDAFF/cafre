@@ -4,4 +4,5 @@ $MESS["AUTH_GET_CHECK_STRING"] = "Get check string";
 $MESS["AUTH_SEND"] = "Send";
 $MESS["AUTH_AUTH"] = "Authorization";
 $MESS["AUTH_LOGIN_EMAIL"] = "Login or E-mail";
+$MESS["system_auth_captcha"] = "Enter the characters you see on the picture";
 ?>

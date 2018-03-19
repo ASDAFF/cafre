@@ -28,7 +28,7 @@ CUtil::InitJSCore(array('popup'));
 				searchInput: BX("<?php echo CUtil::JSEscape($arParams["SEARCH_INPUT"])?>"),
 			<?php endif?>
 			events: {
-				<?php if (strlen($arParams["ON_SELECT"])):?>onGroupSelect: window["<?php echo CUtil::JSEscape($arParams["ON_SELECT"])?>"]<?php endif?>
+				<?php if (strlen($arParams["ON_SELECT"])):?>onGroupSelect: <?php echo CUtil::JSEscape($arParams["ON_SELECT"])?><?php endif?>
 			}
 		});
 	});

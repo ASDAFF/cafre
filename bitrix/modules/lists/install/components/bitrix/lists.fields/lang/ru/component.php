@@ -12,3 +12,5 @@ $MESS["CC_BLF_ACTION_MENU_DELETE"] = "Удалить";
 $MESS["CC_BLF_ACTION_MENU_DELETE_CONF"] = "Вы уверены, что хотите удалить это поле?";
 $MESS["CC_BLF_CHAIN_FIELDS"] = "Поля списка";
 $MESS["CC_BLF_TITLE_EDIT_PROCESS"] = "Настройка полей процесса: #NAME#";
+$MESS["CC_BLF_TITLE_FIELDS"] = "Настройка полей: #NAME#";
+?>

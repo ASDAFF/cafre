@@ -17,6 +17,7 @@ class CMainAppPasswords extends CBitrixComponent
 	{
 		global $APPLICATION;
 
+		$this->setFrameMode(false);
 		$APPLICATION->SetTitle(Loc::getMessage("MAIN_PASSWORDS_TITLE"));
 
 		global $USER;

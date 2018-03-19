@@ -5,6 +5,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" &&
 	)
 {
 	if (CModule::IncludeModule("vote"))
-		CVote::KeepVoting();
+		CVote::keepVoting();
 }
 ?>

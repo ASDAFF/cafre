@@ -5,6 +5,10 @@ $this->IncludeComponentLang("action.php");
 $action = strtoupper($arParams["ACTION"]);
 $action = ($action == "SUPPORT" ? "FORUM_MESSAGE2SUPPORT" : $action);
 
+$post = $this->request->getPostList()->toArray();
+if ($post["AJAX_POST"] == "Y")
+	CUtil::decodeURIComponent($post);
+
 if (strLen($action) <= 0)
 {
 }
@@ -20,10 +24,10 @@ elseif ($_REQUEST["MESSAGE_MODE"] == "VIEW")
 	$arResult["VIEW"] = "Y";
 	$bVarsFromForm = true;
 /************** Preview message ************************************/
-	$arAllow["SMILES"] = ($_POST["USE_SMILES"]!="Y" ? "N" : "Y" );
+	$arAllow["SMILES"] = ($post["USE_SMILES"]!="Y" ? "N" : "Y" );
 
-	$arResult["POST_MESSAGE_VIEW"] = $_POST["POST_MESSAGE"];
-	$arResult["MESSAGE_VIEW"]["AUTHOR_NAME"] = ($USER->IsAuthorized() || empty($_POST["AUTHOR_NAME"]) ? $arResult["USER"]["SHOW_NAME"] : trim($_POST["AUTHOR_NAME"]));
+	$arResult["POST_MESSAGE_VIEW"] = $post["POST_MESSAGE"];
+	$arResult["MESSAGE_VIEW"]["AUTHOR_NAME"] = ($USER->IsAuthorized() || empty($post["AUTHOR_NAME"]) ? $arResult["USER"]["SHOW_NAME"] : trim($post["AUTHOR_NAME"]));
 	$arResult["MESSAGE_VIEW"]["TEXT"] = $arResult["POST_MESSAGE_VIEW"];
 	$arFields = array(
 		"FORUM_ID" => intVal($arParams["FID"]), 
@@ -66,7 +70,7 @@ elseif ($_REQUEST["MESSAGE_MODE"] == "VIEW")
 	$arFilesExists = array_keys($arFilesExists);
 	sort($arFilesExists);
 	$arResult["MESSAGE_VIEW"]["FILES"] = $_REQUEST["FILES"] = $arFilesExists;
-	$arResult["MESSAGE_VIEW"]["TEXT"] = $arResult["POST_MESSAGE_VIEW"] = $parser->convert($_POST["POST_MESSAGE"], $arAllow, "html", $arResult["MESSAGE_VIEW"]["FILES"]);
+	$arResult["MESSAGE_VIEW"]["TEXT"] = $arResult["POST_MESSAGE_VIEW"] = $parser->convert($post["POST_MESSAGE"], $arAllow, "html", $arResult["MESSAGE_VIEW"]["FILES"]);
 	$arResult["MESSAGE_VIEW"]["FILES_PARSED"] = $parser->arFilesIDParsed;
 }
 else
@@ -102,13 +106,13 @@ else
 			$arFields = array(
 				"FID" => $arParams["FID"],
 				"TID" => $arParams["TID"],
-				"POST_MESSAGE" => $_POST["POST_MESSAGE"],
-				"AUTHOR_NAME" => $_POST["AUTHOR_NAME"],
-				"AUTHOR_EMAIL" => $_POST["AUTHOR_EMAIL"],
-				"USE_SMILES" => $_POST["USE_SMILES"],
+				"POST_MESSAGE" => $post["POST_MESSAGE"],
+				"AUTHOR_NAME" => $post["AUTHOR_NAME"],
+				"AUTHOR_EMAIL" => $post["AUTHOR_EMAIL"],
+				"USE_SMILES" => $post["USE_SMILES"],
 				"ATTACH_IMG" => $_FILES["ATTACH_IMG"],
-				"captcha_word" =>  $_POST["captcha_word"],
-				"captcha_code" => $_POST["captcha_code"],
+				"captcha_word" =>  $post["captcha_word"],
+				"captcha_code" => $post["captcha_code"],
 				"NAME_TEMPLATE" => $arParams["NAME_TEMPLATE"]);
 				if (!empty($_FILES["ATTACH_IMG"]))
 				{

@@ -2,11 +2,20 @@
 	var __windows = {};
 
 	BX.GroupsPopup = {
+		searchTimeout: null,
+		oXHR: null,
 		create : function(uniquePopupId, bindElement, params)
 		{
 			if (!__windows[uniquePopupId])
 				__windows[uniquePopupId] = new GroupsPopup(uniquePopupId, bindElement, params);
 			return __windows[uniquePopupId];
+		},
+		abortSearchRequest : function()
+		{
+			if (this.oXHR)
+			{
+				this.oXHR.abort();
+			}
 		}
 	};
 
@@ -38,7 +47,12 @@
 			if (params.events)
 			{
 				for (var eventName in params.events)
-					BX.addCustomEvent(this, eventName, params.events[eventName]);
+				{
+					if (params.events.hasOwnProperty(eventName))
+					{
+						BX.addCustomEvent(this, eventName, params.events[eventName]);
+					}
+				}
 			}
 			if (params.selected && params.selected.length)
 			{
@@ -173,17 +187,20 @@
 			]
 		});
 	};
-	
+
 	GroupsPopup.prototype.show = function() {
 		this.popupWindow.show();
 		this.searchInput.focus();
 	};
-	
+
 	GroupsPopup.prototype.selectTab = function(tab) {
 		for(var i in this.tabs)
 		{
-			BX.removeClass(this.tabs[i].tab, "bx-finder-box-tab-selected");
-			BX.adjust(this.tabs[i].content, {style: {display: "none"}});
+			if (this.tabs.hasOwnProperty(i))
+			{
+				BX.removeClass(this.tabs[i].tab, "bx-finder-box-tab-selected");
+				BX.adjust(this.tabs[i].content, {style: {display: "none"}});
+			}
 		}
 		
 		BX.addClass(tab.tab, "bx-finder-box-tab-selected");
@@ -225,28 +242,37 @@
 	
 	GroupsPopup.prototype.setItems = function(tab, items) {
 		BX.cleanNode(tab.content);
-		for(var i = 0, count = items.length; i < count; i++)
+
+		if (!!items)
 		{
-			tab.content.appendChild(this.__renderItem(items[i]));
+			for(var i = 0, count = items.length; i < count; i++)
+			{
+				tab.content.appendChild(this.__renderItem(items[i]));
+			}
 		}
 	};
 	
 	GroupsPopup.prototype.select = function(item) {
 
 		this.selected = [item];
-		
+
+		var i = 0;
+		var count = 0;
+
+		clearTimeout(BX.GroupsPopup.searchTimeout);
+
 		if (this.items2Objects[item.id])
 		{
-			for(var i = 0, count = this.items2Objects[item.id].length; i < count; i++)
+			for(i = 0, count = this.items2Objects[item.id].length; i < count; i++)
 			{
 				BX.addClass(this.items2Objects[item.id][i], "bx-finder-box-item-t7-selected");
 			}
 		}
-		
+
 		BX.onCustomEvent(this, "onGroupSelect", [this.selected, {onInit: false}]);
-		
+
 		var lastSelected = [item.id];
-		for(var i = 0, count = this.lastGroups.length; i < count; i++)
+		for(i = 0, count = this.lastGroups.length; i < count; i++)
 		{
 			if (!BX.util.in_array(this.lastGroups[i].id, lastSelected))
 			{
@@ -254,7 +280,11 @@
 			}
 		}
 		BX.userOptions.save("socialnetwork", "groups_popup", "last_selected", lastSelected.slice(0, 10));
-		
+
+		if (this.selected[0]) {
+			this.searchInput.value = this.selected[0].title;
+		}
+
 		this.popupWindow.close();
 	};
 	
@@ -273,6 +303,9 @@
 	GroupsPopup.prototype.search = function(query) {
 		if (query.length > 0)
 		{
+			clearTimeout(BX.GroupsPopup.searchTimeout);
+			BX.GroupsPopup.abortSearchRequest();
+
 			this.selectTab(this.tabs["search"]);
 
 			var url = this.ajaxURL + '?mode=search&SITE_ID=' + __bx_group_site_id + '&query=' + encodeURIComponent(query);
@@ -281,11 +314,20 @@
 				url += "&features_perms[0]=" + encodeURIComponent(this.featuresPerms[0]);
 				url += "&features_perms[1]=" + encodeURIComponent(this.featuresPerms[1]);
 			}
-			BX.ajax.loadJSON(url, BX.proxy(
-				function(data) {
-					this.setItems(this.tabs["search"], data);
-				}, this
-			));
+
+			BX.GroupsPopup.searchTimeout = setTimeout(BX.delegate(function()
+			{
+				BX.GroupsPopup.oXHR = BX.ajax.loadJSON(url, BX.proxy(
+					function(data) {
+						this.setItems(this.tabs["search"], data);
+					}, this
+				));
+			}, this), 1000);
+
+		}
+		else
+		{
+			clearTimeout(BX.GroupsPopup.searchTimeout);
 		}
 	};
 
@@ -296,14 +338,17 @@
 		BX.cleanNode(this.tabsContentOuter);
 		for(var i in this.tabs)
 		{
-			if (!selected)
+			if (this.tabs.hasOwnProperty(i))
 			{
-				selected = BX.hasClass(this.tabs[i].tab, "bx-finder-box-tab-selected");
+				if (!selected)
+				{
+					selected = BX.hasClass(this.tabs[i].tab, "bx-finder-box-tab-selected");
+				}
+				this.tabsOuter.appendChild(this.tabs[i].tab);
+				this.tabsContentOuter.appendChild(this.tabs[i].content);
 			}
-			this.tabsOuter.appendChild(this.tabs[i].tab);
-			this.tabsContentOuter.appendChild(this.tabs[i].content);
 		}
-		
+
 		if (!selected)
 		{
 			this.selectTab(this.tabs["last"] || this.tabs["my"] || this.tabs["search"]);
@@ -333,9 +378,9 @@
 			},
 			children: [
 				avatar,
-				BX.create("div", { 
-					props : { 
-						className : "bx-finder-box-item-t7-space" 
+				BX.create("div", {
+					props : {
+						className : "bx-finder-box-item-t7-space"
 					}
 				}),
 				BX.create("div", {

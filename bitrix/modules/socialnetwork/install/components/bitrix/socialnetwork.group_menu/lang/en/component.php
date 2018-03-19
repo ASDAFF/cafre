@@ -10,4 +10,5 @@ $MESS["SONET_UM_FILES"] = "Drive";
 $MESS["SONET_UM_TASKS"] = "Tasks";
 $MESS["SONET_UM_SEARCH"] = "Search";
 $MESS["SONET_UM_MICROBLOG"] = "Microblog";
+$MESS["SONET_UM_CHAT"] = "Chat";
 ?>

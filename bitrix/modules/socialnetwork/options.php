@@ -1,4 +1,9 @@
 <?
+use Bitrix\Main\ModuleManager;
+use Bitrix\Socialnetwork\UserToGroupTable;
+
+global $APPLICATION, $DB;
+
 $module_id = "socialnetwork";
 
 CJSCore::Init(array("access"));
@@ -10,7 +15,7 @@ IncludeModuleLangFile($_SERVER["DOCUMENT_ROOT"].'/bitrix/modules/main/options.ph
 IncludeModuleLangFile($_SERVER["DOCUMENT_ROOT"].'/bitrix/modules/main/admin/settings.php');
 IncludeModuleLangFile(__FILE__);
 
-include_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/socialnetwork/include.php");
+CModule::IncludeModule('socialnetwork');
 
 if ($REQUEST_METHOD=="GET" && strlen($RestoreDefaults)>0 && $SONET_RIGHT=="W" && check_bitrix_sessid())
 {
@@ -28,16 +33,23 @@ $arUserPermsVar = array(
 	SONET_RELATIONS_TYPE_NONE => GetMessage("SONET_PVU_NONE"),
 	SONET_RELATIONS_TYPE_FRIENDS => GetMessage("SONET_PVU_FR"),
 	SONET_RELATIONS_TYPE_AUTHORIZED => GetMessage("SONET_PVU_AUTHORIZED"),
-	SONET_RELATIONS_TYPE_ALL => GetMessage("SONET_PVU_ALL"),
 );
+if (!ModuleManager::isModuleInstalled('bitrix24'))
+{
+	$arUserPermsVar[SONET_RELATIONS_TYPE_ALL] = GetMessage("SONET_PVU_ALL");
+}
 
 $arGroupPermsVar = array(
-	SONET_ROLES_OWNER => GetMessage("SONET_PVG_OWNER"),
-	SONET_ROLES_MODERATOR => GetMessage("SONET_PVG_MOD"),
-	SONET_ROLES_USER => GetMessage("SONET_PVG_USER"),
+	UserToGroupTable::ROLE_OWNER => GetMessage("SONET_PVG_OWNER"),
+	UserToGroupTable::ROLE_MODERATOR => GetMessage("SONET_PVG_MOD"),
+	UserToGroupTable::ROLE_USER => GetMessage("SONET_PVG_USER"),
 	SONET_ROLES_AUTHORIZED => GetMessage("SONET_PVG_AUTHORIZED"),
-	SONET_ROLES_ALL => GetMessage("SONET_PVG_ALL"),
 );
+if (!ModuleManager::isModuleInstalled('bitrix24'))
+{
+	$arGroupPermsVar[SONET_ROLES_ALL] = GetMessage("SONET_PVG_ALL");
+}
+
 
 $bIntranet = IsModuleInstalled('intranet');
 
@@ -178,7 +190,7 @@ if (!function_exists('set_valign'))
 			|| in_array($ctrlType, array("checkbox", "text"))
 		)
 		{
-			return;
+			return '';
 		}
 		else
 		{
@@ -192,11 +204,23 @@ $arAllOptionsCommon = array(
 	array("allow_livefeed_toall", GetMessage("SONET_LOG_ALLOW_TOALL"), "Y", Array("checkbox")),
 	array("livefeed_toall_rights", GetMessage("SONET_LOG_TOALL_RIGHTS"), 'a:1:{i:0;s:2:"AU";}', Array("hidden")),
 	array("default_livefeed_toall", GetMessage("SONET_LOG_DEFAULT_TOALL"), "Y", Array("checkbox")),
+	array("email_users_all", GetMessage("SONET_LOG_EMAIL_USERS_ALL"), "N", Array("checkbox")),
 );
 
 if (!IsModuleInstalled("intranet"))
 {
 	$arAllOptionsCommon[] = array("sonet_log_smart_filter", GetMessage("SONET_LOG_SMART_FILTER"), "N", Array("checkbox"));
+}
+
+if (IsModuleInstalled("im"))
+{
+	$arAllOptionsCommon[] = array("use_workgroup_chat", GetMessage("SONET_USE_WORKGROUP_CHAT"), "Y", Array("checkbox"));
+}
+
+if(strtolower($DB->type) == 'mysql')
+{
+	$fulltextIndexExists = $DB->IndexExists("b_sonet_log_index", array("CONTENT"));
+	$arAllOptionsCommon[] = array("use_lf_fulltext_index", GetMessage("SONET_USE_LF_FULLTEXT_INDEX"), ($fulltextIndexExists ? "Y" : "N"), array("checkbox"));
 }
 
 $arAllOptions = array(
@@ -262,10 +286,6 @@ if ($bIntranet)
 	$arAllOptionsUsersBlocks["tasks"][] = array("default_tasks_operation_create_tasks_user", GetMessage("SONET_TASKS_OPERATION_CREATE_TASKS_USER"), SONET_RELATIONS_TYPE_AUTHORIZED, Array("select_user"));
 	$arAllOptionsUsersBlocks["tasks"][] = array("default_tasks_operation_edit_tasks_user", GetMessage("SONET_TASKS_OPERATION_EDIT_TASKS_USER"), SONET_RELATIONS_TYPE_NONE, Array("select_user"));
 	$arAllOptionsUsersBlocks["tasks"][] = array("default_tasks_operation_delete_tasks_user", GetMessage("SONET_TASKS_OPERATION_DELETE_TASKS_USER"), SONET_RELATIONS_TYPE_NONE, Array("select_user"));
-
-	if (COption::GetOptionString("intranet", "use_tasks_2_0", "N") != "Y")
-		$arAllOptionsUsersBlocks["tasks"][] = array("default_tasks_operation_modify_folders_user", GetMessage("SONET_TASKS_OPERATION_MODIFY_FOLDERS_USER"), SONET_RELATIONS_TYPE_NONE, Array("select_user"));
-
 	$arAllOptionsUsersBlocks["tasks"][] = array("default_tasks_operation_modify_common_views_user", GetMessage("SONET_TASKS_OPERATION_MODIFY_COMMON_VIEWS_USER"), SONET_RELATIONS_TYPE_NONE, Array("select_user"));
 }
 
@@ -333,22 +353,12 @@ $arAllOptionsGroupsBlocks["photo"][] = array("default_photo_create_default", Get
 
 if ($bIntranet)
 {
-	/*
-	$arAllOptionsGroupsBlocks["files"][] = array("default_files_operation_view_group", GetMessage("SONET_FILES_OPERATION_VIEW_GROUP"), SONET_ROLES_USER, Array("select_group"));
-	$arAllOptionsGroupsBlocks["files"][] = array("default_files_operation_write_limited_group", GetMessage("SONET_FILES_OPERATION_WRITE_LIMITED_GROUP"), SONET_ROLES_MODERATOR, Array("select_group"));
-	$arAllOptionsGroupsBlocks["files"][] = array("default_files_operation_write_group", GetMessage("SONET_FILES_OPERATION_WRITE_GROUP"), SONET_ROLES_MODERATOR, Array("select_group"));
-	$arAllOptionsGroupsBlocks["files"][] = array("default_files_create_default", GetMessage("SONET_FUNCTIONALITY_CREATE_DEFAULT"), "Y", Array("checkbox"));
-	*/
-
 	$arAllOptionsGroupsBlocks["tasks"][] = array("default_tasks_operation_view_group", GetMessage("SONET_TASKS_OPERATION_VIEW_GROUP"), SONET_ROLES_USER, Array("select_group"));
 	$arAllOptionsGroupsBlocks["tasks"][] = array("default_tasks_operation_view_all_group", GetMessage("SONET_TASKS_OPERATION_VIEW_ALL_GROUP"), SONET_ROLES_USER, Array("select_group"));
+	$arAllOptionsGroupsBlocks["tasks"][] = array("default_tasks_operation_sort_group", GetMessage("SONET_TASKS_OPERATION_SORT_GROUP"), SONET_ROLES_USER, Array("select_group"));
 	$arAllOptionsGroupsBlocks["tasks"][] = array("default_tasks_operation_create_tasks_group", GetMessage("SONET_TASKS_OPERATION_CREATE_TASKS_GROUP"), SONET_ROLES_USER, Array("select_group"));
 	$arAllOptionsGroupsBlocks["tasks"][] = array("default_tasks_operation_edit_tasks_group", GetMessage("SONET_TASKS_OPERATION_EDIT_TASKS_GROUP"), SONET_ROLES_MODERATOR, Array("select_group"));
 	$arAllOptionsGroupsBlocks["tasks"][] = array("default_tasks_operation_delete_tasks_group", GetMessage("SONET_TASKS_OPERATION_DELETE_TASKS_GROUP"), SONET_ROLES_MODERATOR, Array("select_group"));
-
-	if (COption::GetOptionString("intranet", "use_tasks_2_0", "N") != "Y")
-		$arAllOptionsGroupsBlocks["tasks"][] = array("default_tasks_operation_modify_folders_group", GetMessage("SONET_TASKS_OPERATION_MODIFY_FOLDERS_GROUP"), SONET_ROLES_MODERATOR, Array("select_group"));
-
 	$arAllOptionsGroupsBlocks["tasks"][] = array("default_tasks_operation_modify_common_views_group", GetMessage("SONET_TASKS_OPERATION_MODIFY_COMMON_VIEWS_GROUP"), SONET_ROLES_MODERATOR, Array("select_group"));
 	$arAllOptionsGroupsBlocks["tasks"][] = array("default_tasks_create_default", GetMessage("SONET_FUNCTIONALITY_CREATE_DEFAULT"), "Y", Array("checkbox"));
 }
@@ -373,9 +383,9 @@ $arAllOptionsGroupsGender[] = array("default_group_picture", GetMessage("SONET_G
 
 $strWarning = "";
 if (
-	$REQUEST_METHOD == "POST" 
-	&& strlen($Update) > 0 
-	&& $SONET_RIGHT == "W" 
+	$REQUEST_METHOD == "POST"
+	&& strlen($Update) > 0
+	&& $SONET_RIGHT == "W"
 	&& check_bitrix_sessid()
 )
 {
@@ -389,7 +399,7 @@ if (
 		elseif ($name == "livefeed_toall_rights")
 		{
 			if (
-				is_array($val) 
+				is_array($val)
 				&& count($val) > 0
 			)
 				$val = serialize($val);
@@ -398,8 +408,50 @@ if (
 		}
 
 		$prev_val = COption::GetOptionString("socialnetwork", $arAllOptionsCommon[$i][0], $arAllOptionsCommon[$i][2], "");
+
+		if ($arAllOptionsCommon[$i][0] == 'use_lf_fulltext_index')
+		{
+			\Bitrix\Socialnetwork\LogIndexTable::getEntity()->enableFullTextIndex("CONTENT", ($val == 'Y'));
+		}
+
 		if ($val != $prev_val)
-			COption::SetOptionString("socialnetwork", $arAllOptionsCommon[$i][0], $val, $arAllOptionsCommon[$i][1], "");
+		{
+			if ($arAllOptionsCommon[$i][0] == 'use_lf_fulltext_index')
+			{
+				if (
+					strtolower($DB->type) == 'mysql'
+					&& $val == 'Y'
+				)
+				{
+					if (!$DB->IndexExists("b_sonet_log_index", array("CONTENT")))
+					{
+						if ($DB->Query("CREATE fulltext index IXF_SONET_LOG_INDEX on b_sonet_log_index (CONTENT)", true))
+						{
+							\Bitrix\Socialnetwork\LogIndexTable::getEntity()->enableFullTextIndex("CONTENT");
+							COption::SetOptionString("socialnetwork", $arAllOptionsCommon[$i][0], $val, $arAllOptionsCommon[$i][1], "");
+						}
+						else
+						{
+							\Bitrix\Socialnetwork\LogIndexTable::getEntity()->enableFullTextIndex("CONTENT", false);
+							$e = $APPLICATION->GetException();
+							$strWarning = GetMessage("SONET_USE_LF_FULLTEXT_INDEX_ERROR");
+							if(is_object($e))
+							{
+								$strWarning .= ": ".$e->GetString();
+							}
+						}
+					}
+					else
+					{
+						\Bitrix\Socialnetwork\LogIndexTable::getEntity()->enableFullTextIndex("CONTENT");
+					}
+				}
+			}
+			else
+			{
+				COption::SetOptionString("socialnetwork", $arAllOptionsCommon[$i][0], $val, $arAllOptionsCommon[$i][1], "");
+			}
+		}
 	}
 
 	$dbSites = CSite::GetList(($b = ""), ($o = ""), array("ACTIVE" => "Y"));
@@ -526,7 +578,7 @@ if (
 			{
 				$name = $arAllOptionsUsersGender[$gender][$i][0]."_".$arSite["ID"];
 
-				$arPICTURE = $HTTP_POST_FILES[$name];
+				$arPICTURE = $_FILES[$name];
 				$arPICTURE["del"] = ${$name."_del"};
 				$arPICTURE["MODULE_ID"] = "socialnetwork";
 
@@ -538,11 +590,13 @@ if (
 				if (strlen($checkRes) <= 0)
 				{
 					$fid = CFile::SaveFile($arPICTURE, "socialnetwork");
-					if ($arPICTURE["del"] == "Y" || strlen($HTTP_POST_FILES[$name]["name"]) > 0)
+					if ($arPICTURE["del"] == "Y" || strlen($_FILES[$name]["name"]) > 0)
 						COption::SetOptionInt("socialnetwork", $arAllOptionsUsersGender[$gender][$i][0], intval($fid), $arAllOptionsUsersGender[$gender][$i][1], $arSite["ID"]);
 				}
 				else
+				{
 					CAdminMessage::ShowMessage($checkRes);
+				}
 			}
 		}
 
@@ -551,8 +605,14 @@ if (
 		{
 			$name = $arAllOptionsGroups[$i][0]."_".$arSite["ID"];
 			$val = ${$name};
-			if ($arAllOptionsGroups[$i][3][0] == "checkbox" && $val != "Y")
+			if (
+				$arAllOptionsGroups[$i][3][0] == "checkbox"
+				&& $val != "Y"
+			)
+			{
 				$val = "N";
+			}
+
 			COption::SetOptionString("socialnetwork", $arAllOptionsGroups[$i][0], $val, $arAllOptionsGroups[$i][1], $arSite["ID"]);
 
 			if ($arAllOptionsUsers[$i][0] == "allow_tasks_group")
@@ -563,8 +623,7 @@ if (
 					$bTasksEnabledForAnySite = true;
 				}
 			}
-
-			if ($arAllOptionsUsers[$i][0] == "allow_calendar_group")
+			elseif ($arAllOptionsUsers[$i][0] == "allow_calendar_group")
 			{
 				if ($val == "Y")
 				{
@@ -592,7 +651,7 @@ if (
 		{
 			$name = $arAllOptionsGroupsGender[$i][0]."_".$arSite["ID"];
 
-			$arPICTURE = $HTTP_POST_FILES[$name];
+			$arPICTURE = $_FILES[$name];
 			$arPICTURE["del"] = ${$name."_del"};
 			$arPICTURE["MODULE_ID"] = "socialnetwork";
 
@@ -604,11 +663,13 @@ if (
 			if (strlen($checkRes) <= 0)
 			{
 				$fid = CFile::SaveFile($arPICTURE, "socialnetwork");
-				if ($arPICTURE["del"] == "Y" || strlen($HTTP_POST_FILES[$name]["name"]) > 0)
+				if ($arPICTURE["del"] == "Y" || strlen($_FILES[$name]["name"]) > 0)
 					COption::SetOptionInt("socialnetwork", $arAllOptionsGroupsGender[$i][0], intval($fid), $arAllOptionsGroupsGender[$i][1], $arSite["ID"]);
 			}
 			else
+			{
 				CAdminMessage::ShowMessage($checkRes);
+			}
 		}
 	}
 
@@ -830,7 +891,7 @@ $tabControl->Begin();
 		?>
 		document.getElementById(id+'_Propery').style.display='';
 	}
-	
+
 	function showHideTab(obTabControl, contentId)
 	{
 		if (BX('view_tab_' + contentId))
@@ -857,6 +918,16 @@ $tabControl->BeginNextTab();
 		for ($i = 0; $i < $tmp_count; $i++):
 			$Option = $arAllOptionsCommon[$i];
 			$val = COption::GetOptionString("socialnetwork", $Option[0], $Option[2]);
+
+			if (
+				$Option[0] == 'use_lf_fulltext_index'
+				&& $val == 'Y'
+				&& !\Bitrix\Socialnetwork\LogIndexTable::getEntity()->fullTextIndexEnabled("CONTENT")
+			)
+			{
+				$val = 'N';
+			}
+
 			$type = $Option[3];
 
 			if ($type[0] != "hidden")
@@ -912,7 +983,7 @@ $tabControl->BeginNextTab();
 
 				?><tr id="RIGHTS_all" style="display: <?=(COption::GetOptionString("socialnetwork", "allow_livefeed_toall", "Y") == "Y" ? "table-row" : "none")?>;"><td>&nbsp;</td><td><?
 				?><script>
-				
+
 					var rightsCont = BX('RIGHTS_all');
 					if (toAllCheckBox && rightsCont)
 					{
@@ -920,7 +991,7 @@ $tabControl->BeginNextTab();
 							rightsCont.style.display = (this.checked ? "" : "none");
 						}, toAllCheckBox));
 					}
-				
+
 					function DeleteToAllAccessRow(ob)
 					{
 						var divNode = BX('RIGHTS_div', true);
@@ -990,7 +1061,7 @@ $tabControl->BeginNextTab();
 													html: (pr.length > 0 ? pr + ': ' : '') + arRights[provider][right].name + '&nbsp;'
 												}),
 												BX.create('a', {
-													attrs: { 
+													attrs: {
 														href: 'javascript:void(0);',
 														title: BX.message('SLToAllDel')
 													},
@@ -1035,13 +1106,13 @@ $tabControl->BeginNextTab();
 				?><script>
 					var arToAllRights = <?=CUtil::PhpToJSObject($arToAllRights)?>;
 				</script><?
-				
+
 				?><div style="padding-top: 5px;"><a href="javascript:void(0)" class="bx-action-href" onclick="ShowToAllAccessPopup(arToAllRights);"><?=GetMessage("SONET_LOG_TOALL_RIGHTS_ADD")?></a></div>
 				</td></tr><?
 			}
 
 		endfor;
-		
+
 		?><tr><td colspan="2">&nbsp;</td></tr><?
 	}
 	?><tr>
@@ -1090,13 +1161,13 @@ $tabControl->BeginNextTab();
 						<?elseif($type[0]=="select_fields"):?>
 							<select <?=($type[1] == true ? "multiple" : "")?> size="<?echo $type[2]?>" name="<?echo htmlspecialcharsbx($Option[0]."_".$siteList[$j]["ID"])?><?=($type[1] == true ? "[]" : "")?>">
 							<? foreach ($arTooltipFields as $key => $value):
-								?><option value="<?=$key?>" <?=(in_array($key, $val) ? "selected" : "")?>><?=$value?></option><?
+								?><option value="<?=htmlspecialcharsbx($key)?>" <?=(in_array($key, $val) ? "selected" : "")?>><?=htmlspecialcharsEx($value)?></option><?
 							endforeach; ?>
 							</select>
 						<?elseif($type[0]=="select_properties"):?>
 							<select <?=($type[1] == true ? "multiple" : "")?> size="<?echo $type[2]?>" name="<?echo htmlspecialcharsbx($Option[0]."_".$siteList[$j]["ID"])?><?=($type[1] == true ? "[]" : "")?>">
 							<? foreach ($arTooltipProperties as $key => $value):
-								?><option value="<?=$key?>" <?=(in_array($key, $val) ? "selected" : "")?>><?=$value?></option><?
+								?><option value="<?=htmlspecialcharsbx($key)?>" <?=(in_array($key, $val) ? "selected" : "")?>><?=htmlspecialcharsEx($value)?></option><?
 							endforeach; ?>
 							</select>
 						<?elseif($type[0]=="select_rating"):?>
@@ -1290,37 +1361,38 @@ $tabControl->BeginNextTab();
 				<td colspan="2"><?=GetMessage("SONET_4_GROUPS")?></td>
 			</tr><?
 			$tmp_count = count($arAllOptionsGroups);
-			for ($i = 0; $i < $tmp_count; $i++):
+			for ($i = 0; $i < $tmp_count; $i++)
+			{
 				$Option = $arAllOptionsGroups[$i];
 				$val = COption::GetOptionString("socialnetwork", $Option[0], $Option[2], $siteList[$j]["ID"]);
 				$type = $Option[3];
 				?><tr>
-					<td <?=set_valign($type[0], $type[1])?> width="40%"><?
-						if ($type[0]=="checkbox")
-						{
-							echo "<label for=\"".htmlspecialcharsbx($Option[0]."_".$siteList[$j]["ID"])."\">".$Option[1]."</label>";
-						}
-						else
-						{
-							echo $Option[1];
-						}
+				<td <?=set_valign($type[0], $type[1])?> width="40%"><?
+					if ($type[0]=="checkbox")
+					{
+						echo "<label for=\"".htmlspecialcharsbx($Option[0]."_".$siteList[$j]["ID"])."\">".$Option[1]."</label>";
+					}
+					else
+					{
+						echo $Option[1];
+					}
 					?>:</td>
-					<td width="60%"><?
-						if($type[0]=="checkbox")
-						{
-							?><input type="checkbox" name="<?echo htmlspecialcharsbx($Option[0]."_".$siteList[$j]["ID"])?>" id="<?echo htmlspecialcharsbx($Option[0]."_".$siteList[$j]["ID"])?>" value="Y"<?=($val == "Y" ? " checked" : "")?> <?=(isset($Option[4]) && $Option[4] == 'showHideTab' ? ' onclick="showHideTab(childTabControlGroup_'.$siteList[$j]["ID"].', \''.$Option[5].'_'.$siteList[$j]["ID"].'\');"' : '')?>><?
-						}
-						elseif($type[0]=="text")
-						{
-							?><input type="text" size="<?echo $type[1]?>" value="<?echo htmlspecialcharsbx($val)?>" name="<?echo htmlspecialcharsbx($Option[0]."_".$siteList[$j]["ID"])?>"><?
-						}
-						elseif($type[0]=="textarea")
-						{
-							?><textarea rows="<?echo $type[1]?>" cols="<?echo $type[2]?>" name="<?echo htmlspecialcharsbx($Option[0]."_".$siteList[$j]["ID"])?>"><?echo htmlspecialcharsbx($val)?></textarea><?
-						}
+				<td width="60%"><?
+					if($type[0]=="checkbox")
+					{
+						?><input type="checkbox" name="<?echo htmlspecialcharsbx($Option[0]."_".$siteList[$j]["ID"])?>" id="<?echo htmlspecialcharsbx($Option[0]."_".$siteList[$j]["ID"])?>" value="Y"<?=($val == "Y" ? " checked" : "")?> <?=(isset($Option[4]) && $Option[4] == 'showHideTab' ? ' onclick="showHideTab(childTabControlGroup_'.$siteList[$j]["ID"].', \''.$Option[5].'_'.$siteList[$j]["ID"].'\');"' : '')?>><?
+					}
+					elseif($type[0]=="text")
+					{
+						?><input type="text" size="<?echo $type[1]?>" value="<?echo htmlspecialcharsbx($val)?>" name="<?echo htmlspecialcharsbx($Option[0]."_".$siteList[$j]["ID"])?>"><?
+					}
+					elseif($type[0]=="textarea")
+					{
+						?><textarea rows="<?echo $type[1]?>" cols="<?echo $type[2]?>" name="<?echo htmlspecialcharsbx($Option[0]."_".$siteList[$j]["ID"])?>"><?echo htmlspecialcharsbx($val)?></textarea><?
+					}
 					?></td>
 				</tr><?
-			endfor;
+			}
 			?><tr>
 				<td colspan="2"><?
 				$arChildTabControlGroup[$siteList[$j]["ID"]]->Begin();

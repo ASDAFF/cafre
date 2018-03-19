@@ -13,11 +13,11 @@ require_once($_SERVER['DOCUMENT_ROOT']."/bitrix/modules/main/include/prolog_admi
 define('ADMIN_MODULE_NAME', 'seo');
 
 use Bitrix\Main;
-use Bitrix\Main\Text\Converter;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Seo\AdvSession;
 use Bitrix\Seo\Engine;
 use Bitrix\Seo\Adv;
+use Bitrix\Main\Text\HtmlFilter;
 
 Loc::loadMessages(dirname(__FILE__).'/../../main/tools.php');
 Loc::loadMessages(dirname(__FILE__).'/seo_search.php');
@@ -45,6 +45,23 @@ if(!Main\Loader::includeModule('socialservices'))
 $engine = new Engine\YandexDirect();
 $currentUser = $engine->getCurrentUser();
 $bNeedAuth = !is_array($currentUser);
+
+//get string of campaign CURRENCY name
+try
+{
+	$clientsSettings = $engine->getClientsSettings();
+	$clientCurrency = current($clientsSettings);
+	$clientCurrency = Loc::getMessage('SEO_YANDEX_CURRENCY__'.$clientCurrency['Currency']);
+}
+catch(Engine\YandexDirectException $e)
+{
+	$seoproxyAuthError = new CAdminMessage(array(
+		"TYPE" => "ERROR",
+		"MESSAGE" => Loc::getMessage('SEO_YANDEX_SEOPROXY_AUTH_ERROR'),
+		"DETAILS" => $e->getMessage(),
+	));
+}
+
 
 $bReadOnly = $bNeedAuth;
 $bAllowUpdate = !$bNeedAuth;
@@ -133,6 +150,8 @@ $bShowAuto = $ID > 0 && $bAllowUpdate && IsModuleInstalled("catalog");
 if($ID <= 0)
 {
 	$host = str_replace(array(':80', ':443'), '', $request->getHttpHost());
+	$errors = null;
+	$host = \CBXPunycode::ToUnicode($host, $errors);
 
 	$banner = array(
 		"SETTINGS" => array(
@@ -164,7 +183,9 @@ if($ID <= 0)
 }
 
 $banner["SETTINGS"]["Geo"] = explode(",", $banner["SETTINGS"]["Geo"]);
-$banner["SETTINGS"]["MinusKeywords"] = implode(", ", $banner["SETTINGS"]["MinusKeywords"]);
+$banner["SETTINGS"]["MinusKeywords"] = !empty($banner["SETTINGS"]["MinusKeywords"]) ?
+	implode(", ", $banner["SETTINGS"]["MinusKeywords"]) :
+	'';
 
 $aTabs = array(
 	array(
@@ -229,7 +250,7 @@ if(!$bReadOnly && $request->isPost() && ($request["save"]<>'' || $request["apply
 		);
 	}
 
-	$bannerSettings['MinusKeywords'] = preg_split("/[\\n,;]+\\s*/", $bannerSettings['MinusKeywords']);
+	$bannerSettings['MinusKeywords'] = preg_split("/[\\r\\n,;]+\\s*/", $bannerSettings['MinusKeywords']);
 
 	$bannerFields = array(
 		"CAMPAIGN_ID" => $campaignId,
@@ -254,15 +275,6 @@ if(!$bReadOnly && $request->isPost() && ($request["save"]<>'' || $request["apply
 	{
 		$result = Adv\YandexBannerTable::add($bannerFields);
 	}
-
-
-	/*
-	var_dump($result->isSuccess());
-		echo '<pre>'; print_r($bannerFields); echo '</pre>';
-		echo '<pre>'; print_r($result); echo '</pre>';
-		echo '<pre>'; print_r($request); echo '</pre>';
-	die();
-	*/
 
 	if($result->isSuccess())
 	{
@@ -380,6 +392,9 @@ if(!defined('BX_PUBLIC_MODE') || !BX_PUBLIC_MODE)
 {
 	require_once("tab/seo_search_yandex_direct_auth.php");
 }
+
+if(isset($seoproxyAuthError))
+	echo $seoproxyAuthError->Show();
 
 $context = new CAdminContextMenu($aMenu);
 $context->Show();
@@ -512,7 +527,7 @@ endif;
 	<tr class="adm-detail-required-field">
 		<td width="40%" valign="top"><?=Loc::getMessage("SEO_BANNER_DATA")?>:</td>
 		<td width="0" valign="top">
-			<input type="text" name="SETTINGS[Title]" placeholder="<?=Loc::getMessage('SEO_BANNER_DATA_TITLE')?>" value="<?=Converter::getHtmlConverter()->encode($banner["SETTINGS"]["Title"])?>" id="title_content" style="width: 250px;" maxlength="<?=Adv\YandexBannerTable::MAX_TITLE_LENGTH;?>" onkeyup="updateAdv()" onchange="updateAdv()" onpaste="updateAdv()" tabindex="1">
+			<input type="text" name="SETTINGS[Title]" placeholder="<?=Loc::getMessage('SEO_BANNER_DATA_TITLE')?>" value="<?=HtmlFilter::encode($banner["SETTINGS"]["Title"])?>" id="title_content" style="width: 250px;" maxlength="<?=Adv\YandexBannerTable::MAX_TITLE_LENGTH;?>" onkeyup="updateAdv()" onchange="updateAdv()" onpaste="updateAdv()" tabindex="1">
 		</td>
 		<td width="0" valign="top">
 			<span id="title_stats" class="yandex-adv-stats"><?=Adv\YandexBannerTable::MAX_TITLE_LENGTH-strlen($banner["SETTINGS"]["Title"])?></span>
@@ -527,7 +542,7 @@ require("tab/seo_search_yandex_direct_banner.php");
 	<tr>
 		<td></td>
 		<td valign="top">
-			<textarea name="SETTINGS[Text]" placeholder="<?=Loc::getMessage('SEO_BANNER_DATA_TEXT')?>"  id="text_content"  style="width: 250px; height: 100px;" maxlength="<?=Adv\YandexBannerTable::MAX_TEXT_LENGTH;?>" onkeyup="updateAdv()" onchange="updateAdv()" onpaste="updateAdv()" tabindex="2"><?=Converter::getHtmlConverter()->encode($banner["SETTINGS"]["Text"])?></textarea>
+			<textarea name="SETTINGS[Text]" placeholder="<?=Loc::getMessage('SEO_BANNER_DATA_TEXT')?>"  id="text_content"  style="width: 250px; height: 100px;" maxlength="<?=Adv\YandexBannerTable::MAX_TEXT_LENGTH;?>" onkeyup="updateAdv()" onchange="updateAdv()" onpaste="updateAdv()" tabindex="2"><?=HtmlFilter::encode($banner["SETTINGS"]["Text"])?></textarea>
 		</td>
 		<td valign="top">
 			<span id="text_stats" class="yandex-adv-stats"><?=Adv\YandexBannerTable::MAX_TEXT_LENGTH-strlen($banner["SETTINGS"]["Text"])?></span>
@@ -536,7 +551,7 @@ require("tab/seo_search_yandex_direct_banner.php");
 	<tr class="adm-detail-required-field">
 		<td width="40%" valign="top"><?=Loc::getMessage("SEO_BANNER_HREF")?>:</td>
 		<td colspan="3">
-			<input type="text" name="SETTINGS[Href]" value="<?=Converter::getHtmlConverter()->encode($banner["SETTINGS"]["Href"])?>" id="link_content" style="width: 500px;" onkeyup="updateAdv()" onchange="updateAdv()" onpaste="updateAdv()" tabindex="3">
+			<input type="text" name="SETTINGS[Href]" value="<?=HtmlFilter::encode($banner["SETTINGS"]["Href"])?>" id="link_content" style="width: 500px;" onkeyup="updateAdv()" onchange="updateAdv()" onpaste="updateAdv()" tabindex="3">
 			<div id="link_hint" style="display: none;">
 <?
 echo BeginNote();
@@ -784,7 +799,7 @@ foreach($regions as $region)
 		$button = '<span class="openbutton empty"></span>';
 	}
 
-	$regionsOutput[$region["PARENT_XML_ID"]] .= '<div class="region-closed">'.$button.'<input type="checkbox" name="region[]" id="region_'.$region['XML_ID'].'" value="'.$region['XML_ID'].'" data-parent="'.$region['PARENT_XML_ID'].'"  data-title="'.Converter::getHtmlConverter()->encode($region['NAME']).'">&nbsp;<label for="region_'.$region['XML_ID'].'">'.Converter::getHtmlConverter()->encode($region['NAME']).'</label></div>';
+	$regionsOutput[$region["PARENT_XML_ID"]] .= '<div class="region-closed">'.$button.'<input type="checkbox" name="region[]" id="region_'.$region['XML_ID'].'" value="'.$region['XML_ID'].'" data-parent="'.$region['PARENT_XML_ID'].'"  data-title="'.HtmlFilter::encode($region['NAME']).'">&nbsp;<label for="region_'.$region['XML_ID'].'">'.HtmlFilter::encode($region['NAME']).'</label></div>';
 }
 ?>
 <style>
@@ -949,7 +964,7 @@ echo implode('</div>', $regionsOutput).'</div>';
 
 		var startValue = document.forms.form1['SETTINGS[Geo]'].value;
 
-		BX.bindDelegate(listCont, 'click', {tag: 'INPUT', props: {type: 'checkbox', name: 'regions[]'}}, h)
+		BX.bindDelegate(listCont, 'click', {tag: 'INPUT', props: {type: 'checkbox', name: 'region[]'}}, h)
 
 		if(startValue == '')
 		{
@@ -999,7 +1014,7 @@ foreach($banner["SETTINGS"]["Phrases"] as $phraseData)
 
 <tr>
 	<td colspan="2">
-		<textarea id="phrase_text" style="width: 99%; margin-bottom: 15px;" rows="3"><?=$phraseString?></textarea><br />
+		<textarea id="phrase_text" style="width: 99%; margin-bottom: 15px;" rows="3"><?=HtmlFilter::encode($phraseString)?></textarea><br />
 		<input type="button" value="<?=Loc::getMessage('SEO_YANDEX_WORDSTAT_STAT')?>" onclick="showWordstatReport();" name="template_preview" id="wordstat_button"><span id="wordstat_wait" class="loading-message-text" style="display: none"><?=Loc::getMessage('SEO_YANDEX_WORDSTAT_WAIT')?></span><span id="wordstat_wait_more" class="loading-message-text" style="display: none"><?=Loc::getMessage('SEO_YANDEX_WORDSTAT_WAIT_MORE')?></span>
 		<div id="worstat_report" style="text-align: center;"></div>
 	</td>
@@ -1021,7 +1036,7 @@ foreach($banner["SETTINGS"]["Phrases"] as $phraseData)
 </tr>
 <tr>
 	<td colspan="2">
-		<textarea id="minus_text" style="width: 99%;" rows="3" name="SETTINGS[MinusKeywords]"><?=Converter::getHtmlConverter()->encode($banner["SETTINGS"]["MinusKeywords"])?></textarea>
+		<textarea id="minus_text" style="width: 99%;" rows="3" name="SETTINGS[MinusKeywords]"><?=HtmlFilter::encode($banner["SETTINGS"]["MinusKeywords"])?></textarea>
 	</td>
 </tr>
 
@@ -1256,27 +1271,44 @@ foreach($banner["SETTINGS"]["Phrases"] as $phraseData)
 	}
 
 	BX.ready(function(){
+		var timeOut = null;
+		
+//		phrases hint binds
 		var textInput = BX('phrase_text');
 		var hint = new BX.PopupWindow('phrase_hint_' + Math.random(), textInput, {
 			content: '<div style="max-width: 250px;"><?=Loc::getMessage('SEO_PHRASE_HINT')?></div>',
 			angle: {postion: 'top', offset: 230},
 			bindOptions: {position: 'bottom'}
 		});
-		var timeOut = null;
 
 		BX.bind(textInput, 'focus', function(){
-
 			var pos = BX.pos(textInput);
 			hint.setOffset({
 				offsetLeft: pos.width - 250
 			});
-
 			hint.show();
 			timeOut = setTimeout(BX.proxy(hint.close, hint), 10000)
 		});
 		BX.bind(textInput, 'blur', function(){hint.close(); clearTimeout(timeOut);});
-
 		BX.bind(textInput, 'keyup', parsePhraseList);
+
+//		minus keywords hint binds
+		var minusKWInput = BX('minus_text');
+		var hintMinus = new BX.PopupWindow('minus_keywords_hint_' + Math.random(), minusKWInput, {
+			content: '<div style="max-width: 250px;"><?=Loc::getMessage('SEO_MINUS_KW_HINT')?></div>',
+			angle: {postion: 'top', offset: 230},
+			bindOptions: {position: 'top'}
+		});
+		
+		BX.bind(minusKWInput, 'focus', function(){
+			var pos = BX.pos(minusKWInput);
+			hintMinus.setOffset({
+				offsetLeft: pos.width - 250
+			});
+			hintMinus.show();
+			timeOut = setTimeout(BX.proxy(hintMinus.close, hintMinus), 10000)
+		});
+		BX.bind(minusKWInput, 'blur', function(){hintMinus.close(); clearTimeout(timeOut);});
 
 		BX.bindDelegate(
 			BX('worstat_report'),
@@ -1372,7 +1404,7 @@ foreach($banner["SETTINGS"]["Phrases"] as $phraseData)
 
 		if(!bFromForm)
 		{
-			h += '<tr class="heading"><td></td><td><?=Loc::getMessage('SEO_FORECAST_SHOWS')?></td><td><?=Loc::getMessage('SEO_FORECAST_CLICKS')?></td><td colspan="2"><?=Loc::getMessage('SEO_FORECAST_COST')?></td><td colspan="2"></td></tr>';
+			h += '<tr class="heading"><td></td><td><?=Loc::getMessage('SEO_FORECAST_SHOWS')?></td><td><?=Loc::getMessage('SEO_FORECAST_CLICKS')?></td><td colspan="2"><?=Loc::getMessage('SEO_FORECAST_COST')?>, <?=$clientCurrency?></td><td colspan="2"></td></tr>';
 
 			h += '<tr>' +
 				'<td style="text-align: left;"><span class="region-closed" onclick="toggleDataRow(this,\'forecast\',\'common\',\'' + r + '\');"><span class="openbutton"></span><b><?=Loc::getMessage('SEO_FORECAST_COMMON')?></b></span></td>' +
@@ -1397,7 +1429,7 @@ foreach($banner["SETTINGS"]["Phrases"] as $phraseData)
 			'</tr>';
 		}
 
-		h += '<tr class="heading"><td><?=Loc::getMessage('SEO_FORECAST_PHRASE')?></td><td><?=Loc::getMessage('SEO_FORECAST_SHOWS')?></td><td><?=Loc::getMessage('SEO_FORECAST_CLICKS')?></td><td><?=Loc::getMessage('SEO_FORECAST_PRICE')?></td><td><?=Loc::getMessage('SEO_FORECAST_CTR')?></td><td><?=Loc::getMessage('SEO_FORECAST_PRIORITY')?></td><td></td></tr>';
+		h += '<tr class="heading"><td><?=Loc::getMessage('SEO_FORECAST_PHRASE')?></td><td><?=Loc::getMessage('SEO_FORECAST_SHOWS')?></td><td><?=Loc::getMessage('SEO_FORECAST_CLICKS')?></td><td><?=Loc::getMessage('SEO_FORECAST_PRICE')?>, <?=$clientCurrency?></td><td><?=Loc::getMessage('SEO_FORECAST_CTR')?></td><td><?=Loc::getMessage('SEO_FORECAST_PRIORITY')?></td><td></td></tr>';
 
 		for(var i = 0; i < res['Phrases'].length; i++)
 		{
@@ -1572,7 +1604,7 @@ if($bShowStats)
 
 	$graphData = array();
 
-	$currency = Loc::getMessage('SEO_YANDEX_STATS_GRAPH_AXIS_CURRENCY');
+	$currency = $clientCurrency;
 	foreach($statsData as $date => $dayData)
 	{
 		if($dayData['CURRENCY'] != '')
@@ -1699,7 +1731,7 @@ if($bShowStats)
 
 		if(data.length > 0)
 		{
-			yandexAxis['sum'].title = "<?=Loc::getMessage('SEO_YANDEX_STATS_GRAPH_AXIS_SUM')?>, " + (data[0].CURRENCY || '<?=Loc::getMessage('SEO_YANDEX_STATS_GRAPH_AXIS_CURRENCY')?>');
+			yandexAxis['sum'].title = "<?=Loc::getMessage('SEO_YANDEX_STATS_GRAPH_AXIS_SUM')?>, " + (data[0].CURRENCY || '<?=$clientCurrency?>');
 
 			if (currentGraph == 'sum')
 			{
@@ -1900,7 +1932,7 @@ if(!$bReadOnly):
 <?
 	if($back_url!=''):
 ?>
-	<input type="hidden" name="back_url" value="<?echo Converter::getHtmlConverter()->encode($back_url)?>">
+	<input type="hidden" name="back_url" value="<?echo HtmlFilter::encode($back_url)?>">
 <?
 	endif;
 ?>

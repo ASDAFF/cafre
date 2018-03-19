@@ -1,15 +1,7 @@
-<?
-/*
-##############################################
-# Bitrix: SiteManager                        #
-# Copyright (c) 2004 Bitrix                  #
-# http://www.bitrix.ru                       #
-# mailto:admin@bitrix.ru                     #
-##############################################
-*/
+<?php
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/statistic/prolog.php");
-
+/** @var CMain $APPLICATION */
 $STAT_RIGHT = $APPLICATION->GetGroupRight("statistic");
 if($STAT_RIGHT=="D")
 	$APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
@@ -139,7 +131,7 @@ if(is_array($find_events) && count($find_events)>0)
 							<div style="background-color: <?="#".$color?>"></div>
 						</td>
 						<td>
-							[<a class="stat_link" href="<?echo htmlspecialcharsbx("/bitrix/admin/event_type_list.php?lang=".urlencode(LANGUAGE_ID)."&find_id=".urlencode($keyL)."&set_filter=Y")?>"><?=$keyL?></a>]&nbsp;<a class="stat_link" title="<?echo GetMessage("STAT_EVENT_DYNAMIC")?>" href="<?echo htmlspecialcharsbx("/bitrix/admin/event_dynamic_list.php?lang=".urlencode(LANGUAGE_ID)."&find_event_id=".urlencode($keyL)."&find_date1=".urlencode($arFilter["DATE1"])."&find_date2=".urlencode($arFilter["DATE2"])."&set_filter=Y")?>"><?=$arrL["NAME"]?></a>
+							[<a class="stat_link" href="<?echo htmlspecialcharsbx("/bitrix/admin/event_type_list.php?lang=".urlencode(LANGUAGE_ID)."&find_id=".urlencode($keyL)."&set_filter=Y")?>"><?=$keyL?></a>]&nbsp;<a class="stat_link" title="<?echo GetMessage("STAT_EVENT_DYNAMIC")?>" href="<?echo htmlspecialcharsbx("/bitrix/admin/event_dynamic_list.php?lang=".urlencode(LANGUAGE_ID)."&find_event_id=".urlencode($keyL)."&find_date1=".urlencode($arFilter["DATE1"])."&find_date2=".urlencode($arFilter["DATE2"])."&set_filter=Y")?>"><?=htmlspecialcharsEx($arrL["NAME"])?></a>
 						</td>
 					</tr>
 					<?endforeach;?>
@@ -250,4 +242,4 @@ $lAdmin->DisplayList();
 ?>
 
 
-<?require_once ($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");?>
+<?require_once ($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");

@@ -1,7 +1,7 @@
 <?
 class CFile extends CAllFile
 {
-	function Delete($ID)
+	public static function Delete($ID)
 	{
 		global $DB;
 		$io = CBXVirtualIo::GetInstance();
@@ -21,9 +21,12 @@ class CFile extends CAllFile
 			$file = $io->GetFile($fname);
 
 			if($file->isExists() && $file->unlink())
-					$delete_size += $res["FILE_SIZE"];
+				$delete_size += $res["FILE_SIZE"];
 
 			$delete_size += CFile::ResizeImageDelete($res);
+
+			foreach(GetModuleEvents("main", "OnFileDelete", true) as $arEvent)
+				ExecuteModuleEventEx($arEvent, array($res));
 
 			$DB->Query("DELETE FROM b_file WHERE ID = ".$ID);
 
@@ -33,9 +36,6 @@ class CFile extends CAllFile
 
 			CFile::CleanCache($ID);
 
-			foreach(GetModuleEvents("main", "OnFileDelete", true) as $arEvent)
-				ExecuteModuleEventEx($arEvent, array($res));
-
 			/****************************** QUOTA ******************************/
 			if($delete_size > 0 && COption::GetOptionInt("main", "disk_space") > 0)
 				CDiskQuota::updateDiskQuota("file", $delete_size, "delete");
@@ -43,7 +43,7 @@ class CFile extends CAllFile
 		}
 	}
 
-	function DoDelete($ID)
+	public static function DoDelete($ID)
 	{
 		CFile::Delete($ID);
 	}

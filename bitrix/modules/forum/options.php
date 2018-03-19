@@ -185,8 +185,11 @@ $tabControl->BeginNextTab();
 	<tr>
 		<td><label for="USER_EDIT_OWN_POST"><?=GetMessage("FORUM_USER_EDIT_OWN_POST") ?></label></td>
 		<td>
-			<?$val = COption::GetOptionString("forum", "USER_EDIT_OWN_POST", "N");?>
-			<input type="checkbox" value="Y" name="USER_EDIT_OWN_POST" id="USER_EDIT_OWN_POST" <?if ($val=="Y") echo "checked";?>></td>
+			<?$val = COption::GetOptionString("forum", "USER_EDIT_OWN_POST", "Y");?>
+			<select name="USER_EDIT_OWN_POST" id="USER_EDIT_OWN_POST">
+				<option value="Y" <?if ($val=="Y") echo "selected";?>><?=GetMessage("FORUM_USER_EDIT_OWN_POST_Y") ?></option>
+				<option value="N" <?if ($val!="Y") echo "selected";?>><?=GetMessage("FORUM_USER_EDIT_OWN_POST_N") ?></option>
+			</select>
 	</tr>
 	<tr>
 		<td><label for="USER_SHOW_NAME"><?=GetMessage("FORUM_USER_SHOW_NAME") ?></label></td>
@@ -293,7 +296,7 @@ $tabControl->BeginNextTab();
 <?
 			foreach ($names as $key => $val):
 ?>
-					<td><input type="text" style="width:110px" name="STATUS_NAME[<?=$lid?>][<?=$key?>]" value="<?=htmlspecialcharsEx($val)?>" /></td>
+					<td><input type="text" style="width:110px" name="STATUS_NAME[<?=$lid?>][<?=$key?>]" value="<?=htmlspecialcharsbx($val)?>" /></td>
 <?				
 			endforeach;
 ?>
@@ -323,7 +326,7 @@ $tabControl->BeginNextTab();
 	<tr>
 		<td><?=GetMessage("FILTER_RPL")?>:</td>
 		<?$val = COption::GetOptionString("forum", "FILTER_RPL", "*");?>
-		<td><input type="text" value="<?=htmlspecialcharsEx($val)?>" name="FILTER_RPL" id="FILTER_RPL"></td>
+		<td><input type="text" value="<?=htmlspecialcharsbx($val)?>" name="FILTER_RPL" id="FILTER_RPL"></td>
 	</tr>
 	<script language="JavaScript">
 	function DisableAction(CheckB)

@@ -33,17 +33,17 @@ class CModule
 		return true;
 	}
 
-	function AutoloadClassDefined($className)
+	public static function AutoloadClassDefined($className)
 	{
 		return \Bitrix\Main\Loader::isAutoLoadClassRegistered($className);
 	}
 
-	static function RequireAutoloadClass($className)
+	public static function RequireAutoloadClass($className)
 	{
 		\Bitrix\Main\Loader::autoLoad($className);
 	}
 
-	function _GetCache()
+	public static function _GetCache()
 	{
 		return \Bitrix\Main\ModuleManager::getInstalledModules();
 	}
@@ -77,7 +77,7 @@ class CModule
 	{
 	}
 
-	function GetModuleTasks()
+	public function GetModuleTasks()
 	{
 		return array(
 			/*
@@ -93,7 +93,7 @@ class CModule
 		);
 	}
 
-	function InstallTasks()
+	public function InstallTasks()
 	{
 		global $DB, $CACHE_MANAGER;
 
@@ -184,7 +184,7 @@ class CModule
 		}
 	}
 
-	function UnInstallTasks()
+	public function UnInstallTasks()
 	{
 		global $DB, $CACHE_MANAGER;
 
@@ -243,7 +243,7 @@ class CModule
 		\Bitrix\Main\ModuleManager::add($this->MODULE_ID);
 	}
 
-	function GetList()
+	public static function GetList()
 	{
 		$result = new CDBResult;
 		$result->InitFromArray(CModule::_GetCache());
@@ -261,17 +261,17 @@ class CModule
 		return \Bitrix\Main\Loader::includeModule($module_name);
 	}
 
-	function IncludeModuleEx($module_name)
+	public static function IncludeModuleEx($module_name)
 	{
 		return \Bitrix\Main\Loader::includeSharewareModule($module_name);
 	}
 
-	function err_mess()
+	public static function err_mess()
 	{
 		return "<br>Class: CModule;<br>File: ".__FILE__;
 	}
 
-	function GetDropDownList($strSqlOrder="ORDER BY ID")
+	public static function GetDropDownList($strSqlOrder="ORDER BY ID")
 	{
 		global $DB;
 		$err_mess = (CModule::err_mess())."<br>Function: GetDropDownList<br>Line: ";
@@ -291,7 +291,7 @@ class CModule
 	 * @param string $moduleId
 	 * @return CModule|bool
 	 */
-	function CreateModuleObject($moduleId)
+	public static function CreateModuleObject($moduleId)
 	{
 		$moduleId = trim($moduleId);
 		$moduleId = preg_replace("/[^a-zA-Z0-9_.]+/i", "", $moduleId);

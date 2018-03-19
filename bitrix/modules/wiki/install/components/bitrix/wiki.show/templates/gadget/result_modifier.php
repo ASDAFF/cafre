@@ -8,5 +8,5 @@ $parser = new CSocNetTextParser();
 $arResult["ELEMENT"]["DETAIL_TEXT"] = $parser->html_cut($arResult["ELEMENT"]["DETAIL_TEXT"], $arParams["TEXT_LIMIT"]) ;
 
 if (intval($arResult['ELEMENT']['ID']) > 0)
-  $arResult['ELEMENT']['URL'] = CComponentEngine::MakePathFromTemplate($arParams["~PATH_TO_POST"], array("wiki_name" => urlencode($arParams['ELEMENT_NAME'])));
+  $arResult['ELEMENT']['URL'] = CComponentEngine::MakePathFromTemplate($arParams["~PATH_TO_POST"], array("wiki_name" => rawurlencode($arParams['ELEMENT_NAME'])));
 ?>

@@ -14,20 +14,29 @@ if (typeof BX.Bizproc.doInlineTask === 'undefined')
 		if (!parameters || !parameters['TASK_ID'])
 			return false;
 		parameters['sessid'] = BX.bitrix_sessid();
-		BX.ajax.post(
-			'/bitrix/tools/bizproc_do_task_ajax.php',
-			parameters,
-			function()
+		BX.ajax({
+			method:'POST',
+			dataType: 'json',
+			url:'/bitrix/tools/bizproc_do_task_ajax.php',
+			data: parameters,
+			onsuccess: function(response)
 			{
+				if (response.ERROR)
+				{
+					window.alert(response.ERROR);
+				}
+
 				if (scope)
 				{
 					scope.__waiting = false;
 					BX.removeClass(scope, 'bp-button-wait');
 				}
-				if (callback)
+				if (response.SUCCESS && callback)
+				{
 					callback(arguments);
+				}
 			}
-		);
+		});
 
 		return false;
 	};
@@ -53,48 +62,52 @@ if (typeof BX.Bizproc.doInlineTask === 'undefined')
 				+ (useIframe ? '&IFRAME=Y' : ''),
 			onsuccess: function (HTML)
 			{
+				if (scope)
+				{
+					scope.__waiting = false;
+					BX.removeClass(scope, 'bp-button-wait');
+				}
+				var wrapper = BX.create('div', {
+					style: {width: '800px'}
+				});
+				wrapper.innerHTML = HTML;
+
+				var title = '', titleNode = BX.findChild(wrapper, {className: 'bp-popup-title'}, true);
+				if (titleNode)
+				{
+					title = titleNode.textContent;
+					BX.remove(titleNode);
+				}
+
+				BX.Bizproc.taskPopupInstance = new BX.PopupWindow("bp-task-popup-" + taskId + Math.round(Math.random() * 100000), null, {
+					content: wrapper,
+					closeIcon: true,
+					titleBar: title,
+					contentColor: 'white',
+					contentNoPaddings : true,
+					zIndex: -100,
+					offsetLeft: 0,
+					offsetTop: 0,
+					closeByEsc: true,
+					draggable: {restrict: false},
+					overlay: {backgroundColor: 'black', opacity: 30},
+					events: {
+						onPopupClose: function (popup)
+						{
+							popup.destroy();
+							if (BX.Bizproc.delegationPopup)
+								BX.Bizproc.delegationPopup.destroy();
+							BX.Bizproc.delegationPopup = null;
+						}
+					}
+
+				});
+				// BX.Bizproc.taskPopupInstance.show();
+				BX.Bizproc.taskPopupCallback = callback;
+
 				BX.load(['/bitrix/components/bitrix/bizproc.task/templates/.default/style.css'], function()
 				{
-					if (scope)
-					{
-						scope.__waiting = false;
-						BX.removeClass(scope, 'bp-button-wait');
-					}
-					var wrapper = BX.create('div', {
-						style: {width: '800px'}
-					});
-					wrapper.innerHTML = HTML;
-					BX.Bizproc.taskPopupInstance = new BX.PopupWindow("bp-task-popup-" + taskId + Math.round(Math.random() * 100000), null, {
-						content: wrapper,
-						closeIcon: {right: "20px", top: "10px"},
-						zIndex: -100,
-						offsetLeft: 0,
-						offsetTop: 0,
-						closeByEsc: true,
-						draggable: {restrict: false},
-						overlay: {backgroundColor: 'black', opacity: 30},
-						events: {
-							onPopupShow: function(popup)
-							{
-								var title = BX.findChild(popup.contentContainer, {className: 'bp-popup-title'}, true);
-								if (title)
-								{
-									title.style.cursor = "move";
-									BX.bind(title, "mousedown", BX.proxy(popup._startDrag, popup));
-								}
-							},
-							onPopupClose: function (popup)
-							{
-								popup.destroy();
-								if (BX.Bizproc.delegationPopup)
-									BX.Bizproc.delegationPopup.destroy();
-								BX.Bizproc.delegationPopup = null;
-							}
-						}
-
-					});
 					BX.Bizproc.taskPopupInstance.show();
-					BX.Bizproc.taskPopupCallback = callback;
 				});
 			}
 		});
@@ -190,7 +203,7 @@ if (typeof BX.Bizproc.doInlineTask === 'undefined')
 			data: parameters,
 			onsuccess: function(response)
 			{
-				alert(response.message);
+				window.alert(response.message);
 				if (response.success)
 				{
 					if (!!BX.Bizproc.taskPopupInstance)
@@ -218,9 +231,20 @@ if (typeof BX.Bizproc.doInlineTask === 'undefined')
 						style: {width: '800px'}
 					});
 					wrapper.innerHTML = HTML;
+
+					var title = '', titleNode = BX.findChild(wrapper, {className: 'bp-popup-title'}, true);
+					if (titleNode)
+					{
+						title = titleNode.textContent;
+						BX.remove(titleNode);
+					}
+
 					var popup = new BX.PopupWindow("bp-wfi-popup-" + workflowId + Math.round(Math.random() * 100000), null, {
 						content: wrapper,
-						closeIcon: {right: "20px", top: "10px"},
+						closeIcon: true,
+						titleBar: title,
+						contentColor: 'white',
+						contentNoPaddings : true,
 						zIndex: -100,
 						offsetLeft: 0,
 						offsetTop: 0,
@@ -228,15 +252,6 @@ if (typeof BX.Bizproc.doInlineTask === 'undefined')
 						draggable: {restrict: false},
 						overlay: {backgroundColor: 'black', opacity: 30},
 						events: {
-							onPopupShow: function(popup)
-							{
-								var title = BX.findChild(popup.contentContainer, {className: 'bp-popup-title'}, true);
-								if (title)
-								{
-									title.style.cursor = "move";
-									BX.bind(title, "mousedown", BX.proxy(popup._startDrag, popup));
-								}
-							},
 							onPopupClose: function (popup)
 							{
 								popup.destroy();
@@ -246,6 +261,51 @@ if (typeof BX.Bizproc.doInlineTask === 'undefined')
 					});
 					popup.show();
 				});
+			}
+		});
+
+		return false;
+	};
+
+	BX.Bizproc.showWorkflowLogPopup = function (workflowId, params)
+	{
+		if (!BX.type.isPlainObject(params))
+		{
+			params = {};
+		}
+
+		BX.ajax({
+			method: 'GET',
+			dataType: 'html',
+			url: '/bitrix/components/bitrix/bizproc.log/popup.php?site_id='+BX.message('SITE_ID')+'&WORKFLOW_ID=' + workflowId,
+			onsuccess: function (HTML)
+			{
+				var wrapper = BX.create('div', {
+					style: {width: '800px'}
+				});
+				wrapper.innerHTML = HTML;
+
+				var popup = new BX.PopupWindow("bp-wfi-popup-" + workflowId + Math.round(Math.random() * 100000), null, {
+					content: wrapper,
+					closeIcon: true,
+					titleBar: params.title || '',
+					contentColor: 'white',
+					contentNoPaddings : true,
+					zIndex: -100,
+					offsetLeft: 0,
+					offsetTop: 0,
+					closeByEsc: true,
+					draggable: {restrict: false},
+					overlay: {backgroundColor: 'black', opacity: 30},
+					events: {
+						onPopupClose: function (popup)
+						{
+							popup.destroy();
+						}
+					}
+
+				});
+				popup.show();
 			}
 		});
 
@@ -314,7 +374,7 @@ if (typeof BX.Bizproc.doInlineTask === 'undefined')
 			}
 			response = BX.parseJSON(response);
 			if (response && response.ERROR)
-				alert(response.ERROR);
+				window.alert(response.ERROR);
 			else
 			{
 				if (!!BX.Bizproc.taskPopupInstance)
@@ -368,7 +428,7 @@ if (typeof BX.Bizproc.WorkflowFaces === 'undefined')
 				cls = 'bp-popup-parallel-avatar-ready';
 				if (task.USERS[k].STATUS == '0')
 					cls = '';
-				else if (task.USERS[k].STATUS == '2')
+				else if (task.USERS[k].STATUS == '2' || task.USERS[k].STATUS == '4')
 					cls = 'bp-popup-parallel-avatar-cancel';
 
 				var tpl = [
@@ -387,7 +447,7 @@ if (typeof BX.Bizproc.WorkflowFaces === 'undefined')
 				cls = 'bp-popup-parallel-avatar-ready';
 				if (task.USERS[0].STATUS == '0')
 					cls = '';
-				else if (task.USERS[0].STATUS == '2')
+				else if (task.USERS[0].STATUS == '2' || task.USERS[0].STATUS == '4')
 					cls = 'bp-popup-parallel-avatar-cancel';
 
 				var taskHead = [

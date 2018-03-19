@@ -49,6 +49,22 @@ $engine = new Engine\YandexDirect();
 $currentUser = $engine->getCurrentUser();
 $bNeedAuth = !is_array($currentUser);
 
+//get string of campaign CURRENCY name
+try
+{
+	$clientsSettings = $engine->getClientsSettings();
+	$clientCurrency = current($clientsSettings);
+	$clientCurrency = ', '.Loc::getMessage('SEO_YANDEX_CURRENCY__'.$clientCurrency['Currency']);
+}
+catch(Engine\YandexDirectException $e)
+{
+	$seoproxyAuthError = new CAdminMessage(array(
+		"TYPE" => "ERROR",
+		"MESSAGE" => Loc::getMessage('SEO_YANDEX_SEOPROXY_AUTH_ERROR'),
+		"DETAILS" => $e->getMessage(),
+	));
+}
+
 $request = Main\Context::getCurrent()->getRequest();
 
 $archive = isset($request['archive']) && $request['archive'] == 1;
@@ -169,8 +185,8 @@ $arHeaders = array(
 
 	array("id"=>"SHOW", "content"=>Loc::getMessage('SEO_STATUS_SHOW'), "default"=>true),
 	array("id"=>"SHOW", "content"=>Loc::getMessage('SEO_STATUS_SHOW'), "default"=>true),
-	array("id"=>"SUM", "content"=>Loc::getMessage('SEO_CAMPAIGN_SUM'), "default"=>true),
-	array("id"=>"REST", "content"=>Loc::getMessage('SEO_CAMPAIGN_REST'), "default"=>true),
+	array("id"=>"SUM", "content"=>Loc::getMessage('SEO_CAMPAIGN_SUM').$clientCurrency, "default"=>true),
+	array("id"=>"REST", "content"=>Loc::getMessage('SEO_CAMPAIGN_REST').$clientCurrency, "default"=>true),
 	array("id"=>"SHOWS", "content"=>Loc::getMessage('SEO_CAMPAIGN_SHOWS'), "default"=>true),
 	array("id"=>"CLICKS", "content"=>Loc::getMessage('SEO_CAMPAIGN_CLICKS'), "default"=>true),
 );
@@ -427,7 +443,7 @@ else
 			"ONCLICK" => "updateCampaign(this)",
 			"TITLE" => GetMessage("SEO_CAMPAIGN_LIST_UPDATE_TITLE")
 		),
-		 array(
+		array(
 			"ICON" => "btn_archive",
 			"TEXT" => GetMessage("SEO_LIST_INACTIVE"),
 			"LINK" => "seo_search_yandex_direct.php?lang=".LANGUAGE_ID."&archive=1",
@@ -500,6 +516,9 @@ function updateCampaign(btn, campaignId)
 </script>
 <?
 require_once("tab/seo_search_yandex_direct_auth.php");
+
+if(isset($seoproxyAuthError))
+	echo $seoproxyAuthError->Show();
 
 $adminList->DisplayList();
 

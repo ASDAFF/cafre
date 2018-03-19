@@ -45,6 +45,12 @@ while ($lang = $langs->Fetch())
 
 	if(count($arSites) > 0)
 	{
+		$message1 = GetMessage("IM_NEW_NOTIFY_MESSAGE");
+		if (defined('BX24_HOST_NAME') || \Bitrix\Main\Context::getCurrent()->getRequest()->isHttps())
+		{
+			$message1 = str_replace('http://#SERVER_NAME#/', 'https://#SERVER_NAME#/', $message1);
+		}
+		
 		$emess = new CEventMessage;
 		$emess->Add(array(
 			"ACTIVE" => "Y",
@@ -53,10 +59,16 @@ while ($lang = $langs->Fetch())
 			"EMAIL_FROM" => "#DEFAULT_EMAIL_FROM#",
 			"EMAIL_TO" => "#EMAIL_TO#",
 			"SUBJECT" => GetMessage("IM_NEW_NOTIFY_SUBJECT"),
-			"MESSAGE" => GetMessage("IM_NEW_NOTIFY_MESSAGE"),
+			"MESSAGE" => $message1,
 			"BODY_TYPE" => "text",
 		));
 
+		$message2 = GetMessage("IM_NEW_NOTIFY_GROUP_MESSAGE");
+		if (defined('BX24_HOST_NAME') || \Bitrix\Main\Context::getCurrent()->getRequest()->isHttps())
+		{
+			$message2 = str_replace('http://#SERVER_NAME#/', 'https://#SERVER_NAME#/', $message2);
+		}
+		
 		$emess = new CEventMessage;
 		$emess->Add(array(
 			"ACTIVE" => "Y",
@@ -65,10 +77,16 @@ while ($lang = $langs->Fetch())
 			"EMAIL_FROM" => "#DEFAULT_EMAIL_FROM#",
 			"EMAIL_TO" => "#EMAIL_TO#",
 			"SUBJECT" => GetMessage("IM_NEW_NOTIFY_GROUP_SUBJECT"),
-			"MESSAGE" => GetMessage("IM_NEW_NOTIFY_GROUP_MESSAGE"),
+			"MESSAGE" => $message2,
 			"BODY_TYPE" => "text",
 		));
 
+		$message3 = GetMessage("IM_NEW_MESSAGE_MESSAGE");
+		if (defined('BX24_HOST_NAME') || \Bitrix\Main\Context::getCurrent()->getRequest()->isHttps())
+		{
+			$message3 = str_replace('http://#SERVER_NAME#/', 'https://#SERVER_NAME#/', $message3);
+		}
+		
 		$emess = new CEventMessage;
 		$emess->Add(array(
 			"ACTIVE" => "Y",
@@ -77,10 +95,16 @@ while ($lang = $langs->Fetch())
 			"EMAIL_FROM" => "#DEFAULT_EMAIL_FROM#",
 			"EMAIL_TO" => "#EMAIL_TO#",
 			"SUBJECT" => GetMessage("IM_NEW_MESSAGE_SUBJECT"),
-			"MESSAGE" => GetMessage("IM_NEW_MESSAGE_MESSAGE"),
+			"MESSAGE" => $message3,
 			"BODY_TYPE" => "text",
 		));
 
+		$message4 = GetMessage("IM_NEW_MESSAGE_GROUP_MESSAGE");
+		if (defined('BX24_HOST_NAME') || \Bitrix\Main\Context::getCurrent()->getRequest()->isHttps())
+		{
+			$message4 = str_replace('http://#SERVER_NAME#/', 'https://#SERVER_NAME#/', $message4);
+		}
+		
 		$emess = new CEventMessage;
 		$emess->Add(array(
 			"ACTIVE" => "Y",
@@ -89,7 +113,7 @@ while ($lang = $langs->Fetch())
 			"EMAIL_FROM" => "#DEFAULT_EMAIL_FROM#",
 			"EMAIL_TO" => "#EMAIL_TO#",
 			"SUBJECT" => GetMessage("IM_NEW_MESSAGE_GROUP_SUBJECT"),
-			"MESSAGE" => GetMessage("IM_NEW_MESSAGE_GROUP_MESSAGE"),
+			"MESSAGE" => $message4,
 			"BODY_TYPE" => "text",
 		));
 	}

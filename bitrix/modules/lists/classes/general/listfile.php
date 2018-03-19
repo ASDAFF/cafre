@@ -102,7 +102,7 @@ class CListFile
 
 			if ($divId)
 			{
-				$html .= '</div><script>BX.ready(function(){BX.viewElementBind("'.$divId.'");});</script>';
+				$html .= '</div><script>BX.ready(function(){if(BX["viewElementBind"]){BX.viewElementBind("'.$divId.'");}});</script>';
 			}
 			else
 			{

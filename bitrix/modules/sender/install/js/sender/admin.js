@@ -3,10 +3,11 @@
 		var groupExists = BX($controlName+'_EXISTS');
 		var groupSelected = BX($controlName);
 		var groupSelectedHidden = BX($controlName+'_HIDDEN');
-		var groupSelectedOptions = BX.findChildren(groupSelected, {"tag" : "option"});;
+		var groupSelectedOptions = BX.findChildren(groupSelected, {"tag" : "option"}, true);
+
 		if(isAdd)
 		{
-			var groupExistsOptions = BX.findChildren(groupExists, {"tag" : "option"});
+			var groupExistsOptions = BX.findChildren(groupExists, {"tag" : "option"}, true);
 			if(groupExistsOptions && groupExistsOptions.length > 0)
 			{
 				var arSelectedValues = [];
@@ -60,7 +61,7 @@
 		var element;
 		var selectedGroupId = '';
 		var arSelectedGroupId = [];
-		groupSelectedOptions = BX.findChildren(groupSelected, {"tag" : "option"});
+		groupSelectedOptions = BX.findChildren(groupSelected, {"tag" : "option"}, true);
 		for(var i in groupSelectedOptions)
 		{
 			element = groupSelectedOptions[i];
@@ -75,7 +76,7 @@
 		}
 		groupSelectedHidden.value = selectedGroupId;
 	}
-	
+
 
 	function ConnectorGetHtmlForm(data)
 	{
@@ -136,8 +137,6 @@
 
 	function ConnectorSettingGetCount(element, form)
 	{
-		var arAjaxQueryFields = {};
-		var currentParent;
 		var elementParent;
 		if(form)
 		{
@@ -148,16 +147,108 @@
 			elementParent = BX.findParent(element, {"tag" : "div", "className": "connector_form"}, true);
 		}
 
-        var arConForms = document.getElementsByName('post_form');
-        var controls = arConForms[arConForms.length - 1].elements;
+		var arConForms = document.getElementsByName('post_form');
+		var controls = arConForms[arConForms.length - 1].elements;
 		var ctrl;
-		for(var i in controls){
+		var filteredControls = [];
+		var currentParent;
+		for(var i in controls)
+		{
 			ctrl = controls[i];
-			if(ctrl && ctrl.name && BX.type.isString(ctrl.name) && ctrl.name.substring(0,11)=='CONNECTOR_S'){
-				currentParent = BX.findParent(ctrl, {"tag" : "div", "className": "connector_form"}, true);
-				if(currentParent == elementParent){
-					arAjaxQueryFields[ctrl.name] = ctrl.value;
+
+			if(!ctrl || !ctrl.name || !BX.type.isString(ctrl.name))
+			{
+				continue;
+			}
+
+			if(ctrl.name.substring(0,11) != 'CONNECTOR_S')
+			{
+				continue;
+			}
+
+			currentParent = BX.findParent(ctrl, {"tag" : "div", "className": "connector_form"}, true);
+			if(currentParent != elementParent)
+			{
+				continue;
+			}
+
+			if (ctrl.disabled)
+			{
+				continue;
+			}
+
+			var found = filteredControls.filter(function (filteredCtrl) {
+				return filteredCtrl == ctrl;
+			});
+			if (found.length == 0)
+			{
+				filteredControls.push(ctrl);
+			}
+		}
+
+		var arAjaxQueryFieldsData = [];
+		for(var i = 0; i < filteredControls.length; i++)
+		{
+			ctrl = filteredControls[i];
+			switch(ctrl.type.toLowerCase())
+			{
+				case 'text':
+				case 'textarea':
+				case 'password':
+				case 'number':
+				case 'hidden':
+				case 'select-one':
+					arAjaxQueryFieldsData.push({name: ctrl.name, value: ctrl.value});
+					break;
+				case 'file':
+					break;
+				case 'radio':
+				case 'checkbox':
+					if(ctrl.checked)
+					{
+						arAjaxQueryFieldsData.push({name: ctrl.name, value: ctrl.value});
+					}
+					break;
+				case 'select-multiple':
+					var multipleValues = [];
+					for (var j = 0; j < ctrl.options.length; j++)
+					{
+						if (ctrl.options[j].selected)
+						{
+							multipleValues.push(ctrl.options[j].value);
+						}
+					}
+					if (multipleValues.length > 0)
+					{
+						arAjaxQueryFieldsData.push({name : ctrl.name, value : multipleValues});
+					}
+
+					break;
+				default:
+					break;
+			}
+		}
+
+		var arAjaxQueryFields = {};
+		for(var k = 0; k < arAjaxQueryFieldsData.length; k++)
+		{
+
+			var _data = arAjaxQueryFieldsData[k];
+			if(BX.type.isString(arAjaxQueryFields[_data.name]))
+			{
+				arAjaxQueryFields[_data.name] = [arAjaxQueryFields[_data.name]];
+			}
+
+			if(BX.type.isArray(arAjaxQueryFields[_data.name]))
+			{
+				if(!BX.util.in_array(_data.value, arAjaxQueryFields[_data.name]))
+				{
+					arAjaxQueryFields[_data.name].push(_data.value);
 				}
+			}
+			else
+			{
+				arAjaxQueryFields[_data.name] = _data.value;
 			}
 		}
 
@@ -272,8 +363,8 @@
 
 		BX('sender_group_address_counter').innerHTML = cntSummary;
 	}
-	
-	
+
+
 	function SetAddressToControl(controlName, address, bAdd)
 	{
 		var control = BX(controlName);
@@ -354,15 +445,33 @@
 	{
 		var id;
 		var container;
+		var isBlockCurrentEditorVersion;
+		var editorBlockContainer;
+
 
 		this.init = function(params)
 		{
 			this.container = BX(params.container);
+			var container = BX.findChild(this.container, {'className': 'typearea'}, true);
+			this.id = container.getAttribute('name');
+			this.textareaId = container.getAttribute('name');
+			this.editorBlockContainer = BX('bx-sender-block-editor-' + this.id);
+
 			var _this = this;
 
 			var childList, child, i;
 
 			_this.changeTemplateList('BASE');
+
+			child = BX.findChild(this.container, {'className': 'sender-template-btn-close'}, true);
+			if(child)
+			{
+				BX.bind(child, 'click', function()
+				{
+					BX.onCustomEvent(_this.container, 'onSenderMailingTemplateListHide');
+				});
+			}
+
 			childList = BX.findChildren(this.container, {'className': 'sender-template-type-selector-button'}, true);
 			for(i in childList)
 			{
@@ -372,13 +481,9 @@
 				BX.bind(child, 'click', function()
 				{
 					var bxsendertype = 'BASE';
-					var attr;
-					for(var i in this.attributes)
+					if(this.getAttribute && this.getAttribute('data-bx-sender-tmpl-type'))
 					{
-						if(!this.attributes[i]) continue;
-						attr = this.attributes[i];
-						if(attr.nodeName == 'bxsendertype')
-							bxsendertype = attr.nodeValue;
+						bxsendertype = this.getAttribute('data-bx-sender-tmpl-type');
 					}
 
 					_this.changeTemplateList(bxsendertype);
@@ -393,21 +498,17 @@
 				child = childList[i];
 				BX.bind(child, 'click', function()
 				{
-					var bxsendertype = 'BASE', bxsendernum = 0;
-					var attr;
-
-					for(var i in this.attributes)
+					var bxsenderversion = 'block', bxsendername = '', bxsendertype = 'BASE', bxsendernum = 0, bxsenderlang = '';
+					if(this.getAttribute && this.getAttribute('data-bx-sender-tmpl-type'))
 					{
-						if(!this.attributes[i]) continue;
-						attr = this.attributes[i];
-
-						if(attr.nodeName == 'bxsendertype')
-							bxsendertype = attr.nodeValue;
-						else if(attr.nodeName == 'bxsendernum')
-							bxsendernum = attr.nodeValue;
+						bxsenderversion = this.getAttribute('data-bx-sender-tmpl-version');
+						bxsendername = this.getAttribute('data-bx-sender-tmpl-name');
+						bxsendertype = this.getAttribute('data-bx-sender-tmpl-type');
+						bxsendernum = this.getAttribute('data-bx-sender-tmpl-code');
+						bxsenderlang = this.getAttribute('data-bx-sender-tmpl-lang');
 					}
 
-					_this.setTemplate(bxsendertype, bxsendernum);
+					_this.setTemplate({'lang': bxsenderlang, 'version': bxsenderversion, 'name': bxsendername, 'type': bxsendertype, 'num': bxsendernum});
 				});
 			}
 
@@ -419,9 +520,26 @@
 				child = childList[i];
 				BX.bind(child, 'click', function()
 				{
-					if(confirm(BX.message("SENDER_SHOW_TEMPLATE_LIST")))
+					BX.onCustomEvent(_this.container, 'onSenderMailingTemplateListShow');
+				});
+			}
+
+			childList = BX.findChildren(this.container, {'className': 'sender-template-message-preview-btn'}, true);
+			for(i in childList)
+			{
+				if(!childList[i]) continue;
+
+				child = childList[i];
+				BX.bind(child, 'click', function()
+				{
+					if(this.getAttribute && this.getAttribute('data-bx-sender-tmpl-type'))
 					{
-						BX.onCustomEvent(_this.container, 'onSenderMailingTemplateListShow');
+						var bxsendertype = this.getAttribute('data-bx-sender-tmpl-type');
+						var bxsendernum = this.getAttribute('data-bx-sender-tmpl-code');
+						var bxsenderlang = this.getAttribute('data-bx-sender-tmpl-lang');
+						var url = '/bitrix/admin/sender_template_admin.php?action=get_template';
+						url = url + '&lang=' + bxsenderlang + '&template_type=' + bxsendertype + '&template_id=' + bxsendernum;
+						BX.util.popup(url, 800, 800);
 					}
 				});
 			}
@@ -442,21 +560,35 @@
 			BX.addCustomEvent(this.container, 'onSenderMailingTemplateSet', func);
 		};
 
-		this.setTemplate = function(type, num)
+		this.setTemplate = function(param)
 		{
 			if(!this.container) return;
 
 			BX.onCustomEvent(this.container, 'onSenderMailingTemplateSet');
 
-			var letterManager = new SenderLetterManager;
-			var template = letterManager.getTemplateListByType(type, num);
+			var canSaveContent = false;
+			var isBlockEditorShow = this.editorBlockContainer.style.display !== 'none';
+			var isBlockEditorNeedShow = param.version !== 'visual';
+			var isExistsMessage = !!BX(this.getTextAreaAttributeId()).value;
+			if((isBlockEditorNeedShow && isBlockEditorShow))
+			{
+				canSaveContent = true;
+			}
+			if(!isExistsMessage || canSaveContent || confirm(BX.message("SENDER_SHOW_TEMPLATE_LIST")))
+			{
+				//var letterManager = new SenderLetterManager;
+				//letterManager.setContent(this.id, param.version, param.type, param.num);
+				this.setContent(this.textareaId, param.version, param.type, param.num, param.lang);
 
-			var containerTemplateCaption = BX.findChild(this.container, {'className': 'sender-template-message-caption-container'}, true);
-			if(containerTemplateCaption) containerTemplateCaption.innerHTML = template.NAME;
+				var containerTemplateCaption = BX.findChild(this.container, {'className': 'sender-template-message-caption-container'}, true);
+				if (containerTemplateCaption) containerTemplateCaption.innerText = param.name;
 
-			this.putMessage(template.HTML, true);
-
-			return this;
+				return true;
+			}
+			else
+			{
+				return false;
+			}
 		};
 
 		this.changeTemplateList = function(type)
@@ -471,7 +603,7 @@
 				tmplTypeContList[i].style.display = 'none';
 
 			var typeContainer = BX.findChild(container, {'className': 'sender-template-list-type-container-'+type}, true);
-			typeContainer.style.display = 'table-row';
+			typeContainer.style.display = 'block';
 
 			var buttonList = BX.findChildren(container, {'className': 'sender-template-type-selector-button'}, true);
 			for(var j in buttonList)
@@ -483,6 +615,19 @@
 			}
 		};
 
+		this.getHtmlEditor = function()
+		{
+			var container = BX.findChild(this.container, {'className': 'typearea'}, true);
+			var name = container.getAttribute('name');
+
+			return window.BXHtmlEditor.Get(name);
+		};
+
+		this.getTextAreaAttributeId = function()
+		{
+			var container = BX.findChild(this.container, {'className': 'typearea'}, true);
+			return container.getAttribute('id');
+		};
 
 		this.putMessage = function(str, bChangeAllContent)
 		{
@@ -490,23 +635,11 @@
 
 			if(!this.container) return;
 
-			var container = BX.findChild(this.container, {'className': 'typearea'}, true);
-			var id, name;
-			var attr;
-			for(var i in container.attributes)
-			{
-				if (!container.attributes[i]) continue;
-				attr = container.attributes[i];
-
-				if(attr.nodeName == 'id')
-					id = attr.nodeValue;
-				else if(attr.nodeName == 'name')
-					name = attr.nodeValue;
-			}
+			var id = this.getTextAreaAttributeId();
 
 			var messageHtmlEditor;
 			if(window.BXHtmlEditor)
-				messageHtmlEditor = window.BXHtmlEditor.Get(name);
+				messageHtmlEditor = this.getHtmlEditor();
 
 			var messageContainer = BX(id);
 
@@ -537,7 +670,72 @@
 
 				BX.fireEvent(messageContainer, 'change');
 			}
-		}
+		};
+
+		this.setContent = function(id, version, type, num, lang)
+		{
+			var url = '/bitrix/admin/sender_template_admin.php?action=get_template';
+			url = url + '&lang=' + lang + '&template_type=' + type + '&template_id=' + num;
+
+			var blockContainer = BX('bx-sender-block-editor-' + id);
+			var typeInput = blockContainer.querySelector('input[name*="TEMPLATE_TYPE"]');
+			var idInput = blockContainer.querySelector('input[name*="TEMPLATE_ID"]');
+
+			if(version == 'block')
+			{
+				if(typeInput && idInput)
+				{
+					typeInput.value = type;
+					idInput.value = num;
+				}
+
+				var blockEditor = BX.BlockEditorManager.get(id);
+				blockEditor.load(url);
+				this.switchView(id, true);
+			}
+			else
+			{
+				BX.ajax({
+					'url': url,
+					'method': 'GET',
+					'dataType': 'html',
+					'data': {},
+					'onsuccess': BX.delegate(function(content)
+					{
+						if(typeInput && idInput)
+						{
+							typeInput.value = '';
+							idInput.value = '';
+						}
+
+						this.putMessage(content, true);
+						this.switchView(id, false);
+					}, this)
+				});
+			}
+		};
+
+		this.switchView = function(id, isShowBlock)
+		{
+			var block = BX('bx-sender-block-editor-' + id);
+			var visual = BX('bx-sender-visual-editor-' + id);
+			var htmlEditor = BXHtmlEditor.Get(id);
+
+			if(isShowBlock)
+			{
+				block.style.display = 'block';
+				visual.style.display = 'none';
+				if(htmlEditor) htmlEditor.Hide();
+			}
+			else
+			{
+				visual.style.display = 'block';
+				if(htmlEditor) htmlEditor.Show();
+				block.style.display = 'none';
+			}
+
+			this.isBlockCurrentEditorVersion = isShowBlock;
+		};
 	}
 
 	function SenderLetterManager()
@@ -550,63 +748,95 @@
 		this.list = {};
 		this.templateListByType = {};
 		this.mailBlockList = {};
+		this.placeHolderList = {};
 
-		_this = this;
-		BX.addCustomEvent('OnEditorInitedAfter', function(editor)
+		this.onPlaceHolderSelectorListCreate = function (placeHolderSelectorList)
+		{
+			placeHolderSelectorList.placeHolderList = this.getPlaceHolderList();
+		};
+		this.onGetControlsMap = function(controlsMap)
+		{
+			controlsMap.push({
+				id: 'placeholder_selector',
+				compact: true,
+				hidden: false,
+				sort: 1,
+				checkWidth: false,
+				offsetWidth: 32
+			});
+		};
+		this.onEditorInitedBefore = function(editor)
+		{
+			BX.addCustomEvent(
+				editor,
+				"PlaceHolderSelectorListCreate",
+				this.onPlaceHolderSelectorListCreate.bind(this)
+			);
+			BX.addCustomEvent(
+				editor,
+				"GetControlsMap",
+				this.onGetControlsMap.bind(this)
+			);
+		};
+
+		this.onEditorParse = function(mode)
+		{
+			if (!mode)
+			{
+				var content = this.content;
+
+				content.replace(/(^[\s\S]*?)(<body.*?>)/i, BX.delegate(function(str){
+						this.mailContentParsed.header = str;
+						return '';
+					}, this)
+				);
+
+				content = content.replace(/(<\/body>[\s\S]*?$)/i,  BX.delegate(function(str){
+						this.mailContentParsed.footer = str;
+						return '';
+					}, this)
+				);
+
+				this.content = content;
+			}
+		};
+
+		this.onEditorAfterParse = function(editor, mode)
+		{
+			if (mode)
+			{
+				var content = this.content;
+
+				content = content.replace(/^[\s\S]*?<body.*?>/i, "");
+				content = content.replace(/<\/body>[\s\S]*?$/i, "");
+
+				if(this.mailContentParsed.header != "" && this.mailContentParsed.footer != "")
+				{
+					content = this.mailContentParsed.header + content + this.mailContentParsed.footer;
+				}
+				else
+				{
+					content = editor.content;
+				}
+
+				this.content = content;
+			}
+		};
+
+		this.onEditorInitedAfter = function(editor)
 		{
 			editor.components.SetComponentIcludeMethod('EventMessageThemeCompiler::includeComponent');
 
-			editor.config.mailblocks = _this.getMailBlockList();
+			editor.config.mailblocks = this.getMailBlockList();
 			editor.mailblocks = new BXHtmlEditor.BXEditorMailBlocks(editor);
 			editor.mailblocksTaskbar = new BXHtmlEditor.MailBlocksControl(editor, editor.taskbarManager);
 			editor.taskbarManager.AddTaskbar(editor.mailblocksTaskbar);
 			editor.taskbarManager.ShowTaskbar(editor.mailblocksTaskbar.GetId());
 
 			editor.mailContentParsed = {'header': '', 'footer': ''};
-			BX.addCustomEvent(editor, "OnParse", BX.delegate(function(mode)
-			{
-				if (!mode)
-				{
-					var content = this.content;
-
-					content.replace(/(^[\s\S]*?)(<body.*?>)/i, BX.delegate(function(str){
-							this.mailContentParsed.header = str;
-							return '';
-						}, this)
-					);
-
-					content = content.replace(/(<\/body>[\s\S]*?$)/i,  BX.delegate(function(str){
-							this.mailContentParsed.footer = str;
-							return '';
-						}, this)
-					);
-
-					this.content = content;
-				}
-			}), this);
-
-			BX.addCustomEvent(editor, "OnAfterParse", BX.delegate(function(mode)
-			{
-				if (mode)
-				{
-					var content = this.content;
-
-					content = content.replace(/^[\s\S]*?<body.*?>/i, "");
-					content = content.replace(/<\/body>[\s\S]*?$/i, "");
-
-					if(this.mailContentParsed.header != "" && this.mailContentParsed.footer != "")
-					{
-						content = this.mailContentParsed.header + content + this.mailContentParsed.footer;
-					}
-					else
-					{
-						content = editor.content;
-					}
-
-					this.content = content;
-				}
-			}), this);
-		});
+			BX.addCustomEvent(editor, "OnParse", this.onEditorParse.bind(editor));
+			BX.addCustomEvent(editor, "OnAfterParse", this.onEditorAfterParse.bind(editor, editor));
+		};
 
 		this.add = function(id, params)
 		{
@@ -636,27 +866,33 @@
 		{
 			BX.addCustomEvent('onSenderMailingTemplateListShow', func);
 		};
-
-		this.setTemplateListByType = function(templateList){
-			this.templateListByType = templateList;
-		};
-
-		this.getTemplateListByType = function(type, num){
-			if(num !== null)
-				return this.templateListByType[type][num];
-			else if(type !== null)
-				return this.templateListByType[type];
-			else
-				return this.templateListByType;
+		this.onHideTemplateList = function(func)
+		{
+			BX.addCustomEvent('onSenderMailingTemplateListHide', func);
 		};
 
 		this.setMailBlockList = function(mailBlockList){
 			this.mailBlockList = mailBlockList;
 		};
-
 		this.getMailBlockList = function(){
 			return this.mailBlockList;
 		};
+		this.setPlaceHolderList = function(placeHolderList){
+			this.placeHolderList = placeHolderList;
+		};
+		this.getPlaceHolderList = function(){
+			return this.placeHolderList;
+		};
+
+
+		BX.addCustomEvent(
+			'OnEditorInitedBefore',
+			this.onEditorInitedBefore.bind(this)
+		);
+		BX.addCustomEvent(
+			'OnEditorInitedAfter',
+			this.onEditorInitedAfter.bind(this)
+		);
 
 		SenderLetterManager.instance = this;
 	}
@@ -692,7 +928,10 @@
 			formContainer = this.container;
 
 			var num = (Math.floor(Math.random() * (10000 - 100 + 1)) + 100);
-			var message = letterTemplate.FIELDS.MESSAGE.replace(new RegExp("SENDER_LETTER_TEMPLATE_MESSAGE",'g'), 'CHAIN_MESSAGE_'+num );
+			var message = letterTemplate.FIELDS.MESSAGE;
+			message = message.replace(new RegExp("SENDER_LETTER_TEMPLATE_MESSAGE",'g'), 'CHAIN_MESSAGE_'+num );
+			message = message.replace(new RegExp("sender_letter_template_message",'g'), 'chain_message_'+num );
+			message = message.replace(new RegExp("%SENDER_LETTER_TEMPLATE_BODY_NUM%",'g'), num );
 			var htmlForm = letterTemplate.BODY.replace(new RegExp("%SENDER_LETTER_TEMPLATE_BODY_NUM%",'g'), num );
 			htmlForm = htmlForm.replace(new RegExp("%SENDER_LETTER_TEMPLATE_MESSAGE%",'g'), message );
 

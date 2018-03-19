@@ -30,7 +30,7 @@ if ($VOTE_RIGHT>="R")
 	{
 		while(list($key,$name)=each($arAllOptions))
 		{
-			$val = $$name[0];
+			$val = ${$name[0]};
 
 			if($name[2][0]=="checkbox" && $val != "Y") 
 				$val="N";

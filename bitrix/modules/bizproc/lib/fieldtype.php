@@ -119,6 +119,15 @@ class FieldType
 	/**
 	 * @return string
 	 */
+	public function getBaseType()
+	{
+		$class = $this->typeClass;
+		return $class::getType();
+	}
+
+	/**
+	 * @return string
+	 */
 	public function getTypeClass()
 	{
 		return $this->typeClass;
@@ -219,6 +228,29 @@ class FieldType
 	public function setOptions($options)
 	{
 		$this->property['Options'] = $options;
+		return $this;
+	}
+
+	/**
+	 * Get field settings.
+	 * Settings contain additional information that may be required for rendering of field.
+	 * @return array
+	 */
+	public function getSettings()
+	{
+		return isset($this->property['Settings']) && is_array($this->property['Settings'])
+			? $this->property['Settings'] : array();
+	}
+
+	/**
+	 * set field settings.
+	 * Settings contain additional information that may be required for rendering of field.
+	 * @param array $settings Settings array.
+	 * @return $this
+	 */
+	public function setSettings(array $settings)
+	{
+		$this->property['Settings'] = $settings;
 		return $this;
 	}
 
@@ -350,14 +382,14 @@ class FieldType
 	public static function getBaseTypesMap()
 	{
 		return array(
-			static::BOOL => '\Bitrix\Bizproc\BaseType\Bool',
+			static::BOOL => '\Bitrix\Bizproc\BaseType\BoolType',
 			static::DATE => '\Bitrix\Bizproc\BaseType\Date',
 			static::DATETIME => '\Bitrix\Bizproc\BaseType\Datetime',
 			static::DOUBLE => '\Bitrix\Bizproc\BaseType\Double',
 			static::FILE => '\Bitrix\Bizproc\BaseType\File',
-			static::INT => '\Bitrix\Bizproc\BaseType\Int',
+			static::INT => '\Bitrix\Bizproc\BaseType\IntType',
 			static::SELECT => '\Bitrix\Bizproc\BaseType\Select',
-			static::STRING => '\Bitrix\Bizproc\BaseType\String',
+			static::STRING => '\Bitrix\Bizproc\BaseType\StringType',
 			static::TEXT => '\Bitrix\Bizproc\BaseType\Text',
 			static::USER => '\Bitrix\Bizproc\BaseType\User',
 			static::INTERNALSELECT => '\Bitrix\Bizproc\BaseType\InternalSelect',
@@ -393,6 +425,14 @@ class FieldType
 					case 'OPTIONS':
 					case '3':
 						$normalized['Options'] = is_array($val) ? $val : (string)$val;
+						break;
+					case 'SETTINGS':
+						{
+							if(is_array($val))
+							{
+								$normalized['Settings'] = $val;
+							}
+						}
 						break;
 				}
 			}

@@ -5957,3 +5957,35 @@ double:621
 --
 double:621
 --
+<Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre754</UID><Date xmlns="MC">2018-03-19T09:27:49</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">Dee Dee</Name><Phone xmlns="MC">891245124</Phone><Address xmlns="MC">Московская область, Москва, </Address><eMail xmlns="MC">dee@mail.ru</eMail><Gds xmlns="MC"><ID>00000026132</ID><Qty>1</Qty><Cost>1322</Cost></Gds></Zakaz>
+res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre754</UID><Date xmlns="MC">2018-03-19T09:27:49</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">Dee Dee</Name><Phone xmlns="MC">891245124</Phone><Address xmlns="MC">Московская область, Москва, </Address><eMail xmlns="MC">dee@mail.ru</eMail><Gds xmlns="MC"><ID>00000026132</ID><Qty>1</Qty><Cost>1322</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)
+double:754
+--
+<Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre755</UID><Date xmlns="MC">2018-03-19T09:28:32</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">Dee</Name><Phone xmlns="MC">891245124</Phone><Address xmlns="MC">Московская область, Москва, </Address><eMail xmlns="MC">dee@mail.ru</eMail><Gds xmlns="MC"><ID>00000025958</ID><Qty>1</Qty><Cost>332</Cost></Gds></Zakaz>
+res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre755</UID><Date xmlns="MC">2018-03-19T09:28:32</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">Dee</Name><Phone xmlns="MC">891245124</Phone><Address xmlns="MC">Московская область, Москва, </Address><eMail xmlns="MC">dee@mail.ru</eMail><Gds xmlns="MC"><ID>00000025958</ID><Qty>1</Qty><Cost>332</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)

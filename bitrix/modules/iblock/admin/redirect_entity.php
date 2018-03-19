@@ -19,8 +19,8 @@ $adminList->InitFilter($filterFields);
 unset($filterFields);
 
 $entityList = array(
-	'IBLOCK' => Loc::getMessage('BX_IBLOCK_REDIRECT_ENTITY_ENTITY_IBLOCK'),
-	'ELEMENT' => Loc::getMessage('BX_IBLOCK_REDIRECT_ENTITY_ENTITY_ELEMENT')
+	'ELEMENT' => Loc::getMessage('BX_IBLOCK_REDIRECT_ENTITY_ENTITY_ELEMENT'),
+	'IBLOCK' => Loc::getMessage('BX_IBLOCK_REDIRECT_ENTITY_ENTITY_IBLOCK')
 );
 $errors = array();
 $entityId = '';
@@ -113,7 +113,10 @@ if (!empty($errors))
 echo bitrix_sessid_post();
 $filter = new CAdminFilter(
 	'element_redirect_filter',
-	false
+	array(
+		Loc::getMessage('BX_IBLOCK_REDIRECT_ENTITY_FILTER_ENTITY'),
+		Loc::getMessage('BX_IBLOCK_REDIRECT_ENTITY_FILTER_ID')
+	)
 );
 $filter->Begin();
 ?>

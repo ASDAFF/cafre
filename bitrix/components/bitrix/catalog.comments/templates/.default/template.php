@@ -71,7 +71,17 @@ if (!$templateData['BLOG']['BLOG_FROM_AJAX'])
 			'CACHE_GROUPS' => $arParams['CACHE_GROUPS'],
 			'TEMPLATE_THEME' => $arParams['~TEMPLATE_THEME'],
 			'SHOW_DEACTIVATED' => $arParams['SHOW_DEACTIVATED'],
+			'CHECK_DATES' => $arParams['CHECK_DATES']
 		);
+
+		if(isset($arParams["USER_CONSENT"]))
+			$templateData['BLOG']['AJAX_PARAMS']["USER_CONSENT"] = $arParams["USER_CONSENT"];
+		if(isset($arParams["USER_CONSENT_ID"]))
+			$templateData['BLOG']['AJAX_PARAMS']["USER_CONSENT_ID"] = $arParams["USER_CONSENT_ID"];
+		if(isset($arParams["USER_CONSENT_IS_CHECKED"]))
+			$templateData['BLOG']['AJAX_PARAMS']["USER_CONSENT_IS_CHECKED"] = $arParams["USER_CONSENT_IS_CHECKED"];
+		if(isset($arParams["USER_CONSENT_IS_LOADED"]))
+			$templateData['BLOG']['AJAX_PARAMS']["USER_CONSENT_IS_LOADED"] = $arParams["USER_CONSENT_IS_LOADED"];
 
 		$arJSParams['serviceList']['blog'] = true;
 		$arJSParams['settings']['blog'] = array(
@@ -89,11 +99,26 @@ if (!$templateData['BLOG']['BLOG_FROM_AJAX'])
 
 	if ($arParams["FB_USE"] == "Y")
 	{
+		$currentLanguage = strtolower(LANGUAGE_ID);
+		switch ($currentLanguage)
+		{
+			case 'en':
+				$facebookLocale = 'en_US';
+				break;
+			case 'ua':
+				$facebookLocale = 'uk_UA';
+				break;
+			case 'by':
+				$facebookLocale = 'be_BY';
+				break;
+			default:
+				$facebookLocale = $currentLanguage.'_'.strtoupper(LANGUAGE_ID);
+		}
 		$arJSParams['serviceList']['facebook'] = true;
 		$arJSParams['settings']['facebook'] = array(
 			'parentContID' => $templateData['TABS_ID'],
 			'contID' => 'bx-cat-soc-comments-fb_'.$arResult['ELEMENT']['ID'],
-			'facebookPath' => '//connect.facebook.net/'.(strtolower(LANGUAGE_ID)."_".strtoupper(LANGUAGE_ID)).'/all.js#xfbml=1'
+			'facebookPath' => 'https://connect.facebook.net/'.$facebookLocale.'/sdk.js#xfbml=1&version=v2.11'
 		);
 		$arData["FB"] = array(
 			"NAME" => isset($arParams["FB_TITLE"]) && trim($arParams["FB_TITLE"]) != "" ? $arParams["FB_TITLE"] : "Facebook",
@@ -114,7 +139,7 @@ if (!$templateData['BLOG']['BLOG_FROM_AJAX'])
 			"CONTENT" => '
 				<div id="vk_comments"></div>
 				<script type="text/javascript">
-					BX.load([\'//vk.com/js/api/openapi.js\'], function(){
+					BX.load([\'https://vk.com/js/api/openapi.js?142\'], function(){
 						if (!!window.VK)
 						{
 							VK.init({
@@ -128,7 +153,9 @@ if (!$templateData['BLOG']['BLOG_FROM_AJAX'])
 									pageUrl: "'.$arResult["URL_TO_COMMENT"].'",'.
 									(isset($arParams["COMMENTS_COUNT"]) ? "limit: ".$arParams["COMMENTS_COUNT"]."," : "").
 									(isset($arResult["WIDTH"]) ? "width: ".($arResult["WIDTH"] - 20)."," : "").
-									'attach: false
+									'attach: false,
+									pageTitle: BX.util.htmlspecialchars(document.title) || " ",
+									pageDescription: " "
 								}
 							);
 						}

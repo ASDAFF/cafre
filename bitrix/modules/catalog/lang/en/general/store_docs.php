@@ -14,7 +14,7 @@ $MESS["CAT_DOC_ERROR_CANCEL_STATUS"] = "The transaction is still pending.";
 $MESS["CAT_DOC_AND_MORE"] = "#COUNT# more products.";
 $MESS["CAT_DOC_WRONG_RESERVED_AMOUNT"] = "There is no sufficient reserved stock of #PRODUCT#.";
 $MESS["CAT_DOC_WRONG_ELEMENT_COUNT"] = "Enter at least one product.";
-$MESS["CAT_DOC_ERROR_ELEMENT_IN_DOCUMENT"] = "Some of registered warehouse control documents contain this product.";
 $MESS["CAT_DOC_WRONG_SITE_ID"] = "The SITE_ID specified is incorrect.";
 $MESS["CAT_DOC_STATUS_ALREADY_YES"] = "The document has been already fulfilled.";
+$MESS["CAT_DOC_ERROR_ELEMENT_IN_DOCUMENT_EXT"] = "Cleared inventory documents contain this item. Please change document status and delete the item.";
 ?>

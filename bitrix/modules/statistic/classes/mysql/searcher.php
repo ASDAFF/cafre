@@ -1,8 +1,9 @@
-<?
+<?php
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/statistic/classes/general/searcher.php");
+
 class CSearcher extends CAllSearcher
 {
-	function GetGraphArray_SQL($strSqlSearch)
+	public static function GetGraphArray_SQL($strSqlSearch)
 	{
 		$DB = CDatabase::GetModuleConnection('statistic');
 		$strSql = "
@@ -25,7 +26,7 @@ class CSearcher extends CAllSearcher
 		return $strSql;
 	}
 
-	function GetList(&$by, &$order, $arFilter=Array(), &$is_filtered, $LIMIT=false)
+	public static function GetList(&$by, &$order, $arFilter=Array(), &$is_filtered, $LIMIT=false)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -186,7 +187,7 @@ class CSearcher extends CAllSearcher
 		return $res;
 	}
 
-	function GetDropDownList($strSqlOrder="ORDER BY NAME, ID")
+	public static function GetDropDownList($strSqlOrder="ORDER BY NAME, ID")
 	{
 		$DB = CDatabase::GetModuleConnection('statistic');
 		$err_mess = "File: ".__FILE__."<br>Line: ";
@@ -204,7 +205,7 @@ class CSearcher extends CAllSearcher
 		return $res;
 	}
 
-	function GetDynamicList($SEARCHER_ID, &$by, &$order, &$arMaxMin, $arFilter=Array())
+	public static function GetDynamicList($SEARCHER_ID, &$by, &$order, &$arMaxMin, $arFilter=Array())
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -299,4 +300,3 @@ class CSearcher extends CAllSearcher
 		return $res;
 	}
 }
-?>

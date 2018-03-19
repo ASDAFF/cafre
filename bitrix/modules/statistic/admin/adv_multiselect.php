@@ -1,13 +1,6 @@
-<?
-/*
-##############################################
-# Bitrix: SiteManager                        #
-# Copyright (c) 2004 Bitrix                  #
-# http://www.bitrix.ru                       #
-# mailto:admin@bitrix.ru                     #
-##############################################
-*/
+<?php
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
+/** @var CMain $APPLICATION */
 $STAT_RIGHT = $APPLICATION->GetGroupRight("statistic");
 if($STAT_RIGHT=="D") $APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
 
@@ -81,7 +74,7 @@ $lAdmin->AddFooter(
 
 $lAdmin->AddGroupActionTable(Array(
 	"select" => array(
-			"action" => "setTargetValue(0, '".AddSlashes($field)."')",
+			"action" => "setTargetValue(0, '".addslashes($field)."')",
 			"value" => "select",
 			"type" => "button",
 			"name" => GetMessage("STAT_SELECT"),
@@ -178,13 +171,13 @@ function setTargetValue(id, field)
 			{
 				if(window.opener.selectEventType)
 				{
-					opt_value=oForm.elements[i].value;
-					opt_name=document.getElementById('ADV_NAME['+oForm.elements[i].value+']').value;
+					var opt_value=oForm.elements[i].value;
+					var opt_name=document.getElementById('ADV_NAME['+oForm.elements[i].value+']').value;
 					window.opener.jsSelectUtils.addNewOption(field, opt_value, opt_name);
 				}
 				else
 				{
-					for(j=0; j<arSelect.length; j++)
+					for(var j=0; j<arSelect.length; j++)
 						if (arSelect.options[j].value==oForm.elements[i].value)
 							arSelect.options[j].selected = true;
 				}
@@ -197,4 +190,4 @@ function setTargetValue(id, field)
 //-->
 </script>
 
-<?require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_popup_admin.php")?>
+<?require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_popup_admin.php");

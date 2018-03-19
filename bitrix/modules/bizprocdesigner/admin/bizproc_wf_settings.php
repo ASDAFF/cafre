@@ -1,45 +1,11 @@
 <?
+define("NOT_CHECK_FILE_PERMISSIONS", true);
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 
 include_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/bizproc/include.php");
 IncludeModuleLangFile(__FILE__);
 
-CUtil::DecodeUriComponent($_POST);
-
-foreach (array('arWorkflowParameters', 'arWorkflowVariables', 'arWorkflowConstants') as $field)
-{
-	if (!isset($_POST[$field]))
-	{
-		$_POST[$field] = array();
-		continue;
-	}
-	if (is_array($_POST[$field]))
-	{
-		if (LANG_CHARSET != "UTF-8")
-		{
-			foreach ($_POST[$field] as $name => $param)
-			{
-				if (is_array($_POST[$field][$name]["Options"]))
-				{
-					$newarr = array();
-					foreach ($_POST[$field][$name]["Options"] as $k => $v)
-						$newarr[$GLOBALS["APPLICATION"]->ConvertCharset($k, "UTF-8", LANG_CHARSET)] = $v;
-					$_POST[$field][$name]["Options"] = $newarr;
-				}
-			}
-		}
-	}
-	else
-	{
-		$_POST[$field] = CUtil::JsObjectToPhp($_POST[$field]);
-		if (!is_array($_POST[$field]))
-			$_POST[$field] = array();
-	}
-}
-if (!is_array($_POST['arWorkflowTemplate']))
-{
-	$_POST['arWorkflowTemplate'] = CUtil::JsObjectToPhp($_POST['arWorkflowTemplate']);
-}
+CBPHelper::decodeTemplatePostData($_POST);
 
 $arWorkflowParameters = $_POST['arWorkflowParameters'];
 $arWorkflowVariables = $_POST['arWorkflowVariables'];
@@ -99,11 +65,17 @@ if(!is_array($arWorkflowParameters))
 $arWorkflowParameterTypesTmp = $documentService->GetDocumentFieldTypes(array(MODULE_ID, ENTITY, $_POST['document_type']));
 $arWorkflowParameterTypes = array();
 foreach ($arWorkflowParameterTypesTmp as $key => $value)
+{
+	if ($key === 'N:Sequence')
+		continue;
+
 	$arWorkflowParameterTypes[$key] = $value["Name"];
+}
 
 CBPDocument::AddShowParameterInit(MODULE_ID, "only_users", $_POST['document_type'], ENTITY);
 ?>
 <script type="text/javascript">
+BX.namespace('BX.Bizproc');
 BX.WindowManager.Get().SetTitle('<?= GetMessageJS("BIZPROC_WFS_TITLE") ?>');
 
 var WFSAllData = {};
@@ -132,6 +104,9 @@ function WFSStart()
 
 	document.getElementById('WFStemplate_autostart1').checked = workflowTemplateAutostart & 1;
 	document.getElementById('WFStemplate_autostart2').checked = workflowTemplateAutostart & 2;
+
+	if (typeof BX.Bizproc.Selector !== 'undefined')
+		BX.Bizproc.Selector.initSelectors(document.getElementById('bizprocform'));
 }
 
 function WFSFSave()
@@ -280,8 +255,11 @@ function WFSParamSetType(type, pvMode, value)
 				if (v == undefined)
 					document.getElementById('tdWFSFormDefault'+pvMode).innerHTML = "";
 				else
-					document.getElementById('tdWFSFormDefault'+pvMode).innerHTML = v;
-
+				{
+					document.getElementById('tdWFSFormDefault' + pvMode).innerHTML = v;
+					if (typeof BX.Bizproc.Selector !== 'undefined')
+						BX.Bizproc.Selector.initSelectors(document.getElementById('tdWFSFormDefault' + pvMode));
+				}
 				BX.closeWait();
 			}
 		);
@@ -826,7 +804,10 @@ $tabControl->BeginNextTab();
 						<td><?=GetMessage("BIZPROC_WFS_PARAM_TYPE")?>:</td>
 						<td>
 							<select id="WFSFormTypeC" onchange="WFSSwitchTypeControl(this.value, 'C');">
-								<?foreach ($arWorkflowParameterTypes as $k => $v):?>
+								<?foreach ($arWorkflowParameterTypes as $k => $v):
+									if ($k === 'file'  || $k === 'F')
+										continue;
+								?>
 									<option value="<?= $k ?>"><?= htmlspecialcharsbx($v) ?></option>
 								<?endforeach;?>
 							</select><br />
@@ -865,6 +846,11 @@ $permissions = isset($_POST['arWorkflowTemplate'][0]['Properties']['Permission']
 if (!empty($arAllowableOperations)):
 foreach($arAllowableOperations as $op_id=>$op_name):
 	$parameterKeyExt = 'P'.$op_id;
+	$selectorProps = \Bitrix\Main\Web\Json::encode(array(
+		'controlId' => 'id_'.$parameterKeyExt,
+		'baseType' => 'user',
+		'type' => 'user'
+	));
 ?>
 <tr>
 	<td valign="top"><?=htmlspecialcharsbx($op_name)?>:</td>
@@ -876,7 +862,8 @@ foreach($arAllowableOperations as $op_id=>$op_name):
 					));
 	?>
 	<textarea name="<?= $parameterKeyExt ?>" id="id_<?= $parameterKeyExt ?>" rows="4" cols="50"><?= $usersP ?></textarea>
-	<input type="button" value="..." onclick="BPAShowSelector('id_<?= $parameterKeyExt ?>', 'user', 'all', {'arWorkflowParameters': WFSAllData['P'], 'arWorkflowVariables': WFSAllData['V'], 'arWorkflowConstants': WFSAllData['C']});" style="vertical-align: top; margin-left: 2px"/>
+	<input type="button" value="..." onclick="BPAShowSelector('id_<?= $parameterKeyExt ?>', 'user', 'all', {'arWorkflowParameters': WFSAllData['P'], 'arWorkflowVariables': WFSAllData['V'], 'arWorkflowConstants': WFSAllData['C']});" style="vertical-align: top; margin-left: 2px"
+		data-role="bp-selector-button" data-bp-selector-props="<?=htmlspecialcharsbx($selectorProps)?>" />
 	</td>
 </tr>
 <?

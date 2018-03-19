@@ -1,149 +1,183 @@
 <?php
 namespace Bitrix\Im;
 
-use Bitrix\Main\Entity;
-use Bitrix\Main\Localization\Loc;
-Loc::loadMessages(__FILE__);
-
-/**
- * Class ChatTable
- *
- * Fields:
- * <ul>
- * <li> ID int mandatory
- * <li> TITLE string(255) optional
- * <li> TYPE string(2) optional
- * <li> AUTHOR_ID int mandatory
- * <li> AVATAR int optional
- * <li> COLOR string optional
- * <li> CALL_TYPE int optional
- * <li> CALL_NUMBER string(20) optional
- * <li> EXTRANET bool optional default 'N'
- * <li> ENTITY_TYPE string(50) optional
- * <li> ENTITY_ID string(50) optional
- * <li> DISK_FOLDER_ID int optional
- * <li> AUTHOR reference to {@link \Bitrix\User\UserTable}
- * </ul>
- *
- * @package Bitrix\Im
- **/
-
-class ChatTable extends Entity\DataManager
+class Chat
 {
-	public static function getFilePath()
+	const LIMIT_SEND_EVENT = 30;
+
+	public static function getRelation($chatId, $params = Array())
 	{
-		return __FILE__;
+		$chatId = intval($chatId);
+		if ($chatId <= 0)
+		{
+			return false;
+		}
+
+		$connection = \Bitrix\Main\Application::getInstance()->getConnection();
+
+		$selectFields = '';
+		if (isset($params['SELECT']))
+		{
+			$params['SELECT'][] = 'ID';
+			$params['SELECT'][] = 'USER_ID';
+			$map = \Bitrix\Im\Model\RelationTable::getMap();
+			foreach ($params['SELECT'] as $key => $value)
+			{
+				if (is_int($key) && isset($map[$value]))
+				{
+					$selectFields .= "R.{$value}, ";
+					unset($map[$value]);
+				}
+				else if (!is_int($key) && isset($map[$key]))
+				{
+					$selectFields .= "R.{$key} {$connection->getSqlHelper()->forSql($value)}, ";
+					unset($map[$value]);
+				}
+			}
+		}
+		if (!$selectFields)
+		{
+			$selectFields = 'R.*, ';
+		}
+
+		$withUserFields = false;
+		if (isset($params['USER_DATA']) && $params['USER_DATA'] == 'Y')
+		{
+			$withUserFields = true;
+			$list = Array('ACTIVE', 'EXTERNAL_AUTH_ID');
+			foreach ($list as $key)
+			{
+				$selectFields .= "U.{$key} USER_DATA_{$key}, ";
+			}
+		}
+
+		$whereFields = '';
+		if (isset($params['FILTER']))
+		{
+			$map = \Bitrix\Im\Model\RelationTable::getMap();
+			foreach ($params['FILTER'] as $key => $value)
+			{
+				if (!isset($map[$key]))
+				{
+					continue;
+				}
+
+				$whereFields .= " AND R.{$key} = {$connection->getSqlHelper()->forSql($value)}";
+			}
+		}
+
+		$skipUnmodifiedRecords = false;
+		if (isset($params['SKIP_RELATION_WITH_UNMODIFIED_COUNTERS']) && $params['SKIP_RELATION_WITH_UNMODIFIED_COUNTERS'] == 'Y')
+		{
+			$skipUnmodifiedRecords = true;
+		}
+
+		if (isset($params['REAL_COUNTERS']) && $params['REAL_COUNTERS'] != 'N' || $skipUnmodifiedRecords)
+		{
+			$lastId = "R.LAST_ID";
+			if (is_array($params['REAL_COUNTERS']))
+			{
+				if (isset($params['REAL_COUNTERS']['LAST_ID']) && intval($params['REAL_COUNTERS']['LAST_ID']) > 0)
+				{
+					$lastId = intval($params['REAL_COUNTERS']['LAST_ID']);
+				}
+			}
+
+			$sqlSelectCounter = "R.COUNTER PREVIOUS_COUNTER, (
+				SELECT COUNT(1) FROM b_im_message M WHERE M.CHAT_ID = R.CHAT_ID AND M.ID > $lastId
+			) COUNTER";
+		}
+		else
+		{
+			$sqlSelectCounter = 'R.COUNTER, R.COUNTER PREVIOUS_COUNTER';
+		}
+
+		$sql = "
+			SELECT {$selectFields} {$sqlSelectCounter}
+			FROM b_im_relation R
+			".($withUserFields? "LEFT JOIN b_user U ON R.USER_ID = U.ID": "")."
+			WHERE R.CHAT_ID = {$chatId} {$whereFields}
+			".($skipUnmodifiedRecords? ' HAVING COUNTER <> PREVIOUS_COUNTER': '')."
+		";
+		$relations = array();
+		$query = \Bitrix\Main\Application::getInstance()->getConnection()->query($sql);
+		while ($row = $query->fetch())
+		{
+			$row['COUNTER'] = $row['COUNTER']>99? 100: intval($row['COUNTER']);
+			$row['PREVIOUS_COUNTER'] = intval($row['PREVIOUS_COUNTER']);
+
+			if ($skipUnmodifiedRecords && $row['COUNTER'] == $row['PREVIOUS_COUNTER'])
+			{
+				continue;
+			}
+
+			foreach ($row as $key => $value)
+			{
+				if (strpos($key, 'USER_DATA_') === 0)
+				{
+					$row['USER_DATA'][substr($key, 10)] = $value;
+					unset($row[$key]);
+				}
+			}
+
+			$relations[$row['USER_ID']] = $row;
+		}
+
+		return $relations;
 	}
 
-	public static function getTableName()
+	public static function mute($chatId, $action, $userId = null)
 	{
-		return 'b_im_chat';
-	}
+		$userId = \Bitrix\Im\Common::getUserId($userId);
+		if (!$userId)
+		{
+			return false;
+		}
 
-	public static function getMap()
-	{
-		return array(
-			'ID' => array(
-				'data_type' => 'integer',
-				'primary' => true,
-				'autocomplete' => true,
-				'title' => Loc::getMessage('CHAT_ENTITY_ID_FIELD'),
+		$chatId = intval($chatId);
+		if (!$chatId)
+		{
+			return false;
+		}
+
+		$action = $action === true? 'Y': 'N';
+
+		$relation = self::getRelation($chatId, Array(
+			'SELECT' => Array('ID', 'NOTIFY_BLOCK'),
+			'FILTER' => Array(
+				'USER_ID' => $userId
 			),
-			'TITLE' => array(
-				'data_type' => 'string',
-				'validation' => array(__CLASS__, 'validateTitle'),
-				'title' => Loc::getMessage('CHAT_ENTITY_TITLE_FIELD'),
-			),
-			'COLOR' => array(
-				'data_type' => 'string',
-				'validation' => array(__CLASS__, 'validateColor'),
-				'title' => Loc::getMessage('CHAT_ENTITY_COLOR_FIELD'),
-			),
-			'TYPE' => array(
-				'data_type' => 'string',
-				'validation' => array(__CLASS__, 'validateType'),
-				'title' => Loc::getMessage('CHAT_ENTITY_TYPE_FIELD'),
-				'default_value' => 'P',
-			),
-			'EXTRANET' => array(
-				'data_type' => 'boolean',
-				'values' => array('N', 'Y'),
-				'title' => Loc::getMessage('CHAT_ENTITY_EXTRANET_FIELD'),
-				'default_value' => 'N',
-			),
-			'AUTHOR_ID' => array(
-				'data_type' => 'integer',
-				'required' => true,
-				'title' => Loc::getMessage('CHAT_ENTITY_AUTHOR_ID_FIELD'),
-			),
-			'AVATAR' => array(
-				'data_type' => 'integer'
-			),
-			'CALL_TYPE' => array(
-				'data_type' => 'integer',
-				'title' => Loc::getMessage('CHAT_ENTITY_CALL_TYPE_FIELD'),
-			),
-			'CALL_NUMBER' => array(
-				'data_type' => 'string',
-				'validation' => array(__CLASS__, 'validateCallNumber'),
-				'title' => Loc::getMessage('CHAT_ENTITY_CALL_NUMBER_FIELD'),
-			),
-			'ENTITY_TYPE' => array(
-				'data_type' => 'string',
-				'validation' => array(__CLASS__, 'validateEntityType'),
-				'title' => Loc::getMessage('CHAT_ENTITY_ENTITY_TYPE_FIELD'),
-			),
-			'ENTITY_ID' => array(
-				'data_type' => 'string',
-				'validation' => array(__CLASS__, 'validateEntityId'),
-				'title' => Loc::getMessage('CHAT_ENTITY_ENTITY_ID_FIELD'),
-			),
-			'AUTHOR' => array(
-				'data_type' => 'Bitrix\Main\User',
-				'reference' => array('=this.AUTHOR_ID' => 'ref.ID'),
-			),
-			'DISK_FOLDER_ID' => array(
-				'data_type' => 'integer'
-			),
-			'LAST_MESSAGE_ID' => array(
-				'data_type' => 'integer'
-			),
-		);
-	}
-	public static function validateTitle()
-	{
-		return array(
-			new Entity\Validator\Length(null, 255),
-		);
-	}
-	public static function validateType()
-	{
-		return array(
-			new Entity\Validator\Length(null, 2),
-		);
-	}
-	public static function validateColor()
-	{
-		return array(
-			new Entity\Validator\Length(null, 255),
-		);
-	}
-	public static function validateEntityType()
-	{
-		return array(
-			new Entity\Validator\Length(null, 50),
-		);
-	}
-	public static function validateEntityId()
-	{
-		return array(
-			new Entity\Validator\Length(null, 50),
-		);
-	}
-	public static function validateCallNumber()
-	{
-		return array(
-			new Entity\Validator\Length(null, 20),
-		);
+		));
+		if (!$relation)
+		{
+			return false;
+		}
+
+		if ($relation[$userId]['NOTIFY_BLOCK'] == $action)
+		{
+			return true;
+		}
+
+		\Bitrix\Im\Model\RelationTable::update($relation[$userId]['ID'], array('NOTIFY_BLOCK' => $action));
+
+		Recent::clearCache($userId);
+
+		if (\Bitrix\Main\Loader::includeModule('pull'))
+		{
+			\Bitrix\Pull\Event::add($userId, Array(
+				'module_id' => 'im',
+				'command' => 'chatMuteNotify',
+				'params' => Array(
+					'dialogId' => 'chat'.$chatId,
+					'mute' => $action == 'Y'
+				),
+				'extra' => Array(
+					'im_revision' => IM_REVISION,
+					'im_revision_mobile' => IM_REVISION_MOBILE,
+				),
+			));
+		}
+
+		return true;
 	}
 }

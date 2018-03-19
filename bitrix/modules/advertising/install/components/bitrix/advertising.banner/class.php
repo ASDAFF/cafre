@@ -5,13 +5,14 @@ use Bitrix\Main\Localization\Loc;
 
 if (!defined('B_PROLOG_INCLUDED') || B_PROLOG_INCLUDED !== true) die();
 
-if(!\Bitrix\Main\Loader::includeModule('advertising'))
+if (!\Bitrix\Main\Loader::includeModule('advertising'))
 	return;
 
 Loc::loadMessages(__FILE__);
 
 class AdvertisingBanner extends \CBitrixComponent
 {
+	/** @var CPHPCache $obCache */
 	protected $obCache;
 	protected $cache_id;
 	protected $cache_path;
@@ -24,58 +25,60 @@ class AdvertisingBanner extends \CBitrixComponent
 
 	public function onPrepareComponentParams($params)
 	{
-		$params["TYPE"] = (isset($params["TYPE"]) ? trim($params["TYPE"]) : "");
+		$params['TYPE'] = (isset($params['TYPE']) ? trim($params['TYPE']) : '');
 
-		if($params["NOINDEX"] <> "Y")
-			$params["NOINDEX"] = "N";
+		if($params['NOINDEX'] <> 'Y')
+		{
+			$params['NOINDEX'] = 'N';
+		}
 
-		if ($params["CACHE_TYPE"] == "Y" || ($params["CACHE_TYPE"] == "A" && COption::GetOptionString("main", "component_cache_on", "Y") == "Y"))
-			$params["CACHE_TIME"] = intval($params["CACHE_TIME"]);
+		if ($params['CACHE_TYPE'] == 'Y' || ($params['CACHE_TYPE'] == 'A' && Bitrix\Main\Config\Option::get('main', 'component_cache_on', 'Y') == 'Y'))
+		{
+			$params['CACHE_TIME'] = intval($params['CACHE_TIME']);
+		}
 		else
-			$params["CACHE_TIME"] = 0;
+		{
+			$params['CACHE_TIME'] = 0;
+		}
 
 		if (isset($params['QUANTITY']) && intval($params['QUANTITY']) > 0)
+		{
 			$params['QUANTITY'] =  intval($params['QUANTITY']);
+		}
 		else
+		{
 			$params['QUANTITY'] = 1;
+		}
 
-		$params['BANNER_ID'] = intval($params["BANNER_ID"]);
+		$params['BANNER_ID'] = intval($params['BANNER_ID']);
 
 		return $params;
-	}
-
-	protected function setCache()
-	{
-		global $USER;
-		$this->obCache = new CPHPCache;
-		$this->cache_id = SITE_ID."|advertising.banner|".serialize($this->arParams)."|".$USER->GetGroups();
-		$this->cache_path = "/".SITE_ID.$this->GetRelativePath();
-		return $this->obCache->StartDataCache($this->arParams["CACHE_TIME"], $this->cache_id, $this->cache_path);
 	}
 
 	protected function loadBanners()
 	{
 		global $APPLICATION;
 
-		$this->arBanners = CAdvBanner::GetRandomArray($this->arParams["TYPE"], $this->arParams['QUANTITY']);
-		$this->arResult["BANNERS"] = array();
-		if (is_array($this->arBanners) && count($this->arBanners) > 0)
+		$this->arBanners = CAdvBanner::GetRandomArray($this->arParams['TYPE'], $this->arParams['QUANTITY']);
+		$this->arResult['BANNERS'] = array();
+		if (!empty($this->arBanners) && is_array($this->arBanners))
 		{
 			foreach ($this->arBanners as $key => $banner)
 			{
-				if ($banner["AD_TYPE"] == 'template')
+				if ($banner['AD_TYPE'] === 'template')
 				{
-					$templateProps = unserialize($banner["TEMPLATE"]);
-					$templateFiles = unserialize($banner["TEMPLATE_FILES"]);
+					$templateProps = unserialize($banner['TEMPLATE']);
+					$templateFiles = unserialize($banner['TEMPLATE_FILES']);
 
 					if (empty($this->arResult['SIZE']))
 					{
 						$this->templateFiles = $templateFiles;
 						$this->arResult['SIZE'] = $this->getBannerSize();
 					}
+
 					if (count($templateProps['PROPS']) > 1)
 					{
-						if (count($this->arResult["BANNERS"]) == 0)
+						if (count($this->arResult['BANNERS']) == 0)
 						{
 							foreach ($templateProps['PROPS'] as $k => $v)
 							{
@@ -94,7 +97,7 @@ class AdvertisingBanner extends \CBitrixComponent
 											'TYPE' => $banner['AD_TYPE']
 										)
 									),
-									null,
+									$this,
 									array('HIDE_ICONS' => 'Y')
 								);
 
@@ -102,15 +105,17 @@ class AdvertisingBanner extends \CBitrixComponent
 								$strReturn = CAdvBanner::ReplaceURL($strReturn, $banner);
 								ob_end_clean();
 
-								$this->arResult["BANNERS"][] = $strReturn;
+								$this->arResult['BANNERS'][] = $strReturn;
 								$this->bannerIndex++;
 							}
 
-							$this->arResult["BANNERS_PROPERTIES"][$key] = $banner;
+							$this->arResult['BANNERS_PROPERTIES'][$key] = $banner;
 							break;
 						}
 						else
+						{
 							continue;
+						}
 					}
 					else
 					{
@@ -129,15 +134,16 @@ class AdvertisingBanner extends \CBitrixComponent
 									'TYPE' => $banner['AD_TYPE']
 								)
 							),
-							null,
+							$this,
 							array('HIDE_ICONS' => 'Y')
 						);
 
 						$strReturn = CAdvBanner::PrepareHTML(ob_get_contents(), $banner);
 						$strReturn = CAdvBanner::ReplaceURL($strReturn, $banner);
 						ob_end_clean();
-						$this->arResult["BANNERS"][$key] = $strReturn;
-						$this->arResult["BANNERS_PROPERTIES"][$key] = $banner;
+
+						$this->arResult['BANNERS'][$key] = $strReturn;
+						$this->arResult['BANNERS_PROPERTIES'][$key] = $banner;
 						$this->bannerIndex++;
 					}
 				}
@@ -160,9 +166,8 @@ class AdvertisingBanner extends \CBitrixComponent
 						}
 					}
 
-					if ($banner["AD_TYPE"] == 'image' && $templateExists)
+					if ($banner['AD_TYPE'] === 'image' && $templateExists)
 					{
-						$strReturn = CAdvBanner::GetHTML($banner, ($this->arParams["NOINDEX"] == "Y"));
 						ob_start();
 
 						$APPLICATION->IncludeComponent(
@@ -181,7 +186,7 @@ class AdvertisingBanner extends \CBitrixComponent
 									'URL_TARGET' => $banner['URL_TARGET']
 								)
 							),
-							null,
+							$this,
 							array('HIDE_ICONS' => 'Y')
 						);
 
@@ -189,13 +194,24 @@ class AdvertisingBanner extends \CBitrixComponent
 						ob_end_clean();
 					}
 					else
-						$strReturn = CAdvBanner::GetHTML($banner, ($this->arParams["NOINDEX"] == "Y"));
+					{
+						$strReturn = CAdvBanner::GetHTML($banner, ($this->arParams['NOINDEX'] == 'Y'));
+					}
 
-					$this->arResult["BANNERS"][$key] = $strReturn;
-					$this->arResult["BANNERS_PROPERTIES"][$key] = $banner;
+					$this->arResult['BANNERS'][$key] = $strReturn;
+					$this->arResult['BANNERS_PROPERTIES'][$key] = $banner;
 					$this->bannerIndex++;
 				}
 			}
+		}
+	}
+
+	protected function registerBannerTags()
+	{
+		if (defined('BX_COMP_MANAGED_CACHE'))
+		{
+			$taggedCache = Main\Application::getInstance()->getTaggedCache();
+			$taggedCache->registerTag('advertising_banner_type_'.$this->arParams['TYPE']);
 		}
 	}
 
@@ -203,12 +219,12 @@ class AdvertisingBanner extends \CBitrixComponent
 	{
 		global $APPLICATION;
 
-		if ($banner = CAdvBanner::GetByID($this->arParams["BANNER_ID"])->Fetch())
+		if ($banner = CAdvBanner::GetByID($this->arParams['BANNER_ID'])->Fetch())
 		{
-			if ($banner["AD_TYPE"] == 'template')
+			if ($banner['AD_TYPE'] === 'template')
 			{
-				$this->templateProps = unserialize($banner["TEMPLATE"]);
-				$this->templateFiles = unserialize($banner["TEMPLATE_FILES"]);
+				$this->templateProps = unserialize($banner['TEMPLATE']);
+				$this->templateFiles = unserialize($banner['TEMPLATE_FILES']);
 
 				foreach ($this->templateProps['PROPS'] as $k => $v)
 				{
@@ -227,17 +243,18 @@ class AdvertisingBanner extends \CBitrixComponent
 								'TYPE' => $banner['AD_TYPE']
 							)
 						),
-						null,
+						$this,
 						array('HIDE_ICONS' => 'Y')
 					);
 
 					$strReturn = CAdvBanner::PrepareHTML(ob_get_contents(), $banner);
 					ob_end_clean();
 
-					$this->arResult["BANNERS"][] = $strReturn;
+					$this->arResult['BANNERS'][] = $strReturn;
 					$this->bannerIndex++;
 				}
-				$this->arResult["BANNERS_PROPERTIES"][] = $banner;
+
+				$this->arResult['BANNERS_PROPERTIES'][] = $banner;
 			}
 
 			$this->arResult['SIZE'] = $this->getBannerSize();
@@ -259,74 +276,80 @@ class AdvertisingBanner extends \CBitrixComponent
 					if ($id !== 'null')
 					{
 						$file = CFile::GetFileArray($id);
-						return array('WIDTH' => $file['WIDTH'], 'HEIGHT' => $file['HEIGHT']);
+
+						return array(
+							'WIDTH' => $file['WIDTH'],
+							'HEIGHT' => $file['HEIGHT']
+						);
 					}
 				}
 			}
 		}
-		else
-			return array();
+
+		return array();
+	}
+
+	protected function setCache()
+	{
+		global $USER;
+
+		return $this->startResultCache(false, $USER->GetGroups());
 	}
 
 	public function executeComponent()
 	{
-		global $USER;
-		global $APPLICATION;
-
-		$this->arResult = Array(
-			"ID" => randString(5),
-			"BANNER" => "",
-			"BANNER_PROPERTIES" => Array(),
+		$this->arResult = array(
+			'ID' => $this->randString(5),
+			'BANNER' => '',
+			'BANNER_PROPERTIES' => array(),
 		);
+
 		if ($this->setCache())
 		{
-			if ($this->arParams['PREVIEW'] == 'Y')
-				$this->loadPreview();
-			else
-				$this->loadBanners();
-
-			if (is_array($this->arResult['BANNERS']))
+			if ($this->arParams['PREVIEW'] === 'Y')
 			{
-				foreach ($this->arResult['BANNERS'] as $bk => $bv)
-				{
-					if (isset($this->arResult['BANNER'][0]))
-						$this->arResult['BANNER'] .= '<br />';
-					$this->arResult['BANNER'] .= $bv;
-				}
+				$this->loadPreview();
+			}
+			else
+			{
+				$this->loadBanners();
+				$this->registerBannerTags();
 			}
 
-			$this->arResult['BANNER_PROPERTIES'] = (count($this->arResult['BANNERS_PROPERTIES']) > 0) ? $this->arResult['BANNERS_PROPERTIES'][0] : array();
+			if (!empty($this->arResult['BANNERS']) && is_array($this->arResult['BANNERS']))
+			{
+				$this->arResult['BANNER'] = implode('<br />', $this->arResult['BANNERS']);
+			}
+
+			if (!empty($this->arResult['BANNERS_PROPERTIES']) && is_array($this->arResult['BANNERS_PROPERTIES']))
+			{
+				$this->arResult['BANNER_PROPERTIES'] = reset($this->arResult['BANNERS_PROPERTIES']);
+			}
 
 			$this->includeComponentTemplate();
-
-			$this->templateCachedData = $this->GetTemplateCachedData();
-
-			$this->obCache->EndDataCache(
-				Array(
-					"arResult" => $this->arResult,
-					"templateCachedData" => $this->templateCachedData
-				)
-			);
-		}
-		else
-		{
-			$this->arVars = $this->obCache->GetVars();
-			$this->arResult = $this->arVars["arResult"];
-			CBitrixComponentTemplate::ApplyCachedData($this->arVars["templateCachedData"]);
 		}
 
 		if ($this->arParams['PREVIEW'] != 'Y')
 		{
-			if (is_array($this->arResult['BANNERS_PROPERTIES']) && !empty($this->arResult['BANNERS_PROPERTIES']))
-			{
-				foreach ($this->arResult['BANNERS_PROPERTIES'] as $banner)
-				{
-					CAdvBanner::FixShow($banner);
+			$this->doFinalActions();
+		}
+	}
 
-					if ($USER->IsAuthorized() && $APPLICATION->GetShowIncludeAreas())
+	public function doFinalActions()
+	{
+		global $USER, $APPLICATION;
+
+		if (!empty($this->arResult['BANNERS_PROPERTIES']) && is_array($this->arResult['BANNERS_PROPERTIES']))
+		{
+			foreach ($this->arResult['BANNERS_PROPERTIES'] as $banner)
+			{
+				CAdvBanner::FixShow($banner);
+
+				if ($USER->IsAuthorized() && $APPLICATION->GetShowIncludeAreas())
+				{
+					if (($arIcons = CAdvBanner::GetEditIcons($banner, $this->arParams['TYPE'], $this->getIncludeAreaIcons())) !== false)
 					{
-						if(($arIcons = CAdvBanner::GetEditIcons($banner, $this->arParams["TYPE"], $this->getIncludeAreaIcons())) !== false)
-							$this->AddIncludeAreaIcons($arIcons);
+						$this->addIncludeAreaIcons($arIcons);
 					}
 				}
 			}

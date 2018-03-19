@@ -203,7 +203,7 @@ class MailServicesTable extends Entity\DataManager
 		{
 			$serviceId = is_array($primary) ? $primary['ID'] : $primary;
 
-			if (in_array($serviceForDelete['SERVICE_TYPE'], array('controller', 'domain')))
+			if (in_array($serviceForDelete['SERVICE_TYPE'], array('controller', 'domain', 'crdomain')))
 			{
 				$mbData = array('ACTIVE' => 'N', 'SERVICE_ID' => 0);
 			}
@@ -271,6 +271,24 @@ class MailServicesTable extends Entity\DataManager
 			'SERVER' => array(
 				'data_type' => 'string',
 				'title'     => Localization\Loc::getMessage('mail_mailservice_entity_server_field'),
+				'save_data_modification' => function()
+				{
+					return array(
+						function ($value)
+						{
+							return strtolower($value);
+						}
+					);
+				},
+				'fetch_data_modification' => function()
+				{
+					return array(
+						function ($value)
+						{
+							return strtolower($value);
+						}
+					);
+				},
 			),
 			'PORT' => array(
 				'data_type' => 'integer',

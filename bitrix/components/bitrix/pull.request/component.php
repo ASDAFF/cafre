@@ -14,9 +14,13 @@ if (defined('PULL_USER_ID'))
 {
 	$userId = PULL_USER_ID;
 }
-else if ($GLOBALS['USER'] && intval($GLOBALS['USER']->GetID()) > 0)
+else if (is_object($GLOBALS['USER']) && intval($GLOBALS['USER']->GetID()) > 0)
 {
 	$userId = intval($GLOBALS['USER']->GetID());
+}
+else if (intval($_SESSION["SESS_SEARCHER_ID"]) <= 0 && intval($_SESSION["SESS_GUEST_ID"]) > 0 && \CPullOptions::GetGuestStatus())
+{
+	$userId = intval($_SESSION["SESS_GUEST_ID"])*-1;
 }
 
 if ($userId == 0)

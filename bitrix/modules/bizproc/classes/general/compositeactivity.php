@@ -8,12 +8,17 @@ abstract class CBPCompositeActivity
 	{
 		parent::SetWorkflow($workflow);
 		foreach ($this->arActivities as $activity)
+		{
+			if (!method_exists($activity, 'SetWorkflow'))
+				throw new Exception('ActivitySetWorkflow');
 			$activity->SetWorkflow($workflow);
+		}
 	}
 
 	protected function ReInitialize()
 	{
 		parent::ReInitialize();
+		/** @var CBPActivity $activity */
 		foreach ($this->arActivities as $activity)
 			$activity->ReInitialize();
 	}
@@ -43,7 +48,13 @@ abstract class CBPCompositeActivity
 		foreach ($this->arActivities as $activity)
 			$this->workflow->InitializeActivity($activity);
 	}
-	
+
+	public function Finalize()
+	{
+		foreach ($this->arActivities as $activity)
+			$this->workflow->FinalizeActivity($activity);
+	}
+
 	public function HandleFault(Exception $exception)
 	{
 		if (!$exception)

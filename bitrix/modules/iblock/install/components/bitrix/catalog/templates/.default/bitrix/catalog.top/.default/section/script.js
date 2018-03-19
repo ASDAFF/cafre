@@ -1258,26 +1258,18 @@ window.JCCatalogTopSection.prototype.Compare = function()
 
 window.JCCatalogTopSection.prototype.CompareResult = function(result)
 {
-	var popupContent, popupButtons, popupTitle;
+	var popupContent, popupButtons;
 	if (!!this.obPopupWin)
-	{
 		this.obPopupWin.close();
-	}
-	if (typeof result !== 'object')
-	{
-		return false;
-	}
+
+	if (!BX.type.isPlainObject(result))
+		return;
+
 	this.InitPopupWindow();
-	popupTitle = {
-		content: BX.create('div', {
-			style: { marginRight: '30px', whiteSpace: 'nowrap' },
-			text: BX.message('COMPARE_TITLE')
-		})
-	};
 	if (result.STATUS === 'OK')
 	{
 		BX.onCustomEvent('OnCompareChange');
-		popupContent = '<div style="width: 96%; margin: 10px 2%; text-align: center;"><p>'+BX.message('COMPARE_MESSAGE_OK')+'</p></div>';
+		popupContent = '<div style="width: 100%; margin: 0; text-align: center;"><p>'+BX.message('COMPARE_MESSAGE_OK')+'</p></div>';
 		if (this.showClosePopup)
 		{
 			popupButtons = [
@@ -1313,7 +1305,7 @@ window.JCCatalogTopSection.prototype.CompareResult = function(result)
 	}
 	else
 	{
-		popupContent = '<div style="width: 96%; margin: 10px 2%; text-align: center;"><p>'+(!!result.MESSAGE ? result.MESSAGE : BX.message('COMPARE_UNKNOWN_ERROR'))+'</p></div>';
+		popupContent = '<div style="width: 100%; margin: 0; text-align: center;"><p>'+(!!result.MESSAGE ? result.MESSAGE : BX.message('COMPARE_UNKNOWN_ERROR'))+'</p></div>';
 		popupButtons = [
 			new BasketButton({
 				ownerClass: this.obProduct.parentNode.parentNode.className,
@@ -1325,11 +1317,10 @@ window.JCCatalogTopSection.prototype.CompareResult = function(result)
 			})
 		];
 	}
-	this.obPopupWin.setTitleBar(popupTitle);
+	this.obPopupWin.setTitleBar(BX.message('COMPARE_TITLE'));
 	this.obPopupWin.setContent(popupContent);
 	this.obPopupWin.setButtons(popupButtons);
 	this.obPopupWin.show();
-	return false;
 };
 
 window.JCCatalogTopSection.prototype.CompareRedirect = function()
@@ -1489,12 +1480,7 @@ window.JCCatalogTopSection.prototype.Basket = function()
 			if (this.basketData.useProps && !this.basketData.emptyProps)
 			{
 				this.InitPopupWindow();
-				this.obPopupWin.setTitleBar({
-					content: BX.create('div', {
-						style: { marginRight: '30px', whiteSpace: 'nowrap' },
-						text: BX.message('TITLE_BASKET_PROPS')
-					})
-				});
+				this.obPopupWin.setTitleBar(BX.message('TITLE_BASKET_PROPS'));
 				if (BX(this.visual.BASKET_PROP_DIV))
 				{
 					contentBasketProps = BX(this.visual.BASKET_PROP_DIV).innerHTML;
@@ -1530,13 +1516,11 @@ window.JCCatalogTopSection.prototype.BasketResult = function(arResult)
 		buttons = [];
 
 	if (!!this.obPopupWin)
-	{
 		this.obPopupWin.close();
-	}
-	if ('object' !== typeof arResult)
-	{
-		return false;
-	}
+
+	if (!BX.type.isPlainObject(arResult))
+		return;
+
 	successful = (arResult.STATUS === 'OK');
 	if (successful && this.basketAction === 'BUY')
 	{
@@ -1561,7 +1545,7 @@ window.JCCatalogTopSection.prototype.BasketResult = function(arResult)
 						);
 					break;
 			}
-			strContent = '<div style="width: 96%; margin: 10px 2%; text-align: center;"><img src="'+strPict+'" height="130" style="max-height:130px"><p>'+this.product.name+'</p></div>';
+			strContent = '<div style="width: 100%; margin: 0; text-align: center;"><img src="'+strPict+'" height="130" style="max-height:130px"><p>'+this.product.name+'</p></div>';
 			if (this.showClosePopup)
 			{
 				buttons = [
@@ -1597,7 +1581,7 @@ window.JCCatalogTopSection.prototype.BasketResult = function(arResult)
 		}
 		else
 		{
-			strContent = '<div style="width: 96%; margin: 10px 2%; text-align: center;"><p>'+(!!arResult.MESSAGE ? arResult.MESSAGE : BX.message('BASKET_UNKNOWN_ERROR'))+'</p></div>';
+			strContent = '<div style="width: 100%; margin: 0; text-align: center;"><p>'+(!!arResult.MESSAGE ? arResult.MESSAGE : BX.message('BASKET_UNKNOWN_ERROR'))+'</p></div>';
 			buttons = [
 				new BasketButton({
 					ownerClass: this.obProduct.parentNode.parentNode.className,
@@ -1608,12 +1592,7 @@ window.JCCatalogTopSection.prototype.BasketResult = function(arResult)
 				})
 			];
 		}
-		this.obPopupWin.setTitleBar({
-			content: BX.create('div', {
-				style: { marginRight: '30px', whiteSpace: 'nowrap' },
-				text: (successful ? BX.message('TITLE_SUCCESSFUL') : BX.message('TITLE_ERROR'))
-			})
-		});
+		this.obPopupWin.setTitleBar(successful ? BX.message('TITLE_SUCCESSFUL') : BX.message('TITLE_ERROR'));
 		this.obPopupWin.setContent(strContent);
 		this.obPopupWin.setButtons(buttons);
 		this.obPopupWin.show();
@@ -1628,9 +1607,8 @@ window.JCCatalogTopSection.prototype.BasketRedirect = function()
 window.JCCatalogTopSection.prototype.InitPopupWindow = function()
 {
 	if (!!this.obPopupWin)
-	{
 		return;
-	}
+
 	this.obPopupWin = BX.PopupWindowManager.create('CatalogSectionBasket_'+this.visual.ID, null, {
 		autoHide: false,
 		offsetLeft: 0,
@@ -1638,7 +1616,8 @@ window.JCCatalogTopSection.prototype.InitPopupWindow = function()
 		overlay : true,
 		closeByEsc: true,
 		titleBar: true,
-		closeIcon: {top: '10px', right: '10px'}
+		closeIcon: true,
+		contentColor: 'white'
 	});
 };
 })(window);

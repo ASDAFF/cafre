@@ -128,22 +128,19 @@ class Element
 	 */
 	protected function loadElementPrices(array $productList)
 	{
-		$priceList = \CPrice::getListEx(
-			array(),
-			array('PRODUCT_ID' => $productList),
-			false,
-			false,
-			array('ID', 'PRODUCT_ID', 'CATALOG_GROUP_ID', 'PRICE', 'CURRENCY', 'QUANTITY_FROM', 'QUANTITY_TO')
-		);
+		$priceList = \Bitrix\Catalog\PriceTable::getList(array(
+			'select' => array('ID', 'PRODUCT_ID', 'CATALOG_GROUP_ID', 'PRICE', 'CURRENCY', 'QUANTITY_FROM', 'QUANTITY_TO'),
+			'filter' => array('@PRODUCT_ID' => $productList)
+		));
 		while($price = $priceList->fetch())
 		{
 			if (!isset($this->elementPrices[$price["CATALOG_GROUP_ID"]][$price["CURRENCY"]]))
-			{
 				$this->elementPrices[$price["CATALOG_GROUP_ID"]][$price["CURRENCY"]] = array();
-			}
-			$priceValue = doubleval($price["PRICE"]);
-			$this->elementPrices[$price["CATALOG_GROUP_ID"]][$price["CURRENCY"]][$priceValue] = $priceValue;
+			$priceValue = (float)$price["PRICE"];
+			$this->elementPrices[$price["CATALOG_GROUP_ID"]][$price["CURRENCY"]][(string)$priceValue] = $priceValue;
 		}
+		unset($price);
+		unset($priceList);
 
 		foreach ($this->elementPrices as $catalogGroupId => $currencyPrices)
 		{
@@ -157,7 +154,9 @@ class Element
 					);
 				}
 			}
+			unset($currency, $prices);
 		}
+		unset($catalogGroupId, $currencyPrices);
 	}
 
 	/**

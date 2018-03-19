@@ -21,7 +21,7 @@ if($ex = $APPLICATION->GetException())
 	die();
 }
 
-$ID = IntVal($_REQUEST["ID"]);
+$ID = (isset($_REQUEST["ID"]) ? (int)$_REQUEST["ID"] : 0);
 $classifierMode = false;
 $mainSectionId = $subSectionId = 0;
 $arMeasureClassifier = array();

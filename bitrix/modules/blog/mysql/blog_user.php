@@ -4,7 +4,7 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/blog/general/blog_user.p
 class CBlogUser extends CAllBlogUser
 {
 	/*************** ADD, UPDATE, DELETE *****************/
-	function Add($arFields)
+	public static function Add($arFields)
 	{
 		global $DB;
 		if(strlen($arFields["PATH"]) > 0)
@@ -119,7 +119,7 @@ class CBlogUser extends CAllBlogUser
 		return $ID;
 	}
 
-	function Update($ID, $arFields)
+	public static function Update($ID, $arFields)
 	{
 		global $DB;
 
@@ -243,7 +243,7 @@ class CBlogUser extends CAllBlogUser
 	}
 
 	//*************** SELECT *********************/
-	function GetList($arOrder = Array("ID" => "DESC"), $arFilter = Array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array())
+	public static function GetList($arOrder = Array("ID" => "DESC"), $arFilter = Array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array())
 	{
 		global $DB;
 
@@ -353,7 +353,7 @@ class CBlogUser extends CAllBlogUser
 		return $dbRes;
 	}
 
-	function GetUserFriendsList($ID, $userID = False, $bAuth = False, $limit = 20, $arGroup = Array())
+	public static function GetUserFriendsList($ID, $userID = False, $bAuth = False, $limit = 20, $arGroup = Array())
 	{
 		global $DB;
 

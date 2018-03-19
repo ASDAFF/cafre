@@ -1,6 +1,16 @@
 <?if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
 \Bitrix\Main\Page\Asset::getInstance()->addJs('/bitrix/js/bizproc/tools.js');
+
+\Bitrix\Main\Loader::includeModule('socialnetwork');
+CJSCore::Init(array('socnetlogdest', 'bp_user_selector'));
+
 $cmpId = RandString();
+
+$showDelegationButton = (
+	!$arResult['IsComplete']
+	&& ($arResult['isAdmin'] || (int)$arResult['TASK']['DELEGATION_TYPE'] !== CBPTaskDelegationType::None)
+	&& IsModuleInstalled('intranet')
+);
 
 if (empty($arResult['DOCUMENT_ICON']))
 {
@@ -18,7 +28,7 @@ if (empty($arResult['DOCUMENT_ICON']))
 	});
 </script>
 <?if ($arParams['POPUP']):?>
-<div class="bp-popup-title"><?=$arResult["WORKFLOW_TEMPLATE_NAME"]?></div>
+<div class="bp-popup-title"><?=htmlspecialcharsbx($arResult["WORKFLOW_TEMPLATE_NAME"])?></div>
 <div class="bp-popup">
 <?endif?>
 <div class="bp-task-page bp-lent <?if (empty($arResult["TASK"]['STARTED_BY_PHOTO_SRC'])):?>no-photo<?endif?>">
@@ -58,6 +68,7 @@ if (empty($arResult['DOCUMENT_ICON']))
 					echo '<span class="bp-status-ready"><span>'.GetMessage('BPATL_USER_STATUS_YES').'</span></span>';
 					break;
 				case CBPTaskUserStatus::No:
+				case CBPTaskUserStatus::Cancel:
 					echo '<span class="bp-status-cancel"><span>'.GetMessage('BPATL_USER_STATUS_NO').'</span></span>';
 					break;
 				default:
@@ -69,7 +80,7 @@ if (empty($arResult['DOCUMENT_ICON']))
 				<?
 				if ($arParams['POPUP']):
 				foreach ($arResult['TaskControls']['BUTTONS'] as $control):
-					$class = $control['TARGET_USER_STATUS'] == CBPTaskUserStatus::No? 'decline' : 'accept';
+					$class = $control['TARGET_USER_STATUS'] == CBPTaskUserStatus::No || $control['TARGET_USER_STATUS'] == CBPTaskUserStatus::Cancel ? 'decline' : 'accept';
 					$props = CUtil::PhpToJSObject(array(
 						'TASK_ID' => $arResult["TASK"]['ID'],
 						$control['NAME'] => $control['VALUE']
@@ -89,7 +100,7 @@ if (empty($arResult['DOCUMENT_ICON']))
 						<input type="hidden" name="back_url" value="<?= htmlspecialcharsbx($arResult['backUrl']) ?>" />
 						<?
 						foreach ($arResult['TaskControls']['BUTTONS'] as $control):
-							$class = $control['TARGET_USER_STATUS'] == CBPTaskUserStatus::No? 'decline' : 'accept';
+							$class = $control['TARGET_USER_STATUS'] == CBPTaskUserStatus::No || $control['TARGET_USER_STATUS'] == CBPTaskUserStatus::Cancel ? 'decline' : 'accept';
 							$props = CUtil::PhpToJSObject(array(
 								'TASK_ID' => $arResult["TASK"]['ID'],
 								$control['NAME'] => $control['VALUE']
@@ -132,7 +143,7 @@ if (empty($arResult['DOCUMENT_ICON']))
 			<?endif;?>
 		</p>
 		<?
-		if ($arResult["TASK"]['IS_INLINE'] == 'Y' && !$arResult['IsComplete'] && CModule::IncludeModule('intranet')):?>
+		if ($showDelegationButton && $arResult["TASK"]['IS_INLINE'] == 'Y'):?>
 			<a href="#" class="bp-button bp-button-transparent bp-button-first" onclick="return BX.Bizproc.showDelegationPopup(this, <?= (int)$arResult["TASK"]["ID"] ?>, <?= (int)$arParams["USER_ID"] ?>)"><span></span><?=GetMessage('BPAT_DELEGATE_LABEL')?></a>
 		<?
 		endif;
@@ -154,7 +165,7 @@ if (empty($arResult['DOCUMENT_ICON']))
 					<?if (!empty($arResult['TaskControls']['BUTTONS'])):?>
 						<?
 						foreach ($arResult['TaskControls']['BUTTONS'] as $control):
-							$class = $control['TARGET_USER_STATUS'] == CBPTaskUserStatus::No? 'decline' : 'accept';
+							$class = $control['TARGET_USER_STATUS'] == CBPTaskUserStatus::No || $control['TARGET_USER_STATUS'] == CBPTaskUserStatus::Cancel ? 'decline' : 'accept';
 							$props = CUtil::PhpToJSObject(array(
 								'TASK_ID' => $arResult["TASK"]['ID'],
 								$control['NAME'] => $control['VALUE']
@@ -171,7 +182,7 @@ if (empty($arResult['DOCUMENT_ICON']))
 						?>
 					<?else: echo $arResult["TaskFormButtons"]; endif;?>
 
-					<?if (!$arResult['IsComplete'] && CModule::IncludeModule('intranet')):?>
+					<?if ($showDelegationButton):?>
 						<a href="#" class="bp-button bp-button-transparent" onclick="return BX.Bizproc.showDelegationPopup(this, <?= (int)$arResult["TASK"]["ID"] ?>, <?= (int)$arParams["USER_ID"] ?>)"><span></span><?=GetMessage('BPAT_DELEGATE_LABEL')?></a>
 					<?endif?>
 				</div>
@@ -238,7 +249,7 @@ if (empty($arResult['DOCUMENT_ICON']))
 						"ENTITY_TYPE" => "WF",
 						"ENTITY_ID" => CBPStateService::getWorkflowIntegerId($arResult["TASK"]['WORKFLOW_ID']),
 						"ENTITY_XML_ID" => "WF_".$arResult["TASK"]['WORKFLOW_ID'],
-						"PERMISSION" => "Y",
+						"PERMISSION" => "M",
 						"URL_TEMPLATES_PROFILE_VIEW" => "/company/personal/user/#user_id#/",
 						"SHOW_RATING" => "Y",
 						"SHOW_LINK_TO_MESSAGE" => "N",

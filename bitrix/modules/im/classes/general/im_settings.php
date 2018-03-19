@@ -62,6 +62,21 @@ class CIMSettings
 		{
 			CIMStatus::Set($userId, Array('STATUS' => $value[self::STATUS]));
 		}
+		if (isset($value['openDesktopFromPanel']) && CModule::IncludeModule('pull'))
+		{
+			\Bitrix\Pull\Event::add($userId, Array(
+				'module_id' => 'im',
+				'command' => 'updateSettings',
+				'expiry' => 5,
+				'params' => Array(
+					'openDesktopFromPanel' => $value['openDesktopFromPanel'],
+				),
+				'extra' => Array(
+					'im_revision' => IM_REVISION,
+					'im_revision_mobile' => IM_REVISION_MOBILE,
+				),
+			));
+		}
 
 		$arDefault = self::GetDefaultSettings($type);
 		foreach ($value as $key => $val)
@@ -102,6 +117,21 @@ class CIMSettings
 		if (isset($value[self::STATUS]))
 		{
 			CIMStatus::Set($userId, Array('STATUS' => $value[self::STATUS]));
+		}
+		if (isset($value['openDesktopFromPanel']) && CModule::IncludeModule('pull'))
+		{
+			\Bitrix\Pull\Event::add($userId, Array(
+				'module_id' => 'im',
+				'command' => 'updateSettings',
+				'expiry' => 5,
+				'params' => Array(
+					'openDesktopFromPanel' => $value['openDesktopFromPanel'],
+				),
+				'extra' => Array(
+					'im_revision' => IM_REVISION,
+					'im_revision_mobile' => IM_REVISION_MOBILE,
+				),
+			));
 		}
 
 		$arDefault = self::GetDefaultSettings($type);
@@ -179,15 +209,21 @@ class CIMSettings
 		{
 			$arDefault = Array(
 				'status' => 'online',
+				'backgroundImage' => false,
 				'bxdNotify' => true,
 				'sshNotify' => true,
+				'generalNotify' => true,
 				'trackStatus' => '',
 				'nativeNotify' => true,
+				'openDesktopFromPanel' => true,
 				'viewOffline' => COption::GetOptionString("im", "view_offline"),
 				'viewGroup' => COption::GetOptionString("im", "view_group"),
 				'viewLastMessage' => true,
 				'enableSound' => true,
 				'enableBigSmile' => true,
+				'enableRichLink' => true,
+				'linesTabEnable' => true,
+				'linesNewGroupEnable' => false,
 				'sendByEnter' => COption::GetOptionString("im", "send_by_enter"),
 				'correctText' => COption::GetOptionString("im", "correct_text"),
 				'panelPositionHorizontal' => COption::GetOptionString("im", "panel_position_horizontal"),
@@ -270,6 +306,10 @@ class CIMSettings
 				else if ($key == 'enableSound' && $value[$key] === 'N') // for legacy
 				{
 					$arValues[$key] = false;
+				}
+				else if ($key == 'backgroundImage')
+				{
+					$arValues[$key] = $value[$key];
 				}
 				else if ($key == 'notifySchemeLevel')
 				{
@@ -369,7 +409,7 @@ class CIMSettings
 					list($clientId, $moduleId, $notifyId) = explode('|', $key, 3);
 					if (in_array($clientId, Array('push', 'important', 'disabled')))
 						continue;
-					
+
 					if ($clientId == self::CLIENT_SITE)
 					{
 						if (CIMNotifySchema::CheckDisableFeature($moduleId, $notifyId, $clientId))

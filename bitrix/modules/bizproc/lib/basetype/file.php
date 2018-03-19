@@ -22,6 +22,39 @@ class File extends Base
 	}
 
 	/**
+	 * Get formats list.
+	 * @return array
+	 */
+	public static function getFormats()
+	{
+		$formats = parent::getFormats();
+		$formats['src'] = array(
+			'callable' =>'formatValueSrc',
+			'separator' => ', ',
+		);
+		return $formats;
+	}
+
+	/**
+	 * Normalize single value.
+	 *
+	 * @param FieldType $fieldType Document field type.
+	 * @param mixed $value Field value.
+	 * @return mixed Normalized value
+	 */
+	public static function toSingleValue(FieldType $fieldType, $value)
+	{
+		if (is_array($value))
+		{
+			if (\CBPHelper::isAssociativeArray($value))
+				$value = array_keys($value);
+			reset($value);
+			$value = current($value);
+		}
+		return $value;
+	}
+
+	/**
 	 * @param FieldType $fieldType
 	 * @param $value
 	 * @return string
@@ -41,6 +74,71 @@ class File extends Base
 
 	/**
 	 * @param FieldType $fieldType
+	 * @param $value
+	 * @return string
+	 */
+	protected static function formatValueSrc(FieldType $fieldType, $value)
+	{
+		$value = (int) $value;
+		$file = \CFile::getFileArray($value);
+		if ($file && $file['SRC'])
+		{
+			return $file['SRC'];
+		}
+	}
+
+	/**
+	 * @param FieldType $fieldType Document field type.
+	 * @param mixed $value Field value.
+	 * @param string $toTypeClass Type class name.
+	 * @return null
+	 */
+	public static function convertTo(FieldType $fieldType, $value, $toTypeClass)
+	{
+		/** @var Base $toTypeClass */
+		$type = $toTypeClass::getType();
+		switch ($type)
+		{
+			case FieldType::FILE:
+				$value = (int) $value;
+				break;
+			default:
+				$value = null;
+		}
+
+		return $value;
+	}
+
+	/**
+	 * Return conversion map for current type.
+	 * @return array Map.
+	 */
+	public static function getConversionMap()
+	{
+		return array(
+			array(
+				FieldType::FILE
+			)
+		);
+	}
+
+	/**
+	 * @param FieldType $fieldType Document field type.
+	 * @param mixed $value Field value.
+	 * @param string $toTypeClass Type class name.
+	 * @return array
+	 */
+	public static function convertValueMultiple(FieldType $fieldType, $value, $toTypeClass)
+	{
+		$value = (array) $value;
+		if (\CBPHelper::isAssociativeArray($value))
+			$value = array_keys($value);
+
+		return parent::convertValueMultiple($fieldType, $value, $toTypeClass);
+	}
+
+	/**
+	 * @param FieldType $fieldType
 	 * @param array $field
 	 * @param mixed $value
 	 * @param bool $allowSelection
@@ -51,7 +149,10 @@ class File extends Base
 	{
 		if ($renderMode & FieldType::RENDER_MODE_DESIGNER)
 			return '';
-		return '<input type="file" id="'
+
+		$className = static::generateControlClassName($fieldType, $field);
+
+		return '<input type="file" class="'.htmlspecialcharsbx($className).'" id="'
 			.htmlspecialcharsbx(static::generateControlId($field))
 			.'" name="'.htmlspecialcharsbx(static::generateControlName($field)).'">';
 	}

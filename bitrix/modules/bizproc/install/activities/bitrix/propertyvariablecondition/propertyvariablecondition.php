@@ -32,14 +32,14 @@ class CBPPropertyVariableCondition
 			$joiner = empty($cond[3])? static::CONDITION_JOINER_AND : static::CONDITION_JOINER_OR;
 			if ($rootActivity->IsPropertyExists($cond[0]))
 			{
-				if (!$this->CheckCondition($rootActivity->{$cond[0]}, $cond[1], $cond[2], $rootActivity->GetPropertyBaseType($cond[0]), $rootActivity))
+				if (!$this->CheckCondition($rootActivity->{$cond[0]}, $cond[1], $cond[2], $rootActivity->GetPropertyBaseType($cond[0]), $rootActivity, $rootActivity->getTemplatePropertyType($cond[0])))
 				{
 					$r = false;
 				}
 			}
 			elseif ($rootActivity->IsVariableExists($cond[0]))
 			{
-				if (!$this->CheckCondition($rootActivity->GetVariable($cond[0]), $cond[1], $cond[2], $rootActivity->GetVariableBaseType($cond[0]), $rootActivity))
+				if (!$this->CheckCondition($rootActivity->GetVariable($cond[0]), $cond[1], $cond[2], $rootActivity->GetVariableBaseType($cond[0]), $rootActivity, $rootActivity->getVariableType($cond[0])))
 				{
 					$r = false;
 				}
@@ -56,11 +56,11 @@ class CBPPropertyVariableCondition
 		return sizeof($result) > 0 ? true : false;
 	}
 
-	private function CheckCondition($field, $operation, $value, $type = null, $rootActivity = null)
+	private function CheckCondition($field, $operation, $value, $type = null, $rootActivity = null, $property = null)
 	{
 		$result = false;
 
-		$value = $rootActivity->ParseValue($value, $type);
+		$value = $rootActivity->ParseValue($value, is_array($property) ? $property['Type'] : $type);
 		if ($type == "user")
 		{
 			$field = CBPHelper::ExtractUsersFromUserGroups($field, $rootActivity);
@@ -159,6 +159,12 @@ class CBPPropertyVariableCondition
 				$v1 = $v1Tmp;
 			}
 
+			if ($type === 'bool')
+			{
+				$f1 = CBPHelper::getBool($f1);
+				$v1 = CBPHelper::getBool($v1);
+			}
+
 			switch ($operation)
 			{
 				case ">":
@@ -215,26 +221,26 @@ class CBPPropertyVariableCondition
 					$arCurrentValues["variable_condition_value_".$i] = $value[2];
 					$arCurrentValues["variable_condition_joiner_".$i] = $value[3];
 
-					if (array_key_exists($value[0], $arWorkflowParameters))
-					{
-						if ($arFieldTypes[$arWorkflowParameters[$value[0]]["Type"]]["BaseType"] == "user" && $arWorkflowParameters[$value[0]]["Type"] != "S:employee")
-						{
-							if (!is_array($arCurrentValues["variable_condition_value_".$i]))
-								$arCurrentValues["variable_condition_value_".$i] = array($arCurrentValues["variable_condition_value_".$i]);
-
-							$arCurrentValues["variable_condition_value_".$i] = CBPHelper::UsersArrayToString($arCurrentValues["variable_condition_value_".$i], $arWorkflowTemplate, $documentType);
-						}
-					}
-					elseif (array_key_exists($value[0], $arWorkflowVariables))
-					{
-						if ($arFieldTypes[$arWorkflowVariables[$value[0]]["Type"]]["BaseType"] == "user" && $arWorkflowParameters[$value[0]]["Type"] != "S:employee")
-						{
-							if (!is_array($arCurrentValues["variable_condition_value_".$i]))
-								$arCurrentValues["variable_condition_value_".$i] = array($arCurrentValues["variable_condition_value_".$i]);
-
-							$arCurrentValues["variable_condition_value_".$i] = CBPHelper::UsersArrayToString($arCurrentValues["variable_condition_value_".$i], $arWorkflowTemplate, $documentType);
-						}
-					}
+					//if (array_key_exists($value[0], $arWorkflowParameters))
+					//{
+					//	if ($arFieldTypes[$arWorkflowParameters[$value[0]]["Type"]]["BaseType"] == "user" && $arWorkflowParameters[$value[0]]["Type"] != "S:employee")
+					//	{
+					//		if (!is_array($arCurrentValues["variable_condition_value_".$i]))
+					//			$arCurrentValues["variable_condition_value_".$i] = array($arCurrentValues["variable_condition_value_".$i]);
+					//
+					//		$arCurrentValues["variable_condition_value_".$i] = CBPHelper::UsersArrayToString($arCurrentValues["variable_condition_value_".$i], $arWorkflowTemplate, $documentType);
+					//	}
+					//}
+					//elseif (array_key_exists($value[0], $arWorkflowVariables))
+					//{
+					//	if ($arFieldTypes[$arWorkflowVariables[$value[0]]["Type"]]["BaseType"] == "user" && $arWorkflowParameters[$value[0]]["Type"] != "S:employee")
+					//	{
+					//		if (!is_array($arCurrentValues["variable_condition_value_".$i]))
+					//			$arCurrentValues["variable_condition_value_".$i] = array($arCurrentValues["variable_condition_value_".$i]);
+					//
+					//		$arCurrentValues["variable_condition_value_".$i] = CBPHelper::UsersArrayToString($arCurrentValues["variable_condition_value_".$i], $arWorkflowTemplate, $documentType);
+					//	}
+					//}
 
 					$i++;
 				}

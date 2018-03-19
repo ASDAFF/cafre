@@ -1,12 +1,12 @@
-<?
+<?php
 class CSearcherHit
 {
-	function GetList(&$by, &$order, $arFilter=Array(), &$is_filtered)
+	public static function GetList(&$by, &$order, $arFilter=Array(), &$is_filtered)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
 		$arSqlSearch = Array();
-		$strSqlSearch = "";
+
 		if (is_array($arFilter))
 		{
 			foreach ($arFilter as $key => $val)
@@ -102,4 +102,3 @@ class CSearcherHit
 		return $res;
 	}
 }
-?>

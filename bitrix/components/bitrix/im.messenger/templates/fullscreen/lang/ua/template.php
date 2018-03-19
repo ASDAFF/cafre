@@ -1,0 +1,7 @@
+<?
+$MESS["IM_FULLSCREEN_TITLE"] = "Á³çíåñ-÷àò";
+$MESS["IM_FULLSCREEN_BACK"] = "Íàçàä â «Á³òð³êñ24»";
+$MESS["IM_FULLSCREEN_COPYRIGHT"] = "&ñopy; 2001-2016 «Á³òð³êñ», «1Ñ-Á³òð³êñ»";
+$MESS["IM_FULLSCREEN_TITLE_2"] = "×àò ³ äçâ³íêè";
+$MESS["IM_FULLSCREEN_BACK_BUS"] = "Íàçàä â íà ñàéò";
+?>

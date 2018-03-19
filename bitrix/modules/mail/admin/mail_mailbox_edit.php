@@ -187,14 +187,14 @@ if ($message)
 			<? $defSite = $str_LID; ?>
 			<? $result = Bitrix\Main\SiteTable::getList(array('filter' => array('LID' => $str_LID), 'order' => array('SORT' => 'ASC'))); ?>
 			<? $site = $result->fetch(); ?>
-			[<?=$str_LID; ?>] <?=$site['NAME']; ?>
+			[<?=$str_LID; ?>] <?=htmlspecialcharsbx($site['NAME']); ?>
 			<? } else { ?>
 			<select id="mailbox_site_id" name="LID"<? if ($mailbox_type == 'user') { ?> onchange="changeServicesList();"<? } ?>>
 			<? $result = Bitrix\Main\SiteTable::getList(array('order' => array('SORT' => 'ASC'))); ?>
 			<? while (($site = $result->fetch()) !== false) { ?>
 				<? $defSite = $defSite ?: ($mailbox_type != 'user' || !empty($mailServices[$site['LID']]) ? $site['LID'] : false); ?>
 				<option value="<?=$site['LID']; ?>"<? if ($mailbox_type == 'user' && empty($mailServices[$site['LID']])) { ?> disabled="disabled"<? } ?>>
-					<?=$site['NAME']; ?><? if ($mailbox_type == 'user' && empty($mailServices[$site['LID']])) { ?> *<? } ?>
+					<?=htmlspecialcharsbx($site['NAME']); ?><? if ($mailbox_type == 'user' && empty($mailServices[$site['LID']])) { ?> *<? } ?>
 				</option>
 			<? } ?>
 			</select>
@@ -206,7 +206,7 @@ if ($message)
 		<td width="40%"><?=GetMessage("MAIL_MBOX_EDT_SERVICE"); ?> </td>
 		<td width="60%">
 			<? if ($str_SERVER_TYPE != 'imap' && $ID > 0) { ?>
-			[<?=$str_SERVICE_ID; ?>] <?=$mailServices[$str_LID][$str_SERVICE_ID]['NAME']; ?>
+			[<?=$str_SERVICE_ID; ?>] <?=htmlspecialcharsbx($mailServices[$str_LID][$str_SERVICE_ID]['NAME']) ?>
 			<? } else { ?>
 			<select id="mailbox_service_id" name="SERVICE_ID" onchange="changeFields();">
 			<?
@@ -215,7 +215,7 @@ if ($message)
 					<? if ($service['SERVICE_TYPE'] != 'imap') continue; ?>
 					<option value="<?=$service['ID']; ?>"
 						<? if ($str_SERVICE_ID == $service['ID']) { ?> selected="selected"<? } ?>>
-						[<?=$service['ID']; ?>] <?=$service['NAME']; ?>
+						[<?=$service['ID']; ?>] <?=htmlspecialcharsbx($service['NAME']) ?>
 					</option>
 			<?
 				}
@@ -495,9 +495,9 @@ if ($message)
 		<? foreach ($mailServices as $site => $services) { ?>
 		<? foreach ($services as $service => $settings) { ?>
 		'<?=$service; ?>': {
-			'name': '<?=$settings['NAME']; ?>',
-			'link': '<?=$settings['LINK']; ?>',
-			'server': '<?=$settings['SERVER']; ?>',
+			'name': '<?=CUtil::jsEscape($settings['NAME']) ?>',
+			'link': '<?=CUtil::jsEscape($settings['LINK']) ?>',
+			'server': '<?=CUtil::jsEscape($settings['SERVER']) ?>',
 			'port': '<?=$settings['PORT']; ?>',
 			'encryption': '<?=$settings['ENCRYPTION']; ?>',
 			'type': '<?=$settings['SERVICE_TYPE']; ?>'

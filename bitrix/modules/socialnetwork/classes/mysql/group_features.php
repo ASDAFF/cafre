@@ -6,39 +6,28 @@ class CSocNetFeatures extends CAllSocNetFeatures
 	/***************************************/
 	/********  DATA MODIFICATION  **********/
 	/***************************************/
-	function Add($arFields)
+	public static function Add($arFields)
 	{
-		global $DB;
+		global $DB, $CACHE_MANAGER, $SONET_FEATURES_CACHE;
 
-		$arFields1 = array();
-		foreach ($arFields as $key => $value)
-		{
-			if (substr($key, 0, 1) == "=")
-			{
-				$arFields1[substr($key, 1)] = $value;
-				unset($arFields[$key]);
-			}
-		}
+		$arFields1 = \Bitrix\Socialnetwork\Util::getEqualityFields($arFields);
 
 		if (!CSocNetFeatures::CheckFields("ADD", $arFields))
+		{
 			return false;
+		}
 
 		$db_events = GetModuleEvents("socialnetwork", "OnBeforeSocNetFeaturesAdd");
 		while ($arEvent = $db_events->Fetch())
+		{
 			if (ExecuteModuleEventEx($arEvent, array($arFields))===false)
+			{
 				return false;
+			}
+		}
 
 		$arInsert = $DB->PrepareInsert("b_sonet_features", $arFields);
-
-		foreach ($arFields1 as $key => $value)
-		{
-			if (strlen($arInsert[0]) > 0)
-				$arInsert[0] .= ", ";
-			$arInsert[0] .= $key;
-			if (strlen($arInsert[1]) > 0)
-				$arInsert[1] .= ", ";
-			$arInsert[1] .= $value;
-		}
+		\Bitrix\Socialnetwork\Util::processEqualityFieldsToInsert($arFields1, $arInsert);
 
 		$ID = false;
 		if (strlen($arInsert[0]) > 0)
@@ -51,18 +40,24 @@ class CSocNetFeatures extends CAllSocNetFeatures
 			$ID = IntVal($DB->LastID());
 
 			if (array_key_exists("ENTITY_TYPE", $arFields) && array_key_exists("ENTITY_ID", $arFields))
-				unset($GLOBALS["SONET_FEATURES_CACHE"][$arFields["ENTITY_TYPE"]][$arFields["ENTITY_ID"]]);
+			{
+				unset($SONET_FEATURES_CACHE[$arFields["ENTITY_TYPE"]][$arFields["ENTITY_ID"]]);
+			}
 
 			$events = GetModuleEvents("socialnetwork", "OnSocNetFeaturesAdd");
 			while ($arEvent = $events->Fetch())
+			{
 				ExecuteModuleEventEx($arEvent, array($ID, $arFields));
+			}
 
 			if (
 				defined("BX_COMP_MANAGED_CACHE")
 				&& array_key_exists("ENTITY_TYPE", $arFields) 
 				&& array_key_exists("ENTITY_ID", $arFields)
 			)
-				$GLOBALS["CACHE_MANAGER"]->ClearByTag("sonet_features_".$arFields["ENTITY_TYPE"]."_".$arFields["ENTITY_ID"]);
+			{
+				$CACHE_MANAGER->ClearByTag("sonet_features_".$arFields["ENTITY_TYPE"]."_".$arFields["ENTITY_ID"]);
+			}
 		}
 
 		return $ID;
@@ -72,12 +67,14 @@ class CSocNetFeatures extends CAllSocNetFeatures
 	/***************************************/
 	/**********  DATA SELECTION  ***********/
 	/***************************************/
-	function GetList($arOrder = Array("ID" => "DESC"), $arFilter = Array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array())
+	public static function GetList($arOrder = Array("ID" => "DESC"), $arFilter = Array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array())
 	{
 		global $DB;
 
 		if (count($arSelectFields) <= 0)
+		{
 			$arSelectFields = array("ID", "ENTITY_TYPE", "ENTITY_ID", "FEATURE", "FEATURE_NAME", "ACTIVE", "DATE_CREATE", "DATE_UPDATE");
+		}
 
 		static $arFields = array(
 			"ID" => Array("FIELD" => "GF.ID", "TYPE" => "int"),
@@ -110,9 +107,13 @@ class CSocNetFeatures extends CAllSocNetFeatures
 
 			$dbRes = $DB->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
 			if ($arRes = $dbRes->Fetch())
+			{
 				return $arRes["CNT"];
+			}
 			else
+			{
 				return False;
+			}
 		}
 
 
@@ -172,4 +173,3 @@ class CSocNetFeatures extends CAllSocNetFeatures
 		return $dbRes;
 	}
 }
-?>

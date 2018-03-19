@@ -1,4 +1,14 @@
 <?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
+/** @var CBitrixComponent $this */
+/** @var array $arParams */
+/** @var array $arResult */
+/** @var string $componentPath */
+/** @var string $componentName */
+/** @var string $componentTemplate */
+/** @global CDatabase $DB */
+/** @global CUser $USER */
+/** @global CMain $APPLICATION */
+
 if (!CModule::IncludeModule("forum")):
 	ShowError(GetMessage("F_NO_MODULE"));
 	return false;
@@ -427,7 +437,7 @@ $arResult["URL"] = array(
 	"TOPIC_NEW" => CComponentEngine::MakePathFromTemplate(
 		$arParams["URL_TEMPLATES_TOPIC_EDIT"],
 		array("FID" => $arParams["FID"], "TID" => "new", "ACTION" => "new", "MESSAGE_TYPE" => "NEW",
-			"UID" => $arParams["USER_ID"], "GID" => $arParams["SOCNET_GROUP_ID"])));
+			"UID" => $arParams["USER_ID"], "GID" => $arParams["SOCNET_GROUP_ID"], "MID" => 0)));
 /********************************************************************
 				/Default params # 2
 ********************************************************************/
@@ -552,7 +562,7 @@ if($arParams["SOCNET_GROUP_ID"] > 0 && $USER->IsAuthorized() && CModule::Include
 	}
 	
 
-	// если пользователь имеет право на модуль почты:
+	// if user has mail module permissions:
 	if($arParams["PERMISSION"] >= "Y" && $APPLICATION->GetGroupRight("mail")>"R")
 	{
 		$arResult["MAILBOXES"] = Array();

@@ -40,8 +40,10 @@ BX.Access.Init = function(arParams)
 			offsetTop: 0,
 			draggable: {restrict:true},
 			closeByEsc: true,
-			titleBar: {content: BX.create("span", {html: BX.message('js_access_title'), 'props': {'className': 'access-title-bar'}})}, 
-			closeIcon: { right : "12px", top : "10px"}, 
+			titleBar: BX.message('js_access_title'),
+			contentColor : 'white',
+			contentNoPaddings : true,
+			closeIcon: true,
 			buttons: [
 				new BX.PopupWindowButton({
 					text : BX.message('js_access_select'),
@@ -199,6 +201,11 @@ BX.Access.SelectProvider = function(id)
 
 BX.Access.AddSelection = function(ob)
 {
+	if(!ob.provider)
+	{
+		return;
+	}
+
 	if(!BX.Access.obSelected[ob.provider])
 	{
 		BX.Access.obSelected[ob.provider] = {};

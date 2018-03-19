@@ -51,7 +51,7 @@ class CAllSocNetLogSmartFilter
 			return false;		
 	}
 
-	function GetDefaultValue($user_id)
+	public static function GetDefaultValue($user_id)
 	{
 		if (intval($user_id) <= 0)
 			return false;

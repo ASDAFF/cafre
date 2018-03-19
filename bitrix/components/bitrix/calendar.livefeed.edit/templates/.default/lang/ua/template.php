@@ -24,4 +24,7 @@ $MESS["ECLF_LHE_VIDEO"] = "Додати відео";
 $MESS["ECLF_DESTINATION"] = "Учасники";
 $MESS["ECLF_SHOW_ADD_SECT"] = "Додатково";
 $MESS["ECLF_HIDE_ADD_SECT"] = "Приховати додаткові параметри";
+$MESS["ECLF_PLANNER_FULL_FORM"] = "Докладно";
+$MESS["ECLF_PLANNER_TITLE"] = "Планувальник";
+$MESS["ECLF_PLANNER_PROPOSE_TIME"] = "Підібрати час";
 ?>

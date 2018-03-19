@@ -114,6 +114,10 @@ abstract class CReportHelper
 		/** @var Entity\Field $field*/
 		$dataType = $field->getDataType();
 
+		// until the date type is not supported
+		if ($dataType === 'date')
+			$dataType = 'datetime';
+
 		$ufInfo = null;
 		if ($field instanceof Entity\ExpressionField && is_array(self::$ufInfo) && count(self::$ufInfo) > 0)
 		{
@@ -140,6 +144,9 @@ abstract class CReportHelper
 					break;
 				case 'boolean':
 					$dataType = 'boolean';
+					break;
+				case 'date':
+					$dataType = 'datetime';
 					break;
 				case 'datetime':
 					$dataType = 'datetime';
@@ -448,6 +455,39 @@ abstract class CReportHelper
 
 		if (strlen($valueKey) > 0)
 		{
+			$prefixByType = array(
+				'lead' => 'L',
+				'contact' => 'C',
+				'company' => 'CO',
+				'deal' => 'D',
+				'quote' => 'Q'
+			);
+			$maxPrefixLength = 2;    // 'CO'
+			$singleTypePrefix = '';
+			if (is_array($ufInfo['SETTINGS']))
+			{
+				$supportedTypes = array();
+				foreach ($ufInfo['SETTINGS'] as $type => $supported)
+				{
+					if ($supported === 'Y')
+						$supportedTypes[$type] = true;
+				}
+				$supportedTypes = array_keys($supportedTypes);
+				if (count($supportedTypes) === 1)
+				{
+					if (isset($prefixByType[strtolower($supportedTypes[0])]))
+						$singleTypePrefix = $prefixByType[strtolower($supportedTypes[0])];
+				}
+				unset($supportedTypes, $type, $supported);
+			}
+
+			$prefix = '';
+			if (($pos = strpos(substr($valueKey, 0, $maxPrefixLength + 1), '_')) !== false && $pos > 0)
+				$prefix = substr($valueKey, 0, $pos);
+			if (empty($prefix))
+				$valueKey = $singleTypePrefix . '_' . $valueKey;
+			unset($prefix, $pos);
+
 			if (is_array(self::$ufCrmElements) && is_array(self::$ufCrmElements[$valueKey]))
 			{
 				$element = self::$ufCrmElements[$valueKey];
@@ -462,10 +502,18 @@ abstract class CReportHelper
 							$value = $element['TITLE'];
 							break;
 						case 'C':
-							$value = $element['FULL_NAME'];
+							$value = CUser::FormatName(
+								static::getUserNameFormat(),
+								array(
+									'LOGIN' => '',
+									'NAME' => $element['NAME'],
+									'SECOND_NAME' => $element['SECOND_NAME'],
+									'LAST_NAME' => $element['LAST_NAME']
+								),
+								false,
+								false
+							);
 							break;
-						default:
-							$value = strval($element);
 					}
 				}
 			}
@@ -858,7 +906,7 @@ abstract class CReportHelper
 			class="reports-add-popup-checkbox-block">
 				%s
 			</span><span class="reports-add-popup-it-text%s">%s</span>
-		</div>', $htmlCheckbox, $isUF ? ' uf' : '', $humanTitle);
+		</div>', $htmlCheckbox, $isUF ? ' uf' : '', htmlspecialcharsbx($humanTitle));
 
 		return $htmlElem;
 	}
@@ -897,7 +945,7 @@ abstract class CReportHelper
 
 				if ($user)
 				{
-					$username = CUser::FormatName(static::getUserNameFormat(), $user, true);
+					$username = CUser::FormatName(static::getUserNameFormat(), $user, true, false);
 					$filterElement['value'] = array('id' => $user['ID'], 'name' => $username);
 				}
 				else
@@ -998,7 +1046,7 @@ abstract class CReportHelper
 		return true;
 	}
 
-	public static function beforeViewDataQuery(&$select, &$filter, &$group, &$order, &$limit, &$options)
+	public static function beforeViewDataQuery(&$select, &$filter, &$group, &$order, &$limit, &$options, &$runtime = null)
 	{
 	}
 
@@ -1153,6 +1201,7 @@ abstract class CReportHelper
 						{
 							foreach ($v as $subv)
 							{
+								$subv = strval($subv);
 								if (strlen($subv) > 0)
 								{
 									$prefix = '';
@@ -1162,7 +1211,7 @@ abstract class CReportHelper
 										$subv = $singleTypePrefix . '_' . $subv;
 									unset($prefix, $pos);
 
-									$value = explode('_', trim(strval($subv)));
+									$value = explode('_', trim($subv));
 									if (strlen($value[0]) > 0 && strlen($value[1]) > 0)
 									{
 										if (!is_array($arCrmID[$value[0]]))
@@ -1174,6 +1223,7 @@ abstract class CReportHelper
 						}
 						else
 						{
+							$v = strval($v);
 							if (strlen($v) > 0)
 							{
 								$prefix = '';
@@ -1183,7 +1233,7 @@ abstract class CReportHelper
 									$v = $singleTypePrefix . '_' . $v;
 								unset($prefix, $pos);
 
-								$value = explode('_', trim(strval($v)));
+								$value = explode('_', trim($v));
 								if (strlen($value[0]) > 0 && strlen($value[1]) > 0)
 								{
 									if (!is_array($arCrmID[$value[0]]))
@@ -1606,7 +1656,18 @@ abstract class CReportHelper
 			$ufInfo = $cInfo['ufInfo'];
 		}
 
-		if ($isUF && $dataType === 'enum' && !empty($v)
+		if ($isUF && $dataType == 'float' && (empty($cInfo['aggr']) || $cInfo['aggr'] !== 'COUNT_DISTINCT')
+			&& !strlen($cInfo['prcnt']))
+		{
+			$precision = $defaultPrecision = 1;
+			if (is_array($ufInfo) && is_array($ufInfo['SETTINGS']) && isset($ufInfo['SETTINGS']['PRECISION']))
+				$precision = (int)$ufInfo['SETTINGS']['PRECISION'];
+			if ($precision < 0)
+				$precision = $defaultPrecision;
+
+			$v = round($v, $precision);
+		}
+		elseif ($isUF && $dataType === 'enum' && !empty($v)
 			&& (empty($cInfo['aggr']) || $cInfo['aggr'] !== 'COUNT_DISTINCT')
 			&& !strlen($cInfo['prcnt']))
 		{
@@ -1692,7 +1753,7 @@ abstract class CReportHelper
 		{
 			$v = ($v instanceof \Bitrix\Main\Type\DateTime || $v instanceof \Bitrix\Main\Type\Date) ? ConvertTimeStamp($v->getTimestamp(), 'SHORT') : '';
 		}
-		elseif ($dataType == 'float' && !empty($v) && !$isUF)
+		elseif ($dataType == 'float' && !empty($v) && !$isUF && !strlen($cInfo['prcnt']))
 		{
 			$v = round($v, 1);
 		}
@@ -1760,6 +1821,16 @@ abstract class CReportHelper
 			$cInfo = $columnInfo[$original_k];
 			$field = $cInfo['field'];
 
+			$dataType = self::getFieldDataType($field);
+
+			$isUF = false;
+			$ufInfo = null;
+			if (isset($cInfo['isUF']) && $cInfo['isUF'])
+			{
+				$isUF = true;
+				$ufInfo = $cInfo['ufInfo'];
+			}
+
 			if ($field->getName() == 'ID' && empty($cInfo['aggr']) && !strlen($cInfo['prcnt']))
 			{
 				unset($total[$k]);
@@ -1787,6 +1858,16 @@ abstract class CReportHelper
 			elseif (substr($k, -6) == '_PRCNT' && !strlen($cInfo['prcnt']))
 			{
 				$total[$k] = round($v, 2). '%';
+			}
+			elseif ($isUF && $dataType == 'float')
+			{
+				$precision = $defaultPrecision = 1;
+				if (is_array($ufInfo) && is_array($ufInfo['SETTINGS']) && isset($ufInfo['SETTINGS']['PRECISION']))
+					$precision = (int)$ufInfo['SETTINGS']['PRECISION'];
+				if ($precision < 0)
+					$precision = $defaultPrecision;
+
+				$total[$k] = round($v, $precision);
 			}
 		}
 	}
@@ -1827,6 +1908,62 @@ abstract class CReportHelper
 		}
 
 		return self::$userNameFormat;
+	}
+
+	public static function renderUserSearch($id, $searchInputId, $dataInputId, $componentName, $siteId = '', $nameFormat = '', $delay = 0)
+	{
+		$id = strval($id);
+		$searchInputId = strval($searchInputId);
+		$dataInputId = strval($dataInputId);
+		$componentName = strval($componentName);
+
+		$siteId = strval($siteId);
+		if($siteId === '')
+		{
+			$siteId = SITE_ID;
+		}
+
+		$nameFormat = strval($nameFormat);
+		if($nameFormat === '')
+		{
+			$nameFormat = CSite::getNameFormat(false);
+		}
+
+		$delay = intval($delay);
+		if($delay < 0)
+		{
+			$delay = 0;
+		}
+
+		echo '<input type="text" id="', htmlspecialcharsbx($searchInputId) ,'" style="width:200px;">',
+		'<input type="hidden" id="', htmlspecialcharsbx($dataInputId),'" name="',
+			htmlspecialcharsbx($dataInputId),'" value="">';
+
+		echo '<script type="text/javascript">',
+		'BX.ready(function(){',
+		'BX.ReportUserSearchPopup.deletePopup("', $id, '");',
+		'BX.ReportUserSearchPopup.create("', $id, '", { searchInput: BX("',
+			CUtil::jSEscape($searchInputId), '"), dataInput: BX("',
+			CUtil::jSEscape($dataInputId),'"), componentName: "',
+			CUtil::jSEscape($componentName),'", user: {} }, ', $delay,');',
+		'});</script>';
+
+		$GLOBALS['APPLICATION']->includeComponent(
+			'bitrix:intranet.user.selector.new',
+			'',
+			array(
+				'MULTIPLE' => 'N',
+				'NAME' => $componentName,
+				'INPUT_NAME' => $searchInputId,
+				'SHOW_EXTRANET_USERS' => 'NONE',
+				'POPUP' => 'Y',
+				'SITE_ID' => $siteId,
+				'NAME_TEMPLATE' => $nameFormat,
+				'ON_CHANGE' => 'reports.onResponsiblesChange',
+			),
+			null,
+			array('HIDE_ICONS' => 'Y')
+		);
 	}
 }
 

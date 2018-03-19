@@ -5,6 +5,7 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admi
 use \Bitrix\Sender\MailingChainTable;
 use \Bitrix\Sender\PostingTable;
 use \Bitrix\Sender\PostingRecipientTable;
+use \Bitrix\Main\Localization\Loc;
 
 if(!\Bitrix\Main\Loader::includeModule("sender"))
 	ShowError(\Bitrix\Main\Localization\Loc::getMessage("MAIN_MODULE_NOT_INSTALLED"));
@@ -379,6 +380,10 @@ if($step=='chain')
 				"SUBJECT" => $SUBJECT,
 				"EMAIL_FROM"	=> $EMAIL_FROM,
 				"MESSAGE" => $MESSAGE,
+				"TEMPLATE_TYPE" => $TEMPLATE_TYPE,
+				"TEMPLATE_ID" => $TEMPLATE_ID,
+				"PRIORITY" => $PRIORITY,
+				"LINK_PARAMS" => $LINK_PARAMS,
 				"CREATED_BY" => $USER->GetID(),
 
 				"REITERATE" => "N",
@@ -464,7 +469,61 @@ if($step=='chain')
 				if(array_key_exists("NEW_FILE", $_POST) && is_array($_POST["NEW_FILE"]))
 				{
 					foreach($_POST["NEW_FILE"] as $index=>$value)
-						$arFiles[$index] = CFile::MakeFileArray($value);
+					{
+						if (is_string($value) && preg_match("/^https?:\\/\\//", $value))
+						{
+							$arFiles[$index] = CFile::MakeFileArray($value);
+						}
+						else
+						{
+							if(is_array($value))
+							{
+								$filePath = $value['tmp_name'];
+							}
+							else
+							{
+								$filePath = $value;
+							}
+
+							$isCheckedSuccess = false;
+							$io = CBXVirtualIo::GetInstance();
+							$docRoot = \Bitrix\Main\Application::getDocumentRoot();
+							if(strpos($filePath, CTempFile::GetAbsoluteRoot()) === 0)
+							{
+								$absPath = $filePath;
+							}
+							elseif(strpos($io->CombinePath($docRoot, $filePath), CTempFile::GetAbsoluteRoot()) === 0)
+							{
+								$absPath = $io->CombinePath($docRoot, $filePath);
+							}
+							else
+							{
+								$absPath = $io->CombinePath(CTempFile::GetAbsoluteRoot(), $filePath);
+							}
+
+							if ($io->ValidatePathString($absPath) && $io->FileExists($absPath))
+							{
+								$docRoot = $io->CombinePath($docRoot, '/');
+								$relPath = str_replace($docRoot, '', $absPath);
+								$perm = $APPLICATION->GetFileAccessPermission($relPath);
+								if ($perm >= "W")
+								{
+									$isCheckedSuccess = true;
+								}
+							}
+
+							if($isCheckedSuccess)
+							{
+								$arFiles[$index] = CFile::MakeFileArray($io->GetPhysicalName($absPath));
+								if(is_array($value))
+								{
+									$arFiles[$index]['name'] = $value['name'];
+								}
+							}
+
+						}
+
+					}
 				}
 
 				foreach($arFiles as $file)
@@ -492,10 +551,37 @@ if($step=='chain')
 				{
 					if(!empty($TEMPLATE_ACTION_SAVE_NAME) && !empty($MESSAGE))
 					{
-						\Bitrix\Sender\TemplateTable::add(array(
+						$CONTENT = $MESSAGE;
+						$useBlockEditor = false;
+
+						if($TEMPLATE_TYPE && $TEMPLATE_ID)
+						{
+							\Bitrix\Main\Loader::includeModule('fileman');
+							$chainTemplate = \Bitrix\Sender\Preset\Template::getById($TEMPLATE_TYPE, $TEMPLATE_ID);
+
+							if($chainTemplate && $chainTemplate['HTML'])
+							{
+								$CONTENT = \Bitrix\Fileman\Block\Editor::fillTemplateBySliceContent($chainTemplate['HTML'], $CONTENT);
+
+								if($CONTENT)
+								{
+									$useBlockEditor = true;
+								}
+							}
+						}
+
+						$addResult = \Bitrix\Sender\TemplateTable::add(array(
 							'NAME' => $TEMPLATE_ACTION_SAVE_NAME,
-							'CONTENT' => $MESSAGE
+							'CONTENT' => $CONTENT
 						));
+
+						if($useBlockEditor && $addResult->isSuccess())
+						{
+							\Bitrix\Sender\MailingChainTable::update(
+								array('ID' => $ID),
+								array('TEMPLATE_TYPE' => 'USER', 'TEMPLATE_ID' => $addResult->getId())
+							);
+						}
 					}
 				}
 			}
@@ -528,6 +614,7 @@ if($step=='chain')
 		}
 	}
 
+	\Bitrix\Sender\PostingRecipientTable::setPersonalizeList(\Bitrix\Sender\MailingTable::getPersonalizeList($MAILING_ID));
 	$templateListHtml = \Bitrix\Sender\Preset\Template::getTemplateListHtml('tabControl_layout');
 }
 
@@ -629,7 +716,8 @@ if($step=='chain_send_type')
 	}
 	else
 	{
-
+		$statistics = \Bitrix\Sender\Stat\Statistics::create()->filter('mailingId', $MAILING_ID);
+		$recommendedSendTime = $statistics->getRecommendedSendTime();
 	}
 }
 
@@ -1413,6 +1501,7 @@ if(!empty($message))
 		<?
 		function ShowGroupControl($controlName, $controlValues, $controlSelectedValues)
 		{
+			$controlName = htmlspecialcharsbx($controlName);
 			?>
 			<td>
 				<select multiple style="width:350px; height:300px;" id="<?=$controlName?>_EXISTS" ondblclick="GroupManager(true, '<?=$controlName?>');">
@@ -1729,6 +1818,19 @@ if(!empty($message))
 			</tr>
 
 			<tr class="hidden-when-show-template-list" <?=(empty($str_MESSAGE) ? 'style="display: none;"' : '')?>>
+				<td><?echo GetMessage("sender_chain_edit_field_priority")?></td>
+				<td>
+					<input type="text" name="PRIORITY" id="MSG_PRIORITY" size="10" maxlength="255" value="<?echo $str_PRIORITY?>">
+					<select onchange="document.getElementById('MSG_PRIORITY').value=this.value">
+						<option value=""></option>
+						<option value="1 (Highest)"<?if($str_PRIORITY=='1 (Highest)')echo ' selected'?>><?echo GetMessage("sender_chain_edit_field_priority_1")?></option>
+						<option value="3 (Normal)"<?if($str_PRIORITY=='3 (Normal)')echo ' selected'?>><?echo GetMessage("sender_chain_edit_field_priority_3")?></option>
+						<option value="5 (Lowest)"<?if($str_PRIORITY=='5 (Lowest)')echo ' selected'?>><?echo GetMessage("sender_chain_edit_field_priority_5")?></option>
+					</select>
+				</td>
+			</tr>
+
+			<tr class="hidden-when-show-template-list" <?=(empty($str_MESSAGE) ? 'style="display: none;"' : '')?>>
 				<td colspan="2">&nbsp;</td>
 			</tr>
 
@@ -1749,6 +1851,13 @@ if(!empty($message))
 
 			<tr class="hidden-when-show-template-list" <?=(empty($str_MESSAGE) ? 'style="display: none;"' : '')?>>
 				<td colspan="2">&nbsp;</td>
+			</tr>
+
+			<tr class="hidden-when-show-template-list" <?=(empty($str_MESSAGE) ? 'style="display: none;"' : '')?>>
+				<td><?echo GetMessage("sender_chain_edit_field_linkparams")?></td>
+				<td>
+					<input type="text" id="LINK_PARAMS" name="LINK_PARAMS" value="<?=$str_LINK_PARAMS?>" style="width: 450px;">
+				</td>
 			</tr>
 
 			<tr class="hidden-when-show-template-list" <?=(empty($str_MESSAGE) ? 'style="display: none;"' : '')?>>
@@ -1795,6 +1904,7 @@ if(!empty($message))
 					?>
 				</td>
 			</tr>
+
 		</table>
 		<script>
 			BX.message({"SENDER_SHOW_TEMPLATE_LIST" : "<?=GetMessage('SENDER_SHOW_TEMPLATE_LIST')?>"});
@@ -1832,10 +1942,8 @@ if(!empty($message))
 				ShowTemplateListL(false);
 			});
 
-			letterManager.onShowTemplateList(function()
-			{
-				ShowTemplateListL(true);
-			});
+			letterManager.onShowTemplateList(function(){ ShowTemplateListL(true); });
+			letterManager.onHideTemplateList(function(){ ShowTemplateListL(false); });
 		</script>
 	<?
 	elseif($step=='chain_send_type'):
@@ -1906,6 +2014,23 @@ if(!empty($message))
 											<td>
 												<?echo CalendarDate("AUTO_SEND_TIME", $str_AUTO_SEND_TIME, "post_form", "20")?>
 											</td>
+										</tr>
+										<?if ($recommendedSendTime):?>
+											<tr>
+												<td>&nbsp;</td>
+												<td>
+													<?=Loc::getMessage(
+														'sender_chain_edit_recommended_sent_time',
+														array(
+															'%send_time%' => '<b>' . htmlspecialcharsbx($recommendedSendTime['DAY_HOUR_DISPLAY']) . '</b>',
+															'%delivery_time%' => htmlspecialcharsbx($recommendedSendTime['DELIVERY_TIME']),
+														)
+													)?>
+													<br>
+													<?=Loc::getMessage('sender_chain_edit_recommended_sent_time_hint')?>
+												</td>
+											</tr>
+										<?endif;?>
 									</table>
 								</div>
 							</div>

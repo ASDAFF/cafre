@@ -81,6 +81,13 @@ $isScriptExt = in_array(CFileman::GetFileExtension($path), CFileMan::GetScriptFi
 if (CAutoSave::Allowed())
 	$AUTOSAVE = new CAutoSave();
 
+$imgName = $filename;
+if ($filename == '')
+	$imgName = $io->ExtractNameFromPath($path);
+else
+	$imgName = $filename;
+$imgName = GetFileNameWithoutExtension($imgName).'-img';
+
 //Check access to file
 if(
 	(
@@ -554,6 +561,11 @@ if (!$bDisableEditor)
 						{
 							editorDialog.Close();
 						}
+					});
+
+					BX.addCustomEvent(editor, 'OnGetDefaultUploadImageName', function(nameObj)
+					{
+						nameObj.value = '<?=CUtil::JSEscape($imgName)?>';
 					});
 				}
 

@@ -153,6 +153,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && !empty($_REQUEST["register_submit_bu
 		$arResult['VALUES']["ACTIVE"] = $bConfirmReq? "N": "Y";
 		$arResult['VALUES']["CONFIRM_CODE"] = $bConfirmReq? randString(8): "";
 		$arResult['VALUES']["LID"] = SITE_ID;
+		$arResult['VALUES']["LANGUAGE_ID"] = LANGUAGE_ID;
 
 		$arResult['VALUES']["USER_IP"] = $_SERVER["REMOTE_ADDR"];
 		$arResult['VALUES']["USER_HOST"] = @gethostbyaddr($_SERVER["REMOTE_ADDR"]);

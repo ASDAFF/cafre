@@ -3,5 +3,9 @@ namespace Bitrix\Main\Diag;
 
 interface IExceptionHandlerOutput
 {
-	function renderExceptionMessage(\Exception $exception, $debug = false);
+	/**
+	 * @param \Error|\Exception $exception
+	 * @param bool $debug
+	 */
+	public function renderExceptionMessage($exception, $debug = false);
 }

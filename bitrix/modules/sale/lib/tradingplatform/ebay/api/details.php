@@ -56,11 +56,26 @@ class Details extends Entity
 			$data = $this->getData();
 
 			if(isset($data["ShippingServiceDetails"]) && is_array($data["ShippingServiceDetails"]))
+			{
 				foreach($data["ShippingServiceDetails"] as $service)
+				{
+					if(!in_array($service["ShippingService"], self::getUsableDeliveries()))
+						continue;
+
 					$result[$service["ShippingService"]] = $service["Description"];
+				}
+			}
 		}
 
 		return $result;
+	}
+
+	public static function getUsableDeliveries()
+	{
+		return array(
+			'RU_ExpeditedDelivery','RU_ExpeditedMoscowOnly','RU_StandardDelivery','RU_StandardMoscowOnly',
+			'RU_EconomyDelivery', 'RU_OvernightDelivery', 'RU_LocalPickup'
+		);
 	}
 
 	public function getListPayments()
@@ -77,11 +92,22 @@ class Details extends Entity
 				$data["PaymentOptionDetails"] = Xml2Array::normalize($data["PaymentOptionDetails"]);
 
 				foreach($data["PaymentOptionDetails"] as $payment)
+				{
+					if(!in_array($payment["PaymentOption"], self::getUsablePaySystems()))
+						continue;
+
 					$result[$payment["PaymentOption"]] = $payment["Description"];
+				}
 			}
 		}
 
 		return $result;
 	}
+
+	public static function getUsablePaySystems()
+	{
+		return array('PayPal');
+	}
+
 
 }

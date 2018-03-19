@@ -29,7 +29,7 @@ class CBPIMNotifyActivity
 		$arMessageUserTo = CBPHelper::ExtractUsers($this->MessageUserTo, $documentId, false);
 
 		$arMessageFields = array(
-			"FROM_USER_ID" => $arMessageUserFrom,
+			"FROM_USER_ID" => $this->MessageType == IM_NOTIFY_SYSTEM? 0: $arMessageUserFrom,
 			"NOTIFY_TYPE" => intval($this->MessageType), 
 			"NOTIFY_MESSAGE" => $this->MessageSite, 
 			"NOTIFY_MESSAGE_OUT" => $this->MessageOut,
@@ -62,9 +62,11 @@ class CBPIMNotifyActivity
 		if (!array_key_exists("MessageSite", $arTestProperties) || strlen($arTestProperties["MessageSite"]) <= 0)
 			$arErrors[] = array("code" => "NotExist", "parameter" => "MessageText", "message" => GetMessage("BPIMNA_EMPTY_MESSAGE"));
 
-		global $USER;
-		if (!$USER->IsAdmin() && !(CModule::IncludeModule("bitrix24") && CBitrix24::IsPortalAdmin($USER->GetID())) && $arTestProperties["MessageUserFrom"] != "user_".$USER->GetID())
+		$from = array_key_exists("MessageUserFrom", $arTestProperties) ? $arTestProperties["MessageUserFrom"] : null;
+		if ($user && $from !== $user->getBizprocId() && !$user->isAdmin())
+		{
 			$arErrors[] = array("code" => "NotExist", "parameter" => "MessageUserFrom", "message" => GetMessage("BPIMNA_EMPTY_FROM"));
+		}
 
 		return array_merge($arErrors, parent::ValidateProperties($arTestProperties, $user));
 	}
@@ -122,6 +124,7 @@ class CBPIMNotifyActivity
 			array(
 				"arCurrentValues" => $arCurrentValues,
 				"formName" => $formName,
+				'user' => new CBPWorkflowTemplateUser(CBPWorkflowTemplateUser::CurrentUser)
 			)
 		);
 	}
@@ -129,9 +132,6 @@ class CBPIMNotifyActivity
 	public static function GetPropertiesDialogValues($documentType, $activityName, &$arWorkflowTemplate, &$arWorkflowParameters, &$arWorkflowVariables, $arCurrentValues, &$arErrors)
 	{
 		$arErrors = array();
-
-		$runtime = CBPRuntime::GetRuntime();
-
 		$arMap = array(
 			"from_user_id" => "MessageUserFrom",
 			"to_user_id" => "MessageUserTo",
@@ -149,8 +149,8 @@ class CBPIMNotifyActivity
 			$arProperties[$value] = $arCurrentValues[$key];
 		}
 
-		global $USER;
-		if ($USER->IsAdmin() || (CModule::IncludeModule("bitrix24") && CBitrix24::IsPortalAdmin($USER->GetID())))
+		$user = new CBPWorkflowTemplateUser(CBPWorkflowTemplateUser::CurrentUser);
+		if ($user->isAdmin())
 		{
 			$arProperties["MessageUserFrom"] = CBPHelper::UsersStringToArray($arCurrentValues["from_user_id"], $documentType, $arErrors);
 			if (count($arErrors) > 0)
@@ -158,7 +158,7 @@ class CBPIMNotifyActivity
 		}
 		else
 		{
-			$arProperties["MessageUserFrom"] = "user_".$USER->GetID();
+			$arProperties["MessageUserFrom"] = $user->getBizprocId();
 		}
 
 		$arProperties["MessageUserTo"] = CBPHelper::UsersStringToArray($arCurrentValues["to_user_id"], $documentType, $arErrors);
@@ -175,4 +175,3 @@ class CBPIMNotifyActivity
 		return true;
 	}
 }
-?>

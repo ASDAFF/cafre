@@ -379,6 +379,11 @@ class CIBlockType
 					return false;
 				}
 			}
+			if (empty($arFields["LANG"]) || !is_array($arFields["LANG"]))
+			{
+				$this->LAST_ERROR .= GetMessage("IBLOCK_TYPE_EMPTY_NAMES")."<br>";
+				return false;
+			}
 		}
 
 		if (is_set($arFields, "LANG") && is_array($arFields["LANG"]))

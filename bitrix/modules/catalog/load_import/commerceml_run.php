@@ -9,11 +9,7 @@ if (!CCatalog::IsUserExists())
 {
 	$bTmpUserCreated = true;
 	if (isset($USER))
-	{
 		$USER_TMP = $USER;
-		unset($USER);
-	}
-
 	$USER = new CUser();
 }
 
@@ -72,20 +68,6 @@ class XMLNode
 			return $this->childs[$str_node];
 
 		return $this->childs[$str_node][0]->select_nodes($tmp);
-
-		if(!is_array($this->childs)) return array();
-		$result=array(0=>$this->childs);
-
-		for ($i = 1, $intCount=count($tmp);$i < $intCount; $i++)
-		{
-			if($tmp[$i]!="")
-			{
-				if(!is_array($result[0]->childs)) return array();
-				$result=$result[0]->childs[$tmp[$i]];
-			}
-		}
-
-		return $result;
 	}
 }
 
@@ -879,7 +861,7 @@ if ('' === $strImportErrorMessage)
 				{
 					if ($outFileAction!="H")
 					{
-						CIBlockElement::Delete($arr["ID"], "Y", "N");
+						CIBlockElement::Delete($arr["ID"]);
 					}
 					else
 					{
@@ -1058,11 +1040,9 @@ if ('' === $strImportErrorMessage)
 
 if ($bTmpUserCreated)
 {
-	unset($USER);
 	if (isset($USER_TMP))
 	{
 		$USER = $USER_TMP;
 		unset($USER_TMP);
 	}
 }
-?>

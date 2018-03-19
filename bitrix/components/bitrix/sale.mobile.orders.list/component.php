@@ -70,6 +70,25 @@ if(!isset($arFilter["USER_ID"]))
 	{
 		$arFilter["STATUS_PERMS_GROUP_ID"] = $GLOBALS["USER"]->GetUserGroupArray();
 		$arFilter[">=STATUS_PERMS_PERM_VIEW"] = "Y";
+
+		$arUserGroups = $USER->GetUserGroupArray();
+		$arAccessibleSites = array();
+		$dbAccessibleSites = CSaleGroupAccessToSite::GetList(
+				array(),
+				array("GROUP_ID" => $arUserGroups),
+				false,
+				false,
+				array("SITE_ID")
+		);
+
+		while ($arAccessibleSite = $dbAccessibleSites->Fetch())
+		{
+			if(!in_array($arAccessibleSite["SITE_ID"], $arAccessibleSites))
+				$arAccessibleSites[] = $arAccessibleSite["SITE_ID"];
+		}
+
+		if(count($arAccessibleSites) > 0)
+			$arFilter["LID"] = $arAccessibleSites;
 	}
 }
 
@@ -138,7 +157,16 @@ $personTypesIds = array();
 $paySysIds = array();
 //$statIds = array();
 
-$dbOrderList = CSaleOrder::GetList($arSort, $arFilter, false, array("nTopCount" =>SALE_ORDERS_INIT_COUNT));
+$select = array(
+	'*',
+	'PS_STATUS', 'PS_STATUS_CODE', 'PS_STATUS_DESCRIPTION',
+	'PS_STATUS_MESSAGE', 'PS_SUM', 'PS_CURRENCY', 'PS_RESPONSE_DATE',
+	'PAY_VOUCHER_NUM', 'PAY_VOUCHER_DATE', 'DATE_PAY_BEFORE',
+	'DATE_BILL', 'PAY_SYSTEM_NAME', 'PAY_SYSTEM_ID',
+	'DATE_PAYED', 'EMP_PAYED_ID'
+);
+
+$dbOrderList = CSaleOrder::GetList($arSort, $arFilter, false, array("nTopCount" =>SALE_ORDERS_INIT_COUNT), $select);
 
 while ($arOrderItem = $dbOrderList->GetNext())
 {
@@ -224,6 +252,8 @@ if(!empty($arResult["ORDERS"]))
 
 		if(isset($arPaySysNames[$arOrder["PAY_SYSTEM_ID"]]))
 			$arOrder["ADD_PAY_SYSTEM_NAME"] = $arPaySysNames[$arOrder["PAY_SYSTEM_ID"]].' /';
+		else
+			$arOrder["ADD_PAY_SYSTEM_NAME"] = GetMessage("SMOL_NONE").' /';
 
 		if(isset($arStatNames[$arOrder["STATUS_ID"]]))
 			$arOrder["STATUS_NAME"] = $arStatNames[$arOrder["STATUS_ID"]];

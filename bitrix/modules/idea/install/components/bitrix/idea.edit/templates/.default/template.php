@@ -122,8 +122,9 @@ $className .= " blog-post-day-" . IntVal($arResult["postPreview"]["DATE_PUBLISH_
 	</div>
 <?
 }
-
-include_once(__DIR__. "/lhe.php");?>
+//dbg
+//include_once(__DIR__. "/lhe.php");
+?>
 <form action="<?=POST_FORM_ACTION_URI?>" name="<?=$arResult['FORM_NAME']?>" id="<?=$arResult['FORM_NAME']?>" method="post" enctype="multipart/form-data">
 <?=bitrix_sessid_post();?>
 <? if($arParams["ALLOW_POST_CODE"])
@@ -163,7 +164,10 @@ include_once(__DIR__. "/lhe.php");?>
 	<div class="blog-field-title-idea"><?=GetMessage("IDEA_DESCRIPTION_TITLE")?></div>
 	<div class="blog-post-message blog-edit-editor-area blog-edit-field-text">
 		<div class="blog-comment-field blog-comment-field-bbcode">
-			<?initLHEForIdea('LHEIdeaId', $arResult, $arParams)?>
+			<? include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/neweditor.php"); ?>
+<!--			--><?//initLHEForIdea('LHEIdeaId', $arResult, $arParams)?>
+			<input type="hidden" name="USE_NEW_EDITOR" value="Y">
+			<div style="width:0; height:0; overflow:hidden;"><input type="text" tabindex="3" onFocus="window.oBlogLHE.SetFocus()" name="hidden_focus"></div>
 		</div>
 		<div class="blog-post-field blog-post-field-images blog-edit-field" id="blog-post-image"><?
 		if (!empty($arResult["Images"]))
@@ -250,3 +254,4 @@ include_once(__DIR__. "/lhe.php");?>
 	</div>
 </div>
 </form>
+</div>

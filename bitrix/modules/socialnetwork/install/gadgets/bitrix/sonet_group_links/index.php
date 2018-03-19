@@ -65,7 +65,11 @@ $arGadgetParams["SHOW_FEATURES"] = "Y";
 			if (!$arGadgetParams["USER_ROLE"] && !$arGadgetParams["HIDE_ARCHIVE_LINKS"]):
 				?><li class="bx-icon-join"><a href="<?= $arGadgetParams["URL_USER_REQUEST_GROUP"] ?>"><?= GetMessage("GD_SONET_GROUP_LINKS_ACT_JOIN") ?></a></li><?
 			endif;
-			if ($arGadgetParams["USER_IS_MEMBER"] && !$arGadgetParams["USER_IS_OWNER"]):
+			if (
+				$arGadgetParams["USER_IS_MEMBER"]
+				&& (!isset($arGadgetParams["USER_IS_AUTO_MEMBER"]) || !$arGadgetParams["USER_IS_AUTO_MEMBER"])
+				&& !$arGadgetParams["USER_IS_OWNER"]
+			):
 				?><li class="bx-icon-leave"><a href="<?= $arGadgetParams["URL_USER_LEAVE_GROUP"] ?>"><?= GetMessage("GD_SONET_GROUP_LINKS_ACT_EXIT") ?></a></li><?
 			endif;
 		endif;

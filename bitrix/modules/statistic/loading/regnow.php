@@ -19,7 +19,7 @@ $SEPARATOR = ","; // CSV separator
 
 function CleanUpCsv(&$item)
 {
-	$item = Trim($item, "\"");
+	$item = trim($item, "\"");
 }
 
 function PrepareQuotes(&$item)

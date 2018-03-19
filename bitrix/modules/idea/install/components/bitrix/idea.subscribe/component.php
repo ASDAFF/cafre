@@ -92,7 +92,7 @@ if($arResult["USER_ID"]>0)
 	$oIdeaSubscribe->NavStart($arNav["nPageSize"], false);
 	//Select Subscribe
 	$arBlogPostId = array();
-	while($r = $oIdeaSubscribe->Fetch())
+	while($r = $oIdeaSubscribe->GetNext())
 	{
 		$arResult["SUBSCRIBE"][] = $r["ID"];
 		if ($r["ID"] == CIdeaManagmentEmailNotify::SUBSCRIBE_ALL)
@@ -132,7 +132,7 @@ if($arResult["USER_ID"]>0)
 			array("ID", "TITLE", "PATH", "DATE_PUBLISH", CIdeaManagment::UFStatusField, "AUTHOR_LOGIN", "AUTHOR_NAME", "AUTHOR_LAST_NAME", "AUTHOR_SECOND_NAME")
 		);
 
-		while($r = $oIdeaPost->Fetch())
+		while($r = $oIdeaPost->GetNext())
 			$arResult["IDEA"][CIdeaManagmentEmailNotify::SUBSCRIBE_IDEA_COMMENT.$r["ID"]] = $r;
 		$arResult["IDEA_STATUS"] = CIdeaManagment::getInstance()->Idea()->GetStatusList();
 	}

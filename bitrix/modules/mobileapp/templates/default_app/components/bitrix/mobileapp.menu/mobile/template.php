@@ -4,8 +4,10 @@
 }
 
 $APPLICATION->SetPageProperty("BodyClass", "menu-page");
+CJSCore::Init(array("fx"))
 ?>
-<div class="menu-items" id="menu-items">
+<div class="menu-wrap">
+<div  class="menu-items" id="menu-items">
 
 	<?
 
@@ -65,8 +67,19 @@ $APPLICATION->SetPageProperty("BodyClass", "menu-page");
 	?>
 </div>
 
+	<div id="mobile_menu_preview_wrap">
+		<div class="navigation-panel"></div>
+		<iframe id="mobile_menu_preview"></iframe>
+		<div id="preview_loading">
+			<div class="loading-label">Loading...</div>
+		</div>
+	</div>
+
+</div>
+
 <script type="text/javascript">
 
+	BXMSlider.setStateEnabled(BXMSlider.state.LEFT, true);
 	document.addEventListener("DOMContentLoaded", function ()
 	{
 		Menu.init(null);
@@ -74,15 +87,28 @@ $APPLICATION->SetPageProperty("BodyClass", "menu-page");
 
 	Menu = {
 		currentItem: null,
-
 		init: function (currentItem)
 		{
+			this.isDesktop = false;
+
+			var userAgent  = navigator.userAgent;
+			if(userAgent.indexOf("Android") < 0 && userAgent.indexOf("iPhone") < 0 && userAgent.indexOf("iPad") < 0)
+			{
+				this.isDesktop = true;
+			}
+			else
+			{
+				BX("menu-items").style.float = "none";
+			}
 			this.currentItem = currentItem;
 			var items = document.getElementById("menu-items");
 			var that = this;
+
+
 			items.addEventListener("click", function (event)
 			{
 				that.onItemClick(event);
+
 			}, false);
 		},
 
@@ -98,10 +124,44 @@ $APPLICATION->SetPageProperty("BodyClass", "menu-page");
 				var url = target.getAttribute("data-url");
 				var pageId = target.getAttribute("data-pageid");
 
-				if (BX.type.isNotEmptyString(url) && BX.type.isNotEmptyString(pageId))
-					app.loadPage(url, pageId);
-				else if (BX.type.isNotEmptyString(url))
-					app.loadPage(url);
+				if(!this.isDesktop)
+				{
+					if(BX.type.isNotEmptyString(url) && BX.type.isNotEmptyString(pageId))
+						app.loadPage(url, pageId);
+					else if(BX.type.isNotEmptyString(url))
+						app.loadPage(url);
+				}
+				else
+				{
+					var previewFrame = BX("mobile_menu_preview");
+					var wrapPreview = BX("mobile_menu_preview_wrap");
+					BX("preview_loading").style.display = "table";
+					BX("preview_loading").style.opacity = 1.0;
+
+					wrapPreview.style.display = "inline";
+
+					previewFrame.src = url;
+					previewFrame.onload = function(){
+
+						(new BX.fx({
+							start: 100,
+							finish: 0,
+							type: "linear",
+							time: 0.2,
+							step: 0.05,
+							callback: BX.proxy(function (value)
+							{
+								BX("preview_loading").style.opacity = value/100;
+
+							}, this),
+							callback_complete: function ()
+							{
+								BX("preview_loading").style.display = "none"
+							}
+
+						})).start();
+					}
+				}
 
 				this.currentItem = target;
 			}

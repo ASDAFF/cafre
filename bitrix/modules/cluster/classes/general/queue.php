@@ -1,4 +1,4 @@
-<?
+<?php
 IncludeModuleLangFile(__FILE__);
 
 class CClusterQueue
@@ -12,7 +12,7 @@ class CClusterQueue
 		$sql_param1 = CClusterQueue::QuoteParam($param1);
 		$sql_param2 = CClusterQueue::QuoteParam($param2);
 		$sql_param3 = CClusterQueue::QuoteParam($param3);
-
+		$DB->StartUsingMasterOnly();
 		$DB->Query("
 			INSERT INTO b_cluster_queue (
 			TIMESTAMP_X, GROUP_ID, COMMAND, PARAM1, PARAM2, PARAM3
@@ -20,9 +20,10 @@ class CClusterQueue
 			".$DB->CurrentTimeFunction().", ".$sql_group_id.", ".$sql_command.", ".$sql_param1.", ".$sql_param2.", ".$sql_param3."
 			)
 		");
+		$DB->StopUsingMasterOnly();
 	}
 
-	function QuoteParam($str)
+	public static function QuoteParam($str)
 	{
 		global $DB;
 
@@ -34,7 +35,7 @@ class CClusterQueue
 			return "null";
 	}
 
-	function UnQuoteParam($str)
+	public static function UnQuoteParam($str)
 	{
 		if(strlen($str) > 0)
 		{
@@ -50,27 +51,47 @@ class CClusterQueue
 	public static function Run()
 	{
 		global $DB;
-
-		$rs = $DB->Query("
-			SELECT *
-			FROM b_cluster_queue
-			WHERE GROUP_ID = ".BX_CLUSTER_GROUP."
-			ORDER BY ID
-		");
-		while($ar = $rs->Fetch())
+		$DB->StartUsingMasterOnly();
+		do
 		{
-			$class_name = $ar["COMMAND"];
-			if(class_exists($class_name))
+			//read data
+			$ids = array();
+			$queue = array();
+			$rs = $DB->Query($DB->TopSql("
+				SELECT *
+				FROM b_cluster_queue
+				WHERE GROUP_ID = ".BX_CLUSTER_GROUP."
+				ORDER BY ID
+			", 100));
+			while ($ar = $rs->Fetch())
 			{
-				$object = new $class_name;
-				$object->QueueRun(
-					CClusterQueue::UnQuoteParam($ar["PARAM1"]),
-					CClusterQueue::UnQuoteParam($ar["PARAM2"]),
-					CClusterQueue::UnQuoteParam($ar["PARAM3"])
-				);
+				$queueKey = $ar["COMMAND"]."|".$ar["PARAM1"]."|".$ar["PARAM2"]."|".$ar["PARAM3"];
+				$queue[$queueKey] = $ar;
+				$ids[] = intval($ar["ID"]);
 			}
-			$DB->Query("DELETE FROM b_cluster_queue WHERE ID = ".intval($ar["ID"]));
+
+			//clean cache
+			foreach ($queue as $ar)
+			{
+				$class_name = $ar["COMMAND"];
+				if (class_exists($class_name))
+				{
+					$object = new $class_name;
+					$object->QueueRun(
+						CClusterQueue::UnQuoteParam($ar["PARAM1"]),
+						CClusterQueue::UnQuoteParam($ar["PARAM2"]),
+						CClusterQueue::UnQuoteParam($ar["PARAM3"])
+					);
+				}
+			}
+
+			//mark as done
+			if ($ids)
+			{
+				$DB->Query("DELETE FROM b_cluster_queue WHERE ID in (".implode(",", $ids).")");
+			}
 		}
+		while ($queue);
+		$DB->StopUsingMasterOnly();
 	}
 }
-?>

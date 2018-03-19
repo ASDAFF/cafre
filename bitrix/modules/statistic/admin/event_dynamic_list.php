@@ -1,7 +1,7 @@
-<?
+<?php
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/statistic/prolog.php");
-
+/** @var CMain $APPLICATION */
 IncludeModuleLangFile(__FILE__);
 
 $STAT_RIGHT = $APPLICATION->GetGroupRight("statistic");
@@ -94,7 +94,7 @@ $arFooter[] = array(
 	);
 $arFooter[] = array(
 	"title"=>GetMessage("STAT_TOTAL_TIME"),
-	"value"=>IntVal(($max_date-$min_date)/86400),
+	"value"=>intval(($max_date-$min_date)/86400),
 	);
 
 $lAdmin->AddFooter($arFooter);
@@ -157,4 +157,4 @@ if($message)
 $lAdmin->DisplayList();
 ?>
 
-<?require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");?>
+<?require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");

@@ -124,7 +124,7 @@ final class LocationHelper extends NameHelper
 	##############################################
 
 	// high-level validators used when accepting data typed in form. There can be some misspelling, etc, so additional buisness-logic required
-	public static function validateUpdateRequest(&$data)
+	public static function validateUpdateRequest($data)
 	{
 		$errors = parent::validateUpdateRequest($data);
 
@@ -153,6 +153,18 @@ final class LocationHelper extends NameHelper
 				if(!isset($services[$external['SERVICE_ID']]))
 				{
 					$errors[] = Loc::getMessage('SALE_LOCATION_ADMIN_LOCATION_HELPER_ENTITY_UNKNOWN_EXTERNAL_SERVICE_ID_ERROR');
+					break;
+				}
+			}
+		}
+
+		if(is_array($data['NAME']) && !empty($data['NAME']))
+		{
+			foreach($data['NAME'] as $lang => $fields)
+			{
+				if(isset($fields['NAME']) && strlen($fields['NAME']) <= 0)
+				{
+					$errors[] = Loc::getMessage('SALE_LOCATION_ADMIN_LOCATION_HELPER_ENTITY_NAME_EMPTY_ERROR');
 					break;
 				}
 			}
@@ -242,7 +254,7 @@ final class LocationHelper extends NameHelper
 		$errors = array();
 		$entityClass = static::getEntityClass();
 
-		$res = $entityClass::delete($primary, array('RESET_LEGACY' => !$batch));
+		$res = $entityClass::deleteExtended($primary, array('RESET_LEGACY' => !$batch));
 		if(!$res->isSuccess())
 		{
 			$success = false;
@@ -392,7 +404,14 @@ final class LocationHelper extends NameHelper
 
 			if($id)
 			{
-				$res = Location\LocationTable::getParentTree($id, $parameters, array('SHOW_CHILDREN' => true));
+				try
+				{
+					$res = Location\LocationTable::getParentTree($id, $parameters, array('SHOW_CHILDREN' => true));
+				}
+				catch(Main\SystemException $e)
+				{
+					return array();
+				}
 			}
 			else
 			{
@@ -597,8 +616,37 @@ final class LocationHelper extends NameHelper
 		if(!is_array($parameters))
 			$parameters = array();
 
-		$parameters['filter']['=SERVICE.CODE'] = 'ZIP';
+		$parameters['filter'][] = array(
+			'LOGIC' => 'OR',
+			array('=SERVICE.CODE' => 'ZIP'),
+			array('=SERVICE.CODE' => 'ZIP_LOWER')
+		);
+
 		$parameters['filter']['=XML_ID'] = $zip;
+		$parameters['order']['SERVICE_CODE'] = 'ASC';
+		$parameters['select'][] = '*';
+		$parameters['select']['SERVICE_CODE'] = 'SERVICE.CODE';
+
+		return \Bitrix\Sale\Location\ExternalTable::getList($parameters);
+	}
+
+	public static function getZipByLocation($locationCode, $parameters = array())
+	{
+		if(strlen($locationCode) <= 0)
+			return new \Bitrix\Main\DB\ArrayResult(array());
+
+		if(!is_array($parameters))
+			$parameters = array();
+
+		$parameters['filter'][] = array(
+			'LOGIC' => 'OR',
+			array('=SERVICE.CODE' => 'ZIP'),
+			array('=SERVICE.CODE' => 'ZIP_LOWER')
+		);
+		$parameters['order']['SERVICE_CODE'] = 'ASC';
+		$parameters['filter']['=LOCATION.CODE'] = $locationCode;
+		$parameters['select'][] = '*';
+		$parameters['select']['SERVICE_CODE'] = 'SERVICE.CODE';
 
 		return \Bitrix\Sale\Location\ExternalTable::getList($parameters);
 	}

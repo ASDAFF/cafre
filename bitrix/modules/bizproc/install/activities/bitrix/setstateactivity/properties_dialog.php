@@ -17,8 +17,7 @@
 			}
 			?>
 		</select><br />
-		<input type="text" id="id_target_state_name" name="target_state_name" value="<?= !$fl ? htmlspecialcharsbx($arCurrentValues["target_state_name"]) : "" ?>">
-		<input type="button" value="..." onclick="BPAShowSelector('id_target_state_name', 'string');">
+		<?=CBPDocument::ShowParameterField('string', 'target_state_name', !$fl ? $arCurrentValues["target_state_name"] : "", array('size' => 30))?>
 	</td>
 </tr>
 <tr>

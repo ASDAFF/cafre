@@ -1,5 +1,16 @@
 <?
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
+/** @var CBitrixComponent $this */
+/** @var array $arParams */
+/** @var array $arResult */
+/** @var string $componentPath */
+/** @var string $componentName */
+/** @var string $componentTemplate */
+/** @global CDatabase $DB */
+/** @global CUser $USER */
+/** @global CMain $APPLICATION */
+/** @global CCacheManager $CACHE_MANAGER */
+/** @global CUserTypeManager $USER_FIELD_MANAGER */
 
 if (!CModule::IncludeModule("socialnetwork"))
 {
@@ -24,7 +35,7 @@ if (!function_exists('getRelatedUser'))
 				return false;
 		}
 		else
-			false;
+			return false;
 	}
 }
 
@@ -336,7 +347,7 @@ else
 	$arResult["User"]["NAME_FORMATTED"] = CUser::FormatName($arParams['NAME_TEMPLATE'], $arResult['User'], $bUseLogin);
 
 	if ($arParams["SET_TITLE"] == "Y")
-		$APPLICATION->SetTitle($arResult["User"]["NAME_FORMATTED"].": ".GetMessage("SONET_URE_PAGE_TITLE"));
+		$APPLICATION->SetTitle(htmlspecialcharsback($arResult["User"]["NAME_FORMATTED"]).": ".GetMessage("SONET_URE_PAGE_TITLE"));
 
 	if ($arParams["SET_NAV_CHAIN"] != "N")
 		$APPLICATION->AddChainItem(GetMessage("SONET_URE_PAGE_TITLE"));

@@ -206,3 +206,14 @@ class ObjectNotFoundException extends SystemException
 		parent::__construct($message, 510, '', 0, $previous);
 	}
 }
+
+/**
+ * Exception is thrown when access is denied
+ */
+class AccessDeniedException extends SystemException
+{
+	public function __construct($message = "", \Exception $previous = null)
+	{
+		parent::__construct(($message ?: "Access denied."), 510, '', 0, $previous);
+	}
+}

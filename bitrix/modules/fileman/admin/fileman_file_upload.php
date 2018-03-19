@@ -35,7 +35,7 @@ else
 		{
 			for($i = 1; $i <= $nums; $i++)
 			{
-				$arFile = $HTTP_POST_FILES["file_".$i];
+				$arFile = $_FILES["file_".$i];
 				if(strlen($arFile["name"])<=0 || $arFile["tmp_name"]=="none")
 					continue;
 

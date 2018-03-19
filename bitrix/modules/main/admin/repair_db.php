@@ -10,160 +10,6 @@
  * @global CDatabase $DB
  */
 
-function repair_db()
-{
-	/**
-	 * Defined in dbconn.php
-	 *
-	 * @param $DBType
-	 * @param $DBHost
-	 * @param $DBName
-	 * @param $DBLogin
-	 * @param $DBPassword
-	 */
-	@include($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/php_interface/dbconn.php");
-	if($DBType == "mysql")
-	{
-		$start = microtime(true);
-		if(DBPersistent)
-			$link_rdb = mysql_pconnect($DBHost, $DBLogin, $DBPassword);
-		else
-			$link_rdb = mysql_connect($DBHost, $DBLogin, $DBPassword);
-
-		if (!$link_rdb)
-			die('<span style="color:red;">'.GetMessage("RDB_CONNECT_ERROR").': '. mysql_error().'</span>');
-
-		mysql_select_db($DBName, $link_rdb);
-
-		$result = mysql_query('show table status');
-		?>
-		<table cellspacing="0" cellpadding="0" border="0" class="list-table" width="0%">
-			<tr class="head">
-				<td><?=GetMessage("RDB_TABLE_NAME")?></td>
-				<td><?=GetMessage("RDB_ROWS_COUNT")?></td>
-				<td><?=GetMessage("RDB_TABLE_SIZE")?></td>
-				<td><?=GetMessage("RDB_CHECK_RESULT")?></td>
-				<td><?=GetMessage("RDB_REPAIR_RESULT")?></td>
-			</tr>
-
-		<?
-		while($arResult = mysql_fetch_array($result))
-		{
-			echo "<tr>";
-			echo "<td>".htmlspecialcharsbx($arResult["Name"])."</td>";
-			echo "<td align='right'>".$arResult["Rows"]."</td>";
-			echo "<td align='right'>".number_format($arResult["Data_length"], 0, ',', ' ')."</td>";
-
-			if(
-				(empty($arResult["Type"]) && strlen($arResult["Comment"]) > 0 && empty($arResult["Engine"]))
-				|| (isset($arResult["Type"]) && (strtoupper($arResult["Type"]) == "MYISAM" || strtoupper($arResult["Type"]) == "INNODB"))
-				|| (isset($arResult["Engine"]) && (strtoupper($arResult["Engine"]) == "MYISAM" || strtoupper($arResult["Engine"]) == "INNODB"))
-			)
-			{
-				echo "<td>";
-				$query = 'CHECK TABLE `'.$arResult["Name"].'`';
-				$toRepair = "";
-				if(($status = mysql_query($query)))
-				{
-					$i=0;
-					while($arStatus = mysql_fetch_array($status))
-					{
-						if($i>0) echo "<br>";
-						$i++;
-						echo "[".$arStatus["Msg_type"]."]&nbsp;";
-						if($arStatus["Msg_type"]=="status" || $arStatus["Msg_type"]=="info")
-							echo "<span style='color:green;'>";
-						else
-							echo "<span style='color:red;'>";
-						echo htmlspecialcharsbx($arStatus["Msg_text"])."</span>";
-						flush();
-
-						if($arStatus["Msg_type"]=="error" || $arStatus["Msg_type"]=="warning")
-							$toRepair = $arResult["Name"];
-					}
-				}
-				echo "</td>";
-				if(!empty($toRepair))
-				{
-					echo "<td>";
-					$j=0;
-
-					$queryR = 'REPAIR TABLE `'.$toRepair.'`';
-					$repair = mysql_query($queryR);
-					$toCheck = "";
-					while($repair && ($arRepair = mysql_fetch_array($repair)))
-					{
-						if($j>0) echo "<br>";
-						echo "[Repair&nbsp;".$arRepair["Msg_type"]."]&nbsp;";
-						if($arRepair["Msg_type"]=="status" || $arRepair["Msg_type"]=="info")
-							echo "<span style='color:green;'>";
-						else
-							echo "<span style='color:red;'>";
-						echo htmlspecialcharsbx($arRepair["Msg_text"])."</span>";
-						$j++;
-						flush();
-						$toCheck = $toRepair;
-					}
-					if(!empty($toCheck))
-					{
-						$queryC = 'CHECK TABLE `'.$toCheck.'`';
-						$statusC = mysql_query($queryC);
-						while($arStatusC = mysql_fetch_array($statusC))
-						{
-							echo "<br>";
-							echo "[Check&nbsp;".$arStatusC["Msg_type"]."]&nbsp;";
-							if($arStatusC["Msg_type"]=="status" || $arStatusC["Msg_type"]=="info")
-								echo "<span style='color:green;'>";
-							else
-								echo "<span style='color:red;'>";
-							echo htmlspecialcharsbx($arStatusC["Msg_text"])."</span>";
-							flush();
-						}
-					}
-					echo "</td>";
-				}
-				else
-					echo "<td>&nbsp;</td>";
-				flush();
-			}
-			else
-			{
-				if(!empty($arResult["Type"]))
-					echo "<td>".$arResult["Type"]."</td>";
-				else
-					echo "<td>".$arResult["Engine"]."</td>";
-				echo "<td>&nbsp;</td>";
-			}
-			echo "</tr>";
-		}
-		?>
-		<tr class="head"><td colspan="5"><?echo "<b>".GetMessage("RDB_EXEC_TIME")." </b>".round((microtime(true)-$start),5).GetMessage("RDB_SEC");?></td></tr>
-		</table>
-		<?
-
-	}
-	else
-		echo "<span style='color:red;'>".GetMessage('RDB_DATABASE_ERROR')."</span>";
-}
-
-function show_tip()
-{
-	?>
-	<form name="check" action="">
-	<input type="submit" value="<?=GetMessage("RDB_CHECK_TABLES")?>" class="adm-btn-save">
-	<input type="hidden" value="Y" name="check_tables">
-	<?
-	if(!isset($_REQUEST["login"]) && !isset($_REQUEST["password"]))
-		echo bitrix_sessid_post();
-	if(isset($_REQUEST["login"]))
-		echo '<input type="hidden" value="'.htmlspecialcharsbx($_REQUEST["login"]).'" name="login">';
-	if(isset($_REQUEST["password"]))
-		echo '<input type="hidden" value="'.htmlspecialcharsbx($_REQUEST["password"]).'" name="password">';
-	if(isset($_REQUEST["lang"]))
-		echo '<input type="hidden" value="'.htmlspecialcharsbx($_REQUEST["lang"]).'" name="lang">';
-	echo '</form>';
-}
-
 require_once(dirname(__FILE__)."/../include/prolog_admin_before.php");
 define("HELP_FILE", "utilities/repair_db.php");
 IncludeModuleLangFile(__FILE__);
@@ -375,7 +221,112 @@ else
 	{
 		if($_REQUEST["check_tables"]=="Y" && check_bitrix_sessid())
 		{
-			repair_db();
+			$start = microtime(true);
+			$result = $DB->Query('show table status');
+			?>
+			<table cellspacing="0" cellpadding="0" border="0" class="list-table" width="0%">
+				<tr class="head">
+					<td><?=GetMessage("RDB_TABLE_NAME")?></td>
+					<td align="right"><?=GetMessage("RDB_ROWS_COUNT")?></td>
+					<td align="right"><?=GetMessage("RDB_TABLE_SIZE")?></td>
+					<td><?=GetMessage("RDB_CHECK_RESULT")?></td>
+					<td><?=GetMessage("RDB_REPAIR_RESULT")?></td>
+				</tr>
+
+			<?
+			while($arResult = $result->Fetch())
+			{
+				echo "<tr>";
+				echo "<td>".htmlspecialcharsbx($arResult["Name"])."</td>";
+				echo "<td align='right'>".$arResult["Rows"]."</td>";
+				echo "<td align='right'>".number_format($arResult["Data_length"], 0, ',', ' ')."</td>";
+
+				if(
+					(empty($arResult["Type"]) && strlen($arResult["Comment"]) > 0 && empty($arResult["Engine"]))
+					|| (isset($arResult["Type"]) && (strtoupper($arResult["Type"]) == "MYISAM" || strtoupper($arResult["Type"]) == "INNODB"))
+					|| (isset($arResult["Engine"]) && (strtoupper($arResult["Engine"]) == "MYISAM" || strtoupper($arResult["Engine"]) == "INNODB"))
+				)
+				{
+					echo "<td>";
+					$query = 'CHECK TABLE `'.$arResult["Name"].'`';
+					$toRepair = "";
+					if(($status = $DB->Query($query)))
+					{
+						$i=0;
+						while($arStatus = $status->Fetch())
+						{
+							if($i>0) echo "<br>";
+							$i++;
+							echo "[".$arStatus["Msg_type"]."]&nbsp;";
+							if($arStatus["Msg_type"]=="status" || $arStatus["Msg_type"]=="info")
+								echo "<span style='color:green;'>";
+							else
+								echo "<span style='color:red;'>";
+							echo htmlspecialcharsbx($arStatus["Msg_text"])."</span>";
+							flush();
+
+							if($arStatus["Msg_type"]=="error" || $arStatus["Msg_type"]=="warning")
+								$toRepair = $arResult["Name"];
+						}
+					}
+					echo "</td>";
+					if(!empty($toRepair))
+					{
+						echo "<td>";
+						$j=0;
+
+						$queryR = 'REPAIR TABLE `'.$toRepair.'`';
+						$repair = $DB->Query($queryR);
+						$toCheck = "";
+						while($repair && ($arRepair = $repair->Fetch()))
+						{
+							if($j>0) echo "<br>";
+							echo "[Repair&nbsp;".$arRepair["Msg_type"]."]&nbsp;";
+							if($arRepair["Msg_type"]=="status" || $arRepair["Msg_type"]=="info")
+								echo "<span style='color:green;'>";
+							else
+								echo "<span style='color:red;'>";
+							echo htmlspecialcharsbx($arRepair["Msg_text"])."</span>";
+							$j++;
+							flush();
+							$toCheck = $toRepair;
+						}
+						if(!empty($toCheck))
+						{
+							$queryC = 'CHECK TABLE `'.$toCheck.'`';
+							$statusC = $DB->Query($queryC);
+							while($arStatusC = $statusC->Fetch())
+							{
+								echo "<br>";
+								echo "[Check&nbsp;".$arStatusC["Msg_type"]."]&nbsp;";
+								if($arStatusC["Msg_type"]=="status" || $arStatusC["Msg_type"]=="info")
+									echo "<span style='color:green;'>";
+								else
+									echo "<span style='color:red;'>";
+								echo htmlspecialcharsbx($arStatusC["Msg_text"])."</span>";
+								flush();
+							}
+						}
+						echo "</td>";
+					}
+					else
+						echo "<td>&nbsp;</td>";
+					flush();
+				}
+				else
+				{
+					if(!empty($arResult["Type"]))
+						echo "<td>".$arResult["Type"]."</td>";
+					else
+						echo "<td>".$arResult["Engine"]."</td>";
+					echo "<td>&nbsp;</td>";
+				}
+				echo "</tr>";
+			}
+			?>
+			<tr class="head"><td colspan="5"><?echo "<b>".GetMessage("RDB_EXEC_TIME")." </b>".round((microtime(true)-$start),5).GetMessage("RDB_SEC");?></td></tr>
+			</table>
+			<?
 		}
 		elseif($_REQUEST["optimize_tables"]=="Y")
 		{
@@ -449,7 +400,20 @@ else
 				"HTML" => true,
 				"DETAILS" => GetMessage("RDB_TIP_3"),
 			));
-			show_tip();
+			?>
+			<form name="check" action="">
+			<input type="submit" value="<?=GetMessage("RDB_CHECK_TABLES")?>" class="adm-btn-save">
+			<input type="hidden" value="Y" name="check_tables">
+			<?
+			if(!isset($_REQUEST["login"]) && !isset($_REQUEST["password"]))
+				echo bitrix_sessid_post();
+			if(isset($_REQUEST["login"]))
+				echo '<input type="hidden" value="'.htmlspecialcharsbx($_REQUEST["login"]).'" name="login">';
+			if(isset($_REQUEST["password"]))
+				echo '<input type="hidden" value="'.htmlspecialcharsbx($_REQUEST["password"]).'" name="password">';
+			if(isset($_REQUEST["lang"]))
+				echo '<input type="hidden" value="'.htmlspecialcharsbx($_REQUEST["lang"]).'" name="lang">';
+			echo '</form>';
 		}
 	}
 	else

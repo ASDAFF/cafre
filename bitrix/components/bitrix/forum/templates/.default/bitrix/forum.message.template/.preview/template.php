@@ -2,6 +2,7 @@
 $res = $arParams["~MESSAGE"];
 if ($arParams["SHOW_HEADER"] != "N"):?>
 <a name="postform"></a>
+<!--MSG_PREVIEW-->
 <div class="forum-preview">
 	<div class="forum-header-box">
 		<div class="forum-header-title"><span><?=GetMessage("F_VIEW")?></span></div>
@@ -90,4 +91,6 @@ if ($arParams["SHOW_HEADER"] != "N"):?>
 		</div>
 	</div>
 </div>
+<!--MSG_END_MSG_PREVIEW-->
+
 <?endif;?>

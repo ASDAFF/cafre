@@ -1,6 +1,7 @@
 (function() {
 	if (!!window.__blogEditComment)
 		return;
+
 window.checkForQuote = function(e, node, ENTITY_XML_ID, author_id) {
 	if (window.mplCheckForQuote)
 		mplCheckForQuote(e, node, ENTITY_XML_ID, author_id)
@@ -47,7 +48,8 @@ window.__blogEditComment = function(key, postId){
 			arImages : top["arComFiles"+key],
 			arDocs : top["arComDocs"+key],
 			arFiles : top["arComFilesUf"+key],
-			arDFiles : top["arComDFiles"+key]}
+			arDFiles : top["arComDFiles"+key],
+			UrlPreview : top["UrlPreview"+key]}
 	};
 	BX.onCustomEvent(window, 'OnUCAfterRecordEdit', ['BLOG_' + postId, key, data, 'EDIT']);
 };
@@ -78,10 +80,16 @@ window.__blogOnUCFormAfterShow = function(obj, text, data){
 	obj.form.action = SBPC.actionUrl.replace(/#source_post_id#/, post_data['comment_post_id']);
 
 	var im = BX('captcha');
-	if (!!im) {
-		BX('captcha_del').appendChild(im);
-		im.style.display = "block";
+	if (!!im)
+	{
+		BX.ajax.getCaptcha(function(data) {
+			BX("captcha_word").value = "";
+			BX("captcha_code").value = data["captcha_sid"];
+			BX("captcha").src = '/bitrix/tools/captcha.php?captcha_code=' + data["captcha_sid"];
+			BX("captcha").style.display = "";
+		});
 	}
+
 	onLightEditorShow(text, data);
 };
 
@@ -139,6 +147,11 @@ window.onLightEditorShow = function(content, data){
 			USER_TYPE_ID : "disk_file",
 			FIELD_NAME : "UF_BLOG_COMMENT_FILE[]",
 			VALUE : BX.clone(data["arDFiles"])};
+	if (data["UrlPreview"])
+		res["UF_BLOG_COMMENT_URL_PRV"] = {
+			USER_TYPE_ID : "url_preview",
+			FIELD_NAME : "UF_BLOG_COMMENT_URL_PRV",
+			VALUE : BX.clone(data["UrlPreview"])};
 	LHEPostForm.reinitData(SBPC.editorId, content, res);
 	if (data["arImages"])
 	{
@@ -163,6 +176,45 @@ window.onLightEditorShow = function(content, data){
 			}
 		}
 	}
-}
+};
+
+BX.SocialnetworkBlogPostComment = {
+};
+
+BX.SocialnetworkBlogPostComment.registerViewAreaList = function(params)
+{
+	if (
+		typeof params == 'undefined'
+		|| typeof params.containerId == 'undefined'
+		|| typeof params.className == 'undefined'
+	)
+	{
+		return;
+	}
+
+	if (BX(params.containerId))
+	{
+		var
+			viewAreaList = BX.findChildren(BX(params.containerId), {'tag':'div', 'className': params.className}, true),
+			fullContentArea = null;
+
+		for (var i = 0, length = viewAreaList.length; i < length; i++)
+		{
+			if (viewAreaList[i].id.length > 0)
+			{
+				fullContentArea = null;
+				if (BX.type.isNotEmptyString(params.fullContentClassName))
+				{
+					fullContentArea = BX.findChild(viewAreaList[i], {
+						className: params.fullContentClassName
+					});
+				}
+
+				BX.UserContentView.registerViewArea(viewAreaList[i].id, (fullContentArea ? fullContentArea : null));
+			}
+		}
+	}
+};
+
 })(window);
 

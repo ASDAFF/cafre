@@ -69,4 +69,5 @@ $MESS["prolog_main_support_menu1"] = "Через:";
 $MESS["prolog_main_support_menu2"] = "неделю";
 $MESS["prolog_main_support_menu3"] = "две недели";
 $MESS["prolog_main_support_menu4"] = "<span style=\"color:red;\">месяц</span>";
+$MESS["DEVSERVER_ADMIN_MESSAGE"] = "Эта установка предназначена для разработки на базе продукта \"1С-Битрикс: Управление сайтом\". Она не должна использоваться в качестве рабочего (боевого) сайта.";
 ?>

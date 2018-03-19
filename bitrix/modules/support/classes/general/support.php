@@ -14,7 +14,7 @@ class CAllTicket
 	const REOPEN = "REOPEN";
 	const NEW_SLA = "NEW_SLA";
 		
-	function err_mess()
+	public static function err_mess()
 	{
 		$module_id = "support";
 		@include($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/".$module_id."/install/version.php");
@@ -35,33 +35,33 @@ class CAllTicket
 
 	*****************************************************************/
 
-	function GetDeniedRoleID()
+	public static function GetDeniedRoleID()
 	{
 		return "D";
 	}
 
-	function GetSupportClientRoleID()
+	public static function GetSupportClientRoleID()
 	{
 		return "R";
 	}
 
-	function GetSupportTeamRoleID()
+	public static function GetSupportTeamRoleID()
 	{
 		return "T";
 	}
 
-	function GetDemoRoleID()
+	public static function GetDemoRoleID()
 	{
 		return "V";
 	}
 
-	function GetAdminRoleID()
+	public static function GetAdminRoleID()
 	{
 		return "W";
 	}
 
 	// возвращает true если заданный пользователь имеет заданную роль на модуль
-	function HaveRole($role, $userID=false)
+	public static function HaveRole($role, $userID=false)
 	{
 		global $DB, $USER, $APPLICATION, $SUPPORT_CACHE_USER_ROLES;
 		if (!is_object($USER)) $USER = new CUser;
@@ -98,7 +98,7 @@ class CAllTicket
 
 	// true - если пользователь имеет роль "администратор техподдержки"
 	// false - в противном случае
-	function IsAdmin($userID=false)
+	public static function IsAdmin($userID=false)
 	{
 		global $USER;
 
@@ -111,26 +111,26 @@ class CAllTicket
 
 	// true - если пользователь имеет роль "демо-доступ"
 	// false - в противном случае
-	function IsDemo($userID=false)
+	public static function IsDemo($userID=false)
 	{
 		return CTicket::HaveRole(CTicket::GetDemoRoleID(), $userID);
 	}
 
 	// true - если пользователь имеет роль "сотрудник техподдержки"
 	// false - в противном случае
-	function IsSupportTeam($userID=false)
+	public static function IsSupportTeam($userID=false)
 	{
 		return CTicket::HaveRole(CTicket::GetSupportTeamRoleID(), $userID);
 	}
 
 	// true - если пользователь имеет роль "сотрудник техподдержки"
 	// false - в противном случае
-	function IsSupportClient($userID=false)
+	public static function IsSupportClient($userID=false)
 	{
 		return CTicket::HaveRole(CTicket::GetSupportClientRoleID(), $userID);
 	}
 
-	function IsOwner($ticketID, $userID=false)
+	public static function IsOwner($ticketID, $userID=false)
 	{
 		$err_mess = (CAllTicket::err_mess())."<br>Function: IsOwner<br>Line: ";
 		global $DB, $USER;
@@ -147,7 +147,7 @@ class CAllTicket
 	}
 
 	// возвращает роли заданного пользователя
-	function GetRoles(&$isDemo, &$isSupportClient, &$isSupportTeam, &$isAdmin, &$isAccess, &$userID, $checkRights=true)
+	public static function GetRoles(&$isDemo, &$isSupportClient, &$isSupportTeam, &$isAdmin, &$isAccess, &$userID, $checkRights=true)
 	{
 		global $DB, $USER, $APPLICATION;
 		static $arTicketUserRoles;
@@ -186,7 +186,7 @@ class CAllTicket
 
 	// возвращает массив ID групп для которых задана роль
 	// $role - идентификатор роли
-	function GetGroupsByRole($role)
+	public static function GetGroupsByRole($role)
 	{
 		//Todo: определиться с доступом по умолчанию
 
@@ -229,19 +229,19 @@ class CAllTicket
 	}
 
 	// возвращает массив групп с ролью "администратор техподдержки"
-	function GetAdminGroups()
+	public static function GetAdminGroups()
 	{
 		return CTicket::GetGroupsByRole(CTicket::GetAdminRoleID());
 	}
 
 	// возвращает массив групп с ролью "сотрудник техподдержки"
-	function GetSupportTeamGroups()
+	public static function GetSupportTeamGroups()
 	{
 		return CTicket::GetGroupsByRole(CTicket::GetSupportTeamRoleID());
 	}
 
 	// возвращает массив EMail адресов всех пользователей имеющих заданную роль
-	function GetEmailsByRole($role)
+	public static function GetEmailsByRole($role)
 	{
 		global $DB, $APPLICATION, $USER;
 		if (!is_object($USER)) $USER = new CUser;
@@ -256,18 +256,18 @@ class CAllTicket
 	}
 
 	// возвращает массив EMail'ов всех пользователей имеющих роль "администратор"
-	function GetAdminEmails()
+	public static function GetAdminEmails()
 	{
 		return CTicket::GetEmailsByRole(CTicket::GetAdminRoleID());
 	}
 
 	// возвращает массив EMail'ов всех пользователей имеющих роль "сотрудник техподдержки"
-	function GetSupportTeamEmails()
+	public static function GetSupportTeamEmails()
 	{
 		return CTicket::GetEmailsByRole(CTicket::GetSupportTeamRoleID());
 	}
 	
-	function GetSupportTeamAndAdminUsers()
+	public static function GetSupportTeamAndAdminUsers()
 	{
 		$arUser = array();
 		$stg = CTicket::GetGroupsByRole(CTicket::GetSupportTeamRoleID());
@@ -301,7 +301,7 @@ class CAllTicket
 	*****************************************************************/
 
 	// проверка полей фильтра
-	function CheckFilter($arFilter)
+	public static function CheckFilter($arFilter)
 	{
 		$err_mess = (CAllTicket::err_mess())."<br>Function: CheckFilter<br>Line: ";
 		global $DB, $USER, $APPLICATION;
@@ -332,7 +332,7 @@ class CAllTicket
 	}
 
 	// проверка полей перед вставкой в базу данных
-	function CheckFields($arFields, $id, $arRequired)
+	public static function CheckFields($arFields, $id, $arRequired)
 	{
 		global $DB, $USER, $APPLICATION, $MESS;
 
@@ -394,7 +394,7 @@ class CAllTicket
 	}
 
 	// предварительно обрабатывает массив значений для вставки в базу данных
-	function PrepareFields($arFields, $table, $id)
+	public static function PrepareFields($arFields, $table, $id)
 	{
 		global $DB, $USER, $APPLICATION;
 
@@ -609,7 +609,7 @@ class CAllTicket
 		return $arFields_i;
 	}
 
-	function SplitTicket($arParam)
+	public static function SplitTicket($arParam)
 	{
 		global $DB;
 		$err_mess = (CAllTicket::err_mess())."<br>Function: SplitTicket<br>Line: ";
@@ -696,7 +696,7 @@ class CAllTicket
 					Группа функций по работе со спамом
 	*****************************************************************/
 
-	function MarkMessageAsSpam($messageID, $exactly="Y", $checkRights="Y")
+	public static function MarkMessageAsSpam($messageID, $exactly="Y", $checkRights="Y")
 	{
 		$err_mess = (CAllTicket::err_mess())."<br>Function: MarkMessageAsSpam<br>Line: ";
 		global $DB, $USER;
@@ -746,7 +746,7 @@ class CAllTicket
 		}
 	}
 
-	function UnMarkMessageAsSpam($messageID, $checkRights="Y")
+	public static function UnMarkMessageAsSpam($messageID, $checkRights="Y")
 	{
 		$err_mess = (CAllTicket::err_mess())."<br>Function: UnMarkMessageAsSpam<br>Line: ";
 		global $DB, $USER;
@@ -790,7 +790,7 @@ class CAllTicket
 		}
 	}
 
-	function MarkAsSpam($ticketID, $exactly="Y", $checkRights="Y")
+	public static function MarkAsSpam($ticketID, $exactly="Y", $checkRights="Y")
 	{
 		$err_mess = (CAllTicket::err_mess())."<br>Function: MarkAsSpam<br>Line: ";
 		global $DB, $USER;
@@ -829,7 +829,7 @@ class CAllTicket
 		}
 	}
 
-	function UnMarkAsSpam($ticketID, $checkRights="Y")
+	public static function UnMarkAsSpam($ticketID, $checkRights="Y")
 	{
 		$err_mess = (CAllTicket::err_mess())."<br>Function: UnMarkAsSpam<br>Line: ";
 		global $DB, $USER;
@@ -1073,7 +1073,7 @@ class CAllTicket
 				
 	}*/
 
-	function UpdateLastParamsN($ticketID, $dateType, $recalculateSupportDeadline = true, $setReopenDefault = true)
+	public static function UpdateLastParamsN($ticketID, $dateType, $recalculateSupportDeadline = true, $setReopenDefault = true)
 	{	
 		$err_mess = (CAllTicket::err_mess())."<br>Function: UpdateLastParamsN<br>Line: ";
 		global $DB, $USER;
@@ -1259,7 +1259,7 @@ class CAllTicket
 	
 	}
 
-	function UpdateMessages($ticketID)
+	public static function UpdateMessages($ticketID)
 	{
 		$err_mess = (CAllTicket::err_mess())."<br>Function: UpdateMessages<br>Line: ";
 		global $DB;
@@ -1288,7 +1288,7 @@ class CAllTicket
 		$DB->Update("b_ticket",$arFields,"WHERE ID='".$ticketID."'",$err_mess.__LINE__);
 	}
 
-	function GetFileList(&$by, &$order, $arFilter=array(), $checkRights = 'N')
+	public static function GetFileList(&$by, &$order, $arFilter=array(), $checkRights = 'N')
 	{
 		$err_mess = (CAllTicket::err_mess())."<br>Function: GetFileList<br>Line: ";
 		global $DB, $USER;
@@ -1435,19 +1435,19 @@ class CAllTicket
 		return $res;
 	}
 
-	function GetMessageByID($id, $checkRights="Y", $get_user_name="Y")
+	public static function GetMessageByID($id, $checkRights="Y", $get_user_name="Y")
 	{
 		$by = $order = $is_filtered = null;
 		return CTicket::GetMessageList($by, $order, array("ID" => $id, "ID_EXACT_MATCH" => "Y"), $is_filtered, $checkRights, $get_user_name);
 	}
 
-	function GetByID($id, $lang=LANG, $checkRights="Y", $get_user_name="Y", $get_extra_names="Y", $arParams = Array())
+	public static function GetByID($id, $lang=LANG, $checkRights="Y", $get_user_name="Y", $get_extra_names="Y", $arParams = Array())
 	{
 		$by = $order = $is_filtered = null;
 		return CTicket::GetList($by, $order, array("ID" => $id, "ID_EXACT_MATCH" => "Y"), $is_filtered, $checkRights, $get_user_name, $get_extra_names, $lang, $arParams);
 	}
 
-	function getMaxId()
+	public static function getMaxId()
 	{
 		global $DB;
 
@@ -1463,7 +1463,7 @@ class CAllTicket
 		return $id;
 	}
 
-	function Delete($ticketID, $checkRights="Y")
+	public static function Delete($ticketID, $checkRights="Y")
 	{
 		$err_mess = (CAllTicket::err_mess())."<br>Function: Delete<br>Line: ";
 		global $DB, $USER;
@@ -1510,7 +1510,7 @@ class CAllTicket
 		}
 	}
 
-	function UpdateOnline($ticketID, $userID=false, $currentMode="")
+	public static function UpdateOnline($ticketID, $userID=false, $currentMode="")
 	{
 		$err_mess = (CAllTicket::err_mess())."<br>Function: UpdateOnline<br>Line: ";
 		global $DB, $USER;
@@ -1534,7 +1534,7 @@ class CAllTicket
 		}
 	}
 
-	function SetTicket($arFields, $ticketID="", $checkRights="Y", $sendEmailToAuthor="Y", $sendEmailToTechsupport="Y")
+	public static function SetTicket($arFields, $ticketID="", $checkRights="Y", $sendEmailToAuthor="Y", $sendEmailToTechsupport="Y")
 	{
 		//global $DB;
 		//$DB->DebugToFile = true;
@@ -1548,13 +1548,13 @@ class CAllTicket
 									SET
 	*****************************************************************/
 	
-	static function addSupportText($cn)
+	public static function addSupportText($cn)
 	{
 		if($cn > 0 && (CTicket::IsSupportTeam($cn) || CTicket::IsAdmin($cn))) return " " . GetMessage("SUP_TECHSUPPORT_HINT");
 		return "";
 	}
 	
-	static function EmailsFromStringToArray($emails, $res = null)
+	public static function EmailsFromStringToArray($emails, $res = null)
 	{
 		if(!is_array($res)) $res = array();
 		$arEmails = explode(",", $emails);
@@ -1588,7 +1588,7 @@ class CAllTicket
 		return $res;
 	}
 	
-	static function GetCSupportTableFields($name, $arrOrTable = CSupportTableFields::C_Array)
+	public static function GetCSupportTableFields($name, $arrOrTable = CSupportTableFields::C_Array)
 	{
 		$n = CSupportTableFields::VT_NUMBER;
 		$s = CSupportTableFields::VT_STRING;
@@ -1700,6 +1700,7 @@ class CAllTicket
 				"MESSAGE_HEADER" =>					array("TYPE" => $s,	"DEF_VAL" => null	),
 				"MESSAGE_BODY" =>					array("TYPE" => $s,	"DEF_VAL" => null	),
 				"MESSAGE_FOOTER" =>					array("TYPE" => $s,	"DEF_VAL" => null	),
+				"FILES" =>					array("TYPE" => $s,	"DEF_VAL" => null	),
 				"FILES_LINKS" =>					array("TYPE" => $s,	"DEF_VAL" => null	),
 				"IMAGE_LINK" =>						array("TYPE" => $s,	"DEF_VAL" => null	),
 				"SUPPORT_COMMENTS" =>				array("TYPE" => $s,	"DEF_VAL" => null	),
@@ -1712,7 +1713,7 @@ class CAllTicket
 		return new CSupportTableFields($tables[$name], $arrOrTable);
 	}
 		
-	function Set_getFilesLinks($arFiles, $lID)
+	public static function Set_getFilesLinks($arFiles, $lID)
 	{
 		// сформируем ссылки на прикрепленые файлы
 		$fl = null;
@@ -1728,7 +1729,7 @@ class CAllTicket
 		return $fl;
 	}
 	
-	function Set_WriteLog($nf, $v, $mf)
+	public static function Set_WriteLog($nf, $v, $mf)
 	{
 		
 		$change_log = "";
@@ -1831,7 +1832,7 @@ class CAllTicket
 			
 	}
 	
-	function Set_sendMails($nf, $v, $arFields)
+	public static function Set_sendMails($nf, $v, $arFields)
 	{
 		$I_Email = null;
 		$U_Email = null;
@@ -1918,6 +1919,7 @@ class CAllTicket
 			}
 		}
 
+		$mf->FILES = $v->arrFILES;
 		$mf->FILES_LINKS = self::Set_getFilesLinks($v->arrFILES, $v->arrSite["LANGUAGE_ID"]);
 		$mf->IMAGE_LINK = $mf->FILES_LINKS;
 		
@@ -2223,7 +2225,7 @@ class CAllTicket
 		
 	}
 	
-	function Set_getResponsibleUser($v, $f, &$arFields)
+	public static function Set_getResponsibleUser($v, $f, &$arFields)
 	{
 		global $DB;
 		$err_mess = (CAllTicket::err_mess()) . "<br>Function: Set_getResponsibleUser<br>Line: ";
@@ -2297,7 +2299,7 @@ class CAllTicket
 		}
 	}
 	
-	function Set_getCOUPONandSLA($v, $f, $arFields)
+	public static function Set_getCOUPONandSLA($v, $f, $arFields)
 	{
 		global $APPLICATION;
 		$slaID = 0;
@@ -2343,7 +2345,7 @@ class CAllTicket
 		return true;			
 	}
 	
-	function Set_InitVar(&$arFields, $id, $checkRights, $sendEmailToAuthor, $sendEmailToTechsupport)
+	public static function Set_InitVar(&$arFields, $id, $checkRights, $sendEmailToAuthor, $sendEmailToTechsupport)
 	{
 		global $APPLICATION, $USER, $DB;
 				
@@ -2458,7 +2460,7 @@ class CAllTicket
 		return array("v" => $v, "f" => $f);
 	}
 	
-	function Set($arFields, &$MID, $id="", $checkRights="Y", $sendEmailToAuthor="Y", $sendEmailToTechsupport="Y")
+	public static function Set($arFields, &$MID, $id="", $checkRights="Y", $sendEmailToAuthor="Y", $sendEmailToTechsupport="Y")
 	{						
 		global $DB, $APPLICATION, $USER;
 		
@@ -2593,7 +2595,8 @@ class CAllTicket
 			elseif($v->bOwner || $v->bSupportClient)
 			{
 				$arFields_i = $f->ToArray("TIMESTAMP_X,DATE_CLOSE,CRITICALITY_ID,MODIFIED_USER_ID,MODIFIED_GUEST_ID,MODIFIED_MODULE_NAME,REOPEN", array(CSupportTableFields::ONLY_CHANGED), true);
-				$arFields_i["MARK_ID"] = intval($arFields["MARK_ID"]);
+                                if (isset($arFields['MARK_ID']))
+        				$arFields_i["MARK_ID"] = intval($arFields["MARK_ID"]);
 				if(count($arFields_i) > 0)
 				{
 					$v->SupportClientUpdateRes = $DB->Update("b_ticket",
@@ -2752,6 +2755,7 @@ class CAllTicket
 						//if ($v->arChange['SLA_ID'] == 'Y' || $v->arChange['OPEN'] == 'Y') CTicketReminder::Update($nf->ID, true);
 					}
 				}
+				$arFields['MID'] = $MID;
 				CTicket::ExecuteEvents('OnAfterTicketUpdate', $arFields, false);
 			}
 		}
@@ -2886,7 +2890,7 @@ class CAllTicket
 			Старые функции для совместимости
 	***********************************************/
 
-	function GetFUA($site_id)
+	public static function GetFUA($site_id)
 	{
 		$err_mess = (CAllTicket::err_mess())."<br>Function: GetFUA<br>Line: ";
 		global $DB;
@@ -2897,7 +2901,7 @@ class CAllTicket
 		return $rs;
 	}
 
-	function GetRefBookValues($type, $site_id=false)
+	public static function GetRefBookValues($type, $site_id=false)
 	{
 		$err_mess = (CAllTicket::err_mess())."<br>Function: GetRefBookValues<br>Line: ";
 		global $DB;
@@ -2908,7 +2912,7 @@ class CAllTicket
 		return $rs;
 	}
 
-	function GetMessages($ticketID, $arFilter=array(), $checkRights="Y")
+	public static function GetMessages($ticketID, $arFilter=array(), $checkRights="Y")
 	{
 		$arFilter["TICKET_ID"] = $ticketID;
 		$arFilter["TICKET_ID_EXACT_MATCH"] = "Y";
@@ -2916,17 +2920,17 @@ class CAllTicket
 		return CTicket::GetMessageList($by, $order, $arFilter, $is_filtered, $checkRights, "Y");
 	}
 
-	function GetResponsible()
+	public static function GetResponsible()
 	{
 		return CTicket::GetSupportTeamList();
 	}
 
-	function IsResponsible($userID=false)
+	public static function IsResponsible($userID=false)
 	{
 		return CTicket::IsSupportTeam($userID);
 	}
 
-	function ExecuteEvents($message, $arFields, $isNew, &$eventType = false)
+	public static function ExecuteEvents($message, $arFields, $isNew, &$eventType = false)
 	{
 		foreach(GetModuleEvents('support', $message, true) as $arr)
 		{
@@ -2936,7 +2940,7 @@ class CAllTicket
 		return $arFields;
 	}
 	
-	function GetResponsibleList($userID, $CMGM = null, $CMUGM = null, $SG = null)
+	public static function GetResponsibleList($userID, $CMGM = null, $CMUGM = null, $SG = null)
 	{
 				
 		$condition = "";
@@ -2982,7 +2986,7 @@ class CAllTicket
 		return $res;
 	}
 
-	static function GetUsersPropertiesArray($arUserIDs = array(), $arGuestIDs = array())
+	public static function GetUsersPropertiesArray($arUserIDs = array(), $arGuestIDs = array())
 	{
 		$arGuestUserIDs = array();
 		$arResUsers = array();
@@ -3063,10 +3067,4 @@ class CAllTicket
 
 		return array("arUsers" => $arResUsers, "arGuests" => $arResGuests);
 	}
-
-
-	
-	
 }
-
-?>

@@ -331,15 +331,9 @@ if (strlen($arResult["FatalErrorMessage"]) <= 0)
 	$runtime->StartRuntime();
 	$documentService = $runtime->GetService("DocumentService");
 
-	$idx = 0;
-
 	$arDocumentFields = $documentService->GetDocumentFields($documentType);
 	foreach ($arDocumentFields as $key => $value)
 	{
-		$idx++;
-		if ($idx > 50)
-			break;
-
 		if (count($arResult["Block"]["VISIBLE_FIELDS"]) <= 0 || in_array($key, $arResult["Block"]["VISIBLE_FIELDS"]))
 		{
 			$arResult["HEADERS"][] = array(
@@ -471,7 +465,7 @@ if (strlen($arResult["FatalErrorMessage"]) <= 0)
 		$gridOptions->GetNavParams(),
 		$arSelectFields
 	);
-	while ($arRecord = $dbRecordsList->fetch())
+	while ($arRecord = $dbRecordsList->GetNext())
 	{
 		$arKeys = array_keys($arRecord);
 		foreach ($arKeys as $key)
@@ -567,14 +561,14 @@ if (strlen($arResult["FatalErrorMessage"]) <= 0)
 			if (count($aActions) > 0)
 				$aActions[] = array("SEPARATOR"=>true);
 
-			$aActions[] = array("ICONCLASS"=>"delete", "TEXT"=>GetMessage("JHGFDC_STOP"), "ONCLICK"=>"if(confirm('".GetMessage("JHGFDC_STOP_ALT")."')) window.location='".$arRecord["CancelUrl"]."';");
+			$aActions[] = array("ICONCLASS"=>"delete", "TEXT"=>GetMessage("JHGFDC_STOP"), "ONCLICK"=>"if(confirm('".GetMessageJS("JHGFDC_STOP_ALT")."')) window.location='".$arRecord["CancelUrl"]."';");
 		}
 		if ($arResult["AllowAdmin"])
 		{
 			if (count($aActions) > 0 && strlen($arRecord["CancelUrl"]) <= 0)
 				$aActions[] = array("SEPARATOR"=>true);
 
-			$aActions[] = array("ICONCLASS"=>"delete", "TEXT"=>GetMessage("JHGFDC_STOP_DELETE"), "ONCLICK"=>"if(confirm('".GetMessage("JHGFDC_STOP_DELETE_ALT")."')) window.location='".$APPLICATION->GetCurPageParam("delete_bizproc_id=".$arRecord["DOCUMENT_STATE"]["ID"]."&".bitrix_sessid_get(), array("sessid", "stop_bizproc_id", "delete_bizproc_id", 'bxajaxid'))."';");
+			$aActions[] = array("ICONCLASS"=>"delete", "TEXT"=>GetMessage("JHGFDC_STOP_DELETE"), "ONCLICK"=>"if(confirm('".GetMessageJS("JHGFDC_STOP_DELETE_ALT")."')) window.location='".$APPLICATION->GetCurPageParam("delete_bizproc_id=".$arRecord["DOCUMENT_STATE"]["ID"]."&".bitrix_sessid_get(), array("sessid", "stop_bizproc_id", "delete_bizproc_id", 'bxajaxid'))."';");
 		}
 
 		$arResult["RECORDS"][] = array("data" => $arRecord, "actions" => $aActions, "columns" => $aCols, "editable" => false);

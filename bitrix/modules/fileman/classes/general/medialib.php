@@ -442,7 +442,7 @@ ML_MESS.Save = '<?= GetMessageJS('ML_SAVE')?>';
 		<div id="mlsd_coll" class="mlsd_admin">
 			<table>
 			<tr><td><b><?=GetMessage('ML_NAME')?>:</b></td><td><input type="text" id="mlsd_coll_name" /></td></tr>
-			<tr><td style="vertical-align: top;"><?=GetMessage('ML_DESC')?>:</td><td><textarea id="mlsd_coll_desc" rows="2" cols="21"></textarea></td></tr>
+			<tr><td style="vertical-align: top;"><?=GetMessage('ML_DESC')?>:</td><td><textarea id="mlsd_coll_desc" rows="2" cols="21" style="resize: vertical;"></textarea></td></tr>
 			<tr><td><?=GetMessage('ML_KEYWORDS')?>:</td><td><input type="text" id="mlsd_coll_keywords" /></td></tr>
 			<tr><td><?=GetMessage('ML_PLACE')?>:</td>
 			<td><select id="mlsd_coll_parent" style="width: 190px;"><option value="0"><?= GetMessage('ML_UPPER_LEVEL')?></option></select></td></tr>
@@ -461,7 +461,7 @@ ML_MESS.Save = '<?= GetMessageJS('ML_SAVE')?>';
 		<tr><td class="ml-content-cell">
 			<table class="mlsd-fields-tbl">
 			<tr><td><b><?=GetMessage('ML_NAME')?>:</b></td><td><input type="text" id="mlsd_coll_name" /></td></tr>
-			<tr><td style="vertical-align: top;"><?=GetMessage('ML_DESC')?>:</td><td><textarea id="mlsd_coll_desc" rows="2" cols="21"></textarea></td></tr>
+			<tr><td style="vertical-align: top;"><?=GetMessage('ML_DESC')?>:</td><td><textarea id="mlsd_coll_desc" rows="2" cols="21" style="resize: vertical;"></textarea></td></tr>
 			<tr><td><?=GetMessage('ML_KEYWORDS')?>:</td><td><input type="text" id="mlsd_coll_keywords" /></td></tr>
 			<tr><td><?=GetMessage('ML_PLACE')?>:</td>
 			<td><select id="mlsd_coll_parent" style="width: 190px;"><option value="0"><?= GetMessage('ML_UPPER_LEVEL')?></option></select></td></tr>
@@ -489,7 +489,7 @@ ML_MESS.Save = '<?= GetMessageJS('ML_SAVE')?>';
 			</div>
 			<div id="mlsd_load_cont">
 				<b><label for="ml_load_file"><?=GetMessage('ML_FILE')?>:</label></b>
-				<input id="ml_load_file" type="file" name="load_file" style="margin-left: 15px; width:200px;">
+				<input id="ml_load_file" type="file" name="load_file" style="margin-left: 15px; max-width:250px;">
 			</div>
 			<div id="mlsd_select_cont" style="display: none;">
 				<b><label for="mlsd_item_path"><?=GetMessage('ML_FILE')?>:</label></b>
@@ -615,7 +615,7 @@ ML_MESS.Save = '<?= GetMessageJS('ML_SAVE')?>';
 			</div>
 			<div id="mlsd_load_cont">
 				<b><label for="ml_load_file"><?=GetMessage('ML_FILE')?>:</label></b>
-				<input id="ml_load_file" type="file" name="load_file" style="margin-left: 15px; width:200px;">
+				<input id="ml_load_file" type="file" name="load_file" style="margin-left: 15px; max-width:250px;">
 				<input id="ml_load_max_size" type="hidden" name="ml_load_max_size" value="<?=CMedialib::getMaximumFileUploadSize()?>">
 			</div>
 			<div id="mlsd_select_cont" style="display: none;">
@@ -1555,7 +1555,7 @@ window.MLSearchResult = [
 			if ($arFields['NEW']) // Add
 			{
 				unset($arFields['NEW']);
-				CDatabase::Add("b_medialib_type", $arFields, array("DESCRIPTION"));
+				$DB->Add("b_medialib_type", $arFields, array("DESCRIPTION"));
 			}
 			else // Update
 			{
@@ -1768,6 +1768,58 @@ window.bx_req_res = {
 					$cache->CleanDir(self::$cachePath.$path);
 		}
 	}
+
+	public static function AutosaveImage($file = false)
+	{
+		$res = CMedialibCollection::GetList(array(
+			'arFilter' => array(
+				'ACTIVE' => 'Y',
+				'NAME' => GetMessage('ML_AUTOSAVE_DEFAULT_COL')
+			)
+		));
+		$result = false;
+
+		if (!$res || count($res) == 0)
+		{
+			$colId = CMedialibCollection::Edit(array(
+				'arFields' => array(
+					'NAME' => GetMessage('ML_AUTOSAVE_DEFAULT_COL'),
+					'DESCRIPTION' => GetMessage('ML_AUTOSAVE_DEFAULT_COL_DEF'),
+					'OWNER_ID' => $GLOBALS['USER']->GetId(),
+					'KEYWORDS' => '',
+					'ACTIVE' => "Y",
+					'ML_TYPE' => 'image'
+				)
+			));
+		}
+		else
+		{
+			$colId = $res[0]['ID'];
+		}
+
+		if ($colId && $file)
+		{
+			$res = CMedialibItem::Edit(array(
+				'file' => $file,
+				'path' => '',
+				'arFields' => array(
+					'NAME' => $file['name']
+				),
+				'arCollections' => array($colId)
+			));
+
+			if ($res && $res['ID'] > 0)
+			{
+				$item = CMedialibItem::GetList(array('id' => $res['ID']));
+				if (is_array($item) && count($item) > 0)
+				{
+					$result = $item[0];
+				}
+			}
+		}
+
+		return $result;
+	}
 }
 
 class CMedialibCollection
@@ -1838,7 +1890,7 @@ class CMedialibCollection
 		$res = $DB->Query($strSql, false, $err_mess.__LINE__);
 		$arResult = Array();
 		while($arRes = $res->Fetch())
-			$arResult[]=$arRes;
+			$arResult[] = $arRes;
 
 		return $arResult;
 	}
@@ -1880,7 +1932,7 @@ class CMedialibCollection
 		if ($bNew) // Add
 		{
 			unset($arFields['ID']);
-			$ID = CDatabase::Add("b_medialib_collection", $arFields, array("DESCRIPTION"));
+			$ID = $DB->Add("b_medialib_collection", $arFields, array("DESCRIPTION"));
 		}
 		else // Update
 		{
@@ -2152,7 +2204,7 @@ class CMedialibItem
 			$arFields['SOURCE_ID'] = $source_id;
 			$arFields['~DATE_CREATE'] = $arFields['~DATE_UPDATE'];
 			$arFields['ITEM_TYPE'] = '';
-			$ID = CDatabase::Add("b_medialib_item", $arFields, array("DESCRIPTION","SEARCHABLE_CONTENT"));
+			$ID = $DB->Add("b_medialib_item", $arFields, array("DESCRIPTION","SEARCHABLE_CONTENT"));
 		}
 		else // Update
 		{

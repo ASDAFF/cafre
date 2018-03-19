@@ -220,10 +220,10 @@
 										<input type="hidden" name="item_summ_<?=$arItem["ID"]?>" value="<?=$arItem["PRICE"]*$arItem["QUANTITY"]?>" />
 									</div>
 								</td>
-							<?elseif ($arHeader["id"] == "WEIGHT"):?>
+						<?/*elseif ($arHeader["id"] == "WEIGHT"):?>
 								<td class="weight-cell"><?=$arItem["WEIGHT_FORMATED"]?></td>
-							<?else:?>
-								<td class="cell"><?=$arItem[$arHeader["id"]]?></td>
+							<?else:*/?>
+								<!--<td class="cell"><?//=$arItem[$arHeader["id"]]?></td>-->
 							<?endif;?>
 						<?endforeach;?>
 

@@ -113,28 +113,34 @@ else
 												?>
 													<div class="settings-right-block">
 														<?
-														if ($feature == "tasks" && ($operation == "modify_folders" || $operation === 'modify_common_views' ) && COption::GetOptionString("intranet", "use_tasks_2_0", "N") == "Y"):
-														?>
-															<input type="hidden" name="<?= $feature ?>_<?= $operation ?>_perm" value="<?=$perm?>">
-														<?
-														else:
+														if (
+															$feature == "tasks"
+															&& (
+																$operation == "modify_folders"
+																|| $operation === 'modify_common_views'
+															)
+															&& IsModuleInstalled('tasks')
+														)
+														{
+															?><input type="hidden" name="<?= $feature ?>_<?= $operation ?>_perm" value="<?=$perm?>"><?
+														}
+														else
+														{
 															$title = (array_key_exists("operation_titles", $arResult["arSocNetFeaturesSettings"][$feature]) && array_key_exists($operation, $arResult["arSocNetFeaturesSettings"][$feature]["operation_titles"]) && strlen($arResult["arSocNetFeaturesSettings"][$feature]["operation_titles"][$operation]) > 0 ? $arResult["arSocNetFeaturesSettings"][$feature]["operation_titles"][$operation] : GetMessage("SONET_FEATURES_".$feature."_".$operation));
-														?>
-															<div class="settings-right-block-text">
-																<?=$title?>:
-															</div>
+															?><div class="settings-right-block-text"><?=$title?>:</div>
 															<select name="<?= $feature ?>_<?= $operation ?>_perm">
 																<?foreach ($arResult["PermsVar"] as $key => $value):
 																	if (
-																		!array_key_exists("restricted", $arResult["arSocNetFeaturesSettings"][$feature]["operations"][$operation]) 
+																		!array_key_exists("restricted", $arResult["arSocNetFeaturesSettings"][$feature]["operations"][$operation])
 																		|| !in_array($key, $arResult["arSocNetFeaturesSettings"][$feature]["operations"][$operation]["restricted"][$arResult["ENTITY_TYPE"]])
-																	):
+																	)
+																	{
 																		?><option value="<?= $key ?>"<?= ($key == $perm) ? " selected" : "" ?>><?= $value ?></option><?
-																	endif;
-																endforeach;?>
-															</select>
-														<?
-														endif;
+																	}
+																endforeach;
+															?></select>
+															<?
+                                                        }
 														?>
 													</div>
 												<?

@@ -15,6 +15,32 @@ $POST_RIGHT = $APPLICATION->GetGroupRight("sender");
 if($POST_RIGHT=="D")
 	$APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
 
+$request = \Bitrix\Main\Context::getCurrent()->getRequest();
+if($request->get('action') == 'get_template')
+{
+	require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_js.php");
+
+	$templateType = $request->get('template_type');
+	$templateId = $request->get('template_id');
+	$templateCharset = $request->get('template_charset');
+
+	\Bitrix\Main\Loader::includeModule('fileman');
+	if ($templateType == 'USER' && !$templateId && isset($_SESSION['bx_sender_template_tmp']))
+	{
+		echo base64_decode($_SESSION['bx_sender_template_tmp']);
+	}
+	else
+	{
+		$template = \Bitrix\Sender\Preset\Template::getById($templateType, $templateId);
+		if ($template)
+		{
+			echo \Bitrix\Fileman\Block\Editor::getHtmlForEditor($template['HTML'], $templateCharset);
+		}
+	}
+
+	require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin_js.php");
+}
+
 $sTableID = "tbl_sender_template";
 $ID = intval($_REQUEST["ID"]);
 
@@ -115,19 +141,22 @@ if(($arID = $lAdmin->GroupAction()) && $POST_RIGHT=="W")
 			if(!$dataDeleteDb->isSuccess())
 			{
 				$DB->Rollback();
-				$lAdmin->AddGroupError(GetMessage("rub_del_err"), $ID);
+				$LAST_ERROR = $dataDeleteDb->getErrorMessages();
+				$lAdmin->AddGroupError(GetMessage("rub_del_err") . '<br>' . $LAST_ERROR[0], $ID);
 			}
 			$DB->Commit();
 			break;
 		case "activate":
 		case "deactivate":
-			$arFields["ACTIVE"]=($_REQUEST['action']=="activate"?"Y":"N");
+			$arFields = array(
+				"ACTIVE" => ($_REQUEST['action'] == "activate" ? "Y" : "N")
+			);
 			$dataUpdateDb = \Bitrix\Sender\TemplateTable::update($dataPrimary, $arFields);
 			if(!$dataUpdateDb->isSuccess())
 			{
 				$LAST_ERROR = $dataUpdateDb->getErrorMessages();
 				$LAST_ERROR = $LAST_ERROR[0];
-				$lAdmin->AddGroupError(GetMessage("rub_save_error").$LAST_ERROR, $ID);
+				$lAdmin->AddGroupError(GetMessage("rub_save_error") . '<br>' . $LAST_ERROR, $ID);
 			}
 			break;
 		}

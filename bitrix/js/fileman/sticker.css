@@ -1,6 +1,7 @@
-div.bx-sticker{position: absolute;top: 0;left: 0; overflow:hidden; border-width: 1px; border-style: solid;}
-div.bx-sticker div.bxst-header{height: 19px;}
-div.bx-sticker div.bxst-content{overflow: hidden; cursor: pointer;}
+div.bx-sticker{position: absolute;top: 0;left: 0; overflow:hidden; border-width: 1px; border-style: solid;box-sizing:content-box !important;}
+div.bx-sticker *{line-height:normal!important; box-sizing:content-box !important; font-size: 10px;}
+div.bx-sticker div.bxst-header{height: 19px!important;}
+div.bx-sticker div.bxst-content{overflow: hidden!important; cursor: pointer!important;}
 div.bx-sticker div.bxst-footer{height: 24px; overflow:hidden;}
 div.bx-sticker .bxst-sprite, .bxst-sprite{background-image: url(/bitrix/images/fileman/stickers_sprite.png)!important;}
 body div.bx-sticker-over{border-width: 2px!important;}
@@ -14,7 +15,7 @@ div.bxst-completed div.bxst-content-area{/* text-decoration: line-through!import
 /* Controls and buttons*/
 div.bx-sticker div.bxst-header div.bxst-check-cont{float: left;margin:0 4px;}
 div.bx-sticker div.bxst-header div.bxst-check-cont input{float: left;display: block;}
-div.bx-sticker div.bxst-header div.bxst-check-cont label{display:block; float:left; margin:3px 5px 0 0!important; font-size:10px!important;}
+div.bx-sticker div.bxst-header div.bxst-check-cont label{display:block; float:left; margin:3px 5px 0 4px!important; font-size:10px!important;}
 div.bx-sticker div.bxst-header div.bxst-type-cont{float: right; margin:3px 4px 0 0; cursor: pointer;}
 div.bx-sticker div.bxst-header div.bxst-but{float: right; margin:4px 4px 0 0;}
 div.bx-sticker div.bxst-header div.bxst-but img{width: 12px;height: 12px; cursor: pointer;}
@@ -39,7 +40,8 @@ div.bx-sticker div.bxst-footer div.bxst-info-icon img{width: 19px;height: 19px; 
 /*type selector*/
 div.bx-sticker div.bxst-type-cont div.bxst-type-corn{float: left; width: 3px; height: 12px; background-image: url(/bitrix/images/fileman/stickers_sprite.png)!important; cursor: pointer!important;}
 div.bx-sticker div.bxst-type-cont div.bxst-type-c{height: 12px; float: left; padding: 0 1px;}
-div.bx-sticker div.bxst-type-cont div span{font-size: 10px!important; color: #fff!important; line-height:10px!important;  cursor: pointer!important; font-family:Verdana!important;}
+div.bx-sticker div.bxst-type-cont div span{color: #fff!important; cursor: pointer!important;}
+div.bx-sticker div.bxst-type-cont *{font-size: 10px!important;line-height:10px!important; font-family:Verdana!important;}
 
 /* for personal - green */
 div.bx-sticker div.bxst-type-pers div.bxst-type-l{background-position:  -41px -45px;}
@@ -81,7 +83,7 @@ div.bxst-yellow div.bxst-footer div.bxst-ctrl-txt span{color: #B2B07D!important;
 div.bxst-yellow div.bxst-content-area .bxst-title, div.bxst-yellow .bxst-title, div.bxst-yellow div.bxst-check-cont label{color: #7F7E59!important;}
 	/* For editor */
 div.bxst-yellow div.bxst-content div.bxlhe-frame{ background: #FFFCB3!important;}
-div.bxst-yellow .lhe-stat-toolbar-cont { border-color: #FFFCB3 !important } 
+div.bxst-yellow .lhe-stat-toolbar-cont { border-color: #FFFCB3 !important }
 div.bxst-yellow div.bxst-content table.bxlhe-frame-table td.bxlhe-editor-buttons, div.bxst-yellow div.bxst-lhe-cont td.bxlhe-editor-cell{background: #FFFCB3 !important;}
 div.bxst-yellow div.bxst-content td.bxlhe-editor-cell {border-top: 1px solid #FFFCB3!important;}
 div.bxst-yellow div.bxst-content .lhe-button{border:1px solid #FFFCB3;}
@@ -97,7 +99,7 @@ div.bxst-green div.bxst-footer div.bxst-ctrl-txt span{color: #99B08F!important;}
 div.bxst-green div.bxst-content-area .bxst-title, div.bxst-green .bxst-title, div.bxst-green div.bxst-check-cont label{color: #6D7E66!important;}
 	/* For editor */
 div.bxst-green div.bxst-content div.bxlhe-frame{ background: #DBFCCD!important;}
-div.bxst-green .lhe-stat-toolbar-cont { border-color: #DBFCCD !important } 
+div.bxst-green .lhe-stat-toolbar-cont { border-color: #DBFCCD !important }
 div.bxst-green div.bxst-content table.bxlhe-frame-table td.bxlhe-editor-buttons, div.bxst-green div.bxst-lhe-cont td.bxlhe-editor-cell {background: #DBFCCD !important;}
 div.bxst-green div.bxst-content td.bxlhe-editor-cell {border-top: 1px solid #DBFCCD!important;}
 div.bxst-green div.bxst-content .lhe-button{border:1px solid #DBFCCD;}
@@ -112,7 +114,7 @@ div.bxst-blue div.bxst-footer div.bxst-ctrl-txt span{color: #9AA1AC!important;}
 div.bxst-blue div.bxst-content-area .bxst-title, div.bxst-blue .bxst-title, div.bxst-blue div.bxst-check-cont label{color: #6E737B!important;}
 	/* For editor */
 div.bxst-blue div.bxst-content div.bxlhe-frame{background: #DCE7F7!important;}
-div.bxst-blue .lhe-stat-toolbar-cont { border-color: #DCE7F7 !important } 
+div.bxst-blue .lhe-stat-toolbar-cont { border-color: #DCE7F7 !important }
 div.bxst-blue div.bxst-content table.bxlhe-frame-table td.bxlhe-editor-buttons, div.bxst-blue div.bxst-lhe-cont td.bxlhe-editor-cell {background: #DCE7F7 !important;}
 div.bxst-blue div.bxst-content td.bxlhe-editor-cell {border-top: 1px solid #DCE7F7!important;}
 div.bxst-blue div.bxst-content .lhe-button{border:1px solid #DCE7F7;}
@@ -127,7 +129,7 @@ div.bxst-red div.bxst-footer div.bxst-ctrl-txt span{color: #B09C9C!important;}
 div.bxst-red div.bxst-content-area .bxst-title, div.bxst-red .bxst-title, div.bxst-red div.bxst-check-cont label{color: #7E6F6F!important;}
 	/* For editor */
 div.bxst-red div.bxst-content div.bxlhe-frame{background: #FCDFDF!important;}
-div.bxst-red .lhe-stat-toolbar-cont { border-color: #FCDFDF !important } 
+div.bxst-red .lhe-stat-toolbar-cont { border-color: #FCDFDF !important }
 div.bxst-red div.bxst-content table.bxlhe-frame-table td.bxlhe-editor-buttons, div.bxst-red div.bxst-lhe-cont td.bxlhe-editor-cell {background: #FCDFDF !important;}
 div.bxst-red div.bxst-content td.bxlhe-editor-cell {border-top: 1px solid #FCDFDF!important;}
 div.bxst-red div.bxst-content .lhe-button{border:1px solid #FCDFDF;}
@@ -142,7 +144,7 @@ div.bxst-purple div.bxst-footer div.bxst-ctrl-txt span{color: #AC98AD!important;
 div.bxst-purple div.bxst-content-area .bxst-title, div.bxst-purple .bxst-title, div.bxst-purple div.bxst-check-cont label{color: #7B6D7C!important;}
 	/* For editor */
 div.bxst-purple div.bxst-content div.bxlhe-frame{background: #F6DAF8!important;}
-div.bxst-purple .lhe-stat-toolbar-cont { border-color: #F6DAF8 !important } 
+div.bxst-purple .lhe-stat-toolbar-cont { border-color: #F6DAF8 !important }
 div.bxst-purple div.bxst-content table.bxlhe-frame-table td.bxlhe-editor-buttons, div.bxst-purple div.bxst-lhe-cont td.bxlhe-editor-cell{background: #F6DAF8 !important;}
 div.bxst-purple div.bxst-content td.bxlhe-editor-cell {border-top: 1px solid #F6DAF8!important;}
 div.bxst-purple div.bxst-content .lhe-button{border:1px solid #F6DAF8;}
@@ -157,7 +159,7 @@ div.bxst-gray div.bxst-footer div.bxst-ctrl-txt span{color: #ABABAB!important;}
 div.bxst-gray div.bxst-content-area .bxst-title, div.bxst-gray .bxst-title, div.bxst-gray div.bxst-check-cont label{color: #7A7A7A!important;}
 	/* For editor */
 div.bxst-gray div.bxst-content div.bxlhe-frame{background: #F5F5F5!important;}
-div.bxst-gray .lhe-stat-toolbar-cont { border-color: #F5F5F5 !important } 
+div.bxst-gray .lhe-stat-toolbar-cont { border-color: #F5F5F5 !important }
 div.bxst-gray div.bxst-content table.bxlhe-frame-table td.bxlhe-editor-buttons, div.bxst-gray div.bxst-lhe-cont td.bxlhe-editor-cell {background: #F5F5F5 !important;}
 div.bxst-gray div.bxst-content td.bxlhe-editor-cell {border-top: 1px solid #F5F5F5!important;}
 div.bxst-gray div.bxst-content .lhe-button{border:1px solid #F5F5F5;}
@@ -167,7 +169,7 @@ div.bxst-lhe-cont{position: absolute!important;top: -1000px;left: -1000px;}
 div.bx-sticker div.bxst-content div.bxst-lhe-cont{position: static!important;}
 
 /* Content area */
-div.bxst-content-area{padding: 5px 5px 5px 21px !important; position:relative;top:0px;}
+div.bxst-content-area{padding: 5px 5px 5px 21px !important; position:relative;top:0px;left:0px;}
 
 div.bxst-content-area, div.bxst-content-area *{font-size: 12px!important; font-family:Verdana!important;}
 div.bxst-content-area .bxst-title{font-size: 11px!important; font-family:Verdana!important; margin:0 0 0 -7px !important;line-height:18px!important;}

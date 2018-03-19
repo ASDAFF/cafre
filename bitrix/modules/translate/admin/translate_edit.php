@@ -1,9 +1,12 @@
 <?
+/** @global CMain $APPLICATION */
+use Bitrix\Main\Loader;
+
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/translate/prolog.php");
 $TRANS_RIGHT = $APPLICATION->GetGroupRight("translate");
 if($TRANS_RIGHT=="D") $APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
-require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/translate/include.php");
+Loader::includeModule('translate');
 IncludeModuleLangFile(__FILE__);
 define("HELP_FILE","translate_list.php");
 
@@ -16,16 +19,17 @@ $arDIFF = array();
 $boolGetUntranslate = false;
 
 $file = Rel2Abs("/", $file);
-if(strpos($file, "/bitrix/") !== 0 || strpos($file, "/lang/") === false || GetFileExtension($file) <> "php")
+if (!isAllowPath($file) || strpos($file, "/lang/") === false || GetFileExtension($file) <> "php")
 	$strError = GetMessage("trans_edit_err")."<br>";
+
+$chain = "";
+$arPath = array();
 
 if($strError == "")
 {
 	if (strlen($show_error)>0) $ONLY_ERROR = "Y"; else $ONLY_ERROR = "N";
 
 	// form a way to get back
-	$chain = "";
-	$arPath = array();
 	$path_back = dirname($file);
 	$arSlash = explode("/",$path_back);
 	if (is_array($arSlash))
@@ -153,7 +157,7 @@ if($strError == "")
 	}
 
 	// gather in the array is that it is necessary to write to file
-	if ($REQUEST_METHOD=="POST" && (strlen($save)>0 || strlen($apply)>0) && $TRANS_RIGHT=="W" && check_bitrix_sessid())
+	if ($_SERVER['REQUEST_METHOD'] == "POST" && (strlen($save)>0 || strlen($apply)>0) && $TRANS_RIGHT=="W" && check_bitrix_sessid())
 	{
 		if (is_array($KEYS))
 		{
@@ -309,17 +313,6 @@ $aMenu[] = array(
 	"TEXT" => GetMessage("TR_FILE_PHP"),
 	"MENU" => $arSubMenu,
 );
-/*$aMenu[] = array(
-		"TEXT"	=> GetMessage("TR_FILE_SHOW"),
-		"LINK"	=> "/bitrix/admin/translate_show_php.php?file=".htmlspecialcharsbx($file)."&lang=".LANGUAGE_ID,
-		"TITLE"	=> GetMessage("TR_FILE_SHOW_TITLE"),
-	);
-
-$aMenu[] = array(
-		"TEXT"	=> GetMessage("TR_FILE_EDIT"),
-		"LINK"	=> "/bitrix/admin/translate_edit_php.php?file=".htmlspecialcharsbx($file)."&lang=".LANGUAGE_ID,
-		"TITLE"	=> GetMessage("TR_FILE_EDIT_TITLE"),
-	); */
 
 $context = new CAdminContextMenu($aMenu);
 $context->Show();
@@ -374,7 +367,7 @@ $tabControl->BeginNextTab();
 	{
 		if (LANG_CHARSET == $arLng["CHARSET"] || $arLng["LID"]=="en")
 		{
-			?><input type="hidden" name="LANGS[]" value="<?=$arLng["LID"]?>"><?
+			?><input type="hidden" name="LANGS[]" value="<?=htmlspecialcharsbx($arLng["LID"]); ?>"><?
 		}
 	}
 	$boolShowDeleteAll = false;
@@ -411,7 +404,7 @@ $tabControl->BeginNextTab();
 					}
 				}
 			}
-			?><input type="hidden" name="KEYS[]" value="<?=$key?>"><?
+			?><input type="hidden" name="KEYS[]" value="<?=htmlspecialcharsbx($key); ?>"><?
 			if (($ONLY_ERROR=="Y" && $red) || $ONLY_ERROR=="N")
 			{
 				$boolShowDeleteAll = true;
@@ -424,11 +417,11 @@ $tabControl->BeginNextTab();
 <?
 				if ($red)
 				{
-					?><span class="required"><b><? echo htmlspecialcharsex($key); ?></b></span><?
+					?><span class="required"><b><?=htmlspecialcharsbx($key); ?></b></span><?
 				}
 				else
 				{
-					?><b><? echo htmlspecialcharsex($key); ?></b><?
+					?><b><?=htmlspecialcharsbx($key); ?></b><?
 				}
 				?><a name="<? echo htmlspecialcharsbx($key); ?>"></a></td>
 <?
@@ -596,4 +589,4 @@ $tabControl->BeginNextTab();
 <?$tabControl->Buttons(array("disabled" => ($TRANS_RIGHT<"W"), "back_url"=>"translate_list.php?lang=".LANGUAGE_ID."&path=".urlencode($path_back)."&".bitrix_sessid_get()));
 $tabControl->End();
 ?></form>
-<?require_once ($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");?>
+<?require_once ($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");

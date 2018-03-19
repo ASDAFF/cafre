@@ -102,7 +102,7 @@ CREATE TABLE b_learn_lesson
 	NAME varchar(255) not null default 'name',
 	SORT int(11) not null default '500',
 	PREVIEW_PICTURE int(18),
-	KEYWORDS text NOT NULL DEFAULT '',
+	KEYWORDS text,
 	PREVIEW_TEXT text,
 	PREVIEW_TEXT_TYPE char(4) not null default 'text',
 	DETAIL_PICTURE int(18),

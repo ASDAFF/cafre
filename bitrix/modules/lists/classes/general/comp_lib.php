@@ -41,6 +41,7 @@ class CListFileControl
 		$max_width = 150;
 		$max_height = 150;
 		$url_template = '';
+		$download_url = '';
 		$show_input = true;
 		$show_info = true;
 
@@ -54,6 +55,8 @@ class CListFileControl
 				$max_height = intval($params['max_height']);
 			if(isset($params['url_template']))
 				$url_template = $params['url_template'];
+			if(isset($params['download_url']))
+				$download_url = $params['download_url'];
 			if(isset($params['show_input']))
 				$show_input = (bool)$params['show_input'];
 			if(isset($params['show_info']))
@@ -92,9 +95,11 @@ class CListFileControl
 					'data-bx-image' => $img_src,
 				),
 			));
-			$html .= '</div><script>BX.ready(function(){BX.viewElementBind("'.$divId.'");});</script>';
+			$html .= '</div><script>BX.ready(function(){if(BX["viewElementBind"]){BX.viewElementBind("'.$divId.'");}});</script>';
 		}
 
+		if ($download_url)
+			$url_template = $download_url;
 		$html .= $this->_ob_file->GetLinkHtml(array(
 			'url_template' => $url_template,
 			'download_text' => $params['download_text'],

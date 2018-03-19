@@ -78,4 +78,5 @@ $MESS ['IBLOCK_PROP_VIDEO_BOTH_SET'] = "Общие настройки";
 $MESS ['IBLOCK_PROP_VIDEO_FLV_SET'] = "Настройки Flash-плеера";
 $MESS ['IBLOCK_PROP_VIDEO_WMV_SET'] = "Настройки WMV-плеера";
 $MESS ['IBLOCK_PROP_VIDEO_NO_PREVIEW'] = "Нет картинки";
+$MESS ['IBLOCK_PROP_G_MAP_API_KEY'] = "Ключ JavaScript API";
 ?>

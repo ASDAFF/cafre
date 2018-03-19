@@ -52,7 +52,7 @@ if(is_array($arResult["CommentsResult"][0]))
 				<?
 			}
 			
-						include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/lhe.php");
+			include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/neweditor.php");
 			
 			if(strlen($arResult["NoCommentReason"]) > 0)
 			{

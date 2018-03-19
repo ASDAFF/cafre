@@ -59,7 +59,7 @@ class CAllBlogGroup
 	}
 
 	//*************** SELECT *********************/
-	function GetByID($ID)
+	public static function GetByID($ID)
 	{
 		global $DB;
 

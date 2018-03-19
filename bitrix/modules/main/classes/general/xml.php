@@ -16,7 +16,7 @@ class CDataXMLNode
 	var $attributes;
 	var $_parent;
 
-	function CDataXMLNode()
+	public function __construct()
 	{
 	}
 
@@ -232,7 +232,7 @@ class CDataXMLDocument
 	var $children;
 	var $root;
 
-	function CDataXMLDocument()
+	public function __construct()
 	{
 	}
 
@@ -341,7 +341,7 @@ class CDataXML
 
 	var $delete_ns = true;
 
-	function CDataXML($TrimWhiteSpace = True)
+	public function __construct($TrimWhiteSpace = True)
 	{
 		$this->TrimWhiteSpace = ($TrimWhiteSpace ? True : False);
 		$this->tree = False;
@@ -441,14 +441,14 @@ class CDataXML
 		return $result;
 	}
 
-	function xmlspecialchars($str)
+	public static function xmlspecialchars($str)
 	{
 		static $search = array("&","<",">","\"","'");
 		static $replace = array("&amp;","&lt;","&gt;","&quot;","&apos;");
 		return str_replace($search, $replace, $str);
 	}
 
-	function xmlspecialcharsback($str)
+	public static function xmlspecialcharsback($str)
 	{
 		static $search = array("&lt;","&gt;","&quot;","&apos;","&amp;");
 		static $replace = array("<",">","\"","'","&");
@@ -941,7 +941,7 @@ class CXMLFileStream
 			if($cs)
 			{
 				$error = "";
-				$xmlChunk = CharsetConverter::convertCharset($origChunk, $cs, LANG_CHARSET, $error);
+				$xmlChunk = \Bitrix\Main\Text\Encoding::convertEncoding($origChunk, $cs, LANG_CHARSET, $error);
 			}
 
 			if($xmlChunk[0] == "/")
@@ -1165,7 +1165,7 @@ class CXMLFileStream
 		if ($xmlChunk && $this->fileCharset)
 		{
 			$error = "";
-			$xmlChunk = CharsetConverter::convertCharset($xmlChunk, $this->fileCharset, LANG_CHARSET, $error);
+			$xmlChunk = \Bitrix\Main\Text\Encoding::convertEncoding($xmlChunk, $this->fileCharset, LANG_CHARSET, $error);
 		}
 
 		$xmlObject = new CDataXML;

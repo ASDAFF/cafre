@@ -46,4 +46,6 @@ $MESS["BPSFA_PD_TIME_H"] = "hours";
 $MESS["BPSFA_PD_TIME_M"] = "minutes";
 $MESS["BPSFA_PD_TIME_S"] = "seconds";
 $MESS["BPSFA_PD_TIMEOUT_LIMIT"] = "Minimum wait time";
+$MESS["BPAR_PD_COMMENT_REQUIRED"] = "Comment is required";
+$MESS["BPSFA_PD_DELEGATION_TYPE"] = "Delegate to";
 ?>

@@ -113,6 +113,10 @@ unset($arResult["menuDir"]);
 $menuType = $arResult["menuType"];
 unset($arResult["menuType"]);
 
+//We can't write a new data in $arResult
+//Let's hack $arParams
+$arParams["MENU_DIR"] = $menuDir;
+
 //we have no selected items therefore we should find selection now
 if($arParams["CACHE_SELECTED_ITEMS"] == false)
 	$this->setSelectedItems($arParams["ALLOW_MULTI_SELECT"]);
@@ -152,7 +156,7 @@ if($USER->IsAuthorized())
 				break;
 			}
 	
-			$position = strrpos($currentAddDir, "/");
+			$position = bxstrrpos($currentAddDir, "/");
 			if ($position === false)
 				break;
 	
@@ -357,6 +361,14 @@ if($USER->IsAuthorized())
 //****************
 //Delayed menu
 //***************
+
+if (
+	!empty($arParams["RETURN"])
+	&& $arParams["RETURN"] == "Y"
+)
+{
+	return $arResult;
+}
 
 if ($arParams["DELAY"] == "Y")
 {

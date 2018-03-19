@@ -1,56 +1,64 @@
-function JCEC(Params) // Javascript Class Event Calendar
+function JCEC(params) // Javascript Class Event Calendar
 {
-	this.arConfig = Params;
+	this.arConfig = params;
 	top.BXCRES = {};
 
 	// Data
-	this.id = Params.id;
+	this.dayLength = 86400000;
+	this.id = params.id;
 	this.pCalCnt = BX(this.id + '_bxcal');
 	this.dragDrop = new ECDragDropControl({calendar: this});
 	this.arEvents = [];
 	this.arAttendees = {};
-	this.arSections = Params.sections;
-	this.sectionsIds = Params.sectionsIds;
-	this.type = Params.type;
-	this.bSuperpose = Params.bSuperpose || false;
-	this.canAddToSuperpose = Params.canAddToSuperpose;
-	this.bTasks = Params.bTasks || false;
-	this.userId = Params.userId;
-	this.userName = Params.userName;
-	this.ownerId = Params.ownerId || false;
-	this.sectionControlsDOMId = Params.sectionControlsDOMId;
-	this.PERM = Params.perm;
-	this.permEx = Params.permEx;
-	this.settings = Params.settings;
-	this.userSettings = Params.userSettings;
-	this.pathToUser = Params.pathToUser;
-	this.bIntranet = !!Params.bIntranet;
-	this.allowMeetings = !!Params.bSocNet && this.bIntranet;
-	this.allowReminders = !!Params.bSocNet && this.bIntranet;
-	this.plannerSettings = Params.plannerSettings;
-	this.days = Params.days;
-	this.showBanner = !!Params.bShowBanner;
-	this.bReadOnly = !!Params.readOnly;
-	this.bAnonym = !!Params.bAnonym;
-	this.startupEvent = Params.startupEvent;
-	this.accessColors = Params.accessColors;
-	this.initMonth = Params.init_month;
-	this.initYear = Params.init_year;
-	this.weekHolidays = Params.week_holidays;
-	this.yearHolidays = Params.year_holidays;
-	this.yearWorkdays = Params.year_workdays;
-	this.new_section_access = Params.new_section_access || {};
-	this.bExtranet = !!Params.bExtranet;
-	this.Colors = Params.arCalColors;
-	this.bAMPM = Params.bAMPM;
-	this.bWideDate = Params.bWideDate;
-	this.weekStart = Params.week_start;
-	this.weekDays = Params.week_days;
-	this.lastSection = Params.lastSection;
+	this.arSections = params.sections;
+	this.type = params.type;
+	this.bSuperpose = params.bSuperpose || false;
+	this.bTasks = params.bTasks || false;
+	this.userId = params.userId;
+	this.userName = params.userName;
+	this.ownerId = params.ownerId || false;
+	this.sectionControlsDOMId = params.sectionControlsDOMId;
+	this.PERM = params.perm;
+	this.permEx = params.permEx;
+	this.settings = params.settings;
+	this.userSettings = params.userSettings;
+	this.pathToUser = params.pathToUser;
+	this.bIntranet = !!params.bIntranet;
+	this.allowMeetings = !!params.bSocNet && this.bIntranet;
+	this.allowReminders = !!params.bSocNet && this.bIntranet;
+	this.days = params.days;
+	this.bReadOnly = !!params.readOnly;
+	this.bAnonym = !!params.bAnonym;
+	this.startupEvent = params.startupEvent;
+	this.accessColors = params.accessColors;
+	this.initMonth = params.init_month;
+	this.initYear = params.init_year;
+	this.weekHolidays = params.week_holidays;
+	this.yearHolidays = params.year_holidays;
+	this.yearWorkdays = params.year_workdays;
+	this.new_section_access = params.new_section_access || {};
+	this.bExtranet = !!params.bExtranet;
+	this.Colors = params.arCalColors;
+	this.bAMPM = params.bAMPM;
+	this.bWideDate = params.bWideDate;
+	this.weekStart = params.week_start;
+	this.weekDays = params.week_days;
+	this.lastSection = params.lastSection;
+	this.requests = {};
 
-	this.bCalDAV = !!Params.bCalDAV;
+	//Object.defineProperty(this, 'requests', descriptor)
+
+	this.DATE_FORMAT = BX.date.convertBitrixFormat(BX.message("FORMAT_DATE"));
+	this.DATETIME_FORMAT = BX.date.convertBitrixFormat(BX.message("FORMAT_DATETIME"));
+	if ((this.DATETIME_FORMAT.substr(0, this.DATE_FORMAT.length) == this.DATE_FORMAT))
+		this.TIME_FORMAT = BX.util.trim(this.DATETIME_FORMAT.substr(this.DATE_FORMAT.length));
+	else
+		this.TIME_FORMAT = BX.date.convertBitrixFormat(this.bAMPM ? 'H:MI:SS T' : 'HH:MI:SS');
+	this.TIME_FORMAT_SHORT = this.TIME_FORMAT.replace(':s', '');
+
+	this.bCalDAV = !!params.bCalDAV;
 	if (this.bCalDAV)
-		this.arConnections = Params.connections;
+		this.arConnections = params.connections;
 
 	// Init vars
 	this.arSectionsInd = {};
@@ -59,49 +67,56 @@ function JCEC(Params) // Javascript Class Event Calendar
 	this.darkColor = '#E6E6E6';
 	this.brightColor = '#000000';
 	this.arMenuItems = {};
-	this.newEventUF = {};
 
 	// Access names
 	this.arNames = {};
-	this.HandleAccessNames(Params.accessNames);
+	this.HandleAccessNames(params.accessNames);
 
-	var ind, sectId, isGoogle, i, sect;
+	var ind, sectId, i, sect;
+	this.activeSectionsCount = 0;
 	for (ind in this.arSections)
 	{
-		sect = this.arSections[ind];
-		if (sect.EXPORT && !sect.EXPORT.ALLOW)
-			sect.EXPORT = false;
-		if (!sect.TEXT_COLOR)
-			sect.TEXT_COLOR = '';
-		sectId = sect.ID;
-
-		if (this.bCalDAV && sect.CAL_DAV_CAL && sect.CAL_DAV_CON && this.arConnections && this.arConnections.length > 0)
+		if (this.arSections.hasOwnProperty(ind))
 		{
-			for (i in this.arConnections)
+			sect = this.arSections[ind];
+			if (sect.EXPORT && !sect.EXPORT.ALLOW)
+				sect.EXPORT = false;
+			if (!sect.TEXT_COLOR)
+				sect.TEXT_COLOR = '';
+			sectId = sect.ID;
+
+			if (this.bCalDAV && sect.CAL_DAV_CAL && sect.CAL_DAV_CON && this.arConnections && this.arConnections.length > 0)
 			{
-				if (this.arConnections[i].id == sect.CAL_DAV_CON)
+				for (i in this.arConnections)
 				{
-					sect['~CAL_DAV_LAST_SYNC'] = this.arConnections[i].last_result;
-					break;
+					if (this.arConnections.hasOwnProperty(i) &&
+							this.arConnections[i].id == sect.CAL_DAV_CON)
+					{
+						sect['~CAL_DAV_LAST_SYNC'] = this.arConnections[i].last_result;
+						break;
+					}
 				}
 			}
+
+			this.arSectionsInd[sectId] = ind;
+			if (sect.ACTIVE !== 'N')
+				this.oActiveSections[sectId] = true;
+
+			if (sect.ACTIVE !== 'N' && this.IsCurrentViewSect(sect))
+				this.activeSectionsCount++;
+
+			if (!this.lastSection && sect.PERM && sect.PERM.add && sect.ACTIVE !== 'N')
+				this.lastSection = parseInt(sectId);
 		}
-
-		this.arSectionsInd[sectId] = ind;
-		this.oActiveSections[sectId] = true;
-
-		if (!this.lastSection && sect.PERM && sect.PERM.add)
-			this.lastSection = parseInt(sectId);
 	}
 
 	this.bOnunload = false;
-	this.actionUrl = Params.page;
-	this.path = Params.path;
+	this.actionUrl = params.page;
+	this.path = params.path;
 	this.bUser = this.type == 'user';
-	this.meetingRooms = Params.meetingRooms || [];
-	this.allowResMeeting = !!Params.allowResMeeting;
-	this.allowVideoMeeting = !!Params.allowVideoMeeting;
-	this.bUseMR = this.bIntranet && (this.allowResMeeting || this.allowVideoMeeting) && this.meetingRooms.length > 0;
+	this.meetingRooms = params.meetingRooms || [];
+	this.allowResMeeting = !!params.allowResMeeting;
+	this.bUseMR = this.bIntranet && this.allowResMeeting && this.meetingRooms.length > 0;
 
 	if (this.bTasks)
 	{
@@ -113,15 +128,19 @@ function JCEC(Params) // Javascript Class Event Calendar
 		BX.addCustomEvent('onCalendarPopupTaskChanged', BX.delegate(this.OnTaskChanged, this));
 		BX.addCustomEvent('onCalendarPopupTaskDeleted', BX.delegate(this.OnTaskKilled, this));
 
-		this.oActiveSections.tasks = true;// !Params.hiddenSections['tasks'];
+		this.oActiveSections.tasks = true;// !params.hiddenSections['tasks'];
 	}
 
 	// Set hidden sections
-	for (ind in Params.hiddenSections)
-		this.oActiveSections[Params.hiddenSections[ind]] = false;
+	for (ind in params.hiddenSections)
+	{
+		if (params.hiddenSections.hasOwnProperty(ind))
+		{
+			this.oActiveSections[params.hiddenSections[ind]] = false;
+		}
+	}
 
-	if (this.PERM.access)
-		this.typeAccess = Params.TYPE_ACCESS || {};
+	this.typeAccess = this.PERM.access ? (params.TYPE_ACCESS || {}) : null;
 
 	this.Init();
 }
@@ -163,9 +182,9 @@ JCEC.prototype = {
 		this.arLoadedParentId = {};
 		this.Event = new window.JSECEvent(this);
 
+		this.arConfig.attendees = [];
 		this.HandleEvents(this.arConfig.events, this.arConfig.attendees);
-
-		var _this = this;
+		var i, _this = this;
 
 		//Days selection init
 		this.selectDaysMode = false;
@@ -187,6 +206,7 @@ JCEC.prototype = {
 			this.year_workdays[this.yearWorkdays[i]] = true;
 
 		window.onbeforeunload = function(){_this.bOnunload = true;};
+		// mantis #60948
 		BX.addCustomEvent('onPopupClose', BX.proxy(this._OnPopupCloseHandler, this));
 
 		this.BuildSectionBlock();
@@ -196,15 +216,16 @@ JCEC.prototype = {
 
 		this.BuildButtonsCont();
 		this.pCalCnt.className = "bxcal";
+
 		this.InitTabControl();
 
 		setTimeout(function(){BX.bind(window, "resize", BX.proxy(_this.OnResize, _this))},200);
 
-		if (this.showBanner && this.userSettings.showBanner)
-			new ECBanner(this);
+		if (this.arConfig.syncInfo && typeof this.arConfig.syncInfo === 'object')
+			new ECSyncPannel(this);
 
 		if (this.arConfig.showNewEventDialog && !this.bReadOnly)
-			this.ShowEditEventPopup({bChooseMR: this.arConfig.bChooseMR});
+			setTimeout(function(){_this.ShowEditEventPopup({bChooseMR: _this.arConfig.bChooseMR});}, 1000);
 	},
 
 	InitTabControl: function()
@@ -413,16 +434,6 @@ JCEC.prototype = {
 				onclick: function(){_this.ClosePopupMenu();_this.ShowEditEventPopup();}
 			});
 
-			if (this.allowMeetings)
-			{
-				arMenuItems.push({
-					text : EC_MESS.EventPl,
-					title : EC_MESS.AddNewEventPl,
-					className : "bxec-menu-add-pl",
-					onclick: function(){_this.ClosePopupMenu();_this.ShowEditEventPopup({bRunPlanner: true});}
-				});
-			}
-
 			if (this.bTasks)
 			{
 				arMenuItems.push({
@@ -433,8 +444,7 @@ JCEC.prototype = {
 				});
 			}
 
-			//if (this.type == 'user' && this.userId == this.ownerId || this.type != 'user' /* &&  .... */)
-			if (this.type == 'user' && this.userId == this.ownerId || this.permEx.edit_section)
+			if ((this.type == 'user' && this.userId == this.ownerId) || this.permEx.section_edit)
 			{
 				arMenuItems.push({
 					text : EC_MESS.NewSect,
@@ -470,6 +480,24 @@ JCEC.prototype = {
 
 			this.ButtonsCont.appendChild(BX.create('SPAN', {props: {className: 'bxec-settings-but', title: EC_MESS.Settings}, events: {click: BX.proxy(this.ShowSetDialog, this)}}));
 		}
+
+		this.accessSettingsWrap = BX(this.id + '-access-settings-wrap');
+
+		if (this.accessSettingsWrap && this.type !== 'group' && this.type !== 'user' && !this.bAnonym)
+		{
+			var _this = this;
+			this.accessSettingsWrap.style.display = 'block';
+			this.accessSettingsLink = BX(this.id + '-access-settings');
+			if (this.PERM.access)
+			{
+				BX.bind(this.accessSettingsLink, 'click', function(){_this.ShowSetDialog({tabId: _this.id + 'set-tab-2'});});
+			}
+			else
+			{
+				new BX.CHint({parent: this.accessSettingsLink, hint: EC_MESS.accessSettingsWarn});
+				BX.bind(this.accessSettingsLink, 'click', function(){alert(EC_MESS.accessSettingsWarn);});
+			}
+		}
 	},
 
 	ClosePopupMenu: function()
@@ -499,7 +527,9 @@ JCEC.prototype = {
 	SetMonth : function(m, y)
 	{
 		if (!this.arLoadedMonth[m + '.'+ y])
+		{
 			return this.LoadEvents(m, y);
+		}
 		var bSetActiveDate = this.activeDate.month != m || this.activeDate.year != y;
 		this.activeDate.month = m;
 		this.activeDate.year = y;
@@ -509,7 +539,6 @@ JCEC.prototype = {
 			this.SetTabNeedRefresh('month', true);
 
 		this.Selector.OnChange(y, m);
-
 		this.BuildDaysGrid(m, y);
 	},
 
@@ -539,8 +568,8 @@ JCEC.prototype = {
 		oDate.setFullYear(year, month, 1);
 		this.dragDrop.Reset();
 
-		this.activeDateDaysAr = [];
-		this.activeDateDaysArO = [];
+		this.activeDateDays = []; // array of dates of current displayed days, (contains  dates)
+		this.activeDateObjDays = []; // array of meta info of current displayed days, (contains  objects)
 		this.arWeeks = [];
 
 		this.oDaysGridTable = BX.create('TABLE', {props: {className : 'bxec-days-grid-table', cellPadding: 0, cellSpacing: 0}});
@@ -548,7 +577,7 @@ JCEC.prototype = {
 		if (this.GetWeekStart() != this.GetWeekDayByInd(oDate.getDay()))
 			this.BuildPrevMonthDays(this.GetWeekDayByInd(oDate.getDay()), month, year);
 
-		var date, day;
+		var date;
 		while(oDate.getMonth() == month)
 		{
 			date = oDate.getDate();
@@ -614,7 +643,7 @@ JCEC.prototype = {
 		if (this.GetWeekStart() == day)
 			this._curRow = this.oDaysGridTable.insertRow(-1);
 
-		var dayInd = this.activeDateDaysAr.length;
+		var dayInd = this.activeDateDays.length;
 
 		// Make className
 		//It's Holliday
@@ -645,7 +674,7 @@ JCEC.prototype = {
 		link.onmousedown = function(e){return BX.PreventDefault(e);};
 		link.onclick = function(e)
 		{
-			var date = _this.activeDateDaysAr[this.id.substr('bxec-day-lnk-'.length)];
+			var date = _this.activeDateDays[this.id.substr('bxec-day-lnk-'.length)];
 			_this.SetTab('day', false, {bSetDay: false});
 			_this.SetDay(date.getDate(), date.getMonth(), date.getFullYear());
 			return BX.PreventDefault(e);
@@ -661,8 +690,8 @@ JCEC.prototype = {
 			oDay.onmouseup = function() {_this.oDayOnMouseUp(this)};
 		}
 
-		this.activeDateDaysAr.push(new Date(year, month, date));
-		this.activeDateDaysArO.push(
+		this.activeDateDays.push(new Date(year, month, date));
+		this.activeDateObjDays.push(
 		{
 			pDiv: oDay,
 			pDayCont: dayCont,
@@ -716,7 +745,7 @@ JCEC.prototype = {
 		var
 			startDayInd = ind * 7,
 			endDayInd = (ind + 1) * 7,
-			day, i, arEv, j, ev, arAll, displ, arHid,
+			day, i, k, arEv, j, ev, arAll, arHid,
 			slots = [],
 			step = 0;
 
@@ -725,7 +754,7 @@ JCEC.prototype = {
 
 		for (i = startDayInd; i < endDayInd; i++)
 		{
-			day = this.activeDateDaysArO[i];
+			day = this.activeDateObjDays[i];
 
 			if (!day)
 				continue;
@@ -805,9 +834,7 @@ JCEC.prototype = {
 
 	ShowMoreEventsSelect : function(oDay)
 	{
-		var
-			arEv = oDay.arEvents.hidden,
-			l = arEv.length;
+		var arEv = oDay.arEvents.hidden;
 
 		if (arEv.length <= 0)
 		{
@@ -871,7 +898,7 @@ JCEC.prototype = {
 
 		for (i = start_ind; i <= end_ind; i++)
 		{
-			el = this.activeDateDaysArO[i];
+			el = this.activeDateObjDays[i];
 			if (!el || !el.pDiv)
 				continue;
 			BX.addClass(el.pDiv, 'bxec-day-selected');
@@ -886,14 +913,14 @@ JCEC.prototype = {
 
 	GetDayByIndex: function(ind)
 	{
-		return this.activeDateDaysArO[ind];
+		return this.activeDateObjDays[ind];
 	},
 
 	DeSelectDays : function()
 	{
 		if (!this.arSelectedDays)
 			return;
-		var el, i, l;
+		var i, l;
 		for (i = 0, l = this.arSelectedDays.length; i < l; i++)
 			BX.removeClass(this.arSelectedDays[i], 'bxec-day-selected');
 		this.arSelectedDays = [];
@@ -907,7 +934,7 @@ JCEC.prototype = {
 			{
 				alert(str || '[Event Calendar] Error!');
 				if (bReloadPage)
-					window.location = window.location;
+					BX.reload();
 			}
 		}, 200);
 	},
@@ -918,7 +945,6 @@ JCEC.prototype = {
 
 		var bMove = (this.sectionControlsDOMId && (this.pSidebar = BX(this.sectionControlsDOMId)));
 		this.pSectCont = BX(this.id + '_sect_cont');
-
 		if (!this.pSectCont)
 			return;
 
@@ -937,9 +963,13 @@ JCEC.prototype = {
 		}
 
 		var _this = this;
-		this.pSectCont.style.display = "block";
+
 		if (this.arSections.length < 1 && this.bReadOnly)
+		{
+			this.pSectCont.style.display = "none";
 			return;
+		}
+		this.pSectCont.style.display = "block";
 
 		this.pOwnerSectCont = BX(this.id + 'sections');
 		if(this.pOwnerSectCont)
@@ -956,9 +986,9 @@ JCEC.prototype = {
 		this.pOwnerSectBlock.style.display = '';
 
 		// Prepare block for superposed sections
+		this.pSPSectCont = BX(this.id + 'sp-sections');
 		if (this.bSuperpose)
 		{
-			this.pSPSectCont = BX(this.id + 'sp-sections');
 			this.pSPSectCont.onmouseover = function(){if(_this._sect_over_timeout){clearInterval(_this._sect_over_timeout);} BX.addClass(_this.pSPSectCont, 'bxec-hover');};
 			this.pSPSectCont.onmouseout = function(){_this._sect_over_timeout = setTimeout(function(){BX.removeClass(_this.pSPSectCont, 'bxec-hover');}, 100);};
 
@@ -971,7 +1001,6 @@ JCEC.prototype = {
 		this.BuildSectionElements();
 
 		var pAddSectBut = BX(this.id + '-add-section');
-		//if (this.Personal() || !this.bReadOnly)
 		if (this.Personal() || this.permEx.section_edit)
 		{
 			if (pAddSectBut)
@@ -989,64 +1018,68 @@ JCEC.prototype = {
 		var
 			bShowOwnerSection = false,
 			bShowSuperpose = false,
-			i, l = this.arSections.length, oSect;
+			i, oSect;
 
-		for (i = 0; i < l; i++)
+		for (i = 0; i < this.arSections.length; i++)
 		{
 			oSect = this.arSections[i];
+
 			if (!oSect.DOM)
-				oSect.DOM = {}
+				oSect.DOM = {};
 
-			// Add to owner's sections only if section added first time
-			if (!this.bSuperpose || (oSect.CAL_TYPE == this.type && oSect.OWNER_ID == this.ownerId))
+			if (oSect.ACTIVE !== 'N')
 			{
-				if (oSect.DOM.pEl)
-					this.BuildSectionMenu(oSect.ID);
-				else
-					this.BuildSectionElement(oSect, this.oActiveSections[oSect.ID]);
-
-				if (!bShowOwnerSection)
-					bShowOwnerSection = true;
-			}
-
-			// Add to superposed section
-			if (this.bSuperpose)
-			{
-				// Add to superpose block
-				if (oSect.SUPERPOSED)
+				// Add to owner's sections only if section added first time
+				if (!this.bSuperpose || (oSect.CAL_TYPE == this.type && oSect.OWNER_ID == this.ownerId))
 				{
-					if (oSect.DOM.pSPEl)
-						this.BuildSectionMenu(oSect.ID, true);
+					if (oSect.DOM.pEl)
+						this.BuildSectionMenu(oSect.ID);
 					else
-						this.BuildSectionElement(oSect, this.oActiveSections[oSect.ID], true);
-				}
-				// Section was superposed, but now we have to remove it from superposed
-				else if(!oSect.SUPERPOSED && oSect.DOM.pSPEl)
-				{
-					// Clean DOM and vars
-					if (oSect.DOM.pSPEl.parentNode)
-						oSect.DOM.pSPEl.parentNode.removeChild(oSect.DOM.pSPEl);
+						this.BuildSectionElement(oSect, this.oActiveSections[oSect.ID]);
 
-					var menuId = 'bxec-sect-sp-' + oSect.ID;
-					if (this.arMenuItems[menuId])
+					if (!bShowOwnerSection)
+						bShowOwnerSection = true;
+				}
+
+				// Add to superposed section
+				if (this.bSuperpose && !this.bAnonym)
+				{
+					// Add to superpose block
+					if (oSect.SUPERPOSED)
 					{
-						if (BX.PopupMenu.Data[menuId])
+						if (oSect.DOM.pSPEl)
+							this.BuildSectionMenu(oSect.ID, true);
+						else
+							this.BuildSectionElement(oSect, this.oActiveSections[oSect.ID], true);
+					}
+					// Section was superposed, but now we have to remove it from superposed
+					else if (!oSect.SUPERPOSED && oSect.DOM.pSPEl)
+					{
+						// Clean DOM and vars
+						if (oSect.DOM.pSPEl.parentNode)
+							oSect.DOM.pSPEl.parentNode.removeChild(oSect.DOM.pSPEl);
+
+						var menuId = 'bxec-sect-sp-' + oSect.ID;
+						if (this.arMenuItems[menuId])
 						{
-							BX.PopupMenu.Data[menuId].popupWindow.destroy();
-							BX.PopupMenu.Data[menuId] = false;
+							if (BX.PopupMenu.Data[menuId])
+							{
+								BX.PopupMenu.Data[menuId].popupWindow.destroy();
+								BX.PopupMenu.Data[menuId] = false;
+							}
+							this.arMenuItems[menuId] = null;
+							delete this.arMenuItems[menuId];
 						}
-						this.arMenuItems[menuId] = null;
-						delete this.arMenuItems[menuId];
+
+						oSect.DOM.pSPEl = oSect.DOM.pSPWrap = oSect.DOM.pSPText = null;
+						delete oSect.DOM.pSPEl;
+						delete oSect.DOM.pSPWrap;
+						delete oSect.DOM.pSPText;
 					}
 
-					oSect.DOM.pSPEl = oSect.DOM.pSPWrap = oSect.DOM.pSPText = null;
-					delete oSect.DOM.pSPEl;
-					delete oSect.DOM.pSPWrap;
-					delete oSect.DOM.pSPText;
+					if (oSect.SUPERPOSED && !bShowSuperpose)
+						bShowSuperpose = true;
 				}
-
-				if (oSect.SUPERPOSED && !bShowSuperpose)
-					bShowSuperpose = true;
 			}
 		}
 
@@ -1112,10 +1145,10 @@ JCEC.prototype = {
 			_this = this,
 			menu = [],
 			menuId = 'bxec-sect-' + (bSuperpose ? 'sp-' : '') + el.ID,
-			//bActive = !this.bReadOnly || el.EXPORT,
 			pEl = pCont.appendChild(BX.create('DIV', {props: {id: 'el-' + menuId, className: 'bxec-sect-el'}})),
-			pWrap = pEl.appendChild(BX.create("DIV", {props: {className: 'bxec-sect-el-wrap'  + (isTask ? ' bxec-task-el-wrap' : '')}})),
-			pCh = pWrap.appendChild(BX.create("SPAN", {props: {className: 'bxec-spr bxec-checkbox'}}));
+			pWrap = pEl.appendChild(BX.create("DIV", {props: {className: 'bxec-sect-el-wrap'  + (isTask ? ' bxec-task-el-wrap' : '')}}));
+
+		pWrap.appendChild(BX.create("SPAN", {props: {className: 'bxec-spr bxec-checkbox'}}));
 
 		if(isTask)
 			pWrap.appendChild(BX.create("SPAN", {props: {className: 'bxec-spr bxec-tasks-sect'}}));
@@ -1123,9 +1156,9 @@ JCEC.prototype = {
 		if (isGoogle)
 		{
 			if (el['~CAL_DAV_LAST_SYNC'].indexOf("[200]") >= 0)
-				pWrap.appendChild(BX.create("SPAN", {props: {className: 'bxec-spr bxec-cal-dav-google'}}));
+				el.DOM.pStatus = pWrap.appendChild(BX.create("SPAN", {props: {className: 'bxec-spr bxec-cal-dav-google'}}));
 			else
-				pWrap.appendChild(BX.create("SPAN", {props: {className: 'bxec-spr bxec-cal-dav-google-fail', title: EC_MESS.SyncError + ': ' + el['~CAL_DAV_LAST_SYNC']}}));
+				el.DOM.pStatus = pWrap.appendChild(BX.create("SPAN", {props: {className: 'bxec-spr bxec-cal-dav-google-fail', title: EC_MESS.SyncError + ': ' + el['~CAL_DAV_LAST_SYNC']}}));
 		}
 
 		var
@@ -1162,6 +1195,10 @@ JCEC.prototype = {
 		if (!el || (this.bTasks && el.ID == 'tasks'))
 			return false;
 
+		if (!el.PERM)
+			el.PERM = {};
+
+
 		var
 			_this = this,
 			menu = [],
@@ -1176,7 +1213,16 @@ JCEC.prototype = {
 			BX.PopupMenu.Data[menuId] = false;
 		}
 
-		if (el.PERM.edit_section && !isGoogle && !bSuperpose)
+		if (el.LINK)
+		{
+			menu.push({
+				text: EC_MESS.OpenCalendar,
+				href: el.LINK,
+				className: "bxec-menu-sect-add2sp"
+			});
+		}
+
+		if (el.PERM.edit_section && this.permEx.section_edit && !bSuperpose)
 		{
 			menu.push({
 				text : EC_MESS.Edit,
@@ -1186,7 +1232,7 @@ JCEC.prototype = {
 			});
 		}
 
-		if (!el.SUPERPOSED && this.canAddToSuperpose)
+		if (!el.SUPERPOSED)
 		{
 			menu.push({
 				text : EC_MESS.CalAdd2SP,
@@ -1231,7 +1277,7 @@ JCEC.prototype = {
 			});
 		}
 
-		if (el.PERM.edit_section && !isGoogle  && !bSuperpose && !isFirstExchange)
+		if (el.PERM.edit_section  && this.permEx.section_edit && !isGoogle  && !bSuperpose && !isFirstExchange)
 		{
 			menu.push({
 				text : EC_MESS.Delete,
@@ -1241,7 +1287,7 @@ JCEC.prototype = {
 			});
 		}
 
-		if (isGoogle  && !bSuperpose)
+		if (el.PERM.edit_section && isGoogle && !bSuperpose)
 		{
 			menu.push({
 				text : EC_MESS.Refresh,
@@ -1253,13 +1299,21 @@ JCEC.prototype = {
 				}
 			});
 
-			if (el.PERM.edit_section)
-				menu.push({
-					text : EC_MESS.Adjust,
-					title : EC_MESS.CalDavDialogTitle,
-					className : "bxec-menu-sect-edit",
-					onclick: function(){_this.CloseCPopup();_this.ShowExternalDialog({});}
-				});
+			menu.push({
+				text : EC_MESS.Adjust,
+				title : EC_MESS.CalDavDialogTitle,
+				className : "bxec-menu-sect-edit",
+				onclick: function(){_this.CloseCPopup();_this.ShowExternalDialog({});}
+			});
+
+			menu.push({
+				text: EC_MESS.googleHide, className: "bxec-menu-sect-del", onclick: function ()
+				{
+					_this.CloseCPopup();
+					_this.HideCalDavSection(el);
+					_this.Event.ReloadAll();
+				}
+			});
 		}
 
 		this.arMenuItems[menuId] = menu;
@@ -1329,15 +1383,18 @@ JCEC.prototype = {
 		el.oHint = new BX.CHintSimple({parent: el._pElement, hint: hintContent});
 	},
 
-	ShowCalendar : function(el, bShow, bDontReload, bEffect2Bro)
+	ShowCalendar : function(el, bShow, bDontReload)
 	{
 		if (!el)
 			return;
 
 		if (bShow)
 		{
-			if (el.DOM.pWrap)
-				el.DOM.pWrap.style.backgroundColor = el.COLOR;
+			if (el.DOM.pEl)
+			{
+				el.DOM.pEl.style.backgroundColor = el.COLOR;
+				BX.addClass(el.DOM.pEl, 'bxec-sect-el-checked');
+			}
 
 			// text color
 			var txtColor = el.TEXT_COLOR;
@@ -1345,35 +1402,37 @@ JCEC.prototype = {
 				txtColor = el.bDark ? this.darkColor : this.brightColor;
 			if (el.DOM.pText)
 				el.DOM.pText.style.color = txtColor;
-			if (el.DOM.pEl)
-				BX.addClass(el.DOM.pEl, 'bxec-sect-el-checked');
 
 			// For superposed
 			if (el.DOM.pSPEl)
+			{
 				BX.addClass(el.DOM.pSPEl, 'bxec-sect-el-checked');
+				el.DOM.pSPEl.style.backgroundColor = el.COLOR;
+			}
 			if (el.DOM.pSPText)
 				el.DOM.pSPText.style.color = txtColor;
-			if (el.DOM.pSPWrap)
-				el.DOM.pSPWrap.style.backgroundColor = el.COLOR;
 		}
 		else
 		{
 			if (el.DOM.pEl)
+			{
 				BX.removeClass(el.DOM.pEl, 'bxec-sect-el-checked');
-			if (el.DOM.pWrap)
-				el.DOM.pWrap.style.backgroundColor = 'transparent';
+				el.DOM.pEl.style.backgroundColor = 'transparent';
+			}
 			if (el.DOM.pText)
 				el.DOM.pText.style.color = '#484848';
 
 			// For superposed
 			if (el.DOM.pSPEl)
+			{
 				BX.removeClass(el.DOM.pSPEl, 'bxec-sect-el-checked');
-			if (el.DOM.pSPWrap)
-				el.DOM.pSPWrap.style.backgroundColor = 'transparent';
+				el.DOM.pSPEl.style.backgroundColor = 'transparent';
+			}
+
 			if (el.DOM.pSPText)
 				el.DOM.pSPText.style.color = '#484848';
 		}
-		this.oActiveSections[el.ID] = el.bShowed = !!bShow
+		this.oActiveSections[el.ID] = el.bShowed = !!bShow;
 
 		if (!bDontReload)
 		{
@@ -1416,8 +1475,8 @@ JCEC.prototype = {
 		//if (this.bUser)
 		//	postData.private_status = D.CAL.DOM.Status.value;
 
-		if (this.bUser && this.Personal() && D.CAL.DOM.MeetingCalendarCh.checked)
-			postData.is_def_meet_calendar = 'Y';
+		//if (this.bUser && this.Personal() && D.CAL.DOM.MeetingCalendarCh.checked)
+		//	postData.is_def_meet_calendar = 'Y';
 
 		if (D.CAL.DOM.ExpAllow.checked)
 		{
@@ -1437,11 +1496,11 @@ JCEC.prototype = {
 						_this.HandleAccessNames(oRes.accessNames);
 
 					_this.SaveSectionClientSide(oRes.calendar);
-					if (_this.bUser &&  _this.Personal() && _this.oSectDialog.CAL.DOM.MeetingCalendarCh.checked && _this.userSettings.meetSection != oRes.calendar.ID)
-					{
-						_this.userSettings.meetSection = oRes.calendar.ID;
-						_this.Event.ReloadAll();
-					}
+//					if (_this.bUser &&  _this.Personal() && _this.oSectDialog.CAL.DOM.MeetingCalendarCh.checked && _this.userSettings.meetSection != oRes.calendar.ID)
+//					{
+//						//_this.userSettings.meetSection = oRes.calendar.ID;
+//						//_this.Event.ReloadAll();
+//					}
 					return true;
 				}
 				return false;
@@ -1473,15 +1532,20 @@ JCEC.prototype = {
 		{
 			var
 				key,
-				exSect = this.arSections[this.arSectionsInd[oSect.ID]];
-				bCol = !exSect || oSect.COLOR != exSect.COLOR || oSect.TEXT_COLOR != exSect.TEXT_COLOR;
+				exSect = this.arSections[this.arSectionsInd[oSect.ID]],
+				oldColor = exSect.COLOR,
+				oldTextColor = exSect.TEXT_COLOR,
+				bCol = !exSect || oSect.COLOR != oldColor || oSect.TEXT_COLOR != oldTextColor;
 
 			if (!exSect)
 				return;
 
 			// Copy all properties
 			for (key in oSect)
-				exSect[key] = oSect[key];
+			{
+				if (oSect.hasOwnProperty(key))
+					exSect[key] = oSect[key];
+			}
 
 			// Rename
 			exSect.DOM.pText.innerHTML = BX.util.htmlspecialchars(exSect.NAME);
@@ -1489,13 +1553,30 @@ JCEC.prototype = {
 				exSect.DOM.pSPText.innerHTML = BX.util.htmlspecialchars(exSect.NAME);
 			exSect.bDark = this.ColorIsDark(exSect.COLOR);
 
-			//if (this.bSuperpose && this.oSectDialog.CAL.DOM.add2SP)
 			this.BuildSectionMenu(oSect.ID);
 			if (exSect.DOM.pSPEl)
 				this.BuildSectionMenu(oSect.ID, true);
 
-			this.UpdateSectionColor(exSect);
+			if (bCol)
+				this.UpdateSectionColor(exSect, oldColor, oldTextColor);
 			this.ShowCalendar(exSect, exSect.bShowed, true);
+		}
+	},
+
+	HideCalDavSection: function(el)
+	{
+		if (el.ID && confirm(EC_MESS.googleHideConfirm))
+		{
+			var _this = this;
+			this.Request({
+				getData: this.GetReqData('section_caldav_hide', {id: el.ID}),
+				handler: function (oRes)
+				{
+					if (oRes.refreshView)
+						BX.reload();
+					return oRes.result ? _this.DeleteSectionClientSide(el) : false;
+				}
+			});
 		}
 	},
 
@@ -1523,8 +1604,8 @@ JCEC.prototype = {
 		if (oSect.DOM.pSPEl)
 			BX.cleanNode(oSect.DOM.pSPEl, true);
 
-		var i, l = this.arSections.length;
-		for (i = 0; i < l; i++)
+		var i;
+		for (i = 0; i < this.arSections.length; i++)
 		{
 			if (this.arSections[i].ID == oSect.ID)
 			{
@@ -1539,7 +1620,7 @@ JCEC.prototype = {
 		this.Event.ReloadAll();
 	},
 
-	UpdateSectionColor : function(oSect)
+	UpdateSectionColor : function(oSect, oldColor, oldTextColor)
 	{
 		if (!oSect)
 			return;
@@ -1548,10 +1629,11 @@ JCEC.prototype = {
 			color = oSect.COLOR,
 			txtColor = oSect.TEXT_COLOR ? oSect.TEXT_COLOR : (oSect.bDark ? this.darkColor : this.brightColor);
 
-		oSect.DOM.pWrap.style.backgroundColor = color;
+		oSect.DOM.pEl.style.backgroundColor = color;
 		oSect.DOM.pText.style.color = txtColor;
 
 		var
+			setColor, setTextColor,
 			keys = [['oTLParts', 'week'], ['oTLParts', 'day'], ['oDaysT', 'week'], ['oDaysT', 'day']],
 			i, l = this.arEvents.length, ev, j, n, x, y;
 
@@ -1560,15 +1642,22 @@ JCEC.prototype = {
 			ev = this.arEvents[i];
 			if (!ev)
 				continue;
-			if (ev.SECT_ID != oSect.ID)
+
+			setColor = !ev.displayColor || !oldColor || ev.displayColor === oldColor;
+			setTextColor = !ev.displayTextColor || !oldTextColor || ev.displayTextColor === oldTextColor;
+
+			if (ev.SECT_ID != oSect.ID ||
+					(!setColor && !setTextColor))
 				continue;
 
 			// Month
 			n = ev.oParts.length;
 			for (j = 0; j < n; j++)
 			{
-				ev.oParts[j].style.backgroundColor = color;
-				ev.oParts[j].style.color = txtColor;
+				if (setColor)
+					ev.oParts[j].style.backgroundColor = color;
+				if (setTextColor)
+					ev.oParts[j].style.color = txtColor;
 			}
 
 			n = keys.length;
@@ -1579,63 +1668,26 @@ JCEC.prototype = {
 					y = ev[keys[j][0]][keys[j][1]];
 					if (typeof y == 'object' && y.nodeType)
 					{
-						y.style.backgroundColor = color;
-						y.style.color = txtColor;
+						if (setColor)
+							y.style.backgroundColor = color;
+						if (setTextColor)
+							y.style.color = txtColor;
 					}
 					else
 					{
 						for (x = 0; x < y.length; x++)
 						{
-							y[x].style.backgroundColor = color;
-							y[x].style.color = txtColor;
+							if (setColor)
+								y[x].style.backgroundColor = color;
+							if (setTextColor)
+								y[x].style.color = txtColor;
 						}
 					}
 				}
 			}
-			ev.displayColor = color;
+			if (setColor)
+				ev.displayColor = color;
 		}
-	},
-
-	InitCalBarGlobChecker : function(bSP)
-	{
-		return;
-		var id, GlCh;
-		if (bSP)
-		{
-			id = this.id + '_sp_cal_bar_check';
-			GlCh = 'CalBarGlobCheckerSP';
-		}
-		else
-		{
-			id = this.id + '_cal_bar_check';
-			GlCh = 'CalBarGlobChecker';
-		}
-
-		this[GlCh] = {};
-		this[GlCh].pWnd = BX(id);
-
-		this[GlCh].flag = false; //
-		this[GlCh].pWnd.title = EC_MESS.DeSelectAll; //
-
-		var _this = this;
-		this[GlCh].pWnd.onclick = function()
-		{
-			if (_this[GlCh].flag) // Show
-			{
-				_this[GlCh].flag = false;
-				_this.ShowAllCalendars(true, bSP);
-				_this[GlCh].pWnd.className = 'bxec-iconkit bxec-cal-bar-check';
-				_this[GlCh].pWnd.title = EC_MESS.DeSelectAll;
-			}
-			else // Hide
-			{
-				_this[GlCh].flag = true;
-				_this.ShowAllCalendars(false, bSP);
-				_this[GlCh].pWnd.className = 'bxec-iconkit bxec-cal-bar-uncheck';
-				_this[GlCh].pWnd.title = EC_MESS.SelectAll;
-			}
-
-		};
 	},
 
 	ShowAllCalendars : function(bShow, bSP)
@@ -1684,8 +1736,10 @@ JCEC.prototype = {
 			_this = this, i, arSPIds = [];
 
 		for (i = 0; i < this.arSections.length; i++)
+		{
 			if (this.arSections[i].SUPERPOSED)
 				arSPIds.push(parseInt(this.arSections[i].ID));
+		}
 
 		this.Request({
 			getData: this.GetReqData('set_superposed', {sect: arSPIds, trackedUser: oSect && oSect.CAL_TYPE == 'user' ? oSect.OWNER_ID : 0}),
@@ -1694,26 +1748,13 @@ JCEC.prototype = {
 			{
 				if (res.result)
 				{
-					if (!_this.bSuperpose && _this.canAddToSuperpose)
+					if (!_this.bSuperpose)
 						return BX.reload();
 					return _this.BuildSectionElements();
 				}
 				return  false;
 			}
 		});
-	},
-
-	GetReqData : function(action, O)
-	{
-		if (!O)
-			O = {};
-		if (action)
-			O.action = action;
-		O.sessid = BX.bitrix_sessid();
-		O.bx_event_calendar_request = 'Y';
-		O.reqId = Math.round(Math.random() * 1000000);
-
-		return O;
 	},
 
 	GetCenterWindowPos : function(w, h)
@@ -1726,69 +1767,48 @@ JCEC.prototype = {
 		return {top: top, left: left};
 	},
 
-	ShowWaitWindow : function()
+	ShowStartUpEvent: function()
 	{
-		//BX.showWait(this.pCalCnt);
-	},
-
-	CloseWaitWindow : function()
-	{
-		//BX.closeWait(this.pCalCnt);
-	},
-
-	ShowStartUpEvent : function()
-	{
-		for (var i = 0; i < this.arEvents.length; i++)
-		{
-			if (this.startupEvent.ID == this.arEvents[i].ID)
-			{
-				var _this = this;
-				if (this.startupEvent.EDIT)
-					setTimeout(function(){_this.Event.Edit({oEvent: _this.arEvents[i]});}, 50);
-				else
-					setTimeout(function(){_this.Event.View(_this.arEvents[i]);}, 50);
-				this.startupEvent.viewed = true;
-				return;
-			}
-		}
-	},
-
-	InitFliper : function(pFliper, strCont)
-	{
-		return;
 		var
 			_this = this,
-			td = pFliper.parentNode,
-			tr = _this[strCont].parentNode.parentNode,
-			tbl = BX.findParent(tr, {tagName: 'TABLE'}),
-			flag = 'b' + strCont + 'Hidden';
+			event,
+			i, resEvent = false;
 
-		td.title = EC_MESS.FlipperHide;
-		_this[flag] = this.arConfig.Settings[strCont];
-		var Hide = function(flag)
+		for (i = 0; i < this.arEvents.length; i++)
 		{
-			if (_this[flag])
+			event = this.arEvents[i];
+			if (this.startupEvent.ID == event.ID || (this.startupEvent.PARENT_ID == event.PARENT_ID) && event['~TYPE'] != 'tasks')
 			{
-				pFliper.className = 'bxec-iconkit bxec-hide-arrow';
-				tbl.style.width = null;
-				tr.style.display = BX.browser.IsIE() ? 'inline' : 'table-row';
-				td.title = EC_MESS.FlipperHide;
+				if (this.startupEvent.EDIT)
+				{
+					setTimeout(function ()
+					{
+						_this.Event.Edit({oEvent: event});
+					}, 1000);
+
+					break;
+				}
+				else
+				{
+					if (!resEvent)
+						resEvent = event;
+
+					if (this.startupEvent.RRULE && this.startupEvent['~CURRENT_DATE'] &&
+						this.FormatDate(BX.parseDate(event.DATE_FROM)) == this.startupEvent['~CURRENT_DATE'])
+					{
+						resEvent = event;
+						break;
+					}
+				}
 			}
-			else
-			{
-				pFliper.className = 'bxec-iconkit bxec-show-arrow';
-				tbl.style.width = tbl.offsetWidth + 'px';
-				tr.style.display = 'none';
-				td.title = EC_MESS.FlipperShow;
-			}
-			_this[flag] = !_this[flag];
-		};
-		td.onclick = function() {Hide(flag); _this.SaveSettings();};
-		if (_this[flag])
-		{
-			_this[flag] = false;
-			Hide(flag);
 		}
+
+		if (resEvent)
+		{
+			setTimeout(function(){_this.Event.View(resEvent);}, 1000);
+		}
+
+		this.startupEvent.viewed = true;
 	},
 
 	SaveSettings : function()
@@ -1799,15 +1819,21 @@ JCEC.prototype = {
 		if (D.CAL.inPersonal)
 		{
 			this.userSettings.blink = D.CAL.DOM.Blink.checked ? 1 : 0;
-			this.userSettings.showBanner = D.CAL.DOM.ShowBanner.checked ? 1 : 0;
 			this.userSettings.showDeclined = D.CAL.DOM.ShowDeclined.checked ? 1 : 0;
 			this.userSettings.meetSection = D.CAL.DOM.SectSelect.value;
 		}
 		this.userSettings.showMuted = D.CAL.DOM.ShowMuted.checked ? 1 : 0;
+		this.userSettings.denyBusyInvitation = D.CAL.DOM.denyBusyInvitation.checked ? 1 : 0;
+
+		if (D.CAL.DOM.TimezoneSelect)
+			this.arConfig.userTimezoneName = D.CAL.DOM.TimezoneSelect.value;
 
 		// Save settings
 		var postData = this.GetReqData('save_settings',
-			{user_settings: this.userSettings});
+			{
+				user_settings: this.userSettings,
+				user_timezone_name: this.arConfig.userTimezoneName
+			});
 
 		if (this.PERM.access)
 		{
@@ -1831,7 +1857,7 @@ JCEC.prototype = {
 
 		this.Request({
 			postData: postData,
-			handler: function(oRes)
+			handler: function()
 			{
 				BX.reload();
 			}
@@ -1853,9 +1879,10 @@ JCEC.prototype = {
 
 	GetUserProfileLink : function(uid, bHtml, User, cn, bOwner)
 	{
+		var html;
 		if (User.type == 'ext')
 		{
-			var html = '';
+			html = '';
 			if (User.email)
 				html = BX.util.htmlspecialchars(User.email);
 			else if (User.name)
@@ -1873,7 +1900,7 @@ JCEC.prototype = {
 			if (!bHtml)
 				return path;
 
-			var html = BX.util.htmlspecialchars(User.name);
+			html = BX.util.htmlspecialchars(User.name);
 			if (bOwner)
 				html += ' <span style="font-weight: normal !important;">(' + EC_MESS.Host + ')</span>';
 
@@ -1913,44 +1940,76 @@ JCEC.prototype = {
 			errorText = false;
 
 		var reqId = P.getData ? P.getData.reqId : P.postData.reqId;
+		P.reqId = reqId;
 
-		var _this = this, iter = 0;
-		var handler = function(result)
+		var _this = this, iter = 0, handler;
+
+		if (P.handler)
 		{
-			var handleRes = function()
+			handler = function (result)
 			{
-				_this.CloseWaitWindow();
-				var erInd = result.toLowerCase().indexOf('bx_event_calendar_action_error');
-				if (!result || result.length <= 0 || erInd != -1)
+				var handleRes = function ()
 				{
-					var errorText = '';
-					if (erInd >= 0)
+					if (_this.requests[reqId].status !== 'canceled')
 					{
-						var
-							ind1 = erInd + 'BX_EVENT_CALENDAR_ACTION_ERROR:'.length,
-							ind2 = result.indexOf('-->', ind1);
-						errorText = result.substr(ind1, ind2 - ind1);
+						var erInd = result.toLowerCase().indexOf('bx_event_calendar_action_error');
+						if (!result || result.length <= 0 || erInd != -1)
+						{
+							var errorText = '';
+							if (erInd >= 0)
+							{
+								var ind1 = erInd + 'BX_EVENT_CALENDAR_ACTION_ERROR:'.length, ind2 = result.indexOf('-->', ind1);
+								errorText = result.substr(ind1, ind2 - ind1);
+							}
+							if (P.onerror && typeof P.onerror == 'function')
+								P.onerror();
+
+							return _this.DisplayError(errorText || P.errorText || '');
+						}
+
+						_this.requests[reqId].status = 'complete';
+
+						var res = P.handler(_this.GetRequestRes(reqId), result);
+						if (res === false && ++iter < 20 && P.bIter)
+							setTimeout(handleRes, 5);
+						else
+							_this.ClearRequestRes(reqId);
 					}
-					if (P.onerror && typeof P.onerror == 'function')
-						P.onerror();
+				};
 
-					return _this.DisplayError(errorText || P.errorText || '');
-				}
-
-				var res = P.handler(_this.GetRequestRes(reqId), result);
-				if(res === false && ++iter < 20 && P.bIter)
-					setTimeout(handleRes, 5);
-				else
-					_this.ClearRequestRes(reqId);
+				setTimeout(handleRes, 50);
 			};
-			setTimeout(handleRes, 50);
-		};
-		this.ShowWaitWindow();
-
-		if (P.postData)
-			BX.ajax.post(P.url, P.postData, handler);
+		}
 		else
-			BX.ajax.get(P.url, P.getData, handler);
+		{
+			handler = BX.DoNothing();
+		}
+
+		this.requests[P.reqId] = {
+			status: 'sent',
+			xhr: P.postData ? BX.ajax.post(P.url, P.postData, handler) : BX.ajax.get(P.url, P.getData, handler)
+		};
+
+		return P;
+	},
+
+	GetReqData : function(action, O)
+	{
+		if (!O)
+			O = {};
+		if (action)
+			O.action = action;
+		O.sessid = BX.bitrix_sessid();
+		O.bx_event_calendar_request = 'Y';
+		O.reqId = Math.round(Math.random() * 1000000);
+
+		return O;
+	},
+
+	CancelRequest: function(reqId)
+	{
+		if (this.requests[reqId] && this.requests[reqId].status == 'sent')
+			this.requests[reqId].status = 'canceled';
 	},
 
 	GetRequestRes: function(key)
@@ -2024,81 +2083,6 @@ JCEC.prototype = {
 		return res;
 	},
 
-	RunPlanner: function(params)
-	{
-		if (!params)
-			params = {};
-
-		if (!this.Planner)
-		{
-			this.Planner = new ECPlanner({
-				id: this.id,
-				workTime: this.arConfig.workTime,
-				meetingRooms: this.bUseMR ? this.meetingRooms : false,
-				currentDate: this.currentDate,
-				actionUrl : this.actionUrl,
-				userId: this.userId,
-				config: {
-					days: this.days,
-					week_holidays: this.week_holidays,
-					year_holidays: this.year_holidays
-				},
-				settings: this.plannerSettings,
-				bAddGroupMembers: !this.bExtranet && this.type == 'group',
-				AddGroupMembers: BX.proxy(this.AddGroupMembers, this),
-				bAMPM: this.bAMPM,
-				minWidth: this.bWideDate ? 880 : 760,
-				minHeight: this.bWideDate ? 430 : 300,
-				pathToUser : this.arConfig.pathToUser
-			});
-
-			var _this = this;
-			BX.addCustomEvent(this.Planner, 'onSubmit', function(Params)
-			{
-				var
-					D = _this.oEditEventDialog,
-					con = D.oController;
-
-				var bDateChanged = !(con.pFromDate.value == Params.fromDate && con.pToDate.value == Params.toDate && con.pFromTime.value == Params.fromTime && con.pToTime.value == Params.toTime);
-				con._FromDateValue = con.pFromDate.value = Params.fromDate;
-				con.pToDate.value = Params.toDate;
-				con._FromTimeValue = con.pFromTime.value = Params.fromTime;
-				con.pToTime.value = Params.toTime;
-
-				var bTime = !!(Params.fromTime || Params.toTime);
-				con.pFullDay.checked = !bTime;
-				con.FullDay(false, bTime);
-
-				// Destination
-				BX.SocNetLogDestination.obItemsSelected[editEventDestinationFormName] = BX.SocNetLogDestination.getSelected(plannerDestFormName);
-				BX('event-grid-dest-item').innerHTML = BX('event-planner-dest-item').innerHTML;
-
-				if(parseInt(Params.locInd) != Params.locInd)
-					Params.locInd = false;
-				con.Location.Set(Params.locInd, Params.locValue || '');
-
-				if (Params.attendees.length > 0)
-				{
-					BX.addClass(con.pAttCont, 'event-grid-dest-cont-full');
-					con.pMeetingParams.style.display = 'block';
-				}
-				else
-				{
-					BX.removeClass(con.pAttCont, 'event-grid-dest-cont-full');
-					con.pMeetingParams.style.display = 'none';
-				}
-				con.DisplayAttendees(Params.attendees);
-
-				if (bDateChanged)
-					con.DestinationOnChange();
-
-				D.show();
-			});
-		}
-
-		this.Planner.OpenDialog(params);
-	},
-
 	OnResize: function(timeout)
 	{
 		if (this._resizeTimeout)
@@ -2108,7 +2092,6 @@ JCEC.prototype = {
 		if (timeout !== false)
 		{
 			this._resizeTimeout = setTimeout(function(){_this.OnResize(false);}, timeout || 200);
-			return;
 		}
 		else
 		{
@@ -2129,16 +2112,21 @@ JCEC.prototype = {
 		}
 	},
 
-	_OnPopupCloseHandler: function()
+	_OnPopupCloseHandler: function(popup)
 	{
-		this.OnResize();
+		// mantis #60948. We need to handle only timeman popups
+		if (popup && popup.popupContainer && popup.popupContainer.id && popup.popupContainer.id.indexOf('timeman') !== -1)
+		{
+			this.OnResize();
+		}
+
 		// Do it once
 		BX.removeCustomEvent('onPopupClose', BX.proxy(this._OnPopupCloseHandler, this));
 	},
 
 	CreateStrut: function(width)
 	{
-		return BX.create("IMG", {props: {src: '/bitrix/images/1.gif'}, style: {width: width + 'px', height: '1px'}});
+		return BX.create("DIV", {style: {width: width + 'px', height: '1px'}});
 	},
 
 	CheckMouseInCont: function(pWnd, e, d)
@@ -2155,12 +2143,21 @@ JCEC.prototype = {
 		return (x >= pos.left - d && x <= pos.right + d && y <= pos.bottom + d && y >= pos.top - d);
 	},
 
-	SaveConnections: function(Calback, onError)
+	SaveCalDavConnections: function(Calback, onError)
 	{
-		var connections = [], i, l = this.arConnections.length, con;
-		for (i = 0; i < l; i++)
+		var connections = [], i, con;
+		for (i = 0; i < this.arConnections.length; i++)
 		{
 			con = this.arConnections[i];
+
+			var sections = {};
+			for (var sectId in con.sections)
+			{
+				if (!con.sections.hasOwnProperty(sectId))
+					continue;
+				sections[sectId] = con.sections[sectId].checked ? 'Y' : 'N';
+			}
+
 			connections.push({
 				id: con.id || 0,
 				name: con.name,
@@ -2168,7 +2165,8 @@ JCEC.prototype = {
 				user_name: con.user_name,
 				pass: typeof con.pass == 'undefined' ? 'bxec_not_modify_pass' : con.pass,
 				del: con.del ? 'Y' : 'N',
-				del_calendars: con.pDelCalendars.checked ? 'Y' : 'N'
+				del_calendars: con.pDelCalendars.checked ? 'Y' : 'N',
+				sections: sections
 			});
 		}
 
@@ -2193,23 +2191,6 @@ JCEC.prototype = {
 	IsDavCalendar: function(id)
 	{
 		return this.oSections[id] && (this.oSections[id].IS_EXCHANGE || this.oSections[id].CAL_DAV_CON);
-	},
-
-	SyncExchange: function()
-	{
-		this.Request({
-			postData: this.GetReqData('exchange_sync'),
-			handler: function(oRes)
-			{
-				var res = oRes.result;
-				setTimeout(function(){
-					if (res === true)
-						top.window.location = top.window.location;
-					else if (res === false)
-						alert(EC_MESS.ExchNoSync);
-				}, 100);
-			}
-		});
 	},
 
 	Section: function(id)
@@ -2242,7 +2223,7 @@ JCEC.prototype = {
 		return true;
 	},
 
-	OnTaskChanged : function(arTask)
+	OnTaskChanged : function()
 	{
 		if (!this.oActiveSections['tasks']) // Show tasks
 			return this.ShowCalendar(this.oSections['tasks'], true);
@@ -2265,7 +2246,10 @@ JCEC.prototype = {
 	HandleAccessNames: function(arNames)
 	{
 		for (var code in arNames)
-			this.arNames[code] = arNames[code];
+		{
+			if (arNames.hasOwnProperty(code))
+				this.arNames[code] = arNames[code];
+		}
 	},
 
 	GetAccessName: function(code)
@@ -2275,8 +2259,10 @@ JCEC.prototype = {
 
 	GetMeetingSection: function()
 	{
-		if (this.userSettings.meetSection && this.oSections[this.userSettings.meetSection])
+		if (this.userSettings.meetSection && this.oSections[this.userSettings.meetSection] && this.oSections[this.userSettings.meetSection].ACTIVE !== 'N')
+		{
 			return this.userSettings.meetSection;
+		}
 
 		return this.arSections[0]['ID'];
 	},
@@ -2297,7 +2283,7 @@ JCEC.prototype = {
 		});
 	},
 
-	AddGroupMembers : function(Params)
+	AddGroupMembers : function()
 	{
 		var _this = this, arPost = {};
 
@@ -2353,6 +2339,155 @@ JCEC.prototype = {
 		}
 
 		return result;
+	},
+
+	FormatDate: function(date)
+	{
+		return BX.date.format(this.DATE_FORMAT, date.getTime() / 1000);
+	},
+
+	FormatTime: function(date, seconds)
+	{
+		return BX.date.format(seconds === true ? this.TIME_FORMAT : this.TIME_FORMAT_SHORT, date.getTime() / 1000);
+	},
+
+	FormatDateTime: function(date)
+	{
+		return BX.date.format(this.DATETIME_FORMAT, date.getTime() / 1000);
+	},
+
+	ParseDate: function(str, trimSeconds)
+	{
+		var bUTC = false;
+		var format = BX.message('FORMAT_DATETIME');
+		str = BX.util.trim(str);
+
+		if (trimSeconds !== false)
+			format = format.replace(':SS', '');
+
+		if (BX.type.isNotEmptyString(str))
+		{
+			var regMonths = '';
+			for (i = 1; i <= 12; i++)
+			{
+				regMonths = regMonths + '|' + BX.message('MON_'+i);
+			}
+
+			var expr = new RegExp('([0-9]+|[a-z]+' + regMonths + ')', 'ig');
+			var aDate = str.match(expr),
+				aFormat = BX.message('FORMAT_DATE').match(/(DD|MI|MMMM|MM|M|YYYY)/ig),
+				i, cnt,
+				aDateArgs=[], aFormatArgs=[],
+				aResult={};
+
+			if (!aDate)
+				return null;
+
+			if(aDate.length > aFormat.length)
+			{
+				aFormat = format.match(/(DD|MI|MMMM|MM|M|YYYY|HH|H|SS|TT|T|GG|G)/ig);
+			}
+
+			for(i = 0, cnt = aDate.length; i < cnt; i++)
+			{
+				if(BX.util.trim(aDate[i]) != '')
+				{
+					aDateArgs[aDateArgs.length] = aDate[i];
+				}
+			}
+
+			for(i = 0, cnt = aFormat.length; i < cnt; i++)
+			{
+				if(BX.util.trim(aFormat[i]) != '')
+				{
+					aFormatArgs[aFormatArgs.length] = aFormat[i];
+				}
+			}
+
+			var m = BX.util.array_search('MMMM', aFormatArgs);
+			if (m > 0)
+			{
+				aDateArgs[m] = BX.getNumMonth(aDateArgs[m]);
+				aFormatArgs[m] = "MM";
+			}
+			else
+			{
+				m = BX.util.array_search('M', aFormatArgs);
+				if (m > 0)
+				{
+					aDateArgs[m] = BX.getNumMonth(aDateArgs[m]);
+					aFormatArgs[m] = "MM";
+				}
+			}
+
+			for(i = 0, cnt = aFormatArgs.length; i < cnt; i++)
+			{
+				var k = aFormatArgs[i].toUpperCase();
+				aResult[k] = k == 'T' || k == 'TT' ? aDateArgs[i] : parseInt(aDateArgs[i], 10);
+			}
+
+			if(aResult['DD'] > 0 && aResult['MM'] > 0 && aResult['YYYY'] > 0)
+			{
+				var d = new Date();
+
+				if(bUTC)
+				{
+					d.setUTCDate(1);
+					d.setUTCFullYear(aResult['YYYY']);
+					d.setUTCMonth(aResult['MM'] - 1);
+					d.setUTCDate(aResult['DD']);
+					d.setUTCHours(0, 0, 0);
+				}
+				else
+				{
+					d.setDate(1);
+					d.setFullYear(aResult['YYYY']);
+					d.setMonth(aResult['MM'] - 1);
+					d.setDate(aResult['DD']);
+					d.setHours(0, 0, 0);
+				}
+
+				if(
+					(!isNaN(aResult['HH']) || !isNaN(aResult['GG']) || !isNaN(aResult['H']) || !isNaN(aResult['G']))
+						&& !isNaN(aResult['MI'])
+					)
+				{
+					if (!isNaN(aResult['H']) || !isNaN(aResult['G']))
+					{
+						var bPM = (aResult['T']||aResult['TT']||'am').toUpperCase()=='PM';
+						var h = parseInt(aResult['H']||aResult['G']||0, 10);
+						if(bPM)
+						{
+							aResult['HH'] = h + (h == 12 ? 0 : 12);
+						}
+						else
+						{
+							aResult['HH'] = h < 12 ? h : 0;
+						}
+					}
+					else
+					{
+						aResult['HH'] = parseInt(aResult['HH']||aResult['GG']||0, 10);
+					}
+
+					if (isNaN(aResult['SS']))
+						aResult['SS'] = 0;
+
+					if(bUTC)
+					{
+						d.setUTCHours(aResult['HH'], aResult['MI'], aResult['SS']);
+					}
+					else
+					{
+						d.setHours(aResult['HH'], aResult['MI'], aResult['SS']);
+					}
+				}
+
+				return d;
+			}
+		}
+
+		return null;
 	},
 
 	FormatTimeByNum: function(h, m)
@@ -2498,24 +2633,6 @@ JCEC.prototype = {
 	GetLastSection: function()
 	{
 		return this.lastSection;
-	},
-
-	GetAttendeesByCodes: function(arCodes, callback, from, to, eventId)
-	{
-		this.Request({
-			getData: this.GetReqData('get_attendees_by_codes', {
-				codes: arCodes,
-				event_from_ts: from || '',
-				event_to_ts: to || '',
-				cur_event_id: eventId,
-				path_to_user: this.arConfig.pathToUser
-			}),
-			handler: function(oRes)
-			{
-				if (callback)
-					callback(oRes.users);
-			}
-		});
 	}
 };
 
@@ -2524,14 +2641,15 @@ JCEC.prototype = {
 window.bxInt = function(x)
 {
 	return parseInt(x, 10);
-}
+};
 
 window.bxIntEx = function(x)
 {
 	x = parseInt(x, 10);
-	if (isNaN(x)) x = 0;
+	if (isNaN(x))
+		x = 0;
 	return x;
-}
+};
 
 window.bxSpCh = function(str)
 {
@@ -2543,7 +2661,7 @@ window.bxSpCh = function(str)
 	str = str.replace(/</g, '&lt;');
 	str = str.replace(/>/g, '&gt;');
 	return str;
-}
+};
 
 window.bxSpChBack = function(str)
 {
@@ -2555,7 +2673,7 @@ window.bxSpChBack = function(str)
 	str = str.replace(/&amp;/g, '&');
 	str = str.replace(/script_>/g, 'script>');
 	return str;
-}
+};
 
 window.EnterAndNotTextArea = function(e, id)
 {
@@ -2569,14 +2687,10 @@ window.EnterAndNotTextArea = function(e, id)
 		}
 	}
 	return false;
-}
+};
 
 function bxGetDateFromTS(ts, getObject)
 {
-//	if(!this.browserOffset)
-//		this.browserOffset = new Date().getTimezoneOffset() * 60000;
-	//var oDate = new Date(ts - this.browserOffset);
-
 	var oDate = new Date(ts);
 	if (!getObject)
 	{
@@ -2605,23 +2719,14 @@ function bxGetDateFromTS(ts, getObject)
 window.bxFormatDate = function(d, m, y)
 {
 	var str = BX.message("FORMAT_DATE");
-
 	str = str.replace(/YY(YY)?/ig, y);
-	str = str.replace(/MMMM/ig, BX.message('MONTH_'+this.Number(m)));
+	str = str.replace(/MMMM/ig, BX.message('MONTH_' + Number(m)));
 	str = str.replace(/MM/ig, zeroInt(m));
-	str = str.replace(/M/ig, BX.message('MON_' + this.Number(m)));
+	str = str.replace(/M/ig, BX.message('MON_' + Number(m)));
 	str = str.replace(/DD/ig, zeroInt(d));
 
 	return str;
-}
-
-window.bxGetPixel = function(bFlip)
-{
-	var q = BX.browser.IsIE() || BX.browser.IsOpera();
-	if (bFlip)
-		q = !q;
-	return q ? 0 : 1;
-}
+};
 
 window.zeroInt = function(x)
 {
@@ -2629,7 +2734,7 @@ window.zeroInt = function(x)
 	if (isNaN(x))
 		x = 0;
 	return x < 10 ? '0' + x.toString() : x.toString();
-}
+};
 
 window.DenyDragEx = function(pEl)
 {
@@ -2637,67 +2742,138 @@ window.DenyDragEx = function(pEl)
 	pEl.ondrag = BX.False;
 	pEl.ondragstart = BX.False;
 	pEl.onselectstart = BX.False;
-}
+};
 
-JCEC.prototype.LoadEvents = function(m, y, P)
+JCEC.prototype.GetCurrentSections = function()
 {
-	if (m == undefined)
-		m = this.activeDate.month;
-	if (y == undefined)
-		y = this.activeDate.year;
-	if (P == undefined)
-		P = {};
-
 	var
-		ameetid = [],
-		i, _this = this,
+		i,
+		superposed = [],
 		active = [],
 		hidden = [];
 
 	for (i in this.oActiveSections)
 	{
-		if (i != 'tasks')
+		if (this.oActiveSections.hasOwnProperty(i))
 		{
-			i = parseInt(i);
-			if (i < 0 || isNaN(i))
-				continue;
-		}
+			if (i != 'tasks')
+			{
+				i = parseInt(i);
+				if (i < 0 || isNaN(i))
+					continue;
+			}
 
-		if (this.oActiveSections[i])
-		{
-			active.push(i);
-			if (this.oSections[i] && this.oSections[i]['~IS_MEETING_FOR_OWNER'])
-				ameetid.push({ID: this.oSections[i]['OWNER_ID'], SECTION_ID: this.oSections[i]['ID']});
-		}
-		else
-		{
-			hidden.push(i);
+			if (this.oActiveSections[i])
+			{
+				if (this.arSectionsInd[i] && this.arSections[this.arSectionsInd[i]] && this.arSections[this.arSectionsInd[i]].SUPERPOSED)
+					superposed.push(i);
+				else
+					active.push(i);
+			}
+			else
+			{
+				hidden.push(i);
+			}
 		}
 	}
 
-	this.Request({
+	return {superposed: superposed, active: active, hidden: hidden};
+};
+
+JCEC.prototype.LoadEvents = function(m, y, params)
+{
+	if (m == undefined)
+		m = this.activeDate.month;
+	if (y == undefined)
+		y = this.activeDate.year;
+	if (params == undefined)
+		params = {};
+
+	var
+		sect, ind,
+		_this = this,
+		sections = this.GetCurrentSections();
+
+	var req = this.Request({
 		getData: this.GetReqData('load_events', {
 			month: parseInt(m, 10) + 1,
 			year: y,
 			usecl: 'Y',
-			ameetid: ameetid,
-			sa: active, // section - active
-			sh: hidden, // section - hidden,
+			active_sect: sections.active,
+			hidden_sect: sections.hidden,
+			sup_sect: sections.superposed,
 			cal_dav_data_sync: this.bSyncGoogle ? 'Y' : 'N'
 		}),
 		errorText: EC_MESS.LoadEventsErr,
 		handler: function(oRes)
 		{
+			if (_this.loadEventsLastRequestId)
+			{
+				if (_this.loadEventsLastRequestId == req.reqId)
+				{
+					_this.loadEventsLastRequestId = false;
+				}
+				else
+				{
+					_this.CancelRequest(_this.loadEventsLastRequestId);
+				}
+			}
+
+			var sectionsNow = _this.GetCurrentSections();
+
+			if (!_this.CompareArrays(sections.superposed, sectionsNow.superposed) ||
+				!_this.CompareArrays(sections.active, sectionsNow.active) ||
+				!_this.CompareArrays(sections.hidden, sectionsNow.hidden)
+			)
+			{
+				return;
+			}
+
+			if (_this.bCalDAV && _this.bSyncGoogle && oRes.connections && oRes.connections.length > 0)
+			{
+				_this.arConnections = oRes.connections;
+				for (ind in _this.arSections)
+				{
+					if (_this.arSections.hasOwnProperty(ind))
+					{
+						sect = _this.arSections[ind];
+						if (sect.CAL_DAV_CAL && sect.CAL_DAV_CON && sect.DOM.pStatus)
+						{
+							for (i in _this.arConnections)
+							{
+								if (_this.arConnections.hasOwnProperty(i) && _this.arConnections[i].id == sect.CAL_DAV_CON)
+								{
+									sect['~CAL_DAV_LAST_SYNC'] = _this.arConnections[i].last_result;
+									if (sect['~CAL_DAV_LAST_SYNC'].indexOf("[200]") >= 0)
+									{
+										sect.DOM.pStatus.className = 'bxec-spr bxec-cal-dav-google';
+										sect.DOM.pStatus.title = '';
+									}
+									else
+									{
+										sect.DOM.pStatus.className = 'bxec-spr bxec-cal-dav-google-fail';
+										sect.DOM.pStatus.title = EC_MESS.SyncError + ': ' + el['~CAL_DAV_LAST_SYNC'];
+									}
+									break;
+								}
+							}
+						}
+					}
+				}
+			}
+
 			_this.bSyncGoogle = false;
 			_this.HandleLoadedEvents({
 				events: oRes.events,
 				attendees: oRes.attendees,
 				month: m,
 				year: y,
-				Params: P
+				Params: params
 			});
 		}
 	});
+
+	this.loadEventsLastRequestId = req.reqId;
 };
 
 JCEC.prototype.HandleLoadedEvents = function(P)
@@ -2747,6 +2923,46 @@ JCEC.prototype.HandleEvents = function(events, attendees)
 	}
 };
 
+JCEC.prototype.HandleAccessibility = function(accessibility)
+{
+	var i, userId;
+	if (accessibility)
+	{
+		for (userId in accessibility)
+		{
+			if (accessibility.hasOwnProperty(userId) && accessibility[userId].length > 0)
+			{
+				for (i = 0; i < accessibility[userId].length; i++)
+				{
+					accessibility[userId][i] = this.Event.PreHandle(accessibility[userId][i]);
+				}
+			}
+		}
+	}
+	return accessibility;
+};
+
+JCEC.prototype.FilterAccessibility = function(accessibility, from, to)
+{
+	return accessibility;
+	//var i, userId;
+	//
+	//if (accessibility)
+	//{
+	//	for (userId in accessibility)
+	//	{
+	//		if (accessibility.hasOwnProperty(userId) && accessibility[userId].length > 0)
+	//		{
+	//			for (i = 0; i < accessibility[userId].length; i++)
+	//			{
+	//				//accessibility[userId][i] = this.Event.PreHandle(accessibility[userId][i]);
+	//			}
+	//		}
+	//	}
+	//}
+	//return accessibility;
+};
+
 // BUILDING MONTH
 JCEC.prototype.BuildEventHolder = function()
 {
@@ -2767,17 +2983,15 @@ JCEC.prototype.BuildEventHolder = function()
 		{
 			_this.arCellCoords[d] = {
 				left: bxInt(_this.oDaysGridTable.rows[0].cells[d].offsetLeft),
-				width: bxInt(_this.oDaysGridTable.rows[0].cells[d].offsetWidth) + bxGetPixel(true)
+				width: bxInt(_this.oDaysGridTable.rows[0].cells[d].offsetWidth)
 			};
-			if (d / 2 == Math.round(d / 2))
-				_this.arCellCoords[d].width += bxGetPixel();
 		}
 		_this.dayCellHeight = parseInt(c.offsetHeight);
 		_this.dayCellWidth = parseInt(c.offsetWidth);
 
 		_this.DisplayEventsMonth();
 	}, 10);
-}
+};
 
 JCEC.prototype.EventClick = function(e)
 {
@@ -2812,8 +3026,10 @@ JCEC.prototype.EventClick = function(e)
 				{
 					if (this.Event.IsAttendee(oEvent) && !this.Event.IsHost(oEvent))
 					{
-						if(oEvent.USER_MEETING.STATUS != 'N')
+						if(oEvent.MEETING_STATUS != 'N')
+						{
 							this.Event.SetMeetingStatus(false, {eventId: bxInt(oEvent.ID), comment: ''});
+						}
 					}
 					else if(oEvent['~TYPE'] != 'tasks')
 					{
@@ -2829,50 +3045,49 @@ JCEC.prototype.EventClick = function(e)
 		}
 		o = o.parentNode;
 	}
-}
+};
 
 JCEC.prototype.DisplayEventsMonth = function(bRefresh)
 {
-	var i, l;
+	var i;
 	if (bRefresh || this.bJustRedraw) // Redisplay all events
 	{
 		BX.cleanNode(this.EventHolderCont);
-		for (i = 0, l = this.activeDateDaysArO.length; i < l; i++)
-			this.activeDateDaysArO[i].arEvents = {begining : [], all : []};
+		for (i = 0; i < this.activeDateObjDays.length; i++)
+			this.activeDateObjDays[i].arEvents = {begining : [], all : []};
 	}
 	else
 	{
-		this.activeFirst = this.activeDateDaysAr[0].getTime();
-		this.activeLast = this.activeDateDaysAr[this.activeDateDaysAr.length - 1].getTime();
+		this.activeFirst = this.activeDateDays[0].getTime();
+		this.activeLast = this.activeDateDays[this.activeDateDays.length - 1].getTime();
 	}
 
-	for (i = 0, l = this.arEvents.length; i < l; i++)
+	for (i = 0; i < this.arEvents.length; i++)
+	{
 		if (this.arEvents[i])
 			this.HandleEventMonth(this.arEvents[i], i);
+	}
 
 	this.RefreshEventsOnWeeks([0, 1, 2, 3, 4, 5]);
-}
+};
 
-JCEC.prototype.HandleEventMonth = function(el, ind, arPrehandle)
+JCEC.prototype.HandleEventMonth = function(ev, ind, arPrehandle)
 {
 	var d_from, d_to, _d_from, _d_to;
-	//this.arLoadedEventsId[this.Event.SmartId(el)] = true;
-
-	el = this.HandleEventCommon(el, ind);
-
-	if (!el)
+	ev = this.HandleEventCommon(ev, ind);
+	if (!ev)
 		return;
-	el.oParts = [];
-	el.oWeeks = [];
+	ev.oParts = [];
+	ev.oWeeks = [];
 
 	if (!arPrehandle)
 	{
-		d_from = bxGetDateFromTS(el.DT_FROM_TS);
-		d_to = bxGetDateFromTS(el.DT_TO_TS);
+		d_from = bxGetDateFromTS(ev.DT_FROM_TS);
+		d_to = bxGetDateFromTS(ev.DT_TO_TS);
 
 		// Works only for events with 24:00 ent time - in the end of the day for  correct displaying
 		if (d_from.bTime && !d_to.bTime)
-			d_to = bxGetDateFromTS(el.DT_TO_TS - 60 * 60 * 24);
+			d_to = bxGetDateFromTS(ev.DT_TO_TS - 60 * 60 * 24);
 
 		d_from = {
 			date: d_from.date,
@@ -2923,19 +3138,21 @@ JCEC.prototype.HandleEventMonth = function(el, ind, arPrehandle)
 		arInit.to = this.activeLast;
 	}
 
-	el.display = true;
-	var bInPast = el.DT_TO_TS + 300 /* 5 min */ < new Date().getTime();
-	el.bMuted = this.userSettings.showMuted && bInPast;
+	ev.display = true;
+	var bInPast = (ev.DT_TO_TS + (ev.DT_SKIP_TIME == 'Y' ? this.dayLength : 300000 /* 5 min */)) < new Date().getTime();
+	ev.bMuted = this.userSettings.showMuted && bInPast;
 
-	this.DisplayEvent_M(arInit, el);
+	this.DisplayEvent_M(arInit, ev);
 
 	if (!bInPast)
-		this.Event.Blink(el, true, true);
-}
+		this.Event.Blink(ev, true, true);
+};
 
 JCEC.prototype.HandleEventCommon = function(ev, ind)
 {
-	if(!this.userSettings.showDeclined && ev.USER_MEETING && ev.USER_MEETING.STATUS == 'N' && ev.MEETING_HOST != this.userId && (!this.startupEvent || (this.startupEvent && this.startupEvent.ID != ev.ID)))
+	if((!this.userSettings.showDeclined || ev.CREATED_BY !== this.userId)
+		&& ev.MEETING_STATUS == 'N' &&
+		(!this.startupEvent || (this.startupEvent && this.startupEvent.ID != ev.ID)))
 		return false;
 
 	if (!ev.oParts)
@@ -2947,7 +3164,7 @@ JCEC.prototype.HandleEventCommon = function(ev, ind)
 	ev = this.Event.SetColor(ev);
 
 	return ev;
-}
+};
 
 JCEC.prototype.DisplayEvent_M = function(arInit, oEvent)
 {
@@ -2958,9 +3175,9 @@ JCEC.prototype.DisplayEvent_M = function(arInit, oEvent)
 		bEventStart = false,
 		bEventEnd = false;
 
-	for (j = 0, n = this.activeDateDaysAr.length; j < n; j++)
+	for (j = 0, n = this.activeDateDays.length; j < n; j++)
 	{
-		date = this.activeDateDaysAr[j];
+		date = this.activeDateDays[j];
 		dayOffset = this.GetWeekDayOffset(this.GetWeekDayByInd(date.getDay()));
 
 		if (date.getTime() == arInit.from)
@@ -2973,7 +3190,7 @@ JCEC.prototype.DisplayEvent_M = function(arInit, oEvent)
 		if (!bEventStart)
 			continue;
 
-		this.activeDateDaysArO[j].arEvents.all.push({oEvent: oEvent, partInd: oEvent.oParts.length, daysCount: arEvParams.partDaysCount});
+		this.activeDateObjDays[j].arEvents.all.push({oEvent: oEvent, partInd: oEvent.oParts.length, daysCount: arEvParams.partDaysCount});
 		if (dayOffset == 6)
 		{
 			bEventEnd = date.getTime() == arInit.to;
@@ -2996,37 +3213,38 @@ JCEC.prototype.DisplayEvent_M = function(arInit, oEvent)
 			break;
 		}
 	}
-}
+};
 
-JCEC.prototype.BuildEventDiv = function(arAtr, oEvent)
+JCEC.prototype.BuildEventDiv = function(arAtr, event)
 {
 	if (parseInt(arAtr.width) <= 0)
 		return;
 
-	var oDiv, t, r, c;
-	this.activeDateDaysArO[arAtr.dayIndex].arEvents.begining.push({oEvent: oEvent, partInd: oEvent.oParts.length, daysCount: arAtr.partDaysCount});
+	var div, t, r;
+	this.activeDateObjDays[arAtr.dayIndex].arEvents.begining.push({oEvent: event, partInd: event.oParts.length, daysCount: arAtr.partDaysCount});
 
 	var
-		isTask = this.Event.IsTask(oEvent),
-		isCrm = this.Event.IsCrm(oEvent);
+		isTask = this.Event.IsTask(event),
+		isCrm = this.Event.IsCrm(event);
 
 	var cn = 'bxec-event';
 
-	if(oEvent.bMuted)
+	if(event.bMuted)
 		cn += ' bxec-event-muted';
 
-	oDiv = BX.create('DIV', {props: {className : cn}, style: {left: arAtr.left + 'px', width: bxInt(arAtr.width) + 'px', minWidth: bxInt(arAtr.width) + 'px', display: 'none', backgroundColor: oEvent.displayColor, color: oEvent.displayTextColor}});
+	div = BX.create('DIV', {props: {className : cn}, style: {left: arAtr.left + 'px', width: bxInt(arAtr.width) + 'px', minWidth: bxInt(arAtr.width) + 'px', display: 'none', backgroundColor: event.displayColor, color: event.displayTextColor}});
 
-	t = oDiv.appendChild(BX.create('TABLE'));
+	t = div.appendChild(BX.create('TABLE'));
 	r = t.insertRow(-1);
 
 	var _this = this;
-	if (oEvent.oParts.length > 0 || arAtr.arInit.real_from_t < arAtr.arInit.from)
+	if (event.oParts.length > 0 || arAtr.arInit.real_from_t < arAtr.arInit.from)
 		BX.adjust(r.insertCell(-1), {props: {className: 'bxec-event-ar'}, html: '<i></i>'});
 
 	var
-		bEnc = this.Event.IsMeeting(oEvent),
-		statQ = this.Event.GetQuestIcon(oEvent),
+		maxWidth,
+		bEnc = this.Event.IsMeeting(event),
+		statQ = this.Event.GetQuestIcon(event),
 		titleCell = r.insertCell(-1),
 		typeIcon = '';
 
@@ -3037,30 +3255,42 @@ JCEC.prototype.BuildEventDiv = function(arAtr, oEvent)
 	if (isCrm && !isTask)
 		typeIcon = '<i class="bxc-e-crm"></i>';
 
-	titleCell.innerHTML = '<div class="bxec-event-title">' + typeIcon + '<span class="bxec-event-label"' + this.Event.GetLabelStyle(oEvent) + '>' + statQ + BX.util.htmlspecialchars(oEvent.NAME) + '</span></div>';
+	titleCell.innerHTML = '<div class="bxec-event-title">' + typeIcon + '<span class="bxec-event-label"' + this.Event.GetLabelStyle(event) + '>' + statQ + BX.util.htmlspecialchars(event.NAME) + '</span></div>';
 
-	this.Event.BuildActions({cont: titleCell, oEvent: oEvent, evCont: oDiv});
+	this.Event.BuildActions({cont: titleCell, oEvent: event, evCont: div});
 	if (!arAtr.bEnd)
 		BX.adjust(r.insertCell(-1), {props: {className: 'bxec-event-ar'}, html: '<b></b>'});
 
-	oDiv.onmouseover = function(){_this.HighlightEvent_M(oEvent, this);};
-	oDiv.onmouseout = function(){_this.HighlightEvent_M(oEvent, this, true);}
-	oDiv.ondblclick = function(){_this.Event.View(oEvent);};
+	div.onmouseover = function(){_this.HighlightEvent_M(event, this);};
+	div.onmouseout = function(){_this.HighlightEvent_M(event, this, true);}
+	div.ondblclick = function(){_this.Event.View(event);};
 
-	oDiv.setAttribute('data-bx-event-ind', oEvent.ind);
+	div.setAttribute('data-bx-event-ind', event.ind);
 
 	// Drag & Drop
-	this.dragDrop.RegisterEvent(oDiv, oEvent, 'month');
+	this.dragDrop.RegisterEvent(div, event, 'month');
 
-	oEvent.oWeeks.push({dayIndex: arAtr.dayIndex, bEnd: arAtr.bEnd});
-	oEvent.oParts.push(oDiv);
+	event.oWeeks.push({dayIndex: arAtr.dayIndex, bEnd: arAtr.bEnd});
+	event.oParts.push(div);
 
-	// Applied only for last days on the week. mantis #0045907
+	// Applied only for last days on the week. mantis #45907
 	if ((arAtr.dayIndex + 1) % 7 == 0)
-		titleCell.firstChild.style.maxWidth = bxInt(arAtr.width) + 'px';
+	{
+		maxWidth = bxInt(arAtr.width);
+	}
+	else
+	{
+		// mantis #80526
+		maxWidth = ((8 - ((arAtr.dayIndex + 1) % 7)) * (bxInt(arAtr.width) - 1));
+	}
 
-	this.EventHolderCont.appendChild(oDiv);
-}
+	if (maxWidth > this.DaysTitleCont.offsetWidth)
+		maxWidth = this.DaysTitleCont.offsetWidth - 10;
+
+	titleCell.firstChild.style.maxWidth = maxWidth + 'px';
+
+	this.EventHolderCont.appendChild(div);
+};
 
 JCEC.prototype.HighlightEvent_M = function(oEvent, pEl, bUn)
 {
@@ -3078,7 +3308,7 @@ JCEC.prototype.HighlightEvent_M = function(oEvent, pEl, bUn)
 	if (oEvent.pMoreDivs)
 		for (i = 0, l = oEvent.pMoreDivs.length; i < l; i++)
 			f(oEvent.pMoreDivs[i], 'bxec-event-over');
-}
+};
 
 JCEC.prototype.GetEventWeeks = function(oEvent)
 {
@@ -3096,7 +3326,7 @@ JCEC.prototype.GetEventWeeks = function(oEvent)
 		}
 	}
 	return arWeeks;
-}
+};
 
 // ####################################################################################
 
@@ -3113,7 +3343,7 @@ JCEC.prototype.BuildWeekEventHolder = function()
 			var Tab = _this.Tabs[_this.activeTabId || _this.userSettings.tabId];
 			// Days title event holder;
 			if (!Tab.pEventHolder)
-				Tab.pEventHolder = Tab.pBodyCont.rows[0].cells[0].firstChild;
+				Tab.pEventHolder = Tab.pBodyCont.querySelector(".bxec-day-t-event-holder");
 
 			if (_this.bJustRedraw)
 				_this.ReBuildEvents(Tab.id);
@@ -3122,18 +3352,18 @@ JCEC.prototype.BuildWeekEventHolder = function()
 		},
 		0
 	);
-}
+};
 
 JCEC.prototype.DisplayWeekEvents = function(Tab)
 {
 	BX.cleanNode(Tab.pEventHolder);
 	for (var i = 0, l = this.arEvents.length; i < l; i++)
 		if (this.arEvents[i])
-			this.HandleEventWeek({Tab : Tab, Event: this.arEvents[i], ind: i});
+			this.HandleWeekEvent({Tab : Tab, Event: this.arEvents[i], ind: i});
 
 	this.RefreshEventsInDayT(Tab);
 	this.ArrangeEventsInTL(Tab);
-}
+};
 
 JCEC.prototype.ReBuildEvents = function(tabId)
 {
@@ -3166,9 +3396,9 @@ JCEC.prototype.ReBuildEvents = function(tabId)
 		l = cont.childNodes.length;
 	}
 	this.DisplayWeekEvents(Tab);
-}
+};
 
-JCEC.prototype.HandleEventWeek = function(P)
+JCEC.prototype.HandleWeekEvent = function(P)
 {
 	var ev = this.HandleEventCommon(P.Event, P.ind);
 	if (!ev)
@@ -3223,18 +3453,19 @@ JCEC.prototype.HandleEventWeek = function(P)
 	}
 
 	ev.display = true;
-	var bInPast = ev.DT_TO_TS + 300 /* 5 min */ < new Date().getTime();
+	var bInPast = (ev.DT_TO_TS + (ev.DT_SKIP_TIME == 'Y' ? this.dayLength : 300000 /* 5 min */)) < new Date().getTime();
+
 	ev.bMuted = this.userSettings.showMuted && bInPast;
 
 	//if(!d_from.bTime && !d_to.bTime)
 	if(P.Event.DT_SKIP_TIME == "Y") // Display event on the top sector
 		this.DisplayEvent_DT(arInit, ev, P.Tab);
-	else  // Display event on the TIMELINE
-		this.DisplayEvent_TL(arInit, ev, P.Tab);
+	else
+		this.DisplayEventOnTimeline(arInit, ev, P.Tab);
 
 	if (!bInPast)
 		this.Event.Blink(ev, true, true);
-}
+};
 
 JCEC.prototype.DisplayEvent_DT = function(arInit, oEvent, Tab)
 {
@@ -3257,6 +3488,7 @@ JCEC.prototype.DisplayEvent_DT = function(arInit, oEvent, Tab)
 		if (oDay.day == day_from)
 		{
 			startDay = oDay;
+			endDay = oDay;
 			bEventStart = true;
 			oDay.Events.begining.push(_event);
 		}
@@ -3271,54 +3503,63 @@ JCEC.prototype.DisplayEvent_DT = function(arInit, oEvent, Tab)
 		}
 	}
 
-	var
-		left = bxInt(startDay.pWnd.offsetLeft) + 2 - bxGetPixel(),
-		right = bxInt(endDay.pWnd.offsetLeft) + bxInt(endDay.pWnd.offsetWidth),
-		width = right - left - 5,
-
-		// Build div
-		oDiv = BX.create('DIV', {props: {className : 'bxec-event'}, style: {left: left.toString()+ 'px', width: width.toString() + 'px', backgroundColor: oEvent.displayColor, color: oEvent.displayTextColor}}),
-		t = oDiv.appendChild(BX.create('TABLE')),
-		r = t.insertRow(-1);
-	oEvent.oDaysT[Tab.id] = oDiv;
-
-	oDiv.setAttribute('data-bx-event-ind', oEvent.ind);
-
-	if(oEvent.bMuted)
-		BX.addClass(oDiv, 'bxec-event-muted');
-
-	if (arInit.real_from_t < arInit.from)
+	if (startDay && endDay)
 	{
-		c = r.insertCell(-1);
-		c.innerHTML = '<img class="bxec-iconkit" src="/bitrix/images/1.gif">';
-		c.className = 'bxec-event-ar-l';
+		var
+			left = bxInt(startDay.pWnd.offsetLeft) + 2,
+			right = bxInt(endDay.pWnd.offsetLeft) + bxInt(endDay.pWnd.offsetWidth),
+			width = right - left - 5,
+
+			// Build div
+			oDiv = BX.create('DIV', {props: {className : 'bxec-event'}, style: {left: left.toString()+ 'px', width: width.toString() + 'px', backgroundColor: oEvent.displayColor, color: oEvent.displayTextColor}}),
+			t = oDiv.appendChild(BX.create('TABLE')),
+			r = t.insertRow(-1);
+		oEvent.oDaysT[Tab.id] = oDiv;
+
+		oDiv.setAttribute('data-bx-event-ind', oEvent.ind);
+
+		if(oEvent.bMuted)
+			BX.addClass(oDiv, 'bxec-event-muted');
+
+		if (arInit.real_from_t < arInit.from)
+		{
+			c = r.insertCell(-1);
+			c.innerHTML = '<img class="bxec-iconkit" src="/bitrix/images/1.gif">';
+			c.className = 'bxec-event-ar-l';
+		}
+
+		if (this.Event.IsMeeting(oEvent))
+			typeIcon = '<i class="bxc-e-meeting"></i>';
+		if (isTask)
+			typeIcon = '<i class="bxc-e-task"></i>';
+		if (isCrm && !isTask)
+			typeIcon = '<i class="bxc-e-crm"></i>';
+
+		var
+			statQ = this.Event.GetQuestIcon(oEvent),
+			titleCell = r.insertCell(-1);
+		titleCell.innerHTML = '<div class="bxec-event-title">' + typeIcon + '<span class="bxec-event-label"' + this.Event.GetLabelStyle(oEvent) + '>' + statQ + BX.util.htmlspecialchars(oEvent.NAME) + '</span></div>';
+
+		this.Event.BuildActions({cont: titleCell, oEvent: oEvent, evCont: oDiv});
+		oDiv.onmouseover = function(){_this.HighlightEvent_DT(this);};
+		oDiv.onmouseout = function(){_this.HighlightEvent_DT(this, true);}
+		oDiv.ondblclick = function(){_this.Event.View(oEvent);};
+
+		// Drag & Drop
+		this.dragDrop.RegisterEvent(oDiv, oEvent, 'week_title');
+
+		if(Tab.pEventHolder)
+			Tab.pEventHolder.appendChild(oDiv);
+	}
+};
+JCEC.prototype.DisplayEventOnTimeline = function(arInit, oEvent, Tab)
+{
+	// Mantis: #69527
+	if (arInit.from == arInit.to)
+	{
+		arInit.to += 60 * 1000;
 	}
 
-	if (this.Event.IsMeeting(oEvent))
-		typeIcon = '<i class="bxc-e-meeting"></i>';
-	if (isTask)
-		typeIcon = '<i class="bxc-e-task"></i>';
-	if (isCrm && !isTask)
-		typeIcon = '<i class="bxc-e-crm"></i>';
-
-	var
-		statQ = this.Event.GetQuestIcon(oEvent),
-		titleCell = r.insertCell(-1);
-	titleCell.innerHTML = '<div class="bxec-event-title">' + typeIcon + '<span class="bxec-event-label"' + this.Event.GetLabelStyle(oEvent) + '>' + statQ + BX.util.htmlspecialchars(oEvent.NAME) + '</span></div>';
-
-	this.Event.BuildActions({cont: titleCell, oEvent: oEvent, evCont: oDiv});
-	oDiv.onmouseover = function(){_this.HighlightEvent_DT(this);};
-	oDiv.onmouseout = function(){_this.HighlightEvent_DT(this, true);}
-	oDiv.ondblclick = function(){_this.Event.View(oEvent);};
-
-	// Drag & Drop
-	this.dragDrop.RegisterEvent(oDiv, oEvent, 'week_title');
-
-	Tab.pEventHolder.appendChild(oDiv);
-}
-
-JCEC.prototype.DisplayEvent_TL = function(arInit, oEvent, Tab)
-{
 	var
 		bEventStart = false,
 		nd_f = new Date(arInit.from),
@@ -3333,33 +3574,49 @@ JCEC.prototype.DisplayEvent_TL = function(arInit, oEvent, Tab)
 		endDay,
 		i, oDay;
 
-	if (!nd_t)
+	if (parseInt(oEvent.DT_LENGTH) > 0)
 	{
-		h_to = 23;
-		m_to = 59;
-	}
-	else if (arInit.from == arInit.to)
-	{
-		if (m_to == 59)
+		if (!nd_t)
 		{
-			h_to++;
-			m_to = 00;
+			h_to = 23;
+			m_to = 59;
+		}
+		else if (arInit.from == arInit.to)
+		{
+			if (m_to == 59)
+			{
+				h_to++;
+				m_to = 0;
+			}
+			else
+			{
+				m_to++;
+			}
 		}
 		else
 		{
-			m_to++;
-		}
-	}
-	else
-	{
-		if (m_to == 0)
-		{
-			h_to--;
-			m_to = 59;
-		}
-		else if(m_to > 1)
-		{
-			m_to--;
+			if (m_to == 0 && h_to == 0)
+			{
+				if (day_to > day_from)
+				{
+					day_to--;
+					h_to = 23;
+					m_to = 59;
+				}
+				else
+				{
+					m_to = 1;
+				}
+			}
+			else if (m_to == 0 && h_to > 0)
+			{
+				h_to--;
+				m_to = 59;
+			}
+			else if(m_to > 1)
+			{
+				m_to--;
+			}
 		}
 	}
 
@@ -3369,6 +3626,7 @@ JCEC.prototype.DisplayEvent_TL = function(arInit, oEvent, Tab)
 		if (oDay.day == day_from)
 		{
 			startDay = oDay;
+			endDay = oDay;
 			bEventStart = true;
 		}
 		if (!bEventStart)
@@ -3386,7 +3644,7 @@ JCEC.prototype.DisplayEvent_TL = function(arInit, oEvent, Tab)
 		this._SetTimeEvent(startDay, h_from, m_from, {oEvent : oEvent, bStart: true, arInit: arInit});
 		this._SetTimeEvent(endDay, h_to, m_to, {oEvent : oEvent, bStart: false, arInit: arInit});
 	}
-}
+};
 
 JCEC.prototype._SetTimeEvent = function(oDay, h, m, oEv)
 {
@@ -3401,13 +3659,13 @@ JCEC.prototype._SetTimeEvent = function(oDay, h, m, oEv)
 		oDay.TLine[h][m] = [];
 
 	oDay.TLine[h][m].push(oEv);
-}
+};
 
 JCEC.prototype.HighlightEvent_DT = function(pWnd, bHide)
 {
 	var f = bHide ? BX.removeClass : BX.addClass;
 	f(pWnd, 'bxec-event-over');
-}
+};
 
 JCEC.prototype.RefreshEventsInDayT = function(Tab)
 {
@@ -3480,7 +3738,7 @@ JCEC.prototype.RefreshEventsInDayT = function(Tab)
 		this.ShowMoreEventsSelectWeek(day, Tab.id);
 		step++;
 	}
-}
+};
 
 JCEC.prototype.ShowMoreEventsSelectWeek = function(oDay, tabId)
 {
@@ -3509,26 +3767,20 @@ JCEC.prototype.ShowMoreEventsSelectWeek = function(oDay, tabId)
 	pMoreDiv.style.display = 'block';
 	pMoreDiv.innerHTML = EC_MESS.MoreEvents + ' (' + l + ' ' + EC_MESS.Item + ')';
 	pMoreDiv.onmousedown = function(e){if(!e) e = window.event; BX.PreventDefault(e);};
-	pMoreDiv.onclick = function(e){_this.ShowMoreEventsWin({Events: arHidden, id: 'day_t_' + tabId + oDay.day, pDay: oDay.pWnd, mode: 'day_t', pSelect: pMoreDiv});};
-}
+	pMoreDiv.onclick = function(){_this.ShowMoreEventsWin({Events: arHidden, id: 'day_t_' + tabId + oDay.day, pDay: oDay.pWnd, mode: 'day_t', pSelect: pMoreDiv});};
+};
 
 JCEC.prototype.ArrangeEventsInTL = function(Tab)
 {
-	try{ //
+	try{
 	var
 		bStarted = false,
-		h, m, e, pDiv, _e, leftDrift,
-		arProceed = {},
-		procCnt = 0,
-		procRows = 0,
+		h, m, e, pDiv, _e, leftDrift = 0,
 		_row,
-		RowSet,
-		Rows,
-		Row,
+		RowSet, Rows, Row, freeRowId,
 		bClosedAllRows, // All rows finished, start new row in rowset
 		startedEvents = {},
 		startedEventsCount = 0,
-		arAll = [],
 		Day, i, arEv, ev;
 
 	for (i = 0; i < Tab.daysCount; i++) // For every day
@@ -3572,7 +3824,14 @@ JCEC.prototype.ArrangeEventsInTL = function(Tab)
 						for (_e in startedEvents)
 						{
 							if (startedEvents[_e] && typeof startedEvents[_e] == 'object' && startedEvents[_e].oEvent)
-								arEv.push({oEvent : startedEvents[_e].oEvent, bStart: false, dontClose: true, arInit: startedEvents[_e].arInit});
+							{
+								arEv.push({
+									oEvent: startedEvents[_e].oEvent,
+									bStart: false,
+									dontClose: true,
+									arInit: startedEvents[_e].arInit
+								});
+							}
 						}
 					}
 
@@ -3629,7 +3888,7 @@ JCEC.prototype.ArrangeEventsInTL = function(Tab)
 								startedEventsCount--;
 							}
 
-							for(r = 0, rl = Rows.length; r < rl; r++)
+							for(r = 0; r < Rows.length; r++)
 							{
 								Row = Rows[r];
 								if (Row.bFilled && Row.evId == ev.oEvent.ID)
@@ -3701,7 +3960,7 @@ JCEC.prototype.ArrangeEventsInTL = function(Tab)
 		}
 	}
 	}catch(e){}
-}
+};
 
 JCEC.prototype.BuildEventDiv_TL = function(P)
 {
@@ -3717,9 +3976,9 @@ JCEC.prototype.BuildEventDiv_TL = function(P)
 		rowInd_t = Math.floor((P.to.h + m_t / 60) * 2),
 		cellStart = P.Tab.pTimelineTable.rows[rowInd_f].cells[this.__ConvertCellIndex(rowInd_f, P.dayInd + 1, true)],
 		cellEnd = P.Tab.pTimelineTable.rows[rowInd_t].cells[this.__ConvertCellIndex(rowInd_t, P.dayInd + 1, true)],
-		top = bxInt(cellStart.offsetTop) + 1 + bxGetPixel(true),
-		bottom = bxInt(cellEnd.offsetTop) - 1 - bxGetPixel(),
-		left = bxInt(cellStart.offsetLeft) + 2 - bxGetPixel(),
+		top = bxInt(cellStart.offsetTop) + 1,
+		bottom = bxInt(cellEnd.offsetTop) - 1,
+		left = bxInt(cellStart.offsetLeft) + 2,
 		// Build div
 		oDiv = BX.create('DIV', {
 			props: {className : 'bxec-tl-event' + (oEvent.bMuted ? ' bxec-event-muted' : '')},
@@ -3790,7 +4049,7 @@ JCEC.prototype.BuildEventDiv_TL = function(P)
 	this.dragDrop.RegisterTimelineEvent(oDiv, oEvent, P.Tab.id);
 
 	return oDiv;
-}
+};
 
 JCEC.prototype.HighlightEvent_TL = function(oEvent, pWnd, bHide, tabId, e)
 {
@@ -3924,39 +4183,7 @@ JCEC.prototype.HighlightEvent_TL = function(oEvent, pWnd, bHide, tabId, e)
 			}
 		}
 	}
-}
-
-JCEC.prototype.SimpleSaveNewEvent = function(arParams)
-{
-	var D = this.oAddEventDialog;
-	D.CAL.DOM.Name.value = BX.util.trim(D.CAL.DOM.Name.value);
-	if (D.CAL.DOM.Name.value == "")
-	{
-		D.CAL.bHold = true;
-		alert(EC_MESS.EventNameError);
-		setTimeout(function(){D.CAL.bHold = false;}, 100);
-		return false;
-	}
-
-	var
-		fd = D.CAL.Params.from,
-		td = D.CAL.Params.to,
-		res = {
-			name: D.CAL.DOM.Name.value,
-			desc: '',//Ob.oDesc.value,
-			calendar: D.CAL.DOM.SectSelect.value,
-			from: BX.date.getServerTimestamp(fd.getTime()),
-			to: BX.date.getServerTimestamp(td.getTime()),
-			skip_time: (fd.getHours() == 0 && fd.getMinutes() == 0 && td.getHours() == 0 && td.getMinutes() == 0) ? 'Y' : 'N'
-		};
-
-	if (D.CAL.DOM.Accessibility)
-		res.accessibility = D.CAL.DOM.Accessibility.value;
-
-	this.Event.Save(res);
-	return true;
 };
-
 
 // More events window
 JCEC.prototype.ShowMoreEventsWin = function(P)
@@ -4009,27 +4236,33 @@ JCEC.prototype.ShowMoreEventsWin = function(P)
 	}
 
 	this.MoreEventsWin.show(true); // Show window
-}
+};
 
 JCEC.prototype.GetUsableDateTime = function(timestamp, roundMin)
 {
-	var date = bxGetDateFromTS(timestamp);
-	if (!roundMin)
-		roundMin = 10;
+	var r = (roundMin || 10) * 60 * 1000;
+	timestamp = Math.ceil(timestamp / r) * r;
+	return new Date(timestamp);
+};
 
-	date.min = Math.ceil(date.min / roundMin) * roundMin;
 
-	if (date.min == 60)
+JCEC.prototype.CompareArrays = function(array1, array2)
+{
+	var res = true;
+	if (array1.length !== array2.length)
 	{
-		if (date.hour == 23)
-			date.bTime = false;
-		else
-			date.hour++;
-		date.min = 0;
+		res = false;
 	}
-
-	date.oDate.setHours(date.hour);
-	date.oDate.setMinutes(date.min);
-	return date;
-}
-
+	else
+	{
+		for (i = 0; i < array1.length; i++)
+		{
+			if (array1[i] !== array2[i])
+			{
+				res = false;
+				break;
+			}
+		}
+	}
+	return res;
+};

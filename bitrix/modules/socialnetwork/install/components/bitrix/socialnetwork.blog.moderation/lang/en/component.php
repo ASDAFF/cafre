@@ -17,4 +17,5 @@ $MESS["BLOG_MOD_PUB"] = "Publish";
 $MESS["BLOG_MOD_DELETE"] = "Delete";
 $MESS["BLOG_MOD_DELETE_CONFIRM"] = "Are you sure you want to delete the conversation?";
 $MESS["BLOG_MOD_NO_SOCNET_USER"] = "You do not have permission to view moderation submissions";
+$MESS["BLOG_MOD_EMPTY_SOCNET_USER"] = "User profile not specified";
 ?>

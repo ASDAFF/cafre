@@ -297,7 +297,7 @@ if($arParams["SET_TITLE"]=="Y")
 //if the subscription belongs to USER_ID then authorization is required
 if($ID > 0 && intval($arSubscription["USER_ID"]) > 0 && !CSubscription::IsAuthorized($ID))
 {
-	unset($HTTP_GET_VARS["mess_code"]);
+	unset($_GET["mess_code"]);
 	$APPLICATION->AuthForm("", false);
 }
 

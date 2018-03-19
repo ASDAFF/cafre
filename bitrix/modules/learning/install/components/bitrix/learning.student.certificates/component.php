@@ -3,7 +3,10 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
 
 //Authorized?
 if (!$USER->IsAuthorized())
-	$APPLICATION->AuthForm(GetMessage("LEARNING_NO_AUTHORIZE"));
+{
+	$APPLICATION->AuthForm(GetMessage("LEARNING_NO_AUTHORIZE"), false, false, "N", false);
+	return;
+}
 
 //Module
 if (!CModule::IncludeModule("learning"))

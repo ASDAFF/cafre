@@ -14,25 +14,41 @@ use Bitrix\Main\EventResult;
 class ConnectorManager
 {
 	/**
-	 * @param $arData
+	 * Return connector for contacts
+	 * @param array $data Event Data
 	 * @return mixed
 	 */
-	public static function onConnectorListContact($arData)
+	public static function onConnectorListContact($data)
 	{
-		$arData['CONNECTOR'] = 'Bitrix\Sender\SenderConnectorContact';
+		$data['CONNECTOR'] = 'Bitrix\Sender\SenderConnectorContact';
 
-		return $arData;
+		return $data;
 	}
 
 	/**
-	 * @param $arData
+	 * Return connector for recipients
+	 * @param array $data Event Data
 	 * @return mixed
 	 */
-	public static function onConnectorListRecipient($arData)
+	public static function onConnectorListRecipient($data)
 	{
-		$arData['CONNECTOR'] = 'Bitrix\Sender\SenderConnectorRecipient';
+		$data['CONNECTOR'] = 'Bitrix\Sender\SenderConnectorRecipient';
 
-		return $arData;
+		return $data;
+	}
+
+	/**
+	 * Return list of connectors
+	 * @param array $data Event Data
+	 * @return mixed
+	 */
+	public static function onConnectorList($data)
+	{
+		$data['CONNECTOR'] = array(
+			'Bitrix\Sender\SenderConnectorUnSubscribers'
+		);
+
+		return $data;
 	}
 
 	/**
@@ -63,16 +79,47 @@ class ConnectorManager
 		{
 			if (is_numeric($moduleId)) $moduleId = '';
 			foreach($arConnectorSettings as $connectorCode => $arConnectorFields)
-			{
-				foreach($arConnectorFields as $k => $arFields)
+		{
+				foreach($arConnectorFields as $k => $field)
 				{
-					if (isset($fieldsTmp[$moduleId][$connectorCode][$k]) && is_array($arFields))
-						$fieldsTmp[$moduleId][$connectorCode][$k] = array_merge($fieldsTmp[$moduleId][$connectorCode][$k], $arFields);
+					if (isset($fieldsTmp[$moduleId][$connectorCode][$k]) && is_array($field))
+					{
+						foreach($field as $fieldName => $fieldValue)
+						{
+							if(!isset($fieldsTmp[$moduleId][$connectorCode][$k][$fieldName]))
+							{
+								$fieldsTmp[$moduleId][$connectorCode][$k][$fieldName] = $fieldValue;
+							}
+							else
+							{
+								if(!is_array($fieldsTmp[$moduleId][$connectorCode][$k][$fieldName]))
+								{
+									$fieldsTmp[$moduleId][$connectorCode][$k][$fieldName] = array(
+										$fieldsTmp[$moduleId][$connectorCode][$k][$fieldName]
+									);
+								}
+
+								if(is_array($fieldValue))
+								{
+									$fieldsTmp[$moduleId][$connectorCode][$k][$fieldName] = array_merge(
+										$fieldsTmp[$moduleId][$connectorCode][$k][$fieldName],
+										$fieldValue
+									);
+								}
+								else
+								{
+									$fieldsTmp[$moduleId][$connectorCode][$k][$fieldName][] = $fieldValue;
+								}
+
+							}
+						}
+					}
 					else
-						$fieldsTmp[$moduleId][$connectorCode][$k] = $arFields;
+						$fieldsTmp[$moduleId][$connectorCode][$k] = $field;
 				}
 			}
 		}
+
 
 		foreach($fieldsTmp as $moduleId => $arConnectorSettings)
 		{
@@ -171,27 +218,34 @@ class ConnectorManager
 
 			if($eventResultParameters && array_key_exists('CONNECTOR', $eventResultParameters))
 			{
-				$connectorClassName = $eventResultParameters['CONNECTOR'];
-				if(!is_subclass_of($connectorClassName,  '\Bitrix\Sender\Connector'))
+				$connectorClassNameList = $eventResultParameters['CONNECTOR'];
+				if (!is_array($eventResultParameters['CONNECTOR']))
 				{
-					continue;
+					$connectorClassNameList = array($connectorClassNameList);
 				}
-
-				$connectorCode = call_user_func(array($connectorClassName, 'getCode'));
-				if($moduleConnectorFilter && !in_array($connectorCode, $moduleConnectorFilter[$eventResult->getModuleId()]))
+				foreach ($connectorClassNameList as $connectorClassName)
 				{
-					continue;
-				}
+					if(!is_subclass_of($connectorClassName,  '\Bitrix\Sender\Connector'))
+					{
+						continue;
+					}
 
-				$connectorName = call_user_func(array($connectorClassName, 'getName'));
-				$connectorRequireConfigure = call_user_func(array($connectorClassName, 'requireConfigure'));
-				$resultList[] = array(
-					'MODULE_ID' => $eventResult->getModuleId(),
-					'CLASS_NAME' => $connectorClassName,
-					'CODE' => $connectorCode,
-					'NAME' => $connectorName,
-					'REQUIRE_CONFIGURE' => $connectorRequireConfigure,
-				);
+					$connectorCode = call_user_func(array($connectorClassName, 'getCode'));
+					if($moduleConnectorFilter && !in_array($connectorCode, $moduleConnectorFilter[$eventResult->getModuleId()]))
+					{
+						continue;
+					}
+
+					$connectorName = call_user_func(array($connectorClassName, 'getName'));
+					$connectorRequireConfigure = call_user_func(array($connectorClassName, 'requireConfigure'));
+					$resultList[] = array(
+						'MODULE_ID' => $eventResult->getModuleId(),
+						'CLASS_NAME' => $connectorClassName,
+						'CODE' => $connectorCode,
+						'NAME' => $connectorName,
+						'REQUIRE_CONFIGURE' => $connectorRequireConfigure,
+					);
+				}
 			}
 		}
 

@@ -679,4 +679,4 @@ if (!empty($arResult['ITEMS']))
 }
 ?>
 <?$frame->beginStub();?>
-<?$frame->end();?>
+<?$frame->end();

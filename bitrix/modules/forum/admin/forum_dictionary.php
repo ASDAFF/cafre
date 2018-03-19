@@ -146,11 +146,11 @@
 		)
 	);
 	?><form name="form1" method="get" action="<?=$APPLICATION->GetCurPage()?>">
-	<input type="hidden" name="TYPE" value="<?=htmlspecialcharsEx($TYPE)?>"> 
+	<input type="hidden" name="TYPE" value="<?=htmlspecialcharsbx($TYPE)?>">
 	<?$oFilter->Begin();?>
 	<tr valign="center">
 		<td><b><?=GetMessage("FLT_HEAD_TITLE")?>:</b></td>
-		<td><input type="text" name="TITLE" value="<?=htmlspecialcharsEx($TITLE)?>" size="47"></td>
+		<td><input type="text" name="TITLE" value="<?=htmlspecialcharsbx($TITLE)?>" size="47"></td>
 	</tr><?
 	$oFilter->Buttons(
 		array(

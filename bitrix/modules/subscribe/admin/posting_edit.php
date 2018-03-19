@@ -344,7 +344,7 @@ else
 	<tr>
 		<td colspan="2">
 		<?
-		CFileMan::AddHTMLEditorFrame("BODY", $str_BODY, "BODY_TYPE", $str_BODY_TYPE, 400, "N", 0, "", "", SITE_ID);
+		CFileMan::AddHTMLEditorFrame("BODY", $str_BODY, "BODY_TYPE", $str_BODY_TYPE, array('height' => '400', 'width' => '100%'), "N", 0, "", "", SITE_ID);
 		?>
 		</td>
 	</tr>
@@ -611,7 +611,9 @@ $tabControl->BeginNextTab();
 		<?
 		$aCharset = explode(",", COption::GetOptionString("subscribe", "posting_charset"));
 		foreach($aCharset as $strCharset):
-			?><option value="<?echo htmlspecialcharsbx($strCharset)?>"<?if($ID > 0 && $post_arr["CHARSET"]==$strCharset) echo " selected"?>><?echo htmlspecialcharsex($strCharset)?></option><?
+			?><option value="<?echo htmlspecialcharsbx($strCharset)?>"<?
+			if($ID > 0 && ToLower($post_arr["CHARSET"]) == ToLower($strCharset)) echo " selected"
+			?>><?echo htmlspecialcharsex($strCharset)?></option><?
 		endforeach;
 		?>
 		</select>

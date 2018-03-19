@@ -73,11 +73,26 @@ if ((!empty($_REQUEST["ID"]) || !empty($_REQUEST["answer_id"])) && check_bitrix_
 
 		if (!empty($_REQUEST["ID"]))
 		{
+			$arUsers = array();
+
+			$arSelect = array(
+				"FIELDS" => array("ID", "NAME", "LAST_NAME", "SECOND_NAME", "LOGIN", "PERSONAL_PHOTO")
+			);
+			if (IsModuleInstalled('mail'))
+			{
+				$arSelect["FIELDS"][] = "EXTERNAL_AUTH_ID";
+				$bMailInstalled = true;
+			}
+			if (IsModuleInstalled('extranet'))
+			{
+				$arSelect["SELECT"] = array("UF_DEPARTMENT");
+				$bExtranetInstalled = true;
+			}
 			$db_res = CUser::GetList(
 				($by = "ID"),
 				($order = "ASC"),
 				array("ID" => implode("|", $_REQUEST["ID"])),
-				array("FIELDS" => array("ID", "NAME", "LAST_NAME", "SECOND_NAME", "LOGIN", "PERSONAL_PHOTO"))
+				$arSelect
 			);
 
 			while ($res = $db_res->Fetch())
@@ -87,22 +102,49 @@ if ((!empty($_REQUEST["ID"]) || !empty($_REQUEST["answer_id"])) && check_bitrix_
 				);
 				if (array_key_exists("PERSONAL_PHOTO", $res))
 				{
-					$arFileTmp = CFile::ResizeImageGet(
-						$res["PERSONAL_PHOTO"],
-						array("width" => 21, "height" => 21),
-						BX_RESIZE_IMAGE_EXACT,
-						false
-					);
-					$data["PHOTO"] = CFile::ShowImage($arFileTmp["src"], 21, 21, "border=0");
+					if (!empty($res["PERSONAL_PHOTO"]))
+					{
+						$arFileTmp = CFile::ResizeImageGet(
+							$res["PERSONAL_PHOTO"],
+							array("width" => 21, "height" => 21),
+							BX_RESIZE_IMAGE_EXACT,
+							false
+						);
+						$data["PHOTO"] = CFile::ShowImage($arFileTmp["src"], 21, 21, "border=0");
+						$data["PHOTO_SRC"] = $arFileTmp["src"];
+					}
+					else
+					{
+						$data["PHOTO"] = $data["PHOTO_SRC"] = '';
+					}
 				}
 				$data["FULL_NAME"] = CUser::FormatName($_REQUEST["NAME_TEMPLATE"], $res);
 				$data["URL"] = CUtil::JSEscape(CComponentEngine::MakePathFromTemplate($_REQUEST["URL_TEMPLATE"], array("UID" => $res["ID"], "user_id" => $res["ID"], "USER_ID" => $res["ID"])));
+				if (
+					$bMailInstalled
+					&& $res["EXTERNAL_AUTH_ID"] == "email"
+				)
+				{
+					$data["TYPE"] = "mail";
+				}
+				elseif (
+					$bExtranetInstalled
+					&& (
+						empty($res["UF_DEPARTMENT"])
+						|| intval($res["UF_DEPARTMENT"][0]) <= 0
+					)
+				)
+				{
+					$data["TYPE"] = "extranet";
+				}
+
 				$arUsers[$res["ID"]] = $data;
 			}
 			$arVoteList["items"] = array();
 			foreach($_REQUEST["ID"] as $id)
 				$arVoteList["items"][] = $arUsers[$id];
-			if ($arParams["CACHE_TIME"] > 0):
+			if ($arParams["CACHE_TIME"] > 0)
+			{
 				$cache->StartDataCache($arParams["CACHE_TIME"], $cache_id, $cache_path);
 				if (!!$arEventsInfo)
 				{
@@ -113,11 +155,10 @@ if ((!empty($_REQUEST["ID"]) || !empty($_REQUEST["answer_id"])) && check_bitrix_
 					}
 				}
 				$cache->EndDataCache($arVoteList);
-			endif;
+			}
 		}
 	}
 }
-
 
 $APPLICATION->RestartBuffer();
 Header('Content-Type: application/x-javascript; charset='.LANG_CHARSET);

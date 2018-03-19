@@ -17,7 +17,7 @@ if($MOD_RIGHT<"R")
 	$APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
 
 $mb = new CMailBox();
-$res = $mb->Check($_REQUEST['serv'], $_REQUEST['port'], $_REQUEST['ssl'], $_REQUEST['login'], $_REQUEST['passw']);
+$res = $mb->Check($_POST['serv'], $_POST['port'], $_POST['ssl'], $_POST['login'], $_POST['passw']);
 
 header("Content-Type: application/x-javascript; charset=".LANG_CHARSET);
 echo CUtil::PhpToJSObject($res, false);

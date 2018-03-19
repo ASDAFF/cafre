@@ -30,7 +30,23 @@ class bitrixcloud extends CModule
 
 	function GetModuleTasks()
 	{
-		return array();
+		return array(
+			'bitrixcloud_deny' => array(
+				'LETTER' => 'D',
+				'BINDING' => 'module',
+				'OPERATIONS' => array(
+				)
+			),
+			'bitrixcloud_control' => array(
+				'LETTER' => 'W',
+				'BINDING' => 'module',
+				'OPERATIONS' => array(
+					'bitrixcloud_monitoring',
+					'bitrixcloud_backup',
+					'bitrixcloud_cdn',
+				)
+			),
+		);
 	}
 
 	function InstallDB($arParams = array())

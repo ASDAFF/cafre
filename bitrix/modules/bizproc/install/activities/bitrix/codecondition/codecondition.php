@@ -21,7 +21,7 @@ class CBPCodeCondition
 	{
 		$arErrors = array();
 
-		if ($user == null || !$user->IsAdmin())
+		if ($user == null || !$user->isAdmin())
 		{
 			$arErrors[] = array(
 				"code" => "perm",
@@ -66,4 +66,3 @@ class CBPCodeCondition
 		return $arCurrentValues["php_code_condition"];
 	}
 }
-?>

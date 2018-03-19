@@ -75,7 +75,6 @@ if(count($arResult["POST"])>0)
 						"PAGE_VAR"				=> $arParams["PAGE_VAR"],
 						"PATH_TO_BLOG"			=> $arParams["PATH_TO_BLOG"],
 						"PATH_TO_POST" 			=> $arParams["PATH_TO_POST"],
-						"PATH_TO_POST" 			=> $arParams["PATH_TO_POST"],
 						"PATH_TO_POST_IMPORTANT" => $arParams["PATH_TO_POST_IMPORTANT"],
 						"PATH_TO_BLOG_CATEGORY"	=> $arParams["PATH_TO_CATEGORY"],
 						"PATH_TO_POST_EDIT"		=> $arParams["PATH_TO_POST_EDIT"],
@@ -108,6 +107,8 @@ if(count($arResult["POST"])>0)
 						"ID"					=> $CurPost["ID"],
 						"POST_DATA"				=> $CurPost,
 						"RATING_DATA"			=> $arResult["RATING"],
+						"BLOG_NO_URL_IN_COMMENTS" => $arParams["BLOG_NO_URL_IN_COMMENTS"],
+						"BLOG_NO_URL_IN_COMMENTS_AUTHORITY" => $arParams["BLOG_NO_URL_IN_COMMENTS_AUTHORITY"],
 					),
 				$component 
 			);

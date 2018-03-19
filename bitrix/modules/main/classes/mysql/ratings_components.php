@@ -5,7 +5,7 @@ IncludeModuleLangFile(__FILE__);
 class CRatingsComponentsMain extends CAllRatingsComponentsMain
 {
 	// Calc function
-	function CalcVoteUser($arConfigs)
+	public static function CalcVoteUser($arConfigs)
 	{
 		global $DB;
 
@@ -39,7 +39,7 @@ class CRatingsComponentsMain extends CAllRatingsComponentsMain
 		return true;
 	}
 
-	function CalcUserBonus($arConfigs)
+	public static function CalcUserBonus($arConfigs)
 	{
 		global $DB;
 
@@ -74,4 +74,3 @@ class CRatingsComponentsMain extends CAllRatingsComponentsMain
 		return true;
 	}
 }
-?>

@@ -8,6 +8,7 @@ $MESS["SEO_BANNER_ERROR_NO_TEXT"] = "Ќе указан текст объ€влени€";
 $MESS["SEO_BANNER_ERROR_LONG_NAME"] = "ƒлина заголовка объ€влени€ не должна превышать #MAX# символа";
 $MESS["SEO_BANNER_ERROR_LONG_TEXT"] = "ƒлина текста объ€влени€ не должна превышать #MAX# символов";
 $MESS["SEO_BANNER_ERROR_NO_HREF"] = "Ќе указана ссылка объ€влени€";
+$MESS["SEO_BANNER_ERROR_NO_GEO"] = "Ќе выбран ни один регион географического таргетинга";
 $MESS["SEO_BANNER_ERROR_NO_PHRASES"] = "Ќе указаны ключевые фразы объ€влени€";
 $MESS["SEO_CAMPAIGN_ERROR_BANNER_NOT_FOUND"] = "ќбъ€вление є#ID# не найдено в яндекс.ƒирект!";
 $MESS["SEO_BANNER_ERROR_CAMPAIGN_NOT_FOUND"] = "–екламна€ кампани€ не найдена";

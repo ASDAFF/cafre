@@ -6,7 +6,8 @@ function addNewRow(tableID, regexp)
 	var oCell = oRow.insertCell(0);
 	var html = tbl.rows[cnt-2].cells[0].innerHTML;
 	var reName = /\[(\d+)\]/gi;
-	var foundName = html.match(reName)[0].replace(/\[|\]/g,"");
+	var reNameMatch = html.match(reName);
+	var foundName = reNameMatch[reNameMatch.length - 1].replace(/\[|\]/g, "");
 	var regExpName = new RegExp('(' + regexp + ')\\[(\\d*)\\]', 'gi');
 	var regExpId = new RegExp('(' + regexp + ')_(\\d*)_', 'gi');
 
@@ -20,7 +21,10 @@ function addNewRow(tableID, regexp)
 	{
 		file.firstChild.innerHTML = BX.message('JSADM_FILE');
 	}
-	BX.bind(BX.findChild(oCell, { "tag" : "input", "class" : "adm-designed-file"}, true), 'change', BX.adminFormTools._modified_file_onchange);
+	if(BX.adminFormTools)
+	{
+		BX.bind(BX.findChild(oCell, { "tag" : "input", "class" : "adm-designed-file"}, true), 'change', BX.adminFormTools._modified_file_onchange);
+	}
 
 	setTimeout(function() {
 		var r = BX.findChildren(oCell, {tag: /^(input|select|textarea)$/i});

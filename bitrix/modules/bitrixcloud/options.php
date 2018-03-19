@@ -26,8 +26,14 @@ $aTabs = array(
 	array(
 		"DIV" => "edit1",
 		"TAB" => GetMessage("MAIN_TAB_SET"),
-		"ICON" => "clouds_settings",
+		"ICON" => "bitrixcloud_settings",
 		"TITLE" => GetMessage("MAIN_TAB_TITLE_SET"),
+	),
+	array(
+		"DIV" => "edit2",
+		"TAB" => GetMessage("MAIN_TAB_RIGHTS"),
+		"ICON" => "bitrixcloud_settings",
+		"TITLE" => GetMessage("MAIN_TAB_TITLE_RIGHTS"),
 	),
 );
 $tabControl = new CAdminTabControl("tabControl", $aTabs);
@@ -112,6 +118,8 @@ $tabControl->BeginNextTab();
 		</td>
 	</tr>
 	<?endforeach?>
+<?$tabControl->BeginNextTab();?>
+<?require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/admin/group_rights2.php");?>
 <?$tabControl->Buttons();?>
 	<input <?if(!$RIGHT_W) echo "disabled" ?> type="submit" name="Update" value="<?=GetMessage("MAIN_SAVE")?>" title="<?=GetMessage("MAIN_OPT_SAVE_TITLE")?>" class="adm-btn-save">
 	<input <?if(!$RIGHT_W) echo "disabled" ?> type="submit" name="Apply" value="<?=GetMessage("MAIN_OPT_APPLY")?>" title="<?=GetMessage("MAIN_OPT_APPLY_TITLE")?>">

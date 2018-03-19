@@ -20,6 +20,7 @@ if ($ImageSize <= 0)
 	$ImageSize = 42;
 
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");
+use Bitrix\Main\Localization\Loc;
 
 if ($GLOBALS["USER"]->IsAuthorized())
 	$log_cnt = CUserCounter::GetValueByUserID($GLOBALS["USER"]->GetID(), $site);
@@ -48,10 +49,13 @@ $rsSites = CSite::GetByID($site);
 if ($arSite = $rsSites->Fetch())
 {
 	$DateTimeFormat = $arSite["FORMAT_DATETIME"];
-	__IncludeLang(dirname(__FILE__)."/lang/".$arSite["LANGUAGE_ID"]."/get_message_2.php");	
+	define("LANGUAGE_ID", $arSite["LANGUAGE_ID"]);
+	Loc::loadLanguageFile(__FILE__);
 }
 else
+{
 	die();
+}
 
 if(CModule::IncludeModule("compression"))
 	CCompress::Disable2048Spaces();

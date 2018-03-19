@@ -4,7 +4,7 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admi
 IncludeModuleLangFile(__FILE__);
 /* @global CMain $APPLICATION */
 /* @global CUser $USER */
-if (!$USER->IsAdmin() || !CModule::IncludeModule("bitrixcloud"))
+if (!$USER->CanDoOperation("bitrixcloud_backup") || !CModule::IncludeModule("bitrixcloud"))
 	$APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
 $strError = "";
 $APPLICATION->SetTitle(GetMessage("BCL_BACKUP_JOB_TITLE"));

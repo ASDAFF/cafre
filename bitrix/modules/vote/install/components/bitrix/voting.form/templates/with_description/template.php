@@ -145,9 +145,8 @@
 		<? endif // CAPTCHA_CODE ?>
 		
 		<input type="submit" name="vote" value="<?=GetMessage("VOTE_SUBMIT_BUTTON")?>">&nbsp;&nbsp;
-		<input type="reset" value="<?=GetMessage("VOTE_RESET")?>">
+		<input type="reset" onclick="return resetForm(this.form, event)" value="<?=GetMessage("VOTE_RESET")?>">
 		</form>
-
 	<?endif?>
 
 </div>

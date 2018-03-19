@@ -1,0 +1,7 @@
+<?
+$MESS["BOT_MESSAGE_FROM"] = "Чат-бот #BOT_NAME#";
+$MESS["BOT_DEFAULT_WORK_POSITION"] = "Чат-бот";
+$MESS["BOT_MESSAGE_INSTALL_SYSTEM"] = "Чат-бот был добавлен в ваш Битрикс24";
+$MESS["BOT_MESSAGE_INSTALL_USER"] = "#USER_NAME# добавил чат-бота в Битрикс24";
+$MESS["BOT_MESSAGE_INSTALL_USER_F"] = "#USER_NAME# добавила чат-бота в Битрикс24";
+?>

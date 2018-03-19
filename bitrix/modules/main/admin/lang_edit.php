@@ -12,7 +12,7 @@
  * @global CMain $APPLICATION
  */
 
-use Bitrix\Main\Text\String;
+use Bitrix\Main\Text\HtmlFilter;
 use Bitrix\Main\Localization\Loc;
 
 require_once(dirname(__FILE__)."/../include/prolog_admin_before.php");
@@ -100,7 +100,7 @@ else
 
 $langField = array();
 foreach($language as $key => $val)
-	$langField[$key] = String::htmlEncode($val);
+	$langField[$key] = HtmlFilter::encode($val);
 
 $strTitle = ($ID > 0? Loc::getMessage("EDIT_LANG_TITLE", array("#ID#" => $langField["LID"])) : Loc::getMessage("NEW_LANG_TITLE"));
 $APPLICATION->SetTitle($strTitle);
@@ -156,7 +156,7 @@ if($message)
 <?=bitrix_sessid_post()?>
 <input type="hidden" name="lang" value="<?=LANGUAGE_ID?>">
 <input type="hidden" name="ID" value="<?echo $ID?>">
-<?if($_REQUEST["COPY_ID"] <> ''):?><input type="hidden" name="COPY_ID" value="<?echo String::htmlEncode($_REQUEST["COPY_ID"])?>"><?endif?>
+<?if($_REQUEST["COPY_ID"] <> ''):?><input type="hidden" name="COPY_ID" value="<?echo HtmlFilter::encode($_REQUEST["COPY_ID"])?>"><?endif?>
 <?
 $tabControl->Begin();
 $tabControl->BeginNextTab();
@@ -228,7 +228,7 @@ BX.ready(BXSetCulture);
 <?
 foreach($cultures as $cult):
 ?>
-				<option value="<?=$cult["ID"]?>"<?if($cult["ID"] == $language["CULTURE_ID"]) echo " selected"?>><?=String::htmlEncode($cult["NAME"])?></option>
+				<option value="<?=$cult["ID"]?>"<?if($cult["ID"] == $language["CULTURE_ID"]) echo " selected"?>><?=HtmlFilter::encode($cult["NAME"])?></option>
 <?
 endforeach;
 ?>

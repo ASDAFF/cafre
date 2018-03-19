@@ -16,7 +16,7 @@ class CEventLog
 	const SEVERITY_INFO = 4;
 	const SEVERITY_DEBUG = 5;
 
-	function Log($SEVERITY, $AUDIT_TYPE_ID, $MODULE_ID, $ITEM_ID, $DESCRIPTION = false, $SITE_ID = false)
+	public static function Log($SEVERITY, $AUDIT_TYPE_ID, $MODULE_ID, $ITEM_ID, $DESCRIPTION = false, $SITE_ID = false)
 	{
 		return CEventLog::Add(array(
 			"SEVERITY" => $SEVERITY,
@@ -28,7 +28,7 @@ class CEventLog
 		));
 	}
 
-	function Add($arFields)
+	public static function Add($arFields)
 	{
 		global $USER, $DB;
 		static $arSeverity = array(
@@ -54,13 +54,14 @@ class CEventLog
 			"USER_ID" => is_object($USER) && ($USER->GetID() > 0)? $USER->GetID(): false,
 			"GUEST_ID" => (isset($_SESSION) && array_key_exists("SESS_GUEST_ID", $_SESSION) && $_SESSION["SESS_GUEST_ID"] > 0? $_SESSION["SESS_GUEST_ID"]: false),
 			"DESCRIPTION" => $arFields["DESCRIPTION"],
+			"~TIMESTAMP_X" => $DB->GetNowFunction(),
 		);
 
 		return $DB->Add("b_event_log", $arFields, array("DESCRIPTION"), "", false, "", array("ignore_dml"=>true));
 	}
 
 	//Agent
-	function CleanUpAgent()
+	public static function CleanUpAgent()
 	{
 		global $DB;
 		$cleanup_days = COption::GetOptionInt("main", "event_log_cleanup_days", 7);
@@ -73,7 +74,7 @@ class CEventLog
 		return "CEventLog::CleanUpAgent();";
 	}
 
-	function GetList($arOrder = Array("ID" => "DESC"), $arFilter = array(), $arNavParams = false)
+	public static function GetList($arOrder = Array("ID" => "DESC"), $arFilter = array(), $arNavParams = false)
 	{
 		global $DB;
 		$err_mess = "FILE: ".__FILE__."<br>LINE: ";
@@ -229,13 +230,13 @@ class CEventLog
 
 class CEventMain
 {
-	function MakeMainObject()
+	public static function MakeMainObject()
 	{
 		$obj = new CEventMain;
 		return $obj;
 	}
 
-	function GetFilter()
+	public static function GetFilter()
 	{
 		$arFilter = array();
 		if(COption::GetOptionString("main", "event_log_register", "N") === "Y" || COption::GetOptionString("main", "event_log_user_delete", "N") === "Y" || COption::GetOptionString("main", "event_log_user_edit", "N") === "Y" || COption::GetOptionString("main", "event_log_user_groups", "N") === "Y")
@@ -245,7 +246,7 @@ class CEventMain
 		return  $arFilter;
 	}
 
-	function GetAuditTypes()
+	public static function GetAuditTypes()
 	{
 		return array(
 			"USER_REGISTER" => "[USER_REGISTER] ".GetMessage("LOG_TYPE_NEW_USERS"),
@@ -259,7 +260,7 @@ class CEventMain
 		);
 	}
 
-	function GetEventInfo($row, $arParams)
+	public static function GetEventInfo($row, $arParams)
 	{
 		$DESCRIPTION = unserialize($row["DESCRIPTION"]);
 		$userURL = $EventPrint = "";
@@ -290,7 +291,7 @@ class CEventMain
 		);
 	}
 
-	function GetFilterSQL($var)
+	public static function GetFilterSQL($var)
 	{
 		$ar[] = array("AUDIT_TYPE_ID" => "USER_REGISTER");
 		$ar[] = array("AUDIT_TYPE_ID" => "USER_DELETE");

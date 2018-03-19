@@ -3,7 +3,7 @@ define("STOP_STATISTICS", true);
 define("BX_SECURITY_SHOW_MESSAGE", true);
 
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");
-__IncludeLang(dirname(__FILE__).'/lang/'.LANGUAGE_ID.'/'.basename(__FILE__));
+\Bitrix\Main\Localization\Loc::loadMessages(__FILE__);
 
 if(!CModule::IncludeModule('lists'))
 {

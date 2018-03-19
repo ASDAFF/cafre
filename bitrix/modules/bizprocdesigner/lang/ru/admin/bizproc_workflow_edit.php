@@ -10,6 +10,7 @@ $MESS ['BIZPROC_WFEDIT_CATEGORY_CONSTR'] = "Конструкции";
 $MESS ['BIZPROC_WFEDIT_CATEGORY_INTER'] = "Уведомления";
 $MESS ['BIZPROC_WFEDIT_CATEGORY_OTHER'] = "Прочее";
 $MESS ['BIZPROC_WFEDIT_CATEGORY_REST'] = "Действия приложений";
+$MESS ['BIZPROC_WFEDIT_CATEGORY_TASKS'] = "Задания";
 $MESS ['BIZPROC_WFEDIT_MENU_PARAMS'] = "Параметры шаблона";
 $MESS ['BIZPROC_WFEDIT_MENU_LIST'] = "Список шаблонов";
 $MESS ['BIZPROC_WFEDIT_MENU_LIST_TITLE'] = "Перейти в список шаблонов";
@@ -37,4 +38,5 @@ $MESS["BIZPROC_USER_PARAMS_SAVE_ERROR"] = "Размер действий в панели \"Мои действ
 $MESS['BIZPROC_EMPTY_EXPORT'] = 'Необходимо сохранить шаблон перед экспортом';
 $MESS['BIZPROC_WFEDIT_CHECK_ERROR'] = 'Ошибка открытия шаблона: не все действия шаблона установлены на портале.';
 $MESS['BIZPROC_WFEDIT_BEFOREUNLOAD'] = 'Внимание! Все несохраненные данные будут потеряны. Вы действительно хотите покинуть эту страницу?';
+$MESS['BIZPROC_WFEDIT_SAVE_ERROR'] = 'При сохранении шаблона произошла ошибка.';
 ?>

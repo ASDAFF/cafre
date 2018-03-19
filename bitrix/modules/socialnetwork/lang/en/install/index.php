@@ -19,4 +19,7 @@ $MESS["SONETP_NOT_INSTALL_P"] = "do not install";
 $MESS["SONETP_EDIT_FORM_LABEL"] = "Announcement";
 $MESS["SONETP_LIST_COLUMN_LABEL"] = "Announcement";
 $MESS["SONETP_LIST_FILTER_LABEL"] = "Announcement";
+$MESS["SONET_UF_SG_DEPT_EDIT_FORM_LABEL"] = "Departments";
+$MESS["SONET_UF_SG_DEPT_LIST_COLUMN_LABEL"] = "Departments";
+$MESS["SONET_UF_SG_DEPT_LIST_FILTER_LABEL"] = "Departments";
 ?>

@@ -204,7 +204,7 @@ class CAllBlogUserGroup
 		return False;
 	}
 
-	function GetGroupPerms($ID, $blogID, $postID = 0, $permsType = BLOG_PERMS_POST)
+	public static function GetGroupPerms($ID, $blogID, $postID = 0, $permsType = BLOG_PERMS_POST)
 	{
 		global $DB;
 

@@ -1,3 +1,3 @@
 <?
-$MESS["BPDT_INTERNALSELECT_OPT_LABEL"] = "Document field";
+$MESS["BPDT_INTERNALSELECT_OPT_LABEL"] = "Element field";
 ?>

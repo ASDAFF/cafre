@@ -10,6 +10,7 @@ final class MainPostList extends CBitrixComponent
 {
 	const STATUS_SCOPE_MOBILE = 'mobile';
 	const STATUS_SCOPE_WEB = 'web';
+
 	private $scope;
 	private $sign;
 	static $users = array();
@@ -23,11 +24,15 @@ final class MainPostList extends CBitrixComponent
 			defined("BX_MOBILE") && BX_MOBILE === true)
 			$this->scope = self::STATUS_SCOPE_MOBILE;
 
-		if ($this->isWeb())
-			$this->setTemplateName(".default");
-		else
-			$this->setTemplateName("mobile_app");
+		$templateName = $this->getTemplateName();
 
+		if ((empty($templateName) || $templateName == ".default" || $templateName == "bitrix24"))
+		{
+			if ($this->isWeb())
+				$this->setTemplateName(".default");
+			else
+				$this->setTemplateName("mobile_app");
+		}
 
 		$this->sign = (new \Bitrix\Main\Security\Sign\Signer());
 	}
@@ -36,7 +41,6 @@ final class MainPostList extends CBitrixComponent
 	{
 		return ($this->scope == self::STATUS_SCOPE_WEB);
 	}
-
 
 	protected function isAjax()
 	{
@@ -92,7 +96,7 @@ HTML;
 					\CPullWatch::Add($this->getUser()->GetId(), 'UNICOMMENTSMOBILEEXTENDED'.$this->arParams["ENTITY_XML_ID"]);
 					$text .= <<<HTML
 						<script>
-							app.onCustomEvent('onPullExtendWatch', {'id': "UNICOMMENTSMOBILEEXTENDED{$this->arParams["ENTITY_XML_ID"]}"});
+							BXMobileApp.onCustomEvent('onPullExtendWatch', {'id': "UNICOMMENTSMOBILEEXTENDED{$this->arParams["ENTITY_XML_ID"]}"}, true);
 						</script>
 HTML;
 				}
@@ -101,7 +105,7 @@ HTML;
 					\CPullWatch::Add($this->getUser()->GetId(), 'UNICOMMENTSMOBILE'.$this->arParams["ENTITY_XML_ID"]);
 					$text = <<<HTML
 						<script>
-							app.onCustomEvent('onPullExtendWatch', {'id': "UNICOMMENTSMOBILE{$this->arParams["ENTITY_XML_ID"]}"});
+							BXMobileApp.onCustomEvent('onPullExtendWatch', {'id': "UNICOMMENTSMOBILE{$this->arParams["ENTITY_XML_ID"]}"}, true);
 						</script>
 HTML;
 				}
@@ -113,7 +117,14 @@ HTML;
 
 	protected function sendIntoPull(array &$arParams, array &$arResult)
 	{
-		if ((check_bitrix_sessid() &&
+		if (((
+				check_bitrix_sessid()
+				|| (
+					isset($arParams["PUSH&PULL"])
+					&& isset($arParams["PUSH&PULL"]["AUTHOR_ID"])
+					&& intval($arParams["PUSH&PULL"]["AUTHOR_ID"]) > 0
+				)
+			) &&
 			//$this->getUser()->IsAuthorized() &&
 			($this->request->getPost("ENTITY_XML_ID") == $arParams["ENTITY_XML_ID"] ||
 				$this->request->getQuery("ENTITY_XML_ID") == $arParams["ENTITY_XML_ID"]) || $arParams["MODE"] == "PULL_MESSAGE") &&
@@ -128,7 +139,11 @@ HTML;
 					unset($comment["WEB"]);
 					unset($comment["MOBILE"]);
 					$comment["ACTION"] = $arParams["PUSH&PULL"]["ACTION"];
-					$comment["USER_ID"] = $this->getUser()->getId();
+					$comment["USER_ID"] = (isset($arParams["PUSH&PULL"]) && isset($arParams["PUSH&PULL"]["AUTHOR_ID"]) && intval($arParams["PUSH&PULL"]["AUTHOR_ID"]) > 0 ? intval($arParams["PUSH&PULL"]["AUTHOR_ID"]) : $this->getUser()->getId());
+					if ($this->request->getPost("EXEMPLAR_ID") !== null)
+						$comment["EXEMPLAR_ID"] = $this->request->getPost("EXEMPLAR_ID");
+					if ($this->request->getPost("COMMENT_EXEMPLAR_ID") !== null)
+						$comment["COMMENT_EXEMPLAR_ID"] = $this->request->getPost("COMMENT_EXEMPLAR_ID");
 
 					\CPullWatch::AddToStack('UNICOMMENTSEXTENDED'.$arParams["ENTITY_XML_ID"],
 						array(
@@ -262,6 +277,16 @@ HTML;
 
 	protected function buildUser($id)
 	{
+		static $extranetUserIdList = false;
+
+		if (
+			$extranetUserIdList === false
+			&& Loader::includeModule('socialnetwork')
+		)
+		{
+			$extranetUserIdList = \Bitrix\Socialnetwork\ComponentHelper::getExtranetUserIdList();
+		}
+
 		$res = $id;
 		if (is_integer($res))
 		{
@@ -274,15 +299,39 @@ HTML;
 					"LAST_NAME" => $res["LAST_NAME"],
 					"SECOND_NAME" => $res["SECOND_NAME"],
 					"AVATAR" => $res["AVATAR"],
+					"EXTERNAL_AUTH_ID" => $res["EXTERNAL_AUTH_ID"]
 				);
 				static::$users[$id] = $res;
 			}
 			$res = static::$users[$id];
 		}
+
 		$res["NAME"] = htmlspecialcharsbx($res["NAME"]);
 		$res["LAST_NAME"] = htmlspecialcharsbx($res["LAST_NAME"]);
 		$res["SECOND_NAME"] = htmlspecialcharsbx($res["SECOND_NAME"]);
-		$res["IS_EXTRANET"] = is_array($GLOBALS["arExtranetUserID"]) && in_array($res["ID"], $GLOBALS["arExtranetUserID"]) ? "Y" : "N";
+		$res["IS_EXTRANET"] = is_array($extranetUserIdList) && in_array($res["ID"], $extranetUserIdList) ? "Y" : "N";
+		if (!isset($res["TYPE"]))
+		{
+			if (!empty($res["UF_USER_CRM_ENTITY"]))
+			{
+				$res["TYPE"] = "EMAILCRM";
+			}
+			elseif (
+				isset($res["EXTERNAL_AUTH_ID"])
+				&& $res["EXTERNAL_AUTH_ID"] == 'email'
+			)
+			{
+				$res["TYPE"] = "EMAIL";
+			}
+			elseif ($res["IS_EXTRANET"] == 'Y')
+			{
+				$res["TYPE"] = "EXTRANET";
+			}
+			else
+			{
+				$res["TYPE"] = false;
+			}
+		}
 		return $res;
 	}
 
@@ -296,6 +345,8 @@ HTML;
 			"ENTITY_XML_ID" => $arParams["ENTITY_XML_ID"], // string
 			"FULL_ID" => array($arParams["ENTITY_XML_ID"], $res["ID"]),
 			"NEW" => $res["NEW"], //"Y" | "N"
+			"AUX" => (isset($res["AUX"]) ? $res["AUX"] : ''),
+			"AUX_LIVE_PARAMS" => (isset($res["AUX_LIVE_PARAMS"]) ? $res["AUX_LIVE_PARAMS"] : array()),
 			"APPROVED" => $res["APPROVED"], //"Y" | "N"
 			"POST_TIMESTAMP" => ($res["POST_TIMESTAMP"] - CTimeZone::GetOffset()),
 			"~POST_MESSAGE_TEXT" => $res["~POST_MESSAGE_TEXT"],
@@ -309,12 +360,8 @@ HTML;
 		{
 			$val = ($res[$key] ?: $res);
 			$result[$key] = array(
-				"POST_TIME" => (isset($val["POST_TIME"]) ? $val["POST_TIME"] : self::getDateTimeFormatted($res["POST_TIMESTAMP"], array(
-					"DATE_TIME_FORMAT" => $arParams["DATE_TIME_FORMAT"]
-				))),
-				"POST_DATE" => (isset($val["POST_DATE"]) ? $val["POST_DATE"] : self::getDateTimeFormatted($res["POST_TIMESTAMP"], array(
-					"DATE_TIME_FORMAT" => $arParams["DATE_TIME_FORMAT"]
-				))),
+				"POST_TIME" => (isset($val["POST_TIME"]) ? $val["POST_TIME"] : CComponentUtil::GetDateTimeFormatted($res["POST_TIMESTAMP"], $arParams["DATE_TIME_FORMAT"], CTimeZone::GetOffset())),
+				"POST_DATE" => (isset($val["POST_DATE"]) ? $val["POST_DATE"] : CComponentUtil::GetDateTimeFormatted($res["POST_TIMESTAMP"], $arParams["DATE_TIME_FORMAT"], CTimeZone::GetOffset())),
 				"CLASSNAME" => $val["CLASSNAME"],
 				"POST_MESSAGE_TEXT" => $val["POST_MESSAGE_TEXT"],
 				"BEFORE_HEADER" => $val["BEFORE_HEADER"].$this->getApplication()->GetViewContent($templateId.'BEFORE_HEADER'),
@@ -471,7 +518,6 @@ HTML;
 				$res["MOBILE"]["AFTER"] .= ob_get_clean();
 			}
 		}
-
 		if (is_array($res["UF"]))
 		{
 			ob_start();
@@ -484,8 +530,10 @@ HTML;
 						$arPostField["USER_TYPE"]["USER_TYPE_ID"],
 						array(
 							"arUserField" => $arPostField,
-							"LAZYLOAD" => (isset($arParams["LAZYLOAD"]) && $arParams["LAZYLOAD"] == "Y" ? "Y" : "N")
-						),
+							"TEMPLATE" => $this->getTemplateName(),
+							"LAZYLOAD" => (isset($arParams["LAZYLOAD"]) && $arParams["LAZYLOAD"] == "Y" ? "Y" : "N"),
+							"DISABLE_LOCAL_EDIT" => (isset($arParams["bPublicPage"]) && $arParams["bPublicPage"])
+						) + $arParams,
 						null,
 						array("HIDE_ICONS"=>"Y")
 					);
@@ -494,7 +542,7 @@ HTML;
 			$result["WEB"]["AFTER"] = ob_get_clean().$result["WEB"]["AFTER"];
 
 			ob_start();
-			?><div class="post-item-attached-file-wrap" id="record-<?=$arParams["ENTITY_XML_ID"]?>-<?=$res["ID"]?>-uf"><?
+
 			foreach ($res["UF"] as $arPostField)
 			{
 				if(!empty($arPostField["VALUE"]))
@@ -504,31 +552,104 @@ HTML;
 						$arPostField["USER_TYPE"]["USER_TYPE_ID"],
 						array(
 							"arUserField" => $arPostField,
+							"TEMPLATE" => $this->getTemplateName(),
 							"LAZYLOAD" => (isset($arParams["LAZYLOAD"]) && $arParams["LAZYLOAD"] == "Y" ? "Y" : "N"),
 							"MOBILE" => "Y"
-						),
+						) + $arParams,
 						null,
 						array("HIDE_ICONS"=>"Y")
 					);
 				}
 			}
-			?></div><?
-			$result["MOBILE"]["AFTER"] = ob_get_clean().$result["MOBILE"]["AFTER"];
+			$html = ob_get_clean();
+			if (!empty($html))
+			{
+				$result["MOBILE"]["AFTER"] = '<div class="post-item-attached-file-wrap" id="record-'.$arParams["ENTITY_XML_ID"].'-'.$res["ID"].'-uf">'.$html.'</div>'.$result["MOBILE"]["AFTER"];
+			}
 			$result["CLASSNAME"] .= " feed-com-block-uf";
 		}
 		$result = array_merge($result, ($this->isWeb() ? $result["WEB"] : $result["MOBILE"]));
+
 		return $result;
 	}
 
 	public function parseTemplate(array $res, array $arParams, $template)
 	{
 		global $USER;
+		static $extranetSiteId = null;
+
 		$todayString = ConvertTimeStamp();
+
+		if ($extranetSiteId === null)
+		{
+			$extranetSiteId = (CModule::IncludeModule('extranet') ? CExtranet::GetExtranetSiteID() : false);
+		}
+
+		$authorUrl = (
+			$res["AUTHOR"]["ID"]
+				? str_replace(
+					array("#ID#", "#id#", "#USER_ID#", "#user_id#"),
+					array($res["ID"], $res["ID"], $res["AUTHOR"]["ID"], $res["AUTHOR"]["ID"]),
+					$arParams["AUTHOR_URL"]
+				)
+				: "javascript:void();"
+		);
+
+		$authorStyle = '';
+		$authorTooltipParams = array();
+
+		if (!empty($res["AUTHOR"]["TYPE"]))
+		{
+			if ($res["AUTHOR"]["TYPE"] == 'EMAILCRM')
+			{
+				$authorStyle = ' feed-com-name-emailcrm';
+			}
+			if ($res["AUTHOR"]["TYPE"] == 'EMAIL')
+			{
+				$authorStyle = ' feed-com-name-email';
+			}
+			else if ($res["AUTHOR"]["TYPE"] == 'EXTRANET')
+			{
+				$authorStyle = ' feed-com-name-extranet';
+			}
+		}
+		else if ($res["AUTHOR"]["IS_EXTRANET"] == "Y")
+		{
+			$authorStyle = ' feed-com-name-extranet';
+		}
+
+		if (
+			!empty($arParams["AUTHOR_URL_PARAMS"]) && is_array($arParams["AUTHOR_URL_PARAMS"])
+			&& (
+				(isset($arParams["bPublicPage"]) && $arParams["bPublicPage"])
+				|| SITE_ID == $extranetSiteId
+				|| (!empty($res["AUTHOR"]["TYPE"]) && in_array($res["AUTHOR"]["TYPE"], array('EMAIL', 'EMAILCRM', 'EXTRANET')))
+			)
+		)
+		{
+			$authorTooltipParams = $arParams["AUTHOR_URL_PARAMS"];
+			if (
+				!isset($arParams["bPublicPage"])
+				|| !$arParams["bPublicPage"])
+			{
+				$strParams = '';
+				$i = 0;
+				foreach ($arParams["AUTHOR_URL_PARAMS"] as $key => $value)
+				{
+					$strParams .= ($i > 0 ? '&' : '').urlencode($key).'='.urlencode($value);
+					$i++;
+				}
+				$authorUrl .= (strpos($authorUrl, '?') === false ? '?' : '&').$strParams;
+			}
+		}
+
 		$replacement = array(
 			"#ID#" =>
 				$res["ID"],
 			"#FULL_ID#" =>
 				$arParams["ENTITY_XML_ID"]."-".$res["ID"],
+			"#CONTENT_ID#" =>
+				(!empty($arParams["RATING_TYPE_ID"]) ? $arParams["RATING_TYPE_ID"]."-".$res["ID"] : (!empty($arParams["CONTENT_TYPE_ID"]) ? $arParams["CONTENT_TYPE_ID"]."-".$res["ID"] : "")),
 			"#ENTITY_XML_ID#" =>
 				$arParams["ENTITY_XML_ID"],
 			"#NEW#" =>
@@ -536,8 +657,7 @@ HTML;
 			"#APPROVED#" =>
 				($res["APPROVED"] != "Y" ? "hidden" : "approved"),
 			"#DATE#" => (ConvertTimeStamp(($res["POST_TIMESTAMP"] + CTimeZone::GetOffset()), "SHORT") == $todayString ? $res["POST_TIME"] : $res["POST_DATE"]),
-			"#TEXT#" =>
-				$res["POST_MESSAGE_TEXT"],
+			"#TEXT#" => str_replace(array("\001", "#"), array("", "\001"), $res["POST_MESSAGE_TEXT"]),
 			"#CLASSNAME#" =>
 				(isset($res["CLASSNAME"]) ? " ".$res["CLASSNAME"] : ""),
 			"#VOTE_ID#" =>
@@ -548,9 +668,15 @@ HTML;
 				($arParams["VIEW_URL"] == "" ? "N" : "Y"),
 			"#EDIT_URL#" =>
 				str_replace(array("#ID#", "#id#"), $res["ID"], $arParams["EDIT_URL"]),
-			"#EDIT_SHOW#" =>
-				($arParams["RIGHTS"]["EDIT"] == "Y" || $arParams["RIGHTS"]["EDIT"] == "ALL" ||
-				$arParams["RIGHTS"]["EDIT"] == "OWN" && $USER->GetID() == intval($res["AUTHOR"]["ID"]) ? "Y" : "N"),
+			"#EDIT_SHOW#" => (
+				empty($res["AUX"])
+				&& (
+					$arParams["RIGHTS"]["EDIT"] == "Y" || $arParams["RIGHTS"]["EDIT"] == "ALL" ||
+					$arParams["RIGHTS"]["EDIT"] == "OWN" && $USER->GetID() == intval($res["AUTHOR"]["ID"])
+				)
+					? "Y"
+					: "N"
+			),
 			"#MODERATE_URL#" =>
 				str_replace(array("#ID#", "#id#"), $res["ID"], $arParams["MODERATE_URL"]),
 			"#MODERATE_SHOW#" =>
@@ -561,6 +687,12 @@ HTML;
 			"#DELETE_SHOW#" =>
 				($arParams["RIGHTS"]["DELETE"] == "Y" || $arParams["RIGHTS"]["DELETE"] == "ALL" ||
 				$arParams["RIGHTS"]["DELETE"] == "OWN" && $USER->GetID() == intval($res["AUTHOR"]["ID"]) ? "Y" : "N"),
+			"#CREATETASK_SHOW#" => (
+				empty($res["AUX"])
+				&& $arParams["RIGHTS"]["CREATETASK"] == "Y"
+					? "Y"
+					: "N"
+			),
 			"#BEFORE_HEADER#" => $res["BEFORE_HEADER"],
 			"#BEFORE_ACTIONS#" => $res["BEFORE_ACTIONS"],
 			"#AFTER_ACTIONS#" => $res["AFTER_ACTIONS"],
@@ -573,12 +705,16 @@ HTML;
 				$res["AUTHOR"]["ID"],
 			"#AUTHOR_AVATAR_IS#" =>
 				(empty($res["AUTHOR"]["AVATAR"]) ? "N" : "Y"),
-			"#AUTHOR_AVATAR#" => $res["AUTHOR"]["AVATAR"],
-			"#AUTHOR_URL#" =>
-				str_replace(
-					array("#ID#", "#id#", "#USER_ID#", "#user_id#"),
-					array($res["ID"], $res["ID"], $res["AUTHOR"]["ID"], $res["AUTHOR"]["ID"]),
-					$arParams["AUTHOR_URL"]),
+			"#AUTHOR_AVATAR#" => (
+				!empty($res["AUTHOR"]["AVATAR"])
+					? $res["AUTHOR"]["AVATAR"]
+					: (
+						!empty($arParams["AVATAR_DEFAULT"])
+							? $arParams["AVATAR_DEFAULT"]
+							: ""
+					)
+			),
+			"#AUTHOR_URL#" => $authorUrl,
 			"#AUTHOR_NAME#" =>
 				CUser::FormatName(
 				$arParams["NAME_TEMPLATE"],
@@ -591,15 +727,16 @@ HTML;
 				),
 				($arParams["SHOW_LOGIN"] != "N"),
 				false),
+			"#AUTHOR_PERSONAL_GENDER#" => !empty($res["AUTHOR"]["PERSONAL_GENDER"]) ?
+				$res["AUTHOR"]["PERSONAL_GENDER"] : "",
+			"#AUTHOR_TOOLTIP_PARAMS#" => CUtil::PhpToJSObject($authorTooltipParams),
 			"#SHOW_POST_FORM#" =>
 				$arParams["SHOW_POST_FORM"],
-			"#AUTHOR_EXTRANET_STYLE#" =>
-				($res["AUTHOR"]["IS_EXTRANET"] == "Y" ? ' feed-com-name-extranet' : ''),
+			"#AUTHOR_EXTRANET_STYLE#" => $authorStyle,
 			"background:url('') no-repeat center;" =>
 				""
 		);
-
-		return str_replace(array_keys($replacement), array_values($replacement), $template);
+		return str_replace(array_merge(array_keys($replacement), array("\001")), array_merge(array_values($replacement), array("#")), $template);
 	}
 
 	protected function prepareParams(array &$arParams, array &$arResult)
@@ -616,7 +753,7 @@ HTML;
 		//$arParams["NAV_RESULT"] = (!!$arParams["NAV_STRING"] && is_object($arParams["NAV_RESULT"]) ? $arParams["NAV_RESULT"] : false);
 		$arParams["PREORDER"] = ($arParams["PREORDER"] == "Y" ? "Y" : "N");
 		$arParams["RIGHTS"] = (is_array($arParams["RIGHTS"]) ? $arParams["RIGHTS"] : array());
-		foreach (array("MODERATE", "EDIT", "DELETE") as $act)
+		foreach (array("MODERATE", "EDIT", "DELETE", "CREATETASK") as $act)
 			$arParams["RIGHTS"][$act] = in_array(strtoupper($arParams["RIGHTS"][$act]), array("Y", "ALL", "OWN", "OWNLAST")) ? $arParams["RIGHTS"][$act] : "N";
 		$arParams["LAST_RECORD"] = array();
 		// Answer params
@@ -634,15 +771,15 @@ HTML;
 		// Template params
 		$arParams["VISIBLE_RECORDS_COUNT"] = (!!$arParams["NAV_RESULT"] ? intval($arParams["VISIBLE_RECORDS_COUNT"]) : 0);
 		$arParams["TEMPLATE_ID"] = (!!$arParams["TEMPLATE_ID"] ? $arParams["TEMPLATE_ID"] : 'COMMENT_'.$arParams["ENTITY_XML_ID"].'_');
-		$arParams["AVATAR_SIZE"] = ($arParams["AVATAR_SIZE"] > 0 ? $arParams["AVATAR_SIZE"] : 39);
+		$arParams["AVATAR_SIZE"] = ($arParams["AVATAR_SIZE"] > 0 ? $arParams["AVATAR_SIZE"] : 100);
 		//$arParams["IMAGE_SIZE"] = ($arParams["IMAGE_SIZE"] > 0 ? $arParams["IMAGE_SIZE"] : 30);
 		$arParams['SHOW_MINIMIZED'] = ($arParams['SHOW_MINIMIZED'] == "Y" ? "Y" : "N");
 
-		$arParams["NAME_TEMPLATE"] = (!!$_REQUEST["NAME_TEMPLATE"] ? $_REQUEST["NAME_TEMPLATE"] : \CSite::GetNameFormat());
-		$arParams["SHOW_LOGIN"] = ($_REQUEST["SHOW_LOGIN"] == "Y" ? "Y" : "N");
+		$arParams["NAME_TEMPLATE"] = (!!$_REQUEST["NAME_TEMPLATE"] ? $_REQUEST["NAME_TEMPLATE"] : (!!$arParams["NAME_TEMPLATE"] ? $arParams["NAME_TEMPLATE"] : \CSite::GetNameFormat()));
+		$arParams["SHOW_LOGIN"] = ($_REQUEST["SHOW_LOGIN"] == "Y" ? "Y" : ($arParams["SHOW_LOGIN"] == "Y" ? "Y" : "N"));
 		$arParams["DATE_TIME_FORMAT"] = trim($arParams["DATE_TIME_FORMAT"]);
 		$arParams["SHOW_POST_FORM"] = ($arParams["SHOW_POST_FORM"] == "Y" ? "Y" : "N");
-		$arParams["BIND_VIEWER"] = ($arParams["BIND_VIEWER"] == "Y" ? "Y" : "N");
+		$arParams["BIND_VIEWER"] = ($arParams["BIND_VIEWER"] == "N" ? "N" : "Y");
 		$arParams["SIGN"] = $this->sign->sign($arParams["ENTITY_XML_ID"], "main.post.list");
 
 		$arParams["VIEW_URL"] = trim($arParams["VIEW_URL"]);
@@ -699,8 +836,7 @@ HTML;
 				$arParams["RATING_RESULTS"] = CRatings::GetRatingVoteResult($arParams["RATING_TYPE_ID"], array_keys($arParams["RECORDS"]));
 
 			$arParams["~RECORDS"] = $arParams["RECORDS"];
-
-			foreach ($arParams["~RECORDS"] as $key => &$res)
+			foreach ($arParams["~RECORDS"] as $key => $res)
 				$arParams["RECORDS"][$key] = $this->buildComment($res);
 		}
 
@@ -730,33 +866,42 @@ HTML;
 
 	public function executeComponent()
 	{
-		$this->prepareParams($this->arParams, $this->arResult);
-		ob_start();
-
-		$this->includeComponentTemplate();
-
-		$output = ob_get_clean();
-		$json = false;
-
-		foreach (GetModuleEvents('main.post.list', 'OnCommentsDisplayTemplate', true) as $arEvent)
+		try
 		{
-			ExecuteModuleEventEx($arEvent, array(&$output, &$this->arParams, &$this->arResult));
-		}
-		$this->sendIntoPull($this->arParams, $this->arResult);
+			$this->prepareParams($this->arParams, $this->arResult);
+			ob_start();
 
-		if ($this->arParams["MODE"] == "PULL_MESSAGE")
+			$this->includeComponentTemplate();
+
+			$output = ob_get_clean();
+			$json = false;
+
+			foreach (GetModuleEvents('main.post.list', 'OnCommentsDisplayTemplate', true) as $arEvent)
+			{
+				ExecuteModuleEventEx($arEvent, array(&$output, &$this->arParams, &$this->arResult));
+			}
+			$this->sendIntoPull($this->arParams, $this->arResult);
+
+			if ($this->arParams["MODE"] == "PULL_MESSAGE")
+			{
+				$json = $this->parseHTML($output, "RECORD");
+			}
+			else if ($this->getMode() == "RECORD" || $this->getMode() == "LIST")
+			{
+				$json = $this->parseHTML($output, $this->getMode());
+				$this->sendJsonResponse($json);
+			}
+
+			$output .= $this->joinToPull();
+			return array("HTML" => $output, "JSON" => $json);
+		}
+		catch (\Exception $e)
 		{
-			$json = $this->parseHTML($output, "RECORD");
+			$this->sendJsonResponse(array(
+				"status" => "error",
+				"message" => $e->getMessage()
+			));
 		}
-		else if ($this->getMode() == "RECORD" || $this->getMode() == "LIST")
-		{
-			$json = $this->parseHTML($output, $this->getMode());
-			$this->sendJsonResponse($json);
-		}
-
-		$output .= $this->joinToPull();
-
-		return array("HTML" => $output, "JSON" => $json);
 	}
 
 	protected function sendJsonResponse($response)
@@ -841,8 +986,8 @@ HTML;
 			}
 
 			$JSResult += array(
-				'errorMessage' => $arParams["ERROR_MESSAGE"],
-				'okMessage' => $arParams["OK_MESSAGE"],
+				'errorMessage' => (isset($arParams["~ERROR_MESSAGE"]) ? $arParams["~ERROR_MESSAGE"] : (isset($arParams["ERROR_MESSAGE"]) ? $arParams["ERROR_MESSAGE"] : '')),
+				'okMessage' => (isset($arParams["~OK_MESSAGE"]) ? $arParams["~OK_MESSAGE"] : (isset($arParams["OK_MESSAGE"]) ? $arParams["OK_MESSAGE"] : '')),
 				'status' => "success",
 				'message' => $SHParser->getInnerHTML('<!--LOAD_SCRIPT-->', '<!--END_LOAD_SCRIPT-->').$message,
 				'messageBBCode' => $arParams["~RECORDS"][$record]["~POST_MESSAGE_TEXT"],
@@ -867,51 +1012,6 @@ HTML;
 
 	public function getDateTimeFormatted($timestamp, $arFormatParams)
 	{
-		static $arFormatWOYear = array();
-		static $arFormatTime = array();
-		static $defaultDateTimeFormat = false;
-
-		if (
-			empty($arFormatParams["DATE_TIME_FORMAT"])
-			|| $arFormatParams["DATE_TIME_FORMAT"] == "FULL"
-		)
-		{
-			if (!$defaultDateTimeFormat)
-			{
-				$defaultDateTimeFormat = $GLOBALS["DB"]->DateFormatToPHP(FORMAT_DATETIME);
-			}
-			$arFormatParams["DATE_TIME_FORMAT"] = $defaultDateTimeFormat;
-		}
-		$arFormatParams["DATE_TIME_FORMAT"] = preg_replace('/[\/.,\s:][s]/', '', $arFormatParams["DATE_TIME_FORMAT"]);
-
-		if (empty($arFormatWOYear[$arFormatParams["DATE_TIME_FORMAT"]]))
-		{
-			$arFormatWOYear[$arFormatParams["DATE_TIME_FORMAT"]] = preg_replace('/[\/.,\s-][Yyo]/', '', $arFormatParams["DATE_TIME_FORMAT"]);
-		}
-		$arFormatParams["DATE_TIME_FORMAT_WITHOUT_YEAR"] = $arFormatWOYear[$arFormatParams["DATE_TIME_FORMAT"]];
-
-		if (empty($arFormatTime[$arFormatParams["DATE_TIME_FORMAT"]]))
-		{
-			$arFormatTime[$arFormatParams["DATE_TIME_FORMAT"]] = preg_replace('/[\/.,\s]+$/', '', preg_replace('/^[\/.,\s]+/', '', preg_replace('/[dDjlFmMnYyo]/', '', $arFormatParams["DATE_TIME_FORMAT"])));
-		}
-		$arFormatParams["TIME_FORMAT"] = $arFormatTime[$arFormatParams["DATE_TIME_FORMAT"]];
-
-		$arFormat = Array(
-			"tommorow" => "tommorow, ".$arFormatParams["TIME_FORMAT"],
-			"today" => "today, ".$arFormatParams["TIME_FORMAT"],
-			"yesterday" => "yesterday, ".$arFormatParams["TIME_FORMAT"],
-			"" => (
-			date("Y", $timestamp) == date("Y")
-				? $arFormatParams["DATE_TIME_FORMAT_WITHOUT_YEAR"]
-				: $arFormatParams["DATE_TIME_FORMAT"]
-			)
-		);
-
-		return (
-			strcasecmp(LANGUAGE_ID, 'EN') !== 0
-			&& strcasecmp(LANGUAGE_ID, 'DE') !== 0
-				? ToLower(FormatDate($arFormat, $timestamp, (time()+CTimeZone::GetOffset())))
-				: FormatDate($arFormat, $timestamp, (time()+CTimeZone::GetOffset()))
-		);
+		return CComponentUtil::GetDateTimeFormatted($timestamp, (isset($arFormatParams["DATE_TIME_FORMAT"]) ? $arFormatParams["DATE_TIME_FORMAT"] : false));
 	}
 }

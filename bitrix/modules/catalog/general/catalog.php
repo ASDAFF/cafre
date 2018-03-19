@@ -10,13 +10,17 @@ class CAllCatalog
 	protected static $arCatalogCache = array();
 	protected static $catalogVatCache = array();
 
-	public function CheckFields($ACTION, &$arFields, $ID = 0)
+	private static $disableCheckIblock = 0;
+
+	public static function CheckFields($ACTION, &$arFields, $ID = 0)
 	{
 		global $APPLICATION;
 
 		$arMsg = array();
 		$boolResult = true;
 
+		if (array_key_exists('OFFERS', $arFields))
+			unset($arFields['OFFERS']);
 		$ID = (int)$ID;
 		$arCatalog = false;
 		if (0 < $ID)
@@ -62,11 +66,9 @@ class CAllCatalog
 
 			if ((is_set($arFields,'VAT_ID') || ('ADD' == $ACTION)))
 			{
-				$arFields['VAT_ID'] = intval($arFields['VAT_ID']);
-				if (0 > $arFields['VAT_ID'])
-				{
+				$arFields['VAT_ID'] = (int)$arFields['VAT_ID'];
+				if ($arFields['VAT_ID'] <= 0)
 					$arFields['VAT_ID'] = 0;
-				}
 			}
 		}
 
@@ -257,7 +259,7 @@ class CAllCatalog
 		return $boolResult;
 	}
 
-	public function GetByID($ID)
+	public static function GetByID($ID)
 	{
 		global $DB;
 
@@ -294,7 +296,7 @@ class CAllCatalog
 		return false;
 	}
 
-	public function GetFilterOperation($key)
+	public static function GetFilterOperation($key)
 	{
 		$arResult = array(
 			'FIELD' => '',
@@ -365,7 +367,7 @@ class CAllCatalog
 		return $arResult;
 	}
 
-	public function PrepareSql(&$arFields, $arOrder, $arFilter, $arGroupBy, $arSelectFields)
+	public static function PrepareSql(&$arFields, $arOrder, $arFilter, $arGroupBy, $arSelectFields)
 	{
 		global $DB;
 
@@ -384,7 +386,6 @@ class CAllCatalog
 
 		$strDBType = strtoupper($DB->type);
 		$oracleEdition = ('ORACLE' == $strDBType);
-		$highEdition = ($oracleEdition || 'MSSQL' == $strDBType);
 
 		$arGroupByFunct = array(
 			"COUNT" => true,
@@ -454,10 +455,9 @@ class CAllCatalog
 					{
 						case 'datetime':
 						case 'date':
-							if ($highEdition && isset($arOrder[$fieldKey]))
-							{
+							if (isset($arOrder[$fieldKey]))
 								$sqlSelect[] = $fieldDescr['FIELD'].' as '.$fieldKey.'_X1';
-							}
+
 							$sqlSelect[] = $DB->DateToCharFunction(
 								$fieldDescr['FIELD'],
 								('datetime' == $fieldDescr['TYPE'] ? 'FULL' : 'SHORT')
@@ -491,10 +491,9 @@ class CAllCatalog
 							{
 								case 'datetime':
 								case 'date':
-									if ($highEdition && isset($arOrder[$val]))
-									{
+									if (isset($arOrder[$val]))
 										$sqlSelect[] = $arFields[$val]['FIELD'].' as '.$val.'_X1';
-									}
+
 									$sqlSelect[] = $DB->DateToCharFunction(
 										$arFields[$val]['FIELD'],
 										('datetime' == $arFields[$val]['TYPE'] ? 'FULL' : 'SHORT')
@@ -562,60 +561,72 @@ class CAllCatalog
 						}
 						else
 						{
-							if ($arFields[$key]["TYPE"] == "int")
+							if ($arFields[$key]['TYPE'] == 'int')
 							{
-								array_walk($vals, create_function("&\$item", "\$item=(int)\$item;"));
-								$vals = array_unique($vals);
-								$val = implode(",", $vals);
-
-								if (empty($vals))
-									$arSqlSearch_tmp[] = "(1 = 2)";
+								$clearVals = array();
+								foreach ($vals as $item)
+								{
+									$item = (int)$item;
+									$clearVals[$item] = $item;
+								}
+								unset($item);
+								if (empty($clearVals))
+									$arSqlSearch_tmp[] = '(1 = 2)';
 								else
-									$arSqlSearch_tmp[] = (($strNegative == "Y") ? " NOT " : "")."(".$arFields[$key]["FIELD"]." IN (".$val."))";
+									$arSqlSearch_tmp[] = ($strNegative == 'Y' ? ' NOT ' : '').'('.$arFields[$key]['FIELD'].' IN ('.implode(',', $clearVals).'))';
+								unset($clearVals);
 							}
-							elseif ($arFields[$key]["TYPE"] == "double")
+							elseif ($arFields[$key]['TYPE'] == 'double')
 							{
-								array_walk($vals, create_function("&\$item", "\$item=(float)\$item;"));
-								$vals = array_unique($vals);
-								$val = implode(",", $vals);
-
-								if (empty($vals))
-									$arSqlSearch_tmp[] = "(1 = 2)";
+								$clearVals = array();
+								foreach ($vals as $item)
+									$clearVals[] = (float)$item;
+								unset($item);
+								if (empty($clearVals))
+								{
+									$arSqlSearch_tmp[] = '(1 = 2)';
+								}
 								else
-									$arSqlSearch_tmp[] = (($strNegative == "Y") ? " NOT " : "")."(".$arFields[$key]["FIELD"]." ".$strOperation." (".$val."))";
+								{
+									$clearVals = array_unique($clearVals);
+									$arSqlSearch_tmp[] = ($strNegative == 'Y' ? ' NOT ' : '').'('.$arFields[$key]['FIELD'].' IN ('.implode(',', $clearVals).'))';
+								}
+								unset($clearVals);
 							}
-							elseif ($arFields[$key]["TYPE"] == "string" || $arFields[$key]["TYPE"] == "char")
+							elseif ($arFields[$key]['TYPE'] == 'string' || $arFields[$key]['TYPE'] == 'char')
 							{
-								array_walk($vals, create_function("&\$item", "\$item=\"'\".\$GLOBALS[\"DB\"]->ForSql(\$item).\"'\";"));
-								$vals = array_unique($vals);
-								$val = implode(",", $vals);
-
-								if (empty($vals))
-									$arSqlSearch_tmp[] = "(1 = 2)";
+								$clearVals = array();
+								foreach ($vals as $item)
+									$clearVals[] = "'".$DB->ForSql($item)."'";
+								unset($item);
+								if (empty($clearVals))
+								{
+									$arSqlSearch_tmp[] = '(1 = 2)';
+								}
 								else
-									$arSqlSearch_tmp[] = (($strNegative == "Y") ? " NOT " : "")."(".$arFields[$key]["FIELD"]." ".$strOperation." (".$val."))";
+								{
+									$clearVals = array_unique($clearVals);
+									$arSqlSearch_tmp[] = (($strNegative == 'Y') ? ' NOT ' : '').'('.$arFields[$key]['FIELD'].' '.$strOperation.' ('.implode(',', $clearVals).'))';
+								}
+								unset($clearVals);
 							}
-							elseif ($arFields[$key]["TYPE"] == "datetime")
+							elseif ($arFields[$key]['TYPE'] == 'datetime' || $arFields[$key]['TYPE'] == 'date')
 							{
-								array_walk($vals, create_function("&\$item", "\$item=\"'\".\$GLOBALS[\"DB\"]->CharToDateFunction(\$GLOBALS[\"DB\"]->ForSql(\$item), \"FULL\").\"'\";"));
-								$vals = array_unique($vals);
-								$val = implode(",", $vals);
-
-								if (empty($vals))
-									$arSqlSearch_tmp[] = "1 = 2";
+								$valueFormat = ($arFields[$key]['TYPE'] == 'datetime' ?  'FULL' : 'SHORT');
+								$clearVals = array();
+								foreach ($vals as $item)
+									$clearVals[] = "'".$DB->CharToDateFunction($DB->ForSql($item), $valueFormat)."'";
+								unset($item);
+								if (empty($clearVals))
+								{
+									$arSqlSearch_tmp[] = '(1 = 2)';
+								}
 								else
-									$arSqlSearch_tmp[] = ($strNegative=="Y"?" NOT ":"")."(".$arFields[$key]["FIELD"]." ".$strOperation." (".$val."))";
-							}
-							elseif ($arFields[$key]["TYPE"] == "date")
-							{
-								array_walk($vals, create_function("&\$item", "\$item=\"'\".\$GLOBALS[\"DB\"]->CharToDateFunction(\$GLOBALS[\"DB\"]->ForSql(\$item), \"SHORT\").\"'\";"));
-								$vals = array_unique($vals);
-								$val = implode(",", $vals);
-
-								if (empty($vals))
-									$arSqlSearch_tmp[] = "1 = 2";
-								else
-									$arSqlSearch_tmp[] = ($strNegative=="Y"?" NOT ":"")."(".$arFields[$key]["FIELD"]." ".$strOperation." (".$val."))";
+								{
+									$clearVals = array_unique($clearVals);
+									$arSqlSearch_tmp[] = ($strNegative == 'Y'? ' NOT ' : '').'('.$arFields[$key]['FIELD'].' '.$strOperation.' ('.implode(',', $clearVals).'))';
+								}
+								unset($clearVals, $valueFormat);
 							}
 						}
 					}
@@ -647,10 +658,10 @@ class CAllCatalog
 								{
 									$val = str_replace(",", ".", $val);
 
-									if ((DoubleVal($val) == 0) && (strpos($strOperation, "=") !== false))
+									if ((float)$val == 0 && strpos($strOperation, "=") !== false)
 										$arSqlSearch_tmp[] = "(".$arFields[$key]["FIELD"]." IS ".(($strNegative == "Y") ? "NOT " : "")."NULL) ".(($strNegative == "Y") ? "AND" : "OR")." ".(($strNegative == "Y") ? "NOT " : "")."(".$arFields[$key]["FIELD"]." ".$strOperation." 0)";
 									else
-										$arSqlSearch_tmp[] = (($strNegative == "Y") ? " ".$arFields[$key]["FIELD"]." IS NULL OR NOT " : "")."(".$arFields[$key]["FIELD"]." ".$strOperation." ".DoubleVal($val)." )";
+										$arSqlSearch_tmp[] = (($strNegative == "Y") ? " ".$arFields[$key]["FIELD"]." IS NULL OR NOT " : "")."(".$arFields[$key]["FIELD"]." ".$strOperation." ".(float)$val." )";
 								}
 								elseif ($arFields[$key]["TYPE"] == "string" || $arFields[$key]["TYPE"] == "char")
 								{
@@ -784,7 +795,7 @@ class CAllCatalog
 		);
 	}
 
-	public function _PrepareSql(&$arFields, $arOrder, $arFilter, $arGroupBy, $arSelectFields)
+	public static function _PrepareSql(&$arFields, $arOrder, $arFilter, $arGroupBy, $arSelectFields)
 	{
 		global $DB;
 
@@ -792,13 +803,11 @@ class CAllCatalog
 		$strSqlFrom = "";
 		$strSqlWhere = "";
 		$strSqlGroupBy = "";
-		$strSqlOrderBy = "";
 
 		$sqlGroupByList = array();
 
 		$strDBType = strtoupper($DB->type);
 		$oracleEdition = ('ORACLE' == $strDBType);
-		$highEdition = ($oracleEdition || 'MSSQL' == $strDBType);
 
 		$arGroupByFunct = array(
 			"COUNT" => true,
@@ -874,14 +883,14 @@ class CAllCatalog
 
 					if ($arFields[$arFieldsKeys[$i]]["TYPE"] == "datetime")
 					{
-						if ($highEdition && isset($arOrder[$arFieldsKeys[$i]]))
+						if (isset($arOrder[$arFieldsKeys[$i]]))
 							$strSqlSelect .= $arFields[$arFieldsKeys[$i]]["FIELD"]." as ".$arFieldsKeys[$i]."_X1, ";
 
 						$strSqlSelect .= $DB->DateToCharFunction($arFields[$arFieldsKeys[$i]]["FIELD"], "FULL")." as ".$arFieldsKeys[$i];
 					}
 					elseif ($arFields[$arFieldsKeys[$i]]["TYPE"] == "date")
 					{
-						if ($highEdition && isset($arOrder[$arFieldsKeys[$i]]))
+						if (isset($arOrder[$arFieldsKeys[$i]]))
 							$strSqlSelect .= $arFields[$arFieldsKeys[$i]]["FIELD"]." as ".$arFieldsKeys[$i]."_X1, ";
 
 						$strSqlSelect .= $DB->DateToCharFunction($arFields[$arFieldsKeys[$i]]["FIELD"], "SHORT")." as ".$arFieldsKeys[$i];
@@ -919,14 +928,14 @@ class CAllCatalog
 						{
 							if ($arFields[$val]["TYPE"] == "datetime")
 							{
-								if ($highEdition && isset($arOrder[$val]))
+								if (isset($arOrder[$val]))
 									$strSqlSelect .= $arFields[$val]["FIELD"]." as ".$val."_X1, ";
 
 								$strSqlSelect .= $DB->DateToCharFunction($arFields[$val]["FIELD"], "FULL")." as ".$val;
 							}
 							elseif ($arFields[$val]["TYPE"] == "date")
 							{
-								if ($highEdition && isset($arOrder[$val]))
+								if (isset($arOrder[$val]))
 									$strSqlSelect .= $arFields[$val]["FIELD"]." as ".$val."_X1, ";
 
 								$strSqlSelect .= $DB->DateToCharFunction($arFields[$val]["FIELD"], "SHORT")." as ".$val;
@@ -1018,10 +1027,10 @@ class CAllCatalog
 						{
 							$val = str_replace(",", ".", $val);
 
-							if ((DoubleVal($val) == 0) && (strpos($strOperation, "=") !== false))
+							if ((float)$val == 0 && strpos($strOperation, "=") !== false)
 								$arSqlSearch_tmp1 = "(".$arFields[$key]["FIELD"]." IS ".(($strNegative == "Y") ? "NOT " : "")."NULL) ".(($strNegative == "Y") ? "AND" : "OR")." ".(($strNegative == "Y") ? "NOT " : "")."(".$arFields[$key]["FIELD"]." ".$strOperation." 0)";
 							else
-								$arSqlSearch_tmp1 = (($strNegative == "Y") ? " ".$arFields[$key]["FIELD"]." IS NULL OR NOT " : "")."(".$arFields[$key]["FIELD"]." ".$strOperation." ".DoubleVal($val)." )";
+								$arSqlSearch_tmp1 = (($strNegative == "Y") ? " ".$arFields[$key]["FIELD"]." IS NULL OR NOT " : "")."(".$arFields[$key]["FIELD"]." ".$strOperation." ".(float)$val." )";
 						}
 						elseif ($arFields[$key]["TYPE"] == "string" || $arFields[$key]["TYPE"] == "char")
 						{
@@ -1125,7 +1134,6 @@ class CAllCatalog
 			}
 		}
 
-		$strSqlWhere = '';
 		if (!empty($arSqlSearch))
 			$strSqlWhere = '('.implode(') and (', $arSqlSearch).')';
 
@@ -1169,21 +1177,19 @@ class CAllCatalog
 		// <-- ORDER BY
 
 		return array(
-				"SELECT" => $strSqlSelect,
-				"FROM" => $strSqlFrom,
-				"WHERE" => $strSqlWhere,
-				"GROUPBY" => $strSqlGroupBy,
-				"ORDERBY" => $strSqlOrder,
-				"HAVING" => $strSqlHaving
-			);
+			"SELECT" => $strSqlSelect,
+			"FROM" => $strSqlFrom,
+			"WHERE" => $strSqlWhere,
+			"GROUPBY" => $strSqlGroupBy,
+			"ORDERBY" => $strSqlOrder,
+			"HAVING" => $strSqlHaving
+		);
 	}
 
-	public function Add($arFields)
+	public static function Add($arFields)
 	{
 		global $DB;
 
-		if (array_key_exists('OFFERS', $arFields))
-			unset($arFields['OFFERS']);
 		if (!CCatalog::CheckFields("ADD", $arFields, 0))
 			return false;
 
@@ -1197,12 +1203,10 @@ class CAllCatalog
 		return true;
 	}
 
-	public function Update($ID, $arFields)
+	public static function Update($ID, $arFields)
 	{
 		global $DB;
 		$ID = (int)$ID;
-		if (array_key_exists('OFFERS', $arFields))
-			unset($arFields['OFFERS']);
 
 		if (!CCatalog::CheckFields("UPDATE", $arFields, $ID))
 			return false;
@@ -1229,7 +1233,7 @@ class CAllCatalog
 		return true;
 	}
 
-	public function Delete($ID)
+	public static function Delete($ID)
 	{
 		global $DB;
 		$ID = (int)$ID;
@@ -1241,47 +1245,32 @@ class CAllCatalog
 		}
 
 		foreach(GetModuleEvents("catalog", "OnCatalogDelete", true) as $arEvent)
-		{
 			ExecuteModuleEventEx($arEvent, array($ID));
-		}
 
-		$bSuccess = true;
-		$dbRes = CIBlockElement::GetList(array(), array("IBLOCK_ID" => $ID));
-		while ($arRes = $dbRes->Fetch())
+		if (isset(self::$arCatalogCache[$ID]))
 		{
-			if (!CCatalogProduct::Delete($arRes["ID"]))
-				$bSuccess = false;
+			unset(self::$arCatalogCache[$ID]);
+			if (defined('CATALOG_GLOBAL_VARS') && CATALOG_GLOBAL_VARS == 'Y')
+			{
+				global $CATALOG_CATALOG_CACHE;
+				$CATALOG_CATALOG_CACHE = self::$arCatalogCache;
+			}
 		}
-
-		if ($bSuccess)
+		if (isset(self::$catalogVatCache[$ID]))
 		{
-			if (isset(self::$arCatalogCache[$ID]))
-			{
-				unset(self::$arCatalogCache[$ID]);
-				if (defined('CATALOG_GLOBAL_VARS') && CATALOG_GLOBAL_VARS == 'Y')
-				{
-					global $CATALOG_CATALOG_CACHE;
-					$CATALOG_CATALOG_CACHE = self::$arCatalogCache;
-				}
-			}
-			if (isset(self::$catalogVatCache[$ID]))
-			{
-				unset(self::$catalogVatCache[$ID]);
-			}
-			CCatalogSKU::ClearCache();
-			CCatalogProduct::ClearCache();
-			return $DB->Query("DELETE FROM b_catalog_iblock WHERE IBLOCK_ID = ".$ID, true);
+			unset(self::$catalogVatCache[$ID]);
 		}
-		return false;
-
+		CCatalogSKU::ClearCache();
+		CCatalogProduct::ClearCache();
+		return $DB->Query("DELETE FROM b_catalog_iblock WHERE IBLOCK_ID = ".$ID, true);
 	}
 
-	public function OnIBlockDelete($ID)
+	public static function OnIBlockDelete($ID)
 	{
 		return CCatalog::Delete($ID);
 	}
 
-	public function PreGenerateXML($xml_type = 'yandex')
+	public static function PreGenerateXML($xml_type = 'yandex')
 	{
 		if ($xml_type == 'yandex')
 		{
@@ -1309,25 +1298,31 @@ class CAllCatalog
 		return 'CCatalog::PreGenerateXML("'.$xml_type.'");';
 	}
 
-/*
-* @deprecated deprecated since catalog 11.0.2
-* @see CCatalogSKU::GetInfoByProductIBlock()
-*/
-	public function GetSkuInfoByProductID($ID)
+	/**
+	 * @deprecated deprecated since catalog 11.0.2
+	 * @see CCatalogSku::GetInfoByProductIBlock()
+	 *
+	 * @param int $ID
+	 * @return false|array
+	 */
+	public static function GetSkuInfoByProductID($ID)
 	{
 		return CCatalogSKU::GetInfoByProductIBlock($ID);
 	}
 
-/*
-* @deprecated deprecated since catalog 11.0.2
-* @see CCatalogSKU::GetInfoByLinkProperty()
-*/
-	public function GetSkuInfoByPropID($ID)
+	/**
+	 * @deprecated deprecated since catalog 11.0.2
+	 * @see CCatalogSku::GetInfoByLinkProperty()
+	 *
+	 * @param int $ID
+	 * @return false|array
+	 */
+	public static function GetSkuInfoByPropID($ID)
 	{
 		return CCatalogSKU::GetInfoByLinkProperty($ID);
 	}
 
-	public function OnBeforeIBlockElementDelete($ID)
+	public static function OnBeforeIBlockElementDelete($ID)
 	{
 		global $APPLICATION;
 
@@ -1371,7 +1366,7 @@ class CAllCatalog
 		return true;
 	}
 
-	public function OnBeforeCatalogDelete($ID)
+	public static function OnBeforeCatalogDelete($ID)
 	{
 		global $APPLICATION;
 
@@ -1453,11 +1448,55 @@ class CAllCatalog
 		return false;
 	}
 
-/*
-* @deprecated deprecated since catalog 14.0.0
-* @see CCatalogSKU::GetInfoByIBlock()
-*/
-	public function GetByIDExt($ID)
+	public static function OnBeforeIBlockUpdate(array &$fields)
+	{
+		if (!self::isEnabledHandler())
+			return true;
+		if (isset($fields['ID']) && isset($fields['ACTIVE']))
+		{
+			$catalog = CCatalogSku::GetInfoByOfferIBlock($fields['ID']);
+			if (!empty($catalog))
+			{
+				$parentActive = CIBlock::GetArrayByID($catalog['PRODUCT_IBLOCK_ID'], 'ACTIVE');
+				if (!empty($parentActive))
+					$fields['ACTIVE'] = $parentActive;
+				unset($parentActive);
+			}
+			unset($catalog);
+		}
+
+		return true;
+	}
+
+	public static function OnAfterIBlockUpdate(array &$fields)
+	{
+		if (!self::isEnabledHandler())
+			return true;
+		if (!$fields['RESULT'])
+			return;
+		if (!isset($fields['ID']) || !isset($fields['ACTIVE']))
+			return;
+
+		$catalog = CCatalogSku::GetInfoByProductIBlock($fields['ID']);
+		if (!empty($catalog))
+		{
+			self::disableHandler();
+			$iblock = new CIBlock();
+			$result = $iblock->Update($catalog['IBLOCK_ID'], array('ACTIVE' => $fields['ACTIVE']));
+			unset($result);
+			self::enableHandler();
+		}
+		unset($catalog);
+	}
+
+	/**
+	 * @deprecated deprecated since catalog 14.0.0
+	 * @see CCatalogSku::GetInfoByIBlock()
+	 *
+	 * @param int $ID
+	 * @return false|array
+	 */
+	public static function GetByIDExt($ID)
 	{
 		$arResult = CCatalogSKU::GetInfoByIBlock($ID);
 		if (!empty($arResult))
@@ -1489,10 +1528,9 @@ class CAllCatalog
 		return $arResult;
 	}
 
-	public function UnLinkSKUIBlock($ID)
+	public static function UnLinkSKUIBlock($ID)
 	{
 		global $APPLICATION;
-		global $DB;
 
 		$arMsg = array();
 		$boolResult = true;
@@ -1521,9 +1559,7 @@ class CAllCatalog
 					'SKU_PROPERTY_ID' => 0,
 				);
 				if (!CCatalog::Update($arCatalog['IBLOCK_ID'], $arFields))
-				{
 					return false;
-				}
 			}
 		}
 		if (!$boolResult)
@@ -1539,16 +1575,22 @@ class CAllCatalog
 		return $boolResult;
 	}
 
-	public function LinkSKUIBlock($ID,$SKUID)
+	/**
+	 * @deprecated deprecated since catalog 16.0.0
+	 * @see CIBlockPropertyTools::createProperty
+	 *
+	 * @param int $ID				Parent iblock id.
+	 * @param int $SKUID			Offer iblock id.
+	 * @return int|false
+	 */
+	public static function LinkSKUIBlock($ID, $SKUID)
 	{
 		global $APPLICATION;
-		global $DB;
 
 		$arMsg = array();
 		$boolResult = true;
 
-		$intSKUPropID = 0;
-		$ibp = new CIBlockProperty();
+		$propertyId = 0;
 		$ID = (int)$ID;
 		if (0 >= $ID)
 		{
@@ -1569,57 +1611,15 @@ class CAllCatalog
 
 		if ($boolResult)
 		{
-			$arSKUProp = false;
-			$rsProps = CIBlockProperty::GetList(array(),array('IBLOCK_ID' => $SKUID,'PROPERTY_TYPE' => 'E','LINK_IBLOCK_ID' => $ID,'ACTIVE' => 'Y'));
-			while ($arProp = $rsProps->Fetch())
+			$propertyId = CIBlockPropertyTools::createProperty(
+				$SKUID,
+				CIBlockPropertyTools::CODE_SKU_LINK,
+				array('LINK_IBLOCK_ID' => $ID)
+			);
+			if (!$propertyId)
 			{
-				if (is_array($arProp) && 'N' == $arProp['MULTIPLE'])
-				{
-					$arSKUProp = $arProp;
-					break;
-				}
-			}
-			if ((false === $arSKUProp) || (is_array($arSKUProp) && 'N' != $arSKUProp['MULTIPLE']))
-			{
-				$arOFProperty = array(
-					'NAME' => Loc::getMessage('BT_MOD_CATALOG_MESS_SKU_PROP_NAME'),
-					'IBLOCK_ID' => $SKUID,
-					'PROPERTY_TYPE' => 'E',
-					'USER_TYPE' =>'SKU',
-					'LINK_IBLOCK_ID' => $ID,
-					'ACTIVE' => 'Y',
-					'SORT' => '5',
-					'MULTIPLE' => 'N',
-					'CODE' => 'CML2_LINK',
-					'XML_ID' => 'CML2_LINK',
-					"FILTRABLE" => "Y",
-					"SEARCHABLE" => "N",
-				);
-				$intSKUPropID = $ibp->Add($arOFProperty);
-				if (!$intSKUPropID)
-				{
-					$arMsg[] = array('id' => 'SKU_PROPERTY_ID','text' => str_replace('#ERROR#',$ibp->LAST_ERROR,Loc::getMessage('BT_MOD_CATALOG_ERR_CREATE_SKU_PROPERTY')));
-					$boolResult = false;
-				}
-			}
-			elseif (('SKU' != $arSKUProp['USER_TYPE']) || ('CML2_LINK' != $arProp['XML_ID']))
-			{
-				$arFields = array(
-					'USER_TYPE' => 'SKU',
-					'XML_ID' => 'CML2_LINK',
-				);
-				$boolFlag = $ibp->Update($arSKUProp['ID'],$arFields);
-				if (false === $boolFlag)
-				{
-					$arMsg[] = array('id' => 'SKU_PROPERTY_ID','text' => str_replace('#ERROR#',$ibp->LAST_ERROR,Loc::getMessage('BT_MOD_CATALOG_ERR_UPDATE_SKU_PROPERTY')));
-					$boolResult = false;
-				}
-				else
-					$intSKUPropID = $arSKUProp['ID'];
-			}
-			else
-			{
-				$intSKUPropID = $arSKUProp['ID'];
+				$arMsg = CIBlockPropertyTools::getErrors();
+				$boolResult = false;
 			}
 		}
 
@@ -1632,14 +1632,17 @@ class CAllCatalog
 		}
 		else
 		{
-			CCatalogSKU::ClearCache();
-			return $intSKUPropID;
+			return $propertyId;
 		}
 	}
-/*
-* @deprecated deprecated since catalog 10.0.3
-*/
-	public function GetCatalogFieldsList()
+
+	/**
+	 * @deprecated deprecated since catalog 10.0.3
+	 * @internal
+	 *
+	 * @return array
+	 */
+	public static function GetCatalogFieldsList()
 	{
 		global $DB;
 		$arFieldsList = $DB->GetTableFieldsList('b_catalog_iblock');
@@ -1662,5 +1665,20 @@ class CAllCatalog
 	{
 		self::$arCatalogCache = array();
 		self::$catalogVatCache = array();
+	}
+
+	private static function disableHandler()
+	{
+		self::$disableCheckIblock--;
+	}
+
+	private static function enableHandler()
+	{
+		self::$disableCheckIblock++;
+	}
+
+	private static function isEnabledHandler()
+	{
+		return (self::$disableCheckIblock >= 0);
 	}
 }

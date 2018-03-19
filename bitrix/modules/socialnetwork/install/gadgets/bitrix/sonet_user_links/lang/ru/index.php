@@ -19,5 +19,6 @@ $MESS["GD_SONET_USER_VIDEOCALL"] = "Видеозвонок";
 $MESS["GD_SONET_USER_SONET_ADMIN_ON"] = "Режим администратора";
 $MESS["GD_SONET_USER_LINKS_SECURITY"] = "Безопасность";
 $MESS["GD_SONET_USER_LINKS_PASSWORDS"] = "Пароли приложений";
+$MESS["GD_SONET_USER_LINKS_SYNCHRONIZE"] = "Синхронизация";
 $MESS["GD_SONET_USER_LINKS_CODES"] = "Резервные коды";
 ?>

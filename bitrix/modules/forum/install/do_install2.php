@@ -16,7 +16,7 @@ if ($_REQUEST["INSTALL_PUBLIC"] == "Y" && is_array($_REQUEST["PUBLIC_INFO"]) && 
 			continue;
 		// Errors
 		$res["ID"] = intVal($res["ID"]);
-		$res["PATH"] = htmlspecialcharsEx(trim($res["PATH"]));
+		$res["PATH"] = htmlspecialcharsbx(trim($res["PATH"]));
 		$res["MODE"] = ($res["MODE"] == "sef" ? "sef" : "nsef");
 		if (strLen($res["PATH"]) <= 0)
 		{

@@ -12,4 +12,5 @@ $MESS["BIZPROC_WFEDIT_TITLE_EDIT"] = "Edit Business Process Template";
 $MESS["BIZPROC_WFEDIT_IMPORT_ERROR"] = "Error importing the business process template.";
 $MESS["BIZPROC_USER_PARAMS_SAVE_ERROR"] = "One or more activities in the \"My Activities\" bar are too large. Changes will not be saved.";
 $MESS["BIZPROC_WFEDIT_CATEGORY_REST"] = "Application actions";
+$MESS["BIZPROC_WFEDIT_CATEGORY_TASKS"] = "Tasks";
 ?>

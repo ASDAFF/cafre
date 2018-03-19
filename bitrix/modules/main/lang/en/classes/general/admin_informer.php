@@ -21,4 +21,7 @@ $MESS["top_panel_ai_marketplace_hide"] = "Hide";
 $MESS["top_panel_ai_marketplace_add"] = "Leave feedback";
 $MESS["top_panel_ai_marketplace_descr"] = "You are using <b>#NAME#</b> (#ID#).<br />Please share your opinion.<br />
 How great is it?<br />What would you like to see improved?<br />Your opinion counts!";
+$MESS["top_panel_ai_composite_title"] = "Autocomposite Site";
+$MESS["top_panel_ai_composite_desc"] = "A unique website building technology allow to increase web page loading speed.";
+$MESS["top_panel_ai_composite_switch_on"] = "Enable Autocomposite Mode";
 ?>

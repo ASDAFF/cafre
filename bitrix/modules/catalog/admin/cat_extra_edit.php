@@ -1,9 +1,14 @@
 <?
+/** @global CUser $USER */
+/** @global CMain $APPLICATION */
+/** @global CDatabase $DB */
+use Bitrix\Main\Loader;
+
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/catalog/prolog.php");
 if (!($USER->CanDoOperation('catalog_read') || $USER->CanDoOperation('catalog_price')))
 	$APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
-CModule::IncludeModule("catalog");
+Loader::includeModule('catalog');
 $bReadOnly = !$USER->CanDoOperation('catalog_extra');
 
 if ($ex = $APPLICATION->GetException())
@@ -24,9 +29,9 @@ ClearVars();
 $errorMessage = "";
 $bVarsFromForm = false;
 
-$ID = intval($ID);
+$ID = (isset($_REQUEST['ID']) ? (int)$_REQUEST['ID'] : 0);
 
-if ($REQUEST_METHOD=="POST" && strlen($Update) > 0 && !$bReadOnly && check_bitrix_sessid())
+if ($_SERVER['REQUEST_METHOD'] == "POST" && strlen($Update) > 0 && !$bReadOnly && check_bitrix_sessid())
 {
 	$arFields = array(
 		"NAME" => $NAME,
@@ -46,8 +51,7 @@ if ($REQUEST_METHOD=="POST" && strlen($Update) > 0 && !$bReadOnly && check_bitri
 	}
 	else
 	{
-		$ID = CExtra::Add($arFields);
-		$ID = IntVal($ID);
+		$ID = (int)CExtra::Add($arFields);
 		if ($ID <= 0)
 		{
 			if ($ex = $APPLICATION->GetException())
@@ -190,4 +194,4 @@ $tabControl->Buttons(
 $tabControl->End();
 ?>
 </form>
-<?require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");?>
+<?require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");

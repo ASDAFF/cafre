@@ -1,3 +1,4 @@
+drop table if exists b_vote_attached_object;
 drop table if exists b_vote;
 drop table if exists b_vote_answer;
 drop table if exists b_vote_channel;

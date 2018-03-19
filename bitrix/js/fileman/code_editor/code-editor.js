@@ -2,7 +2,6 @@
 {
 	window.JCCodeEditor = function(arConfig, MESS)
 	{
-		var _this = this;
 		this.actionCount = 0;
 		this.arConfig = arConfig;
 		this.MESS = MESS;
@@ -2359,6 +2358,9 @@
 				e = window.event;
 
 			if (!this.highlightMode)
+				return;
+
+			if (e.button && e.button !== 0)
 				return;
 
 			this.SetShift(e.shiftKey);

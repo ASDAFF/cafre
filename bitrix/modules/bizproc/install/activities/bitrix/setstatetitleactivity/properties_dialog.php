@@ -5,6 +5,10 @@
 <tr>
 	<td align="right" width="40%"><?= GetMessage("BPSFA_PD_STATE") ?>:</td>
 	<td width="60%">
-		<?=CBPDocument::ShowParameterField("string", 'target_state_title', $arCurrentValues['target_state_title'], Array('size'=>'50'))?>
+		<?=CBPDocument::ShowParameterField(
+				"text",
+				'target_state_title',
+				$arCurrentValues['target_state_title'],
+				array('rows' => 2, 'maxlength' => 255))?>
 	</td>
 </tr>

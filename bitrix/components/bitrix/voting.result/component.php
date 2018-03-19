@@ -14,7 +14,7 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/img.php");
 				Input params
 ********************************************************************/
 /************** BASE ***********************************************/
-	$arParams["VOTE_ID"] = intVal($arParams["VOTE_ID"]);
+	$arParams["VOTE_ID"] = intval($arParams["VOTE_ID"]);
 	$arParams["PERMISSION"] = (isset($arParams["PERMISSION"]) && ($arParams["PERMISSION"] > 0 || $arParams["PERMISSION"] === 0) ?
 		intval($arParams["PERMISSION"]) : false);
 /************** URL ************************************************/
@@ -22,10 +22,10 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/img.php");
 		"vote_form" => "PAGE_NAME=vote_new&VOTE_ID=#VOTE_ID#",
 		"vote_result" => "PAGE_NAME=vote_result&VOTE_ID=#VOTE_ID#");
 	foreach ($URL_NAME_DEFAULT as $URL => $URL_VALUE):
-		if (strLen(trim($arParams[strToUpper($URL)."_TEMPLATE"])) <= 0)
-			$arParams[strToUpper($URL)."_TEMPLATE"] = $APPLICATION->GetCurPage()."?".$URL_VALUE;
-		$arParams["~".strToUpper($URL)."_TEMPLATE"] = $arParams[strToUpper($URL)."_TEMPLATE"];
-		$arParams[strToUpper($URL)."_TEMPLATE"] = htmlspecialcharsbx($arParams["~".strToUpper($URL)."_TEMPLATE"]);
+		if (strlen(trim($arParams[strtoupper($URL)."_TEMPLATE"])) <= 0)
+			$arParams[strtoupper($URL)."_TEMPLATE"] = $APPLICATION->GetCurPage()."?".$URL_VALUE;
+		$arParams["~".strtoupper($URL)."_TEMPLATE"] = $arParams[strtoupper($URL)."_TEMPLATE"];
+		$arParams[strtoupper($URL)."_TEMPLATE"] = htmlspecialcharsbx($arParams["~".strtoupper($URL)."_TEMPLATE"]);
 	endforeach;
 /************** ADDITIONAL *****************************************/
 	$arParams["NEED_SORT"] = ($arParams["NEED_SORT"] == "N" ? "N" : "Y");
@@ -131,11 +131,11 @@ elseif (CModule::IncludeModule("vote"))
 		$counterSum = $counterMax = 0;
 		foreach ($arQuestion["ANSWERS"] as $aID => $arAnswer)
 		{
-			if (empty($arAnswer["MESSAGE"]))
+			if ($arAnswer["MESSAGE"] == "")
 				unset($arQuestion["ANSWERS"][$aID]);
 
 			$counterSum += $arAnswer["COUNTER"];
-			$counterMax = max(intVal($arAnswer["COUNTER"]), $counterMax);
+			$counterMax = max(intval($arAnswer["COUNTER"]), $counterMax);
 		}
 
 		if ($arParams["NEED_SORT"] != "N")
@@ -162,8 +162,7 @@ elseif (CModule::IncludeModule("vote"))
 				$sum2 += $arAnswer["PERCENT2"];
 				$sum3 += $arAnswer["PERCENT3"];
 			}
-			$arAnswer["BAR_PERCENT"] = ($arAnswer["FIELD_TYPE"] == 0 || $arAnswer["FIELD_TYPE"] == 2 ?  /* radio || dropdown */
-				($counterMax > 0 ? round($arAnswer["COUNTER"]*100/$counterMax) : 0) : round($arAnswer["PERCENT"]));
+			$arAnswer["BAR_PERCENT"] = round($arAnswer["PERCENT"]);
 			$arAnswer["COLOR"] = (empty($arAnswer["COLOR"]) && ($color = GetNextRGB($color, count($arQuestion["ANSWERS"]))) ?
 				$color : TrimEx($arAnswer["COLOR"], "#"));
 			$arQuestion["ANSWERS"][$aID] = $arAnswer;

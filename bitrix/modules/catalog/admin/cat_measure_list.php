@@ -83,7 +83,7 @@ if(($arID = $lAdmin->GroupAction()) && !$bReadOnly)
 			case "delete":
 				@set_time_limit(0);
 				$DB->StartTransaction();
-				if(!CCatalogMeasure::Delete($ID))
+				if(!CCatalogMeasure::delete($ID))
 				{
 					$DB->Rollback();
 

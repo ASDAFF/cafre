@@ -81,3 +81,51 @@ div.bx-user-control li.bx-icon-subscribe{background-image: url(images/subscribe.
 div.bx-user-control li.bx-icon-requests{background-image: url(images/request.gif);}
 
 table.sonet-user-profile-groups ul{margin:0 0 12px 6px; padding-left:10px; list-style-type:square;}
+
+
+.user-profile-mail-link-block {
+	height: 42px;
+	line-height: 42px;
+	position: relative;
+}
+
+.user-profile-short-link {
+	color: #000000;
+	display: inline-block;
+	max-width: 100px;
+	overflow: hidden;
+	vertical-align: top;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+
+.user-profile-show-link-btn {
+	display: inline-block;
+	margin-top: 1px;
+	font-size: 12px;
+	line-height: normal;
+}
+
+.user-profile-link-input {
+	border: 1px solid #d9dbde;
+	height: 40px;
+	font-size: 14px;
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	line-height: 40px;
+	margin-left: -10px;
+	max-width: 220px;
+	left: 0;
+	top: 100px;
+	opacity: 0;
+	position: absolute;
+	padding: 0 9px;
+	width: 0;
+}
+
+
+.user-profile-show-input .user-profile-link-input {
+	position: static;
+	-webkit-transition: width 0.25s linear;
+	transition: width 0.25s linear;
+}

@@ -14,22 +14,27 @@ else
 		<span class='errortext'><?= $arResult["ErrorMessage"] ?></span><br /><br />
 		<?
 	}
-	$arButtons = array(
-		array(
-			"TEXT"=>GetMessage("BPWC_WVCT_2LIST"),
-			"TITLE"=>GetMessage("BPWC_WVCT_2LIST"),
-			"LINK"=>$arResult["LIST_PAGE_URL"],
-			"ICON"=>"btn-list",
-		),
-	);
-	$APPLICATION->IncludeComponent(
-		"bitrix:main.interface.toolbar",
-		"",
-		array(
-			"BUTTONS" => $arButtons
-		),
-		$component
-	);
+	if(empty($arParams["SHOW_TOOLBAR"]))
+		$arParams["SHOW_TOOLBAR"] == "Y";
+	if($arParams["SHOW_TOOLBAR"] == "Y")
+	{
+		$arButtons = array(
+			array(
+				"TEXT"=>GetMessage("BPWC_WVCT_2LIST"),
+				"TITLE"=>GetMessage("BPWC_WVCT_2LIST"),
+				"LINK"=>$arResult["LIST_PAGE_URL"],
+				"ICON"=>"btn-list",
+			),
+		);
+		$APPLICATION->IncludeComponent(
+			"bitrix:main.interface.toolbar",
+			"",
+			array(
+				"BUTTONS" => $arButtons
+			),
+			$component
+		);
+	}
 	?>
 	<br>
 

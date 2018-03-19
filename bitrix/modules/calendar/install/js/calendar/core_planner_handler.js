@@ -97,7 +97,7 @@ BX.CCalendarPlannerHandler.prototype.drawEvent = function(event, additional_prop
 		children: [
 			BX.create('DIV', {
 				props: {className: 'tm-popup-event-datetime'},
-				html: '<span class="tm-popup-event-time-start' + (event.DATE_FROM_TODAY ? '' : ' tm-popup-event-time-passed') + '">'+(fulldate?BX.timeman.formatDate(event.DATE_FROM)+' ':'')+ event.TIME_FROM + '</span><span class="tm-popup-event-separator">-</span><span class="tm-popup-event-time-end' + (event.DATE_TO_TODAY ? '' : ' tm-popup-event-time-passed') + '">' +(fulldate?BX.timeman.formatDate(event.DATE_TO)+' ':'')+  event.TIME_TO + '</span>'
+				html: '<span class="tm-popup-event-time-start' + (event.DATE_FROM_TODAY ? '' : ' tm-popup-event-time-passed') + '">' + (fulldate?BX.timeman.formatDate(event.DATE_FROM)+' ':'') + event.TIME_FROM + '</span><span class="tm-popup-event-separator">-</span><span class="tm-popup-event-time-end' + (event.DATE_TO_TODAY ? '' : ' tm-popup-event-time-passed') + '">' +(fulldate?BX.timeman.formatDate(event.DATE_TO)+' ':'')+  event.TIME_TO + '</span>'
 			}),
 			BX.create('DIV', {
 				props: additional_props,
@@ -426,7 +426,7 @@ BX.CCalendarPlannerEventPopup.prototype.GetContent = function()
 	html += hr;
 
 	html += '<div class="tm-event-popup-time"><div class="tm-event-popup-time-interval">' + this.data.DATE_F + '</div>';
-	if (this.data.DATE_F_TO)
+	if (this.data.DATE_F_TO && this.data.DATE_F_TO > 0)
 		html += '<div class="tm-event-popup-time-hint">(' + this.data.DATE_F_TO + ')</div></div>'
 
 

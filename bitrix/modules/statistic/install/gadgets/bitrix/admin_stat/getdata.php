@@ -56,7 +56,7 @@ if($_REQUEST["table_id"] == "adv"):
 	</tr><?
 
 	$bFound = false;
-	while ($arAdv = $rsAdv->Fetch()):
+	while ($arAdv = $rsAdv->GetNext()):
 		?><tr>
 			<td>[<a href="<?echo htmlspecialcharsbx(CHTTP::urlAddParams("/bitrix/admin/adv_list.php", array(
 				'lang' => $_REQUEST["lang"],
@@ -170,7 +170,7 @@ elseif($_REQUEST["table_id"] == "event"):
 	</tr><?
 
 	$bFound = false;
-	while ($arEvent = $rsEvents->Fetch()):
+	while ($arEvent = $rsEvents->GetNext()):
 		?><tr>
 			<td><?
 				$dynamic_days = CStatEventType::DynamicDays($arEvent["ID"]);
@@ -289,7 +289,7 @@ elseif($_REQUEST["table_id"] == "referer"):
 	</tr><?
 
 	$bFound = false;
-	while ($arReferer = $rsReferers->Fetch()):
+	while ($arReferer = $rsReferers->GetNext()):
 		?><tr>
 			<td><a href="<?echo htmlspecialcharsbx(CHTTP::urlAddParams("/bitrix/admin/referer_list.php", array(
 				'lang' => $_REQUEST["lang"],

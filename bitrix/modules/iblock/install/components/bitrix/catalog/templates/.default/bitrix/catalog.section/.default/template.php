@@ -30,72 +30,75 @@ if (!empty($arResult['ITEMS']))
 	);
 	unset($currencyList, $templateLibrary);
 
-	$arSkuTemplate = array();
+	$skuTemplate = array();
 	if (!empty($arResult['SKU_PROPS']))
 	{
-		foreach ($arResult['SKU_PROPS'] as &$arProp)
+		foreach ($arResult['SKU_PROPS'] as $arProp)
 		{
+			$propId = $arProp['ID'];
+			$skuTemplate[$propId] = array(
+				'SCROLL' => array(
+					'START' => '',
+					'FINISH' => '',
+				),
+				'FULL' => array(
+					'START' => '',
+					'FINISH' => '',
+				),
+				'ITEMS' => array()
+			);
 			$templateRow = '';
 			if ('TEXT' == $arProp['SHOW_MODE'])
 			{
-				if (5 < $arProp['VALUES_COUNT'])
+				$skuTemplate[$propId]['SCROLL']['START'] = '<div class="bx_item_detail_size full" id="#ITEM#_prop_'.$propId.'_cont">'.
+					'<span class="bx_item_section_name_gray">'.htmlspecialcharsbx($arProp['NAME']).'</span>'.
+					'<div class="bx_size_scroller_container"><div class="bx_size"><ul id="#ITEM#_prop_'.$propId.'_list" style="width: #WIDTH#;">';;
+				$skuTemplate[$propId]['SCROLL']['FINISH'] = '</ul></div>'.
+					'<div class="bx_slide_left" id="#ITEM#_prop_'.$propId.'_left" data-treevalue="'.$propId.'" style=""></div>'.
+					'<div class="bx_slide_right" id="#ITEM#_prop_'.$propId.'_right" data-treevalue="'.$propId.'" style=""></div>'.
+					'</div></div>';
+
+				$skuTemplate[$propId]['FULL']['START'] = '<div class="bx_item_detail_size" id="#ITEM#_prop_'.$propId.'_cont">'.
+					'<span class="bx_item_section_name_gray">'.htmlspecialcharsbx($arProp['NAME']).'</span>'.
+					'<div class="bx_size_scroller_container"><div class="bx_size"><ul id="#ITEM#_prop_'.$propId.'_list" style="width: #WIDTH#;">';;
+				$skuTemplate[$propId]['FULL']['FINISH'] = '</ul></div>'.
+					'<div class="bx_slide_left" id="#ITEM#_prop_'.$propId.'_left" data-treevalue="'.$propId.'" style="display: none;"></div>'.
+					'<div class="bx_slide_right" id="#ITEM#_prop_'.$propId.'_right" data-treevalue="'.$propId.'" style="display: none;"></div>'.
+					'</div></div>';
+				foreach ($arProp['VALUES'] as $value)
 				{
-					$strClass = 'bx_item_detail_size full';
-					$strWidth = ($arProp['VALUES_COUNT']*20).'%';
-					$strOneWidth = (100/$arProp['VALUES_COUNT']).'%';
-					$strSlideStyle = '';
+					$value['NAME'] = htmlspecialcharsbx($value['NAME']);
+					$skuTemplate[$propId]['ITEMS'][$value['ID']] = '<li data-treevalue="'.$propId.'_'.$value['ID'].
+						'" data-onevalue="'.$value['ID'].'" style="width: #WIDTH#;" title="'.$value['NAME'].'"><i></i><span class="cnt">'.$value['NAME'].'</span></li>';
 				}
-				else
-				{
-					$strClass = 'bx_item_detail_size';
-					$strWidth = '100%';
-					$strOneWidth = '20%';
-					$strSlideStyle = 'display: none;';
-				}
-				$templateRow .= '<div class="'.$strClass.'" id="#ITEM#_prop_'.$arProp['ID'].'_cont">'.
-'<span class="bx_item_section_name_gray">'.htmlspecialcharsex($arProp['NAME']).'</span>'.
-'<div class="bx_size_scroller_container"><div class="bx_size"><ul id="#ITEM#_prop_'.$arProp['ID'].'_list" style="width: '.$strWidth.';">';
-				foreach ($arProp['VALUES'] as $arOneValue)
-				{
-					$arOneValue['NAME'] = htmlspecialcharsbx($arOneValue['NAME']);
-					$templateRow .= '<li data-treevalue="'.$arProp['ID'].'_'.$arOneValue['ID'].'" data-onevalue="'.$arOneValue['ID'].'" style="width: '.$strOneWidth.';" title="'.$arOneValue['NAME'].'"><i></i><span class="cnt">'.$arOneValue['NAME'].'</span></li>';
-				}
-				$templateRow .= '</ul></div>'.
-'<div class="bx_slide_left" id="#ITEM#_prop_'.$arProp['ID'].'_left" data-treevalue="'.$arProp['ID'].'" style="'.$strSlideStyle.'"></div>'.
-'<div class="bx_slide_right" id="#ITEM#_prop_'.$arProp['ID'].'_right" data-treevalue="'.$arProp['ID'].'" style="'.$strSlideStyle.'"></div>'.
-'</div></div>';
+				unset($value);
 			}
 			elseif ('PICT' == $arProp['SHOW_MODE'])
 			{
-				if (5 < $arProp['VALUES_COUNT'])
+				$skuTemplate[$propId]['SCROLL']['START'] = '<div class="bx_item_detail_scu full" id="#ITEM#_prop_'.$propId.'_cont">'.
+					'<span class="bx_item_section_name_gray">'.htmlspecialcharsbx($arProp['NAME']).'</span>'.
+					'<div class="bx_scu_scroller_container"><div class="bx_scu"><ul id="#ITEM#_prop_'.$propId.'_list" style="width: #WIDTH#;">';
+				$skuTemplate[$propId]['SCROLL']['FINISH'] = '</ul></div>'.
+					'<div class="bx_slide_left" id="#ITEM#_prop_'.$propId.'_left" data-treevalue="'.$propId.'" style=""></div>'.
+					'<div class="bx_slide_right" id="#ITEM#_prop_'.$propId.'_right" data-treevalue="'.$propId.'" style=""></div>'.
+					'</div></div>';
+
+				$skuTemplate[$propId]['FULL']['START'] = '<div class="bx_item_detail_scu" id="#ITEM#_prop_'.$propId.'_cont">'.
+					'<span class="bx_item_section_name_gray">'.htmlspecialcharsbx($arProp['NAME']).'</span>'.
+					'<div class="bx_scu_scroller_container"><div class="bx_scu"><ul id="#ITEM#_prop_'.$propId.'_list" style="width: #WIDTH#;">';
+				$skuTemplate[$propId]['FULL']['FINISH'] = '</ul></div>'.
+					'<div class="bx_slide_left" id="#ITEM#_prop_'.$propId.'_left" data-treevalue="'.$propId.'" style="display: none;"></div>'.
+					'<div class="bx_slide_right" id="#ITEM#_prop_'.$propId.'_right" data-treevalue="'.$propId.'" style="display: none;"></div>'.
+					'</div></div>';
+				foreach ($arProp['VALUES'] as $value)
 				{
-					$strClass = 'bx_item_detail_scu full';
-					$strWidth = ($arProp['VALUES_COUNT']*20).'%';
-					$strOneWidth = (100/$arProp['VALUES_COUNT']).'%';
-					$strSlideStyle = '';
+					$value['NAME'] = htmlspecialcharsbx($value['NAME']);
+					$skuTemplate[$propId]['ITEMS'][$value['ID']] = '<li data-treevalue="'.$propId.'_'.$value['ID'].
+						'" data-onevalue="'.$value['ID'].'" style="width: #WIDTH#; padding-top: #WIDTH#;"><i title="'.$value['NAME'].'"></i>'.
+						'<span class="cnt"><span class="cnt_item" style="background-image:url(\''.$value['PICT']['SRC'].'\');" title="'.$value['NAME'].'"></span></span></li>';
 				}
-				else
-				{
-					$strClass = 'bx_item_detail_scu';
-					$strWidth = '100%';
-					$strOneWidth = '20%';
-					$strSlideStyle = 'display: none;';
-				}
-				$templateRow .= '<div class="'.$strClass.'" id="#ITEM#_prop_'.$arProp['ID'].'_cont">'.
-'<span class="bx_item_section_name_gray">'.htmlspecialcharsex($arProp['NAME']).'</span>'.
-'<div class="bx_scu_scroller_container"><div class="bx_scu"><ul id="#ITEM#_prop_'.$arProp['ID'].'_list" style="width: '.$strWidth.';">';
-				foreach ($arProp['VALUES'] as $arOneValue)
-				{
-					$arOneValue['NAME'] = htmlspecialcharsbx($arOneValue['NAME']);
-					$templateRow .= '<li data-treevalue="'.$arProp['ID'].'_'.$arOneValue['ID'].'" data-onevalue="'.$arOneValue['ID'].'" style="width: '.$strOneWidth.'; padding-top: '.$strOneWidth.';"><i title="'.$arOneValue['NAME'].'"></i>'.
-'<span class="cnt"><span class="cnt_item" style="background-image:url(\''.$arOneValue['PICT']['SRC'].'\');" title="'.$arOneValue['NAME'].'"></span></span></li>';
-				}
-				$templateRow .= '</ul></div>'.
-'<div class="bx_slide_left" id="#ITEM#_prop_'.$arProp['ID'].'_left" data-treevalue="'.$arProp['ID'].'" style="'.$strSlideStyle.'"></div>'.
-'<div class="bx_slide_right" id="#ITEM#_prop_'.$arProp['ID'].'_right" data-treevalue="'.$arProp['ID'].'" style="'.$strSlideStyle.'"></div>'.
-'</div></div>';
+				unset($value);
 			}
-			$arSkuTemplate[$arProp['CODE']] = $templateRow;
 		}
 		unset($templateRow, $arProp);
 	}
@@ -108,10 +111,13 @@ if (!empty($arResult['ITEMS']))
 	$strElementEdit = CIBlock::GetArrayByID($arParams["IBLOCK_ID"], "ELEMENT_EDIT");
 	$strElementDelete = CIBlock::GetArrayByID($arParams["IBLOCK_ID"], "ELEMENT_DELETE");
 	$arElementDeleteParams = array("CONFIRM" => GetMessage('CT_BCS_TPL_ELEMENT_DELETE_CONFIRM'));
-?>
+
+	if($arParams['HIDE_SECTION_DESCRIPTION'] !== 'Y')
+	{ ?>
 <div class="bx-section-desc <? echo $templateData['TEMPLATE_CLASS']; ?>">
 	<p class="bx-section-desc-post"><?=$arResult["DESCRIPTION"]?></p>
 </div>
+<? } ?>
 <div class="bx_catalog_list_home col<? echo $arParams['LINE_ELEMENT_COUNT']; ?> <? echo $templateData['TEMPLATE_CLASS']; ?>">
 	<?
 foreach ($arResult['ITEMS'] as $key => $arItem)
@@ -231,7 +237,10 @@ foreach ($arResult['ITEMS'] as $key => $arItem)
 	}
 	unset($minPrice);
 	?></div></div><?
-	$showSubscribeBtn = false;
+	if($arItem['CATALOG_SUBSCRIBE'] == 'Y')
+		$showSubscribeBtn = true;
+	else
+		$showSubscribeBtn = false;
 	$compareBtnMessage = ($arParams['MESS_BTN_COMPARE'] != '' ? $arParams['MESS_BTN_COMPARE'] : GetMessage('CT_BCS_TPL_MESS_BTN_COMPARE'));
 	if (!isset($arItem['OFFERS']) || empty($arItem['OFFERS']))
 	{
@@ -273,25 +282,28 @@ foreach ($arResult['ITEMS'] as $key => $arItem)
 		}
 		else
 		{
+			if($showSubscribeBtn):
+				$APPLICATION->includeComponent('bitrix:catalog.product.subscribe','',
+					array(
+						'PRODUCT_ID' => $arItem['ID'],
+						'BUTTON_ID' => $arItemIDs['SUBSCRIBE_LINK'],
+						'BUTTON_CLASS' => 'bx_bt_button bx_medium',
+						'DEFAULT_DISPLAY' => true,
+					),
+					$component, array('HIDE_ICONS' => 'Y')
+				);
+			endif;
 			?><div id="<? echo $arItemIDs['NOT_AVAILABLE_MESS']; ?>" class="bx_catalog_item_controls_blockone"><span class="bx_notavailable"><?
 			echo ('' != $arParams['MESS_NOT_AVAILABLE'] ? $arParams['MESS_NOT_AVAILABLE'] : GetMessage('CT_BCS_TPL_MESS_PRODUCT_NOT_AVAILABLE'));
 			?></span></div><?
-			if ($arParams['DISPLAY_COMPARE'] || $showSubscribeBtn)
+			if ($arParams['DISPLAY_COMPARE'])
 			{
 			?>
 				<div class="bx_catalog_item_controls_blocktwo"><?
 				if ($arParams['DISPLAY_COMPARE'])
 				{
 					?><a id="<? echo $arItemIDs['COMPARE_LINK']; ?>" class="bx_bt_button_type_2 bx_medium" href="javascript:void(0)"><? echo $compareBtnMessage; ?></a><?
-				}
-				if ($showSubscribeBtn)
-				{
-				?>
-				<a id="<? echo $arItemIDs['SUBSCRIBE_LINK']; ?>" class="bx_bt_button_type_2 bx_medium" href="javascript:void(0)"><?
-					echo ('' != $arParams['MESS_BTN_SUBSCRIBE'] ? $arParams['MESS_BTN_SUBSCRIBE'] : GetMessage('CT_BCS_TPL_MESS_BTN_SUBSCRIBE'));
-					?></a><?
-				}
-				?>
+				}?>
 			</div><?
 			}
 		}
@@ -417,7 +429,8 @@ foreach ($arResult['ITEMS'] as $key => $arItem)
 				'BASKET_PROP_DIV' => $arItemIDs['BASKET_PROP_DIV'],
 				'BASKET_ACTIONS_ID' => $arItemIDs['BASKET_ACTIONS'],
 				'NOT_AVAILABLE_MESS' => $arItemIDs['NOT_AVAILABLE_MESS'],
-				'COMPARE_LINK_ID' => $arItemIDs['COMPARE_LINK']
+				'COMPARE_LINK_ID' => $arItemIDs['COMPARE_LINK'],
+				'SUBSCRIBE_ID' => $arItemIDs['SUBSCRIBE_LINK'],
 			),
 			'LAST_ELEMENT' => $arItem['LAST_ELEMENT']
 		);
@@ -452,6 +465,19 @@ var <? echo $strObName; ?> = new JCCatalogSection(<? echo CUtil::PhpToJSObject($
 		</div>
 			<?
 			}
+
+			if($showSubscribeBtn):
+				$APPLICATION->includeComponent('bitrix:catalog.product.subscribe','',
+					array(
+						'PRODUCT_ID' => $arItem['ID'],
+						'BUTTON_ID' => $arItemIDs['SUBSCRIBE_LINK'],
+						'BUTTON_CLASS' => 'bx_bt_button bx_medium',
+						'DEFAULT_DISPLAY' => !$canBuy,
+					),
+					$component, array('HIDE_ICONS' => 'Y')
+				);
+			endif;
+
 			?>
 		<div id="<? echo $arItemIDs['NOT_AVAILABLE_MESS']; ?>" class="bx_catalog_item_controls_blockone" style="display: <? echo ($canBuy ? 'none' : ''); ?>;"><span class="bx_notavailable"><?
 			echo ('' != $arParams['MESS_NOT_AVAILABLE'] ? $arParams['MESS_NOT_AVAILABLE'] : GetMessage('CT_BCS_TPL_MESS_PRODUCT_NOT_AVAILABLE'));
@@ -475,12 +501,11 @@ var <? echo $strObName; ?> = new JCCatalogSection(<? echo CUtil::PhpToJSObject($
 <div class="bx_catalog_item_controls_blocktwo">
 	<a id="<? echo $arItemIDs['COMPARE_LINK']; ?>" class="bx_bt_button_type_2 bx_medium" href="javascript:void(0)"><? echo $compareBtnMessage; ?></a>
 </div><?
-	}
-	?>
-				<div style="clear: both;"></div>
-			</div>
-			<?
-			unset($canBuy);
+	} ?>
+		<div style="clear: both;"></div>
+		</div>
+		<?
+		unset($canBuy);
 		}
 		else
 		{
@@ -534,12 +559,35 @@ var <? echo $strObName; ?> = new JCCatalogSection(<? echo CUtil::PhpToJSObject($
 			{
 				$arSkuProps = array();
 				?><div class="bx_catalog_item_scu" id="<? echo $arItemIDs['PROP_DIV']; ?>"><?
-				foreach ($arSkuTemplate as $code => $strTemplate)
+				foreach ($skuTemplate as $propId => $propTemplate)
 				{
-					if (!isset($arItem['OFFERS_PROP'][$code]))
+					if (!isset($arItem['SKU_TREE_VALUES'][$propId]))
 						continue;
-					echo '<div>', str_replace('#ITEM#_prop_', $arItemIDs['PROP'], $strTemplate), '</div>';
+					$valueCount = count($arItem['SKU_TREE_VALUES'][$propId]);
+					if ($valueCount > 5)
+					{
+						$fullWidth = ($valueCount*20).'%';
+						$itemWidth = (100/$valueCount).'%';
+						$rowTemplate = $propTemplate['SCROLL'];
+					}
+					else
+					{
+						$fullWidth = '100%';
+						$itemWidth = '20%';
+						$rowTemplate = $propTemplate['FULL'];
+					}
+					unset($valueCount);
+					echo '<div>', str_replace(array('#ITEM#_prop_', '#WIDTH#'), array($arItemIDs['PROP'], $fullWidth), $rowTemplate['START']);
+					foreach ($propTemplate['ITEMS'] as $value => $valueItem)
+					{
+						if (!isset($arItem['SKU_TREE_VALUES'][$propId][$value]))
+							continue;
+						echo str_replace(array('#ITEM#_prop_', '#WIDTH#'), array($arItemIDs['PROP'], $itemWidth), $valueItem);
+					}
+					unset($value, $valueItem);
+					echo str_replace('#ITEM#_prop_', $arItemIDs['PROP'], $rowTemplate['FINISH']), '</div>';
 				}
+				unset($propId, $propTemplate);
 				foreach ($arResult['SKU_PROPS'] as $arOneProp)
 				{
 					if (!isset($arItem['OFFERS_PROP'][$arOneProp['CODE']]))
@@ -614,7 +662,8 @@ var <? echo $strObName; ?> = new JCCatalogSection(<? echo CUtil::PhpToJSObject($
 						'DISPLAY_PROP_DIV' => $arItemIDs['DISPLAY_PROP_DIV'],
 						'BASKET_ACTIONS_ID' => $arItemIDs['BASKET_ACTIONS'],
 						'NOT_AVAILABLE_MESS' => $arItemIDs['NOT_AVAILABLE_MESS'],
-						'COMPARE_LINK_ID' => $arItemIDs['COMPARE_LINK']
+						'COMPARE_LINK_ID' => $arItemIDs['COMPARE_LINK'],
+						'SUBSCRIBE_ID' => $arItemIDs['SUBSCRIBE_LINK'],
 					),
 					'BASKET' => array(
 						'QUANTITY' => $arParams['PRODUCT_QUANTITY_VARIABLE'],
@@ -683,7 +732,8 @@ var <? echo $strObName; ?> = new JCCatalogSection(<? echo CUtil::PhpToJSObject($
 					'DISPLAY_PROP_DIV' => $arItemIDs['DISPLAY_PROP_DIV'],
 					'BASKET_ACTIONS_ID' => $arItemIDs['BASKET_ACTIONS'],
 					'NOT_AVAILABLE_MESS' => $arItemIDs['NOT_AVAILABLE_MESS'],
-					'COMPARE_LINK_ID' => $arItemIDs['COMPARE_LINK']
+					'COMPARE_LINK_ID' => $arItemIDs['COMPARE_LINK'],
+					'SUBSCRIBE_ID' => $arItemIDs['SUBSCRIBE_LINK'],
 				),
 				'BASKET' => array(
 					'QUANTITY' => $arParams['PRODUCT_QUANTITY_VARIABLE'],

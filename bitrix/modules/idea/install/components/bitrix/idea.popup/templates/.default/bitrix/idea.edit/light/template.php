@@ -63,7 +63,8 @@ elseif(strlen($arResult["UTIL_MESSAGE"]) > 0)
 	return;
 }
 // Frame with file input to ajax uploading in WYSIWYG editor dialog
-include_once(__DIR__. "/lhe.php");?>
+//dbg ?
+//include_once(__DIR__. "/lhe.php");?>
 <form action="<?=POST_FORM_ACTION_URI?>" name="<?=$arResult['FORM_NAME']?>" id="<?=$arResult['FORM_NAME']?>" method="post" enctype="multipart/form-data">
 <?=bitrix_sessid_post();?>
 <? if($arParams["ALLOW_POST_CODE"])
@@ -125,7 +126,8 @@ if(strlen($arResult["ERROR_MESSAGE"]) > 0)
 	<div class="field-title-idea-text"><?=GetMessage("IDEA_DESCRIPTION_TITLE")?></div>
 	<div class="blog-post-message blog-edit-editor-area blog-edit-field-text">
 		<div class="blog-comment-field">
-			<?initLHEForIdea('LHEIdeaId'.$arResult["ID"], $arResult, $arParams)?>
+			<? include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/neweditor.php"); ?>
+<!--			--><?//initLHEForIdea('LHEIdeaId'.$arResult["ID"], $arResult, $arParams) dbg?>
 		</div>
 		<div class="blog-post-field blog-post-field-images blog-edit-field" id="blog-post-image"><?
 		if (!empty($arResult["Images"]))

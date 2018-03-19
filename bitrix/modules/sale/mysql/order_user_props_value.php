@@ -30,13 +30,7 @@ class CSaleOrderUserPropsValue extends CAllSaleOrderUserPropsValue
 
 		// TODO proper compatibility CAllSaleOrderUserPropsValue::getList15
 		$sale15converted = \Bitrix\Main\Config\Option::get('main', '~sale_converted_15', 'N') == 'Y';
-		if ($sale15converted && is_array($arSelectFields) && $arSelectFields)
-		{
-			if (($i = array_search('PROP_SIZE1', $arSelectFields)) !== false)
-				unset($arSelectFields[$i]);
-			if (($i = array_search('PROP_SIZE2', $arSelectFields)) !== false)
-				unset($arSelectFields[$i]);
-		}
+
 
 		// FIELDS -->
 		$arFields = array(
@@ -63,6 +57,7 @@ class CSaleOrderUserPropsValue extends CAllSaleOrderUserPropsValue
 				"PROP_IS_PAYER" => array("FIELD" => "P.IS_PAYER", "TYPE" => "char", "FROM" => "INNER JOIN b_sale_order_props P ON (UP.ORDER_PROPS_ID = P.ID)"),
 				"PROP_IS_LOCATION4TAX" => array("FIELD" => "P.IS_LOCATION4TAX", "TYPE" => "char", "FROM" => "INNER JOIN b_sale_order_props P ON (UP.ORDER_PROPS_ID = P.ID)"),
 				"PROP_IS_ZIP" => array("FIELD" => "P.IS_ZIP", "TYPE" => "char", "FROM" => "INNER JOIN b_sale_order_props P ON (UP.ORDER_PROPS_ID = P.ID)"),
+				"PROP_MULTIPLE" => array("FIELD" => "P.MULTIPLE", "TYPE" => "char", "FROM" => "INNER JOIN b_sale_order_props P ON (UP.ORDER_PROPS_ID = P.ID)"),
 				"PROP_CODE" => array("FIELD" => "P.CODE", "TYPE" => "string", "FROM" => "INNER JOIN b_sale_order_props P ON (UP.ORDER_PROPS_ID = P.ID)"),
 				"PROP_ACTIVE" => array("FIELD" => "P.ACTIVE", "TYPE" => "char", "FROM" => "INNER JOIN b_sale_order_props P ON (UP.ORDER_PROPS_ID = P.ID)"),
 				"PROP_UTIL" => array("FIELD" => "P.UTIL", "TYPE" => "char", "FROM" => "INNER JOIN b_sale_order_props P ON (UP.ORDER_PROPS_ID = P.ID)"),
@@ -80,6 +75,20 @@ class CSaleOrderUserPropsValue extends CAllSaleOrderUserPropsValue
 				"CODE" => array("FIELD" => "P.CODE", "TYPE" => "string", "FROM" => "INNER JOIN b_sale_order_props P ON (UP.ORDER_PROPS_ID = P.ID)")
 			);
 		// <-- FIELDS
+
+
+		if ($sale15converted && is_array($arSelectFields) && $arSelectFields)
+		{
+			if (($i = array_search('PROP_SIZE1', $arSelectFields)) !== false)
+				unset($arSelectFields[$i]);
+			if (($i = array_search('PROP_SIZE2', $arSelectFields)) !== false)
+				unset($arSelectFields[$i]);
+
+			if (($i = array_search('*', $arSelectFields)) !== false)
+			{
+				unset($arFields['PROP_SIZE1'], $arFields['PROP_SIZE2']);
+			}
+		}
 
 		self::addPropertyValueField('UP', $arFields, $arSelectFields);
 

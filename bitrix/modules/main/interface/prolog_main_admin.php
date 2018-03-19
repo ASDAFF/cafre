@@ -388,7 +388,7 @@ if($USER->IsAuthorized()):
 				if($sSupportMess <> '')
 				{
 					$userOption = CUserOptions::GetOption("main", "admSupInf");
-					if(mktime() > $userOption["showInformerDate"])
+					if(time() > $userOption["showInformerDate"])
 					{
 						$prolongUrl = "/bitrix/admin/buy_support.php?lang=".LANGUAGE_ID;
 						if(!in_array(LANGUAGE_ID, array("ru", "ua")) || IntVal(COption::GetOptionString("main", "~PARAM_PARTNER_ID")) <= 0)

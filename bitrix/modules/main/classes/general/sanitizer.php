@@ -307,7 +307,7 @@
 						'h6'		=> array('style','id','class','align'),
 						'hr'		=> array('style','id','class'),
 						'i'		=> array('style','id','class'),
-						'img'		=> array('src','alt','height','width','title'),
+						'img'		=> array('style','id','class','src','alt','height','width','title'),
 						'ins'		=> array('title','style','id','class'),
 						'li'		=> array('style','id','class'),
 						'map'		=> array('shape','coords','href','alt','title','style','id','class','name'),
@@ -353,10 +353,11 @@
 			{
 				case 'src':
 				case 'href':
-					if(!preg_match("#^(http://|https://|ftp://|file://|mailto:|callto:|skype:|\\#|/)#i".BX_UTF_PCRE_MODIFIER, $attrValue))
+				case 'data-url':
+					if(!preg_match("#^(http://|https://|ftp://|file://|mailto:|callto:|skype:|tel:|\\#|/)#i".BX_UTF_PCRE_MODIFIER, $attrValue))
 						$arAttr[3] = "http://".$arAttr[3];
 
-					$valid = (!preg_match("#javascript:|data:|[^\\w".$this->localAlph."a-zA-Z:/\\.=@;,!~\\*\\&\\#\\)(%\\s\\+\$\\?\\-]#i".BX_UTF_PCRE_MODIFIER, $attrValue)) ? true : false;
+					$valid = (!preg_match("#javascript:|data:|[^\\w".$this->localAlph."a-zA-Z:/\\.=@;,!~\\*\\&\\#\\)(%\\s\\+\$\\?\\-\\[\\]]#i".BX_UTF_PCRE_MODIFIER, $attrValue)) ? true : false;
 					break;
 
 				case 'height':
@@ -372,7 +373,7 @@
 					break;
 
 				case 'style':
-					$valid = !preg_match("#(behavior|expression|position|javascript)#i".BX_UTF_PCRE_MODIFIER, $attrValue) && !preg_match("#[^\\w\\s)(,:\\.;\\-\\#]#i".BX_UTF_PCRE_MODIFIER, $attrValue) ? true : false;
+					$valid = !preg_match("#(behavior|expression|position|javascript)#i".BX_UTF_PCRE_MODIFIER, $attrValue) && !preg_match("#[^\\/\\w\\s)(!%,:\\.;\\-\\#\\']#i".BX_UTF_PCRE_MODIFIER, $attrValue) ? true : false;
 					break;
 
 				case 'coords':
@@ -380,7 +381,7 @@
 					break;
 
 				default:
-					$valid = !preg_match("#[^\\s\\w".$this->localAlph."\\-\\#\\.]#i".BX_UTF_PCRE_MODIFIER, $attrValue) ? true : false;
+					$valid = !preg_match("#[^\\s\\w".$this->localAlph."\\-\\#\\.;]#i".BX_UTF_PCRE_MODIFIER, $attrValue) ? true : false;
 					break;
 			}
 
@@ -475,8 +476,23 @@
 			$segCount = count($seg);
 			for($i=0; $i<$segCount; $i++)
 			{
-				if($seg[$i]['segType'] == 'text' && $this->bHtmlSpecChars)
-					$seg[$i]['value'] = htmlspecialchars($seg[$i]['value'], ENT_QUOTES, LANG_CHARSET, $this->bDoubleEncode);
+				if($seg[$i]['segType'] == 'text')
+				{
+					if (trim($seg[$i]['value']) && ($tp = array_search('table', $openTagsStack)) !== false)
+					{
+						$cellTags = array_intersect(array('td', 'th'), array_keys($this->arHtmlTags));
+						if ($cellTags && !array_intersect($cellTags, array_slice($openTagsStack, $tp+1)))
+						{
+							array_splice($seg, $i, 0, array(array('segType' => 'tag', 'value' => sprintf('<%s>', reset($cellTags)))));
+							$i--; $segCount++;
+
+							continue;
+						}
+					}
+
+					if ($this->bHtmlSpecChars)
+						$seg[$i]['value'] = htmlspecialchars($seg[$i]['value'], ENT_QUOTES, LANG_CHARSET, $this->bDoubleEncode);
+				}
 				elseif($seg[$i]['segType'] == 'tag')
 				{
 					//find tag type (open/close), tag name, attributies
@@ -511,6 +527,71 @@
 						//if allowed
 						else
 						{
+							if (in_array('table', $openTagsStack))
+							{
+								if ($openTagsStack[count($openTagsStack)-1] == 'table')
+								{
+									if (array_key_exists('tr', $this->arHtmlTags) && !in_array($seg[$i]['tagName'], array('thead', 'tfoot', 'tbody', 'tr')))
+									{
+										array_splice($seg, $i, 0, array(array('segType' => 'tag', 'tagType' => 'open', 'tagName' => 'tr', 'action' => 'add')));
+										$i++; $segCount++;
+
+										$openTagsStack[] = 'tr';
+									}
+								}
+
+								if (in_array($openTagsStack[count($openTagsStack)-1], array('thead', 'tfoot', 'tbody')))
+								{
+									if (array_key_exists('tr', $this->arHtmlTags) && $seg[$i]['tagName'] != 'tr')
+									{
+										array_splice($seg, $i, 0, array(array('segType' => 'tag', 'tagType' => 'open', 'tagName' => 'tr', 'action' => 'add')));
+										$i++; $segCount++;
+
+										$openTagsStack[] = 'tr';
+									}
+								}
+
+								if ($seg[$i]['tagName'] == 'tr')
+								{
+									for ($j = count($openTagsStack)-1; $j >= 0; $j--)
+									{
+										if (in_array($openTagsStack[$j], array('table', 'thead', 'tfoot', 'tbody')))
+											break;
+
+										array_splice($seg, $i, 0, array(array('segType' => 'tag', 'tagType' => 'close', 'tagName' => $openTagsStack[$j], 'action' => 'add')));
+										$i++; $segCount++;
+
+										array_splice($openTagsStack, $j, 1);
+									}
+								}
+
+								if ($openTagsStack[count($openTagsStack)-1] == 'tr')
+								{
+									$cellTags = array_intersect(array('td', 'th'), array_keys($this->arHtmlTags));
+									if ($cellTags && !in_array($seg[$i]['tagName'], $cellTags))
+									{
+										array_splice($seg, $i, 0, array(array('segType' => 'tag', 'tagType' => 'open', 'tagName' => reset($cellTags), 'action' => 'add')));
+										$i++; $segCount++;
+
+										$openTagsStack[] = 'td';
+									}
+								}
+
+								if (in_array($seg[$i]['tagName'], array('td', 'th')))
+								{
+									for ($j = count($openTagsStack)-1; $j >= 0; $j--)
+									{
+										if ($openTagsStack[$j] == 'tr')
+											break;
+
+										array_splice($seg, $i, 0, array(array('segType' => 'tag', 'tagType' => 'close', 'tagName' => $openTagsStack[$j], 'action' => 'add')));
+										$i++; $segCount++;
+
+										array_splice($openTagsStack, $j, 1);
+									}
+								}
+							}
+
 							//Processing valid tables
 							//if find 'tr','td', etc...
 							if(array_key_exists($seg[$i]['tagName'], $this->arTableTags))
@@ -522,12 +603,14 @@
 							}
 
 							//find attributies an erase unallowed
-							preg_match_all('#([a-z_]+)\s*=\s*([\'\"])\s*(.*?)\s*\2#i'.BX_UTF_PCRE_MODIFIER, $matches[3], $arTagAttrs, PREG_SET_ORDER);
+							preg_match_all('#([a-z_-]+)\s*=\s*([\'\"])\s*(.*?)\s*\2#is'.BX_UTF_PCRE_MODIFIER, $matches[3], $arTagAttrs, PREG_SET_ORDER);
 							$attr = array();
 							foreach($arTagAttrs as $arTagAttr)
 							{
 								if(in_array(strtolower($arTagAttr[1]), $this->arHtmlTags[$seg[$i]['tagName']]))
 								{
+									$arTagAttr[3] = str_replace('"', "'", $arTagAttr[3]); //We will wrap attribute by "
+
 									if($this->IsValidAttr($arTagAttr))
 									{
 										if($this->bHtmlSpecChars)
@@ -578,7 +661,10 @@
 								//if this tag don't match last from open tags stack , adding right close tag
 								$tagName = array_pop($openTagsStack);
 								if($seg[$i]['tagName'] != $tagName)
+								{
 									array_splice($seg, $i, 0, array(array('segType'=>'tag', 'tagType'=>'close', 'tagName'=>$tagName, 'action'=>'add')));
+									$segCount++;
+								}
 							}
 						}
 						//if tag unallowed erase it
@@ -615,7 +701,7 @@
 							$filteredHTML .= '<'.$segt['tagName'];
 
 							if(is_array($segt['attr']))
-								foreach($segt['attr'] as $attr_key=>$attr_val)
+								foreach($segt['attr'] as $attr_key => $attr_val)
 									$filteredHTML .= ' '.$attr_key.'="'.$attr_val.'"';
 
 							if (count($this->arHtmlTags[$segt['tagName']]) && ($this->arHtmlTags[$segt['tagName']][count($this->arHtmlTags[$segt['tagName']])-1] == false))

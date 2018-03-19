@@ -248,7 +248,7 @@ if(CModule::IncludeModule('fileman')):
 		'inputId' => 'POST_MESSAGE_HTML',
 		'id' => 'pLEditorWiki',
 		'jsObjName' => 'pLEditorWiki',
-		'content' => $arResult['ELEMENT']['~DETAIL_TEXT'],
+		'content' => CWikiParser::Clear($arResult['ELEMENT']['~DETAIL_TEXT']),
 		'bUseFileDialogs' => false,
 		'bFloatingToolbar' => false,
 		'bArisingToolbar' => false,

@@ -17,7 +17,7 @@ class CAllCurrencyLang
 		self::SEP_DOT => '.',
 		self::SEP_COMMA => ',',
 		self::SEP_SPACE => ' ',
-		self::SEP_NBSPACE => ' '
+		self::SEP_NBSPACE => '&nbsp;'
 	);
 
 	static protected $arDefaultValues = array(
@@ -99,7 +99,7 @@ class CAllCurrencyLang
 			$clearFields[] = 'LID';
 		}
 		$fields = array_filter($fields, 'CCurrencyLang::clearFields');
-		foreach ($clearFields as &$fieldName)
+		foreach ($clearFields as $fieldName)
 		{
 			if (isset($fields[$fieldName]))
 				unset($fields[$fieldName]);
@@ -141,13 +141,53 @@ class CAllCurrencyLang
 				if ($fields['DECIMALS'] < 0)
 					$fields['DECIMALS'] = self::$arDefaultValues['DECIMALS'];
 			}
+			$validateCustomSeparator = false;
 			if (isset($fields['THOUSANDS_VARIANT']))
 			{
 				if (empty($fields['THOUSANDS_VARIANT']) || !isset(self::$arSeparators[$fields['THOUSANDS_VARIANT']]))
+				{
 					$fields['THOUSANDS_VARIANT'] = false;
+					$validateCustomSeparator = true;
+				}
 				else
-					$fields['THOUSANDS_SEP'] = false;
+				{
+					$fields['THOUSANDS_SEP'] = self::$arSeparators[$fields['THOUSANDS_VARIANT']];
+				}
 			}
+			else
+			{
+				if (isset($fields['THOUSANDS_SEP']))
+					$validateCustomSeparator = true;
+			}
+
+			if ($validateCustomSeparator)
+			{
+				if (!isset($fields['THOUSANDS_SEP']) || $fields['THOUSANDS_SEP'] == '')
+				{
+					$errorMessages[] = array(
+						'id' => 'THOUSANDS_SEP',
+						'text' => Loc::getMessage(
+							'BT_CUR_LANG_ERR_THOUSANDS_SEP_IS_EMPTY',
+							array('#LANG#' => $language)
+						)
+					);
+				}
+				else
+				{
+					if (!preg_match('/^&(#[x]{0,1}[0-9a-zA-Z]+|[a-zA-Z]+);$/', $fields['THOUSANDS_SEP']))
+					{
+						$errorMessages[] = array(
+							'id' => 'THOUSANDS_SEP',
+							'text' => Loc::getMessage(
+								'BT_CUR_LANG_ERR_THOUSANDS_SEP_IS_NOT_VALID',
+								array('#LANG#' => $language)
+							)
+						);
+					}
+				}
+			}
+			unset($validateCustomSeparator);
+
 			if (isset($fields['HIDE_ZERO']))
 				$fields['HIDE_ZERO'] = ($fields['HIDE_ZERO'] == 'Y' ? 'Y' : 'N');
 		}
@@ -362,7 +402,7 @@ class CAllCurrencyLang
 
 	public static function GetFormatTemplates()
 	{
-		$installCurrencies = CCurrency::getInstalledCurrencies();
+		$installCurrencies = Currency\CurrencyManager::getInstalledCurrencies();
 		$templates = array();
 		$templates[] = array(
 			'TEXT' => '$1.234,10',
@@ -453,6 +493,7 @@ class CAllCurrencyLang
 			if ($arCurFormat === false)
 			{
 				$arCurFormat = self::$arDefaultValues;
+				$arCurFormat['FULL_NAME'] = $currency;
 			}
 			else
 			{
@@ -521,6 +562,7 @@ class CAllCurrencyLang
 		if ($currency === false)
 			return '';
 
+		$price = (float)$price;
 		$arCurFormat = (isset(self::$arCurrencyFormat[$currency]) ? self::$arCurrencyFormat[$currency] : self::GetFormatDescription($currency));
 		$intDecimals = $arCurFormat['DECIMALS'];
 		if (self::isAllowUseHideZero() && $arCurFormat['HIDE_ZERO'] == 'Y')
@@ -529,14 +571,17 @@ class CAllCurrencyLang
 				$intDecimals = 0;
 		}
 		$price = number_format($price, $intDecimals, $arCurFormat['DEC_POINT'], $arCurFormat['THOUSANDS_SEP']);
-		if ($arCurFormat['THOUSANDS_VARIANT'] == self::SEP_NBSPACE)
-			$price = str_replace(' ', '&nbsp;', $price);
 
 		return (
 			$useTemplate
-			? preg_replace('/(^|[^&])#/', '${1}'.$price, $arCurFormat['FORMAT_STRING'])
+			? self::applyTemplate($price, $arCurFormat['FORMAT_STRING'])
 			: $price
 		);
+	}
+
+	public static function applyTemplate($value, $template)
+	{
+		return preg_replace('/(^|[^&])#/', '${1}'.$value, $template);
 	}
 
 	public static function checkLanguage($language)
@@ -558,6 +603,42 @@ class CAllCurrencyLang
 			return true;
 		}
 		return false;
+	}
+
+	public static function getParsedCurrencyFormat($currency)
+	{
+		$arCurFormat = (isset(self::$arCurrencyFormat[$currency])
+			? self::$arCurrencyFormat[$currency]
+			: self::GetFormatDescription($currency)
+		);
+
+		$result = preg_split('/(?<!&)(#)/', $arCurFormat['FORMAT_STRING'], -1, PREG_SPLIT_DELIM_CAPTURE);
+		if (!is_array($result))
+			return null;
+		$resultCount = count($result);
+		if ($resultCount > 1)
+		{
+			$needSlice = false;
+			$offset = 0;
+			$count = $resultCount;
+			if ($result[0] == '')
+			{
+				$needSlice = true;
+				$offset = 1;
+				$count--;
+			}
+			if ($result[$resultCount-1] == '')
+			{
+				$needSlice = true;
+				$count--;
+			}
+			if ($needSlice)
+				$result = array_slice($result, $offset, $count);
+			unset($count, $offset, $needSlice);
+		}
+		unset($resultCount);
+
+		return $result;
 	}
 
 	protected static function clearFields($value)

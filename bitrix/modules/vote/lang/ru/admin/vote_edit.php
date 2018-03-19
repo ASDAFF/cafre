@@ -1,7 +1,6 @@
 <?
 $MESS["VOTE_EDIT_RECORD"] = "Параметры опроса # #ID#";
 $MESS["VOTE_NEW_RECORD"] = "Новый опрос";
-$MESS["VOTE_RECORDS_LIST"] = "Список опросов";
 $MESS["VOTE_QUESTIONS"] = "Вопросы";
 $MESS["VOTE_QUESTIONS_TITLE"] = "Открыть список вопросов";
 $MESS["VOTE_QUESTIONS_ADD"] = "Создать вопрос";
@@ -40,11 +39,13 @@ $MESS["VOTE_DELETE_RECORD_CONFIRM"] = "Вы уверены что хотите удалить опрос и все
 $MESS["VOTE_RESET_RECORD"] = "Обнулить опрос";
 $MESS["VOTE_RESET"] = "Обнулить";
 $MESS["VOTE_RESET_RECORD_CONFIRM"] = "Вы уверены что хотите удалить все голоса этого опроса?";
+$MESS["VOTE_EXPORT"] = "Экспорт";
+$MESS["VOTE_EXPORT_XLS"] = "Экспортировать данные о голосовании в excel";
 $MESS["VOTE_PROP"] = "Свойства";
 $MESS["VOTE_HOSTS"] = "Ограничения";
 $MESS["VOTE_DESCR"] = "Описание";
 $MESS["VOTE_PARAMS"] = "Параметры опроса";
-$MESS["VOTE_GOTO_LIST"] = "Перейти на список голосований";
+$MESS["VOTE_GOTO_LIST"] = "Список голосов";
 $MESS["VOTE_GOT_ERROR"] = "Ошибка при сохранении опроса";
 $MESS["VOTE_LIST"] = "Список";
 $MESS["VOTE_DELETE"] = "Удалить";

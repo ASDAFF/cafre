@@ -183,11 +183,12 @@ $lng = (isset($_REQUEST["lang"]) && is_string($_REQUEST["lang"])) ? trim($_REQUE
 $lng = substr(preg_replace("/[^a-z0-9_]/i", "", $lng), 0, 2);
 
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");
+use Bitrix\Main\Localization\Loc;
 
 if (!$GLOBALS["USER"]->IsAuthorized())
 	return false;
 
-__IncludeLang(dirname(__FILE__)."/lang/".$lng."/ajax.php");	
+Loc::loadLanguageFile(__FILE__, $lng);
 
 if(CModule::IncludeModule("compression"))
 	CCompress::Disable2048Spaces();
@@ -401,18 +402,18 @@ if(CModule::IncludeModule("socialnetwork"))
 		}
 
 		$arResult["Transport"] = array(
-			0 => array("Key" => "N", "Value" => GetMessage("SUBSCRIBE_TRANSPORT_NONE")),
-			1 => array("Key" => "M", "Value" => GetMessage("SUBSCRIBE_TRANSPORT_MAIL")),
-//			3 => array("Key" => "D", "Value" => GetMessage("SUBSCRIBE_TRANSPORT_DIGEST")),
-//			4 => array("Key" => "E", "Value" => GetMessage("SUBSCRIBE_TRANSPORT_DIGEST_WEEK"))
+			0 => array("Key" => "N", "Value" => Loc::getMessage("SUBSCRIBE_TRANSPORT_NONE", false, $lng)),
+			1 => array("Key" => "M", "Value" => Loc::getMessage("SUBSCRIBE_TRANSPORT_MAIL", false, $lng)),
+//			3 => array("Key" => "D", "Value" => Loc::getMessage("SUBSCRIBE_TRANSPORT_DIGEST", false, $lng)),
+//			4 => array("Key" => "E", "Value" => Loc::getMessage("SUBSCRIBE_TRANSPORT_DIGEST_WEEK", false, $lng))
 		);
 
 		if (CBXFeatures::IsFeatureEnabled("WebMessenger"))
-			$arResult["Transport"][] = array("Key" => "X", "Value" => GetMessage("SUBSCRIBE_TRANSPORT_XMPP"));
+			$arResult["Transport"][] = array("Key" => "X", "Value" => Loc::getMessage("SUBSCRIBE_TRANSPORT_XMPP"));
 		
 		$arResult["Visible"] = array(
-			0 => array("Key" => "Y", "Value" => GetMessage("SUBSCRIBE_VISIBLE_VISIBLE")),
-			1 => array("Key" => "N", "Value" => GetMessage("SUBSCRIBE_VISIBLE_HIDDEN")),
+			0 => array("Key" => "Y", "Value" => Loc::getMessage("SUBSCRIBE_VISIBLE_VISIBLE", false, $lng)),
+			1 => array("Key" => "N", "Value" => Loc::getMessage("SUBSCRIBE_VISIBLE_HIDDEN", false, $lng)),
 		);		
 
 	}

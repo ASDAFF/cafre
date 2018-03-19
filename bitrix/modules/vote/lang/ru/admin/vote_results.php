@@ -7,4 +7,5 @@ $MESS ['VOTE_QUESTIONS_ADD'] = "Добавить вопрос";
 $MESS ['VOTE_PREVIEW'] = "Форма опроса";
 $MESS ['VOTE_NOT_FOUND'] = "Неверный ID опроса";
 $MESS ['VOTE_SAVE'] = "Сохранить";
+$MESS ['VOTE_BACK_TO_VOTE'] = "Перейти к опросу";
 ?>

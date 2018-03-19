@@ -70,18 +70,30 @@ if(($arID = $adminList->GroupAction()) && $isAdmin)
 
 $APPLICATION->SetTitle(Loc::getMessage("TITLE"));
 
-/**
- * @global $by
- * @global $order
- */
+$sortBy = strtoupper($sorting->getField());
+if(!CultureTable::getEntity()->hasField($sortBy))
+{
+	$sortBy = "NAME";
+}
+
+$sortOrder = strtoupper($sorting->getOrder());
+if($sortOrder <> "DESC")
+{
+	$sortOrder = "ASC";
+}
+
+$nav = new \Bitrix\Main\UI\AdminPageNavigation("nav-culture");
+
 $cultureList = CultureTable::getList(array(
-	'order' => array(strtoupper($by) => $order)
+	'order' => array($sortBy => $sortOrder),
+	'count_total' => true,
+	'offset' => $nav->getOffset(),
+	'limit' => $nav->getLimit(),
 ));
 
-$data = new CAdminResult($cultureList, $tableID);
-$data->NavStart();
+$nav->setRecordCount($cultureList->getCount());
 
-$adminList->NavText($data->GetNavPrint(Loc::getMessage("PAGES"), false));
+$adminList->setNavigation($nav, Loc::getMessage("PAGES"));
 
 $adminList->AddHeaders(array(
 	array("id"=>"ID", "content"=>"ID", "sort"=>"ID", "default"=>true),
@@ -97,7 +109,7 @@ $adminList->AddHeaders(array(
 
 $days = array(Loc::getMessage("culture_su"), Loc::getMessage("culture_mo"), Loc::getMessage("culture_tu"), Loc::getMessage("culture_we"), Loc::getMessage("culture_th"), Loc::getMessage("culture_fr"), Loc::getMessage("culture_sa"));
 
-while($culture = $data->Fetch())
+while($culture = $cultureList->fetch())
 {
 	$id = htmlspecialcharsbx($culture["ID"]);
 	$name = htmlspecialcharsbx($culture["NAME"]);

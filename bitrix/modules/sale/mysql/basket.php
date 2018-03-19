@@ -34,7 +34,7 @@ class CSaleBasket extends CAllSaleBasket
 	{
 		global $DB, $USER;
 
-		$isOrderConverted = \Bitrix\Main\Config\Option::get("main", "~sale_converted_15", 'N');
+		$isOrderConverted = \Bitrix\Main\Config\Option::get("main", "~sale_converted_15", 'Y');
 
 		if (!is_array($arOrder) && !is_array($arFilter))
 		{
@@ -56,10 +56,11 @@ class CSaleBasket extends CAllSaleBasket
 			}
 		}
 
-		if ($isOrderConverted == "Y")
+		if ($isOrderConverted != 'N')
 		{
 			$result = \Bitrix\Sale\Compatible\BasketCompatibility::getList($arOrder, $arFilter, $arGroupBy, $arNavStartParams, $arSelectFields);
-			$result->addFetchAdapter(new \Bitrix\Sale\Compatible\BasketFetchAdapter());
+			if ($result instanceof \Bitrix\Sale\Compatible\CDBResult)
+				$result->addFetchAdapter(new \Bitrix\Sale\Compatible\BasketFetchAdapter());
 			return $result;
 		}
 
@@ -434,55 +435,13 @@ class CSaleBasket extends CAllSaleBasket
 		if (isset($arFields["ID"]))
 			unset($arFields["ID"]);
 
-		$isOrderConverted = \Bitrix\Main\Config\Option::get("main", "~sale_converted_15", 'N');
+		$isOrderConverted = \Bitrix\Main\Config\Option::get("main", "~sale_converted_15", 'Y');
 
 		CSaleBasket::Init();
-		if (!CSaleBasket::CheckFields("ADD", $arFields))
-			return false;
+//		if (!CSaleBasket::CheckFields("ADD", $arFields))
+//			return false;
 
-		if (!array_key_exists('IGNORE_CALLBACK_FUNC', $arFields) || 'Y' != $arFields['IGNORE_CALLBACK_FUNC'])
-		{
-			if ((array_key_exists("CALLBACK_FUNC", $arFields) && !empty($arFields["CALLBACK_FUNC"]))
-				|| (array_key_exists("PRODUCT_PROVIDER_CLASS", $arFields) && !empty($arFields["PRODUCT_PROVIDER_CLASS"]))
-			)
-			{
-				/** @var $productProvider IBXSaleProductProvider */
-				if ($productProvider = CSaleBasket::GetProductProvider(array("MODULE" => $arFields["MODULE"], "PRODUCT_PROVIDER_CLASS" => $arFields["PRODUCT_PROVIDER_CLASS"])))
-				{
-					$providerParams = array(
-						"PRODUCT_ID" => $arFields["PRODUCT_ID"],
-						"QUANTITY" => $arFields["QUANTITY"],
-						"RENEWAL" => $arFields["RENEWAL"],
-						"USER_ID" => (isset($arFields["USER_ID"]) ? $arFields["USER_ID"] : 0),
-						"SITE_ID" => (isset($arFields["LID"]) ? $arFields["LID"] : false),
-					);
-					if (isset($arFields['NOTES']))
-						$providerParams['NOTES'] = $arFields['NOTES'];
-
-					if (!($productProvider::GetProductData($providerParams)))
-					{
-						return false;
-					}
-				}
-				else
-				{
-					if (!(CSaleBasket::ExecuteCallbackFunction(
-						$arFields["CALLBACK_FUNC"],
-						$arFields["MODULE"],
-						$arFields["PRODUCT_ID"],
-						$arFields["QUANTITY"],
-						$arFields["RENEWAL"],
-						$arFields["USER_ID"],
-						$arFields["LID"]
-					)))
-					{
-						return false;
-					}
-				}
-			}
-		}
-
-		if ($isOrderConverted != "Y")
+		if ($isOrderConverted == 'N')
 		{
 			foreach(GetModuleEvents("sale", "OnBeforeBasketAdd", true) as $arEvent)
 				if (ExecuteModuleEventEx($arEvent, Array(&$arFields))===false)
@@ -493,17 +452,27 @@ class CSaleBasket extends CAllSaleBasket
 		$bEqAr = false;
 
 		//TODO: is order converted?
-		if ($isOrderConverted == "Y")
+		if ($isOrderConverted != 'N')
 		{
-			/** @var \Bitrix\Sale\BasketItem $basketItem */
-			if (!($basketItem = \Bitrix\Sale\Compatible\BasketCompatibility::add($arFields)))
+			/** @var \Bitrix\Sale\Result $result */
+			$result = \Bitrix\Sale\Compatible\BasketCompatibility::add($arFields);
+			if (!$result->isSuccess())
 			{
-				$APPLICATION->ThrowException(Localization\Loc::getMessage('BT_MOD_SALE_BASKET_ERR_ID_ABSENT'), "BASKET_ITEM");
+				foreach($result->getErrorMessages() as $error)
+				{
+					$APPLICATION->ThrowException($error);
+				}
+
 				return false;
 			}
 
-			$ID = $basketItem->getId();
-			$arFields['QUANTITY'] = $basketItem->getQuantity();
+			$ID = $result->getId();
+
+			$basketItemData = $result->getData();
+			if (array_key_exists('QUANTITY', $basketItemData))
+			{
+				$arFields['QUANTITY'] = $basketItemData['QUANTITY'];
+			}
 		}
 		else
 		{
@@ -618,7 +587,7 @@ class CSaleBasket extends CAllSaleBasket
 		if (!$bFound)
 		{
 			//TODO: is order converted?
-			if ($isOrderConverted != "Y")
+			if ($isOrderConverted == 'N')
 			{
 				$arInsert = $DB->PrepareInsert("b_sale_basket", $arFields);
 
@@ -703,7 +672,7 @@ class CSaleBasket extends CAllSaleBasket
 			}
 		}
 
-		if ($isOrderConverted != "Y")
+		if ($isOrderConverted == 'N')
 		{
 			foreach(GetModuleEvents("sale", "OnBasketAdd", true) as $arEvent)
 				ExecuteModuleEventEx($arEvent, Array($ID, $arFields));
@@ -716,13 +685,13 @@ class CSaleBasket extends CAllSaleBasket
 	{
 		global $DB, $APPLICATION;
 
-		$isOrderConverted = \Bitrix\Main\Config\Option::get("main", "~sale_converted_15", 'N');
+		$isOrderConverted = \Bitrix\Main\Config\Option::get("main", "~sale_converted_15", 'Y');
 
 		$ID = intval($ID);
 		if (0 >= $ID)
 			return false;
 
-		if ($isOrderConverted == "Y")
+		if ($isOrderConverted != 'N')
 		{
 			/** @var \Bitrix\Sale\Result $r */
 			$r = \Bitrix\Sale\Compatible\BasketCompatibility::delete($ID);
@@ -820,14 +789,14 @@ class CSaleBasket extends CAllSaleBasket
 	{
 		global $DB, $APPLICATION;
 
-		$isOrderConverted = \Bitrix\Main\Config\Option::get("main", "~sale_converted_15", 'N');
+		$isOrderConverted = \Bitrix\Main\Config\Option::get("main", "~sale_converted_15", 'Y');
 
 		$bIncOrdered = ($bIncOrdered ? True : False);
 		$FUSER_ID = intval($FUSER_ID);
 		if ($FUSER_ID <= 0)
 			return false;
 
-		$arFilter = array("FUSER_ID" => $FUSER_ID);
+		$arFilter = array("FUSER_ID" => $FUSER_ID, 'SET_PARENT_ID' => false);
 		if (!$bIncOrdered)
 			$arFilter["ORDER_ID"] = "NULL";
 
@@ -845,7 +814,7 @@ class CSaleBasket extends CAllSaleBasket
 		);
 		while ($arBasket = $dbBasket->Fetch())
 		{
-			if ($isOrderConverted == "Y")
+			if ($isOrderConverted != 'N')
 			{
 				/** @var \Bitrix\Sale\Result $r */
 				$r = \Bitrix\Sale\Compatible\BasketCompatibility::delete($arBasket["ID"]);
@@ -1020,6 +989,9 @@ class CSaleUser extends CAllSaleUser
 		$ID = CSaleUser::_Add($arFields);
 		$ID = IntVal($ID);
 
+		$cookie_name = COption::GetOptionString("main", "cookie_name", "BITRIX_SM");
+		$_COOKIE[$cookie_name."_SALE_UID"] = $ID;
+
 		$secure = false;
 		if(COption::GetOptionString("sale", "use_secure_cookies", "N") == "Y" && CMain::IsHTTPS())
 			$secure=1;
@@ -1028,7 +1000,10 @@ class CSaleUser extends CAllSaleUser
 		{
 			$arRes = CSaleUser::GetList(array("ID" => $ID));
 			if(!empty($arRes))
+			{
 				$GLOBALS["APPLICATION"]->set_cookie("SALE_UID", $arRes["CODE"], false, "/", false, $secure, "Y", false);
+				$_COOKIE[$cookie_name."_SALE_UID"] = $arRes["CODE"];
+			}
 		}
 		else
 		{

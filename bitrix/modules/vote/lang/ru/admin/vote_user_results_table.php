@@ -3,7 +3,7 @@ $MESS ['VOTE_CHANNEL'] = "Группа:";
 $MESS ['VOTE_VOTE'] = "Опрос:";
 $MESS ['VOTE_PAGE_TITLE'] = "Голосование # #ID#";
 $MESS ['VOTE_USER_LIST'] = "Список посетителей";
-$MESS ['VOTE_RESULTS_LIST'] = "Список голосований";
+$MESS ['VOTE_RESULTS_LIST'] = "Результаты опроса";
 $MESS ['VOTE_GUEST'] = "Посетитель:";
 $MESS ['VOTE_RESULT_NOT_FOUND'] = "Результат голосования не найден";
 $MESS ['VOTE_NOT_FOUND'] = "Опрос не найден";
@@ -21,4 +21,8 @@ $MESS ['VOTE_VOTES'] = "Всего голосов:";
 $MESS ['VOTE_ENLARGE'] = "Увеличить";
 $MESS ['VOTE_START_DATE'] = "Дата начала:";
 $MESS ['VOTE_END_DATE'] = "Дата окончания:";
+$MESS ['VOTE_ACTUALITY'] = "Актуальность:";
+$MESS ['VOTE_ANSWERS'] = "Ответы:";
+$MESS ['VOTE_VOTE1'] = "Опрос";
+
 ?>

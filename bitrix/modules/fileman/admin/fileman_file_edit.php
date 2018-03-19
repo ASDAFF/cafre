@@ -106,7 +106,7 @@ else
 		$arParsedPath = CFileMan::ParsePath($path, true, false, "", $logical == "Y");
 		$abs_path = $DOC_ROOT.$path;
 	}
-	elseif(!$USER->IsAdmin() && substr(CFileman::GetFileName($abs_path), 0, 1)==".")
+	elseif(!$USER->CanDoOperation('edit_php') && substr(CFileman::GetFileName($abs_path), 0, 1)==".")
 	{
 		$strWarning = GetMessage("FILEMAN_FILEEDIT_BAD_FNAME")." ";
 		$bEdit = false;

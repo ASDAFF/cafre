@@ -9,4 +9,5 @@ $MESS["SONET_GRE_NOT_SELECTED"] = "No users selected.";
 $MESS["SONET_GRE_NAV"] = "Users";
 $MESS["SONET_GRE_NAME_TEMPLATE_DEFAULT"] = "#NOBR##NAME# #LAST_NAME##/NOBR#";
 $MESS["SONET_GRE_CANT_DELETE_INVITATION"] = "Cannot delete invitation to user ID=#RELATION_ID#";
+$MESS["SONET_GRE_TITLE_PROJECT"] = "Project membership invites and requests";
 ?>

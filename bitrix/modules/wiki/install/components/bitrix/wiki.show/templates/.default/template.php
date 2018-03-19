@@ -37,27 +37,27 @@ else:
 				echo "<br /><br />";
 
 			$APPLICATION->IncludeComponent(
-			'bitrix:wiki.category',
-			'',
-			Array(
-				'PATH_TO_POST' => $arParams['PATH_TO_POST'],
-				'PATH_TO_POST_EDIT' => $arParams['PATH_TO_POST_EDIT'],
-				'PATH_TO_CATEGORY' => $arParams['PATH_TO_CATEGORY'],
-				'PATH_TO_CATEGORIES' => $arParams['PATH_TO_CATEGORIES'],
-				'PATH_TO_DISCUSSION' => $arParams['PATH_TO_DISCUSSION'],
-				'PATH_TO_HISTORY' => $arParams['PATH_TO_HISTORY'],
-				'PAGE_VAR' => $arParams['ALIASES']['wiki_name'],
-				'OPER_VAR' => $arParams['ALIASES']['oper'],
-				'IBLOCK_TYPE' => $arParams['IBLOCK_TYPE'],
-				'IBLOCK_ID' => $arParams['IBLOCK_ID'],
-				'CACHE_TYPE' => $arParams['CACHE_TYPE'],
-				'CACHE_TIME' => $arParams['CACHE_TIME'],
-				'ELEMENT_NAME' => $arResult['ELEMENT']['NAME'],
-				'PAGES_COUNT' => '100',
-				'COLUMNS_COUNT' => '3'
-			),
-			$component
-		);
+				'bitrix:wiki.category',
+				'',
+				Array(
+					'PATH_TO_POST' => $arParams['PATH_TO_POST'],
+					'PATH_TO_POST_EDIT' => $arParams['PATH_TO_POST_EDIT'],
+					'PATH_TO_CATEGORY' => $arParams['PATH_TO_CATEGORY'],
+					'PATH_TO_CATEGORIES' => $arParams['PATH_TO_CATEGORIES'],
+					'PATH_TO_DISCUSSION' => $arParams['PATH_TO_DISCUSSION'],
+					'PATH_TO_HISTORY' => $arParams['PATH_TO_HISTORY'],
+					'PAGE_VAR' => $arParams['ALIASES']['wiki_name'],
+					'OPER_VAR' => $arParams['ALIASES']['oper'],
+					'IBLOCK_TYPE' => $arParams['IBLOCK_TYPE'],
+					'IBLOCK_ID' => $arParams['IBLOCK_ID'],
+					'CACHE_TYPE' => $arParams['CACHE_TYPE'],
+					'CACHE_TIME' => $arParams['CACHE_TIME'],
+					'ELEMENT_NAME' => $arResult['ELEMENT']['NAME'],
+					'PAGES_COUNT' => '100',
+					'COLUMNS_COUNT' => '3'
+				),
+				$component
+			);
 
 			echo "<br /><br />";
 		break;

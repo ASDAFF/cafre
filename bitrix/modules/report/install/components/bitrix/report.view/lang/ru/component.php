@@ -20,4 +20,8 @@ $MESS["REPORT_PRCNT_FROM_TITLE"] = "% от";
 $MESS["REPORT_CHART_TYPE_LINE"] = "График";
 $MESS["REPORT_CHART_TYPE_BAR"] = "Гистограмма";
 $MESS["REPORT_CHART_TYPE_PIE"] = "Круговая";
+$MESS["REPORT_HELPER_NOT_DEFINED"] = "Не задан вспомогательный класс.";
+$MESS["REPORT_COLUMNS_HAS_CYCLIC_DEPENDENCY"] = "Отчёт не может быть построен из-за циклической зависимости колонок. ".
+	"Внимательно проверьте в настройках отчёта, не образуют ли колонки с операцией \"Доля от поля\" циклические ".
+	"зависимости.";
 ?>

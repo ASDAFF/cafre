@@ -25,8 +25,8 @@ elseif ($arParams["SEO_USER"] == "TEXT") $arParams["USER_TMPL"] = '#NAME#';
 ********************************************************************/
 ?>
 <div style="float:right;">
-	<div class="out"><div class="in" style="width:<?=$arResult["count"]?>%">&nbsp;</div></div>
-	<div class="out1"><div class="in1"><?=GetMessage("F_POST_FULLY")." ".$arResult["count"]?>%</div></div>
+	<div class="forum-pm-progress-bar-out"><div class="forum-pm-progress-bar-in" style="width:<?=$arResult["count"]?>%">&nbsp;</div></div>
+	<div class="forum-pm-progress-bar-out1"><div class="forum-pm-progress-bar-in1"><?=GetMessage("F_POST_FULLY")." ".$arResult["count"]?>%</div></div>
 </div>
 <div class="forum-clear-float"></div>
 

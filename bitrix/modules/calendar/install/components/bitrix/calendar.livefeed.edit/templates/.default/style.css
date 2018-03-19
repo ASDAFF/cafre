@@ -70,7 +70,7 @@
 /*.feed-event-time a{display: none;}*/
 .feed-event-full-day {
 	display: inline-block;
-	margin: 23px 85px 0 0;
+	margin: 10px 0 0 5px;
 	vertical-align: top;
 }
 
@@ -103,6 +103,7 @@
 
 .feed-event-from-to-reminder-inner {
 	position: relative;
+	display: inline-block;
 }
 
 .feed-event-mdash {
@@ -113,15 +114,9 @@
 /*Reminder container */
 .feed-event-reminder-collapsed,
 .feed-event-reminder {
-	display: inline-block;
-	margin: 16px 0 0 0;
 	vertical-align: top;
-	height: 40px;
+	height: 45px;
 }
-
-/*.feed-event-reminder-collapsed *, .feed-event-reminder * {
-	vertical-align: top;
-}*/
 
 .feed-event-rem-ch {
 	margin: 10px 0 0;
@@ -159,7 +154,7 @@
 
 .feed-event-location {
 	border-top: 1px solid #e7eaec;
-	padding: 19px 0 5px;
+	padding: 15px 0 5px;
 }
 
 .feed-event-location label {
@@ -397,21 +392,6 @@
 	position: relative;
 }
 
-/*
-.feed-event-edit-but {background:url("/bitrix/images/calendar/calendar-sprite-mpf-2.png") no-repeat; border-radius:2px; cursor:pointer; display:inline-block; height:21px; margin-left:6px; vertical-align:top; width:25px;}
-.feed-event-edit-but:hover {background-color:#dee1e5;}
-.feed-add-but-bold {background-position:-10px -19px;}
-.feed-add-but-italic {background-position:8px -39px;}
-.feed-add-but-underline {background-position:-31px -18px;}
-.feed-add-but-strike {background-position:-78px -18px;}
-.feed-event-color {background-position:-102px -19px;}
-.feed-event-fontsizelist {background-position:-39px 4px;}
-.feed-event-removeformat {background-position:-70px -40px;}
-.feed-event-quote {background-position:-54px -19px;}
-.feed-event-code {background-position:-18px -40px;}
-.feed-event-cut {background-position:-44px -40px;}
-*/
-
 .feed-event-edit-block .feed-event-add-close-icon {
 	top: 3px;
 }
@@ -567,11 +547,59 @@
 	position: relative;
 }
 
+.feed-event-planner-block {
+	padding: 14px 0 14px 14px;
+	display: none;
+}
+
+.feed-event-planner-title {
+	color: #000;
+	display: inline-block;
+	font-size: 14px;
+	min-width: 75px;
+	margin: 23px 20px 0 0;
+	padding-left: 5px;
+	vertical-align: top;
+}
+
+.feed-event-planner-block .calendar-planner-wrapper{
+	display: inline-block;
+	margin-left: -10px;
+}
+
+.feed-event-planner-block-shown {
+	display: block;
+}
+
+.feed-event-planner-expanded .feed-event-planner-link-wrap,
+.feed-event-planner-expanded .feed-event-planner-title
+{
+	display: none;
+}
+
+.feed-event-planner-link-wrap{
+	display: inline-block;
+	vertical-align: top;
+	margin-top: 18px;
+}
+
+.feed-ev-planner-link {
+	border-bottom: 1px dashed #d1deed;
+	color: #2887d7;
+	cursor: pointer;
+	display: inline-block;
+	margin: 5px 0 0 10px;
+}
+
+.feed-ev-planner-link:hover {
+	border-color: #2887d7;
+}
+
 .feed-event-destination-title {
 	color: #000;
 	float: left;
 	font-size: 14px;
-	min-width: 55px;
+	min-width: 75px;
 	margin-right: 10px;
 	padding-left: 5px;
 }
@@ -752,6 +780,7 @@
 	font-size: 13px;
 	margin: 7px 7px 7px 18px;
 	line-height: 17px;
+	text-decoration: none;
 	vertical-align: top;
 	position: relative;
 
@@ -774,6 +803,7 @@
 .feed-add-destination-link:hover,
 .feed-event-tags-add:hover {
 	border-bottom: 1px solid;
+	color: #2067b0;
 }
 
 .feed-add-destination-input-box {
@@ -1070,7 +1100,7 @@
 .calendar-inp-cal {
 	background-position: right 9px;
 	padding-right: 30px;
-	width: 97px;
+	width: 115px;
 
 }
 
@@ -1088,7 +1118,13 @@
 }
 
 .ampm-width input {
-	width: 72px;
+	width: 105px;
+}
+
+.calendar-inp-loc
+{
+	width: auto !important;
+	min-width: 200px;
 }
 
 .calendar-select {
@@ -1121,6 +1157,11 @@
 	border-bottom: 1px solid #EFF0F1;
 	padding: 5px 0 10px 0;
 	margin-bottom: 5px;
+
+}
+
+.feed-cal-repeat-details .feed-cal-repeat-details-inner * {
+	color: #000;
 }
 
 .event-feed-rep-phrase-to {
@@ -1138,6 +1179,18 @@
 	font-size: 14px;
 	margin-top: 11px;
 	vertical-align: top;
+}
+
+.event-feed-endson-wrap{
+	display: inline-block;
+	margin: 3px 0 0 18px;
+}
+.event-feed-endson-piece{
+	display: inline-block;
+	margin-right: 8px;
+}
+.event-feed-endson-label {
+	margin-right: 6px;
 }
 
 .feed-cal-repeat-details-none {
@@ -1178,12 +1231,175 @@
 	margin: 0 20px;
 }
 
-.feed-event .feed-add-post-edit-form
-{
-	border-top: 1px solid #f0f1f2;
-}
-
 .feed-event .feed-add-post-text
 {
 	padding: 0 !important;
 }
+
+.feed-cal-full-day .bxec-tz-wrap{display: none;}
+.feed-event-hidden-wrap {
+	height: 31px;
+	overflow: hidden;
+	-webkit-transition: height 0.2s linear;
+	transition: height 0.2s linear;
+}
+
+.feed-event-cell-hidden-open .feed-event-hidden-wrap {
+	height: 0;
+}
+
+
+.feed-event-tip-wrap {
+	padding-right: 25px;
+	position: relative;
+}
+
+.feed-event-dashed-link {
+	border-bottom: 1px dashed #d2d8d9;
+	color: #898a8a;
+	cursor: pointer;
+	display: inline-block;
+	font-size: 12px;
+	line-height: 13px;
+	margin-left: 10px;
+	position: relative;
+	vertical-align: middle;
+}
+
+.feed-event-dashed-link:hover {
+	border-color: #898a8a;
+}
+
+.feed-event-tip-btn-grey {
+	background: url(/bitrix/images/calendar/calendar-sprite.png) no-repeat center -424px;
+	border: 1px solid #dde4e6;
+	border-radius: 50%;
+	cursor: pointer;
+	height: 18px;
+	top: -2px;
+	right: 0;
+	position: absolute;
+	width: 18px;
+}
+
+
+.feed-event-tip-btn {
+	background: url(/bitrix/images/calendar/calendar-sprite.png) no-repeat center -424px;
+	border: 1px solid #dde4e6;
+	border-radius: 50%;
+	cursor: pointer;
+	height: 18px;
+	top: -2px;
+	right: 0;
+	position: absolute;
+	width: 18px;
+}
+
+.feed-event-tip-btn:hover {
+	border-color: #a5b5ba;
+}
+
+
+.feed-event-timezone {
+	background-color: #eff6d6;
+	border-radius: 2px;
+	display: inline-block;
+	margin-bottom: 12px;
+	padding: 8px 10px 5px 15px;
+	position: relative;
+}
+
+.feed-event-timezone .feed-event-tip-btn {
+	background-position: center -447px;
+	border-color: #cadb98;
+	right: -31px;
+	top: 13px;
+}
+
+.feed-event-timezone .feed-event-tip-btn:hover {
+	border-color: #91b443;
+}
+
+.feed-event .feed-event-timezone .bxec-field-label-edev {
+	width: auto;
+}
+
+.feed-ev-timezone-link {
+	border-bottom: 1px dashed #d1deed;
+	color: #2887d7;
+	cursor: pointer;
+	display: inline-block;
+	margin: 5px 0 0 10px;
+}
+
+.feed-ev-timezone-link:hover {
+	border-color: #2887d7;
+}
+
+.feed-ev-timezone-hidden-wrap {
+	height: 0;
+	overflow: hidden;
+	-webkit-transition: height 0.2s linear;
+	transition: height 0.2s linear;
+	margin-left: 8px;
+}
+
+.feed-ev-timezone-hidden-item {
+	margin: 5px 0 7px;
+	display: inline-block;
+	position: relative;
+}
+
+.feed-ev-timezone-hidden {
+	overflow: hidden;
+}
+
+.feed-ev-timezone-hidden-item .bxecpl-loc-cont {
+	position: relative;
+}
+.feed-ev-timezone-hidden-item .feed-event-tip-btn {
+	right: -28px;
+	top: 5px;
+}
+
+.feed-ev-timezone-hidden-item .bxec-field-label-edev {
+	width: auto;
+}
+
+.feed-ev-timezone-outer-wrap
+{
+	margin-top: 7px;
+	background-color: transparent;
+	display: block;
+	width: 530px;
+}
+
+.feed-ev-timezone-outer-wrap-opened{
+	background-color: #dde5e8 !important;
+}
+
+.feed-ev-timezone-outer-wrap .feed-ev-timezone-link .feed-ev-tz-open{display: inline-block;}
+.feed-ev-timezone-outer-wrap .feed-ev-timezone-link .feed-ev-tz-close{display: none;}
+.feed-ev-timezone-outer-wrap-opened .feed-ev-timezone-link .feed-ev-tz-open{display: none !important;}
+.feed-ev-timezone-outer-wrap-opened .feed-ev-timezone-link .feed-ev-tz-close{display: inline-block !important;}
+
+.bx-cal-view-timezon-icon {
+	background: url(/bitrix/images/calendar/calendar-sprite.png) no-repeat -10px -482px;
+	cursor: pointer;
+	display: inline-block;
+	height: 15px;
+	vertical-align: middle;
+	width: 17px;
+}
+
+.feed-ev-tz-select{
+	width: 220px;
+	font-size: 11pt !important;
+}
+
+.bxecpl-loc-popup{background: #ffffff !important; height: auto !important; border-color:#FFF !important;}
+.bxecpl-loc-popup div{padding: 4px 5px; cursor: default; position: relative; text-align:left;}
+.bxecpl-loc-popup div a.bxecplloc-view{padding: 2px 5px; margin: 1px; cursor: default; position: absolute; top: -1px; right: -4px; display: none;}
+.bxecpl-loc-popup div a.bxecplloc-view img{border-width: 0 !important; background: url(/bitrix/images/calendar/iconkit.gif) -40px -47px; width: 18px; height: 18px; cursor: pointer;}
+.bxecpl-loc-popup div.bxecplloc-over{background-color:#DBE3F2;}
+.bxecpl-loc-popup div.bxecplloc-over a.bxecplloc-view{display: block !important;}

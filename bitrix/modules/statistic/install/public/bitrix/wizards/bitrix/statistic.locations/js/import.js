@@ -91,7 +91,7 @@ var jsPB = {
 	{
 		if (this.bInit)
 		{
-			this.Update(0)
+			this.Update(0);
 			return;
 		}
 
@@ -124,7 +124,7 @@ var jsPB = {
 		this.curValue = percent;
 
 		var obIndicator = document.getElementById('pb_indicator');
-		obIndicator.style.width = Math.round(this.width * percent / 100);;
+		obIndicator.style.width = Math.round(this.width * percent / 100);
 	},
 
 	Remove: function(bRemoveParent)
@@ -140,4 +140,4 @@ var jsPB = {
 				obPb.parentNode.parentNode.removeChild(obPb.parentNode);
 		}
 	}
-}
+};

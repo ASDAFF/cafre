@@ -638,12 +638,12 @@ class CMShop{
 	
 	function GetItemsIDs($arItem, $detail="N"){
 		$arAllIDs=array();
-		$arAllIDs["strMainID"] = $this->GetEditAreaId($arItem['ID']);
+		//$arAllIDs["strMainID"] = $this->GetEditAreaId($arItem['ID']);
 		$arAllIDs["strObName"] = 'ob'.preg_replace("/[^a-zA-Z0-9_]/", "x", $arAllIDs["strMainID"]);
 		
 		if($detail=="Y"){
 			$arAllIDs["ALL_ITEM_IDS"] = array(
-				'ID' => $arAllIDs["strMainID"],
+				'ID' => $arItem['ID'],
 				'PICT' => $arAllIDs["strMainID"].'_pict',
 				'DISCOUNT_PICT_ID' => $arAllIDs["strMainID"].'_dsc_pict',
 				'STICKER_ID' => $arAllIDs["strMainID"].'_sticker',

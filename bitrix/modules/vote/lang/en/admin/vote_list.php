@@ -13,6 +13,7 @@ $MESS["VOTE_F_LAMP"] = "Indicator:";
 $MESS["VOTE_RED"] = "red";
 $MESS["VOTE_GREEN"] = "green";
 $MESS["VOTE_F_CHANNEL"] = "Poll channel:";
+$MESS["VOTE_F_CHANNEL_ID"] = "Poll channel [ID]:";
 $MESS["VOTE_F_COUNTER"] = "Number of votes:";
 $MESS["VOTE_PAGES"] = "Polls";
 $MESS["VOTE_LAMP"] = "Ind.";
@@ -63,4 +64,5 @@ $MESS["MAIN_ADMIN_MENU_EDIT"] = "Edit";
 $MESS["MAIN_ADMIN_MENU_DELETE"] = "Delete";
 $MESS["MAIN_ADMIN_LIST_SELECTED"] = "Selected:";
 $MESS["MAIN_ADMIN_LIST_CHECKED"] = "Checked:";
+$MESS["VOTE_RESULTS_DIAGRAM"] = "Result chart";
 ?>

@@ -65,7 +65,7 @@ if($this->StartResultCache(false, ($arParams["CACHE_GROUPS"]==="N"? false: $USER
 				$picture,
 				array("width" => 130, "height" => 130),
 				BX_RESIZE_IMAGE_PROPORTIONAL,
-				true, $arFilter
+				true
 			);
 
 			$arSection["PICTURE"] = $arFileTmp["src"];
@@ -86,15 +86,15 @@ if($this->StartResultCache(false, ($arParams["CACHE_GROUPS"]==="N"? false: $USER
 }
 
 $data = array();
-foreach($arResult["SECTIONS"] as $arSection):
-
+foreach($arResult["SECTIONS"] as $arSection)
+{
 	$data["data"][] = array(
 		"ID" => $arSection["ID"],
-		"NAME" => $arSection["NAME"],
+		"NAME" => $arSection["~NAME"],
 		"URL" => $arSection["SECTION_PAGE_URL"],
 		"IMAGE" => $arSection["PICTURE"]
 	);
-endforeach;
+}
 if (SITE_CHARSET != "utf-8")
 	$data = $APPLICATION->ConvertCharsetArray($data, SITE_CHARSET, "utf-8");
 echo json_encode($data);

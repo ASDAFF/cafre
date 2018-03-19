@@ -63,8 +63,13 @@ class ManagedCache
 		return false;
 	}
 
-	// This method is used to read the variable value
-	// from the cache after successfull Read
+	/**
+	 * This method is used to read the variable value
+	 * from the cache after successfull Read
+	 *
+	 * @param string $uniqueId
+	 * @return mixed
+	 */
 	public function get($uniqueId)
 	{
 		if (array_key_exists($uniqueId, $this->vars))

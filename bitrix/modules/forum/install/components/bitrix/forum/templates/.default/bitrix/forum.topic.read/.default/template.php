@@ -451,14 +451,11 @@ oText['quote_text'] = '<?=GetMessageJS("JQOUTE_AUTHOR_WRITES");?>';
 oText['show'] = '<?=GetMessageJS("F_SHOW")?>';
 oText['hide'] = '<?=GetMessageJS("F_HIDE")?>';
 oText['wait'] = '<?=GetMessageJS("F_WAIT")?>';
-if (typeof phpVars != "object")
-	var phpVars = {};
-phpVars.bitrix_sessid = '<?=bitrix_sessid()?>';
 
-if (typeof oForum != "object")
-	var oForum = {};
-oForum.page_number = <?=intval($arResult['PAGE_NUMBER']);?>;
-oForum.topic_read_url = '<?=CUtil::JSUrlEscape($arResult['CURRENT_PAGE']);?>';
+BX.message({
+	topic_read_url : '<?=CUtil::JSUrlEscape($arResult['CURRENT_PAGE']);?>',
+	page_number : '<?=intval($arResult['PAGE_NUMBER']);?>'
+});
 <?
 if ($GLOBALS["USER"]->IsAuthorized() && $bShowedHeader):
 ?>

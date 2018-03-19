@@ -73,6 +73,19 @@ document.getElementById('bx_auth_secure_conf').style.display = '';
 			</div>
 		</div>
 
+<?if ($arResult["USE_CAPTCHA"]):?>
+		<input type="hidden" name="captcha_sid" value="<?=$arResult["CAPTCHA_CODE"]?>" />
+
+		<div class="bx-authform-formgroup-container">
+			<div class="bx-authform-label-container"><?echo GetMessage("system_auth_captcha")?></div>
+			<div class="bx-captcha"><img src="/bitrix/tools/captcha.php?captcha_sid=<?=$arResult["CAPTCHA_CODE"]?>" width="180" height="40" alt="CAPTCHA" /></div>
+			<div class="bx-authform-input-container">
+				<input type="text" name="captcha_word" maxlength="50" value="" autocomplete="off"/>
+			</div>
+		</div>
+
+<?endif?>
+
 		<div class="bx-authform-formgroup-container">
 			<input type="submit" class="btn btn-primary" name="change_pwd" value="<?=GetMessage("AUTH_CHANGE")?>" />
 		</div>

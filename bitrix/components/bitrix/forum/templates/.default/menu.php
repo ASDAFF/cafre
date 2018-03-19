@@ -84,8 +84,24 @@ endif;
 if ($arParams["SHOW_AUTH_FORM"] == "Y"):
 ?>
 		<span class="forum-menu-item forum-menu-item-last forum-menu-authorize">
-		<?$GLOBALS["APPLICATION"]->IncludeComponent("bitrix:system.auth.form", "", Array(), $component, array("HIDE_ICONS" => "Y"));?>&nbsp;</span>
+
 <?
+	if ($USER->isAuthorized())
+	{
+	?><a href="<?
+		?><?=htmlspecialcharsbx($APPLICATION->GetCurPageParam("logout=yes",
+		array("login", "logout", "register", "forgot_password", "change_password", BX_AJAX_PARAM_ID, "forum_auth")))?><?
+		?>" rel="nofollow"><span><?=GetMessage("AUTH_LOGOUT_BUTTON")?></span></a>
+		<?
+	}
+	else
+	{
+		?><a href="<?
+			?><?=htmlspecialcharsbx($APPLICATION->GetCurPageParam("login=yes",
+			array("login", "logout", "register", "forgot_password", "change_password", BX_AJAX_PARAM_ID, "forum_auth")))?><?
+			?>" rel="nofollow"><span><?=GetMessage("AUTH_LOGIN_BUTTON")?></span></a>
+			<?
+	}
 endif;
 ?>
 	</div>

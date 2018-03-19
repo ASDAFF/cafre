@@ -4,6 +4,7 @@ $MESS["AD_DONT_USE_CONTRACT"] = "Не использовать ограничения контрактов при пока
 $MESS["MAIN_RESTORE_DEFAULTS"] = "По умолчанию";
 $MESS["AD_BANNER_DAYS"] = "Сколько дней хранить динамику по баннерам?";
 $MESS["AD_CLEAR"] = "Очистить";
+$MESS["AD_DELETE_ALL"] = "Удалить все";
 $MESS["AD_RECORDS"] = "записей:";
 $MESS["AD_BANNER_GRAPH_WEIGHT"] = "Ширина графика:";
 $MESS["AD_BANNER_GRAPH_HEIGHT"] = "Высота графика:";

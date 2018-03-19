@@ -90,7 +90,7 @@ class CRubric
 	}
 
 	//Get by ID
-	function GetByID($ID)
+	public static function GetByID($ID)
 	{
 		global $DB;
 		$ID = intval($ID);
@@ -107,7 +107,7 @@ class CRubric
 	}
 
 	//Count of subscribers
-	function GetSubscriptionCount($ID)
+	public static function GetSubscriptionCount($ID)
 	{
 		global $DB;
 		$ID = intval($ID);
@@ -127,7 +127,7 @@ class CRubric
 
 
 	// delete
-	function Delete($ID)
+	public static function Delete($ID)
 	{
 		global $DB;
 		$ID = intval($ID);
@@ -148,7 +148,7 @@ class CRubric
 		return $res;
 	}
 
-	function OnBeforeLangDelete($lang)
+	public static function OnBeforeLangDelete($lang)
 	{
 		global $DB, $APPLICATION;
 		$rs = $DB->Query("SELECT count(*) C FROM b_list_rubric WHERE LID='".$DB->ForSql($lang, 2)."'", false, "File: ".__FILE__."<br>Line: ".__LINE__);

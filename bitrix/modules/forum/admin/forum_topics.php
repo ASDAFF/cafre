@@ -391,11 +391,11 @@ while ($res = $rsData->NavNext(true, "t_"))
 	</tr>
 	<tr valign="center">
 		<td><?=GetMessage("FM_TITLE_NAME")?>:</td>
-		<td><input type="text" name="TITLE" value="<?=htmlspecialcharsEx($TITLE)?>" /></td>
+		<td><input type="text" name="TITLE" value="<?=htmlspecialcharsbx($TITLE)?>" /></td>
 	</tr>
 	<tr valign="center">
 		<td><?=GetMessage("FM_TITLE_DESCRIPTION")?>:</td>
-		<td><input type="text" name="DESCRIPTION" value="<?=htmlspecialcharsEx($DESCRIPTION)?>" /></td>
+		<td><input type="text" name="DESCRIPTION" value="<?=htmlspecialcharsbx($DESCRIPTION)?>" /></td>
 	</tr>
 	<tr valign="center">
 		<td><?=GetMessage("FM_TITLE_APPROVED")?>:</td>

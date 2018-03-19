@@ -22,4 +22,3 @@ class CBPStateInitializationActivity
 		return true;
 	}
 }
-?>

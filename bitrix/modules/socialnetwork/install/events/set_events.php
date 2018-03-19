@@ -20,7 +20,6 @@ while ($lang = $langs->Fetch())
 		"DESCRIPTION" => GetMessage("SONET_NEW_MESSAGE_DESC"),
 	));
 
-	$et = new CEventType;
 	$et->Add(array(
 		"LID" => $lid,
 		"EVENT_NAME" => "SONET_INVITE_FRIEND",
@@ -28,7 +27,6 @@ while ($lang = $langs->Fetch())
 		"DESCRIPTION" => GetMessage("SONET_INVITE_FRIEND_DESC"),
 	));
 
-	$et = new CEventType;
 	$et->Add(array(
 		"LID" => $lid,
 		"EVENT_NAME" => "SONET_INVITE_GROUP",
@@ -36,7 +34,6 @@ while ($lang = $langs->Fetch())
 		"DESCRIPTION" => GetMessage("SONET_INVITE_GROUP_DESC"),
 	));
 
-	$et = new CEventType;
 	$et->Add(array(
 		"LID" => $lid,
 		"EVENT_NAME" => "SONET_AGREE_FRIEND",
@@ -44,7 +41,6 @@ while ($lang = $langs->Fetch())
 		"DESCRIPTION" => GetMessage("SONET_AGREE_FRIEND_DESC"),
 	));
 
-	$et = new CEventType;
 	$et->Add(array(
 		"LID" => $lid,
 		"EVENT_NAME" => "SONET_BAN_FRIEND",
@@ -52,7 +48,6 @@ while ($lang = $langs->Fetch())
 		"DESCRIPTION" => GetMessage("SONET_BAN_FRIEND_DESC"),
 	));
 
-	$et = new CEventType;
 	$et->Add(array(
 		"LID" => $lid,
 		"EVENT_NAME" => "SONET_NEW_EVENT_GROUP",
@@ -60,7 +55,6 @@ while ($lang = $langs->Fetch())
 		"DESCRIPTION" => GetMessage("SONET_NEW_EVENT_GROUP_DESC"),
 	));
 
-	$et = new CEventType;
 	$et->Add(array(
 		"LID" => $lid,
 		"EVENT_NAME" => "SONET_NEW_EVENT_USER",
@@ -68,22 +62,34 @@ while ($lang = $langs->Fetch())
 		"DESCRIPTION" => GetMessage("SONET_NEW_EVENT_USER_DESC"),
 	));
 	
-	$et = new CEventType;
 	$et->Add(array(
 		"LID" => $lid,
 		"EVENT_NAME" => "SONET_NEW_EVENT",
 		"NAME" => GetMessage("SONET_NEW_EVENT_NAME"),
 		"DESCRIPTION" => GetMessage("SONET_NEW_EVENT_DESC"),
 	));
-	
-	$et = new CEventType;
+
 	$et->Add(array(
 		"LID" => $lid,
 		"EVENT_NAME" => "SONET_REQUEST_GROUP",
 		"NAME" => GetMessage("SONET_REQUEST_GROUP_NAME"),
 		"DESCRIPTION" => GetMessage("SONET_REQUEST_GROUP_DESC"),
 	));
-	
+
+	$et->Add(array(
+		"LID" => $lid,
+		"EVENT_NAME" => "SONET_LOG_NEW_ENTRY",
+		"NAME" => GetMessage("SONET_LOG_NEW_ENTRY_NAME"),
+		"DESCRIPTION" => GetMessage("SONET_LOG_NEW_ENTRY_DESC"),
+	));
+
+	$et->Add(array(
+		"LID" => $lid,
+		"EVENT_NAME" => "SONET_LOG_NEW_COMMENT",
+		"NAME" => GetMessage("SONET_LOG_NEW_COMMENT_NAME"),
+		"DESCRIPTION" => GetMessage("SONET_LOG_NEW_COMMENT_DESC"),
+	));
+
 	$arSites = array();
 	$sites = CSite::GetList(($b=""), ($o=""), Array("LANGUAGE_ID"=>$lid));
 	while ($site = $sites->Fetch())
@@ -103,7 +109,6 @@ while ($lang = $langs->Fetch())
 			"BODY_TYPE" => "text",
 		));
 
-		$emess = new CEventMessage;
 		$emess->Add(array(
 			"ACTIVE" => "Y",
 			"EVENT_NAME" => "SONET_INVITE_FRIEND",
@@ -115,7 +120,6 @@ while ($lang = $langs->Fetch())
 			"BODY_TYPE" => "text",
 		));
 
-		$emess = new CEventMessage;
 		$emess->Add(array(
 			"ACTIVE" => "Y",
 			"EVENT_NAME" => "SONET_INVITE_GROUP",
@@ -127,7 +131,6 @@ while ($lang = $langs->Fetch())
 			"BODY_TYPE" => "text",
 		));
 
-		$emess = new CEventMessage;
 		$emess->Add(array(
 			"ACTIVE" => "Y",
 			"EVENT_NAME" => "SONET_AGREE_FRIEND",
@@ -139,7 +142,6 @@ while ($lang = $langs->Fetch())
 			"BODY_TYPE" => "text",
 		));
 
-		$emess = new CEventMessage;
 		$emess->Add(array(
 			"ACTIVE" => "Y",
 			"EVENT_NAME" => "SONET_BAN_FRIEND",
@@ -151,7 +153,6 @@ while ($lang = $langs->Fetch())
 			"BODY_TYPE" => "text",
 		));
 
-		$emess = new CEventMessage;
 		$emess->Add(array(
 			"ACTIVE" => "Y",
 			"EVENT_NAME" => "SONET_NEW_EVENT_GROUP",
@@ -163,7 +164,6 @@ while ($lang = $langs->Fetch())
 			"BODY_TYPE" => "text",
 		));
 
-		$emess = new CEventMessage;
 		$emess->Add(array(
 			"ACTIVE" => "Y",
 			"EVENT_NAME" => "SONET_NEW_EVENT_USER",
@@ -174,8 +174,7 @@ while ($lang = $langs->Fetch())
 			"MESSAGE" => str_replace("/company/personal/", $strCorectPath, GetMessage("SONET_NEW_EVENT_USER_MESSAGE")),
 			"BODY_TYPE" => "text",
 		));
-		
-		$emess = new CEventMessage;
+
 		$emess->Add(array(
 			"ACTIVE" => "Y",
 			"EVENT_NAME" => "SONET_NEW_EVENT",
@@ -186,8 +185,7 @@ while ($lang = $langs->Fetch())
 			"MESSAGE" => str_replace("/company/personal/", $strCorectPath, GetMessage("SONET_NEW_EVENT_MESSAGE")),
 			"BODY_TYPE" => "text",
 		));		
-		
-		$emess = new CEventMessage;
+
 		$emess->Add(array(
 			"ACTIVE" => "Y",
 			"EVENT_NAME" => "SONET_REQUEST_GROUP",
@@ -197,7 +195,31 @@ while ($lang = $langs->Fetch())
 			"SUBJECT" => GetMessage("SONET_REQUEST_GROUP_SUBJECT"),
 			"MESSAGE" => str_replace("/company/personal/", $strCorectPath, GetMessage("SONET_REQUEST_GROUP_MESSAGE")),
 			"BODY_TYPE" => "text",
-		));		
+		));
+
+		$emess->Add(array(
+			"ACTIVE" => "Y",
+			"EVENT_NAME" => "SONET_LOG_NEW_ENTRY",
+			"LID" => $arSites,
+			"EMAIL_FROM" => "#EMAIL_FROM#",
+			"EMAIL_TO" => "#EMAIL_TO#",
+			"SUBJECT" => "#LOG_ENTRY_TITLE#",
+			"MESSAGE" => "<?EventMessageThemeCompiler::includeComponent(\"bitrix:socialnetwork.log.entry.mail\",\"\",array(\"EMAIL_TO\" => \"{#EMAIL_TO#}\",\"RECIPIENT_ID\" => \"{#RECIPIENT_ID#}\",\"LOG_ENTRY_ID\" => \"{#LOG_ENTRY_ID#}\",\"URL\" => \"{#URL#}\"));?>",
+			"BODY_TYPE" => "html",
+			"SITE_TEMPLATE_ID" => "mail_user"
+		));
+
+		$emess->Add(array(
+			"ACTIVE" => "Y",
+			"EVENT_NAME" => "SONET_LOG_NEW_COMMENT",
+			"LID" => $arSites,
+			"EMAIL_FROM" => "#EMAIL_FROM#",
+			"EMAIL_TO" => "#EMAIL_TO#",
+			"SUBJECT" => "Re: #LOG_ENTRY_TITLE#",
+			"MESSAGE" => "<?EventMessageThemeCompiler::includeComponent(\"bitrix:socialnetwork.log.entry.mail\",\"\",array(\"EMAIL_TO\" => \"{#EMAIL_TO#}\",\"RECIPIENT_ID\" => \"{#RECIPIENT_ID#}\",\"LOG_ENTRY_ID\" => \"{#LOG_ENTRY_ID#}\",\"COMMENT_ID\" => \"{#COMMENT_ID#}\",\"URL\" => \"{#URL#}\"));?>",
+			"BODY_TYPE" => "html",
+			"SITE_TEMPLATE_ID" => "mail_user"
+		));
 	}
 }
 ?>

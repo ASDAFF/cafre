@@ -237,4 +237,18 @@ $MESS["SONET_REQUEST_GROUP_MESSAGE"] = "Информационное сообщение сайта #SITE_NAM
 ------------------------------------------
 
 Сообщение сгенерировано автоматически.";
+$MESS["SONET_LOG_NEW_ENTRY_NAME"] = "Добавлено новое сообщение";
+$MESS["SONET_LOG_NEW_ENTRY_DESC"] = "#EMAIL_TO# - Email получателя письма
+#LOG_ENTRY_ID# - ID сообщения
+#RECIPIENT_ID# - ID получателя
+#URL_ID# - URL страницы сообщения
+";
+$MESS["SONET_LOG_NEW_COMMENT_NAME"] = "Добавлен новый комментарий";
+$MESS["SONET_LOG_NEW_COMMENT_DESC"] = "#EMAIL_TO# - Email получателя письма
+#COMMENT_ID# - ID комментария
+#LOG_ENTRY_ID# - ID сообщения
+#RECIPIENT_ID# - ID получателя
+#URL_ID# - URL страницы сообщения
+";
+
 ?>

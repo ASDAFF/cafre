@@ -44,6 +44,7 @@ div.blog-comment-common .idea-comment-rating-content-like .idea-comment-rating-t
 
 /*Add comment button*/
 .idea-add-comment{text-align: center;}
+.idea-add-comment *{box-sizing: content-box;}
 
 .idea-add-button{
 	display: inline-block;

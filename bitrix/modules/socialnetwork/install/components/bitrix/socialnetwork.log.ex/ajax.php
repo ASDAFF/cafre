@@ -26,15 +26,29 @@ $ls_arr = isset($_REQUEST["ls_arr"])? $_REQUEST["ls_arr"]: "";
 
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");
 
+use Bitrix\Main\Localization\Loc;
+use Bitrix\Socialnetwork\Livefeed;
+
+global $USER;
+
 $rsSite = CSite::GetByID($site_id);
 if ($arSite = $rsSite->Fetch())
+{
 	define("LANGUAGE_ID", $arSite["LANGUAGE_ID"]);
+}
 else
+{
 	define("LANGUAGE_ID", "en");
+}
+
+if (empty($lng))
+{
+	$lng = LANGUAGE_ID;
+}
 
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/components/bitrix/socialnetwork.log.ex/include.php");
 
-__IncludeLang(dirname(__FILE__)."/lang/".$lng."/ajax.php");
+Loc::loadLanguageFile(__FILE__, $lng);
 
 if(CModule::IncludeModule("compression"))
 	CCompress::Disable2048Spaces();
@@ -54,10 +68,69 @@ if(CModule::IncludeModule("socialnetwork"))
 		CSocNetTools::InitGlobalExtranetArrays();
 	}
 
-	if (!$GLOBALS["USER"]->IsAuthorized())
+	if (!$USER->IsAuthorized())
+	{
 		$arResult[0] = "*";
+	}
 	elseif (!check_bitrix_sessid())
+	{
 		$arResult[0] = "*";
+	}
+	elseif ($action == "get_raw_data")
+	{
+		$provider = \Bitrix\Socialnetwork\Livefeed\Provider::init(array(
+			'ENTITY_TYPE' => (isset($_REQUEST['ENTITY_TYPE']) ? preg_replace("/[^a-z0-9_]/i", "", $_REQUEST['ENTITY_TYPE']) : false),
+			'ENTITY_ID' => (isset($_REQUEST['ENTITY_ID']) ? intval($_REQUEST['ENTITY_ID']) : false),
+			'CLONE_DISK_OBJECTS' => true
+		));
+
+		if ($provider)
+		{
+			$arResult = array(
+				'TITLE' => $provider->getSourceTitle(),
+				'DESCRIPTION' => $provider->getSourceDescription(),
+				'DISK_OBJECTS' => $provider->getSourceDiskObjects()
+			);
+
+			if (isset($_REQUEST["params"]))
+			{
+				if (
+					isset($_REQUEST["params"]["getSonetGroupAvailableList"])
+					&& !!$_REQUEST["params"]["getSonetGroupAvailableList"]
+				)
+				{
+					$feature = $operation = false;
+					if (
+						isset($_REQUEST["params"]["checkParams"])
+						&& isset($_REQUEST["params"]["checkParams"]["feature"])
+						&& isset($_REQUEST["params"]["checkParams"]["operation"])
+					)
+					{
+						$feature = $_REQUEST["params"]["checkParams"]["feature"];
+						$operation = $_REQUEST["params"]["checkParams"]["operation"];
+					}
+					$arResult['GROUPS_AVAILABLE'] = $provider->getSonetGroupsAvailable($feature, $operation);
+				}
+
+				if (
+					isset($_REQUEST["params"]["getLivefeedUrl"])
+					&& !!$_REQUEST["params"]["getLivefeedUrl"]
+				)
+				{
+					$arResult['LIVEFEED_URL'] = $provider->getLiveFeedUrl();
+				}
+			}
+		}
+	}
+	elseif ($action == "create_task_comment")
+	{
+		\Bitrix\Socialnetwork\ComponentHelper::processBlogCreateTask(array(
+			'TASK_ID' => (isset($_REQUEST['TASK_ID']) ? intval($_REQUEST['TASK_ID']) : false),
+			'SOURCE_ENTITY_TYPE' => (isset($_REQUEST['ENTITY_TYPE']) ? preg_replace("/[^a-z0-9_]/i", "", $_REQUEST['ENTITY_TYPE']) : false),
+			'SOURCE_ENTITY_ID' => (isset($_REQUEST['ENTITY_ID']) ? intval($_REQUEST['ENTITY_ID']) : false),
+			'LIVE' => 'Y'
+		));
+	}
 	elseif ($action == "get_data")
 	{
 		if
@@ -106,7 +179,7 @@ if(CModule::IncludeModule("socialnetwork"))
 		$arSubscribe = array();
 
 		$arFilter = array(
-			"USER_ID" => $GLOBALS["USER"]->GetID(),
+			"USER_ID" => $USER->GetID(),
 			"ENTITY_TYPE" => $entity_type,
 			"ENTITY_ID" => $entity_id,
 			"ENTITY_CB" => "N"
@@ -134,10 +207,10 @@ if(CModule::IncludeModule("socialnetwork"))
 		}
 
 		$arFilter = array(
-			"USER_ID" 		=> $GLOBALS["USER"]->GetID(),
-			"ENTITY_TYPE" 	=> SONET_SUBSCRIBE_ENTITY_USER,
-			"ENTITY_ID" 	=> $cb_id,
-			"ENTITY_CB" 	=> "Y"
+			"USER_ID" => $USER->getID(),
+			"ENTITY_TYPE" => SONET_SUBSCRIBE_ENTITY_USER,
+			"ENTITY_ID" => $cb_id,
+			"ENTITY_CB" => "Y"
 		);
 
 		$dbResultTmp = CSocNetLogEvents::GetList(
@@ -162,7 +235,7 @@ if(CModule::IncludeModule("socialnetwork"))
 		}
 
 		$arFilter = array(
-			"USER_ID" => $GLOBALS["USER"]->GetID(),
+			"USER_ID" => $USER->getId(),
 			"ENTITY_TYPE" => $entity_type,
 			"ENTITY_ID" => 0
 		);
@@ -509,7 +582,7 @@ if(CModule::IncludeModule("socialnetwork"))
 				$arSubscribe["CB_ALL"][$strTmp."_INHERITED"] = true;
 			}
 
-			$arSubscribe["CB_ALL"]["TITLE"]	= GetMessage("SUBSCRIBE_CB_ALL");
+			$arSubscribe["CB_ALL"]["TITLE"]	= Loc::getMessage("SUBSCRIBE_CB_ALL", false, $lng);
 
 			if (
 				array_key_exists("NAME_FORMATTED", $arCreatedByTmp)
@@ -519,12 +592,12 @@ if(CModule::IncludeModule("socialnetwork"))
 				$arSubscribe["CB_ALL"]["TITLE_1"] = str_replace(
 					array("#TITLE#"),
 					array(array_key_exists("~NAME_FORMATTED", $arCreatedByTmp) ? $arCreatedByTmp["~NAME_FORMATTED"] : $arCreatedByTmp["NAME_FORMATTED"]),
-					GetMessage("SUBSCRIBE_CB_ALL_1")
+					Loc::getMessage("SUBSCRIBE_CB_ALL_1", false, $lng)
 				);
 				$arSubscribe["CB_ALL"]["TITLE_2"] = str_replace(
 					array("#TITLE#"),
 					array(array_key_exists("~NAME_FORMATTED", $arCreatedByTmp) ? $arCreatedByTmp["~NAME_FORMATTED"] : $arCreatedByTmp["NAME_FORMATTED"]),
-					GetMessage("SUBSCRIBE_CB_ALL_2")
+					Loc::getMessage("SUBSCRIBE_CB_ALL_2", false, $lng)
 				);
 			}
 		}
@@ -550,12 +623,12 @@ if(CModule::IncludeModule("socialnetwork"))
 		$arResult["Subscription"] = $arSubscribe;
 
 		$arResult["Transport"] = array(
-			0 => array("Key" => "N", "Value" => GetMessage("SUBSCRIBE_TRANSPORT_NONE")),
-			1 => array("Key" => "M", "Value" => GetMessage("SUBSCRIBE_TRANSPORT_MAIL")),
+			0 => array("Key" => "N", "Value" => Loc::getMessage("SUBSCRIBE_TRANSPORT_NONE", false, $lng)),
+			1 => array("Key" => "M", "Value" => Loc::getMessage("SUBSCRIBE_TRANSPORT_MAIL", false, $lng)),
 		);
 
 		if (CBXFeatures::IsFeatureEnabled("WebMessenger"))
-			$arResult["Transport"][] = array("Key" => "X", "Value" => GetMessage("SUBSCRIBE_TRANSPORT_XMPP"));
+			$arResult["Transport"][] = array("Key" => "X", "Value" => Loc::getMessage("SUBSCRIBE_TRANSPORT_XMPP", false, $lng));
 	}
 	elseif ($action == "set")
 	{
@@ -564,7 +637,7 @@ if(CModule::IncludeModule("socialnetwork"))
 		if (in_array($ls, array("EVENT", "ALL")))
 		{
 			$arFields = array(
-				"USER_ID" => $GLOBALS["USER"]->GetID(),
+				"USER_ID" => $USER->getId(),
 				"ENTITY_TYPE" => $entity_type,
 				"ENTITY_ID" => $entity_id,
 				"ENTITY_CB" => "N"
@@ -579,7 +652,7 @@ if(CModule::IncludeModule("socialnetwork"))
 		elseif (in_array($ls, array("CB_ALL")))
 		{
 			$arFields = array(
-				"USER_ID" => $GLOBALS["USER"]->GetID(),
+				"USER_ID" => $USER->getId(),
 				"ENTITY_TYPE" => SONET_SUBSCRIBE_ENTITY_USER,
 				"ENTITY_ID" => $cb_id,
 				"ENTITY_CB" => "Y"
@@ -648,7 +721,7 @@ if(CModule::IncludeModule("socialnetwork"))
 				if (in_array($ls, array("EVENT", "ALL")))
 				{
 					$arFields = array(
-						"USER_ID" => $GLOBALS["USER"]->GetID(),
+						"USER_ID" => $USER->getId(),
 						"ENTITY_TYPE" => $entity_type,
 						"ENTITY_ID" => $entity_id,
 						"ENTITY_CB" => "N"
@@ -663,7 +736,7 @@ if(CModule::IncludeModule("socialnetwork"))
 				elseif (in_array($ls, array("CB_ALL")))
 				{
 					$arFields = array(
-						"USER_ID" => $GLOBALS["USER"]->GetID(),
+						"USER_ID" => $USER->getId(),
 						"ENTITY_TYPE" => SONET_SUBSCRIBE_ENTITY_USER,
 						"ENTITY_ID" => $cb_id,
 						"ENTITY_CB" => "Y"
@@ -721,15 +794,22 @@ if(CModule::IncludeModule("socialnetwork"))
 			}
 		}
 	}
-	elseif ($action == "change_follow" && $GLOBALS["USER"]->IsAuthorized())
+	elseif (
+		$action == "change_follow"
+		&& $USER->isAuthorized()
+	)
 	{
-		if ($strRes = CSocNetLogFollow::Set($GLOBALS["USER"]->GetID(), "L".intval($_REQUEST["log_id"]), ($_REQUEST["follow"] == "Y" ? "Y" : "N")))
-			$arResult["SUCCESS"] = "Y";
-		else
-			$arResult["SUCCESS"] = "N";
+		$arResult["SUCCESS"] = (
+			($strRes = CSocNetLogFollow::Set($USER->getId(), "L".intval($_REQUEST["log_id"]), ($_REQUEST["follow"] == "Y" ? "Y" : "N")))
+				? "Y"
+				: "N"
+		);
 	}
 
-	header('Content-Type: application/x-javascript; charset='.LANG_CHARSET);
+	if (empty($_REQUEST['mobile_action']))
+	{
+		header('Content-Type: application/x-javascript; charset='.LANG_CHARSET);
+	}
 	echo CUtil::PhpToJSObject($arResult);
 }
 

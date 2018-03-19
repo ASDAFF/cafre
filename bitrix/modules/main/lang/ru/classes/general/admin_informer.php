@@ -16,9 +16,12 @@ $MESS["top_panel_ai_in_no"] = "Нет";
 $MESS["top_panel_ai_sys_ver"] = "Версия системы";
 $MESS["top_panel_ai_upd_last"] = "Последнее обновление";
 $MESS["top_panel_ai_upd_never"] = "Система не обновлялась.";
-$MESS["top_panel_ai_marketplace"] = "Оцените решение Marketplace";
+$MESS["top_panel_ai_marketplace"] = "Оцените решение Маркетплейс";
 $MESS["top_panel_ai_marketplace_hide"] = "Скрыть";
 $MESS["top_panel_ai_marketplace_add"] = "Оставить отзыв";
 $MESS["top_panel_ai_marketplace_descr"] = "Вы используете решение <b>#NAME#</b> (#ID#).<br />Поделитесь своими впечатлениями.<br />
 Что понравилось?<br />Есть ли замечания?<br />Ваш отзыв очень важен для нас!";
+$MESS["top_panel_ai_composite_title"] = "Автокомпозитный сайт";
+$MESS["top_panel_ai_composite_desc"] = "Уникальная технология позволит ускорить скорость загрузки страниц вашего сайта.";
+$MESS["top_panel_ai_composite_switch_on"] = "Включить АвтоКомпозит";
 ?>

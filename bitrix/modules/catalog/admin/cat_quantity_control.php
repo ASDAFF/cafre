@@ -14,12 +14,12 @@ $userId = $USER->GetID();
 
 if(intval($userId) <= 0)
 {
-	echo CUtil::PhpToJsObject(array('ERROR' => 'AUTHORIZE_ERROR'));
+	echo CUtil::PhpToJSObject(array('ERROR' => 'AUTHORIZE_ERROR'));
 	die();
 }
 if(!CModule::IncludeModule("catalog"))
 {
-	echo CUtil::PhpToJsObject(array('ERROR' => 'CATALOG_MODULE_NOT_INSTALL'));
+	echo CUtil::PhpToJSObject(array('ERROR' => 'CATALOG_MODULE_NOT_INSTALL'));
 	die();
 }
 $strUseStoreControl = COption::GetOptionString('catalog', 'default_use_store_control', 'N');
@@ -30,7 +30,7 @@ if(check_bitrix_sessid())
 	$iblockId = intval($_REQUEST["iblockId"]);
 	if($iblockId <= 0)
 	{
-		echo CUtil::PhpToJsObject(Array('ERROR' => 'IBLOCK_ERROR'));
+		echo CUtil::PhpToJSObject(array('ERROR' => 'IBLOCK_ERROR'));
 		die();
 	}
 	CUtil::JSPostUnescape();
@@ -48,7 +48,7 @@ if(check_bitrix_sessid())
 		}
 		else
 		{
-			echo CUtil::PhpToJsObject(Array('ERROR' => 'STORE_CONTROL_ERROR'));
+			echo CUtil::PhpToJSObject(Array('ERROR' => 'STORE_CONTROL_ERROR'));
 			die();
 		}
 	}
@@ -102,4 +102,3 @@ if(check_bitrix_sessid())
 echo CUtil::PhpToJSObject($buttonId);
 
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_after.php");
-?>

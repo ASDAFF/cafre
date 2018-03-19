@@ -7,7 +7,7 @@ use Bitrix\Bizproc\FieldType;
  * Class Text
  * @package Bitrix\Bizproc\BaseType
  */
-class Text extends String
+class Text extends StringType
 {
 	/**
 	 * @return string
@@ -29,12 +29,13 @@ class Text extends String
 	{
 		$name = static::generateControlName($field);
 		$controlId = static::generateControlId($field);
-		$renderResult =  '<textarea rows="5" cols="40" id="'.htmlspecialcharsbx($controlId).'" name="'
-		.htmlspecialcharsbx($name).'">'.htmlspecialcharsbx((string) $value).'</textarea>';
+		$renderResult =  '<textarea class="'.htmlspecialcharsbx(static::generateControlClassName($fieldType, $field))
+			.'"rows="5" cols="40" id="'.htmlspecialcharsbx($controlId).'" name="'
+			.htmlspecialcharsbx($name).'">'.htmlspecialcharsbx((string) $value).'</textarea>';
 
 		if ($allowSelection)
 		{
-			$renderResult .= static::renderControlSelector($field);
+			$renderResult .= static::renderControlSelector($field, null, false, '', $fieldType);
 		}
 
 		return $renderResult;

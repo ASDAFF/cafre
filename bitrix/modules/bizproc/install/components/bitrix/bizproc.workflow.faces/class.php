@@ -92,7 +92,7 @@ class BizprocWorkflowFaces extends \CBitrixComponent
 		{
 			$workflowState = $this->getWorkflowStateInfo();
 			$tasks = CBPViewHelper::getWorkflowTasks($workflowState['ID'], true, true);
-			$lastUserStatus = CBPTaskUserStatus::Waiting;
+			$lastUserStatus = CBPTaskUserStatus::Ok;
 			if (isset($tasks['COMPLETED'][0]['USERS'][0]['STATUS']))
 				$lastUserStatus = $tasks['COMPLETED'][0]['USERS'][0]['STATUS'];
 

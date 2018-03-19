@@ -24,6 +24,7 @@ $arFilterFields = array(
 	"find_modify_2",
 	"find_modified_user",
 	"find_modified_user_exact_match",
+	"find_site_id",
 	"find_filename",
 	"find_filename_exact_match",
 	"find_title",
@@ -45,6 +46,7 @@ $filter = new CAdminFilter(
 		GetMessage('FLOW_F_DOCUMENT'),
 		GetMessage("FLOW_F_DATE_MODIFY"),
 		GetMessage('FLOW_F_MODIFIED_BY'),
+		GetMessage('FLOW_SITE_ID'),
 		GetMessage('FLOW_F_FILENAME'),
 		GetMessage('FLOW_F_TITLE'),
 		GetMessage('FLOW_F_BODY'),
@@ -67,6 +69,7 @@ $arFilter = array(
 	"DATE_MODIFY_1" => $find_modify_1,
 	"DATE_MODIFY_2" => $find_modify_2,
 	"MODIFIED_USER" => ($find_type == "modified_by" && strlen($find) > 0 ? $find : $find_modified_user),
+	"SITE_ID" => $find_site_id,
 	"FILENAME" => $find_filename,
 	"TITLE" => ($find_type == "title" && strlen($find) > 0 ? $find : $find_title),
 	"BODY" => ($find_type == "body" && strlen($find) > 0 ? $find : $find_body),
@@ -131,6 +134,12 @@ $arHeaders = array(
 		"content" => GetMessage("FLOW_MODIFIED_BY"),
 		"default" => true,
 		"sort" => "s_modified_by",
+	),
+	array(
+		"id" => "SITE_ID",
+		"content" => GetMessage("FLOW_SITE_ID"),
+		"default" => true,
+		"sort" => "s_site_id",
 	),
 	array(
 		"id" => "FILENAME",
@@ -288,6 +297,10 @@ function Diff()
 <tr valign="center">
 	<td nowrap valign="top"><?=GetMessage("FLOW_F_MODIFIED_BY")?>:</td>
 	<td nowrap><input type="text" name="find_modified_user" value="<?echo htmlspecialcharsbx($find_modified_user)?>" size="47"><?=ShowExactMatchCheckbox("find_modified_user")?>&nbsp;<?=ShowFilterLogicHelp()?></td>
+</tr>
+<tr>
+	<td><?echo GetMessage("FLOW_SITE_ID")?>:</td>
+	<td><?=CSite::SelectBox("find_site_id", $find_site_id, GetMessage("MAIN_ALL"));?></td>
 </tr>
 <tr valign="center">
 	<td nowrap><?=GetMessage("FLOW_F_FILENAME")?>:</td>

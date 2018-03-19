@@ -10,9 +10,11 @@ require($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/classes/general/agent.p
 
 class CAgent extends CAllAgent
 {
-	function CheckAgents()
+	public static function CheckAgents()
 	{
 		global $CACHE_MANAGER;
+
+		define("BX_CHECK_AGENT_START", true);
 
 		//For a while agents will execute only on primary cluster group
 		if((defined("NO_AGENT_CHECK") && NO_AGENT_CHECK===true) || (defined("BX_CLUSTER_GROUP") && BX_CLUSTER_GROUP !== 1))
@@ -38,7 +40,7 @@ class CAgent extends CAllAgent
 		return CAgent::ExecuteAgents($str_crontab);
 	}
 
-	function ExecuteAgents($str_crontab)
+	public static function ExecuteAgents($str_crontab)
 	{
 		global $DB, $CACHE_MANAGER, $pPERIOD;
 
@@ -127,6 +129,7 @@ class CAgent extends CAllAgent
 
 		$DB->Query("SELECT RELEASE_LOCK('".$uniq."_agent')");
 
+		/** @var callable|false $logFunction */
 		$logFunction = (defined("BX_AGENTS_LOG_FUNCTION") && function_exists(BX_AGENTS_LOG_FUNCTION)? BX_AGENTS_LOG_FUNCTION : false);
 
 		for($i = 0, $n = count($agents_array); $i < $n; $i++)
@@ -153,11 +156,22 @@ class CAgent extends CAllAgent
 
 			CTimeZone::Disable();
 
-			global $USER;
-			unset($USER);
-			$eval_result = "";
-			$e = eval("\$eval_result=".$arAgent["NAME"]);
-			unset($USER);
+			$USER = null;
+			try
+			{
+				$eval_result = "";
+				$e = eval("\$eval_result=".$arAgent["NAME"]);
+			}
+			catch (Exception $e)
+			{
+				CTimeZone::Enable();
+
+				$application = \Bitrix\Main\Application::getInstance();
+				$exceptionHandler = $application->getExceptionHandler();
+				$exceptionHandler->writeToLog($e);
+
+				continue;
+			}
 
 			CTimeZone::Enable();
 
@@ -176,7 +190,7 @@ class CAgent extends CAllAgent
 			{
 				$strSql = "
 					UPDATE b_agent SET
-						NAME='".$DB->ForSQL($eval_result, 2000)."',
+						NAME='".$DB->ForSQL($eval_result)."',
 						LAST_EXEC=now(),
 						NEXT_EXEC=DATE_ADD(".($arAgent["IS_PERIOD"]=="Y"? "NEXT_EXEC" : "now()").", INTERVAL ".$pPERIOD." SECOND),
 						DATE_CHECK=NULL,

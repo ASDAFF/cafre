@@ -4,36 +4,37 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
 
 <?
 if (strlen($arCurrentValues["mail_charset"]) <= 0)
-	$arCurrentValues["mail_charset"] = "windows-1251";
+	$arCurrentValues["mail_charset"] = SITE_CHARSET;
 if (strlen($arCurrentValues["mail_message_type"]) <= 0)
 	$arCurrentValues["mail_message_type"] = "plain";
+
+if ($arCurrentValues["mail_message_encoded"])
+{
+	$arCurrentValues["mail_text"] = htmlspecialcharsback($arCurrentValues["mail_text"]);
+}
 ?>
 <tr>
 	<td align="right" width="40%"><span class="adm-required-field"><?= GetMessage("BPMA_PD_FROM") ?>:</span></td>
 	<td width="60%">
-		<input type="text" name="mail_user_from" id="id_mail_user_from" value="<?= htmlspecialcharsbx($arCurrentValues["mail_user_from"]) ?>" size="50">
-		<input type="button" value="..." onclick="BPAShowSelector('id_mail_user_from', 'string');">
+		<?=CBPDocument::ShowParameterField("string", 'mail_user_from', $arCurrentValues['mail_user_from'], Array('size'=> 50))?>
 	</td>
 </tr>
 <tr>
 	<td align="right" width="40%"><span class="adm-required-field"><?= GetMessage("BPMA_PD_TO") ?>:</span></td>
 	<td width="60%">
-		<input type="text" name="mail_user_to" id="id_mail_user_to" value="<?= htmlspecialcharsbx($arCurrentValues["mail_user_to"]) ?>" size="50">
-		<input type="button" value="..." onclick="BPAShowSelector('id_mail_user_to', 'string');">
+		<?=CBPDocument::ShowParameterField("string", 'mail_user_to', $arCurrentValues['mail_user_to'], Array('size'=> 50))?>
 	</td>
 </tr>
 <tr>
 	<td align="right" width="40%"><span class="adm-required-field"><?= GetMessage("BPMA_PD_SUBJECT") ?>:</span></td>
 	<td width="60%">
-		<input type="text" name="mail_subject" id="id_mail_subject" value="<?= htmlspecialcharsbx($arCurrentValues["mail_subject"]) ?>" size="50">
-		<input type="button" value="..." onclick="BPAShowSelector('id_mail_subject', 'string');">
+		<?=CBPDocument::ShowParameterField("string", 'mail_subject', $arCurrentValues['mail_subject'], Array('size'=> 50))?>
 	</td>
 </tr>
 <tr>
 	<td align="right" width="40%" valign="top"><span class="adm-required-field"><?= GetMessage("BPMA_PD_BODY") ?>:</span></td>
 	<td width="60%">
-		<textarea name="mail_text" id="id_mail_text" rows="7" cols="40"><?= htmlspecialcharsbx($arCurrentValues["mail_text"]) ?></textarea>
-		<input style="vertical-align: top" type="button" value="..." onclick="BPAShowSelector('id_mail_text', 'string');">
+		<?=CBPDocument::ShowParameterField("text", 'mail_text', $arCurrentValues['mail_text'], Array('rows'=> 7))?>
 	</td>
 </tr>
 <tr>
@@ -41,15 +42,14 @@ if (strlen($arCurrentValues["mail_message_type"]) <= 0)
 	<td width="60%">
 		<select name="mail_message_type">
 			<option value="plain"<?= $arCurrentValues["mail_message_type"] == "plain" ? " selected" : "" ?>><?= GetMessage("BPMA_PD_TEXT") ?></option>
-			<option value="html"<?= $arCurrentValues["mail_message_type"] == "html" ? " selected" : "" ?>>Html</option>
+			<option value="html"<?= $arCurrentValues["mail_message_type"] == "html" ? " selected" : "" ?>>HTML</option>
 		</select>
 	</td>
 </tr>
 <tr>
 	<td align="right" width="40%"><?= GetMessage("BPMA_PD_CP") ?>:</td>
 	<td width="60%">
-		<input type="text" name="mail_charset" id="id_mail_charset" size="50" value="<?= htmlspecialcharsbx($arCurrentValues["mail_charset"]) ?>" />
-		<input type="button" value="..." onclick="BPAShowSelector('id_mail_charset', 'string');">
+		<?=CBPDocument::ShowParameterField("string", 'mail_charset', $arCurrentValues['mail_charset'], Array('size'=> 50))?>
 	</td>
 </tr>
 <tr>
@@ -74,7 +74,18 @@ if (strlen($arCurrentValues["mail_message_type"]) <= 0)
 			}
 			?>
 		</select><br>
-		<input type="text" name="mail_site_x" id="id_mail_site_x" size="50" value="<?= $bFound ? "" : htmlspecialcharsbx($arCurrentValues["mail_site"]) ?>" />
-		<input type="button" value="..." onclick="BPAShowSelector('id_mail_site_x', 'string');">
+		<?=CBPDocument::ShowParameterField("string", 'mail_site_x', $arCurrentValues['mail_site'], Array('size'=> 20))?>
+	</td>
+</tr>
+<tr>
+	<td align="right" width="40%"><?= GetMessage("BPMA_PD_FILE") ?>:<br><?= GetMessage("BPMA_PD_FILE_DESCRIPTION") ?></td>
+	<td width="60%">
+		<?=CBPDocument::ShowParameterField("file", 'file', $arCurrentValues['file'], array('size'=> 20))?>
+	</td>
+</tr>
+<tr>
+	<td align="right" width="40%"><?= GetMessage("BPMA_PD_MAIL_SEPARATOR") ?>:</td>
+	<td width="60%">
+		<input type="text" name="mail_separator" size="4" value="<?= htmlspecialcharsbx($arCurrentValues["mail_separator"]) ?>" />
 	</td>
 </tr>

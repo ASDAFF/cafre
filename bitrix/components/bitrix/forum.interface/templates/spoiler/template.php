@@ -15,7 +15,7 @@ ob_start();
 ?><table class='forum-spoiler'><?
 ?><thead onclick='<?
 	?>if(this.nextSibling.style.display=="none"){this.nextSibling.style.display="";BX.addClass(this,"forum-spoiler-head-open")}<?
-	?>else{this.nextSibling.style.display="none";BX.removeClass(this,"forum-spoiler-head-open")}'><tr><th><div><?=htmlspecialcharsEx($arParams["TITLE"])?></div></th></tr></thead><?
+	?>else{this.nextSibling.style.display="none";BX.removeClass(this,"forum-spoiler-head-open")}'><tr><th><div><?=htmlspecialcharsbx($arParams["TITLE"])?></div></th></tr></thead><?
 ?><tbody class='forum-spoiler' style='display:none;'><tr><td><?=$arParams["TEXT"]?></td></tr></tbody></table><?
 $str = ob_get_clean();;
 if ($arParams["RETURN"] == "Y")

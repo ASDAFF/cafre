@@ -18,8 +18,11 @@ elseif ($arResult["SHOW_MODE"] == "StartWorkflowError")
 }
 elseif ($arResult["SHOW_MODE"] == "WorkflowParameters")
 {
+	/** @var CBPDocumentService $documentService */
+	$documentService = $arResult["DocumentService"];
+
 ?>
-<form method="post" name="start_workflow_form1" action="<?=POST_FORM_ACTION_URI?>" enctype="multipart/form-data">
+<form method="post" name="start_workflow_form1" action="<?=POST_FORM_ACTION_URI?>" enctype="multipart/form-data" data-role="bizproc-start-form">
 	<input type="hidden" name="workflow_template_id" value="<?=intval($arParams["TEMPLATE_ID"]) ?>" />
 	<input type="hidden" name="document_type" value="<?= htmlspecialcharsbx($arParams["DOCUMENT_TYPE"][2]) ?>" />
 	<input type="hidden" name="document_id" value="<?= htmlspecialcharsbx($arParams["DOCUMENT_ID"][2]) ?>" />
@@ -57,7 +60,7 @@ elseif ($arResult["SHOW_MODE"] == "WorkflowParameters")
 					?>:
 				</label>
 				<span class="bizproc-field-value"><?
-					echo $arResult["DocumentService"]->GetFieldInputControl(
+					echo $documentService->GetFieldInputControl(
 						$arParams["DOCUMENT_TYPE"],
 						$arParameter,
 						array("Form" => "start_workflow_form1", "Field" => $parameterKey),

@@ -1,4 +1,10 @@
 <?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
+/** @var CBitrixComponentTemplate $this */
+/** @var array $arParams */
+/** @var array $arResult */
+/** @global CDatabase $DB */
+/** @global CUser $USER */
+/** @global CMain $APPLICATION */
 
 $arParams["BLOG_POSTS_FILTER"] = array(">UF_BLOG_POST_IMPRTNT" => 0);
 $arParams["BLOG_POSTS_PAGE_SETTINGS"] = array("bDescPageNumbering" => true, "nPageSize" => 5);
@@ -55,8 +61,10 @@ $APPLICATION->IncludeComponent(
 		"CACHE_TAGS" => array("IMPORTANT".$GLOBALS["USER"]->GetId()),
 		/************** Template Settings **********************************/
 		"OPTIONS" => array(array("name" => "BLOG_POST_IMPRTNT", "value" => "Y")),
+		"BLOG_NO_URL_IN_COMMENTS" => $arParams["BLOG_NO_URL_IN_COMMENTS"],
+		"BLOG_NO_URL_IN_COMMENTS_AUTHORITY" => $arParams["BLOG_NO_URL_IN_COMMENTS_AUTHORITY"]
 	),
-	$component,
+	$this->getComponent(),
 	array("HIDE_ICONS" => "Y")
 );
 ?>

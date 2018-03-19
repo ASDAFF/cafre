@@ -1,10 +1,13 @@
 <?
+/** @global CMain $APPLICATION */
+use Bitrix\Main\Loader;
+
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/translate/prolog.php");
 $TRANS_RIGHT = $APPLICATION->GetGroupRight("translate");
 if($TRANS_RIGHT=="D") $APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
 if (!check_bitrix_sessid()) die();
-require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/translate/include.php");
+Loader::includeModule('translate');
 
 $arTLangs = GetTLangList();
 

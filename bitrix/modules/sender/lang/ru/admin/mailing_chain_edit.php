@@ -22,6 +22,8 @@ $MESS["sender_chain_edit_list_title"] = "Перейти к списку выпусков рассылки";
 
 $MESS["sender_chain_edit_action_add"] = "Добавить";
 $MESS["sender_chain_edit_action_add_title"] = "Добавить выпуск";
+$MESS["sender_chain_edit_action_copy"] = "Копировать";
+$MESS["sender_chain_edit_action_copy_title"] = "Копировать выпуск";
 $MESS["sender_chain_edit_action_del"] = "Удалить";
 $MESS["sender_chain_edit_action_del_title"] = "Удалить выпуск";
 $MESS["sender_chain_edit_action_del_confirm"] = "Подтвердите, что вы хотите удалить этот выпуск";
@@ -47,6 +49,11 @@ $MESS["sender_chain_edit_field_subject_personalize"] = "Тэги персонализации:";
 $MESS["sender_chain_edit_field_email_from"] = "Отправитель:";
 $MESS["sender_chain_edit_field_email_from_last"] = "Ваши адреса:";
 $MESS["sender_chain_edit_field_email_from_desc"] = "Адрес отобразится в строке Отправитель (From)";
+$MESS["sender_chain_edit_field_priority"] = "Важность:";
+$MESS["sender_chain_edit_field_priority_1"] = "Высокая";
+$MESS["sender_chain_edit_field_priority_3"] = "Нормальная";
+$MESS["sender_chain_edit_field_priority_5"] = "Низкая";
+$MESS["sender_chain_edit_field_linkparams"] = "Добавить параметры во все ссылки:";
 $MESS["sender_chain_edit_field_message"] = "Тело письма";
 
 $MESS["sender_chain_edit_field_send_type_desc"] = "Чтобы настроить выход выпусков, создайте расписание. Выбирайте дни недели, месяц и периодичность отправки. Контролируйте выпуски вручную или настройте автоматическое генерирование писем.";
@@ -60,6 +67,10 @@ $MESS["sender_chain_edit_field_send_type_EMPTY"] = "Способ отправки не выбран.";
 $MESS["sender_chain_edit_field_send_type_MANUAL_desc"] = "После сохранения выпуска появится кнопка \"Отправить\". Нажмите ее для начала отправки.";
 $MESS["sender_chain_edit_field_AUTO_SEND_TIME"] = "Время отправки:";
 
+$MESS["sender_chain_edit_field_title"] = "Название выпуска";
+$MESS["sender_chain_edit_field_title_desc"] = "Это название видите только вы.";
+$MESS["sender_chain_edit_status_deactivated"] = "Рассылка деактивирована. Для отправки выпуска активировируйте рассылку.";
+
 
 $MESS["rubric_mon"] = "Пн";
 $MESS["rubric_tue"] = "Вт";
@@ -70,12 +81,23 @@ $MESS["rubric_sat"] = "Сб";
 $MESS["rubric_sun"] = "Вс";
 $MESS["rub_dom"] = "Дни месяца (например 1,10-20,25):";
 $MESS["rub_dow"] = "Дни недели:";
-$MESS["rub_tod"] = "Время (например 9:00,18:00):";
+$MESS["rub_tod"] = "Время (например 9:00):";
 
+$MESS["sender_chain_edit_btn_send_stat_prcnt"] = "отправлено";
+$MESS["sender_chain_edit_btn_send_or"] = "или";
 $MESS["sender_chain_edit_btn_send"] = "Отправить";
 $MESS["sender_chain_edit_btn_send_desc"] = "Отправить выпуск";
+$MESS["sender_chain_edit_btn_pause"] = "Пауза";
+$MESS["sender_chain_edit_btn_pause_desc"] = "Поставить на паузу отправку выпуска, можно возобновить или остановить на совсем.";
+$MESS["sender_chain_edit_btn_stop"] = "Остановить";
+$MESS["sender_chain_edit_btn_stop_desc"] = "Остановить выпуск, это необратимо.";
 $MESS["sender_chain_edit_btn_send2"] = "Отправить оставшимся адресатам";
 $MESS["sender_chain_edit_btn_send2_desc"] = "Отправить выпуск оставшимся адресатам";
+$MESS["sender_chain_edit_btn_send_err"] = "Переотправить ошибочным адресатам";
+$MESS["sender_chain_edit_btn_send_err_desc"] = "Отправить повторно тем адресатам, которым в первый раз не удалось отправить(отправлено с ошибкой).";
 $MESS["sender_chain_edit_pers_help"] = "Используйте тэги для персонализации рассылки.<br> При отправке произойдет автозамена тегов на установленные данные.<br> Например, адресат получит именное письмо с датой или названием товара-новинки";
 $MESS["sender_chain_edit_field_attachment"] = "Вложения";
+$MESS["sender_chain_edit_copied"] = "Выпуск успешно скопирован. Открыта копия выпуска.";
+$MESS["sender_chain_edit_recommended_sent_time"] = "Рекомендуемое время отправки %send_time%, с учетом %delivery_time% часов на отправку и доставку писем.";
+$MESS["sender_chain_edit_recommended_sent_time_hint"] = "Время рассчитано на основании времени суток, когда были прочитаны письма предыдущих выпусков.";
 ?>

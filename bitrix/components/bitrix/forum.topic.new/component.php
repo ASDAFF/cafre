@@ -158,7 +158,7 @@ if (!empty($arError)):
 	if ($arParams["AJAX_CALL"] == "Y"):
 		$res = array("error" => $arError, "note" => $arNote, "id" => $arParams["MID"], "post" => ShowError($arError["title"]));
 		if ($_REQUEST["CONVERT_DATA"] == "Y")
-			array_walk($res, "htmlspecialcharsEx");
+			array_walk($res, "htmlspecialcharsbx");
 		$APPLICATION->RestartBuffer();
 		?><?=CUtil::PhpToJSObject($res)?><?
 		die();
@@ -188,10 +188,12 @@ $arResult["URL"] = array(
 $arResult["VIEW"] = ((strToUpper($_REQUEST["MESSAGE_MODE"]) == "VIEW" && $_SERVER["REQUEST_METHOD"] == "POST") ? "Y" : "N");
 $_REQUEST["FILES"] = (is_array($_REQUEST["FILES"]) ? $_REQUEST["FILES"] : array());
 $_REQUEST["FILES_TO_UPLOAD"] = (is_array($_REQUEST["FILES_TO_UPLOAD"]) ? $_REQUEST["FILES_TO_UPLOAD"] : array());
-
+$post = $this->request->getPostList()->toArray();
+if ($post["AJAX_POST"] == "Y")
+	CUtil::decodeURIComponent($post);
 $arResult["MESSAGE_VIEW"] = array();
 $arAllow = forumTextParser::GetFeatures($arResult["FORUM"]);
-$arAllow['SMILES'] = (($_POST["USE_SMILES"] == "Y") ? $arAllow['SMILES'] : 'N');
+$arAllow['SMILES'] = (($post["USE_SMILES"] == "Y") ? $arAllow['SMILES'] : 'N');
 $arResult["GROUP_NAVIGATION"] = array();
 $arResult["GROUPS"] = CForumGroup::GetByLang(LANGUAGE_ID);
 $parser = new forumTextParser(LANGUAGE_ID, "");
@@ -315,7 +317,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
 				$uniqType = 0;
 				foreach ($arParams['VOTE_UNIQUE'] as $k => $v)
 					$uniqType |= intval($v);
-				$uniqType += 5;
 
 				list($uniqDelay, $uniqDelayType) = explode(" ", $arParams['VOTE_UNIQUE_IP_DELAY']);
 
@@ -395,7 +396,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
 				$arParams["FID"], $TID1, $MID1, $arFieldsG,
 				$strErrorMessage, $strOKMessage,
 				false,
-				$_POST["captcha_word"], 0, $_POST["captcha_code"]));
+				$post["captcha_word"], 0, $post["captcha_code"]));
 			if ($MID1 > 0 && empty($strErrorMessage))
 			{
 				$arParams["MID"] = $MID1;
@@ -483,7 +484,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
 		$arFilesExists = array_keys($arFilesExists);
 		sort($arFilesExists);
 		$arResult["MESSAGE_VIEW"]["FILES"] = $_REQUEST["FILES"] = $arFilesExists;
-		$arResult["MESSAGE_VIEW"]["TEXT"] = $arResult["POST_MESSAGE_VIEW"] = $parser->convert($_POST["POST_MESSAGE"], $arAllow, "html", $arFilesExists);
+		$arResult["MESSAGE_VIEW"]["TEXT"] = $arResult["POST_MESSAGE_VIEW"] = $parser->convert($post["POST_MESSAGE"], $arAllow, "html", $arFilesExists);
 		$arResult["MESSAGE_VIEW"]["FILES_PARSED"] = $parser->arFilesIDParsed;
 
 		if ($arParams['AUTOSAVE'])
@@ -570,15 +571,15 @@ endif;
 		"PAGE_NAME" => "topic_new");
 	if ($bVarsFromForm)
 	{
-		$arFormParams["AUTHOR_NAME"] = $_POST["AUTHOR_NAME"];
-		$arFormParams["AUTHOR_EMAIL"] = $_POST["AUTHOR_EMAIL"];
-		$arFormParams["POST_MESSAGE"] = $_POST["POST_MESSAGE"];
-		$arFormParams["USE_SMILES"] = $_POST["USE_SMILES"];
-		$arFormParams["TITLE"] = $_POST["TITLE"];
-		$arFormParams["TITLE_SEO"] = $_POST["TITLE_SEO"];
-		$arFormParams["TAGS"] = $_POST["TAGS"];
-		$arFormParams["DESCRIPTION"] = $_POST["DESCRIPTION"];
-		$arFormParams["ICON"] = $_POST["ICON"];
+		$arFormParams["AUTHOR_NAME"] = $post["AUTHOR_NAME"];
+		$arFormParams["AUTHOR_EMAIL"] = $post["AUTHOR_EMAIL"];
+		$arFormParams["POST_MESSAGE"] = $post["POST_MESSAGE"];
+		$arFormParams["USE_SMILES"] = $post["USE_SMILES"];
+		$arFormParams["TITLE"] = $post["TITLE"];
+		$arFormParams["TITLE_SEO"] = $post["TITLE_SEO"];
+		$arFormParams["TAGS"] = $post["TAGS"];
+		$arFormParams["DESCRIPTION"] = $post["DESCRIPTION"];
+		$arFormParams["ICON"] = $post["ICON"];
 	}
 	$arFormParams["PATH_TO_SMILE"] = "";
 	$arFormParams["PATH_TO_ICON"] = "";

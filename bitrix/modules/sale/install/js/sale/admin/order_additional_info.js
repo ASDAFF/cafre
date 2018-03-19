@@ -17,11 +17,12 @@ BX.Sale.Admin.OrderAdditionalInfo =
 			responsibleId = BX('RESPONSIBLE_ID').value;
 
 		if(node)
-			node.href = '/bitrix/admin/user_edit.php?lang='+BX.lang+'&ID='+responsibleId;
+			node.href = '/bitrix/admin/user_edit.php?lang='+BX.Sale.Admin.OrderEditPage.languageId+'&ID='+responsibleId;
 
 		var params = {
 			action : 'changeResponsibleUser',
-			user_id : responsibleId,
+			userId : responsibleId,
+			siteId: BX.Sale.Admin.OrderEditPage.siteId,
 			callback: function(result)
 						{
 							BX.Sale.Admin.OrderAdditionalInfo.setResponsible(result.RESPONSIBLE);
@@ -35,27 +36,32 @@ BX.Sale.Admin.OrderAdditionalInfo =
 
 	setResponsible: function(responsible)
 	{
-		var span = BX("order_additional_info_responsible"),
-			name = (!!responsible[0]) ? responsible[0] : '',
-			lastName = (!!responsible[1]) ? responsible[1] : '';
+		var span = BX("order_additional_info_responsible");
+
+		if(responsible)
+			responsible = BX.util.htmlspecialchars(responsible);
 
 		if (span)
-			BX.html(span, lastName + " " + name);
+			BX.html(span, responsible);
 	},
 
 	setEmpResponsible: function(empResponsible)
 	{
 		var span = BX("order_additional_info_emp_responsible");
-		var name = (!!empResponsible[0]) ? empResponsible[0] : '';
-		var lastName = (!!empResponsible[1]) ? empResponsible[1] : '';
+
+		if(empResponsible)
+			empResponsible = BX.util.htmlspecialchars(empResponsible);
 
 		if (span)
-			BX.html(span, lastName + " " + name);
+			BX.html(span, empResponsible);
 	},
 
 	setDateResponsible: function(dateResponsible)
 	{
 		var span = BX("order_additional_info_date_responsible");
+
+		if(dateResponsible)
+			dateResponsible = BX.util.htmlspecialchars(dateResponsible);
 
 		if (span)
 			BX.html(span, dateResponsible);
@@ -63,8 +69,9 @@ BX.Sale.Admin.OrderAdditionalInfo =
 
 	showCommentsDialog: function(orderId, commentNode)
 	{
-		var comments = commentNode.innerHTML,
-			dialog = new BX.CDialog({
+		var comments = commentNode.innerHTML.replace(new RegExp("<br>", "g"), "");
+
+		var	dialog = new BX.CDialog({
 			'content': '<textarea style="width:710px;height:260px;" name="COMMENTS" id="COMMENTS">'+
 				comments+
 			'</textarea>',
@@ -111,7 +118,7 @@ BX.Sale.Admin.OrderAdditionalInfo =
 			callback: function(result)
 			{
 				if(result && typeof result.COMMENTS !== 'undefined' && commentNode)
-					commentNode.innerHTML = result.COMMENTS;
+					commentNode.innerHTML = result.COMMENTS.replace(new RegExp("\n", "g"), "<br>\n");
 			}
 		});
 	}

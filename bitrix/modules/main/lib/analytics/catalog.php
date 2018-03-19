@@ -11,8 +11,11 @@ use Bitrix\Catalog\CatalogViewedProductTable;
 use Bitrix\Main\Application;
 use Bitrix\Main\Config\Option;
 use Bitrix\Main\Context;
+use Bitrix\Main\Event;
 use Bitrix\Main\Loader;
 use Bitrix\Main\UserTable;
+use Bitrix\Sale\BasketItem;
+use Bitrix\Sale\Order;
 use Bitrix\Sale\OrderTable;
 
 if (!Loader::includeModule('catalog'))
@@ -26,16 +29,22 @@ class Catalog
 {
 	protected static $cookieLogName = 'RCM_PRODUCT_LOG';
 
-	// basket (catalog:OnBasketAdd)
-	public static function catchCatalogBasket($id, $arFields)
+	// basket (sale:OnSaleBasketItemSaved)
+	public static function catchCatalogBasket(Event $event)
 	{
+		$isNew = $event->getParameter("IS_NEW");
+
+		// new items only
+		if (!$isNew)
+		{
+			return;
+		}
+		
 		// exclude empty cookie
 		if (!static::getBxUserId())
 		{
 			return;
 		}
-
-		global $APPLICATION;
 
 		// alter b_sale_basket - add recommendation, update it here
 		if (!static::isOn())
@@ -43,13 +52,17 @@ class Catalog
 			return;
 		}
 
+		/** @var BasketItem $basketItem */
+		$basketItem = $event->getParameter("ENTITY");
+
 		// get product id by offer id
 		$iblockId = 0;
-		$realProductId = $arFields['PRODUCT_ID'];
+		$realProductId = $basketItem->getProductId();
+		$isCatalog = $basketItem->getField('MODULE') == 'catalog';
 
-		if (isset($arFields['MODULE']) && $arFields['MODULE'] == 'catalog')
+		if ($isCatalog)
 		{
-			$productInfo = \CCatalogSKU::GetProductInfo($arFields['PRODUCT_ID']);
+			$productInfo = \CCatalogSKU::GetProductInfo($realProductId);
 
 			if (!empty($productInfo['ID']))
 			{
@@ -58,8 +71,6 @@ class Catalog
 			}
 			else
 			{
-				$realProductId = $arFields['PRODUCT_ID'];
-
 				// get iblock id
 				$element = \Bitrix\Iblock\ElementTable::getRow(array(
 					'select' => array('IBLOCK_ID'),
@@ -78,7 +89,7 @@ class Catalog
 		$recommendationId = '';
 
 		// first, try to find in cookies
-		$recommendationCookie = $APPLICATION->get_cookie(static::getCookieLogName());
+		$recommendationCookie = Context::getCurrent()->getRequest()->getCookie(static::getCookieLogName());
 
 		if (!empty($recommendationCookie))
 		{
@@ -90,17 +101,17 @@ class Catalog
 			}
 		}
 
-		if (empty($recommendationId) && isset($arFields['MODULE']) && $arFields['MODULE'] == 'catalog')
+		if (empty($recommendationId) && $isCatalog)
 		{
 			// ok then, lets see in views history
 			//if(\COption::GetOptionString("sale", "encode_fuser_id", "N") == "Y")
-			if (!is_numeric($arFields['FUSER_ID']))
+			if (!is_numeric($basketItem->getFUserId()))
 			{
-				$filter = array('CODE' => $arFields['FUSER_ID']);
+				$filter = array('CODE' => $basketItem->getFUserId());
 			}
 			else
 			{
-				$filter = array('ID' => $arFields['FUSER_ID']);
+				$filter = array('ID' => $basketItem->getFUserId());
 			}
 
 			$result = \CSaleUser::getList($filter);
@@ -116,7 +127,7 @@ class Catalog
 					'select' => array('RECOMMENDATION'),
 					'filter' => array(
 						'=FUSER_ID' => $fuser,
-						'=PRODUCT_ID' => $arFields['PRODUCT_ID']
+						'=PRODUCT_ID' => $basketItem->getProductId()
 					),
 					'order' => array('DATE_VISIT' => 'DESC')
 				))->fetch();
@@ -167,18 +178,20 @@ class Catalog
 
 			$conn->query(
 				"UPDATE ".$helper->quote('b_sale_basket')
-				." SET RECOMMENDATION='".$helper->forSql($recommendationId)."' WHERE ID=".(int) $id
+				." SET RECOMMENDATION='".$helper->forSql($recommendationId)."' WHERE ID=".(int) $basketItem->getId()
 			);
 		}
 	}
 
-	// order detailed info (OnOrderSave)
-	public static function catchCatalogOrder($orderId, $arFields, $arOrder, $isNew)
+	// order detailed info (sale:OnSaleOrderSaved)
+	public static function catchCatalogOrder(Event $event)
 	{
 		if (!static::isOn())
 		{
 			return;
 		}
+
+		$isNew = $event->getParameter("IS_NEW");
 
 		if (!$isNew)
 		{
@@ -186,7 +199,10 @@ class Catalog
 			return;
 		}
 
-		$data = static::getOrderInfo($orderId);
+		/** @var Order $orderItem */
+		$orderItem = $event->getParameter("ENTITY");
+
+		$data = static::getOrderInfo($orderItem->getId());
 
 		if (empty($data['products']))
 		{
@@ -245,52 +261,52 @@ class Catalog
 		}
 	}
 
-	// order payment (OnSalePayOrder)
-	public static function catchCatalogOrderPayment($orderId, $value)
+	// order payment (sale:OnSaleOrderPaid)
+	public static function catchCatalogOrderPayment(Event $event)
 	{
 		if (!static::isOn())
 		{
 			return;
 		}
 
-		if ($value == 'Y')
+		/** @var Order $orderItem */
+		$orderItem = $event->getParameter("ENTITY");
+
+		$data = static::getOrderInfo($orderItem->getId());
+
+		if (empty($data['products']))
 		{
-			$data = static::getOrderInfo($orderId);
-
-			if (empty($data['products']))
-			{
-				return;
-			}
-
-			// add bxuid
-			$data['bx_user_id'] = static::getBxUserId();
-
-			if (empty($data['bx_user_id']) && OrderTable::getEntity()->hasField('BX_USER_ID'))
-			{
-				$order = OrderTable::getRow(array(
-					'select' => array('BX_USER_ID'),
-					'filter' => array('=ID' => $orderId)
-				));
-
-				if (!empty($order) && !empty($order['BX_USER_ID']))
-				{
-					$data['bx_user_id'] = $order['BX_USER_ID'];
-				}
-			}
-
-			// add general info
-			$data['paid'] = '1';
-			$data['domain'] = Context::getCurrent()->getServer()->getHttpHost();
-			$data['date'] = date(DATE_ISO8601);
-
-			CounterDataTable::add(array(
-				'TYPE' => 'order_pay',
-				'DATA' => $data
-			));
+			return;
 		}
+
+		// add bxuid
+		$data['bx_user_id'] = static::getBxUserId();
+
+		if (empty($data['bx_user_id']) && OrderTable::getEntity()->hasField('BX_USER_ID'))
+		{
+			$order = OrderTable::getRow(array(
+				'select' => array('BX_USER_ID'),
+				'filter' => array('=ID' => $orderItem->getId())
+			));
+
+			if (!empty($order) && !empty($order['BX_USER_ID']))
+			{
+				$data['bx_user_id'] = $order['BX_USER_ID'];
+			}
+		}
+
+		// add general info
+		$data['paid'] = '1';
+		$data['domain'] = Context::getCurrent()->getServer()->getHttpHost();
+		$data['date'] = date(DATE_ISO8601);
+
+		CounterDataTable::add(array(
+			'TYPE' => 'order_pay',
+			'DATA' => $data
+		));
 	}
 
-	protected static function getOrderInfo($orderId)
+	public static function getOrderInfo($orderId)
 	{
 		// order itself
 		$order = \CSaleOrder::getById($orderId);
@@ -408,7 +424,7 @@ class Catalog
 
 	public static function isOn()
 	{
-		return SiteSpeed::isLicenseAccepted()
+		return SiteSpeed::isRussianSiteManager()
 			&& Option::get("main", "gather_catalog_stat", "Y") === "Y"
 			&& defined("LICENSE_KEY") && LICENSE_KEY !== "DEMO"
 		;

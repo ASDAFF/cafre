@@ -18,5 +18,6 @@ $MESS["SALE_BASKET_DISCOUNT_FILTER_DATE_RANGE"] = "Даты создания заказов:";
 $MESS["SALE_BASKET_DISCOUNT_FILTER_RANGE_FROM"] = "с";
 $MESS["SALE_BASKET_DISCOUNT_FILTER_RANGE_TO"] = "по";
 $MESS["SALE_BASKET_DISCOUNT_UPDATE_BTN"] = "Начать";
-$MESS["SALE_BASKET_DISCOUNT_STOP_BTN"] = "Остановить"
+$MESS["SALE_BASKET_DISCOUNT_STOP_BTN"] = "Остановить";
+$MESS["SALE_BASKET_DISCOUNT_MESS_ORDERS_ABSENT"] = "Нет заказов, для которых необходимо конвертировать данные о купонах торгового каталога";
 ?>

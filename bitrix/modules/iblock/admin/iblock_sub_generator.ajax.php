@@ -6,20 +6,22 @@ define('BX_SECURITY_SHOW_MESSAGE', true);
 define("PUBLIC_AJAX_MODE", true);
 define("NOT_CHECK_PERMISSIONS", true);
 
+use Bitrix\Main\Loader;
+
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/iblock/admin_tools.php");
 IncludeModuleLangFile(__FILE__);
 header('Content-Type: application/x-javascript; charset='.LANG_CHARSET);
 
-if(!CModule::includeModule("iblock") || !CModule::includeModule('fileman'))
-{
+if (!Loader::includeModule('iblock') || !Loader::includeModule('fileman'))
 	die();
-}
+
 CUtil::jSPostUnescape();
 if (check_bitrix_sessid())
 {
-	if($_POST['GET_INPUT'] == 'Y')
+	if (isset($_POST['GET_INPUT']) && $_POST['GET_INPUT'] == 'Y')
 		{
+			/** @global CMain $APPLICATION */
 			$APPLICATION->RestartBuffer();
 			if($_POST['PROPERTY_ID'] == "DETAIL" || $_POST['PROPERTY_ID'] == "ANNOUNCE")
 			{
@@ -39,11 +41,11 @@ if (check_bitrix_sessid())
 						'file_dialog' => true,
 						'cloud' => true,
 						'del' => true,
-						'description' => $property_fields["WITH_DESCRIPTION"]=="Y",
+						'description' => false,
 					));
 			}
-			
-			$properties = CIBlockProperty::getList(Array("sort"=>"asc", "name"=>"asc"), Array("ACTIVE"=>"Y", "ID"=>$_POST["PROPERTY_ID"], "CHECK_PERMISSIONS"=>"N"));
+
+			$properties = CIBlockProperty::getList(array("SORT" => "ASC", "NAME" => "ASC"), array("ID"=>$_POST["PROPERTY_ID"], "ACTIVE"=>"Y", "CHECK_PERMISSIONS"=>"N"));
 			if($prop_fields = $properties->Fetch())
 			{
 				$prop_fields["VALUE"] = array();
@@ -52,7 +54,6 @@ if (check_bitrix_sessid())
 			}
 			exit;
 		}
-	
+
 }
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_after.php");
-?>

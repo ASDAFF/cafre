@@ -147,10 +147,10 @@ $editTab->BeginNextTab();
 		<td><input type="text" name="SORT" size="40" value="<? echo $a_SORT?>"></td>
 	</tr>
 	<tr>
-		<td><?echo GetMessage("MAIN_AGENT_PERIOD")?></td>
+		<td class="adm-detail-valign-top"><?echo GetMessage("MAIN_AGENT_PERIODICAL1")?></td>
 		<td>
-			<input type="hidden" name="IS_PERIOD" value="N">
-			<input type="checkbox" name="IS_PERIOD" value="Y"<?if($a_IS_PERIOD=="Y") echo " checked"?>>
+			<label><input type="radio" name="IS_PERIOD" value="N"<?if($a_IS_PERIOD<>"Y") echo " checked"?>><?echo GetMessage("MAIN_AGENT_PERIODICAL_INTERVAL")?></label><br>
+			<label><input type="radio" name="IS_PERIOD" value="Y"<?if($a_IS_PERIOD=="Y") echo " checked"?>><?echo GetMessage("MAIN_AGENT_PERIODICAL_TIME")?></label>
 		</td>
 	</tr>
 	<tr>

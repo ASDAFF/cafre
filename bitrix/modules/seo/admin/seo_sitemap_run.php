@@ -8,6 +8,7 @@ use Bitrix\Main\IO;
 use Bitrix\Main\SiteTable;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Seo\RobotsFile;
+use Bitrix\Seo\SitemapIblock;
 use Bitrix\Seo\SitemapTable;
 use Bitrix\Seo\SitemapIndex;
 use Bitrix\Seo\SitemapRuntime;
@@ -278,8 +279,12 @@ if($_REQUEST['action'] == 'sitemap_run' && check_bitrix_sessid())
 				{
 					$sitemapFile->delete();
 				}
-
-				$NS['XML_FILES'] = array_merge($NS['XML_FILES'], $sitemapFile->getNameList());
+				
+				$xmlFiles = $sitemapFile->getNameList();
+				$directory = $sitemapFile->getPathDirectory();
+				foreach($xmlFiles as &$xmlFile)
+					$xmlFile = $directory.$xmlFile;
+				$NS['XML_FILES'] = array_unique(array_merge($NS['XML_FILES'], $xmlFiles));
 			}
 			else
 			{
@@ -343,6 +348,7 @@ if($_REQUEST['action'] == 'sitemap_run' && check_bitrix_sessid())
 		$NS['IBLOCK_LASTMOD'] = 0;
 
 		$NS['IBLOCK'] = array();
+		$NS['IBLOCK_MAP'] = array();
 
 		if(count($arIBlockList) <= 0)
 		{
@@ -368,6 +374,12 @@ if($_REQUEST['action'] == 'sitemap_run' && check_bitrix_sessid())
 
 		$dbOldIblockResult = null;
 		$dbIblockResult = null;
+
+		if(isset($_SESSION["SEO_SITEMAP_".$PID]))
+		{
+			$NS['IBLOCK_MAP'] = $_SESSION["SEO_SITEMAP_".$PID];
+			unset($_SESSION["SEO_SITEMAP_".$PID]);
+		}
 
 		while(!$bFinished && microtime(true) <= $ts_finish)
 		{
@@ -448,6 +460,7 @@ if($_REQUEST['action'] == 'sitemap_run' && check_bitrix_sessid())
 								'SECTION_ID' => intval($NS['CURRENT_SECTION']),
 								'>ID' => intval($NS['LAST_ELEMENT_ID']),
 								'SITE_ID' => $arSitemap['SITE_ID'],
+								"ACTIVE_DATE" => "Y"
 							),
 							false,
 							array('nTopCount' => 1000),
@@ -479,18 +492,29 @@ if($_REQUEST['action'] == 'sitemap_run' && check_bitrix_sessid())
 
 					if($arElement)
 					{
-						$arElement['LANG_DIR'] = $arSitemap['SITE']['DIR'];
+						if(!is_array($NS['IBLOCK_MAP'][$iblockId]))
+						{
+							$NS['IBLOCK_MAP'][$iblockId] = array();
+						}
 
-						$bCheckFinished = false;
-						$elementLastmod = MakeTimeStamp($arElement['TIMESTAMP_X']);
-						$NS['IBLOCK_LASTMOD'] = max($NS['IBLOCK_LASTMOD'], $elementLastmod);
-						$NS['LAST_ELEMENT_ID'] = $arElement['ID'];
+						if(!array_key_exists($arElement['ID'], $NS['IBLOCK_MAP'][$iblockId]))
+						{
+							$arElement['LANG_DIR'] = $arSitemap['SITE']['DIR'];
 
-						$NS['IBLOCK'][$iblockId]['E']++;
+							$bCheckFinished = false;
+							$elementLastmod = MakeTimeStamp($arElement['TIMESTAMP_X']);
+							$NS['IBLOCK_LASTMOD'] = max($NS['IBLOCK_LASTMOD'], $elementLastmod);
+							$NS['LAST_ELEMENT_ID'] = $arElement['ID'];
 
-						$url = \CIBlock::ReplaceDetailUrl($arElement['DETAIL_PAGE_URL'], $arElement, false, "E");
+							$NS['IBLOCK'][$iblockId]['E']++;
+							$NS['IBLOCK_MAP'][$iblockId][$arElement["ID"]] = 1;
+							
+//							remove or replace SERVER_NAME
+							$url = SitemapIblock::prepareUrlToReplace($arElement['DETAIL_PAGE_URL'], $arSitemap['SITE_ID']);
+							$url = \CIBlock::ReplaceDetailUrl($url, $arElement, false, "E");
 
-						$sitemapFile->addIBlockEntry($url, $elementLastmod);
+							$sitemapFile->addIBlockEntry($url, $elementLastmod);
+						}
 					}
 					elseif(!$bCheckFinished)
 					{
@@ -570,8 +594,10 @@ if($_REQUEST['action'] == 'sitemap_run' && check_bitrix_sessid())
 							$NS['IBLOCK'][$iblockId]['S']++;
 
 							$arSection['LANG_DIR'] = $arSitemap['SITE']['DIR'];
-
-							$url = \CIBlock::ReplaceDetailUrl($arSection['SECTION_PAGE_URL'], $arSection, false, "S");
+							
+//							remove or replace SERVER_NAME
+							$url = SitemapIblock::prepareUrlToReplace($arSection['SECTION_PAGE_URL'], $arSitemap['SITE_ID']);
+							$url = \CIBlock::ReplaceDetailUrl($url, $arSection, false, "S");
 
 							$sitemapFile->addIBlockEntry($url, $sectionLastmod);
 						}
@@ -610,7 +636,10 @@ if($_REQUEST['action'] == 'sitemap_run' && check_bitrix_sessid())
 							$arCurrentIBlock['IBLOCK_ID'] = $arCurrentIBlock['ID'];
 							$arCurrentIBlock['LANG_DIR'] = $arSitemap['SITE']['DIR'];
 
-							$url = \CIBlock::ReplaceDetailUrl($arCurrentIBlock['LIST_PAGE_URL'], $arCurrentIBlock, false, "");
+//							remove or replace SERVER_NAME
+							$url = SitemapIblock::prepareUrlToReplace($arCurrentIBlock['LIST_PAGE_URL'], $arSitemap['SITE_ID']);
+							$url = \CIBlock::ReplaceDetailUrl($url, $arCurrentIBlock, false, "");
+							
 							$sitemapFile->addIBlockEntry($url, $NS['IBLOCK_LASTMOD']);
 						}
 
@@ -628,7 +657,11 @@ if($_REQUEST['action'] == 'sitemap_run' && check_bitrix_sessid())
 							if(!is_array($NS['XML_FILES']))
 								$NS['XML_FILES'] = array();
 
-							$NS['XML_FILES'] = array_merge($NS['XML_FILES'], $sitemapFile->getNameList());
+							$xmlFiles = $sitemapFile->getNameList();
+							$directory = $sitemapFile->getPathDirectory();
+							foreach($xmlFiles as &$xmlFile)
+								$xmlFile = $directory.$xmlFile;
+							$NS['XML_FILES'] = array_unique(array_merge($NS['XML_FILES'], $xmlFiles));
 						}
 						else
 						{
@@ -861,7 +894,11 @@ if($_REQUEST['action'] == 'sitemap_run' && check_bitrix_sessid())
 						if(!is_array($NS['XML_FILES']))
 							$NS['XML_FILES'] = array();
 
-						$NS['XML_FILES'] = array_merge($NS['XML_FILES'], $sitemapFile->getNameList());
+						$xmlFiles = $sitemapFile->getNameList();
+						$directory = $sitemapFile->getPathDirectory();
+						foreach($xmlFiles as &$xmlFile)
+							$xmlFile = $directory.$xmlFile;
+						$NS['XML_FILES'] = array_unique(array_merge($NS['XML_FILES'], $xmlFiles));
 					}
 					else
 					{
@@ -944,6 +981,11 @@ if($_REQUEST['action'] == 'sitemap_run' && check_bitrix_sessid())
 
 	if($v < $arValueSteps['index'])
 	{
+		if(isset($NS['IBLOCK_MAP']))
+		{
+			$_SESSION["SEO_SITEMAP_".$PID] = $NS['IBLOCK_MAP'];
+			unset($NS['IBLOCK_MAP']);
+		}
 ?>
 <script>
 top.BX.runSitemap(<?=$ID?>, <?=$v?>, '<?=$PID?>', <?=CUtil::PhpToJsObject($NS)?>);

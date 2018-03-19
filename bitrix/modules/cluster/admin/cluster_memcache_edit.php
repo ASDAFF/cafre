@@ -127,7 +127,7 @@ $tabControl->BeginNextTab();
 	<?if(is_array($arServer)):?>
 		<tr>
 			<td><?echo GetMessage("CLU_MEMCACHE_EDIT_ID")?>:</td>
-			<td><?echo $arServer["ID"];?></td>
+			<td><?echo intval($arServer["ID"]);?></td>
 		</tr>
 	<?endif?>
 	<tr>
@@ -153,7 +153,7 @@ $tabControl->Buttons(
 <input type="hidden" name="lang" value="<?echo LANGUAGE_ID?>">
 <input type="hidden" name="group_id" value="<?echo $group_id?>">
 <?if(is_array($arServer)):?>
-	<input type="hidden" name="ID" value="<?echo $arServer["ID"]?>">
+	<input type="hidden" name="ID" value="<?echo intval($arServer["ID"])?>">
 <?endif;?>
 <?
 $tabControl->End();

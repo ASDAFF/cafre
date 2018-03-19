@@ -39,8 +39,7 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
 <tr id="tr_time_type_selector_delay">
 	<td align="right" width="40%"><?= GetMessage("CPAD_DP_TIME") ?>:</td>
 	<td width="60%">
-		<input type="text" name="delay_time" id="id_delay_time" value="<?= htmlspecialcharsbx($arCurrentValues["delay_time"]) ?>" size="20" />
-		<input type="button" value="..." onclick="BPAShowSelector('id_delay_time', 'int');" />
+		<?=CBPDocument::ShowParameterField('int', 'delay_time', $arCurrentValues["delay_time"], array('size' => 20))?>
 		<select name="delay_type">
 			<option value="s"<?= ($arCurrentValues["delay_type"] == "s") ? " selected" : "" ?>><?= GetMessage("CPAD_DP_TIME_S") ?></option>
 			<option value="m"<?= ($arCurrentValues["delay_type"] == "m") ? " selected" : "" ?>><?= GetMessage("CPAD_DP_TIME_M") ?></option>
@@ -60,20 +59,7 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
 <tr id="tr_time_type_selector_time">
 	<td align="right" width="40%"><?= GetMessage("CPAD_DP_TIME1") ?>:</td>
 	<td width="60%">
-		<?
-		$v = "";
-		$v_x = trim($arCurrentValues["delay_date"]);
-		if (!CBPActivity::isExpression($v_x))
-		{
-			$v = $v_x;
-			$v_x = "";
-		}
-
-		require_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/interface/init_admin.php");
-		echo CAdminCalendar::CalendarDate("delay_date", $v, 19, true);
-		?>
-		<input type="text" name="delay_date_x" id="id_delay_date_x" value="<?= htmlspecialcharsbx($v_x) ?>" size="20" />
-		<input type="button" value="..." onclick="BPAShowSelector('id_delay_date_x', 'datetime');" />
+		<?=CBPDocument::ShowParameterField('datetime', 'delay_date', $arCurrentValues["delay_date"])?>
 	</td>
 </tr>
 <script type="text/javascript">

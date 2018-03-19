@@ -10,13 +10,13 @@ IncludeModuleLangFile(__FILE__);
 //
 class CControllerClient
 {
-	function IsInCommonKernel()
+	public static function IsInCommonKernel()
 	{
 		return file_exists($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/classes/general/update_db_updater.php");
 	}
 
 	// Controller's authentication
-	function OnExternalLogin(&$arParams)
+	public static function OnExternalLogin(&$arParams)
 	{
 		global $USER, $APPLICATION;
 		$FORMAT_DATE = false;
@@ -151,25 +151,41 @@ class CControllerClient
 
 			$arParams["REMEMBER"] = "N";
 
+			if (
+				$ar_mem
+				&& $USER_ID
+				&& class_exists("\\Bitrix\\Controller\\AuthLogTable")
+				&& \Bitrix\Controller\AuthLogTable::isEnabled()
+			)
+			{
+				\Bitrix\Controller\AuthLogTable::logSiteToControllerAuth(
+					$ar_mem["ID"],
+					$USER_ID,
+					true,
+					'CONTROLLER_MEMBER',
+					$arUser['NAME'].' '.$arUser['LAST_NAME'].' ('.$arUser['LOGIN'].')'
+				);
+			}
+
 			return $USER_ID;
 		}
 
 		return false;
 	}
 
-	function OnAfterUserLogin(&$arParams)
+	public static function OnAfterUserLogin(&$arParams)
 	{
 		global $USER;
 		if($arParams["CONTROLLER_ADMIN"] === "Y")
 			$USER->SetControllerAdmin();
 	}
 
-	function UpdateUser($arFields = Array(), $FORMAT_DATE = false, $FORMAT_DATETIME = false)
+	public static function UpdateUser($arFields = Array(), $FORMAT_DATE = false, $FORMAT_DATETIME = false)
 	{
 		global $DB;
 
 		$arFields["ACTIVE"] = "Y";
-		$arFields["PASSWORD"] = md5(uniqid(rand(), true));
+		$arFields["PASSWORD"] = \Bitrix\Main\Security\Random::getString(32);
 
 		$oUser = new CUser;
 		unset($arFields["ID"]);
@@ -250,7 +266,7 @@ class CControllerClient
 		return $USER_ID;
 	}
 
-	function AuthorizeAdmin($arParams = Array())
+	public static function AuthorizeAdmin($arParams = Array())
 	{
 		global $USER;
 		$ADMIN_ID = 0;
@@ -275,7 +291,7 @@ class CControllerClient
 		return false;
 	}
 
-	function AuthorizeUser($arParams = Array())
+	public static function AuthorizeUser($arParams = Array())
 	{
 		global $USER;
 
@@ -289,7 +305,7 @@ class CControllerClient
 		return false;
 	}
 
-	function OnExternalAuthList()
+	public static function OnExternalAuthList()
 	{
 		$arResult = Array(
 				Array(
@@ -301,7 +317,7 @@ class CControllerClient
 		return $arResult;
 	}
 
-	function PrepareUserInfo($arUser)
+	public static function PrepareUserInfo($arUser)
 	{
 		$arFields = array(
 			"ID",
@@ -349,7 +365,7 @@ class CControllerClient
 		return $arSaveUser;
 	}
 
-	function SendMessage($name, $status = 'Y', $description = '')
+	public static function SendMessage($name, $status = 'Y', $description = '')
 	{
 		// send to controller
 		$arVars =
@@ -371,23 +387,23 @@ class CControllerClient
 		}
 	}
 
-	function InitTicket($controller_url)
+	public static function InitTicket($controller_url)
 	{
 		// generating own member_id and temporary ticket
-		$member_id = substr("m".md5(uniqid(rand(), true)), 0, 32);
+		$member_id = "m".\Bitrix\Main\Security\Random::getString(31);
 		COption::SetOptionString("main", "controller_member_id", $member_id);
 
-		$member_secret_id = substr("m".md5(uniqid(rand(), true)), 0, 32);
+		$member_secret_id = "m".\Bitrix\Main\Security\Random::getString(31);
 		COption::SetOptionString("main", "controller_member_secret_id", $member_secret_id);
 
-		$ticket_id = substr("m".md5(uniqid(rand(), true)), 0, 32);
+		$ticket_id = "m".\Bitrix\Main\Security\Random::getString(31);
 		COption::SetOptionString("main", "controller_ticket", time()."|".$ticket_id."|".$controller_url);
 		COption::SetOptionString("main", "controller_url", $controller_url);
 
 		return array($member_id, $member_secret_id, $ticket_id);
 	}
 
-	function JoinToControllerEx($controller_url, $controller_login, $controller_password, $arMemberParams = Array())
+	public static function JoinToControllerEx($controller_url, $controller_login, $controller_password, $arMemberParams = Array())
 	{
 		if(COption::GetOptionString("main", "controller_member", "N")=="Y")
 			return false;
@@ -433,7 +449,7 @@ class CControllerClient
 		return true;
 	}
 
-	function JoinToController($controller_url, $controller_login, $controller_password, $site_url = false, $controller_group = false, $site_name = false, $bSharedKernel = false)
+	public static function JoinToController($controller_url, $controller_login, $controller_password, $site_url = false, $controller_group = false, $site_name = false, $bSharedKernel = false)
 	{
 		$arMemberParams = Array(
 				"URL" => $site_url,
@@ -446,7 +462,7 @@ class CControllerClient
 	}
 
 
-	function RemoveFromController($controller_login, $controller_password)
+	public static function RemoveFromController($controller_login, $controller_password)
 	{
 		if(COption::GetOptionString("main", "controller_member", "N")!="Y")
 			return false;
@@ -473,7 +489,7 @@ class CControllerClient
 		return true;
 	}
 
-	function UpdateCounters()
+	public static function UpdateCounters()
 	{
 		if(COption::GetOptionString("main", "controller_member", "N") != "Y")
 		{
@@ -486,38 +502,49 @@ class CControllerClient
 			$oResponse = $oRequest->SendWithCheck();
 
 			if($oResponse == false)
-				error_log("CControllerClient::UpdateCounters: unknown error");
+				throw new \Bitrix\Main\SystemException("CControllerClient::UpdateCounters: unknown error");
 			elseif(!$oResponse->OK())
-				error_log("CControllerClient::UpdateCounters: ".$oResponse->text);
+				throw new \Bitrix\Main\SystemException("CControllerClient::UpdateCounters: ".$oResponse->text);
 
 			return "CControllerClient::UpdateCounters();";
 		}
 	}
 
-	function ExecuteEvent($eventName, $arParams = array())
+	public static function ExecuteEvent($eventName, $arParams = array())
 	{
+		global $APPLICATION;
 		if(COption::GetOptionString("main", "controller_member", "N") != "Y")
 		{
 			return null;
 		}
 		else
 		{
+			$APPLICATION->ResetException();
 			$oRequest = new CControllerClientRequestTo("execute_event", array(
 				"event_name" => $eventName,
 				"parameters" => $arParams,
 			));
 			$oResponse = $oRequest->SendWithCheck();
 
-			if($oResponse == false)
-				error_log("CControllerClient::ExecuteEvent: unknown error");
-			elseif(!$oResponse->OK())
-				error_log("CControllerClient::ExecuteEvent: ".$oResponse->text);
+			if ($oResponse == false || !$oResponse->OK())
+			{
+				$e = $APPLICATION? $APPLICATION->GetException(): false;
+				if (is_object($e))
+					$errorMessage = $e->GetString();
+				elseif ($oResponse && $oResponse->text)
+					$errorMessage = $oResponse->text;
+				elseif ($oResponse)
+					$errorMessage = "http headers: [".$oResponse->httpHeaders."]";
+				else
+					$errorMessage = "unknown error";
+				error_log("CControllerClient::ExecuteEvent($eventName): ".$errorMessage);
+			}
 
 			return $oResponse->arParameters['result'];
 		}
 	}
 
-	function Unlink()
+	public static function Unlink()
 	{
 		$disconnect_command = COption::GetOptionString("main", "~controller_disconnect_command", "");
 		if(strlen($disconnect_command)>0)
@@ -525,7 +552,7 @@ class CControllerClient
 		COption::SetOptionString("main", "controller_member", "N");
 	}
 
-	function GetBackup($bRefresh = false)
+	public static function GetBackup($bRefresh = false)
 	{
 		static $arCachedData;
 		if(!isset($arCachedData) || $bRefresh)
@@ -534,13 +561,13 @@ class CControllerClient
 		return $arCachedData;
 	}
 
-	function SetBackup($arBackup)
+	public static function SetBackup($arBackup)
 	{
 		COption::SetOptionString("main", "~controller_backup", serialize($arBackup));
 		CControllerClient::GetBackup(true);
 	}
 
-	function SetOptionString($module_id, $option_id, $value)
+	public static function SetOptionString($module_id, $option_id, $value)
 	{
 		$arBackup = CControllerClient::GetBackup();
 		if(!is_set($arBackup["options"][$module_id], $option_id))
@@ -551,7 +578,7 @@ class CControllerClient
 		COption::SetOptionString($module_id, $option_id, $value);
 	}
 
-	function RestoreOption($module_id, $option_id)
+	public static function RestoreOption($module_id, $option_id)
 	{
 		$arBackup = CControllerClient::GetBackup();
 		if(is_set($arBackup["options"][$module_id], $option_id))
@@ -564,7 +591,7 @@ class CControllerClient
 		return false;
 	}
 
-	function SetModules($arModules)
+	public static function SetModules($arModules)
 	{
 		$arInstalled = Array();
 		$arm = CModule::_GetCache();
@@ -596,7 +623,7 @@ class CControllerClient
 		return true;
 	}
 
-	function RestoreModules()
+	public static function RestoreModules()
 	{
 		$arBackup = CControllerClient::GetBackup();
 		if(isset($arBackup["modules"]))
@@ -630,7 +657,8 @@ class CControllerClient
 			CControllerClient::SetBackup($arBackup);
 		}
 	}
-	function RestoreGroupSecurity($group_code, $arModules)
+
+	public static function RestoreGroupSecurity($group_code, $arModules)
 	{
 		$arBackup = CControllerClient::GetBackup();
 
@@ -654,7 +682,7 @@ class CControllerClient
 		CControllerClient::SetBackup($arBackup);
 	}
 
-	function SetTaskSecurity($task_id, $module_id, $arOperations, $letter = '')
+	public static function SetTaskSecurity($task_id, $module_id, $arOperations, $letter = '')
 	{
 		$ID = 0;
 		$dbr_task = CTask::GetList(Array(), Array('NAME'=>$task_id, 'MODULE_ID'=>$module_id, "BINDING" => 'module'));
@@ -692,7 +720,7 @@ class CControllerClient
 		}
 	}
 
-	function SetGroupSecurity($group_code, $arPermissions, $arSubGroups = false)
+	public static function SetGroupSecurity($group_code, $arPermissions, $arSubGroups = false)
 	{
 		if(($group_id = CGroup::GetIDByCode($group_code))<=0)
 			return false;
@@ -729,7 +757,7 @@ class CControllerClient
 		CControllerClient::SetBackup($arBackup);
 	}
 
-	function RestoreSecurity($arExcludeGroups = array())
+	public static function RestoreSecurity($arExcludeGroups = array())
 	{
 		$arBackup = CControllerClient::GetBackup();
 		if(!is_array($arBackup))
@@ -763,7 +791,7 @@ class CControllerClient
 		return true;
 	}
 
-	function RestoreAll()
+	public static function RestoreAll()
 	{
 		$arBackup = CControllerClient::GetBackup();
 		if(!is_array($arBackup))
@@ -788,7 +816,7 @@ class CControllerClient
 		return true;
 	}
 
-	function GetInstalledOptions($module_id)
+	public static function GetInstalledOptions($module_id)
 	{
 		$arOptions = CControllerClient::GetBackup();
 		$arOptions = $arOptions["options"][$module_id];
@@ -797,7 +825,7 @@ class CControllerClient
 		return $arOptions;
 	}
 
-	function RunCommand($command, $oRequest, $oResponse)
+	public static function RunCommand($command, $oRequest, $oResponse)
 	{
 		global $APPLICATION, $USER, $DB;
 		return eval($command);
@@ -869,7 +897,7 @@ class __CControllerPacket
 		if ($this->session_id)
 			return $this->session_id.".log";
 		else
-			return "gen_".md5(uniqid(rand(), true)).".log";
+			return "gen_".\Bitrix\Main\Security\Random::getString(32).".log";
 
 	}
 
@@ -1145,9 +1173,11 @@ class __CControllerPacketRequest extends __CControllerPacket
 	/**
 	 * Sends packet.
 	 *
+	 * @param string $url
+	 * @param string $page
 	 * @return __CControllerPacketResponse
-	 **/
-	public function Send($url, $page)
+	 */
+	public function Send($url = "", $page = "")
 	{
 		global $APPLICATION;
 
@@ -1169,12 +1199,17 @@ class __CControllerPacketRequest extends __CControllerPacket
 			$server_name = substr($server_name, 0, 0 - strlen($server_port) - 1);
 		}
 
-		$proxy_url = COption::GetOptionString("main", "controller_proxy_url", "");
-		$proxy_port = COption::GetOptionString("main", "controller_proxy_port", "");
+		$proxy_url = CPageOption::GetOptionString("main", "controller_proxy_url", "");
+		$proxy_port = CPageOption::GetOptionString("main", "controller_proxy_port", "");
+		$bUseProxy = (strlen($proxy_url) > 0 && strlen($proxy_port) > 0);
+		if (!$bUseProxy)
+		{
+			$proxy_url = COption::GetOptionString("main", "controller_proxy_url", "");
+			$proxy_port = COption::GetOptionString("main", "controller_proxy_port", "");
+			$bUseProxy = (strlen($proxy_url) > 0 && strlen($proxy_port) > 0);
+		}
 
 		// соединяемся с удаленным сервером
-		$bUseProxy = (strlen($proxy_url) > 0 && strlen($proxy_port) > 0);
-
 		if ($bUseProxy)
 		{
 			$proxy_port = intval($proxy_port);
@@ -1271,6 +1306,7 @@ class __CControllerPacketRequest extends __CControllerPacket
 		fclose($conn);
 
 		$packet_result = new __CControllerPacketResponse();
+		$packet_result->httpHeaders = $header;
 		$packet_result->secret_id = $this->secret_id;
 		$packet_result->ParseResult($result);
 
@@ -1303,7 +1339,9 @@ class __CControllerPacketRequest extends __CControllerPacket
 //////////////////////////////////////////////////////////
 class __CControllerPacketResponse extends __CControllerPacket
 {
-	var $status, $text;
+	public $httpHeaders;
+	public $status;
+	public $text;
 
 	function _InitFromRequest($oPacket, $arExclude = array('operation', 'arParameters'))
 	{
@@ -1456,18 +1494,18 @@ class CControllerClientRequestTo extends __CControllerPacketRequest
 	var $debug_const = "CONTROLLER_CLIENT_DEBUG";
 	var $debug_file_const = "CONTROLLER_CLIENT_LOG_DIR";
 
-	function CControllerClientRequestTo($operation, $arParameters = Array())
+	public function __construct($operation, $arParameters = Array())
 	{
 		$this->member_id = COption::GetOptionString("main", "controller_member_id", "");
 		$this->secret_id = COption::GetOptionString("main", "controller_member_secret_id", "");
 		$this->operation = $operation;
 		$this->arParameters = $arParameters;
-		$this->session_id = md5(uniqid(rand(), true));
+		$this->session_id = \Bitrix\Main\Security\Random::getString(32);
 	}
 
 	function SendWithCheck($page="/bitrix/admin/controller_ws.php")
 	{
-		$oResponse = $this->Send($page);
+		$oResponse = $this->Send("", $page);
 		if($oResponse===false)
 			return false;
 
@@ -1484,7 +1522,7 @@ class CControllerClientRequestTo extends __CControllerPacketRequest
 		return $oResponse;
 	}
 
-	function Send($page="/bitrix/admin/controller_ws.php")
+	public function Send($url = "", $page = "/bitrix/admin/controller_ws.php")
 	{
 		$this->Sign();
 		$oResponsePacket = parent::Send(COption::GetOptionString("main", "controller_url", ""), $page);
@@ -1503,7 +1541,7 @@ class CControllerClientResponseFrom extends __CControllerPacketResponse
 	var $debug_const = "CONTROLLER_CLIENT_DEBUG";
 	var $debug_file_const = "CONTROLLER_CLIENT_LOG_DIR";
 
-	function CControllerClientResponseFrom($oPacket)
+	public function __construct($oPacket)
 	{
 		$this->_InitFromRequest($oPacket, array());
 	}
@@ -1514,7 +1552,7 @@ class CControllerClientRequestFrom extends __CControllerPacketRequest
 	var $debug_const = "CONTROLLER_CLIENT_DEBUG";
 	var $debug_file_const = "CONTROLLER_CLIENT_LOG_DIR";
 
-	function CControllerClientRequestFrom()
+	public function __construct()
 	{
 		$this->InitFromRequest();
 		$this->Debug(array(
@@ -1549,7 +1587,7 @@ class CControllerClientResponseTo extends __CControllerPacketResponse
 	var $debug_const = "CONTROLLER_CLIENT_DEBUG";
 	var $debug_file_const = "CONTROLLER_CLIENT_LOG_DIR";
 
-	function CControllerClientResponseTo($oPacket = false)
+	public function __construct($oPacket = false)
 	{
 		$this->_InitFromRequest($oPacket);
 	}
@@ -1557,7 +1595,7 @@ class CControllerClientResponseTo extends __CControllerPacketResponse
 
 class CControllerTools
 {
-	function PackFileArchive($path)
+	public static function PackFileArchive($path)
 	{
 		include_once(dirname(__FILE__) . '/tar_gz.php');
 
@@ -1565,7 +1603,7 @@ class CControllerTools
 		{
 			$path = realpath($path);
 
-			$arcname = CTempFile::GetFileName(md5(uniqid(rand(), true)).'.tar.gz');
+			$arcname = CTempFile::GetFileName(\Bitrix\Main\Security\Random::getString(32).'.tar.gz');
 			CheckDirPath($arcname);
 			$ob = new CArchiver($arcname);
 
@@ -1580,12 +1618,12 @@ class CControllerTools
 		return false;
 	}
 
-	function UnpackFileArchive($strfile, $path_to)
+	public static function UnpackFileArchive($strfile, $path_to)
 	{
 		global $APPLICATION;
 		$res = true;
 
-		$arcname = CTempFile::GetFileName(md5(uniqid(rand(), true)).'.tar.gz');
+		$arcname = CTempFile::GetFileName(\Bitrix\Main\Security\Random::getString(32).'.tar.gz');
 		CheckDirPath($arcname);
 
 		if(file_put_contents($arcname, $strfile) !== false)
@@ -1614,5 +1652,3 @@ class CControllerTools
 		return $res;
 	}
 }
-
-?>

@@ -53,6 +53,7 @@ div.blog-post-image-item-act input {
 
 /*Add comment button*/
 .idea-add-comment{text-align: center;}
+.idea-add-comment *{box-sizing: content-box;}
 .idea-add-button{
 	display: inline-block;
 	margin: 8px 0px 0px 0;

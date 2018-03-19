@@ -153,6 +153,8 @@ class CPHPCacheFiles
 		if(!file_exists($fn))
 			return false;
 
+		$handle = null;
+
 		if(is_array($arAllVars))
 		{
 			$INCLUDE_FROM_CACHE='Y';
@@ -182,20 +184,26 @@ class CPHPCacheFiles
 		$this->read = @filesize($fn);
 		$this->path = $fn;
 
-		if(intval($datecreate) < (mktime() - $TTL))
-			return false;
-
-		if(is_array($arAllVars))
+		$res = false;
+		if(intval($datecreate) >= (time() - $TTL))
 		{
-			$arAllVars = unserialize($ser_content);
+			if(is_array($arAllVars))
+			{
+				$arAllVars = unserialize($ser_content);
+			}
+			else
+			{
+				$arAllVars = fread($handle, filesize($fn));
+			}
+			$res = true;
 		}
-		else
+
+		if($handle)
 		{
-			$arAllVars = fread($handle, filesize($fn));
 			fclose($handle);
 		}
 
-		return true;
+		return $res;
 	}
 
 	function write($arAllVars, $basedir, $initdir, $filename, $TTL)
@@ -213,15 +221,15 @@ class CPHPCacheFiles
 			{
 				$contents = "<?";
 				$contents .= "\nif(\$INCLUDE_FROM_CACHE!='Y')return false;";
-				$contents .= "\n\$datecreate = '".str_pad(mktime(), 12, "0", STR_PAD_LEFT)."';";
-				$contents .= "\n\$dateexpire = '".str_pad(mktime() + IntVal($TTL), 12, "0", STR_PAD_LEFT)."';";
+				$contents .= "\n\$datecreate = '".str_pad(time(), 12, "0", STR_PAD_LEFT)."';";
+				$contents .= "\n\$dateexpire = '".str_pad(time() + IntVal($TTL), 12, "0", STR_PAD_LEFT)."';";
 				$contents .= "\n\$ser_content = '".str_replace("'", "\'", str_replace("\\", "\\\\", serialize($arAllVars)))."';";
 				$contents .= "\nreturn true;";
 				$contents .= "\n?>";
 			}
 			else
 			{
-				$contents = "BX".str_pad(mktime(), 12, "0", STR_PAD_LEFT).str_pad(mktime() + IntVal($this->TTL), 12, "0", STR_PAD_LEFT);
+				$contents = "BX".str_pad(time(), 12, "0", STR_PAD_LEFT).str_pad(time() + IntVal($this->TTL), 12, "0", STR_PAD_LEFT);
 				$contents .= $arAllVars;
 			}
 
@@ -259,7 +267,7 @@ class CPHPCacheFiles
 			|| preg_match("/^(\\d{12})/", $str_tmp, $arTmp)
 		)
 		{
-			if(strlen($arTmp[1]) <= 0 || doubleval($arTmp[1]) < mktime())
+			if(strlen($arTmp[1]) <= 0 || doubleval($arTmp[1]) < time())
 				return true;
 		}
 

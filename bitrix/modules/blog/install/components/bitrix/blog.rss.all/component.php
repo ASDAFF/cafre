@@ -50,7 +50,7 @@ $cache_id = "blog_rss_all_out_".$arParams["GROUP_ID"]."_".$arParams["MESSAGE_COU
 $cache_path = "/".SITE_ID."/blog/rss_all/";
 
 $APPLICATION->RestartBuffer();
-header("Content-Type: text/xml");
+header("Content-Type: text/xml; charset=".LANG_CHARSET);
 header("Pragma: no-cache");
 
 if ($arParams["CACHE_TIME"] > 0 && $cache->InitCache($arParams["CACHE_TIME"], $cache_id, $cache_path))

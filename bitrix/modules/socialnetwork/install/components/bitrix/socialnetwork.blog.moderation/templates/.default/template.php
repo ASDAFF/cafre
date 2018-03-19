@@ -87,6 +87,8 @@ if(count($arResult["POST"])>0)
 						"POST_DATA"				=> $CurPost,
 						"TYPE"					=> "DRAFT",
 						"ADIT_MENU"				=> $CurPost["ADIT_MENU"],
+						"BLOG_NO_URL_IN_COMMENTS" => $arParams["BLOG_NO_URL_IN_COMMENTS"],
+						"BLOG_NO_URL_IN_COMMENTS_AUTHORITY" => $arParams["BLOG_NO_URL_IN_COMMENTS_AUTHORITY"],
 					),
 				$component 
 			);

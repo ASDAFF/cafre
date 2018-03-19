@@ -49,6 +49,9 @@ class CBPHelper
 			if (array_key_exists(strtolower($arUsers), $arAllowableUserGroups))
 				return $arAllowableUserGroups[strtolower($arUsers)];
 
+			if (CBPActivity::isExpression($arUsers))
+				return $arUsers;
+
 			$userId = 0;
 			if (substr($arUsers, 0, strlen("user_")) == "user_")
 				$userId = intval(substr($arUsers, strlen("user_")));
@@ -102,6 +105,11 @@ class CBPHelper
 		$strUsers = trim($strUsers);
 		if (strlen($strUsers) <= 0)
 			return ($callbackFunction != null) ? array(array(), array()) : array();
+
+		if (CBPActivity::isExpression($strUsers))
+		{
+			return ($callbackFunction != null) ? array(array($strUsers), array()) : array($strUsers);
+		}
 
 		$arUsers = array();
 		$strUsers = str_replace(";", ",", $strUsers);
@@ -745,15 +753,7 @@ class CBPHelper
 			if (strlen($strSqlOrderBy) > 0)
 				$strSqlOrderBy .= ", ";
 
-			if(strtoupper($DB->type)=="ORACLE")
-			{
-				if(substr($arSqlOrder[$i], -3)=="ASC")
-					$strSqlOrderBy .= $arSqlOrder[$i]." NULLS FIRST";
-				else
-					$strSqlOrderBy .= $arSqlOrder[$i]." NULLS LAST";
-			}
-			else
-				$strSqlOrderBy .= $arSqlOrder[$i];
+			$strSqlOrderBy .= $arSqlOrder[$i];
 		}
 		// <-- ORDER BY
 
@@ -790,12 +790,13 @@ class CBPHelper
 
 		$moduleId = trim($moduleId);
 
-		$documentId = trim($documentId);
-		if (strlen($documentId) <= 0)
+		if (!is_array($documentId))
+			$documentId = trim($documentId);
+		if ($documentId === '')
 			throw new CBPArgumentNullException("documentId");
 
 		$entity = trim($entity);
-		if (strlen($entity) <= 0)
+		if ($entity === '')
 			throw new CBPArgumentNullException("entity");
 
 		return array($moduleId, $entity, $documentId);
@@ -1160,15 +1161,14 @@ class CBPHelper
 					$a = array_values($fieldValueTmp);
 					echo htmlspecialcharsbx($a[0]);
 				}
-				?>">
-				<input type="button" value="..." onclick="BPAShowSelector('id_<?= $arFieldName["Field"] ?>_text', 'select');">
-				<?
+				?>"><?
+				echo CBPHelper::renderControlSelectorButton('id_'.$arFieldName["Field"].'_text', 'select');
 			}
 		}
 		elseif ($arFieldType["Type"] == "user")
 		{
 			$fieldValue = CBPHelper::UsersArrayToString($fieldValue, null, $documentType);
-			?><input type="text" size="40" id="id_<?= $arFieldName["Field"] ?>" name="<?= $arFieldName["Field"] ?>" value="<?= htmlspecialcharsbx($fieldValue) ?>"><input type="button" value="..." onclick="BPAShowSelector('id_<?= $arFieldName["Field"] ?>', 'user');"><?
+			?><input type="text" size="40" id="id_<?= $arFieldName["Field"] ?>" name="<?= $arFieldName["Field"] ?>" value="<?= htmlspecialcharsbx($fieldValue) ?>"><? echo CBPHelper::renderControlSelectorButton('id_'.$arFieldName["Field"], 'user');
 		}
 		else
 		{
@@ -1295,7 +1295,6 @@ class CBPHelper
 							$v = $value;
 							unset($fieldValueTmp[$key]);
 						}
-						require_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/interface/init_admin.php");
 						echo CAdminCalendar::CalendarDate($fieldNameName, $v, 19, ($arFieldType["Type"] == "date"));
 						break;
 					default:
@@ -1307,7 +1306,7 @@ class CBPHelper
 				{
 					if (!in_array($arFieldType["Type"], array("file", "bool", "date", "datetime")))
 					{
-						?><input type="button" value="..." onclick="BPAShowSelector('<?= $fieldNameId ?>', '<?= $arFieldType["BaseType"] ?>');"><?
+						echo CBPHelper::renderControlSelectorButton($fieldNameId, $arFieldType["BaseType"]);
 					}
 				}
 
@@ -1332,9 +1331,8 @@ class CBPHelper
 						$a = array_values($fieldValueTmp);
 						echo htmlspecialcharsbx($a[0]);
 					}
-					?>">
-					<input type="button" value="..." onclick="BPAShowSelector('id_<?= $arFieldName["Field"] ?>_text', '<?= $arFieldType["BaseType"] ?>');">
-					<?
+					?>"><?
+					echo CBPHelper::renderControlSelectorButton('id_'.$arFieldName["Field"].'_text', $arFieldType["BaseType"]);
 				}
 			}
 		}
@@ -1904,6 +1902,9 @@ class CBPHelper
 
 		foreach ($arUsersDraft as $user)
 		{
+			if (!is_scalar($user))
+				continue;
+
 			if (substr($user, 0, $l) === "user_")
 			{
 				$user = intval(substr($user, $l));
@@ -1995,9 +1996,9 @@ class CBPHelper
 			}
 			elseif ($arMatches['object'] == "System")
 			{
-				if ($arMatches['field'] == "Now")
+				if (strtolower($arMatches['field']) === "now")
 					$result = date($GLOBALS["DB"]->DateFormatToPHP(CSite::GetDateFormat("FULL")));
-				elseif ($arMatches['field'] == "Date")
+				elseif (strtolower($arMatches['field']) == "date")
 					$result = date($GLOBALS["DB"]->DateFormatToPHP(CSite::GetDateFormat("SHORT")));
 			}
 		}
@@ -2178,6 +2179,62 @@ class CBPHelper
 			}
 		}
 		return false;
+	}
+
+	public static function renderControlSelectorButton($controlId, $baseType = 'string', array $options = null)
+	{
+		$selectorProps = \Bitrix\Main\Web\Json::encode(array(
+			'controlId' => $controlId,
+			'baseType' => $baseType
+		));
+
+		$mode = isset($options['mode']) ? $options['mode'] : '';
+		$additional = array();
+
+		if (isset($options['style']))
+			$additional[] = 'style="'.htmlspecialcharsbx($options['style']).'"';
+
+		if (isset($options['title']))
+			$additional[] = 'title="'.htmlspecialcharsbx($options['title']).'"';
+
+		return '<input type="button" value="..." onclick="BPAShowSelector(\''
+		.Cutil::JSEscape(htmlspecialcharsbx($controlId))
+		.'\', \''.Cutil::JSEscape(htmlspecialcharsbx($baseType))
+		.'\', \''.Cutil::JSEscape(htmlspecialcharsbx($mode)).'\');"'
+		.' data-role="bp-selector-button" data-bp-selector-props="'.htmlspecialcharsbx($selectorProps).'" '.implode(' ', $additional).'>';
+	}
+
+	public static function decodeTemplatePostData(&$data)
+	{
+		CUtil::DecodeUriComponent($data);
+
+		foreach (array('arWorkflowTemplate', 'arWorkflowParameters', 'arWorkflowVariables', 'arWorkflowConstants', 'USER_PARAMS') as $k)
+		{
+			if (!isset($data[$k]) || !is_array($data[$k]))
+			{
+				$data[$k] = isset($data[$k]) ? (array) CUtil::JsObjectToPhp($data[$k]) : array();
+			}
+		}
+
+		if (strtolower(LANG_CHARSET) != 'utf-8')
+		{
+			$data = static::decodeArrayKeys($data);
+		}
+	}
+
+	public static function decodeArrayKeys($item, $reverse = false)
+	{
+		$from = !$reverse ? 'UTF-8' : LANG_CHARSET;
+		$to = !$reverse ? LANG_CHARSET : 'UTF-8';
+
+		if (is_array($item))
+		{
+			$ar = array();
+			foreach ($item as $k => $v)
+				$ar[$GLOBALS["APPLICATION"]->ConvertCharset($k, $from, $to)] = self::decodeArrayKeys($v, $reverse);
+			return $ar;
+		}
+		return $item;
 	}
 }
 

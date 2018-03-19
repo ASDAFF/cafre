@@ -1,6 +1,7 @@
 <?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
 
-use Bitrix\Currency;
+use Bitrix\Main\Loader,
+	Bitrix\Currency;
 
 if (!isset($arParams['arrCURRENCY_FROM']))
 	$arParams['arrCURRENCY_FROM'] = array();
@@ -24,7 +25,7 @@ $arParams["CACHE_TIME"] = intval($arParams["CACHE_TIME"]);
 
 if ($this->StartResultCache())
 {
-	if (!CModule::IncludeModule("currency"))
+	if (!Loader::includeModule('currency'))
 	{
 		$this->AbortResultCache();
 		ShowError(GetMessage("CURRENCY_MODULE_NOT_INSTALLED"));
@@ -137,43 +138,38 @@ if ($this->StartResultCache())
 				}
 			}
 
-			$arCurrencyList = array();
-
-			$arDBCurrencies = array();
-			$dbCurrencyList = CCurrency::GetList(($b = ""), ($o = ""));
-			while ($arCurrency = $dbCurrencyList->Fetch())
-				$arDBCurrencies[$arCurrency["CURRENCY"]] = $arCurrency["AMOUNT_CNT"];
-
-			foreach ($arParams["arrCURRENCY_FROM"] as &$strCurrencyCode)
+			$currencyList = array();
+			$iterator = Currency\CurrencyTable::getList(array(
+				'select' => array('CURRENCY', 'AMOUNT_CNT'),
+				'filter' => array('@CURRENCY' => $arParams["arrCURRENCY_FROM"]),
+				'order' => array('CURRENCY' => 'ASC')
+			));
+			while ($row = $iterator->fetch())
 			{
-				if (array_key_exists($strCurrencyCode, $arDBCurrencies))
-				{
-					$arCurrencyList[] = $strCurrencyCode;
-					$rate = CCurrencyRates::ConvertCurrency($arDBCurrencies[$strCurrencyCode], $strCurrencyCode, $arParams["CURRENCY_BASE"], $arParams["RATE_DAY"]);
-					$arResult["CURRENCY"][] = array(
-						'FROM' => CCurrencyLang::CurrencyFormat($arDBCurrencies[$strCurrencyCode], $strCurrencyCode, true),
-						'BASE' => CCurrencyLang::CurrencyFormat($rate, $arParams["CURRENCY_BASE"], true),
-					);
-				}
+				$currencyList[$row['CURRENCY']] = $row['CURRENCY'];
+				$rate = CCurrencyRates::ConvertCurrency(
+					$row['AMOUNT_CNT'],
+					$row['CURRENCY'],
+					$arParams['CURRENCY_BASE'],
+					$arParams['RATE_DAY']
+				);
+				$arResult['CURRENCY'][] = array(
+					'FROM' => CCurrencyLang::CurrencyFormat($row['AMOUNT_CNT'], $row['CURRENCY'], true),
+					'BASE' => CCurrencyLang::CurrencyFormat($rate, $arParams['CURRENCY_BASE'], true),
+				);
+				unset($rate);
 			}
-			if (isset($strCurrencyCode))
-				unset($strCurrencyCode);
+			unset($row, $iterator);
 
-			if (!empty($arCurrencyList))
+			if (!empty($currencyList) && defined("BX_COMP_MANAGED_CACHE"))
 			{
-				if (defined("BX_COMP_MANAGED_CACHE"))
-				{
-					$arCurrencyList[] = $arParams["CURRENCY_BASE"];
-					$arCurrencyList = array_unique($arCurrencyList);
-					$CACHE_MANAGER->StartTagCache($this->GetCachePath());
-					foreach ($arCurrencyList as &$strOneCurrency)
-					{
-						$CACHE_MANAGER->RegisterTag("currency_id_".$strOneCurrency);
-					}
-					if (isset($strOneCurrency))
-						unset($strOneCurrency);
-					$CACHE_MANAGER->EndTagCache();
-				}
+				$currencyList[$arParams["CURRENCY_BASE"]] = $arParams["CURRENCY_BASE"];
+
+				$CACHE_MANAGER->StartTagCache($this->GetCachePath());
+				foreach ($currencyList as $currency)
+					$CACHE_MANAGER->RegisterTag('currency_id_'.$currency);
+				unset($currency);
+				$CACHE_MANAGER->EndTagCache();
 			}
 		}
 	}

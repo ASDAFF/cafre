@@ -8,7 +8,7 @@ use Bitrix\Main\Entity;
 class MssqlSqlHelper extends SqlHelper
 {
 	/**
-	 * Identificator escaping - left char
+	 * Returns an identificator escaping left character.
 	 *
 	 * @return string
 	 */
@@ -18,7 +18,7 @@ class MssqlSqlHelper extends SqlHelper
 	}
 
 	/**
-	 * Identificator escaping - left char
+	 * Returns an identificator escaping right character.
 	 *
 	 * @return string
 	 */
@@ -133,10 +133,10 @@ class MssqlSqlHelper extends SqlHelper
 	 * - M      A short textual representation of a month, three letters
 	 * - DD     Day of the month, 2 digits with leading zeros
 	 * - HH     24-hour format of an hour with leading zeros
-	 * - H      12-hour format of an hour with leading zeros
-	 * - GG     24-hour format of an hour with leading zeros
-	 * - G      12-hour format of an hour with leading zeros
-	 * - SS     Minutes with leading zeros
+	 * - H      24-hour format of an hour without leading zeros
+	 * - GG     12-hour format of an hour with leading zeros
+	 * - G      12-hour format of an hour without leading zeros
+	 * - SS     Seconds with leading zeros
 	 * - TT     AM or PM
 	 * - T      AM or PM
 	 * <p>
@@ -309,6 +309,30 @@ class MssqlSqlHelper extends SqlHelper
 	public function getDateToCharFunction($fieldName)
 	{
 		return "CONVERT(varchar(19), ".$fieldName.", 120)";
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @param string $fieldName
+	 *
+	 * return string
+	 */
+	public function castToChar($fieldName)
+	{
+		return 'CAST('.$fieldName.' AS varchar)';
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @param string $fieldName
+	 *
+	 * return string
+	 */
+	public function softCastTextToChar($fieldName)
+	{
+		return 'CONVERT(VARCHAR(8000), '.$fieldName.')';
 	}
 
 	/**
@@ -536,7 +560,7 @@ class MssqlSqlHelper extends SqlHelper
 	 *
 	 * @param string $sql Sql text.
 	 * @param integer $limit Maximum number of rows to return.
-	 * @param integer $offset Offset of the first row to return.
+	 * @param integer $offset Offset of the first row to return, starting from 0.
 	 *
 	 * @return string
 	 * @throws Main\ArgumentException
@@ -578,6 +602,7 @@ class MssqlSqlHelper extends SqlHelper
 					$sqlTmp = $sql;
 				}
 
+				// ROW_NUMBER() Returns the sequential number of a row within a partition of a result set, starting at 1 for the first row in each partition.
 				$sqlTmp = preg_replace(
 					"/^\\s*SELECT/i",
 					"SELECT ROW_NUMBER() OVER (".$orderBy.") AS ROW_NUMBER_ALIAS,",
@@ -588,7 +613,7 @@ class MssqlSqlHelper extends SqlHelper
 					"WITH ROW_NUMBER_QUERY_ALIAS AS (".$sqlTmp.") ".
 					"SELECT * ".
 					"FROM ROW_NUMBER_QUERY_ALIAS ".
-					"WHERE ROW_NUMBER_ALIAS BETWEEN ".$offset." AND ".($offset + $limit - 1)."";
+					"WHERE ROW_NUMBER_ALIAS BETWEEN ".($offset + 1)." AND ".($offset + $limit);
 			}
 		}
 		return $sql;
@@ -620,7 +645,15 @@ class MssqlSqlHelper extends SqlHelper
 			{
 				$sourceSelectValues[] = $this->convertToDb($insertFields[$columnName], $tableField);
 				$sourceSelectColumns[] = $quotedName;
-				$targetConnectColumns[] = "source.".$quotedName." = target.".$quotedName;
+				if($insertFields[$columnName] === null)
+				{
+					//can't just compare NULLs
+					$targetConnectColumns[] = "(source.".$quotedName." IS NULL AND target.".$quotedName." IS NULL)";
+				}
+				else
+				{
+					$targetConnectColumns[] = "(source.".$quotedName." = target.".$quotedName.")";
+				}
 			}
 
 			if (isset($updateFields[$columnName]) || array_key_exists($columnName, $updateFields))

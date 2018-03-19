@@ -2,8 +2,10 @@
 
 namespace Bitrix\Sale\Delivery\Services;
 
+use Bitrix\Main\IO\File;
 use Bitrix\Sale\Order;
 use Bitrix\Main\Loader;
+use Bitrix\Sale\Result;
 use Bitrix\Sale\Shipment;
 use Bitrix\Sale\Internals\Input;
 use Bitrix\Sale\Delivery\Helper;
@@ -13,6 +15,7 @@ use Bitrix\Sale\ShipmentCollection;
 use Bitrix\Main\Entity\EntityError;
 use Bitrix\Currency\CurrencyManager;
 use Bitrix\Main\ArgumentNullException;
+use Bitrix\Sale\Delivery\Restrictions;
 use Bitrix\Sale\Delivery\CalculationResult;
 use Bitrix\Sale\Delivery\Inputs\MultiControlString;
 
@@ -29,6 +32,8 @@ class Automatic extends Base
 	protected $oldConfig = array();
 	protected $handlerInitParams = array();
 
+	protected static $canHasProfiles = true;
+
 	public function __construct(array $initParams)
 	{
 		parent::__construct($initParams);
@@ -44,6 +49,9 @@ class Automatic extends Base
 
 			$this->sid = $this->code = $this->config["MAIN"]["SID"];
 			$this->handlerInitParams = $this->getHandlerInitParams($this->sid);
+
+			if(!empty($this->handlerInitParams["TRACKING_CLASS_NAME"]))
+				$this->setTrackingClass($this->handlerInitParams["TRACKING_CLASS_NAME"]);
 
 			if($this->handlerInitParams == false)
 				throw new SystemException("Can't get delivery services init params. Delivery id: ".$this->id.", sid: ".$this->sid);
@@ -76,6 +84,7 @@ class Automatic extends Base
 	protected function getConfigStructure()
 	{
 		static $handlers = null;
+		static $jsData = array();
 
 		$initedHandlers = self::getRegisteredHandlers("SID");
 		sortByColumn($initedHandlers, array(strtoupper("NAME") => SORT_ASC));
@@ -85,7 +94,17 @@ class Automatic extends Base
 			$handlers = array("" => "");
 
 			foreach($initedHandlers as $handler)
+			{
+				if(isset($handler["DEPRECATED"]) && $handler["DEPRECATED"] = "Y")
+					continue;
+					
 				$handlers[$handler["SID"]] = $handler["NAME"]." [".$handler["SID"]."]";
+				$jsData[$handler["SID"]] = array(
+					htmlspecialcharsbx($handler["NAME"]),
+					htmlspecialcharsbx($handler["DESCRIPTION"]),
+					htmlspecialcharsbx($handler["DESCRIPTION_INNER"])
+				);
+			}
 		}
 
 		if(strlen($this->handlerInitParams["SID"]) <= 0 || $this->id <=0)
@@ -99,8 +118,14 @@ class Automatic extends Base
 							"TYPE" => "ENUM",
 							"NAME" => Loc::getMessage("SALE_DLVR_HANDL_AUT_HANDLER_CHOOSE"),
 							"OPTIONS" => $handlers,
-							"ONCHANGE" => "top.BX.showWait(); if(this.form.elements['NAME'].value == '') this.form.elements['NAME'].value = this.selectedOptions[0].innerHTML.replace(/\s*\[.*\]/g,''); this.form.submit();"
-						)
+							"ONCHANGE" => "var data=".\CUtil::PhpToJSObject($jsData)."; BX.onCustomEvent('onDeliveryServiceNameChange',[{name: data[this.value][0], description: data[this.value][1]}]); BX('adm-sale-delivery-auto-description_inner_view').innerHTML=data[this.value][2]; //this.form.submit();"
+						),
+						"DESCRIPTION_INNER" => array(
+								"TYPE" => "DELIVERY_READ_ONLY",
+								"NAME" => Loc::getMessage("SALE_DLVR_HANDL_AUT_DESCRIPTION_INNER"),
+								"ID" => "adm-sale-delivery-auto-description_inner",
+								"DEFAULT" => ""
+						),
 					)
 				)
 			);
@@ -342,6 +367,11 @@ class Automatic extends Base
 					$result["TYPE"] = 'ENUM';
 					break;
 
+				case 'RADIO':
+					$result["TYPE"] = 'ENUM';
+					$result["MULTIELEMENT"] = 'Y';
+					break;
+
 				case 'CHECKBOX':
 					$result["TYPE"] = 'Y/N';
 					break;
@@ -381,53 +411,7 @@ class Automatic extends Base
 
 	protected static function convertNewOrderToOld(\Bitrix\Sale\Shipment $shipment)
 	{
-		/** @var ShipmentCollection $shipmentCollection */
-		$shipmentCollection = $shipment->getCollection();
-		/** @var Order $newOrder */
-		$newOrder = $shipmentCollection->getOrder();
-		$props = $newOrder->getPropertyCollection();
-		$oldOrder = array();
-
-		/** @var \Bitrix\Sale\Basket  $basket */
-		if($collection = $shipment->getShipmentItemCollection())
-			$oldOrder["PRICE"] = $collection->getPrice();
-
-		$oldOrder["WEIGHT"] = 0;
-		$oldOrder["LOCATION_FROM"] = \Bitrix\Main\Config\Option::get(
-			'sale',
-			'location',
-			"",
-			$newOrder->getSiteId());
-		$oldOrder["SITE_ID"] = $newOrder->getSiteId();
-		$oldOrder["PERSON_TYPE_ID"] = $newOrder->getPersonTypeId();
-		$oldOrder["CURRENCY"] = $newOrder->getCurrency();
-
-		$loc = $props->getDeliveryLocation();
-		$oldOrder["LOCATION_TO"] = !!$loc ? $loc->getValue() : "";
-
-		$loc = $props->getDeliveryLocationZip();
-		$oldOrder["LOCATION_ZIP"] = !!$loc ? $loc->getValue() : "";
-
-		$oldOrder["ITEMS"] = array();
-
-		/** @var \Bitrix\Sale\ShipmentItem $shipmentItem */
-		foreach($shipment->getShipmentItemCollection() as $shipmentItem)
-		{
-			$basketItem = $shipmentItem->getBasketItem();
-			$itemFieldValues = $basketItem->getFieldValues();
-			$itemFieldValues["QUANTITY"] = $shipmentItem->getField("QUANTITY");
-
-			if(!empty($itemFieldValues["DIMENSIONS"]) && is_string($itemFieldValues["DIMENSIONS"]))
-				$itemFieldValues["DIMENSIONS"] = unserialize($itemFieldValues["DIMENSIONS"]);
-
-			$oldOrder["ITEMS"][] = $itemFieldValues;
-			$itemWeight = floatval($basketItem->getField("WEIGHT"));
-
-			if($itemWeight > 0)
-				$oldOrder["WEIGHT"] += $itemWeight*floatval($basketItem->getField("QUANTITY"));
-		}
-
-		return $oldOrder;
+		return \CSaleDelivery::convertOrderNewToOld($shipment);
 	}
 
 	public static function getHandlerInitParams($sid)
@@ -466,9 +450,11 @@ class Automatic extends Base
 
 					if (!is_dir($_SERVER["DOCUMENT_ROOT"].$basePath."/".$filename) && substr($filename, 0, 9) == "delivery_")
 					{
-						$arLoadedHandlers[] = $filename;
-
-						require_once($_SERVER["DOCUMENT_ROOT"].$basePath."/".$filename);
+						if(\Bitrix\Main\IO\Path::getExtension($filename) == 'php')
+						{
+							$arLoadedHandlers[] = $filename;
+							require_once($_SERVER["DOCUMENT_ROOT"].$basePath."/".$filename);
+						}
 					}
 				}
 				@closedir($handle);
@@ -505,8 +491,8 @@ class Automatic extends Base
 
 	public static function convertNewServiceToOld($service, $sid = false)
 	{
-		if(!isset($service["CONFIG"]["MAIN"]["SID"]))
-			return false;
+		if(!$sid && !isset($service["CONFIG"]["MAIN"]["SID"]))
+			return array();
 
 		self::initHandlers();
 		$handlers = self::getRegisteredHandlers("SID");
@@ -530,7 +516,7 @@ class Automatic extends Base
 
 		if(isset($service["ID"]) && intval($service["ID"]) > 0)
 		{
-			$restrictions = \Bitrix\Sale\Delivery\Services\Manager::getRestrictionsByDeliveryId($service["ID"]);
+			$restrictions = \Bitrix\Sale\Delivery\Restrictions\Manager::getRestrictionsList($service["ID"]);
 
 			foreach($restrictions as $restriction)
 			{
@@ -570,7 +556,7 @@ class Automatic extends Base
 					"ACTIVE" =>  $profile["ACTIVE"]
 				);
 
-				$restrictions = Manager::getRestrictionsByDeliveryId($profile["ID"]);
+				$restrictions = Restrictions\Manager::getRestrictionsList($profile["ID"]);
 
 				foreach($restrictions as $restriction)
 				{
@@ -628,50 +614,53 @@ class Automatic extends Base
 
 	public static function createConfig($initHandlerParams, $settings, $siteId = false)
 	{
-		$result = array(
-			"CONFIG_GROUPS" => array(),
-			"CONFIG" => array(),
-		);
+		static $result = array();
+		$hitCacheId = md5(serialize($initHandlerParams))."_".md5(serialize($settings))."_".strval($siteId);
 
-		if (is_callable($initHandlerParams["GETCONFIG"]))
+		if(!isset($result[$hitCacheId]))
 		{
-			$conf = call_user_func($initHandlerParams["GETCONFIG"], $siteId);
+			$config = array(
+				"CONFIG_GROUPS" => array(),
+				"CONFIG" => array(),
+			);
 
-			if(isset($conf["CONFIG_GROUPS"]))
-				$result["CONFIG_GROUPS"] = $conf["CONFIG_GROUPS"];
+			if (is_callable($initHandlerParams["GETCONFIG"]))
+			{
+				$conf = call_user_func($initHandlerParams["GETCONFIG"], $siteId);
 
-			if (strlen($settings) > 0 && is_callable($initHandlerParams["DBGETSETTINGS"]))
-			{
-				$settings = unserialize($settings);
-				$arConfigValues = call_user_func($initHandlerParams["DBGETSETTINGS"], $settings);
-			}
-			else
-			{
-				$arConfigValues = array();
-			}
+				if(isset($conf["CONFIG_GROUPS"]))
+					$config["CONFIG_GROUPS"] = $conf["CONFIG_GROUPS"];
 
-			foreach ($conf["CONFIG"] as $key => $arConfig)
-			{
-				if (is_array($conf["CONFIG"][$key]))
+				if (strlen($settings) > 0 && is_callable($initHandlerParams["DBGETSETTINGS"]))
 				{
-					$result["CONFIG"][$key] = $conf["CONFIG"][$key];
+					$settings = unserialize($settings);
+					$arConfigValues = call_user_func($initHandlerParams["DBGETSETTINGS"], $settings);
+				}
+				else
+				{
+					$arConfigValues = array();
+				}
 
-					if(isset($arConfigValues[$key]))
-						$result["CONFIG"][$key]["VALUE"] = $arConfigValues[$key];
-					elseif(isset($conf["CONFIG"][$key]["DEFAULT"]))
-						$result["CONFIG"][$key]["VALUE"] = $conf["CONFIG"][$key]["DEFAULT"];
-					else
-						$result["CONFIG"][$key]["VALUE"] = "";
+				foreach ($conf["CONFIG"] as $key => $arConfig)
+				{
+					if (is_array($conf["CONFIG"][$key]))
+					{
+						$config["CONFIG"][$key] = $conf["CONFIG"][$key];
+
+						if(isset($arConfigValues[$key]))
+							$config["CONFIG"][$key]["VALUE"] = $arConfigValues[$key];
+						elseif(isset($conf["CONFIG"][$key]["DEFAULT"]))
+							$config["CONFIG"][$key]["VALUE"] = $conf["CONFIG"][$key]["DEFAULT"];
+						else
+							$config["CONFIG"][$key]["VALUE"] = "";
+					}
 				}
 			}
+
+			$result[$hitCacheId] = $config;
 		}
 
-		return $result;
-	}
-
-	public static function canHasProfiles()
-	{
-		return true;
+		return $result[$hitCacheId];
 	}
 
 	protected function getCalcultor()
@@ -700,10 +689,6 @@ class Automatic extends Base
 			throw new ArgumentNullException("sid");
 
 		static $result = array();
-
-		if(isset($result[$sid]))
-			return $result[$sid];
-
 		$oldOrder = self::convertNewOrderToOld($shipment);
 
 		if(!empty($oldOrder["ITEMS"]) && is_array($oldOrder["ITEMS"]))
@@ -732,9 +717,14 @@ class Automatic extends Base
 				$oldOrder["MAX_DIMENSIONS"] = $maxDimensions;
 		}
 
-		$result[$sid] = call_user_func($compatibilityFunc, $oldOrder, $config["CONFIG"]);
+		$hitCacheId = $sid.'_'.md5(serialize($oldOrder)).'_'.md5(serialize($config["CONFIG"]));
 
-		return $result[$sid];
+		if(!isset($result[$hitCacheId]))
+		{
+			$result[$hitCacheId] = call_user_func($compatibilityFunc, $oldOrder, $config["CONFIG"]);
+		}
+
+		return $result[$hitCacheId];
 	}
 
 	public function isProfileCompatible($profileId, $config, Shipment $shipment)
@@ -744,7 +734,7 @@ class Automatic extends Base
 		if($compatibilityFunc === false)
 			return true;
 
-		$res = $this->getCompatibleProfiles($this->sid, $compatibilityFunc, $config, $shipment);
+		$res = $this->getCompatibleProfiles($this->sid.':'.$profileId, $compatibilityFunc, $config, $shipment);
 		return is_array($res) && in_array($profileId, $res);
 	}
 
@@ -768,8 +758,15 @@ class Automatic extends Base
 	 */
 	public function calculateProfile($profileId, array $profileConfig, \Bitrix\Sale\Shipment $shipment)
 	{
+		static $result = array();
+		$oldOrder = self::convertNewOrderToOld($shipment);
+		$hitCacheId = $this->sid.'_'.$profileId.'_'.md5(serialize($profileConfig)).'_'.md5(serialize($oldOrder));
+
+		if(isset($result[$hitCacheId]))
+			return clone $result[$hitCacheId];
+
 		global $APPLICATION;
-		$result = new CalculationResult();
+		$calcRes = new CalculationResult();
 		$step = 0;
 		$tmp = false;
 		/** @var ShipmentCollection $shipmentCollection */
@@ -789,7 +786,7 @@ class Automatic extends Base
 				$calculator,
 				$profileId,
 				$profileConfig["CONFIG"],
-				self::convertNewOrderToOld($shipment),
+				$oldOrder,
 				++$step,
 				$tmp))
 			{
@@ -798,26 +795,35 @@ class Automatic extends Base
 					if($res["RESULT"] == "OK" )
 					{
 						if(isset($res["TEXT"]))
-							$result->setDescription($res["TEXT"]);
+							$calcRes->setDescription($res["TEXT"]);
 
 						if(isset($res["VALUE"]))
-							$result->setDeliveryPrice(floatval($res["VALUE"]));
+							$calcRes->setDeliveryPrice(floatval($res["VALUE"]));
 
 						if(isset($res["TRANSIT"]))
-							$result->setPeriodDescription($res["TRANSIT"]);
+							$calcRes->setPeriodDescription($res["TRANSIT"]);
+
+						if(isset($res["PERIOD_FROM"]))
+							$calcRes->setPeriodFrom($res["PERIOD_FROM"]);
+
+						if(isset($res["PERIOD_TO"]))
+							$calcRes->setPeriodTo($res["PERIOD_TO"]);
+
+						if(isset($res["PERIOD_TYPE"]))
+							$calcRes->setPeriodType($res["PERIOD_TYPE"]);
 					}
 					else
 					{
 						if(isset($res["TEXT"]) && strlen($res["TEXT"]) > 0)
 						{
-							$result->addError(new EntityError(
+							$calcRes->addError(new EntityError(
 								$res["TEXT"],
 								'DELIVERY_CALCULATION'
 							));
 						}
 						else
 						{
-							$result->addError(new EntityError(
+							$calcRes->addError(new EntityError(
 								Loc::getMessage('SALE_DLVR_HANDL_AUT_ERROR_CALCULATION'),
 								'DELIVERY_CALCULATION'
 							));
@@ -826,40 +832,43 @@ class Automatic extends Base
 				}
 				elseif (is_numeric($res))
 				{
-					$result->setDeliveryPrice(floatval($res));
+					$calcRes->setDeliveryPrice(floatval($res));
 				}
 			}
 			else
 			{
 				if ($ex = $APPLICATION->getException())
 				{
-					$result->addError(new EntityError(
+					$calcRes->addError(new EntityError(
 						$ex->getString(),
 						'DELIVERY_CALCULATION'
 					));
 				}
 				else
 				{
-					$result->setDeliveryPrice(0);
+					$calcRes->setDeliveryPrice(0);
 				}
 			}
 
-			if ($result->isSuccess() && $this->currency != $shipmentCurrency)
+			if ($calcRes->isSuccess() && $this->currency != $shipmentCurrency)
 			{
-				$result->setDeliveryPrice(
+				$calcRes->setDeliveryPrice(
 					\CCurrencyRates::convertCurrency(
-						$result->getPrice(),
+						$calcRes->getPrice(),
 						$this->currency,
 						$shipmentCurrency
 				));
 			}
 		}
 
-		$result->setDeliveryPrice(
-			$result->getPrice() + $this->getMarginPrice($shipment)
+		$price = $calcRes->getPrice();
+
+		$calcRes->setDeliveryPrice(
+			$price + $this->getMarginPrice($price)
 		);
 
-		return $result;
+		$result[$hitCacheId] = $calcRes;
+		return clone $result[$hitCacheId];
 	}
 
 	public static function getChildrenClassNames()
@@ -874,22 +883,12 @@ class Automatic extends Base
 		return $this->config;
 	}
 
-	protected function getMarginPrice($shipment)
+	protected function getMarginPrice($price)
 	{
-		$marginPrice = 0;
-
-		if(floatval($this->config["MAIN"]["MARGIN_VALUE"]) > 0)
-		{
-			if($this->config["MAIN"]["MARGIN_TYPE"] == "%")
-			{
-				$shipmentPrice = (($shipment !== null) ? self::calculateShipmentPrice($shipment) : 0);
-				$marginPrice = $shipmentPrice * floatval($this->config["MAIN"]["MARGIN_VALUE"]) / 100;
-			}
-			else
-			{
-				$marginPrice = floatval($this->config["MAIN"]["MARGIN_VALUE"]);
-			}
-		}
+		if($this->config["MAIN"]["MARGIN_TYPE"] == "%")
+			$marginPrice = $price * floatval($this->config["MAIN"]["MARGIN_VALUE"]) / 100;
+		else
+			$marginPrice = floatval($this->config["MAIN"]["MARGIN_VALUE"]);
 
 		return $marginPrice;
 	}
@@ -944,7 +943,7 @@ class Automatic extends Base
 
 		foreach($profiles as $profile)
 		{
-			$res = Table::add($profile);
+			$res = Manager::add($profile);
 			$result = $result && $res->isSuccess();
 		}
 
@@ -967,5 +966,83 @@ class Automatic extends Base
 		return $result;
 	}
 
+	public static function canHasProfiles()
+	{
+		return self::$canHasProfiles;
+	}
 
+	public function getAdminMessage()
+	{
+		$result = array();
+
+		if(isset($this->handlerInitParams["GET_ADMIN_MESSAGE"]) && is_callable($this->handlerInitParams["GET_ADMIN_MESSAGE"]))
+			$result = call_user_func($this->handlerInitParams["GET_ADMIN_MESSAGE"]);
+
+		return $result;
+	}
+
+	public function execAdminAction()
+	{
+		$result = new Result();
+
+		if(isset($this->handlerInitParams["EXEC_ADMIN_ACTION"]) && is_callable($this->handlerInitParams["EXEC_ADMIN_ACTION"]))
+			$result = call_user_func($this->handlerInitParams["EXEC_ADMIN_ACTION"]);
+
+		return $result;
+	}
+
+	public function getAdditionalInfoShipmentEdit(Shipment $shipment)
+	{
+		$result = '';
+
+		if(isset($this->handlerInitParams["GET_ADD_INFO_SHIPMENT_EDIT"]) && is_callable($this->handlerInitParams["GET_ADD_INFO_SHIPMENT_EDIT"]))
+		{
+			$result = call_user_func(
+				$this->handlerInitParams["GET_ADD_INFO_SHIPMENT_EDIT"],
+				$shipment
+			);
+
+			if(!is_array($result))
+				throw new SystemException('GET_ADD_INFO_SHIPMENT_EDIT return value must be array!');
+		}
+
+		return $result;
+	}
+
+	public function processAdditionalInfoShipmentEdit(Shipment $shipment, array $requestData)
+	{
+		$result = '';
+
+		if(isset($this->handlerInitParams["PROCESS_ADD_INFO_SHIPMENT_EDIT"]) && is_callable($this->handlerInitParams["PROCESS_ADD_INFO_SHIPMENT_EDIT"]))
+		{
+			$result = call_user_func(
+				$this->handlerInitParams["PROCESS_ADD_INFO_SHIPMENT_EDIT"],
+				$shipment,
+				$requestData
+			);
+
+			if($result && get_class($result) != 'Bitrix\Sale\Shipment')
+				throw new SystemException('PROCESS_ADD_INFO_SHIPMENT_EDIT return value myst be of type "Bitrix\Sale\Result" !');
+		}
+
+		return $result;
+	}
+
+	public function getAdditionalInfoShipmentView(Shipment $shipment)
+	{
+		$result = '';
+
+		if(isset($this->handlerInitParams["GET_ADD_INFO_SHIPMENT_VIEW"]) && is_callable($this->handlerInitParams["GET_ADD_INFO_SHIPMENT_VIEW"]))
+		{
+			$result = call_user_func(
+				$this->handlerInitParams["GET_ADD_INFO_SHIPMENT_VIEW"],
+				$shipment
+			);
+
+			if(!is_array($result))
+				throw new SystemException('GET_ADD_INFO_SHIPMENT_VIEW return value must be array!');
+		}
+
+		return $result;
+	}
 }

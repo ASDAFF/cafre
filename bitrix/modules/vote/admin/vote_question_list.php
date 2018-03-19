@@ -6,49 +6,45 @@
 # mailto:admin@bitrixsoft.com				 #
 ##############################################
 /**
- * @param CMain $APPLICATION
- * @params CDatabase $DB
- * @param integer $VOTE_ID
+ * @global CMain $APPLICATION
+ * @global CUser $USER
+ * @param CDatabase $DB
+ * @param integer $voteId
  * @param CAdminMainChain $adminChain
  */
 global $APPLICATION, $DB, $adminChain, $CACHE_MANAGER;
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/vote/prolog.php");
-$VOTE_RIGHT = $APPLICATION->GetGroupRight("vote");
-if($VOTE_RIGHT=="D") $APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
-require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/vote/include.php");
 
-
-IncludeModuleLangFile(__FILE__);
-define("HELP_FILE","vote_list.php");
-
-$sTableID = "tbl_vote_question";
+$request = \Bitrix\Main\Context::getCurrent()->getRequest();
+$voteId = intval($request->getQuery("VOTE_ID"));
+$sTableID = "tbl_vote_question".$voteId;
 $oSort = new CAdminSorting($sTableID, "ID", "asc");
 $lAdmin = new CAdminList($sTableID, $oSort);
 
-$aMenu = array();
+define("HELP_FILE","vote_list.php");
 
-$VOTE_ID = intval($_REQUEST["VOTE_ID"]);
-$z = CVote::GetByID($VOTE_ID);
-if (!$arVote = $z->Fetch()) 
+$VOTE_RIGHT = $APPLICATION->GetGroupRight("vote");
+if($VOTE_RIGHT <= "D")
+	$APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
+
+CModule::IncludeModule("vote");
+IncludeModuleLangFile(__FILE__);
+
+$APPLICATION->SetTitle(GetMessage("VOTE_PAGE_TITLE", array("#ID#"=> $voteId)));
+try
+{
+	$vote = \Bitrix\Vote\Vote::loadFromId($voteId);
+	if (!$vote->canEdit($USER->GetID()))
+		throw new \Bitrix\Main\ArgumentException(GetMessage("ACCESS_DENIED"), "Access denied.");
+}
+catch(Exception $e)
 {
 	require_once ($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_after.php");
-	echo "<a href='vote_list.php?lang=".LANGUAGE_ID."' class='navchain'>".GetMessage("VOTE_VOTE_LIST")."</a>";
-	echo ShowError(GetMessage("VOTE_NOT_FOUND"));
+	ShowError($e->getMessage());
 	require_once ($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");
 	die();
 }
-
-$t = CVoteChannel::GetByID($arVote["CHANNEL_ID"]);
-$arChannel = $t->Fetch();
-
-$adminChain->AddItem(array(
-	"TEXT" => htmlspecialcharsbx($arChannel["TITLE"]), 
-	"LINK"=> "vote_channel_edit.php?ID=$arChannel[ID]&lang=".LANGUAGE_ID));
-$adminChain->AddItem(array(
-	"TEXT"=> (strlen($arVote["TITLE"]) > 0 ? htmlspecialcharsbx($arVote["TITLE"]) : TruncateText(
-	($arVote["DESCRIPTION_TYPE"] == "html" ? strip_tags($arVote["DESCRIPTION"]) : htmlspecialcharsbx($arVote["DESCRIPTION"])), 200)), 
-	"LINK"=> "vote_edit.php?ID=$arVote[ID]&lang=".LANGUAGE_ID));
 
 $arFilterFields = Array(
 	"find_id", 
@@ -65,15 +61,16 @@ $lAdmin->InitFilter($arFilterFields);
 ********************************************************************/
 InitBVar($find_id_exact_match);
 InitBVar($find_question_exact_match);
-$arFilter = Array(
-	"ID"					=> $find_id,
-	"ID_EXACT_MATCH"		=> $find_id_exact_match,
-	"ACTIVE"				=> $find_active,
-	"DIAGRAM"				=> $find_diagram,
-	"REQUIRED"				=> $find_required,
-	"QUESTION"				=> $find_question,
-	"QUESTION_EXACT_MATCH"	=> $find_question_exact_match);
-if (!($VOTE_RIGHT >= "W" && check_bitrix_sessid()))
+$arFilter = array(
+	"ID" => $find_id,
+	"ID_EXACT_MATCH" => $find_id_exact_match,
+	"ACTIVE" => $find_active,
+	"DIAGRAM" => $find_diagram,
+	"REQUIRED" => $find_required,
+	"QUESTION" => $find_question,
+	"QUESTION_EXACT_MATCH" => $find_question_exact_match);
+
+if (!check_bitrix_sessid())
 {
 	//
 }
@@ -173,7 +170,7 @@ else if($arID = $lAdmin->GroupAction())
 	if($_REQUEST['action_target']=='selected')
 	{
 		$arID = array();
-		$rsData = CVoteQuestion::GetList($VOTE_ID, $by, $order, $arFilter, $is_filtered);
+		$rsData = CVoteQuestion::GetList($voteId, $by, $order, $arFilter, $is_filtered);
 		while($arRes = $rsData->Fetch())
 			$arID[] = $arRes['ID'];
 	}
@@ -198,7 +195,7 @@ else if($arID = $lAdmin->GroupAction())
 	}
 }
 
-$rsData = CVoteQuestion::GetList($VOTE_ID, $by, $order, $arFilter, $is_filtered);
+$rsData = CVoteQuestion::GetList($voteId, $by, $order, $arFilter, $is_filtered);
 $rsData = new CAdminResult($rsData, $sTableID);
 $rsData->NavStart();
 
@@ -220,9 +217,6 @@ while($arRes = $rsData->NavNext(true, "f_"))
 {
 	$row =& $lAdmin->AddRow($f_ID, $arRes);
 
-	$row->AddViewField("ACTIVE",$f_ACTIVE=="Y"?GetMessage("MAIN_YES"):GetMessage("MAIN_NO"));
-	$row->AddViewField("DIAGRAM",$f_DIAGRAM=="Y"?GetMessage("MAIN_YES"):GetMessage("MAIN_NO"));
-	$row->AddViewField("REQUIRED",$f_REQUIRED=="Y"?GetMessage("MAIN_YES"):GetMessage("MAIN_NO"));
 	$row->AddViewField("QUESTION", ($arRes["QUESTION_TYPE"]=="text" ? htmlspecialcharsex($arRes["QUESTION"]) : HTMLToTxt($arRes["QUESTION"])));
 	$row->AddViewFileField("IMAGE_ID", array(
 		"IMAGE" => "Y",
@@ -232,43 +226,40 @@ while($arRes = $rsData->NavNext(true, "f_"))
 		"IMAGE_POPUP" => "Y"
 		)
 	);
-	if ($VOTE_RIGHT=="W")
-	{
-		$row->AddViewField("SITE",trim($str, " ,"));
-		$row->AddCheckField("ACTIVE");
-		$row->AddCheckField("DIAGRAM");
-		$row->AddCheckField("REQUIRED");
-		$row->AddInputField("C_SORT");
-		$f_QUESTION_TEXT = ($arRes["QUESTION_TYPE"]=="text" ? "checked" : "");
-		$f_QUESTION_HTML = ($arRes["QUESTION_TYPE"]=="text" ? "" : "checked");
-		$sHTML = <<<HTML
-			<input type="radio" name="FIELDS[{$f_ID}][QUESTION_TYPE]" value="text" id="{$f_ID}QUESTIONTEXT" {$f_QUESTION_TEXT} /><label for="{$f_ID}QUESTION">text</label>
-			<input type="radio" name="FIELDS[{$f_ID}][QUESTION_TYPE]" value="html" id="{$f_ID}QUESTIONHTML" {$f_QUESTION_HTML} /><label for="{$f_ID}QUESTION">html</label><br>
-			<textarea rows="10" cols="70" name="FIELDS[{$f_ID}][QUESTION]">{$f_QUESTION}</textarea>
+	$row->AddViewField("SITE",trim($str, " ,"));
+	$row->AddCheckField("ACTIVE");
+	$row->AddCheckField("DIAGRAM");
+	$row->AddCheckField("REQUIRED");
+	$row->AddInputField("C_SORT");
+	$f_QUESTION_TEXT = ($arRes["QUESTION_TYPE"]=="text" ? "checked" : "");
+	$f_QUESTION_HTML = ($arRes["QUESTION_TYPE"]=="text" ? "" : "checked");
+	$sHTML = <<<HTML
+		<input type="radio" name="FIELDS[{$f_ID}][QUESTION_TYPE]" value="text" id="{$f_ID}QUESTIONTEXT" {$f_QUESTION_TEXT} /><label for="{$f_ID}QUESTION">text</label>
+		<input type="radio" name="FIELDS[{$f_ID}][QUESTION_TYPE]" value="html" id="{$f_ID}QUESTIONHTML" {$f_QUESTION_HTML} /><label for="{$f_ID}QUESTION">html</label><br>
+		<textarea rows="10" cols="70" name="FIELDS[{$f_ID}][QUESTION]">{$f_QUESTION}</textarea>
 HTML;
-		$row->AddEditField("QUESTION", $sHTML);
+	$row->AddEditField("QUESTION", $sHTML);
 
-		$row->AddFileField("IMAGE_ID", array(
-			"IMAGE" => "Y",
-			"PATH" => "Y",
-			"FILE_SIZE" => "Y",
-			"DIMENSIONS" => "Y",
-			"IMAGE_POPUP" => "Y",
-			), array(
-				'upload' => true,
-				'medialib' => false,
-				'file_dialog' => false,
-				'cloud' => false,
-				'del' => true,
-				'description' => false
-			)
-		);
+	$row->AddFileField("IMAGE_ID", array(
+		"IMAGE" => "Y",
+		"PATH" => "Y",
+		"FILE_SIZE" => "Y",
+		"DIMENSIONS" => "Y",
+		"IMAGE_POPUP" => "Y",
+		), array(
+			'upload' => true,
+			'medialib' => false,
+			'file_dialog' => false,
+			'cloud' => false,
+			'del' => true,
+			'description' => false
+		)
+	);
 
-		$row->AddActions(array(
-			array("ICON"=>"edit", "DEFAULT" => true, "TEXT"=>GetMessage("MAIN_ADMIN_MENU_EDIT"), "ACTION"=>$lAdmin->ActionRedirect("vote_question_edit.php?ID=$f_ID&VOTE_ID=$VOTE_ID")),
-			array("ICON"=>"delete", "TEXT"=>GetMessage("MAIN_ADMIN_MENU_DELETE"), "ACTION"=>"if(confirm('".GetMessage("VOTE_CONFIRM_DEL_QUESTION")."')) window.location='vote_question_list.php?lang=".LANGUAGE_ID."&VOTE_ID=$VOTE_ID&action=delete&ID=$f_ID&".bitrix_sessid_get()."'")
-		));
-	}
+	$row->AddActions(array(
+		array("ICON"=>"edit", "DEFAULT" => true, "TEXT"=>GetMessage("MAIN_ADMIN_MENU_EDIT"), "ACTION"=>$lAdmin->ActionRedirect("vote_question_edit.php?ID=$f_ID&VOTE_ID=$voteId")),
+		array("ICON"=>"delete", "TEXT"=>GetMessage("MAIN_ADMIN_MENU_DELETE"), "ACTION"=>"if(confirm('".GetMessage("VOTE_CONFIRM_DEL_QUESTION")."')) window.location='vote_question_list.php?lang=".LANGUAGE_ID."&VOTE_ID=$voteId&action=delete&ID=$f_ID&".bitrix_sessid_get()."'")
+	));
 }
 
 $lAdmin->AddFooter(
@@ -277,30 +268,27 @@ $lAdmin->AddFooter(
 				array("counter"=>true, "title"=>GetMessage("MAIN_ADMIN_LIST_CHECKED"), "value"=>"0"),
 		)
 );
-
-if ($VOTE_RIGHT=="W")
-{
-	$lAdmin->AddGroupActionTable(Array(
-		"delete"=>GetMessage("VOTE_DELETE"),
-		"activate"=>GetMessage("VOTE_ACTIVATE"),
-		"deactivate"=>GetMessage("VOTE_DEACTIVATE")
-	));
-	$aMenu[] = array(
-		"TEXT"	=> GetMessage("VOTE_CREATE"),
-		"TITLE"=>GetMessage("VOTE_ADD_QUESTION"),
-		"LINK"=>"vote_question_edit.php?lang=".LANG."&VOTE_ID=$VOTE_ID",
-		"ICON" => "btn_new"
-	);
-	$aContext = $aMenu;
-	$lAdmin->AddAdminContextMenu($aContext);
-}
-
+$lAdmin->AddGroupActionTable(Array(
+	"delete"=>GetMessage("VOTE_DELETE"),
+	"activate"=>GetMessage("VOTE_ACTIVATE"),
+	"deactivate"=>GetMessage("VOTE_DEACTIVATE")
+));
+$lAdmin->AddAdminContextMenu(array(array(
+	"TEXT"	=> GetMessage("VOTE_CREATE"),
+	"TITLE"=>GetMessage("VOTE_ADD_QUESTION"),
+	"LINK"=>"vote_question_edit.php?lang=".LANG."&VOTE_ID=$voteId",
+	"ICON" => "btn_new"
+)));
 $lAdmin->CheckListMode();
 /********************************************************************
 				Form
 ********************************************************************/
-$APPLICATION->SetTitle(str_replace("#ID#","$VOTE_ID",GetMessage("VOTE_PAGE_TITLE")));
 require_once ($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_after.php");
+$context = new CAdminContextMenu(array(array(
+	"TEXT"	=> GetMessage("VOTE_BACK_TO_VOTE"),
+	"LINK"	=> "/bitrix/admin/vote_edit.php?lang=".LANGUAGE_ID."&ID=".$voteId,
+	"ICON" => "btn_list")));
+$context->Show();
 ?>
 <form name="form1" method="GET" action="<?=$APPLICATION->GetCurPage()?>?">
 <?
@@ -346,7 +334,7 @@ $oFilter->Begin();
 		?></td>
 </tr>
 <?
-$oFilter->Buttons(array("table_id"=>$sTableID, "url"=>"/bitrix/admin/vote_question_list.php?lang=".LANGUAGE_ID."&VOTE_ID=$VOTE_ID", "form"=>"form1"));
+$oFilter->Buttons(array("table_id"=>$sTableID, "url"=>"/bitrix/admin/vote_question_list.php?lang=".LANGUAGE_ID."&VOTE_ID=$voteId", "form"=>"form1"));
 $oFilter->End();
 ?>
 </form>

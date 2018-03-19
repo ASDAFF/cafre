@@ -3,31 +3,36 @@
 	background: #f2f6f7;
 	border-radius: 1px;
 	height: 80px;
-	width: 250px;
+	width: calc(20% - 13px);
 	margin: 13px 13px 0 0;
 	float: left;
 }
-.bp-bx-application a {
-	position: absolute;
-	top: 0;
-	bottom: 0;
-	right: 0;
-	left: 0;
-	padding: 13px 16px;
+
+@media (max-width: 1600px) {
+	.bp-bx-application { width: calc(25% - 13px); }
+}
+@media (max-width: 1280px) {
+	.bp-bx-application { width: calc(33% - 13px); }
+}
+.bp-bx-application-link {
+	padding: 9px 11px;
+	display: flex;
+	align-items: center;
 	z-index: 1;
 }
-.bp-bx-application-title:hover .bx-lists-application-link {
-	text-decoration: underline;
-}
+.bp-bx-application-title:hover .bx-lists-application-link { text-decoration: underline;}
+
 .bp-bx-application-icon {
-	position: relative;
-	width: 55px;
+	max-width: 55px;
+	min-width: 55px;
 	height: 55px;
 	border-radius: 50%;
-	margin-right: 13px;
-	float: left;
 	background: #fff;
+	display: block;
+	overflow: hidden;
+	position: relative;
 }
+
 .bp-bx-application-icon img {
 	position: absolute;
 	margin: auto;
@@ -36,50 +41,38 @@
 	left: 0;
 	bottom: 0;
 }
-.bp-bx-application-title {
-	font-size: 15px;
-	font-weight: bold;
-	line-height: 36px;
-	overflow: hidden;
-	display: table;
-	height: 36px;
-}
-.bp-bx-application-title .bx-lists-application-link {
-	line-height: 18px;
-	vertical-align: middle;
-	color: #000;
-	display: table-cell;
+
+.bp-bx-application-title-wrapper {
+	flex:1;
+	padding-left: 10px;
+	box-sizing: border-box;
+	max-width: calc(100% - 55px);
 }
 
-.bp-bx-application-check {
-	position: absolute;
-	bottom: 0px;
-	left: 70px;
-	height: 34px;
-	line-height: 34px;
+.bp-bx-application-title {
+	overflow: hidden;
+	display: block;
+	font: bold 14px/18px Arial, "Helvetica Neue", Helvetica, sans-serif;
+	white-space: nowrap;
+	text-overflow: ellipsis;
 	vertical-align: middle;
-	z-index: 2;
+	color: #000;
 }
+
+.bp-bx-application-check { vertical-align: middle; }
 
 .bp-bx-application-check label {
-	display: inline-block;
 	vertical-align: middle;
-	font-size: 11px;
-	color: rgba(0,0,0,0.5);
-	width: 155px;
-	padding-left: 30px;
-}
-
-.bp-bx-application-check label:hover, .bp-bx-application-check input:checked + label {
+	font: 11px Arial, "Helvetica Neue", Helvetica, sans-serif;
 	color: #000;
 }
 
+.bp-bx-application-check label:hover,
+.bp-bx-application-check input:checked + label {color: #000;}
+
 .bp-bx-application-check input {
-	margin: auto;
-	position: absolute;
-	top: 0;
-	bottom: 0;
-	left: 15px;
+	vertical-align: middle;
+	margin: 0;
 }
 
 .bx-lists-alert {
@@ -133,6 +126,7 @@
 	max-height: 36px;
 	overflow: hidden;
 	position: relative;
-	display: inline-block;
-	width: 150px;
+	display: block;
+	white-space: nowrap;
+	text-overflow: ellipsis;
 }

@@ -35,7 +35,7 @@
 					<?echo GetMessage("CT_BSAC_LOGIN")?>:
 				</td>
 				<td>
-					<input type="text" name="<?echo $arParams["LOGIN"]?>" maxlength="50" value="<?echo (strlen($arResult["LOGIN"]) > 0? $arResult["LOGIN"]: $arResult["USER"]["LOGIN"])?>" size="17" />
+					<input type="text" name="<?echo $arParams["LOGIN"]?>" maxlength="50" value="<?echo $arResult["LOGIN"]?>" size="17" />
 				</td>
 			</tr>
 			<tr>

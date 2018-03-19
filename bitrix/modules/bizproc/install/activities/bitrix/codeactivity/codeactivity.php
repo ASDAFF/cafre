@@ -22,7 +22,7 @@ class CBPCodeActivity
 	{
 		$arErrors = array();
 
-		if ($user == null || !$user->IsAdmin())
+		if ($user == null || !$user->isAdmin())
 		{
 			$arErrors[] = array(
 				"code" => "perm",
@@ -87,4 +87,3 @@ class CBPCodeActivity
 		return true;
 	}
 }
-?>

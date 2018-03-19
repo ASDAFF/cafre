@@ -29,10 +29,10 @@ endif;
 		"vote_form" => "PAGE_NAME=vote_new&VOTE_ID=#VOTE_ID#",
 		"vote_result" => "PAGE_NAME=vote_result&VOTE_ID=#VOTE_ID#");
 	foreach ($URL_NAME_DEFAULT as $URL => $URL_VALUE):
-		if (strLen(trim($arParams[strToUpper($URL)."_TEMPLATE"])) <= 0)
-			$arParams[strToUpper($URL)."_TEMPLATE"] = $APPLICATION->GetCurPage()."?".$URL_VALUE;
-		$arParams["~".strToUpper($URL)."_TEMPLATE"] = $arParams[strToUpper($URL)."_TEMPLATE"];
-		$arParams[strToUpper($URL)."_TEMPLATE"] = htmlspecialcharsbx($arParams["~".strToUpper($URL)."_TEMPLATE"]);
+		if (strlen(trim($arParams[strtoupper($URL)."_TEMPLATE"])) <= 0)
+			$arParams[strtoupper($URL)."_TEMPLATE"] = $APPLICATION->GetCurPage()."?".$URL_VALUE;
+		$arParams["~".strtoupper($URL)."_TEMPLATE"] = $arParams[strtoupper($URL)."_TEMPLATE"];
+		$arParams[strtoupper($URL)."_TEMPLATE"] = htmlspecialcharsbx($arParams["~".strtoupper($URL)."_TEMPLATE"]);
 	endforeach;
 /********************************************************************
 				/Input params
@@ -51,17 +51,20 @@ $db_res = GetVoteList($arParams["CHANNEL_SID"],
 		"bShowAll" => false
 	)
 );
+$channelID = false;
 if ($db_res)
 {
 	$arResult["NAV_STRING"] = $db_res->GetPageNavString(GetMessage("VOTE_PAGES"));
+	$votedUser = \Bitrix\Vote\User::getCurrent();
 	while ($res = $db_res->Fetch())
 	{
-		$res["USER_ALREADY_VOTE"] = (CVote::UserAlreadyVote($res["ID"], $_SESSION["VOTE_USER_ID"], $res["UNIQUE_TYPE"], $res["KEEP_IP_SEC"], $GLOBALS["USER"]->GetID()) ? "Y" : "N");
+		$channelID = ($channelID ?: $res["CHANNLE_ID"]);
+		$res["USER_ALREADY_VOTE"] = ($votedUser->isVotedFor($res["ID"]) ? "Y" : "N");
 		$res["URL"] = array(
-				"~VOTE_RESULT" => CComponentEngine::MakePathFromTemplate($arParams["~VOTE_RESULT_TEMPLATE"], array("VOTE_ID" => $res["ID"])),
-				"~VOTE_FORM" => CComponentEngine::MakePathFromTemplate($arParams["~VOTE_FORM_TEMPLATE"], array("VOTE_ID" => $res["ID"])),
-				"VOTE_RESULT" => CComponentEngine::MakePathFromTemplate($arParams["VOTE_RESULT_TEMPLATE"], array("VOTE_ID" => $res["ID"])),
-				"VOTE_FORM" => CComponentEngine::MakePathFromTemplate($arParams["VOTE_FORM_TEMPLATE"], array("VOTE_ID" => $res["ID"])));
+				"~VOTE_RESULT" => CComponentEngine::makePathFromTemplate($arParams["~VOTE_RESULT_TEMPLATE"], array("VOTE_ID" => $res["ID"])),
+				"~VOTE_FORM" => CComponentEngine::makePathFromTemplate($arParams["~VOTE_FORM_TEMPLATE"], array("VOTE_ID" => $res["ID"])),
+				"VOTE_RESULT" => CComponentEngine::makePathFromTemplate($arParams["VOTE_RESULT_TEMPLATE"], array("VOTE_ID" => $res["ID"])),
+				"VOTE_FORM" => CComponentEngine::makePathFromTemplate($arParams["VOTE_FORM_TEMPLATE"], array("VOTE_ID" => $res["ID"])));
 		$res["IMAGE"] = CFile::GetFileArray($res["IMAGE_ID"]);
 		// For custom 
 		foreach ($res["URL"] as $key => $val):
@@ -77,15 +80,16 @@ if ($db_res)
 				/Data
 ********************************************************************/
 
-if($GLOBALS["APPLICATION"]->GetGroupRight("vote") == "W" && CModule::IncludeModule("intranet") && is_object($GLOBALS['INTRANET_TOOLBAR']))
+if ($GLOBALS["APPLICATION"]->GetGroupRight("vote") == "W" && CModule::IncludeModule("intranet") && is_object($GLOBALS['INTRANET_TOOLBAR']))
 {
-	$GLOBALS['INTRANET_TOOLBAR']->AddButton(array(
-		'TEXT' => GetMessage("comp_voting_list_add"),
-		'TITLE' => GetMessage("comp_voting_list_add_title"),
-		'ICON' => 'add',
-		'HREF' => '/bitrix/admin/vote_edit.php?lang='.LANGUAGE_ID,
-		'SORT' => '100',
-	));
+	if ($channelID )
+		$GLOBALS['INTRANET_TOOLBAR']->AddButton(array(
+			'TEXT' => GetMessage("comp_voting_list_add"),
+			'TITLE' => GetMessage("comp_voting_list_add_title"),
+			'ICON' => 'add',
+			'HREF' => '/bitrix/admin/vote_edit.php?lang='.LANGUAGE_ID."&CHANNEL_ID=".$channelID,
+			'SORT' => '100',
+		));
 	$GLOBALS['INTRANET_TOOLBAR']->AddButton(array(
 		'TEXT' => GetMessage("comp_voting_list_list"),
 		'TITLE' => GetMessage("comp_voting_list_list_title"),

@@ -1,6 +1,6 @@
 <?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
 
-if (!CModule::IncludeModule('bizproc'))
+if (!CModule::IncludeModule('bizproc') || !CBPRuntime::isFeatureEnabled())
 {
 	ShowError(GetMessage('BIZPROC_MODULE_NOT_INSTALLED'));
 	return;
@@ -32,8 +32,8 @@ if($arParams["IBLOCK_TYPE_ID"] == COption::GetOptionString("lists", "livefeed_ib
 }
 else
 {
-	$moduleId = "iblock";
-	$entity = "CIBlockDocument";
+	$moduleId = "lists";
+	$entity = 'Bitrix\Lists\BizprocDocumentLists';
 }
 $APPLICATION->IncludeComponent("bitrix:bizproc.workflow.edit", ".default", array(
 	"MODULE_ID" => $moduleId,

@@ -680,5 +680,4 @@ if (is_array($arResult['SKU_PROPS']))
 			BTN_MESSAGE_CLOSE: '<? echo GetMessageJS('CATALOG_RECOMMENDED_PRODUCTS_CATALOG_BTN_MESSAGE_CLOSE') ?>'
 		});
 	</script>
-
-<? endif ?>
+<? endif;

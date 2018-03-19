@@ -1,7 +1,9 @@
 <?
 /** @global CMain $APPLICATION */
-use Bitrix\Main;
-use Bitrix\Main\Loader;
+use Bitrix\Main,
+	Bitrix\Main\Loader,
+	Bitrix\Iblock;
+
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 Loader::includeModule('iblock');
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/iblock/prolog.php");
@@ -48,16 +50,15 @@ if (Loader::includeModule('catalog'))
 	$OfferIblocks = array();
 	$offersIterator = \Bitrix\Catalog\CatalogIblockTable::getList(array(
 		'select' => array('IBLOCK_ID'),
-		'filter' => array('!PRODUCT_IBLOCK_ID' => 0)
+		'filter' => array('!=PRODUCT_IBLOCK_ID' => 0)
 	));
 	while ($offer = $offersIterator->fetch())
-	{
 		$OfferIblocks[] = (int)$offer['IBLOCK_ID'];
-	}
+	unset($offer, $offersIterator);
 	if (!empty($OfferIblocks))
 	{
 		unset($offer);
-		$iblockFilter['!ID'] = $OfferIblocks;
+		$iblockFilter['!=ID'] = $OfferIblocks;
 	}
 	unset($offersIterator, $OfferIblocks);
 }
@@ -66,6 +67,64 @@ if (!isset($by))
 	$by = 'ID';
 if (!isset($order))
 	$order = 'ASC';
+$iblockOrder = array($by => $order);
+
+if ($arID = $lAdmin->GroupAction())
+{
+	if ($_REQUEST['action_target']=='selected')
+	{
+		$arID = array();
+		$iblockIterator = Iblock\IblockTable::getList(array(
+			'select' => array('ID'),
+			'filter' => $iblockFilter,
+			'order' => $iblockOrder
+		));
+		while ($iblockInfo = $iblockIterator->fetch())
+			$arID[] = (int)$iblockInfo['ID'];
+		unset($iblockInfo, $iblockIterator);
+	}
+
+	if (!empty($arID))
+	{
+		$conn = Main\Application::getConnection();
+		foreach ($arID as &$ID)
+		{
+			$ID = (int)$ID;
+			if ($ID <= 0)
+				continue;
+
+			switch ($_REQUEST['action'])
+			{
+				case "delete":
+					if (!CIBlockRights::UserHasRightTo($ID, $ID, "iblock_edit"))
+						break;
+					$iblockInfo = Iblock\IblockTable::getList(array(
+						'select' => array('ID', 'PROPERTY_INDEX'),
+						'filter' => array('=ID' => $ID)
+					))->fetch();
+					if (empty($iblockInfo) || $iblockInfo['PROPERTY_INDEX'] != 'Y')
+						continue;
+					$conn->startTransaction();
+					$result = Iblock\IblockTable::update($ID, array('PROPERTY_INDEX' => 'I'));
+					if (!$result->isSuccess())
+					{
+						$lAdmin->AddGroupError(implode('. ', $result->getErrorMessages()), $ID);
+						$conn->rollbackTransaction();
+					}
+					else
+					{
+						$conn->commitTransaction();
+						CIBlock::clearIblockTagCache($ID);
+						CIBlock::CleanCache($ID);
+					}
+					unset($result);
+					break;
+			}
+		}
+		unset($ID);
+		unset($conn);
+	}
+}
 
 $usePageNavigation = true;
 if (isset($_REQUEST['mode']) && $_REQUEST['mode'] == 'excel')
@@ -91,7 +150,7 @@ else
 $getListParams = array(
 	'select' => array('ID', 'NAME', 'PROPERTY_INDEX', 'ACTIVE'),
 	'filter' => $iblockFilter,
-	'order' => array($by => $order)
+	'order' => $iblockOrder
 );
 unset($iblockFilter);
 if ($usePageNavigation)
@@ -144,7 +203,7 @@ while($iblockInfo = $rsIBlocks->Fetch())
 	$row = $lAdmin->AddRow($iblockInfo["ID"], $iblockInfo);
 
 	$row->AddViewField("ID", $iblockInfo["ID"]);
-	$row->AddViewField("NAME", $iblockInfo["NAME"]);
+	$row->AddViewField("NAME", htmlspecialcharsEx($iblockInfo["NAME"]));
 	$row->AddViewField('ACTIVE', ($iblockInfo['ACTIVE'] == 'Y' ? GetMessage('IBLOCK_RADM_ACTIVE_YES') : GetMessage('IBLOCK_RADM_ACTIVE_NO')));
 
 	if ($iblockInfo["PROPERTY_INDEX"] == "I")
@@ -173,6 +232,20 @@ while($iblockInfo = $rsIBlocks->Fetch())
 		);
 
 		$row->AddActions($arActions);
+		unset($arActions);
+	}
+	elseif ($iblockInfo["PROPERTY_INDEX"] == "Y")
+	{
+		$arActions = array(
+			array(
+				"ICON" => "edit",
+				"TEXT" => GetMessage("IBLOCK_RADM_REINDEX_DISABLE"),
+				"ACTION"=>"if(confirm('".GetMessageJS("IBLOCK_RADM_REINDEX_DISABLE_CONFIRM")."')) ".$lAdmin->ActionDoGroup($iblockInfo["ID"], "delete", "&lang=".LANGUAGE_ID),
+			),
+		);
+
+		$row->AddActions($arActions);
+		unset($arActions);
 	}
 }
 

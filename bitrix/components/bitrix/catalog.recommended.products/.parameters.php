@@ -16,7 +16,7 @@ while ($catalogGroup = $catalogGroupIterator->fetch())
 }
 
 // iblockTypes
-$iblockTypes = CIBlockParameters::getIBlockTypes();
+$iblockTypes = CIBlockParameters::GetIBlockTypes();
 
 $iblockNames = array();
 $iblockIterator = CIBlock::GetList(array("SORT" => "ASC"), array("TYPE" => ($arCurrentValues["IBLOCK_TYPE"] != "-" ? $arCurrentValues["IBLOCK_TYPE"] : "")));
@@ -109,7 +109,7 @@ $arComponentParameters = array(
 			"PARENT" => "BASKET",
 			"NAME" => GetMessage("CATALOG_RECOMMENDED_PRODUCTS_COMPONENT_ACTION_VARIABLE"),
 			"TYPE" => "STRING",
-			"DEFAULT" => "action",
+			"DEFAULT" => "action_crp",
 		),
 		"PRODUCT_ID_VARIABLE" => array(
 			"PARENT" => "BASKET",
@@ -253,13 +253,21 @@ while ($iblock = $iblockIterator->fetch())
 $catalogs = array();
 $productsCatalogs = array();
 $skuCatalogs = array();
-$catalogIterator = CCatalog::getList(array("IBLOCK_ID" => "ASC"), array("@IBLOCK_ID" => array_keys($iblockMap)));
+$catalogIterator = CCatalog::GetList(
+	array("IBLOCK_ID" => "ASC"),
+	array("@IBLOCK_ID" => array_keys($iblockMap)),
+	false,
+	false,
+	array('IBLOCK_ID', 'PRODUCT_IBLOCK_ID', 'SKU_PROPERTY_ID')
+);
 while($catalog = $catalogIterator->fetch())
 {
 	$isOffersCatalog = (int)$catalog['PRODUCT_IBLOCK_ID'] > 0;
 	if($isOffersCatalog)
 	{
 		$skuCatalogs[$catalog['PRODUCT_IBLOCK_ID']] = $catalog;
+		if (!isset($productsCatalogs[$catalog['PRODUCT_IBLOCK_ID']]))
+			$productsCatalogs[$catalog['PRODUCT_IBLOCK_ID']] = $catalog;
 	}
 	else
 	{
@@ -445,4 +453,3 @@ if (Loader::includeModule('currency'))
 		);
 	}
 }
-?>

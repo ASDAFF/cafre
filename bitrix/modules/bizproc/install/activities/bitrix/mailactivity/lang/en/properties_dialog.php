@@ -11,4 +11,7 @@ $MESS["BPMA_PD_DIRRECT_MAIL_Y"] = "Direct sending";
 $MESS["BPMA_PD_DIRRECT_MAIL_N"] = "Send using Mail Subsystem (engaged email events and templates)";
 $MESS["BPMA_PD_MAIL_SITE"] = "Message template website";
 $MESS["BPMA_PD_MAIL_SITE_OTHER"] = "other";
+$MESS["BPMA_PD_MAIL_SEPARATOR"] = "E-mail address separator";
+$MESS["BPMA_PD_FILE"] = "Attachments";
+$MESS["BPMA_PD_FILE_DESCRIPTION"] = "Only for sending via Mail Subsystem";
 ?>

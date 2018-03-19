@@ -206,7 +206,10 @@ class CWebService
 		global $USER;
 
 		if (!$USER->IsAuthorized())
-			return $USER->RequiredHTTPAuthBasic("Bitrix.{$class}.{$method}");
+		{
+			\CHTTP::SetAuthHeader(true);
+			return false;
+		}
 
 		return true;
 	}
@@ -234,7 +237,7 @@ class CWebService
 	function GetDefaultEndpoint()
 	{
 		global $APPLICATION;
-		return ($APPLICATION->IsHTTPS() ? "https" : "https")."://".$_SERVER["HTTP_HOST"].
+		return ($APPLICATION->IsHTTPS() ? "https" : "http")."://".$_SERVER["HTTP_HOST"].
 				$APPLICATION->GetCurPage();
 	}
 
@@ -242,7 +245,7 @@ class CWebService
 	{
 		global $APPLICATION;
 
-		return ($APPLICATION->IsHTTPS() ? "https" : "https")."://".$_SERVER["HTTP_HOST"]."/";
+		return ($APPLICATION->IsHTTPS() ? "https" : "http")."://".$_SERVER["HTTP_HOST"]."/";
 	}
 
 	function &GetWebServiceDeclaration($className)

@@ -9,6 +9,8 @@ $POST_RIGHT = $APPLICATION->GetGroupRight("subscribe");
 if($POST_RIGHT=="D")
 	$APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
 
+$MAIN_RIGHT = $APPLICATION->GetGroupRight("main");
+
 $aTabs = array(
 	array("DIV" => "edit1", "TAB" => GetMessage("imp_import_tab"), "ICON"=>"main_user_edit", "TITLE"=>GetMessage("imp_import_tab_title")),
 );
@@ -86,7 +88,7 @@ if($REQUEST_METHOD=="POST" && !empty($Import) && $POST_RIGHT>="W" && check_bitri
 				"CONFIRM_PASSWORD" => $sPassw,
 				"EMAIL" => $email,
 				"ACTIVE" => "Y",
-				"GROUP_ID" => ($USER->IsAdmin()?$USER_GROUP_ID:array(COption::GetOptionString("main", "new_user_registration_def_group")))
+				"GROUP_ID" => ($MAIN_RIGHT >= "W"?$USER_GROUP_ID:array(COption::GetOptionString("main", "new_user_registration_def_group")))
 			);
 			if($USER_ID = $user->Add($arUserFields))
 			{
@@ -189,7 +191,7 @@ $tabControl->BeginNextTab();
 	<tr>
 		<td><?echo GetMessage("imp_send_reg")?></td>
 		<td><input type="checkbox" name="SEND_REG_INFO" value="Y"<?if($SEND_REG_INFO == "Y") echo " checked"?>>
-<?if(!$USER->IsAdmin()):?>
+<?if($MAIN_RIGHT < "W"):?>
 		<script language="JavaScript">
 		function DisableControls(bDisable)
 		{
@@ -203,7 +205,7 @@ $tabControl->BeginNextTab();
 <?endif;?>
 		</td>
 	</tr>
-<?if($USER->IsAdmin()):?>
+<?if($MAIN_RIGHT >= "W"):?>
 	<tr>
 		<td class="adm-detail-valign-top"><?echo GetMessage("imp_add_gr")?></td>
 		<td><select name="USER_GROUP_ID[]" multiple size=10><?

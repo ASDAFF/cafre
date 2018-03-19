@@ -548,20 +548,16 @@ if ((!empty($arBlog) && $arBlog["ACTIVE"] == "Y") ||
 					}
 				}
 
-				$arSelectFields = array("ID", "SMILE_TYPE", "TYPING", "IMAGE", "DESCRIPTION", "CLICKABLE", "SORT", "IMAGE_WIDTH", "IMAGE_HEIGHT", "LANG_NAME");
-				$total = 0;
-				$arSmiles = array();
-				$res = CBlogSmile::GetList(array("SORT"=>"ASC","ID"=>"DESC"), array("SMILE_TYPE"=>"S", "LANG_LID"=>LANGUAGE_ID), false, false, $arSelectFields);
-				while ($arr = $res->GetNext())
+				$arResult["Smiles"] = CBlogSmile::getSmiles(CSmile::TYPE_SMILE, LANGUAGE_ID);
+				foreach($arResult["Smiles"] as $key => $value)
 				{
-					$total++;
-					list($type)=explode(" ",$arr["TYPING"]);
-					$arr["TYPE"]=str_replace("'","\'",$type);
-					$arr["TYPE"]=str_replace("\\","\\\\",$arr["TYPE"]);
-					$arSmiles[] = $arr;
+					$arResult["Smiles"][$key]["LANG_NAME"] = $value["NAME"];
+					$arResult["Smiles"][$key]["~LANG_NAME"] = htmlspecialcharsback($value["NAME"]);
+					list($type) = explode(" ", $value["TYPING"]);
+					$arResult["Smiles"][$key]["TYPE"] = str_replace("'", "\'", $type);
+					$arResult["Smiles"][$key]["TYPE"] = str_replace("\\", "\\\\", $arResult["Smiles"][$key]["TYPE"]);
 				}
-				$arResult["Smiles"] = $arSmiles;
-				$arResult["SmilesCount"] = $total;
+				$arResult["SmilesCount"] = count($arResult["Smiles"]);
 
 				$arResult["Images"] = Array();
 				if(!empty($arBlog))

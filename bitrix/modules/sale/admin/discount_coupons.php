@@ -2,18 +2,23 @@
 /** @global CUser $USER */
 /** @global CMain $APPLICATION */
 /** @global array $FIELDS */
-use Bitrix\Main;
-use Bitrix\Main\Loader;
-use Bitrix\Main\Localization\Loc;
-use Bitrix\Sale\Internals;
+use Bitrix\Main,
+	Bitrix\Main\Loader,
+	Bitrix\Main\Localization\Loc,
+	Bitrix\Sale\Internals;
 
 require_once($_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/main/include/prolog_admin_before.php');
 require_once($_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/sale/prolog.php');
 
+Loc::loadMessages(__FILE__);
+
 $saleModulePermissions = $APPLICATION->GetGroupRight('sale');
 $readOnly = ($saleModulePermissions < 'W');
 if ($saleModulePermissions < 'R')
-	$APPLICATION->AuthForm(GetMessage('ACCESS_DENIED'));
+	$APPLICATION->AuthForm('');
+
+Loader::includeModule('sale');
+
 $canViewUserList = (
 	$USER->CanDoOperation('view_subordinate_users')
 	|| $USER->CanDoOperation('view_all_users')
@@ -21,8 +26,9 @@ $canViewUserList = (
 	|| $USER->CanDoOperation('edit_subordinate_users')
 );
 
-Loader::includeModule('sale');
-Loc::loadMessages(__FILE__);
+$couponTypeList = Internals\DiscountCouponTable::getCouponTypes(true);
+
+$request = Main\Context::getCurrent()->getRequest();
 
 $adminListTableID = 'tbl_sale_discount_coupons';
 
@@ -30,9 +36,29 @@ $adminSort = new CAdminSorting($adminListTableID, 'ID', 'ASC');
 $adminList = new CAdminList($adminListTableID, $adminSort);
 
 $filter = array();
-$filterFields = array();
-
+$filterFields = array(
+	'filter_coupon',
+	'filter_discount_id',
+	'filter_active',
+	'filter_type'
+);
 $adminList->InitFilter($filterFields);
+$filterValues = array(
+	'filter_coupon' => (isset($filter_coupon) ? $filter_coupon : ''),
+	'filter_discount_id' => (isset($filter_discount_id) ? $filter_discount_id : ''),
+	'filter_active' => (isset($filter_active) ? $filter_active : ''),
+	'filter_type' => (isset($filter_type) ? $filter_type : '')
+);
+
+if ($filterValues['filter_coupon'] != '')
+	$filter['=COUPON'] = $filterValues['filter_coupon'];
+if (!empty($filterValues['filter_discount_id']))
+	$filter['=DISCOUNT_ID'] = $filterValues['filter_discount_id'];
+if ($filterValues['filter_active'] == 'Y' || $filterValues['filter_active'] == 'N')
+	$filter['=ACTIVE'] = $filterValues['filter_active'];
+if ($filterValues['filter_type'] != '' && isset($couponTypeList[$filterValues['filter_type']]))
+	$filter['=TYPE'] = $filterValues['filter_type'];
+
 
 if (!$readOnly && $adminList->EditAction())
 {
@@ -69,11 +95,14 @@ if (!$readOnly && $adminList->EditAction())
 
 if (!$readOnly && ($listID = $adminList->GroupAction()))
 {
-	$checkUseCoupons = ($_REQUEST['action'] == 'delete');
+	$action = $request['action'];
+	if (!empty($request['action_button']))
+		$action = $request['action_button'];
+	$checkUseCoupons = ($action == 'delete');
 	$discountList = array();
 
 	Internals\DiscountCouponTable::clearDiscountCheckList();
-	if ($_REQUEST['action_target'] == 'selected')
+	if ($request['action_target'] == 'selected')
 	{
 		$listID = array();
 		$couponIterator = Internals\DiscountCouponTable::getList(array(
@@ -92,13 +121,13 @@ if (!$readOnly && ($listID = $adminList->GroupAction()))
 	$listID = array_filter($listID);
 	if (!empty($listID))
 	{
-		switch ($_REQUEST['action'])
+		switch ($action)
 		{
 			case 'activate':
 			case 'deactivate':
 				Internals\DiscountCouponTable::disableCheckCouponsUse();
 				$fields = array(
-					'ACTIVE' => ($_REQUEST['action'] == 'activate' ? 'Y' : 'N')
+					'ACTIVE' => ($action == 'activate' ? 'Y' : 'N')
 				);
 				foreach ($listID as &$couponID)
 				{
@@ -135,7 +164,7 @@ if (!$readOnly && ($listID = $adminList->GroupAction()))
 				break;
 		}
 	}
-	unset($discountList, $listID);
+	unset($discountList, $action, $listID);
 }
 
 $headerList = array();
@@ -254,6 +283,7 @@ $adminList->AddHeaders($headerList);
 $selectFields = array_fill_keys($adminList->GetVisibleHeaderColumns(), true);
 $selectFields['ID'] = true;
 $selectFields['ACTIVE'] = true;
+$selectFields['TYPE'] = true;
 $selectFieldsMap = array_fill_keys(array_keys($headerList), false);
 $selectFieldsMap = array_merge($selectFieldsMap, $selectFields);
 
@@ -270,13 +300,9 @@ $nameFormat = CSite::GetNameFormat(true);
 
 $rowList = array();
 
-$couponTypeList = array();
-if ($selectFieldsMap['TYPE'])
-	$couponTypeList = Internals\DiscountCouponTable::getCouponTypes(true);
-
 $usePageNavigation = true;
 $navyParams = array();
-if (isset($_REQUEST['mode']) && $_REQUEST['mode'] == 'excel')
+if ($request['mode'] == 'excel')
 {
 	$usePageNavigation = false;
 }
@@ -354,12 +380,20 @@ else
 	$couponIterator->NavStart();
 }
 
+CTimeZone::Disable();
 $adminList->NavText($couponIterator->GetNavPrint(Loc::getMessage('BT_SALE_DISCOUNT_COUPON_LIST_MESS_NAV')));
 while ($coupon = $couponIterator->Fetch())
 {
 	$coupon['ID'] = (int)$coupon['ID'];
-	$coupon['MAX_USE'] = (int)$coupon['MAX_USE'];
-	$coupon['USE_COUNT'] = (int)$coupon['USE_COUNT'];
+	if ($selectFieldsMap['MAX_USE'])
+		$coupon['MAX_USE'] = (int)$coupon['MAX_USE'];
+	if ($selectFieldsMap['USE_COUNT'])
+		$coupon['USE_COUNT'] = (int)$coupon['USE_COUNT'];
+	if ($coupon['TYPE'] != Internals\DiscountCouponTable::TYPE_MULTI_ORDER)
+	{
+		$coupon['MAX_USE'] = 0;
+		$coupon['USE_COUNT'] = 0;
+	}
 	if ($selectFieldsMap['CREATED_BY'])
 	{
 		$coupon['CREATED_BY'] = (int)$coupon['CREATED_BY'];
@@ -378,6 +412,15 @@ while ($coupon = $couponIterator->Fetch())
 		if ($coupon['USER_ID'] > 0)
 			$userIDs[$coupon['USER_ID']] = true;
 	}
+	if ($selectFieldsMap['ACTIVE_FROM'])
+		$coupon['ACTIVE_FROM'] = ($coupon['ACTIVE_FROM'] instanceof Main\Type\DateTime ? $coupon['ACTIVE_FROM']->toString() : '');
+	if ($selectFieldsMap['ACTIVE_TO'])
+		$coupon['ACTIVE_TO'] = ($coupon['ACTIVE_TO'] instanceof Main\Type\DateTime ? $coupon['ACTIVE_TO']->toString() : '');
+	if ($selectFieldsMap['DATE_CREATE'])
+		$coupon['DATE_CREATE'] = ($coupon['DATE_CREATE'] instanceof Main\Type\DateTime ? $coupon['DATE_CREATE']->toString() : '');
+	if ($selectFieldsMap['TIMESTAMP_X'])
+		$coupon['TIMESTAMP_X'] = ($coupon['TIMESTAMP_X'] instanceof Main\Type\DateTime ? $coupon['TIMESTAMP_X']->toString() : '');
+
 	$urlEdit = 'sale_discount_coupon_edit.php?ID='.$coupon['ID'].'&lang='.LANGUAGE_ID.GetFilterParams('filter_');
 
 	$rowList[$coupon['ID']] = $row = &$adminList->AddRow(
@@ -394,7 +437,7 @@ while ($coupon = $couponIterator->Fetch())
 		$row->AddViewField('TIMESTAMP_X', $coupon['TIMESTAMP_X']);
 
 	if ($selectFieldsMap['DISCOUNT'])
-		$row->AddViewField('DISCOUNT', '<a href="'.$discountEditUrl.$coupon['DISCOUNT_ID'].'">['.$coupon['DISCOUNT_ID'].']</a> '.$coupon['DISCOUNT_NAME']);
+		$row->AddViewField('DISCOUNT', '<a href="'.$discountEditUrl.$coupon['DISCOUNT_ID'].'">['.$coupon['DISCOUNT_ID'].']</a> '.htmlspecialcharsbx($coupon['DISCOUNT_NAME']));
 
 	if ($selectFieldsMap['MAX_USE'])
 		$row->AddViewField('MAX_USE', ($coupon['MAX_USE'] > 0 ? $coupon['MAX_USE'] : ''));
@@ -403,7 +446,7 @@ while ($coupon = $couponIterator->Fetch())
 	if ($selectFieldsMap['TYPE'])
 		$row->AddViewField('TYPE', $couponTypeList[$coupon['TYPE']]);
 	if ($selectFieldsMap['DESCRIPTION'])
-		$row->AddViewField('DESCRIPTION', $coupon['DESCRIPTION']);
+		$row->AddViewField('DESCRIPTION', htmlspecialcharsbx($coupon['DESCRIPTION']));
 	if (!$readOnly)
 	{
 		if ($selectFieldsMap['COUPON'])
@@ -411,9 +454,9 @@ while ($coupon = $couponIterator->Fetch())
 		if ($selectFieldsMap['ACTIVE'])
 			$row->AddCheckField('ACTIVE');
 		if ($selectFieldsMap['ACTIVE_FROM'])
-			$row->AddCalendarField('ACTIVE_FROM');
+			$row->AddCalendarField('ACTIVE_FROM', array(), true);
 		if ($selectFieldsMap['ACTIVE_TO'])
-			$row->AddCalendarField('ACTIVE_TO');
+			$row->AddCalendarField('ACTIVE_TO', array(), true);
 	}
 	else
 	{
@@ -464,23 +507,21 @@ while ($coupon = $couponIterator->Fetch())
 		$actions[] = array(
 			'ICON' =>'delete',
 			'TEXT' => Loc::getMessage('BT_SALE_DISCOUNT_COUPON_LIST_CONTEXT_DELETE'),
-			'ACTION' => "if(confirm('".Loc::getMessage('BT_SALE_DISCOUNT_COUPON_LIST_CONTEXT_DELETE_CONFIRM')."')) ".$adminList->ActionDoGroup($coupon['ID'], 'delete')
+			'ACTION' => "if (confirm('".Loc::getMessage('BT_SALE_DISCOUNT_COUPON_LIST_CONTEXT_DELETE_CONFIRM')."')) ".$adminList->ActionDoGroup($coupon['ID'], 'delete')
 		);
 	}
 	$row->AddActions($actions);
-	unset($actions);
+	unset($actions, $row);
 }
-if (isset($row))
-	unset($row);
-unset($discountEditUrl);
+CTimeZone::Enable();
 
-if ($selectFieldsMap['CREATED_BY'] || $selectFieldsMap['MODIFIED_BY'] || $selectFieldsMap['USER_ID'])
+if (!empty($rowList) && ($selectFieldsMap['CREATED_BY'] || $selectFieldsMap['MODIFIED_BY'] || $selectFieldsMap['USER_ID']))
 {
 	if (!empty($userIDs))
 	{
 		$userIterator = Main\UserTable::getList(array(
 			'select' => array('ID', 'LOGIN', 'NAME', 'LAST_NAME', 'SECOND_NAME', 'EMAIL'),
-			'filter' => array('ID' => array_keys($userIDs)),
+			'filter' => array('@ID' => array_keys($userIDs)),
 		));
 		while ($oneUser = $userIterator->fetch())
 		{
@@ -500,34 +541,28 @@ if ($selectFieldsMap['CREATED_BY'] || $selectFieldsMap['MODIFIED_BY'] || $select
 		{
 			$userName = '';
 			if ($row->arRes['CREATED_BY'] > 0 && isset($userList[$row->arRes['CREATED_BY']]))
-			{
 				$userName = $userList[$row->arRes['CREATED_BY']];
-			}
 			$row->AddViewField('CREATED_BY', $userName);
 		}
 		if ($selectFieldsMap['MODIFIED_BY'])
 		{
 			$userName = '';
 			if ($row->arRes['MODIFIED_BY'] > 0 && isset($userList[$row->arRes['MODIFIED_BY']]))
-			{
 				$userName = $userList[$row->arRes['MODIFIED_BY']];
-			}
 			$row->AddViewField('MODIFIED_BY', $userName);
 		}
 		if ($selectFieldsMap['USER_ID'])
 		{
 			$userName = '';
 			if ($row->arRes['USER_ID'] > 0 && isset($userList[$row->arRes['USER_ID']]))
-			{
 				$userName = $userList[$row->arRes['USER_ID']];
-			}
 			$row->AddViewField('USER_ID', $userName);
 		}
 		unset($userName);
 	}
-	if (isset($row))
-		unset($row);
+	unset($row);
 }
+unset($discountEditUrl);
 
 $adminList->AddFooter(
 	array(
@@ -558,7 +593,7 @@ if (!$readOnly)
 		'ICON' => 'btn_new',
 		'TEXT' => Loc::getMessage('BT_SALE_DISCOUNT_COUPONT_LIST_MESS_NEW_COUPON'),
 		'TITLE' => Loc::getMessage('BT_SALE_DISCOUNT_COUPON_LIST_MESS_NEW_COUPON_TITLE'),
-		'LINK' => 'sale_discount_coupon_edit.php?lang='.LANGUAGE_ID.GetFilterParams('filter_'),
+		'LINK' => 'sale_discount_coupon_edit.php?ID=0&lang='.LANGUAGE_ID.GetFilterParams('filter_')
 	);
 }
 if (!empty($contextMenu))
@@ -568,6 +603,77 @@ $adminList->CheckListMode();
 
 $APPLICATION->SetTitle(Loc::getMessage('BT_SALE_DISCOUNT_COUPON_LIST_TITLE'));
 require($_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/main/include/prolog_admin_after.php');
+?>
+<form name="find_form" method="GET" action="<?=$APPLICATION->GetCurPage();?>">
+	<?
+	$filterForm = new CAdminFilter(
+		$adminListTableID.'_filter',
+		array(
+			Loc::getMessage('SALE_DISCOUNT_COUPON_LIST_FILTER_COUPON_SHORT'),
+			Loc::getMessage('SALE_DISCOUNT_COUPON_LIST_FILTER_DISCOUNT_ID_SHORT'),
+			Loc::getMessage('SALE_DISCOUNT_COUPON_LIST_FILTER_ACTIVE_SHORT'),
+			Loc::getMessage('SALE_DISCOUNT_COUPON_LIST_FILTER_TYPE_SHORT')
+		)
+	);
+	$filterForm->Begin();
+	?>
+	<tr>
+		<td><?=Loc::getMessage('SALE_DISCOUNT_COUPON_LIST_FILTER_COUPON'); ?></td>
+		<td><input type="text" name="filter_coupon" value="<?=htmlspecialcharsbx($filterValues['filter_coupon']); ?>"></td>
+	</tr>
+	<tr>
+		<td><?=Loc::getMessage('SALE_DISCOUNT_COUPON_LIST_FILTER_DISCOUNT_ID'); ?></td>
+		<td><select name="filter_discount_id">
+			<option value=""<?=($filterValues['filter_discount_id'] == '' ? ' selected' : ''); ?>><?=htmlspecialcharsbx(Loc::getMessage('PRICE_ROUND_LIST_FILTER_PRICE_TYPE_ANY')); ?></option><?
+			$discountIterator = Internals\DiscountTable::getList(array(
+				'select' => array('ID', 'NAME'),
+				'filter' => array('=USE_COUPONS' => 'Y'),
+				'order' => array('SORT' => 'ASC', 'NAME' => 'ASC')
+			));
+			while ($discount = $discountIterator->fetch())
+			{
+				$discount['NAME'] = (string)$discount['NAME'];
+				$title = '['.$discount['ID'].']'.($discount['NAME'] !== '' ? ' '.htmlspecialcharsbx($discount['NAME']) : '');
+				?><option value="<?=$discount['ID']; ?>"<?=($filterValues['filter_discount_id'] == $discount['ID'] ? ' selected' : ''); ?>><?=$title; ?></option><?
+				unset($title);
+			}
+			unset($discount, $discountIterator);
+			?></select>
+		</td>
+	</tr>
+	<tr>
+		<td><?=Loc::getMessage('SALE_DISCOUNT_COUPON_LIST_FILTER_ACTIVE'); ?></td>
+		<td><select name="filter_active">
+			<option value=""<?=(empty($filterValues['filter_active']) ? ' selected' : ''); ?>><?=htmlspecialcharsbx(Loc::getMessage('SALE_DISCOUNT_COUPON_LIST_FILTER_ACTIVE_EMPTY')); ?></option>
+			<option value="Y"<?=($filterValues['filter_active'] === 'Y' ? ' selected' : ''); ?>><?=htmlspecialcharsbx(Loc::getMessage('SALE_DISCOUNT_COUPON_LIST_FILTER_ACTIVE_YES')); ?></option>
+			<option value="N"<?=($filterValues['filter_active'] === 'N' ? ' selected' : ''); ?>><?=htmlspecialcharsbx(Loc::getMessage('SALE_DISCOUNT_COUPON_LIST_FILTER_ACTIVE_NO')); ?></option>
+			</select>
+		</td>
+	</tr>
+	<tr>
+		<td><?=Loc::getMessage('SALE_DISCOUNT_COUPON_LIST_FILTER_TYPE'); ?></td>
+		<td><select name="filter_type">
+			<option value=""<?=(empty($filterValues['filter_type']) || !isset($couponTypeList[$filterValues['filter_type']]) ? ' selected' : ''); ?>><?=htmlspecialcharsbx(Loc::getMessage('SALE_DISCOUNT_COUPON_LIST_FILTER_TYPE_EMPTY')); ?></option><?
+			foreach ($couponTypeList as $id =>$title)
+			{
+				?><option value="<?=$id; ?>"<?=($filterValues['filter_type'] == $id ? ' selected' : ''); ?>><?=htmlspecialcharsbx($title); ?></option><?
+			}
+			unset($id, $title);
+			?></select>
+		</td>
+	</tr>
+	<?
+	$filterForm->Buttons(
+		array(
+			'table_id' => $adminListTableID,
+			'url' => $APPLICATION->GetCurPage(),
+			'form' => 'find_form'
+		)
+	);
+	$filterForm->End();
+	?>
+</form>
+<?
 
 $adminList->DisplayList();
 

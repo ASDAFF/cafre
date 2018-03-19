@@ -3,7 +3,7 @@ define("STOP_STATISTICS", true);
 define("BX_SECURITY_SHOW_MESSAGE", true);
 
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");
-__IncludeLang(dirname(__FILE__).'/lang/'.LANGUAGE_ID.'/'.basename(__FILE__));
+\Bitrix\Main\Localization\Loc::loadMessages(__FILE__);
 
 if(!CModule::IncludeModule('lists'))
 {
@@ -239,7 +239,7 @@ document.getElementById('<?echo $win_id?>').__object.InitControl('bx_emp_search_
 				$arSectionList[] = $opened_section;
 
 ?>
-document.getElementById('<?echo $win_id?>').__object.LoadSection('<?echo $opened_section?>', true);
+document.getElementById('<?echo $win_id?>').__object.LoadSection('<?echo intval($opened_section)?>', true);
 <?
 				$opened_section = $arSections[$opened_section]['IBLOCK_SECTION_ID'];
 			}

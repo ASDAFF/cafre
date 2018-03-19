@@ -130,6 +130,10 @@ if(!$USER->CanDoOperation('view_all_users'))
 		$arUserSubordinateGroups = array_merge($arUserSubordinateGroups, CGroup::GetSubordinateGroups($grp));
 
 	$arFilter["CHECK_SUBORDINATE"] = array_unique($arUserSubordinateGroups);
+	if($USER->CanDoOperation('edit_own_profile'))
+	{
+		$arFilter["CHECK_SUBORDINATE_AND_OWN"] = $USER->GetID();
+	}
 }
 
 // инициализация списка - выборка данных

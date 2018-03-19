@@ -46,6 +46,20 @@ $arComponentVariables = Array(
 	$arParams["PAGE_NUMBER_VARIABLE"],
 );
 
+//PHP converts dots into underscores (php.net/variables.external)
+if (is_array($arParams["SEF_URL_TEMPLATES"]))
+{
+	foreach ($arParams["SEF_URL_TEMPLATES"] as $pageCode => $pageTemplate)
+	{
+		$newPageCode = str_replace("_", ".", $pageCode);
+		$arParams["SEF_URL_TEMPLATES"][$newPageCode] = $pageTemplate;
+		if ($newPageCode !== $pageCode)
+		{
+			unset($arParams["SEF_URL_TEMPLATES"][$pageCode]);
+		}
+	}
+}
+
 if ($arParams["SEF_MODE"] == "Y")
 {
 	$arDefaultUrlTemplates404 = array(

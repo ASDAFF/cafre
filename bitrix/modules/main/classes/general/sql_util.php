@@ -107,6 +107,21 @@ class CSqlUtil
 			$key = substr($key, 1);
 			$strOperation = "QUERY";
 		}
+		elseif (substr($key, 0, 2)=="*=")
+		{
+			$key = substr($key, 2);
+			$strOperation = "FTI";
+		}
+		elseif (substr($key, 0, 2)=="*%")
+		{
+			$key = substr($key, 2);
+			$strOperation = "FTL";
+		}
+		elseif (substr($key, 0, 1)=="*")
+		{
+			$key = substr($key, 1);
+			$strOperation = "FT";
+		}
 		elseif (substr($key, 0, 1)=="=")
 		{
 			$key = substr($key, 1);
@@ -185,6 +200,11 @@ class CSqlUtil
 	public static function PrepareSql(&$arFields, $arOrder, $arFilter, $arGroupBy, $arSelectFields, $arOptions = array())
 	{
 		global $DB;
+
+		if(!is_array($arOptions))
+		{
+			$arOptions = array();
+		}
 
 		$strSqlSelect = '';
 		$strSqlFrom = '';
@@ -272,14 +292,16 @@ class CSqlUtil
 				}
 			}
 
-			if (strlen($strSqlGroupBy) > 0)
+			if($strSqlGroupBy === '')
+			{
+				$strSqlSelect = "%%_DISTINCT_%% ".$strSqlSelect;
+			}
+			elseif(!isset($arOptions['ENABLE_GROUPING_COUNT']) || $arOptions['ENABLE_GROUPING_COUNT'] === true)
 			{
 				if (strlen($strSqlSelect) > 0)
 					$strSqlSelect .= ", ";
 				$strSqlSelect .= "COUNT(%%_DISTINCT_%% ".$arFields[$arFieldsKeys[0]]["FIELD"].") as CNT";
 			}
-			else
-				$strSqlSelect = "%%_DISTINCT_%% ".$strSqlSelect;
 		}
 		// <-- SELECT
 
@@ -305,7 +327,7 @@ class CSqlUtil
 		// ORDER BY -->
 		$arSqlOrder = array();
 		$dbType = strtoupper($DB->type);
-		$nullsLast = is_array($arOptions) && isset($arOptions['NULLS_LAST']) ? (bool)$arOptions['NULLS_LAST'] : false;
+		$nullsLast = isset($arOptions['NULLS_LAST']) ? (bool)$arOptions['NULLS_LAST'] : false;
 		foreach ($arOrder as $by => $order)
 		{
 			$by = strtoupper($by);
@@ -407,9 +429,8 @@ class CSqlUtil
 			if (!is_array($vals))
 				$vals = array($vals);
 
-			$key = $filter_keys[$i];
-
-			if(strpos($key, '__INNER_FILTER') === 0)
+			$filterKey = $filter_keys[$i];
+			if(strpos($filterKey, '__INNER_FILTER') === 0)
 			{
 				$innerFilterSql = self::PrepareWhere($arFields, $vals, $arJoins);
 				if(is_string($innerFilterSql) && $innerFilterSql !== '')
@@ -419,7 +440,7 @@ class CSqlUtil
 				continue;
 			}
 
-			$key_res = self::GetFilterOperation($key);
+			$key_res = self::GetFilterOperation($filterKey);
 			$key = $key_res["FIELD"];
 			$strNegative = $key_res["NEGATIVE"];
 			$strOperation = $key_res["OPERATION"];
@@ -579,6 +600,25 @@ class CSqlUtil
 													$arSqlSearch_tmp[] = $fieldName;
 												else
 													$arSqlSearch_tmp[] = $fieldName." LIKE '".$DB->ForSql($val)."'";
+											}
+											elseif($strOperation === "FT" || $strOperation === "FTI" || $strOperation === "FTL")
+											{
+												$queryWhere = new CSQLWhere();
+												$queryWhere->SetFields(
+													array(
+														$key => array(
+															'FIELD_NAME' => $fieldName,
+															'FIELD_TYPE' => 'string',
+															'JOIN' => false
+														)
+													)
+												);
+
+												$query = $queryWhere->GetQuery(array($filterKey => $val));
+												if($query !== '')
+												{
+													$arSqlSearch_tmp[] = $query;
+												}
 											}
 											else
 												$arSqlSearch_tmp[] = (($strNegative == "Y") ? " ".$fieldName." IS NULL OR NOT " : "")."(".$fieldName." ".$strOperation." '".$DB->ForSql($val)."' )";

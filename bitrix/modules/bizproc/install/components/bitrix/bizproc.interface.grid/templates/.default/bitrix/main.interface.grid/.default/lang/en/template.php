@@ -102,5 +102,5 @@ $MESS["interface_grid_filters_title"] = "Manage Saved Filters";
 $MESS["interface_grid_filters_save"] = "Save As...";
 $MESS["interface_grid_filters_save_title"] = "Save Current Filter";
 $MESS["navigation_records_all"] = "all";
-$MESS ["navigation_records"] = "Records";
+$MESS["navigation_records"] = "Records";
 ?>

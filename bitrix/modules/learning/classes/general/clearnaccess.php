@@ -705,6 +705,7 @@ class CLearnAccess implements ILearnAccessInterface
 	 */
 	public function SQLClauseForAccessibleLessons ($in_bitmaskOperations, $isUseCache = false, $lessonId = 0, $in_prfx = 'DEFPRFX')
 	{
+		global $DB;
 		if ( ! (is_int($in_bitmaskOperations) && ($in_bitmaskOperations > 0)) )
 		{
 			throw new LearnException ('bitmask must be an integer > 0', 
@@ -712,7 +713,7 @@ class CLearnAccess implements ILearnAccessInterface
 				| LearnException::EXC_ERR_ALL_PARAMS);
 		}
 
-		$prfx   = CDatabase::ForSQL ($in_prfx);
+		$prfx   = $DB->ForSQL ($in_prfx);
 		$userId = (int) $this->userId;
 
 		// access codes for user $this->userId
@@ -1010,7 +1011,8 @@ class CLearnAccess implements ILearnAccessInterface
 
 	protected static function EscapeAndAddLateralQuotes ($txt)
 	{
-		return ("'" . CDatabase::ForSQL($txt) . "'");
+		global $DB;
+		return ("'" . $DB->ForSQL($txt) . "'");
 	}
 
 

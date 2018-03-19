@@ -17,6 +17,12 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/sale/prolog.php");
 $sTableID = "tbl_sale_delivery_list";
 $oSort = new CAdminSorting($sTableID, "ID", "asc");
 $lAdmin = new CAdminList($sTableID, $oSort);
+$adminNotes = array();
+
+if(!isset($by))
+	$by = 'ID';
+if(!isset($order))
+	$order = 'ASC';
 
 $groupId = isset($filter_group) && (isset($set_filter) ||  $set_filter == 'Y') ? $filter_group : -1;
 
@@ -24,7 +30,8 @@ $arFilterFields = array(
 	"filter_name",
 	"filter_active",
 	"filter_class_name",
-	"filter_group"
+	"filter_group",
+	"filter_site"
 );
 
 if(!empty($_REQUEST["SHOW_GROUPS"]) && $_REQUEST["SHOW_GROUPS"] == 'Y')
@@ -43,26 +50,42 @@ if(strlen($filter_active) > 0) $filter["=ACTIVE"] = Trim($filter_active);
 if(intval($filter_group) >= 0) $filter["=PARENT_ID"] = intval($filter_group);
 
 if(strlen($filter_class_name) > 0)
+{
 	$filter["=CLASS_NAME"] = Trim($filter_class_name);
+}
 else
+{
+	$handlersList = \Bitrix\Sale\Delivery\Services\Manager::getHandlersList();
+
 	$filter['!=CLASS_NAME'] = array(
-		'\Bitrix\Sale\Delivery\Services\AutomaticProfile',
-		'\Bitrix\Sale\Delivery\Services\Group'
+		'\Bitrix\Sale\Delivery\Services\Group',
+		'\Bitrix\Sale\Delivery\Services\EmptyDeliveryService'
 	);
 
-
+	/** @var \Bitrix\Sale\Delivery\Services\Base $handlerClass */
+	foreach($handlersList as $handlerClass)
+	{
+		if($handlerClass::isProfile() && !in_array($handlerClass, $filter['!=CLASS_NAME']))
+		{
+			$filter['!=CLASS_NAME'][] = $handlerClass;
+		}
+	}
+}
 
 if (($arID = $lAdmin->GroupAction()) && $saleModulePermissions >= "W")
 {
 	if ($_REQUEST['action_target']=='selected')
 	{
 		$arID = Array();
-		$dbResultList = \Bitrix\Sale\Delivery\Services\Table::GetList( array(
-			'order' => array($by => $order),
+		$params = array(
 			'filter' => $filter,
 			'select' => array("ID")
-			)
 		);
+
+		if(strlen($by) > 0 && strlen($order) > 0)
+			$params['order'] = array($by => $order);
+
+		$dbResultList = \Bitrix\Sale\Delivery\Services\Table::getList($params);
 
 		while ($arResult = $dbResultList->fetch())
 			$arID[] = $arResult['ID'];
@@ -76,7 +99,7 @@ if (($arID = $lAdmin->GroupAction()) && $saleModulePermissions >= "W")
 		switch ($_REQUEST['action'])
 		{
 			case "delete":
-				$res = \Bitrix\Sale\Delivery\Services\Table::delete($ID);
+				$res = \Bitrix\Sale\Delivery\Services\Manager::delete($ID);
 
 				if (!$res->isSuccess())
 				{
@@ -94,7 +117,7 @@ if (($arID = $lAdmin->GroupAction()) && $saleModulePermissions >= "W")
 					"ACTIVE" => (($_REQUEST['action']=="activate") ? "Y" : "N")
 				);
 
-				$res = \Bitrix\Sale\Delivery\Services\Table::update($ID, $arFields);
+				$res = \Bitrix\Sale\Delivery\Services\Manager::update($ID, $arFields);
 
 				if (!$res->isSuccess())
 				{
@@ -105,7 +128,7 @@ if (($arID = $lAdmin->GroupAction()) && $saleModulePermissions >= "W")
 				}
 				else
 				{
-					\Bitrix\Sale\Delivery\Services\Table::setChildrenFieldsValues(
+					\Bitrix\Sale\Delivery\Services\Manager::setChildrenFieldsValues(
 						$ID,
 						$arFields
 					);
@@ -116,32 +139,87 @@ if (($arID = $lAdmin->GroupAction()) && $saleModulePermissions >= "W")
 	}
 }
 
-$dbResultList = \Bitrix\Sale\Delivery\Services\Table::getList(array(
-	'order' => array($by => $order),
-	'filter' => $filter
+$sitesList = array();
+
+$db = \Bitrix\Main\SiteTable::getList(
+	array(
+		'filter' => array('ACTIVE' => 'Y'),
+		'order' => array('SORT' => 'ASC')
 	)
 );
 
-$dbResultList = new CAdminResult($dbResultList, $sTableID);
-$dbResultList->NavStart();
-$lAdmin->NavText($dbResultList->GetNavPrint(GetMessage("SALE_SDL_PRLIST")));
+while($site = $db->fetch())
+	$sitesList[$site['LID']] = $site['NAME'];
+
+$vatList = array(
+	0 => Loc::getMessage('SALE_SDL_NO_VAT')
+);
+
+if(\Bitrix\Main\Loader::includeModule('catalog'))
+{
+	$dbRes = \Bitrix\Catalog\VatTable::getList(array(
+		'filter' => array('ACTIVE' => 'Y'),
+		'order' => array('SORT' => 'ASC')
+	));
+
+	while($vat = $dbRes->fetch())
+		$vatList[$vat['ID']] = $vat['NAME'];
+}
+
+$glParams = array(
+	'filter' => $filter,
+	'order' => array($by => $order)
+);
+
 $lAdmin->AddHeaders(array(
 	array("id"=>"NAME", "content"=>Loc::getMessage("SALE_SDL_NAME"),  "sort"=>"NAME", "default" => true),
+	array("id"=>"DESCRIPTION", "content"=>Loc::getMessage("SALE_SDL_DESCRIPTION"),  "sort"=>"", "default" => true),
+	array("id"=>"LOGOTIP", "content"=>Loc::getMessage("SALE_SDL_LOGOTIP"), "sort"=>"", "default"=>true),
 	array("id"=>"GROUP_NAME", "content"=>Loc::getMessage("SALE_SDL_GROUP_NAME"),  "sort"=>"PARENT.NAME", "default"=>true),
 	array("id"=>"ID", "content"=>"ID", 	"sort"=>"ID", "default"=>true),
-	array("id"=>"LOGOTIP", "content"=>Loc::getMessage("SALE_SDL_LOGOTIP"), "sort"=>"", "default"=>true),
-	array("id"=>"DESCRIPTION", "content"=>Loc::getMessage("SALE_SDL_DESCRIPTION"),  "sort"=>"", "default" => false),
 	array("id"=>"SORT", "content"=>Loc::getMessage("SALE_SDL_SORT"),  "sort"=>"SORT", "default"=>true),
 	array("id"=>"ACTIVE", "content"=>Loc::getMessage("SALE_SDL_ACTIVE"),  "sort"=>"ACTIVE", "default"=>true),
-	array("id"=>"CLASS_NAME", "content"=>Loc::getMessage("SALE_SDL_CLASS_NAME"),  "sort"=>"CLASS_NAME", "default"=>false)
+	array("id"=>"ALLOW_EDIT_SHIPMENT", "content"=>Loc::getMessage("SALE_SDL_ALLOW_EDIT_SHIPMENT"),  "sort"=>"ALLOW_EDIT_SHIPMENT", "default"=>false),
+	array("id"=>"CLASS_NAME", "content"=>Loc::getMessage("SALE_SDL_CLASS_NAME"),  "sort"=>"CLASS_NAME", "default"=>false),
+	array("id"=>"SITES", "content"=>Loc::getMessage("SALE_SDL_SITES"), "default"=>false),
+	array("id"=>"VAT_ID", "content"=>Loc::getMessage("SALE_SDL_VAT_ID"), "default"=>false)
 ));
 
 $arVisibleColumns = $lAdmin->GetVisibleHeaderColumns();
 
+if(strlen($filter_site) > 0 || in_array('SITES', $arVisibleColumns))
+{
+	$glParams['runtime'] = array(
+		'RESTRICTION_BY_SITE' => array(
+			'data_type' => 'Bitrix\Sale\Internals\ServiceRestrictionTable',
+			'reference' => array(
+				'ref.SERVICE_ID' => 'this.ID',
+				'ref.SERVICE_TYPE' => array('?', \Bitrix\Sale\Delivery\Restrictions\Manager::SERVICE_TYPE_SHIPMENT),
+				'ref.CLASS_NAME' => array('?', '\Bitrix\Sale\Delivery\Restrictions\BySite')
+			),
+			'join_type' => 'left'
+		)
+	);
+
+	$glParams['select'] = array(
+		'*',
+		'SITES' => 'RESTRICTION_BY_SITE.PARAMS'
+	);
+}
+
 $backUrl = urlencode($APPLICATION->GetCurPageParam("", array("mode")));
+$dbResultList = \Bitrix\Sale\Delivery\Services\Table::getList($glParams);
+$dbResultList = new CAdminResult($dbResultList, $sTableID);
+
+$dbResultList->NavStart();
+$lAdmin->NavText($dbResultList->GetNavPrint(GetMessage("SALE_SDL_PRLIST")));
 
 while ($service = $dbResultList->NavNext(true, "f_"))
 {
+	if(strlen($filter_site) > 0 && isset($f_SITES) && !empty($f_SITES['SITE_ID']) && is_array($f_SITES['SITE_ID']))
+		if(!in_array($filter_site, $f_SITES['SITE_ID']))
+			continue;
+
 	if(is_callable($service["CLASS_NAME"].'::canHasChildren') && $service["CLASS_NAME"]::canHasChildren()) //has children
 	{
 		$actUrl = "sale_delivery_service_list.php?lang=".LANG."&filter_group=".$f_ID."&set_filter=Y";
@@ -173,7 +251,17 @@ while ($service = $dbResultList->NavNext(true, "f_"))
 	$row->AddField("DESCRIPTION", $f_DESCRIPTION);
 	$row->AddField("SORT", $f_SORT);
 	$row->AddField("ACTIVE", (($f_ACTIVE=="Y") ? Loc::getMessage("SALE_SDL_YES") : Loc::getMessage("SALE_SDL_NO")));
+	$row->AddField("ALLOW_EDIT_SHIPMENT", (($f_ALLOW_EDIT_SHIPMENT=="Y") ? Loc::getMessage("SALE_SDL_YES") : Loc::getMessage("SALE_SDL_NO")));
 	$row->AddField("CLASS_NAME", (is_callable($f_CLASS_NAME."::getClassTitle") ? $f_CLASS_NAME::getClassTitle() : "")." [".$f_CLASS_NAME."]");
+
+	$sites = "";
+
+	if(isset($f_SITES) && !empty($f_SITES['SITE_ID']) && is_array($f_SITES['SITE_ID']))
+		foreach($f_SITES['SITE_ID'] as $siteId)
+			$sites .= $sitesList[$siteId]." (".$siteId.")<br>";
+
+	$row->AddField("SITES", strlen($sites) > 0 ? $sites : Loc::getMessage('SALE_SDL_ALL'));
+	$row->AddField("VAT_ID", isset($vatList[$f_VAT_ID]) ? $vatList[$f_VAT_ID] : $vatList[0]);
 
 	$groupNameHtml = "";
 
@@ -244,32 +332,70 @@ if ($saleModulePermissions == "W")
 	}
 	else
 	{
-		$classNamesList = \Bitrix\Sale\Delivery\Services\Manager::getHandlersClassNames();
+		$classNamesList = \Bitrix\Sale\Delivery\Services\Manager::getHandlersList();
 
 		$classesToExclude = array(
 			'\Bitrix\Sale\Delivery\Services\AutomaticProfile',
 			'\Bitrix\Sale\Delivery\Services\Group'
 		);
 
+		if(\Bitrix\Sale\Delivery\Services\EmptyDeliveryService::getEmptyDeliveryServiceId() > 0)
+			$classesToExclude[] = '\Bitrix\Sale\Delivery\Services\EmptyDeliveryService';
 
 		$menu = array();
 
-		foreach($classesToExclude as $class)
-		{
-			$key = array_search($class, $classNamesList);
-
-			if($key !== false)
-				unset($classNamesList[$key]);
-		}
+		/** @var \Bitrix\Sale\Delivery\Services\Base $class */
 
 		foreach($classNamesList as $class)
 		{
-			$menu[] = array(
-				"TEXT" => $class::getClassTitle(),
-				"LINK" => "sale_delivery_service_edit.php?lang=".LANG."&PARENT_ID=".(intval($filter["=PARENT_ID"]) > 0 ? $filter["=PARENT_ID"] : 0).
-					"&CLASS_NAME=".urlencode($class)."&back_url=".$backUrl
-			);
+			if(in_array($class, $classesToExclude))
+				continue;
+
+			if($class::isProfile())
+				continue;
+
+			$supportedServices = $class::getSupportedServicesList();
+
+			if(is_array($supportedServices) && !empty($supportedServices))
+			{
+				if(!empty($supportedServices['ERRORS']) && is_array($supportedServices['ERRORS']))
+					foreach($supportedServices['ERRORS'] as $error)
+						$lAdmin->AddGroupError($error);
+
+				unset($supportedServices['ERRORS']);
+
+				if(!empty($supportedServices['NOTES']) && is_array($supportedServices['NOTES']))
+					foreach($supportedServices['NOTES'] as $note)
+						$adminNotes[] = $note;
+
+				unset($supportedServices['NOTES']);
+
+				if(is_array($supportedServices))
+				{
+					foreach($supportedServices as $srvType => $srvParams)
+					{
+						if(!empty($srvParams["NAME"]))
+						{
+							$menu[] = array(
+								"TEXT" => $srvParams["NAME"],
+								"LINK" => "sale_delivery_service_edit.php?lang=".LANG."&PARENT_ID=".(intval($filter["=PARENT_ID"]) > 0 ? $filter["=PARENT_ID"] : 0).
+									"&CLASS_NAME=".urlencode($class)."&SERVICE_TYPE=".$srvType."&back_url=".$backUrl
+							);
+						}
+					}
+				}
+			}
+			else
+			{
+				$menu[] = array(
+					"TEXT" => $class::getClassTitle(),
+					"LINK" => "sale_delivery_service_edit.php?lang=".LANG."&PARENT_ID=".(intval($filter["=PARENT_ID"]) > 0 ? $filter["=PARENT_ID"] : 0).
+						"&CLASS_NAME=".urlencode($class)."&back_url=".$backUrl
+				);
+			}
 		}
+
+		sortByColumn($menu, array("TEXT" => SORT_ASC));
 
 		$aContext[] = array(
 			"TEXT" => Loc::getMessage("SALE_SDL_ADD_NEW"),
@@ -287,6 +413,18 @@ if ($saleModulePermissions == "W")
 			),
 			"TITLE" => Loc::getMessage("SALE_SDL_MANAGE_GROUP_ALT")
 		);
+
+		/** @global CUser $USER */
+		global $USER;
+		if($USER->CanDoOperation("install_updates"))
+		{
+			$aContext[] = array(
+				"TEXT" => GetMessage("SALE_SDL_MARKETPLACE_ADD_NEW"),
+				"TITLE" => GetMessage("SALE_SDL_MARKETPLACE_ADD_NEW_ALT"),
+				"LINK" => "update_system_market.php?category=36&lang=".LANG,
+				"ICON" => "btn"
+			);
+		}
 	}
 
 	$lAdmin->AddAdminContextMenu($aContext);
@@ -314,7 +452,8 @@ $oFilter = new CAdminFilter(
 		Loc::getMessage("SALE_SDL_FILTER_NAME"),
 		Loc::getMessage("SALE_SDL_FILTER_ACTIVE"),
 		Loc::getMessage("SALE_SDL_FILTER_CLASS_NAME"),
-		Loc::getMessage("SALE_SDL_FILTER_GROUP")
+		Loc::getMessage("SALE_SDL_FILTER_GROUP"),
+		Loc::getMessage("SALE_SDL_FILTER_SITE")
 	)
 );
 
@@ -341,7 +480,7 @@ $oFilter->Begin();
 		<td>
 			<select name="filter_class_name">
 				<option value=""></option>
-				<?foreach(\Bitrix\Sale\Delivery\Services\Manager::getHandlersClassNames() as $className):?>
+				<?foreach(\Bitrix\Sale\Delivery\Services\Manager::getHandlersList() as $className):?>
 					<?if(is_callable($className."::getClassTitle")):?>
 						<option value="<?=htmlspecialcharsbx($className)?>" <?=(isset($filter["=CLASS_NAME"]) && $className == $filter["=CLASS_NAME"] ? " selected" : "" )?>><?=htmlspecialcharsbx($className::getClassTitle())?></option>
 					<?endif;?>
@@ -360,6 +499,17 @@ $oFilter->Begin();
 			)?>
 		</td>
 	</tr>
+	<tr>
+		<td><?=Loc::getMessage("SALE_SDL_FILTER_SITE")?>:</td>
+		<td>
+			<select name="filter_site">
+				<option value=""><?=Loc::getMessage('SALE_SDL_ALL')?></option>
+				<?foreach($sitesList as $siteId => $siteName):?>
+					<option value="<?=$siteId?>"<?=($filter_site == $siteId ? ' selected' : '')?>><?=htmlspecialcharsbx($siteName).' ('.$siteId.')'?></option>
+				<?endforeach;?>
+			</select>
+		</td>
+	</tr>
 	<?
 $oFilter->Buttons(
 	array(
@@ -372,6 +522,14 @@ $oFilter->End();
 ?>
 </form>
 <?
+
+if(!empty($adminNotes))
+{
+	echo BeginNote();
+	echo implode('<br>', $adminNotes);
+	echo EndNote();
+}
+
 $lAdmin->DisplayList();
 
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");

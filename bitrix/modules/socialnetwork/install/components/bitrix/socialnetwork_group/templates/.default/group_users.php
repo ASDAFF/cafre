@@ -30,6 +30,7 @@ $APPLICATION->IncludeComponent(
 		"CACHE_TYPE" => $arParams["CACHE_TYPE"],
 		"CACHE_TIME" => $arParams["CACHE_TIME"],
 		"GROUP_USE_BAN" => $arParams["GROUP_USE_BAN"],
+		"USE_AUTO_MEMBERS" => "Y"
 	),
 	$component 
 );

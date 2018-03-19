@@ -63,4 +63,15 @@ $MESS ['SALE_DSE_TAB_GROUP_GENERAL'] = "Общие настройки группы служб доставки";
 $MESS ['SALE_DSE_DELETE_GROUP'] = "Удалить группу";
 $MESS ['SALE_DSE_NEW_GROUP'] = "Добавить группу";
 $MESS ['SALE_DSE_DELETE_GROUP_CONFIRM'] = "Вы уверены, что хотите удалить эту группу служб доставок?";
+$MESS ['SALE_DSE_TAB_TRACKING'] = "Трэкинг";
+$MESS ['SALE_DSE_TAB_TRACKING_DESCR'] = "Настройки трэкинга";
+$MESS ['SALE_DSE_TAB_TRACKING_PARAMS'] = "Параметры";
+$MESS ['SALE_DSE_TAB_TRACKING_PARAMS_EMPTY'] = "Дополнительная настройка не требуется";
+$MESS ['SALE_DSE_FORM_ALLOW_EDIT_SHIPMENT'] = "Автоматическое изменение отгрузки, находящейся в первоначальном статусе, при изменении заказа";
+$MESS ['SALE_DSE_REQUIRED_FIELD'] = "Необходимо заполнить поле:";
+$MESS ['SALE_DSE_2DS_EDIT'] = "Вернуться в службу доставки";
+$MESS ['SALE_DSE_BUSINESS_VALUES'] = "Бизнес смыслы";
+$MESS ['SALE_DSE_FORM_VAT_ID'] = "Ставка НДС";
+$MESS ['SALE_DSE_FORM_NO_VAT'] = "Без НДС";
+$MESS ['SALE_DSE_DELIVERY_SERVICE_CREATE_ERROR'] = "Не удалось создать объект службы доставки!";
 ?>

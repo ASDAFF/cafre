@@ -57,7 +57,7 @@ SequentialWorkflowActivity = function()
 		{
 			ob.swfToolboxDiv.style.position = 'static';
 		}
-	}
+	};
 
 	ob.DrawSequenceActivity = ob.Draw;
 	ob.Draw = function (div)
@@ -101,7 +101,7 @@ SequentialWorkflowActivity = function()
 							BX.remove(r);
 							for(var i=1; i<allP.childNodes.length; i++)
 								allP.childNodes[i]._ind = i-1;
-							window.dlgSnippetsSettings.Hide();
+							window.dlgSnippetsSettings.Close();
 							BCPSaveUserParams();
 						}
 					}
@@ -154,7 +154,7 @@ SequentialWorkflowActivity = function()
 		end.style.textAlign = 'center';
 		end.style.width = '120px';
 		end.innerHTML = '<div style="background: url(/bitrix/images/bizproc/beg_bg.gif);"><div  style="background: url(/bitrix/images/bizproc/beg_r.gif) right top no-repeat;"><div style="background: url(/bitrix/images/bizproc/beg_l.gif) left top no-repeat; height: 23px;"><div style="padding-top: 3px; font-size: 12px; color:#194d0b;">'+BPMESS['SEQWF_END']+'</div></div></div></div>';
-	}
+	};
 
 	ob.DrawActivities = function ()
 	{
@@ -162,7 +162,7 @@ SequentialWorkflowActivity = function()
 			ob._table.rows[1].cells[0].removeChild(ob._table.rows[1].cells[0].childNodes[0]);
 
 		ob.DrawSequenceActivity(ob._table.rows[1].cells[0]);
-	}
+	};
 
 	ob.DrawGroup = function (oGroup)
 	{
@@ -199,14 +199,14 @@ SequentialWorkflowActivity = function()
 		divGroupList.className = 'swftoolboxgrouplist';
 
 		return divGroupList;
-	}
+	};
 	
 	ob.DrawGroupItem = function (divGroupList, oActivity, bExt, ind)
 	{
 		var dCont, bCat, cat;
 
 		dCont = divGroupList.appendChild(document.createElement('DIV'));
-		//console.debug(oActivity);
+		dCont.onclick = function(e){BX.PreventDefault(e);};
 		if(oActivity['NAME'] !== undefined)
 			dCont.activityTemplate = {'Properties': {'Title': oActivity['NAME']}, 'Type': oActivity['CLASS'], 'Children': [], 'Icon': oActivity['ICON']};
 		else
@@ -241,7 +241,7 @@ SequentialWorkflowActivity = function()
 			t.rows[0].cells[2].onmousedown = function (e)
 			{
 				return BX.PreventDefault(e);
-			}
+			};
 			
 			dCont._ind = ind;
 
@@ -273,7 +273,7 @@ SequentialWorkflowActivity = function()
 			div.style.width = this.parentNode.offsetWidth + 'px';
 		}
 		
-	}
+	};
 
 	ob.ShowActivities = function (div)
 	{
@@ -327,7 +327,7 @@ SequentialWorkflowActivity = function()
 		arUserParams['SNIPPETS'] = arUserParams['SNIPPETS'] || [];
 		for(var isn in arUserParams['SNIPPETS'])
 			ob.DrawGroupItem(ob.divSnippets, arUserParams['SNIPPETS'][isn], true, isn);
-	}
+	};
 
 	ob.lastDrop2 = false;
 	ob.ondragging2 = function (e, X, Y)
@@ -349,7 +349,7 @@ SequentialWorkflowActivity = function()
 			ob.drdrop.style.border = '1px dashed #DDDDDD';
 			ob.lastDrop2 = false;
 		}
-	}
+	};
 
 	ob.ondrop2 = function (e, X, Y)
 	{
@@ -364,7 +364,7 @@ SequentialWorkflowActivity = function()
 			ob.drdrop.style.border = '1px dashed #DDDDDD';
 			ob.lastDrop2 = false;
 		}
-	}
+	};
 
 
 	ob.RemoveResourcesSequenceActivity = ob.RemoveResources;
@@ -383,7 +383,7 @@ SequentialWorkflowActivity = function()
 			ob.Table.parentNode.removeChild(ob.Table);
 			ob.Table = null;
 		}
-	}
+	};
 
 	return ob;
-}
+};

@@ -21,25 +21,15 @@ $GLOBALS["FORUM_TOPICS_PER_PAGE"] = intVal(COption::GetOptionString("forum", "TO
 $GLOBALS["FORUM_MESSAGES_PER_PAGE"] = intVal(COption::GetOptionString("forum", "MESSAGES_PER_PAGE", "10"));
 
 $arNameStatuses = @unserialize(COption::GetOptionString("forum", "statuses_name"));
+$arNameStatuses = is_array($arNameStatuses) ? $arNameStatuses : array();
+$arNameStatuses[LANGUAGE_ID] = is_array($arNameStatuses[LANGUAGE_ID]) ? $arNameStatuses[LANGUAGE_ID] : array();
 $name = array("guest" => "Guest", "user" => "User", "moderator" => "Moderator", "editor" => "Editor", "administrator" => "Administrator");
 foreach ($name as $k => $v):
-	$name[$k] = (!empty($arMess["F_".strToUpper($k)]) ? $arMess["F_".strToUpper($k)] : $name[$k]);
+	$name[$k] = trim(!empty($arMess["F_".strToUpper($k)]) ? $arMess["F_".strToUpper($k)] : $name[$k]);
+	$arNameStatuses[LANGUAGE_ID][$k] = htmlspecialcharsbx(empty($arNameStatuses[LANGUAGE_ID][$k]) ? $name[$k] : $arNameStatuses[LANGUAGE_ID][$k]);
 endforeach;
-if (!is_array($arNameStatuses) || empty($arNameStatuses)):
-	if (!is_array($arNameStatuses[LANGUAGE_ID])):
-		$arNameStatuses[LANGUAGE_ID] = $name;
-	else:
-		foreach ($name as $k => $v):
-			$n = trim($arNameStatuses[LANGUAGE_ID][$k]);
-			$arNameStatuses[LANGUAGE_ID][$k] = (empty($n) ? $v : $n);
-		endforeach;
-	endif;
-endif;
 
-foreach ($arNameStatuses[LANGUAGE_ID] as $k => $v)
-	$arNameStatuses[LANGUAGE_ID][$k] = htmlspecialcharsEx($v);
 $GLOBALS["FORUM_STATUS_NAME"] = $arNameStatuses[LANGUAGE_ID];
-
 $GLOBALS["SHOW_FORUM_DEBUG_INFO"] = false;
 $GLOBALS["FORUM_CACHE"] = array(
 	"FORUM" => array(),
@@ -73,10 +63,17 @@ if(!defined("CACHED_b_forum_filter"))
 	define("CACHED_b_forum_filter", 3600);
 if(!defined("CACHED_b_forum_user"))
 	define("CACHED_b_forum_user", 3600);
-
-CModule::AddAutoloadClasses(
+\Bitrix\Main\Loader::registerAutoLoadClasses(
 	"forum",
 	array(
+		"bitrix\\forum\\internals\\basetable" => "lib/internals/basetable.php",
+		"bitrix\\forum\\comments\\comment" => "lib/comments/comment.php",
+		"bitrix\\forum\\comments\\entity" => "lib/comments/entity.php",
+		"bitrix\\forum\\comments\\eventmanager" => "lib/comments/eventmanager.php",
+		"bitrix\\forum\\comments\\feed" => "lib/comments/feed.php",
+		"bitrix\\forum\\comments\\taskentity" => "lib/comments/taskentity.php",
+		"bitrix\\forum\\comments\\user" => "lib/comments/user.php",
+
 		"textParser" => "classes/general/functions.php",
 		"forumTextParser" => "classes/general/functions.php",
 
@@ -115,16 +112,15 @@ CModule::AddAutoloadClasses(
 		"CForumFormat" => "tools/components_lib.php",
 		"CRatingsComponentsForum" => "classes/".$DBType."/ratings_components.php",
 		"CEventForum" => "classes/general/event_log.php",
-		"ForumEventManager" => "classes/general/event_manager.php",
+
 		"CForumCacheManager" => "classes/general/functions.php",
 		"CForumAutosave" => "classes/general/functions.php",
 		"CForumDBTools" => "tools/dbtools.php",
 		"CForumNotifySchema" => "classes/general/forum_notify_schema.php",
 	));
 
-$forumCache = new CForumCacheManager();
-$forumEventManager = new ForumEventManager();
-
+new CForumCacheManager();
+\Bitrix\Forum\Comments\EventManager::init();
 
 function ForumCurrUserPermissions($FID, $arAddParams = array())
 {
@@ -146,7 +142,7 @@ function ForumCurrUserPermissions($FID, $arAddParams = array())
 			}
 			elseif (CForumUser::IsLocked($GLOBALS["USER"]->GetID()))
 			{
-				$strPerms = CForumNew::GetPermissionUserDefault($GLOBALS["USER"]->GetID());
+				$strPerms = CForumNew::GetPermissionUserDefault($FID);
 				$result = ($strPerms >= "E" ? $strPerms : "E");
 			}
 			else
@@ -258,14 +254,14 @@ function ForumSubscribeNewMessages($FID, $TID, &$strErrorMessage, &$strOKMessage
 				{
 					$sError = GetMessage("FORUM_SUB_ERR_ALREADY_NEW");
 					if ($NEW_TOPIC_ONLY != $res["NEW_TOPIC_ONLY"])
-						$sError = str_replace("#FORUM_NAME#", htmlspecialcharsEx($res["FORUM_NAME"]),
+						$sError = str_replace("#FORUM_NAME#", htmlspecialcharsbx($res["FORUM_NAME"]),
 							GetMessage("FORUM_SUB_ERR_ALREADY_ALL_HELP"));
 				}
 				else
 				{
 					$sError = GetMessage("FORUM_SUB_ERR_ALREADY_ALL");
 					if ($NEW_TOPIC_ONLY != $res["NEW_TOPIC_ONLY"])
-						$sError = str_replace("#FORUM_NAME#", htmlspecialcharsEx($res["FORUM_NAME"]),
+						$sError = str_replace("#FORUM_NAME#", htmlspecialcharsbx($res["FORUM_NAME"]),
 							GetMessage("FORUM_SUB_ERR_ALREADY_NEW_HELP"));
 				}
 			}
@@ -595,6 +591,7 @@ function ForumAddMessage(
 			}
 			else
 			{
+				$arFields["MESSAGE_ID"] = $MID;
 				if (is_set($arFieldsG, "AUTHOR_NAME")):
 					if ($arTopic["LAST_MESSAGE_ID"] == $MID && $arMessage["LAST_POSTER_NAME"] != $arFieldsG["AUTHOR_NAME"]):
 						$arFields["LAST_POSTER_NAME"] = $arFieldsG["AUTHOR_NAME"];
@@ -945,13 +942,12 @@ function ForumOpenCloseTopic($topic, $TYPE, &$strErrorMessage, &$strOKMessage, $
 				else
 				{
 					$arTopic["SORT"] = $arFields["SORT"];
-					$res = serialize($res);
 					if ($TYPE=="OPEN"):
 						$arOk[] = GetMessage("OCTOP_SUCCESS_OPEN")." (TID=".intVal($res["ID"]).")";
-						CForumEventLog::Log("topic", "open", $ID, $res);
+						CForumEventLog::Log("topic", "open", $ID, serialize($res));
 					else:
 						$arOk[] = GetMessage("OCTOP_SUCCESS_CLOSE")." (TID=".intVal($res["ID"]).")";
-						CForumEventLog::Log("topic", "close", $ID, $res);
+						CForumEventLog::Log("topic", "close", $ID, serialize($res));
 					endif;
 				}
 			}while ($res = $db_res->Fetch());
@@ -2184,37 +2180,35 @@ function ForumSetReadTopic($FID, $TID)
 
 function ForumSetLastVisit($FID = false, $TID = false, $arAddParams = array())
 {
-	global $DB;
+	global $DB, $USER;
 	// For custom components
 	$GLOBALS["FID"] = $FID = ($FID === false && intVal($GLOBALS["FID"]) > 0 ? intVal($GLOBALS["FID"]) : $FID);
 
-	if ($GLOBALS["USER"]->IsAuthorized())
+	if ($USER->isAuthorized())
 	{
 		$GLOBALS["SHOW_FORUM_ICON"] = true; // out-of-date param
-		$USER_ID = $GLOBALS["USER"]->GetID();
-		$arUserFields = array("=LAST_VISIT" => $DB->GetNowFunction());
+		$USER_ID = $USER->getID();
+		$update = true;
 
-		if (!is_array($_SESSION["FORUM"]["USER"]) || $_SESSION["FORUM"]["USER"]["USER_ID"] != $GLOBALS["USER"]->GetID())
+		if (!is_array($_SESSION["FORUM"]["USER"]) || $_SESSION["FORUM"]["USER"]["USER_ID"] != $USER->getID())
 		{
 			$_SESSION["FORUM"]["USER"] = CForumUser::GetByUSER_ID($USER_ID);
 			if (!$_SESSION["FORUM"]["USER"])
 			{
-				$arUserFields["USER_ID"] = $USER_ID;
-				CForumUser::Add($arUserFields);
+				$update = false; ;
+				CForumUser::Add(array("USER_ID" => $USER_ID));
 				$_SESSION["FORUM"]["USER"] = CForumUser::GetByUSER_ID($USER_ID);
 			}
 			$_SESSION["FORUM"]["SHOW_NAME"] = $_SESSION["FORUM"]["USER"]["SHOW_NAME"];
 		}
-		if (!is_set($arUserFields, "USER_ID")):
-			CForumUser::Update($USER_ID, $arUserFields, false, true);
+		if ($update):
+			CForumUser::Update($USER_ID, array("=LAST_VISIT" => $DB->GetNowFunction()), false, true);
 		endif;
 	}
 
 	ForumInitParams();
 
-	if ($_SESSION["SESS_SEARCHER_ID"] > 0 && CModule::IncludeModule("statistic"))
-		return;
-	else
+	if (!($_SESSION["SESS_SEARCHER_ID"] > 0 && CModule::IncludeModule("statistic")))
 		CForumStat::RegisterUSER(array("SITE_ID" => SITE_ID, "FORUM_ID" => $FID, "TOPIC_ID" => $TID));
 	return true;
 }

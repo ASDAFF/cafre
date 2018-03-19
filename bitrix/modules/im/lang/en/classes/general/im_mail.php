@@ -4,4 +4,5 @@ $MESS["IM_MAIL_TEMPLATE_NEW_MESSAGE_FOOTER"] = "--------------------------------
 $MESS["IM_MAIL_TEMPLATE_NEW_MESSAGE_HEADER"] = "------------------------------------------
 Messages from #FROM_USER#
 ------------------------------------------";
+$MESS["IM_MAIL_USER_SYSTEM"] = "System user";
 ?>

@@ -87,6 +87,7 @@ $MESS["SONET_TASKS_OPERATION_MODIFY_FOLDERS_USER"] = "Кто может изменять папки";
 $MESS["SONET_TASKS_OPERATION_MODIFY_COMMON_VIEWS_USER"] = "Кто может изменять общие представления";
 $MESS["SONET_TASKS_OPERATION_VIEW_GROUP"] = "Кто может просматривать свои задачи";
 $MESS["SONET_TASKS_OPERATION_VIEW_ALL_GROUP"] = "Кто может просматривать все задачи";
+$MESS["SONET_TASKS_OPERATION_SORT_GROUP"] = "Кто может сортировать и перемещать задачи";
 $MESS["SONET_TASKS_OPERATION_CREATE_TASKS_GROUP"] = "Кто может создавать задачи";
 $MESS["SONET_TASKS_OPERATION_EDIT_TASKS_GROUP"] = "Кто может изменять все задачи";
 $MESS["SONET_TASKS_OPERATION_DELETE_TASKS_GROUP"] = "Кто может удалять все задачи";
@@ -174,4 +175,8 @@ $MESS["SONET_LOG_DEFAULT_TOALL"] = "Отображать адресацию \"Всем\" по умолчанию";
 $MESS["SONET_LOG_TOALL_RIGHTS_ADD"] = "Добавить";
 $MESS["SONET_LOG_TOALL_RIGHTS"] = "Права на доступ к адресации \"Всем\"";
 $MESS["SONET_LOG_TOALL_DEL"] = "удалить";
+$MESS["SONET_LOG_EMAIL_USERS_ALL"] = "Отображать всех почтовых получателей";
+$MESS["SONET_USE_WORKGROUP_CHAT"] = "Разрешить чаты в рабочих группах";
+$MESS["SONET_USE_LF_FULLTEXT_INDEX"] = "Использовать полнотекстовый индекс в живой ленте";
+$MESS["SONET_USE_LF_FULLTEXT_INDEX_ERROR"] = "Ошибка включения полнотекстового поиска";
 ?>

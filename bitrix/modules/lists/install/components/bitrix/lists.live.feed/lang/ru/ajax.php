@@ -33,7 +33,7 @@ $MESS["LISTS_SEAC_SETTING_LIST_NEW"] = "Расширенные настройки";
 $MESS["LISTS_IS_CONSTANTS_TUNED_NEW"] = "Необходимо настроить параметры Бизнес-процесса";
 $MESS["LISTS_IS_DESRIPTION_DETAIL"] = "Подробнее";
 $MESS["LISTS_SEAC_NOTIFY_ERROR"] = "Произошла ошибка отправки уведомления!";
-$MESS["LISTS_SEAC_NOTIFY_MESSAGE"] = "Прошу вас <a href='#URL#'>настроить параметры</a> по умолчания для Бизнес процесса \"#NAME_PROCESSES#\" или делегировать право управления настройками мне.";
+$MESS["LISTS_SEAC_NOTIFY_MESSAGE"] = "Прошу вас <a href='#URL#'>настроить параметры</a> по умолчанию для Бизнес процесса \"#NAME_PROCESSES#\" или делегировать право управления настройками мне.";
 $MESS["LISTS_SEAC_NOTIFY_SUCCESS"] = "Уведомление отправлено";
 $MESS["LISTS_IS_BIZPROC_PARAMETERS"] = "Входящие параметры Бизнес-процесса";
 $MESS["LISTS_IS_ACCESS_DENIED_STATUS"] = "У вас нет прав на редактирование данной записи в ее текущем статусе";
@@ -42,4 +42,6 @@ $MESS["LISTS_SEAC_MARKETPLACE_NOT_PROCESSES"] = "Нет процессов доступных для уст
 $MESS["LISTS_SEAC_INCORRECT_DATA"] = "Некорректные данные!";
 $MESS["LISTS_SEAC_MESSAGE_SUCCESS"] = "Успешно";
 $MESS["LISTS_NOT_BIZPROC_TEMPLATE_NEW"] = "Не удается запустить Бизнес-процесс. Проверьте, пожалуйста, существует ли шаблон Бизнес-процесса и установлен ли для него автоматический запуск на создание!";
+$MESS["LISTS_BIZPROC_PARAMETERS"] = "Входящие параметры";
+$MESS["LISTS_SET_RESPONSIBLE_POPUP_DESCRIPTION"] = "У вас создано несколько шаблонов, выберите какой настроить.";
 ?>

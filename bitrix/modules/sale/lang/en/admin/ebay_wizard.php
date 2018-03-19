@@ -85,4 +85,13 @@ $MESS["SALE_EBAY_W_STEP_EXCHANGE_NOT_STARTED"] = "not started";
 $MESS["SALE_EBAY_W_STEP_EXCHANGE_DESCR"] = "To start eBay data exchange, click \"Next\"";
 $MESS["SALE_EBAY_W_STEP_FINISH"] = "Setup has been completed";
 $MESS["SALE_EBAY_W_STEP_FINISH_DESCR"] = "Congratulations! You have completed all the steps required to start selling on eBay.";
+$MESS["SALE_EBAY_W_CLEAN_CACHE"] = "Update data";
+$MESS["SALE_EBAY_W_STEP_DEFAULT_POLICY"] = "Select default policies";
+$MESS["SALE_EBAY_W_STEP_DEFAULT_POLICY_DESCR"] = "Select eBay policies to be used by default when exporting products. Product specific policies can be selected in the product category settings.";
+$MESS["SALE_EBAY_W_STEP_DEFAULT_POLICY_P"] = "Payment policies";
+$MESS["SALE_EBAY_W_STEP_DEFAULT_POLICY_S"] = "Delivery policies";
+$MESS["SALE_EBAY_W_STEP_DEFAULT_POLICY_R"] = "Return policies";
+$MESS["SALE_EBAY_W_USER_INFO_ERROR"] = "Cannot get eBay user data.";
+$MESS["SALE_EBAY_W_PAYMENT_METHOD_ERROR"] = "Only PayPal can be used for eBay payments. Currently, \"#PAYMENT_METHOD#\" is selected.";
+$MESS["SALE_EBAY_W_SITE_ERROR"] = "The user has to be bound to the eBay site ID'd as \"Russia\". The user is currently bound to the site \"#SITE#\".";
 ?>

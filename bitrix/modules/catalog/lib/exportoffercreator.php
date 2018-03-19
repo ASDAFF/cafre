@@ -15,7 +15,7 @@ class ExportOfferCreator
 			throw new SystemException("IBlock is not catalog. (".__CLASS__."::".__METHOD__.")");
 
 		$catalogType = $arCatalog["CATALOG_TYPE"];
-		$catalogTypes = \CCatalogSKU::GetCatalogTypes();
+		$catalogTypes = \CCatalogSku::GetCatalogTypes();
 
 		if(!in_array($catalogType, $catalogTypes))
 			throw new SystemException("Unknown type of catalog (".__CLASS__."::".__METHOD__.")");
@@ -24,13 +24,13 @@ class ExportOfferCreator
 
 		switch($catalogType)
 		{
-			case \CCatalogSKU::TYPE_CATALOG:
-			case \CCatalogSKU::TYPE_OFFERS:
+			case \CCatalogSku::TYPE_CATALOG:
+			case \CCatalogSku::TYPE_OFFERS:
 				$result = new ExportOffer($catalogType, $offerParams);
 				break;
 
-			case \CCatalogSKU::TYPE_PRODUCT:
-			case \CCatalogSKU::TYPE_FULL:
+			case \CCatalogSku::TYPE_PRODUCT:
+			case \CCatalogSku::TYPE_FULL:
 				$result = new ExportOfferSKU($catalogType, $offerParams);
 				break;
 		}

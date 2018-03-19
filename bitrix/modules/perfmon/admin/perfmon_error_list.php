@@ -251,11 +251,24 @@ $oFilter = new CAdminFilter(
 	<tr>
 		<td><?=GetMessage("PERFMON_ERR_NO")?></td>
 		<td>
+			<div class="adm-list">
 			<? foreach ($arErrorCodes as $key => $value): ?>
-				<label><input type="checkbox" value="<? echo $key ?>"
-						name="find_errno[]" <? if (is_array($find_errno) && in_array($key, $find_errno))
-						echo "checked" ?>><? echo $value ?></label><br>
+				<div class="adm-list-item">
+					<div class="adm-list-control">
+						<input
+							type="checkbox"
+							id="ck_<? echo $key ?>"
+							value="<? echo $key ?>"
+							name="find_errno[]" <? if (is_array($find_errno) && in_array($key, $find_errno))
+							echo "checked" ?>
+						/>
+					</div>
+					<div class="adm-list-label">
+						<label for="ck_<? echo $key ?>"><? echo $value ?></label>
+					</div>
+				</div>
 			<? endforeach ?>
+			</div>
 		</td>
 	</tr>
 	<tr>

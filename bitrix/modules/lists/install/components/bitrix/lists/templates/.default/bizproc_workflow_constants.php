@@ -5,22 +5,24 @@ $link = str_replace(
 	array($arResult["VARIABLES"]["list_id"]),
 	$arResult["FOLDER"].$arResult["URL_TEMPLATES"]["bizproc_workflow_admin"]
 );
-$arButtons = array(
-	array(
-		"TEXT"=>GetMessage("CT_BL_LIST_PROCESSES"),
-		"TITLE"=>GetMessage("CT_BL_LIST_PROCESSES"),
-		"LINK"=>$link,
-		"ICON"=>"btn-list",
-	),
-);
-$APPLICATION->IncludeComponent(
-	"bitrix:main.interface.toolbar",
-	"",
-	array(
-		"BUTTONS" => $arButtons
-	),
-	$component
-);
+
+CJSCore::Init(array('lists'));
+$isBitrix24Template = (SITE_TEMPLATE_ID == "bitrix24");
+if($isBitrix24Template)
+{
+	$this->SetViewTarget("pagetitle", 100);
+}
+?>
+<div class="pagetitle-container pagetitle-align-right-container">
+	<a href="<?=$link?>" class="lists-list-back">
+		<?=GetMessage("CT_BL_LIST_PROCESSES")?>
+	</a>
+</div>
+<?
+if($isBitrix24Template)
+{
+	$this->EndViewTarget();
+}
 
 ?>
 	<div style="background: #eef2f4; width: 600px; padding: 5px 0px 0px 20px;">

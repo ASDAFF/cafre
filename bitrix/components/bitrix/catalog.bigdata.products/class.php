@@ -1,32 +1,52 @@
 <?php
-use \Bitrix\Main;
-use \Bitrix\Catalog\CatalogViewedProductTable as CatalogViewedProductTable;
-use \Bitrix\Main\Text\String as String;
-use \Bitrix\Main\Localization\Loc as Loc;
-use \Bitrix\Main\SystemException as SystemException;
+use Bitrix\Main,
+	Bitrix\Iblock,
+	Bitrix\Catalog,
+	Bitrix\Main\Localization\Loc as Loc,
+	Bitrix\Main\SystemException;
 
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) die();
 
+Loc::loadMessages(__FILE__);
+
 CBitrixComponent::includeComponentClass("bitrix:sale.bestsellers");
 
+/**
+ * Class \CatalogBigdataProductsComponent
+ *
+ * No longer used by internal code and not recommended. Use "catalog.section" instead.
+ *
+ * @deprecated deprecated since catalog 17.0.5
+ * @use \CatalogSectionComponent
+ */
 class CatalogBigdataProductsComponent extends CSaleBestsellersComponent
 {
 	protected $rcmParams;
 	protected $ajaxItemsIds;
+	protected $recommendationIdToProduct = array();
 
 	/**
 	 * Prepare Component Params
+	 *
+	 * @param array $params
+	 * @return array
 	 */
 	public function onPrepareComponentParams($params)
 	{
 		global $APPLICATION;
 
-		// remember src params for further ajax query
 		if (!isset($params['RCM_CUR_BASE_PAGE']))
 		{
 			$params['RCM_CUR_BASE_PAGE'] = $APPLICATION->GetCurPage();
 		}
 
+		// uniq identifier for the component on the page
+		if (!isset($params['UNIQ_COMPONENT_ID']))
+		{
+			$params['UNIQ_COMPONENT_ID'] = 'bigdata_recommended_products_'.$this->randString();
+		}
+
+		// remember src params for further ajax query
 		$this->arResult['_ORIGINAL_PARAMS'] = $params;
 
 		// bestselling
@@ -121,46 +141,257 @@ class CatalogBigdataProductsComponent extends CSaleBestsellersComponent
 	{
 		$ids = array();
 
+		// try cloud
 		if (!empty($this->ajaxItemsIds))
 		{
 			$recommendationId = Main\Context::getCurrent()->getRequest()->get('RID');
 			$ids = $this->ajaxItemsIds;
+			$ids = $this->filterByParams($ids);
+			$ids = $this->filterByAvailability($ids);
+
+			foreach ($ids as $id)
+			{
+				$this->recommendationIdToProduct[$id] = $recommendationId;
+			}
 		}
-		else
+
+		// try bestsellers
+		if (count($ids) < $this->arParams['PAGE_ELEMENT_COUNT'])
 		{
+			// increase element count
+			$this->arParams['PAGE_ELEMENT_COUNT'] = $this->arParams['PAGE_ELEMENT_COUNT']*10;
 			$bestsellers = parent::getProductIds();
+			$this->arParams['PAGE_ELEMENT_COUNT'] = $this->arParams['PAGE_ELEMENT_COUNT']/10;
 
 			if (!empty($bestsellers))
 			{
 				$recommendationId = 'bestsellers';
-				$ids = Main\Analytics\Catalog::getProductIdsByOfferIds($bestsellers);
-			}
+				$bestsellers = Main\Analytics\Catalog::getProductIdsByOfferIds($bestsellers);
+				$bestsellers = $this->filterByParams($bestsellers);
+				$bestsellers = $this->filterByAvailability($bestsellers);
 
-			if (empty($ids))
-			{
-				$recommendationId = 'mostviewed';
-				$dublicate = array();
-				// top viewed
-				$result = CatalogViewedProductTable::getList(array(
-					'select' => array(
-						'ELEMENT_ID',
-						new Main\Entity\ExpressionField('SUM_HITS', 'SUM(%s)', 'VIEW_COUNT')
-					),
-					'filter' => array('=SITE_ID' => $this->getSiteId(), '>ELEMENT_ID' => 0),
-					'order' => array('SUM_HITS' => 'DESC'),
-					'limit' => $this->arParams['PAGE_ELEMENT_COUNT']
-				));
-
-				while ($row = $result->fetch())
+				foreach ($bestsellers as $id)
 				{
-					if (!isset($dublicate[$row['ELEMENT_ID']]))
-						$ids[] = $row['ELEMENT_ID'];
-					$dublicate[$row['ELEMENT_ID']] = true;
+					if (!isset($this->recommendationIdToProduct[$id]))
+					{
+						$this->recommendationIdToProduct[$id] = $recommendationId;
+					}
 				}
-				unset($row, $result, $dublicate);
+
+				$ids = array_unique(array_merge($ids, $bestsellers));
 			}
 		}
 
+		// try top viewed
+		if (count($ids) < $this->arParams['PAGE_ELEMENT_COUNT'])
+		{
+			$recommendationId = 'mostviewed';
+			$duplicate = array();
+			$mostviewed = array();
+
+			$result = Catalog\CatalogViewedProductTable::getList(array(
+				'select' => array(
+					'ELEMENT_ID',
+					new Main\Entity\ExpressionField('SUM_HITS', 'SUM(%s)', 'VIEW_COUNT')
+				),
+				'filter' => array(
+					'=SITE_ID' => $this->getSiteId(), '>ELEMENT_ID' => 0,
+					'>DATE_VISIT' => new Main\Type\DateTime(date('Y-m-d H:i:s', strtotime('-30 days')), 'Y-m-d H:i:s')
+				),
+				'order' => array('SUM_HITS' => 'DESC'),
+				'limit' => $this->arParams['PAGE_ELEMENT_COUNT']*10
+			));
+
+			while ($row = $result->fetch())
+			{
+				if (!isset($duplicate[$row['ELEMENT_ID']]))
+					$mostviewed[] = $row['ELEMENT_ID'];
+				$duplicate[$row['ELEMENT_ID']] = true;
+			}
+			unset($row, $result, $duplicate);
+
+			$mostviewed = $this->filterByParams($mostviewed);
+			$mostviewed = $this->filterByAvailability($mostviewed);
+
+			foreach ($mostviewed as $id)
+			{
+				if (!isset($this->recommendationIdToProduct[$id]))
+				{
+					$this->recommendationIdToProduct[$id] = $recommendationId;
+				}
+			}
+
+			$ids = array_unique(array_merge($ids, $mostviewed));
+		}
+
+		// limit
+		$ids = array_slice($ids, 0, $this->arParams['PAGE_ELEMENT_COUNT']);
+
+		return $ids;
+	}
+
+	protected function filterByParams($ids)
+	{
+		if (empty($ids))
+		{
+			return array();
+		}
+
+		$ids = array_values(array_unique($ids));
+
+		// remove duplicate of current item
+		if (!empty($this->arParams['ID']) && in_array($this->arParams['ID'], $ids))
+		{
+			$key = array_search($this->arParams['ID'], $ids);
+			if ($key !== false)
+			{
+				unset($ids[$key]);
+				$ids = array_values($ids);
+			}
+		}
+
+		// general filter
+		$this->prepareFilter();
+		$filter = $this->filter;
+		$filter['ID'] = $ids;
+		$r = CIBlockElement::GetList(array(), $filter, false, false, array('ID'));
+		$ids = array();
+		while ($row = $r->Fetch())
+		{
+			$ids[] = $row['ID'];
+		}
+
+		// filtering by section
+		if ($this->arParams['SHOW_FROM_SECTION'] != 'Y')
+		{
+			return $ids;
+		}
+
+		$sectionSearch = $this->arParams["SECTION_ID"] > 0 || $this->arParams["SECTION_CODE"] !== '';
+
+		if ($sectionSearch)
+			$sectionId = ($this->arParams["SECTION_ID"] > 0) ? $this->arParams["SECTION_ID"] : $this->getSectionIdByCode($this->arParams["SECTION_CODE"]);
+		else
+			$sectionId = $this->getSectionIdByElement($this->arParams["SECTION_ELEMENT_ID"], $this->arParams["SECTION_ELEMENT_CODE"]);
+
+		
+		$map = $this->filterIdBySection(
+			$ids,
+			$this->arParams['IBLOCK_ID'],
+			$sectionId,
+			$this->arParams['PAGE_ELEMENT_COUNT'],
+			$this->arParams['DEPTH']
+		);
+
+		return $map;
+	}
+	
+	protected function filterIdBySection($elementIds, $iblockId, $sectionId, $limit, $depth = 0)
+	{
+		$map = array();
+
+		Main\Type\Collection::normalizeArrayValuesByInt($elementIds);
+		if (empty($elementIds))
+			return $map;
+
+		$iblockId = (int)$iblockId;
+		$sectionId = (int)$sectionId;
+		$limit = (int)$limit;
+		$depth = (int)$depth;
+		if ($iblockId <= 0 ||$depth < 0)
+			return $map;
+
+		$subSections = array();
+		if ($depth > 0)
+		{
+			$parentSectionId = Catalog\Product\Viewed::getParentSection($sectionId, $depth);
+			if ($parentSectionId !== null)
+				$subSections[$parentSectionId] = $parentSectionId;
+			unset($parentSectionId);
+		}
+
+		if (empty($subSections) && $sectionId <= 0)
+		{
+			$getListParams = array(
+				'select' => array('ID'),
+				'filter' => array(
+					'@ID' => $elementIds,
+					'=IBLOCK_ID' => $iblockId,
+					'=WF_STATUS_ID' => 1,
+					'=WF_PARENT_ELEMENT_ID' => null
+				),
+			);
+			if ($limit > 0)
+				$getListParams['limit'] = $limit;
+			$iterator = Iblock\ElementTable::getList($getListParams);
+		}
+		else
+		{
+			if (empty($subSections))
+				$subSections[$sectionId] = $sectionId;
+
+			$sectionQuery = new Main\Entity\Query(Iblock\SectionTable::getEntity());
+			$sectionQuery->setTableAliasPostfix('_parent');
+			$sectionQuery->setSelect(array('ID', 'LEFT_MARGIN', 'RIGHT_MARGIN'));
+			$sectionQuery->setFilter(array('@ID' => $subSections));
+
+			$subSectionQuery = new Main\Entity\Query(Iblock\SectionTable::getEntity());
+			$subSectionQuery->setTableAliasPostfix('_sub');
+			$subSectionQuery->setSelect(array('ID'));
+			$subSectionQuery->setFilter(array('=IBLOCK_ID' => $iblockId));
+			$subSectionQuery->registerRuntimeField(
+				'',
+				new Main\Entity\ReferenceField(
+					'BS',
+					Main\Entity\Base::getInstanceByQuery($sectionQuery),
+					array('>=this.LEFT_MARGIN' => 'ref.LEFT_MARGIN', '<=this.RIGHT_MARGIN' => 'ref.RIGHT_MARGIN'),
+					array('join_type' => 'INNER')
+				)
+			);
+
+			$sectionElementQuery = new Main\Entity\Query(Iblock\SectionElementTable::getEntity());
+			$sectionElementQuery->setSelect(array('IBLOCK_ELEMENT_ID'));
+			$sectionElementQuery->setGroup(array('IBLOCK_ELEMENT_ID'));
+			$sectionElementQuery->setFilter(array('=ADDITIONAL_PROPERTY_ID' => null));
+			$sectionElementQuery->registerRuntimeField(
+				'',
+				new Main\Entity\ReferenceField(
+					'BSUB',
+					Main\Entity\Base::getInstanceByQuery($subSectionQuery),
+					array('=this.IBLOCK_SECTION_ID' => 'ref.ID'),
+					array('join_type' => 'INNER')
+				)
+			);
+
+			$elementQuery = new Main\Entity\Query(Iblock\ElementTable::getEntity());
+			$elementQuery->setSelect(array('ID'));
+			$elementQuery->setFilter(array('=IBLOCK_ID' => $iblockId, '=WF_STATUS_ID' => 1, '=WF_PARENT_ELEMENT_ID' => null));
+			$elementQuery->registerRuntimeField(
+				'',
+				new Main\Entity\ReferenceField(
+					'BSE',
+					Main\Entity\Base::getInstanceByQuery($sectionElementQuery),
+					array('=this.ID' => 'ref.IBLOCK_ELEMENT_ID'),
+					array('join_type' => 'INNER')
+				)
+			);
+			if ($limit > 0)
+				$elementQuery->setLimit($limit);
+
+			$iterator = $elementQuery->exec();
+
+			unset($elementQuery, $sectionElementQuery, $subSectionQuery, $sectionQuery);
+		}
+
+		while ($row = $iterator->fetch())
+			$map[] = $row['ID'];
+		unset($row, $iterator);
+
+		return $map;
+	}	
+
+	protected function filterByAvailability($ids)
+	{
 		if (!empty($ids) && $this->arParams['HIDE_NOT_AVAILABLE'] == 'Y')
 		{
 			$filter = (count($ids) > 1000 ? array('ID' => $ids) : array('@ID' => $ids));
@@ -181,11 +412,6 @@ class CatalogBigdataProductsComponent extends CSaleBestsellersComponent
 			$ids = array_keys($ids);
 		}
 
-		$ids = array_slice($ids, 0, $this->arParams['PAGE_ELEMENT_COUNT']);
-
-		// remember recommendation id
-		$this->arResult['RID'] = $recommendationId;
-
 		return $ids;
 	}
 
@@ -198,7 +424,7 @@ class CatalogBigdataProductsComponent extends CSaleBestsellersComponent
 		if($this->arParams['CACHE_TYPE'] == 'N')
 			return false;
 
-		return !($this->StartResultCache(false, $this->getAdditionalCacheId(), '/'.$this->getSiteId().'/bitrix/catalog.bigdata.products/common'));
+		return !($this->startResultCache(false, $this->getAdditionalCacheId(), '/'.$this->getSiteId().'/bitrix/catalog.bigdata.products/common'));
 	}
 
 	protected function getAdditionalCacheId()
@@ -225,7 +451,7 @@ class CatalogBigdataProductsComponent extends CSaleBestsellersComponent
 		$a = array(
 			'uid' => $_COOKIE['BX_USER_ID'],
 			'aid' => \Bitrix\Main\Analytics\Counter::getAccountId(),
-			'count' => $this->arParams['PAGE_ELEMENT_COUNT']+10
+			'count' => max($this->arParams['PAGE_ELEMENT_COUNT']*2, 30)
 		);
 
 		// random choices
@@ -275,7 +501,8 @@ class CatalogBigdataProductsComponent extends CSaleBestsellersComponent
 		}
 		else
 		{
-			// unkonwn type
+			// unkonwn type, personal by default
+			$a['op'] = 'recommend';
 		}
 
 		// get iblocks
@@ -315,6 +542,30 @@ class CatalogBigdataProductsComponent extends CSaleBestsellersComponent
 		$a['ib'] = join('.', $iblocks);
 
 		return $a;
+	}
+
+	/**
+	 * Check action variable.
+	 *
+	 * @param array $params			Component params.
+	 * @return string
+	 */
+	protected function prepareActionVariable($params)
+	{
+		$actionVariable = (isset($params['ACTION_VARIABLE']) ? trim($params['ACTION_VARIABLE']) : '');
+		if ($actionVariable === '' || !preg_match("/^[A-Za-z_][A-Za-z01-9_]*$/", $actionVariable))
+			$actionVariable = 'action_cbdp';
+		return $actionVariable;
+	}
+
+	/**
+	 * Get additional data for cache
+	 *
+	 * @return array
+	 */
+	protected function getAdditionalReferences()
+	{
+		return array();
 	}
 
 	/**
@@ -378,7 +629,7 @@ class CatalogBigdataProductsComponent extends CSaleBestsellersComponent
 				}
 
 				// show cache and die
-				return;
+				return null;
 			}
 			catch (SystemException $e)
 			{
@@ -387,7 +638,8 @@ class CatalogBigdataProductsComponent extends CSaleBestsellersComponent
 				if ($this->isAjax())
 				{
 					$APPLICATION->restartBuffer();
-					echo CUtil::PhpToJSObject(array('STATUS' => 'ERROR', 'MESSAGE' => $e->getMessage()));
+					header('Content-Type: application/json');
+					echo Main\Web\Json::encode(array('STATUS' => 'ERROR', 'MESSAGE' => $e->getMessage()));
 					die();
 				}
 
@@ -419,8 +671,61 @@ class CatalogBigdataProductsComponent extends CSaleBestsellersComponent
 
 		if (!$this->extractDataFromCache())
 		{
+			// output js before template to be caught in cache
+			if (!empty($this->arResult['ITEMS']))
+			{
+				echo $this->getInjectedJs($this->arResult['ITEMS'], $this->arParams['UNIQ_COMPONENT_ID']);
+			}
+
 			$this->setResultCacheKeys(array());
 			$this->includeComponentTemplate();
 		}
+	}
+
+	protected function getInjectedJs($items, $uniqId)
+	{
+		$jsItems = array();
+
+		foreach ($items as $item)
+		{
+			$jsItems[] = array(
+				"productId" => $item['ID'],
+				"productUrl" => $item['DETAIL_PAGE_URL'],
+				"recommendationId" => $this->recommendationIdToProduct[$item['ID']]
+			);
+		}
+		
+		global $APPLICATION;
+
+		$jsCookiePrefix = CUtil::JSEscape(COption::GetOptionString("main", "cookie_name", "BITRIX_SM"));
+		$jsCookieDomain = CUtil::JSEscape($APPLICATION->GetCookieDomain());
+		$jsServerTime = time();
+
+		$jsUniqId = CUtil::JSEscape($uniqId."_items");
+		$jsonItems = CUtil::PhpToJSObject($jsItems);
+
+		// static data for JCCatalogBigdataProducts (SendToBasket)
+		$jsToBasket = "";
+		foreach ($items as $item)
+		{
+			$jsToBasket .= "JCCatalogBigdataProducts.productsByRecommendation[{$item['ID']}] = \"{$this->recommendationIdToProduct[$item['ID']]}\";\n";
+		}
+
+		return "<script type=\"text/javascript\">
+			BX.cookie_prefix = '{$jsCookiePrefix}';
+			BX.cookie_domain = '{$jsCookieDomain}';
+			BX.current_server_time = '{$jsServerTime}';
+
+			if (!JCCatalogBigdataProducts.productsByRecommendation)
+			{
+				JCCatalogBigdataProducts.productsByRecommendation = [];
+			}
+
+			{$jsToBasket}
+
+			BX.ready(function(){
+				bx_rcm_adaptive_recommendation_event_attaching({$jsonItems}, '{$jsUniqId}');
+			});
+		</script>";
 	}
 }

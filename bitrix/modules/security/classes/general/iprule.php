@@ -1,9 +1,10 @@
-<?
+<?php
 IncludeModuleLangFile(__FILE__);
 
 class CSecurityIPRule
 {
 	static $bActive = null;
+	public $LAST_ERROR = "";
 
 	function Add($arFields)
 	{
@@ -155,7 +156,7 @@ class CSecurityIPRule
 		return true;
 	}
 
-	function UpdateRuleMasks($IPRULE_ID, $arInclMasks = false, $arExclMasks = false)
+	public static function UpdateRuleMasks($IPRULE_ID, $arInclMasks = false, $arExclMasks = false)
 	{
 		global $DB, $CACHE_MANAGER;
 		$IPRULE_ID = intval($IPRULE_ID);
@@ -165,7 +166,7 @@ class CSecurityIPRule
 		$arLikeSearch = array("?", "*", ".");
 		$arLikeReplace = array("_",  "%", "\\.");
 		$arPregSearch = array("\\", ".",  "?", "*",   "'");
-		$arPregReplace = array("/",  "\.", ".", ".*?", "\'");
+		$arPregReplace = array("/",  "\\.", ".", ".*?", "\\'");
 
 		if(is_array($arInclMasks))
 		{
@@ -330,9 +331,9 @@ class CSecurityIPRule
 
 	function CheckIP($arInclIPs=false, $arExclIPs=false)
 	{
-		global $DB, $APPLICATION;
+		global $APPLICATION;
 
-		$bFound = false;
+		$idFound = null;
 
 		$ip2check = self::ip2number($_SERVER["REMOTE_ADDR"]);
 		if($ip2check > 0 && is_array($arInclIPs))
@@ -349,14 +350,14 @@ class CSecurityIPRule
 						$ip2 = $ip1;
 					if($ip2check >= $ip1 && $ip2check <= $ip2)
 					{
-						$bFound = true;
+						$idFound = $id;
 						break;
 					}
 				}
 			}
 		}
 
-		if($bFound && $ip2check > 0 && is_array($arExclIPs))
+		if($idFound !== null && $ip2check > 0 && is_array($arExclIPs))
 		{
 			foreach($arExclIPs as $id => $ip)
 			{
@@ -370,23 +371,23 @@ class CSecurityIPRule
 						$ip2 = $ip1;
 					if($ip2check >= $ip1 && $ip2check <= $ip2)
 					{
-						$bFound = false;
+						$idFound = null;
 						break;
 					}
 				}
 			}
 		}
 
-		if($bFound)
+		if($idFound !== null)
 		{
 			if(COption::GetOptionString("security", "ipcheck_allow_self_block")==="Y")
-				$text = GetMessage("SECURITY_IPRULE_ERROR_SELF_BLOCK", array("#IP#" => htmlspecialcharsex($_SERVER["REMOTE_ADDR"])));
+				$text = GetMessage("SECURITY_IPRULE_ERROR_SELF_BLOCK", array("#IP#" => htmlspecialcharsEx($_SERVER["REMOTE_ADDR"])));
 			else
-				$text = GetMessage("SECURITY_IPRULE_ERROR_SELF_BLOCK_2", array("#IP#" => htmlspecialcharsex($_SERVER["REMOTE_ADDR"])));
+				$text = GetMessage("SECURITY_IPRULE_ERROR_SELF_BLOCK_2", array("#IP#" => htmlspecialcharsEx($_SERVER["REMOTE_ADDR"])));
 
 			$e = new CAdminException(array(
 				array(
-					"id"=>"IPS[".htmlspecialcharsex($id)."]",
+					"id"=>"IPS[".htmlspecialcharsEx($idFound)."]",
 					"text"=>$text,
 				),
 			));
@@ -403,7 +404,7 @@ class CSecurityIPRule
 
 	function CheckFields(&$arFields, $ID)
 	{
-		global $DB, $APPLICATION;
+		global $APPLICATION;
 
 		$this->LAST_ERROR = "";
 		$aMsg = array();
@@ -455,15 +456,40 @@ class CSecurityIPRule
 				{
 					$ar = explode("-", $ip);
 					$ip1 = self::ip2number($ar[0]);
+
 					if($ip1 <= 0)
-						$aMsg[] = array("id"=>"INCL_IPS[".htmlspecialcharsex($id)."]", "text"=>GetMessage("SECURITY_IPRULE_ERROR_WONG_IP", array("#IP#" => htmlspecialcharsex($ar[0]))));
+					{
+						$aMsg[] = array(
+							"id"=>"INCL_IPS[".htmlspecialcharsEx($id)."]",
+							"text"=>GetMessage("SECURITY_IPRULE_ERROR_WONG_IP", array(
+								"#IP#" => htmlspecialcharsEx($ar[0]),
+							)),
+						);
+					}
+
 					if(count($ar) > 1)
 					{
 						$ip2 = self::ip2number($ar[1]);
 						if($ip2 <= 0)
-							$aMsg[] = array("id"=>"INCL_IPS[".htmlspecialcharsex($id)."]", "text"=>GetMessage("SECURITY_IPRULE_ERROR_WONG_IP", array("#IP#" => htmlspecialcharsex($ar[1]))));
+						{
+							$aMsg[] = array(
+								"id"=>"INCL_IPS[".htmlspecialcharsEx($id)."]",
+								"text"=>GetMessage("SECURITY_IPRULE_ERROR_WONG_IP", array(
+									"#IP#" => htmlspecialcharsEx($ar[1]),
+								)),
+							);
+						}
 						elseif($ip2 < $ip1)
-							$aMsg[] = array("id"=>"INCL_IPS[".htmlspecialcharsex($id)."]", "text"=>GetMessage("SECURITY_IPRULE_ERROR_WONG_IP_RANGE", array("#END_IP#" => htmlspecialcharsex($ar[1]), "#START_IP#" => htmlspecialcharsex($ar[0]))));
+						{
+							$aMsg[] = array(
+								"id"=>"INCL_IPS[".htmlspecialcharsEx($id)."]",
+								"text"=>GetMessage("SECURITY_IPRULE_ERROR_WONG_IP_RANGE", array(
+									"#END_IP#" => htmlspecialcharsEx($ar[1]),
+									"#START_IP#" => htmlspecialcharsEx($ar[0]),
+								)),
+							);
+						}
+
 						break;
 					}
 				}
@@ -479,15 +505,39 @@ class CSecurityIPRule
 				{
 					$ar = explode("-", $ip);
 					$ip1 = self::ip2number($ar[0]);
+
 					if($ip1 <= 0)
-						$aMsg[] = array("id"=>"EXCL_IPS[".htmlspecialcharsex($id)."]", "text"=>GetMessage("SECURITY_IPRULE_ERROR_WONG_IP", array("#IP#" => htmlspecialcharsex($ar[0]))));
+					{
+						$aMsg[] = array(
+							"id"=>"EXCL_IPS[".htmlspecialcharsEx($id)."]",
+							"text"=>GetMessage("SECURITY_IPRULE_ERROR_WONG_IP", array(
+								"#IP#" => htmlspecialcharsEx($ar[0]),
+							)),
+						);
+					}
+
 					if(count($ar) > 1)
 					{
 						$ip2 = self::ip2number($ar[1]);
 						if($ip2 <= 0)
-							$aMsg[] = array("id"=>"EXCL_IPS[".htmlspecialcharsex($id)."]", "text"=>GetMessage("SECURITY_IPRULE_ERROR_WONG_IP", array("#IP#" => htmlspecialcharsex($ar[1]))));
+						{
+							$aMsg[] = array(
+								"id"=>"EXCL_IPS[".htmlspecialcharsEx($id)."]",
+								"text"=>GetMessage("SECURITY_IPRULE_ERROR_WONG_IP", array(
+									"#IP#" => htmlspecialcharsEx($ar[1]),
+								)),
+							);
+						}
 						elseif($ip2 < $ip1)
-							$aMsg[] = array("id"=>"EXCL_IPS[".htmlspecialcharsex($id)."]", "text"=>GetMessage("SECURITY_IPRULE_ERROR_WONG_IP_RANGE", array("#END_IP#" => htmlspecialcharsex($ar[1]), "#START_IP#" => htmlspecialcharsex($ar[0]))));
+						{
+							$aMsg[] = array(
+								"id"=>"EXCL_IPS[".htmlspecialcharsEx($id)."]",
+								"text"=>GetMessage("SECURITY_IPRULE_ERROR_WONG_IP_RANGE", array(
+									"#END_IP#" => htmlspecialcharsEx($ar[1]),
+									"#START_IP#" => htmlspecialcharsEx($ar[0]),
+								)),
+							);
+						}
 						break;
 					}
 				}
@@ -661,10 +711,14 @@ class CSecurityIPRule
 				case "SITE_ID":
 				case "SORT":
 				case "NAME":
+					$arSelect[] = $strColumn;
+					$arQueryOrder[$strColumn] = $strColumn." ".$strDirection;
+					break;
 				case "ACTIVE_FROM":
 				case "ACTIVE_TO":
 					$arSelect[] = $strColumn;
-					$arQueryOrder[$strColumn] = $strColumn." ".$strDirection;
+					$arSelect[] = $strColumn."_TIMESTAMP";
+					$arQueryOrder[$strColumn] = $strColumn."_TIMESTAMP ".$strDirection;
 					break;
 			}
 		}
@@ -824,11 +878,11 @@ class CSecurityIPRule
 				".implode(", ", $arQueryOrder)."
 			";
 		}
-		//echo "<pre>",htmlspecialcharsbx($strSql),"</pre><hr>";
+
 		return $DB->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
 	}
 
-	function GetActiveCount()
+	public static function GetActiveCount()
 	{
 		$c = COption::GetOptionInt("security", "iprules_count", -1);
 		if($c < 0)
@@ -878,12 +932,12 @@ class CSecurityIPRule
 		self::$bActive = $bActive;
 	}
 
-	public static function CheckAntiFile($retun_message = false)
+	public static function CheckAntiFile($return_message = false)
 	{
 		$file = COption::GetOptionString("security", "ipcheck_disable_file", "");
 		$res = (strlen($file) > 0) && file_exists($_SERVER["DOCUMENT_ROOT"].$file) && is_file($_SERVER["DOCUMENT_ROOT"].$file);
 
-		if($retun_message)
+		if($return_message)
 		{
 			if($res)
 				return new CAdminMessage(GetMessage("SECURITY_IPRULE_IPCHECK_DISABLE_FILE_WARNING"));
@@ -1096,7 +1150,7 @@ class CSecurityIPRule
 								break;
 							}
 						}
-						//IP is in blocked range so check if it is exluded
+						//IP is in blocked range so check if it is excluded
 						if($bMatch)
 						{
 							foreach($arRule["EXCL_IPS"] as $arIP)
@@ -1172,7 +1226,7 @@ class CSecurityIPRule
 						AND ".$ip2check." between ii.IP_START and ii.IP_END
 						AND ei.IPRULE_ID is null
 				";
-				//echo "<pre>".htmlspecialcharsbx($strSql)."</pre>";
+
 				$rs = $DB->Query($strSql);
 
 				if($arRule = $rs->Fetch())
@@ -1227,4 +1281,3 @@ class CSecurityIPRule
 		return $agentName;
 	}
 }
-?>

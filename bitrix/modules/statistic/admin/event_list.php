@@ -1,7 +1,7 @@
-<?
+<?php
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/statistic/prolog.php");
-
+/** @var CMain $APPLICATION */
 IncludeModuleLangFile(__FILE__);
 
 $STAT_RIGHT = $APPLICATION->GetGroupRight("statistic");
@@ -107,7 +107,6 @@ $arFilter = Array(
 	"ID"			=> $find_id,
 	"EVENT_ID"		=> $find_event_id,
 	"EVENT_NAME"		=> $find_event_name,
-	"EVENT1"		=> $find_event1,
 	"EVENT1"		=> ($find!="" && $find_type == "event1"? $find:$find_event1),
 	"EVENT2"		=> ($find!="" && $find_type == "event2"? $find:$find_event2),
 	"EVENT3"		=> $find_event3,
@@ -145,7 +144,7 @@ if(($arID = $lAdmin->GroupAction()) && $STAT_RIGHT=="W")
 	{
 		if(strlen($ID)<=0)
 			continue;
-		$ID = IntVal($ID);
+		$ID = intval($ID);
 		switch($_REQUEST['action'])
 		{
 		case "delete":
@@ -250,7 +249,7 @@ $arHeaders = array(
 if($STAT_RIGHT>"M")
 	$arHeaders[]=
 		array(	"id"		=>"MONEY",
-			"content"	=>GetMessage("STAT_MONEY").(strlen($view_currency)>0?"<br>(".htmlspecialcharsex($view_currency).")":""),
+			"content"	=>GetMessage("STAT_MONEY").(strlen($view_currency)>0?"<br>(".htmlspecialcharsEx($view_currency).")":""),
 			"sort"		=>"s_money",
 			"align"		=>"right",
 			"default"	=>true,
@@ -541,5 +540,4 @@ $lAdmin->DisplayList();
 <?echo EndNote();?>
 
 <?
-require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");?>
-?>
+require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");

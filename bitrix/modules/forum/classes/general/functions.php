@@ -29,9 +29,9 @@ class forumTextParser extends CTextParser
 	public $arFilesIDParsed = array();
 
 
-	function forumTextParser($lang = false, $pathToSmiles = '', $type=false, $mode = 'full')
+	function __construct($lang = false, $pathToSmiles = '', $type=false, $mode = 'full')
 	{
-		$this->CTextParser();
+		parent::__construct();
 		$this->arFiles = array();
 		$this->arFilesParsed = array();
 		$this->serverName = (defined("SITE_SERVER_NAME") && strlen(SITE_SERVER_NAME) > 0 ? SITE_SERVER_NAME : COption::GetOptionString("main", "server_name", ""));
@@ -47,11 +47,10 @@ class forumTextParser extends CTextParser
 		{
 			AddEventHandler("main", "TextParserBeforeTags", Array(&$this, "ParserSpoiler"));
 			AddEventHandler("main", "TextParserAfterTags", Array(&$this, "ParserFile"));
-			AddEventHandler("main", "TextParserAfterTags", Array(&$this, "ParserUser"));
 		}
 	}
 
-	static function GetFeatures($arForum)
+	public static function GetFeatures($arForum)
 	{
 		static $arFeatures = array("HTML", "ANCHOR", "BIU", "IMG", "VIDEO", "LIST", "QUOTE", "CODE", "FONT", "SMILES", "UPLOAD", "NL2BR", "SMILES", "TABLE", "ALIGN");
 		$result = array();
@@ -65,7 +64,7 @@ class forumTextParser extends CTextParser
 		return $result;
 	}
 
-	static function GetEditorButtons($arParams)
+	public static function GetEditorButtons($arParams)
 	{
 		$result = array();
 		$arEditorFeatures = array(
@@ -87,7 +86,7 @@ class forumTextParser extends CTextParser
 		return $result;
 	}
 
-	static function GetEditorToolbar($arParams)
+	public static function GetEditorToolbar($arParams)
 	{
 		static $arEditorFeatures = array(
 			"ALLOW_BIU" => array('Bold', 'Italic', 'Underline', 'Strike', 'Spoiler'),
@@ -136,12 +135,14 @@ class forumTextParser extends CTextParser
 		$this->imageWidth = ($this->image_params["width"] > 0 ? $this->image_params["width"] : ($this->imageWidth > 0 ? $this->imageWidth : 300));
 		$this->imageHeight = ($this->image_params["height"] > 0 ? $this->image_params["height"] : ($this->imageHeight > 0 ? $this->imageHeight : 300));
 		
-		$this->userPath = (empty($this->userPath) && !empty($this->pathToUser) ? $this->pathToUser : $this->userPath);
+		$this->userPath = str_replace(array("#UID#", "#uid#"), "#user_id#", (empty($this->userPath) && !empty($this->pathToUser) ? $this->pathToUser : $this->userPath));
 
 		$this->type = $type;
+
 		$allow = (is_array($allow) ? $allow : array());
 		if (!empty($this->arUserfields))
 			$allow["USERFIELDS"] = $this->arUserfields;
+
 		if (sizeof($allow)>0)
 		{
 			if (!isset($allow['TABLE']))
@@ -159,48 +160,83 @@ class forumTextParser extends CTextParser
 		$text = str_replace(array("\013", "\014"), array(chr(34), chr(39)), $this->convertText($text));
 		return $text;
 	}
-	function convert4mail($text, $arFiles = false)
-	{
-		$text = CTextParser::convert4mail($text);
 
-		if ($arFiles !== false)
-			$this->arFiles = is_array($arFiles) ? $arFiles : array($arFiles);
+	function convert4mail($text, $files = false, $allow = array(), $params = array())
+	{
+		$this->arFiles = (is_array($files) ? $files : ($files ? array($files) : array()));
 		$this->arFilesIDParsed = array();
-		if (!empty($this->arFiles))
-			$this->ParserFile($text, $this, "mail");
-		if (preg_match("/\\[cut(([^\\]])*)\\]/is".BX_UTF_PCRE_MODIFIER, $text, $matches))
+
+		if (!empty($params))
 		{
-			$text = preg_replace(
-				array("/\\[cut(([^\\]])*)\\]/is".BX_UTF_PCRE_MODIFIER,
-					"/\\[\\/cut\\]/is".BX_UTF_PCRE_MODIFIER),
-				array("\001\\1\002",
-					"\003"),
-				$text);
-			while (preg_match("/(\001([^\002]*)\002([^\001\002\003]+)\003)/is".BX_UTF_PCRE_MODIFIER, $text, $arMatches))
+			$mail = array(
+				"RECIPIENT_ID" => intval($params["RECIPIENT_ID"]),
+				"SITE_ID" => ($params["SITE_ID"] ?: SITE_ID)
+			);
+			$allow = array_merge(((is_array($allow) ? $allow : array()) + array(
+				"HTML" => "N",
+				"ANCHOR" => "Y",
+				"BIU" => "Y",
+				"IMG" => "Y",
+				"QUOTE" => "Y",
+				"CODE" => "Y",
+				"FONT" => "Y",
+				"LIST" => "Y",
+				"NL2BR" => "N",
+				"TABLE" => "Y"
+			)), array("SMILES" => "N"));
+
+			$this->RECIPIENT_ID = $mail["RECIPIENT_ID"];
+			$this->SITE_ID = $mail["SITE_ID"];
+
+			if (is_array($this->arUserfields))
+			{
+				foreach ($this->arUserfields as &$f)
+				{
+					$f += $mail;
+				}
+			}
+			return $this->convert($text, $allow, "mail");
+		}
+		else
+		{
+			$text = parent::convert4mail($text);
+			if (!empty($this->arFiles))
+				$this->ParserFile($text, $this, "mail");
+			if (preg_match("/\\[cut(([^\\]])*)\\]/is".BX_UTF_PCRE_MODIFIER, $text, $matches))
+			{
 				$text = preg_replace(
-					"/(\001([^\002]*)\002([^\001\002\003]+)\003)/is".BX_UTF_PCRE_MODIFIER,
-					"\n>================== CUT ===================\n\\3\n>==========================================\n",
+					array("/\\[cut(([^\\]])*)\\]/is".BX_UTF_PCRE_MODIFIER,
+						"/\\[\\/cut\\]/is".BX_UTF_PCRE_MODIFIER),
+					array("\001\\1\002",
+						"\003"),
 					$text);
-			$text = preg_replace(
-				array("/\001([^\002]+)\002/",
-					"/\001\002/",
-					"/\003/"),
-				array("[cut\\1]",
-					"[cut]",
-					"[/cut]"),
-				$text);
+				while (preg_match("/(\001([^\002]*)\002([^\001\002\003]+)\003)/is".BX_UTF_PCRE_MODIFIER, $text, $arMatches))
+					$text = preg_replace(
+						"/(\001([^\002]*)\002([^\001\002\003]+)\003)/is".BX_UTF_PCRE_MODIFIER,
+						"\n>================== CUT ===================\n\\3\n>==========================================\n",
+						$text);
+				$text = preg_replace(
+					array("/\001([^\002]+)\002/",
+						"/\001\002/",
+						"/\003/"),
+					array("[cut\\1]",
+						"[cut]",
+						"[/cut]"),
+					$text);
+			}
 		}
 		return $text;
 	}
+
 	function ParserSpoiler(&$text, &$obj)
 	{
 		$matches = array();
-		if (method_exists($obj, "convert_spoiler_tag") && preg_match("/\[(cut|spoiler)/is".BX_UTF_PCRE_MODIFIER, $text, $matches))
+		if (method_exists($obj, "convert_spoiler_tag") && preg_match("/\\[(cut|spoiler)/is".BX_UTF_PCRE_MODIFIER, $text, $matches))
 		{
 			$text = preg_replace(
 				array(
-					"/\[(cut|spoiler)(([^\]])*)\]/is".BX_UTF_PCRE_MODIFIER,
-					"/\[\/(cut|spoiler)\]/is".BX_UTF_PCRE_MODIFIER
+					"/\\[(cut|spoiler)(([^\\]])*)\\]/is".BX_UTF_PCRE_MODIFIER,
+					"/\\[\\/(cut|spoiler)\\]/is".BX_UTF_PCRE_MODIFIER
 				),
 				array(
 					"\001\\2\002",
@@ -231,41 +267,6 @@ class forumTextParser extends CTextParser
 		}
 	}
 
-	function ParserUser(&$text, &$obj)
-	{
-		if($obj->allow["USER"] != "N" && is_callable(array($obj, 'convert_user')))
-		{
-			$text = preg_replace_callback("/\[user\s*=\s*([^\]]*)\](.+?)\[\/user\]/is".BX_UTF_PCRE_MODIFIER, array($obj, "convert_user"), $text);
-		}
-	}
-
-	function convert_user($userId = 0, $name = "")
-	{
-		if (is_array($userId))
-		{
-			$name = $userId[2];
-			$userId = $userId[1];
-		}
-		$userId = intval($userId);
-		if($userId > 0)
-		{
-			$anchor_id = RandString(8);
-			return
-				'<a class="blog-p-user-name'.(is_array($GLOBALS["arExtranetUserID"]) && in_array($userId, $GLOBALS["arExtranetUserID"]) ? ' feed-extranet-mention' : '').'" id="bp_'.$anchor_id.'" href="'.CComponentEngine::MakePathFromTemplate($this->userPath,
-					array(
-						"user_id" => $userId,
-						"USER_ID" => $userId,
-						"uid" => $userId,
-						"UID" => $userId)).'">'.$name.'</a>'.
-				(
-					!$this->bMobile
-						? '<script type="text/javascript">if(!!BX[\'tooltip\']){BX.tooltip(\''.$userId.'\', "bp_'.$anchor_id.'", "'.CUtil::JSEscape($this->ajaxPage).'");}</script>' 
-						: ''
-				);
-		}
-		return "";
-	}
-
 	function convert_spoiler_tag($text, $title="")
 	{
 		if (is_array($text))
@@ -275,8 +276,12 @@ class forumTextParser extends CTextParser
 		}
 		if (empty($text))
 			return "";
-		$title = htmlspecialcharsbx(trim(htmlspecialcharsback($title), " =\"\'"));
-		$result = $GLOBALS["APPLICATION"]->IncludeComponent(
+		$title = htmlspecialcharsbx(trim(htmlspecialcharsback($title), " =\"\\'"));
+		if ($this->type == "mail")
+			return "<dl><dt>".($title ?: GetMessage("FRM_SPOILER"))."</dt><dd>".htmlspecialcharsbx($text)."</dd></dl>";
+
+		global $APPLICATION;
+		$result = $APPLICATION->includeComponent(
 			"bitrix:forum.interface",
 			"spoiler",
 			Array(
@@ -296,15 +301,12 @@ class forumTextParser extends CTextParser
 		$this->{$marker."_open"}++;
 		if ($this->type == "rss")
 			return "\n====".$marker."====\n";
-
-		if ($this->bMobile)
-		{
+		else if ($this->type == "mail")
+			return ($marker == "code" ? "<code>" : "<blockquote>");
+		else if ($this->bMobile)
 			return "<div class='blog-post-".$marker."' title=\"".($marker == "quote" ? GetMessage("FRM_QUOTE") : GetMessage("FRM_CODE"))."\"><table class='blog".$marker."'><tr><td>";
-		}
 		else
-		{
 			return '<table class="forum-'.$marker.'"><thead><tr><th>'.($marker == "quote" ? GetMessage("FRM_QUOTE") : GetMessage("FRM_CODE")).'</th></tr></thead><tbody><tr><td>';
-		}
 	}
 
 	function convert_close_tag($marker = "quote")
@@ -320,15 +322,12 @@ class forumTextParser extends CTextParser
 
 		if ($this->type == "rss")
 			return "\n=============\n";
-
-		if ($this->bMobile)
-		{
+		else if ($this->type == "mail")
+			return ($marker == "code" ? "</code>" : "</blockquote>");
+		else if ($this->bMobile)
 			return "</td></tr></table></div>";
-		}
 		else
-		{
 			return "</td></tr></tbody></table>";
-		}
 
 	}
 
@@ -453,18 +452,7 @@ class forumTextParser extends CTextParser
 	function convert_to_rss(
 		$text,
 		$arImages = Array(),
-		$arAllow = Array(
-			"HTML" => "N",
-			"ANCHOR" => "Y",
-			"BIU" => "Y",
-			"IMG" => "Y",
-			"QUOTE" => "Y",
-			"CODE" => "Y",
-			"FONT" => "Y",
-			"LIST" => "Y",
-			"SMILES" => "Y",
-			"NL2BR" => "N",
-			"TABLE" => "Y"))
+		$arAllow = Array())
 	{
 		if (empty($arAllow))
 			$arAllow = array(
@@ -487,6 +475,46 @@ class forumTextParser extends CTextParser
 			"\\1", $text);
 
 		return $this->convert($text, $arAllow, "rss", $arImages);
+	}
+
+	function render_user($fields)
+	{
+		$classAdditional = (!empty($fields['CLASS_ADDITIONAL']) ? $fields['CLASS_ADDITIONAL'] : '');
+		$pathToUser = (!empty($fields['PATH_TO_USER']) ? $fields['PATH_TO_USER'] : '');
+		$userId = (!empty($fields['USER_ID']) ? $fields['USER_ID'] : '');
+		$userName = (!empty($fields['USER_NAME']) ? $fields['USER_NAME'] : '');
+
+		$ajaxPage = $this->ajaxPage;
+
+		if (
+			$this->pathToUserEntityType && strlen($this->pathToUserEntityType) > 0
+			&& intval($this->pathToUserEntityId) > 0
+		)
+		{
+			$ajaxPage = $ajaxPage.(strpos($pathToUser, '?') === false ? '?' : '&').'entityType='.$this->pathToUserEntityType.'&entityId='.intval($this->pathToUserEntityId);
+		}
+
+		$anchorId = RandString(8);
+
+		$res = (
+			!$this->bPublic
+				? '<a class="blog-p-user-name'.$classAdditional.'" id="bp_'.$anchorId.'" href="'.CComponentEngine::MakePathFromTemplate($pathToUser, array("user_id" => $userId)).'">'.
+				(
+				!$this->bMobile
+				&& $ajaxPage
+					? '<script type="text/javascript">BX.tooltip(\''.$userId.'\', "bp_'.$anchorId.'", "'.CUtil::JSEscape($ajaxPage).'");</script>'
+					: ''
+				)
+				: ''
+			).
+			$userName.
+			(
+				!$this->bPublic
+					? '</a>'
+					: ''
+			);
+
+		return $res;
 	}
 }
 
@@ -1431,10 +1459,44 @@ class CForumSimpleHTMLParser
 	var $replace_tag_begin = '/^\s*\w+\s*/';
 	var $parse_params = '/([a-z]+)\s*=\s*(?:([^\s]*)|(?:[\'"]([^\'"])[\'"]))/im';
 	var $lastError = '';
+	private $preg = array(
+			"counter" => 0,
+			"pattern" => array(),
+			"replace" => array()
+		);
 
 	function __construct ($data)
 	{
-		$this->data = $data;
+		$this->data = $this->prepare($data);
+	}
+	/**
+	 * @param string $text
+	 * @return string
+	 */
+	private function prepare($text)
+	{
+		$text = preg_replace_callback(
+			"/<pre>(.+?)<\\/pre>/is".BX_UTF_PCRE_MODIFIER,
+			array($this, "defendTags"),
+			(is_string($text) ? $text : strval($text))
+		);
+		$text = str_replace(array("\r\n", "\n", "\t"), "", $text);
+		$text = str_replace($this->preg["pattern"], $this->preg["replace"], $text);
+		$this->preg["pattern"] = array();
+		$this->preg["replace"] = array();
+		return $text;
+	}
+
+	/**
+	 * @param array $matches
+	 * @return string
+	 */
+	public function defendTags($matches)
+	{
+		$text = "<\017#".(++$this->preg["counter"]).">";
+		$this->preg["pattern"][] = $text;
+		$this->preg["replace"][] = $matches[0];
+		return $text;
 	}
 
 	function findTagStart($needle) // needle = input[name=input;class=red]
@@ -1523,7 +1585,7 @@ class CForumSimpleHTMLParser
 		for ($i=0; $i<$n_tags;$i++)
 		{
 			if (preg_match('#^\s*'.$tags_quoted[$i]['open'].'#i', $tmp) < 1) continue;
-			if (preg_match('#('.$tags_quoted[$i]['close'].'\s*)#im', $tmp, $matches) > 0)
+			if (preg_match('#('.$tags_quoted[$i]['close'].'[^<]*)#im', $tmp, $matches) > 0)
 			{
 				$endpos = strpos($tmp, $matches[1]);
 				$offset = $endpos+strlen($matches[1]);
@@ -1641,7 +1703,7 @@ class CForumSimpleHTMLParser
 
 class CForumCacheManager
 {
-	function CForumCacheManager()
+	public function CForumCacheManager()
 	{
 		if(defined("BX_COMP_MANAGED_CACHE"))
 		{
@@ -1662,7 +1724,7 @@ class CForumCacheManager
 		}
 	}
 
-	static function Compress($arDictCollection)
+	public static function Compress($arDictCollection)
 	{
 		if (
 			is_array($arDictCollection) &&
@@ -1689,7 +1751,7 @@ class CForumCacheManager
 		return $arDictCollection;
 	}
 
-	static function Expand($arDictCollection)
+	public static function Expand($arDictCollection)
 	{
 		if (
 			is_array($arDictCollection) &&
@@ -1719,7 +1781,7 @@ class CForumCacheManager
 		return $arDictCollection;
 	}
 
-	function SetTag($path, $tags)
+	public static function SetTag($path, $tags)
 	{
 		global $CACHE_MANAGER;
 		if (! defined("BX_COMP_MANAGED_CACHE"))
@@ -1738,7 +1800,7 @@ class CForumCacheManager
 		return true;
 	}
 
-	function ClearTag($type, $ID=0)
+	public static function ClearTag($type, $ID=0)
 	{
 		global $CACHE_MANAGER;
 		static $forum = "forum_";
@@ -1752,7 +1814,7 @@ class CForumCacheManager
 			$CACHE_MANAGER->ClearByTag($type);
 	}
 
-	function OnRate($rateID, $arData)
+	public function OnRate($rateID, $arData)
 	{
 		if (!isset($arData['ENTITY_TYPE_ID']) ||
 			!isset($arData['ENTITY_ID']) ||
@@ -1775,13 +1837,13 @@ class CForumCacheManager
 		return true;
 	}
 
-	function OnMessageAdd($ID, $arFields)
+	public function OnMessageAdd($ID, $arFields)
 	{
-		$this->ClearTag("T", isset($arFields["FORUM_TOPIC_ID"]) ? $arFields["FORUM_TOPIC_ID"] : $arFields["TOPIC_ID"]);
-		$this->ClearTag("forum_msg_count".$arFields["FORUM_ID"]);
+		self::ClearTag("T", isset($arFields["FORUM_TOPIC_ID"]) ? $arFields["FORUM_TOPIC_ID"] : $arFields["TOPIC_ID"]);
+		self::ClearTag("forum_msg_count".$arFields["FORUM_ID"]);
 	}
 
-	function OnMessageUpdate($ID, $arFields, $arMessage = array())
+	public function OnMessageUpdate($ID, $arFields, $arMessage = array())
 	{
 		$arMessage = (is_array($arMessage) ? $arMessage : array());
 		$topic_id = (isset($arFields["FORUM_TOPIC_ID"]) ? $arFields["FORUM_TOPIC_ID"] : $arFields["TOPIC_ID"]);
@@ -1796,39 +1858,39 @@ class CForumCacheManager
 			$this->ClearTag("forum_msg_count".$forum_id);
 	}
 
-	function OnMessageDelete($ID, $arMessage)
+	public function OnMessageDelete($ID, $arMessage)
 	{
-		$this->ClearTag("T", isset($arMessage["FORUM_TOPIC_ID"]) ? $arMessage["FORUM_TOPIC_ID"] : $arMessage["TOPIC_ID"]);
-		$this->ClearTag("forum_msg_count".$arMessage["FORUM_ID"]);
+		self::ClearTag("T", isset($arMessage["FORUM_TOPIC_ID"]) ? $arMessage["FORUM_TOPIC_ID"] : $arMessage["TOPIC_ID"]);
+		self::ClearTag("forum_msg_count".$arMessage["FORUM_ID"]);
 	}
 
-	function OnTopicAdd($ID, $arFields)
+	public function OnTopicAdd($ID, $arFields)
 	{
-		$this->ClearTag("F", $arFields["FORUM_ID"]);
+		self::ClearTag("F", $arFields["FORUM_ID"]);
 	}
 
-	function OnTopicUpdate($ID, $arFields)
+	public function OnTopicUpdate($ID, $arFields)
 	{
-		$this->ClearTag("T", $ID);
-		$this->ClearTag("F", $arFields["FORUM_ID"]);
+		self::ClearTag("T", $ID);
+		self::ClearTag("F", $arFields["FORUM_ID"]);
 	}
 
-	function OnTopicDelete(&$ID, $arTopic)
+	public function OnTopicDelete(&$ID, $arTopic)
 	{
-		$this->ClearTag("T", $ID);
-		$this->ClearTag("F", $arTopic["FORUM_ID"]);
+		self::ClearTag("T", $ID);
+		self::ClearTag("F", $arTopic["FORUM_ID"]);
 	}
 
-	//function OnForumAdd(&$ID, &$arFields)
+	//public function OnForumAdd(&$ID, &$arFields)
 	//{
 	//}
 
-	function OnForumUpdate($ID, $arFields)
+	public function OnForumUpdate($ID, $arFields)
 	{
-		$this->ClearTag("F", $arFields["FORUM_ID"]);
+		self::ClearTag("F", $arFields["FORUM_ID"]);
 	}
 
-	//function OnForumDelete($ID)
+	//public function OnForumDelete($ID)
 	//{
 	//}
 }
@@ -1836,7 +1898,7 @@ class CForumCacheManager
 class CForumAutosave
 {
 	private static $instance;
-	private static $as;
+	private $as;
 
 	public function __construct()
 	{

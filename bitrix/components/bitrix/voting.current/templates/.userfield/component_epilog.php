@@ -12,7 +12,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" &&
 	!empty($questions) &&
 	array_key_exists("PUBLIC_VOTE_ID", $_REQUEST) && $_REQUEST["PUBLIC_VOTE_ID"] == $arResult["VOTE_ID"] &&
 	array_key_exists("vote", $_REQUEST) && strlen($_REQUEST["vote"])>0 &&
-	($GLOBALS["VOTING_ID"] == $arResult["VOTE_ID"] && is_array($_SESSION["VOTE_ARRAY"]) && in_array($arResult["VOTE_ID"], $_SESSION["VOTE_ARRAY"])) &&
+	($GLOBALS["VOTING_ID"] == $arResult["VOTE_ID"] && array_key_exists($arResult["VOTE_ID"], $_SESSION["VOTE"]["VOTES"])) &&
 	CModule::IncludeModule("pull"))
 {
 	$result = array();
@@ -48,35 +48,19 @@ CJSCore::Init(array('ajax', 'popup'));
 $GLOBALS['APPLICATION']->SetAdditionalCSS('/bitrix/components/bitrix/rating.vote/templates/like/popup.css');
 
 $uid = $this->params["uid"];
-$controller = $this->params["controller"];
 $lastVote = intval($this->params["lastVote"]);
 ?>
 <script type="text/javascript">
-	BX.ready(function(){
-window.__votevar<?=$uid?> = 0;
-window.__vote<?=$uid?> = function() {
-	if (! <?=$controller?>) {
-		window.__votevar<?=$uid?>++;
-		if (window.__votevar<?=$uid?> <= 100)
-			setTimeout(__vote<?=$uid?>, 10);
-		return false;
-	}
-
-	if (!!<?=$controller?> && ! <?=$controller?>.loaded) {
-		<?=$controller?>.loaded = true;
-		BVote<?=$uid?> = new BVotedUser({
-			'CID' : '<?=$uid?>',
-			'controller': <?=$controller?>,
-			'urlTemplate' : "<?=CUtil::JSEscape($arParams["~PATH_TO_USER"]);?>",
-			'nameTemplate' : "<?=CUtil::JSEscape($arParams["~NAME_TEMPLATE"]);?>",
-			'url' : "<?=CUtil::JSEscape(htmlspecialcharsback(POST_FORM_ACTION_URI))?>",
-			'voteId' : <?=$arParams["VOTE_ID"]?>,
-			'startCheck' : <?=$lastVote?>
-		});
-	}
-};
-window.__vote<?=$uid?>();
+BX.ready(function(){
+	BX.Vote.init({
+		id : <?=$arParams["VOTE_ID"]?>,
+		cid : '<?=$uid?>',
+		urlTemplate : '<?=CUtil::JSEscape($arParams["~PATH_TO_USER"]);?>',
+		nameTemplate : '<?=CUtil::JSEscape($arParams["~NAME_TEMPLATE"]);?>',
+		url : '<?=CUtil::JSEscape(htmlspecialcharsback(POST_FORM_ACTION_URI))?>',
+		startCheck : <?=$lastVote?>
 	});
+});
 </script>
 <?if ($_REQUEST["VOTE_ID"] == $arParams["VOTE_ID"] && $_REQUEST["AJAX_POST"] == "Y" && check_bitrix_sessid()):
 	$res = ob_get_clean();

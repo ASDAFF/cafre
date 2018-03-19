@@ -1,10 +1,15 @@
-<?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();?>
-<?
+<?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
+/** @var CBitrixComponentTemplate $this */
+/** @var array $arParams */
+/** @var array $arResult */
+/** @global CDatabase $DB */
+/** @global CUser $USER */
+/** @global CMain $APPLICATION */
+
 $pageId = "user_log";
 include("util_menu.php");
-?>
-<div id="log_external_container"></div>
-<?
+
+?><div id="log_external_container"></div><?
 $APPLICATION->IncludeComponent(
 	"bitrix:socialnetwork.log.ex", 
 	"", 
@@ -52,8 +57,10 @@ $APPLICATION->IncludeComponent(
 		"AVATAR_SIZE" => $arParams["LOG_THUMBNAIL_SIZE"],
 		"AVATAR_SIZE_COMMENT" => $arParams["LOG_COMMENT_THUMBNAIL_SIZE"],
 		"NEW_TEMPLATE" => $arParams["LOG_NEW_TEMPLATE"],
-		"HIDE_EDIT_FORM" => "Y"
+		"HIDE_EDIT_FORM" => "Y",
+		"BLOG_NO_URL_IN_COMMENTS" => $arParams["BLOG_NO_URL_IN_COMMENTS"],
+		"BLOG_NO_URL_IN_COMMENTS_AUTHORITY" => $arParams["BLOG_NO_URL_IN_COMMENTS_AUTHORITY"]
 	),
-	$component 
+	$this->getComponent()
 );
 ?>

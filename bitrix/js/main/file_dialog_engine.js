@@ -33,7 +33,6 @@ BXDialogTree.prototype =
 
 	oPlusOnClick : function(el)
 	{
-		oBXFileDialog.SetFocus('tree');
 		this.OpenTreeSection(el.parentNode.parentNode.getAttribute('__bxpath'), 'check');
 	},
 

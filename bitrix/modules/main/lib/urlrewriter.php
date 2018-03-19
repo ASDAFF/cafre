@@ -99,13 +99,13 @@ class UrlRewriter
 				}
 
 				if ($keyFilter == 'QUERY')
-					$isMatchedTmp = preg_match($arRule["CONDITION"], $arFilter["QUERY"]);
+					$isMatchedTmp = preg_match($arRule["CONDITION"], $valueFilter);
 				elseif ($keyFilter == 'CONDITION')
-					$isMatchedTmp = ($arRule["CONDITION"] == $arFilter["CONDITION"]);
+					$isMatchedTmp = ($arRule["CONDITION"] == $valueFilter);
 				elseif ($keyFilter == 'ID')
-					$isMatchedTmp = ($arRule["ID"] == $arFilter["ID"]);
+					$isMatchedTmp = ($arRule["ID"] == $valueFilter);
 				elseif ($keyFilter == 'PATH')
-					$isMatchedTmp = ($arRule["PATH"] == $arFilter["PATH"]);
+					$isMatchedTmp = ($arRule["PATH"] == $valueFilter);
 				else
 					throw new ArgumentException("arFilter");
 

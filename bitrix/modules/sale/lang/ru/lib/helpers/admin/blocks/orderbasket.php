@@ -27,6 +27,7 @@ $MESS["SALE_ORDER_BASKET_PRICE_DISCOUNT"] = "Стоимость товаров с учётом скидок и
 $MESS["SALE_ORDER_BASKET_PRICE_DELIVERY"] = "Стоимость доставки";
 $MESS["SALE_ORDER_BASKET_PRICE_DELIVERY_DISCOUNT"] = "Стоимость доставки с учетом скидок и наценок";
 $MESS["SALE_ORDER_BASKET_PAYMENT_DISCOUNT"] = "Скидка или наценка на способ оплаты";
+$MESS["SALE_ORDER_DEPRECATED_DISCOUNT_VALUE"] = "Скидка на общую сумму заказа";
 $MESS["SALE_ORDER_BASKET_TAX"] = "Налог";
 $MESS["SALE_ORDER_BASKET_WEIGHT"] = "Вес";
 $MESS["SALE_ORDER_BASKET_PAID"] = "Уже оплачено";
@@ -73,4 +74,8 @@ $MESS ['SALE_ORDER_BASKET_COUPON_STATUS'] = "Статус";
 $MESS ['SALE_ORDER_BASKET_COUPON_APPLY'] = "Применить";
 $MESS ['SALE_ORDER_BASKET_COUPON_DELETE'] = "Удалить купон";
 $MESS ['SALE_ORDER_BASKET_POSITION_EXISTS'] = "Товар \"#NAME#\" в заказе уже есть. Нажмите ОК для увеличения количества товара в существующей позиции";
+$MESS ['SALE_ORDER_BASKET_ACTUALIZE_DATA'] = "Пересчитать";
+$MESS ['SALE_ORDER_BASKET_ADD_COUPON_ERROR'] = "Ошибка добавления купона";
+$MESS["SALE_ORDER_BASKET_COUPONS_NOTE"] = "Для использования купонов, действующих на конкретный тип цен, необходимо ввести купон и пересчитать заказ";
+$MESS["SALE_ORDER_BASKET_NO_NAME"] = "Без названия";
 ?>

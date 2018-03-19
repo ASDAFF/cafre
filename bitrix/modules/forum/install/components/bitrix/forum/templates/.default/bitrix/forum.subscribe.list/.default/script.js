@@ -1,9 +1,3 @@
-if (typeof oForum != "object")
-	var oForum = {};
-if (typeof oForum["selectors"] != "object")
-	oForum["selectors"] = {};
-	
-
 function FSelectAll(oObj, bSet)
 {
 	if (typeof oObj != "object" || oObj == null)

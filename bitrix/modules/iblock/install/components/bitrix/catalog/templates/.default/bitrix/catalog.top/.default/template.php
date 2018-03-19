@@ -14,74 +14,75 @@ $this->setFrameMode(true);
 
 if (!empty($arResult['ITEMS']))
 {
-	$arSkuTemplate = array();
+	$skuTemplate = array();
 	if (!empty($arResult['SKU_PROPS']))
 	{
-		foreach ($arResult['SKU_PROPS'] as &$arProp)
+		foreach ($arResult['SKU_PROPS'] as $arProp)
 		{
+			$propId = $arProp['ID'];
+			$skuTemplate[$propId] = array(
+				'SCROLL' => array(
+					'START' => '',
+					'FINISH' => '',
+				),
+				'FULL' => array(
+					'START' => '',
+					'FINISH' => '',
+				),
+				'ITEMS' => array()
+			);
 			$templateRow = '';
 			if ('TEXT' == $arProp['SHOW_MODE'])
 			{
-				if (5 < $arProp['VALUES_COUNT'])
+				$skuTemplate[$propId]['SCROLL']['START'] = '<div class="bx_item_detail_size full" id="#ITEM#_prop_'.$propId.'_cont">'.
+					'<span class="bx_item_section_name_gray">'.htmlspecialcharsbx($arProp['NAME']).'</span>'.
+					'<div class="bx_size_scroller_container"><div class="bx_size"><ul id="#ITEM#_prop_'.$propId.'_list" style="width: #WIDTH#;">';;
+				$skuTemplate[$propId]['SCROLL']['FINISH'] = '</ul></div>'.
+					'<div class="bx_slide_left" id="#ITEM#_prop_'.$propId.'_left" data-treevalue="'.$propId.'" style=""></div>'.
+					'<div class="bx_slide_right" id="#ITEM#_prop_'.$propId.'_right" data-treevalue="'.$propId.'" style=""></div>'.
+					'</div></div>';
+
+				$skuTemplate[$propId]['FULL']['START'] = '<div class="bx_item_detail_size" id="#ITEM#_prop_'.$propId.'_cont">'.
+					'<span class="bx_item_section_name_gray">'.htmlspecialcharsbx($arProp['NAME']).'</span>'.
+					'<div class="bx_size_scroller_container"><div class="bx_size"><ul id="#ITEM#_prop_'.$propId.'_list" style="width: #WIDTH#;">';;
+				$skuTemplate[$propId]['FULL']['FINISH'] = '</ul></div>'.
+					'<div class="bx_slide_left" id="#ITEM#_prop_'.$propId.'_left" data-treevalue="'.$propId.'" style="display: none;"></div>'.
+					'<div class="bx_slide_right" id="#ITEM#_prop_'.$propId.'_right" data-treevalue="'.$propId.'" style="display: none;"></div>'.
+					'</div></div>';
+				foreach ($arProp['VALUES'] as $value)
 				{
-					$strClass = 'bx_item_detail_size full';
-					$strWidth = ($arProp['VALUES_COUNT']*20).'%';
-					$strOneWidth = (100/$arProp['VALUES_COUNT']).'%';
-					$strSlideStyle = '';
+					$value['NAME'] = htmlspecialcharsbx($value['NAME']);
+					$skuTemplate[$propId]['ITEMS'][$value['ID']] = '<li data-treevalue="'.$propId.'_'.$value['ID'].
+						'" data-onevalue="'.$value['ID'].'" style="width: #WIDTH#;" title="'.$value['NAME'].'"><i></i><span class="cnt">'.$value['NAME'].'</span></li>';
 				}
-				else
-				{
-					$strClass = 'bx_item_detail_size';
-					$strWidth = '100%';
-					$strOneWidth = '20%';
-					$strSlideStyle = 'display: none;';
-				}
-				$templateRow .= '<div class="'.$strClass.'" id="#ITEM#_prop_'.$arProp['ID'].'_cont">
-<span class="bx_item_section_name_gray">'.htmlspecialcharsex($arProp['NAME']).'</span>
-<div class="bx_size_scroller_container"><div class="bx_size"><ul id="#ITEM#_prop_'.$arProp['ID'].'_list" style="width: '.$strWidth.';">';
-				foreach ($arProp['VALUES'] as $arOneValue)
-				{
-					$arOneValue['NAME'] = htmlspecialcharsbx($arOneValue['NAME']);
-					$templateRow .= '<li data-treevalue="'.$arProp['ID'].'_'.$arOneValue['ID'].'" data-onevalue="'.$arOneValue['ID'].'" style="width: '.$strOneWidth.';" title="'.$arOneValue['NAME'].'"><i></i><span class="cnt">'.$arOneValue['NAME'].'</span></li>';
-				}
-				$templateRow .= '</ul></div>
-<div class="bx_slide_left" id="#ITEM#_prop_'.$arProp['ID'].'_left" data-treevalue="'.$arProp['ID'].'" style="'.$strSlideStyle.'"></div>
-<div class="bx_slide_right" id="#ITEM#_prop_'.$arProp['ID'].'_right" data-treevalue="'.$arProp['ID'].'" style="'.$strSlideStyle.'"></div>
-	</div>
-</div>';
+				unset($value);
 			}
 			elseif ('PICT' == $arProp['SHOW_MODE'])
 			{
-				if (5 < $arProp['VALUES_COUNT'])
+				$skuTemplate[$propId]['SCROLL']['START'] = '<div class="bx_item_detail_scu full" id="#ITEM#_prop_'.$propId.'_cont">'.
+					'<span class="bx_item_section_name_gray">'.htmlspecialcharsbx($arProp['NAME']).'</span>'.
+					'<div class="bx_scu_scroller_container"><div class="bx_scu"><ul id="#ITEM#_prop_'.$propId.'_list" style="width: #WIDTH#;">';
+				$skuTemplate[$propId]['SCROLL']['FINISH'] = '</ul></div>'.
+					'<div class="bx_slide_left" id="#ITEM#_prop_'.$propId.'_left" data-treevalue="'.$propId.'" style=""></div>'.
+					'<div class="bx_slide_right" id="#ITEM#_prop_'.$propId.'_right" data-treevalue="'.$propId.'" style=""></div>'.
+					'</div></div>';
+
+				$skuTemplate[$propId]['FULL']['START'] = '<div class="bx_item_detail_scu" id="#ITEM#_prop_'.$propId.'_cont">'.
+					'<span class="bx_item_section_name_gray">'.htmlspecialcharsbx($arProp['NAME']).'</span>'.
+					'<div class="bx_scu_scroller_container"><div class="bx_scu"><ul id="#ITEM#_prop_'.$propId.'_list" style="width: #WIDTH#;">';
+				$skuTemplate[$propId]['FULL']['FINISH'] = '</ul></div>'.
+					'<div class="bx_slide_left" id="#ITEM#_prop_'.$propId.'_left" data-treevalue="'.$propId.'" style="display: none;"></div>'.
+					'<div class="bx_slide_right" id="#ITEM#_prop_'.$propId.'_right" data-treevalue="'.$propId.'" style="display: none;"></div>'.
+					'</div></div>';
+				foreach ($arProp['VALUES'] as $value)
 				{
-					$strClass = 'bx_item_detail_scu full';
-					$strWidth = ($arProp['VALUES_COUNT']*20).'%';
-					$strOneWidth = (100/$arProp['VALUES_COUNT']).'%';
-					$strSlideStyle = '';
+					$value['NAME'] = htmlspecialcharsbx($value['NAME']);
+					$skuTemplate[$propId]['ITEMS'][$value['ID']] = '<li data-treevalue="'.$propId.'_'.$value['ID'].
+						'" data-onevalue="'.$value['ID'].'" style="width: #WIDTH#; padding-top: #WIDTH#;"><i title="'.$value['NAME'].'"></i>'.
+						'<span class="cnt"><span class="cnt_item" style="background-image:url(\''.$value['PICT']['SRC'].'\');" title="'.$value['NAME'].'"></span></span></li>';
 				}
-				else
-				{
-					$strClass = 'bx_item_detail_scu';
-					$strWidth = '100%';
-					$strOneWidth = '20%';
-					$strSlideStyle = 'display: none;';
-				}
-				$templateRow .= '<div class="'.$strClass.'" id="#ITEM#_prop_'.$arProp['ID'].'_cont">
-<span class="bx_item_section_name_gray">'.htmlspecialcharsex($arProp['NAME']).'</span>
-<div class="bx_scu_scroller_container"><div class="bx_scu"><ul id="#ITEM#_prop_'.$arProp['ID'].'_list" style="width: '.$strWidth.';">';
-				foreach ($arProp['VALUES'] as $arOneValue)
-				{
-					$arOneValue['NAME'] = htmlspecialcharsbx($arOneValue['NAME']);
-					$templateRow .= '<li data-treevalue="'.$arProp['ID'].'_'.$arOneValue['ID'].'" data-onevalue="'.$arOneValue['ID'].'" style="width: '.$strOneWidth.'; padding-top: '.$strOneWidth.';"><i title="'.$arOneValue['NAME'].'"></i>
-<span class="cnt"><span class="cnt_item" style="background-image:url(\''.$arOneValue['PICT']['SRC'].'\');" title="'.$arOneValue['NAME'].'"></span></span></li>';
-				}
-				$templateRow .= '</ul></div>
-<div class="bx_slide_left" id="#ITEM#_prop_'.$arProp['ID'].'_left" data-treevalue="'.$arProp['ID'].'" style="'.$strSlideStyle.'"></div>
-<div class="bx_slide_right" id="#ITEM#_prop_'.$arProp['ID'].'_right" data-treevalue="'.$arProp['ID'].'" style="'.$strSlideStyle.'"></div>
-	</div>
-</div>';
+				unset($value);
 			}
-			$arSkuTemplate[$arProp['CODE']] = $templateRow;
 		}
 		unset($templateRow, $arProp);
 	}

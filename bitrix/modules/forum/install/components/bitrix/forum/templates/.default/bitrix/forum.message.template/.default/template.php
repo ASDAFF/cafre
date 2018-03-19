@@ -3,7 +3,6 @@ if (empty($arParams["~MESSAGE"]))
 	return false;
 /************************ Default Params ***************************/
 $res = $arParams["~MESSAGE"];
-$component = (($component && $component->__component && $component->__component->__parent) ? $component->__component->__parent : null);
 $iNumber = intVal($arParams["NUMBER"] > 0 ? $arParams["NUMBER"] : 1); // message number in list
 $iCount = intVal($arParams["COUNT"] > 0 ? $arParams["COUNT"] : 0); // messages count
 
@@ -152,9 +151,9 @@ include_once(__DIR__."/script.php");
 							"TOTAL_POSITIVE_VOTES" => $arRatingVote[$voteEntityType][$voteEntityId]['TOTAL_POSITIVE_VOTES'],
 							"TOTAL_NEGATIVE_VOTES" => $arRatingVote[$voteEntityType][$voteEntityId]['TOTAL_NEGATIVE_VOTES'],
 							"TOTAL_VALUE" => $arRatingVote[$voteEntityType][$voteEntityId]['TOTAL_VALUE'],
-							"PATH_TO_USER_PROFILE" => $arParams["URL_TEMPLATES_PROFILE_VIEW"]
+							"PATH_TO_USER_PROFILE" => $arParams["~URL_TEMPLATES_PROFILE_VIEW"]
 						),
-						$component,
+						($component->__parent ? $component->__parent : $component),
 						array("HIDE_ICONS" => "Y")
 					);?>
 					</div>

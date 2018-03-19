@@ -1,9 +1,9 @@
-<?
+<?php
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/statistic/classes/general/statistic.php");
 
 class CStatistics extends CAllStatistics
 {
-	function CleanUpTableByDate($cleanup_date, $table_name, $date_name)
+	public static function CleanUpTableByDate($cleanup_date, $table_name, $date_name)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -18,7 +18,7 @@ class CStatistics extends CAllStatistics
 		}
 	}
 
-	function GetSessionDataByMD5($GUEST_MD5)
+	public static function GetSessionDataByMD5($GUEST_MD5)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -38,7 +38,7 @@ class CStatistics extends CAllStatistics
 		return $res;
 	}
 
-	function CleanUpPathDynamic()
+	public static function CleanUpPathDynamic()
 	{
 		set_time_limit(0);
 		ignore_user_abort(true);
@@ -68,7 +68,7 @@ class CStatistics extends CAllStatistics
 		}
 	}
 
-	function CleanUpPathCache()
+	public static function CleanUpPathCache()
 	{
 		__SetNoKeepStatistics();
 		if ($_SESSION["SESS_NO_AGENT_STATISTIC"]!="Y" && !defined("NO_AGENT_STATISTIC"))
@@ -88,7 +88,7 @@ class CStatistics extends CAllStatistics
 		return "CStatistics::CleanUpPathCache();";
 	}
 
-	function CleanUpSessionData()
+	public static function CleanUpSessionData()
 	{
 		__SetNoKeepStatistics();
 		if ($_SESSION["SESS_NO_AGENT_STATISTIC"]!="Y" && !defined("NO_AGENT_STATISTIC"))
@@ -108,7 +108,7 @@ class CStatistics extends CAllStatistics
 		return "CStatistics::CleanUpSessionData();";
 	}
 
-	function CleanUpSearcherDynamic()
+	public static function CleanUpSearcherDynamic()
 	{
 		set_time_limit(0);
 		ignore_user_abort(true);
@@ -163,7 +163,7 @@ class CStatistics extends CAllStatistics
 		}
 	}
 
-	function CleanUpEventDynamic()
+	public static function CleanUpEventDynamic()
 	{
 		set_time_limit(0);
 		ignore_user_abort(true);
@@ -220,7 +220,7 @@ class CStatistics extends CAllStatistics
 		}
 	}
 
-	function CleanUpAdvDynamic()
+	public static function CleanUpAdvDynamic()
 	{
 		set_time_limit(0);
 		ignore_user_abort(true);
@@ -249,7 +249,7 @@ class CStatistics extends CAllStatistics
 		}
 	}
 
-	function CleanUpPhrases()
+	public static function CleanUpPhrases()
 	{
 		set_time_limit(0);
 		ignore_user_abort(true);
@@ -271,7 +271,7 @@ class CStatistics extends CAllStatistics
 		}
 	}
 
-	function CleanUpRefererList()
+	public static function CleanUpRefererList()
 	{
 		set_time_limit(0);
 		ignore_user_abort(true);
@@ -293,7 +293,7 @@ class CStatistics extends CAllStatistics
 		}
 	}
 
-	function CleanUpReferer()
+	public static function CleanUpReferer()
 	{
 		set_time_limit(0);
 		ignore_user_abort(true);
@@ -323,7 +323,7 @@ class CStatistics extends CAllStatistics
 		}
 	}
 
-	function CleanUpVisits()
+	public static function CleanUpVisits()
 	{
 		set_time_limit(0);
 		ignore_user_abort(true);
@@ -355,7 +355,7 @@ class CStatistics extends CAllStatistics
 		}
 	}
 
-	function CleanUpCities()
+	public static function CleanUpCities()
 	{
 		set_time_limit(0);
 		ignore_user_abort(true);
@@ -376,7 +376,7 @@ class CStatistics extends CAllStatistics
 		}
 	}
 
-	function CleanUpCountries()
+	public static function CleanUpCountries()
 	{
 		set_time_limit(0);
 		ignore_user_abort(true);
@@ -398,7 +398,7 @@ class CStatistics extends CAllStatistics
 		}
 	}
 
-	function CleanUpGuests()
+	public static function CleanUpGuests()
 	{
 		set_time_limit(0);
 		ignore_user_abort(true);
@@ -420,7 +420,7 @@ class CStatistics extends CAllStatistics
 		}
 	}
 
-	function CleanUpSessions()
+	public static function CleanUpSessions()
 	{
 		set_time_limit(0);
 		ignore_user_abort(true);
@@ -443,7 +443,7 @@ class CStatistics extends CAllStatistics
 		}
 	}
 
-	function CleanUpHits()
+	public static function CleanUpHits()
 	{
 		set_time_limit(0);
 		ignore_user_abort(true);
@@ -465,7 +465,7 @@ class CStatistics extends CAllStatistics
 		}
 	}
 
-	function CleanUpSearcherHits()
+	public static function CleanUpSearcherHits()
 	{
 		set_time_limit(0);
 		ignore_user_abort(true);
@@ -496,7 +496,7 @@ class CStatistics extends CAllStatistics
 		}
 	}
 
-	function CleanUpAdvGuests()
+	public static function CleanUpAdvGuests()
 	{
 		set_time_limit(0);
 		ignore_user_abort(true);
@@ -528,7 +528,7 @@ class CStatistics extends CAllStatistics
 		}
 	}
 
-	function CleanUpEvents()
+	public static function CleanUpEvents()
 	{
 		set_time_limit(0);
 		ignore_user_abort(true);
@@ -559,7 +559,7 @@ class CStatistics extends CAllStatistics
 		}
 	}
 
-	function SetNewDayForSite($SITE_ID=false, $HOSTS=0, $TOTAL_HOSTS=0, $SESSIONS=0, $HITS=0)
+	public static function SetNewDayForSite($SITE_ID=false, $HOSTS=0, $TOTAL_HOSTS=0, $SESSIONS=0, $HITS=0)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -603,7 +603,7 @@ class CStatistics extends CAllStatistics
 		}
 	}
 
-	function SetNewDay($HOSTS=0, $TOTAL_HOSTS=0, $SESSIONS=0, $HITS=0, $NEW_GUESTS=0, $GUESTS=0, $FAVORITES=0)
+	public static function SetNewDay($HOSTS=0, $TOTAL_HOSTS=0, $SESSIONS=0, $HITS=0, $NEW_GUESTS=0, $GUESTS=0, $FAVORITES=0)
 	{
 		__SetNoKeepStatistics();
 		if ($_SESSION["SESS_NO_AGENT_STATISTIC"]!="Y" && !defined("NO_AGENT_STATISTIC"))
@@ -642,12 +642,12 @@ class CStatistics extends CAllStatistics
 		return "CStatistics::SetNewDay();";
 	}
 
-	function DBDateAdd($date, $days=1)
+	public static function DBDateAdd($date, $days=1)
 	{
 		return $date." + INTERVAL ".$days." DAY";
 	}
 
-	function DBTopSql($strSql, $nTopCount=false)
+	public static function DBTopSql($strSql, $nTopCount=false)
 	{
 		if($nTopCount===false)
 			$nTopCount = intval(COption::GetOptionString('statistic','RECORDS_LIMIT'));
@@ -659,15 +659,13 @@ class CStatistics extends CAllStatistics
 			return str_replace("/*TOP*/", "", $strSql);
 	}
 
-	function DBFirstDate($strSql)
+	public static function DBFirstDate($strSql)
 	{
 		return "ifnull(".$strSql.",'1980-01-01')";
 	}
 
-	function DBDateDiff($date1, $date2)
+	public static function DBDateDiff($date1, $date2)
 	{
 		return "UNIX_TIMESTAMP(".$date1.")-UNIX_TIMESTAMP(".$date2.")";
 	}
 }
-
-?>

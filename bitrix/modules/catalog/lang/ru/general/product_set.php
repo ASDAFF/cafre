@@ -11,7 +11,6 @@ $MESS["BT_CAT_PRODUCT_SET_ERR_QUANTITY_GROUP_IS_BAD"] = "Неверное количество тов
 $MESS["BT_CAT_PRODUCT_SET_ERR_DISCOUNT_PERCENT_IS_BAD"] = "Неверное значение процента скидки в комплекте";
 $MESS["BT_CAT_PRODUCT_SET_ERR_ALL_DISCOUNT_PERCENT_IS_BAD"] = "Суммарный процент скидки превышает 100";
 $MESS["BT_CAT_PRODUCT_SET_ERR_ITEM_ID_IS_ABSENT"] = "Не указан ID товара";
-$MESS["BT_CAT_PRODUCT_SET_ERR_ITEMS_IS_NOT_PRODUCT"] = "Нельзя добавить в комплект/набор элемент, не являющийся товаром";
-$MESS["BT_CAT_PRODUCT_SET_ERR_ITEMS_IS_SKU"] = "Нельзя добавить в комплект/набор товар, имеющий торговые предложения";
-$MESS["BT_CAT_PRODUCT_SET_ERR_ITEMS_IS_SET"] = "Нельзя добавить в комплект другие комплекты";
+$MESS["BT_CAT_PRODUCT_SET_ERR_BAD_ITEMS_IN_SET"] = "В комплект можно добавлять только простые товары или торговые предложения";
+$MESS["BT_CAT_PRODUCT_SET_ERR_BAD_ITEMS_IN_GROUP"] = "В набор можно добавлять только простые товары, торговые предложения и комплекты";
 ?>

@@ -170,6 +170,17 @@ class CAllGradeBook
 				case "USER":
 					$arSqlSearch[] = GetFilterQuery("U.ID, U.LOGIN, U.NAME, U.LAST_NAME",$val);
 					break;
+				case "USER_LOGIN":
+					$arSqlSearch[] = CLearnHelper::FilterCreate("U.LOGIN", $val, "string_equal", $bFullJoin, $cOperationType);
+					break;
+
+				case "USER_NAME":
+					$arSqlSearch[] = CLearnHelper::FilterCreate("U.NAME", $val, "string_equal", $bFullJoin, $cOperationType);
+					break;
+
+				case "USER_LAST_NAME":
+					$arSqlSearch[] = CLearnHelper::FilterCreate("U.LAST_NAME", $val, "string_equal", $bFullJoin, $cOperationType);
+					break;
 			}
 
 		}

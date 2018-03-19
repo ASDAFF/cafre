@@ -14,10 +14,11 @@ if (!empty($arParams["RATING_TYPE_ID"]))
 	\Bitrix\Main\Page\Asset::getInstance()->addJs("/bitrix/components/bitrix/rating.vote/templates/mobile_comment_like/script_attached.js");
 }
 
-CUtil::InitJSCore(array("uploader", "date", "fx")); // does not work
+CUtil::InitJSCore(array("uploader", "date", "fx", "ls")); // does not work
 ob_start();
 ?>
 <!--RCRD_#FULL_ID#-->
+<a id="com#ID#" name="com#ID#" bx-mpl-full-id="#FULL_ID#"></a>
 <div id="record-#FULL_ID#" class="post-comment-block post-comment-block-#NEW#" <?=($arResult["ajax_comment"] == $comment["ID"] ? ' data-send="Y"' : '')?> <?
 	?>bx-mpl-id="#FULL_ID#" <?
 	?>bx-mpl-reply-show="#SHOW_POST_FORM#" <?
@@ -25,6 +26,7 @@ ob_start();
 	?>bx-mpl-edit-url="#EDIT_URL#" bx-mpl-edit-show="#EDIT_SHOW#" <?
 	?>bx-mpl-moderate-url="#MODERATE_URL#" bx-mpl-moderate-show="#MODERATE_SHOW#" bx-mpl-moderate-approved="#APPROVED#" <?
 	?>bx-mpl-delete-url="#DELETE_URL###ID#" bx-mpl-delete-show="#DELETE_SHOW#" <?
+	?>bx-mpl-createtask-show="#CREATETASK_SHOW#" <?
 	?>bx-mpl-vote-id="#VOTE_ID#" <?
 	?>onclick="return mobileShowActions('#ENTITY_XML_ID#', '#ID#', arguments[0])" <?
 ?>>
@@ -40,17 +42,23 @@ BX.ready(function()
 	<div class="post-user-wrap">
 		<div class="avatar post-comment-block-avatar post-comment-block-avatar-#AUTHOR_AVATAR_IS#" style="background-image:url('#AUTHOR_AVATAR#')"></div>
 		<div class="post-comment-cont">
-			<a href="#AUTHOR_URL#" class="post-comment-author" id="record-#FULL_ID#-author" bx-mpl-author-id="#AUTHOR_ID#">#AUTHOR_NAME#</a>
+			<a href="#AUTHOR_URL#" class="post-comment-author #AUTHOR_EXTRANET_STYLE#" id="record-#FULL_ID#-author" bx-mpl-author-id="#AUTHOR_ID#">#AUTHOR_NAME#</a>
 			<div class="post-comment-time">#DATE#</div>
 		</div>
 	</div>
 	<!--/noindex-->
 	#AFTER_HEADER#
 	#BEFORE#
-	<div class="post-comment-text" id="record-#FULL_ID#-text">#TEXT#</div>
+	<div class="post-comment-wrap" bx-content-view-xml-id="#CONTENT_ID#" id="post-comment-wrap-#CONTENT_ID#" bx-content-view-save="N">
+		<div class="post-comment-text" id="record-#FULL_ID#-text">#TEXT#</div>
+		<div class="post-comment-more" onclick="mobileExpand(this, event)"><div class="post-comment-more-but"></div></div>
+	</div>
 	#AFTER#
 <?
-if (\Bitrix\MobileApp\Mobile::getApiVersion() >= 10)
+if (
+		\Bitrix\MobileApp\Mobile::getApiVersion() >= 10
+		&& (!isset($arParams["SHOW_POST_FORM"]) || $arParams["SHOW_POST_FORM"] != 'N')
+)
 {
 	?><div class="post-comment-reply"><?
 		?><div class="post-comment-reply-text" id="record-#FULL_ID#-reply-action" onclick="return mobileReply('#ENTITY_XML_ID#', event)" <?
@@ -77,7 +85,10 @@ ob_start();
 		</div>
 	</div>
 	<!--/noindex-->
-	<div class="post-comment-text" id="record-#FULL_ID#-text">#TEXT#</div><?
+	<div class="post-comment-wrap">
+		<div class="post-comment-text" id="record-#FULL_ID#-text">#TEXT#</div>
+		<div class="post-comment-more" onclick="mobileExpand(this, event)"><div class="post-comment-more-but"></div></div>
+	</div><?
 if (\Bitrix\MobileApp\Mobile::getApiVersion() >= 10)
 {
 	?><div class="post-comment-reply"><?
@@ -106,6 +117,7 @@ $name = CUser::FormatName(
 	($arParams["SHOW_LOGIN"] != "N"),
 	false
 );
+
 $thumb = preg_replace(array(
 		"/[\t\n]/",
 		"/\\#AUTHOR_ID\\#/",
@@ -118,7 +130,7 @@ $thumb = preg_replace(array(
 		$USER->getId(),
 		($avatar ? "Y" : "N"),
 		($avatar ? $avatar["src"] : ''),
-		$name
+		htmlspecialcharsbx($name)
 	), ob_get_clean());
 ob_start();
 ?>
@@ -132,7 +144,11 @@ ob_start();
 		</div>
 	</div>
 	<!--/noindex-->
-	<div class="post-comment-text">
+	<div class="post-comment-wrap">
+		<div class="post-comment-text" id="record-#FULL_ID#-text">#TEXT#</div>
+		<div class="post-comment-more" onclick="mobileExpand(this, event)"><div class="post-comment-more-but"></div></div>
+	</div>
+	<div class="post-comment-files">
 		<div class="comment-loading">
 			<div class="newpost-progress-label"></div>
 			<div id="record-#FULL_ID#-ind" class="newpost-progress-indicator"></div>
@@ -166,7 +182,7 @@ $thumbFile = preg_replace(array(
 		$USER->getId(),
 		($avatar ? "Y" : "N"),
 		($avatar ? $avatar["src"] : ""),
-		$name,
+		htmlspecialcharsbx($name),
 	), ob_get_clean());
 if (empty($arParams["RECORDS"]))
 {
@@ -241,7 +257,8 @@ if ($arParams["SHOW_POST_FORM"] == "Y")
 					rights : {
 						MODERATE : '<?=$arParams["RIGHTS"]["MODERATE"]?>',
 						EDIT : '<?=$arParams["RIGHTS"]["EDIT"]?>',
-						DELETE : '<?=$arParams["RIGHTS"]["DELETE"]?>'
+						DELETE : '<?=$arParams["RIGHTS"]["DELETE"]?>',
+						CREATETASK : '<?=$arParams["RIGHTS"]["CREATETASK"]?>'
 					},
 					sign : '<?=$arParams["SIGN"]?>'
 			},
@@ -251,6 +268,7 @@ if ($arParams["SHOW_POST_FORM"] == "Y")
 				MODERATE_URL : '<?=CUtil::JSEscape($arParams["~MODERATE_URL"])?>',
 				DELETE_URL : '<?=CUtil::JSEscape($arParams["~DELETE_URL"])?>',
 				AUTHOR_URL : '<?=CUtil::JSEscape($arParams["~AUTHOR_URL"])?>',
+				AUTHOR_URL_PARAMS: <?=(isset($arParams["AUTHOR_URL_PARAMS"]) ? CUtil::PhpToJSObject($arParams["AUTHOR_URL_PARAMS"]) : '{}')?>,
 
 				AVATAR_SIZE : '<?=CUtil::JSEscape($arParams["AVATAR_SIZE"])?>',
 				NAME_TEMPLATE : '<?=CUtil::JSEscape($arParams["~NAME_TEMPLATE"])?>',

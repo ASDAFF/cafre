@@ -9,4 +9,5 @@ $MESS ['BPAR_ACT_PROP_EMPTY1'] = "Свойство 'Пользователи' не указано.";
 $MESS ['BPAR_ACT_PROP_EMPTY4'] = "Свойство 'Название' не указано.";
 $MESS ['BPAA_ACT_APPROVERS_NONE'] = "нет";
 $MESS ['BPAA_ACT_NO_ACTION'] = "Неверно указано действие";
+$MESS ['BPAA_ACT_COMMENT_ERROR'] = "Не заполнено поле: #COMMENT_LABEL#";
 ?>

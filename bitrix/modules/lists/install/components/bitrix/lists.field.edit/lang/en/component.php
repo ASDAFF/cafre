@@ -12,4 +12,7 @@ $MESS["CC_BLFE_TITLE_EDIT"] = "Field Parameters: #NAME#";
 $MESS["CC_BLFE_TITLE_NEW"] = "New Field";
 $MESS["CC_BLFE_CHAIN_FIELDS"] = "List Fields";
 $MESS["CC_BLFE_CHAIN_LIST_EDIT"] = "Grid Settings";
+$MESS["CC_BLFE_BAD_FIELD_ADD_READ_ONLY"] = "Default value is required.";
+$MESS["CC_BLFE_INVALID_DEFAULT_VALUE"] = "The \"Default value\" field format is incorrect";
+$MESS["CC_BLFE_INVALID_LIST_VALUE"] = "The two list items cannot have the same value";
 ?>

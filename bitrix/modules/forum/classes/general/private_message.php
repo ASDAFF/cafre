@@ -6,7 +6,7 @@ define("FORUM_SystemFolder", 4);
 //************************************!****************************************************************************
 class CAllForumPrivateMessage
 {
-	function Send($arFields = array())
+	public static function Send($arFields = array())
 	{
 		global $DB;
 		$version = COption::GetOptionString("forum", "UsePMVersion", "2");
@@ -48,7 +48,7 @@ class CAllForumPrivateMessage
 		return $result;
 	}
 
-	function Copy($ID, $arFields = array())
+	public static function Copy($ID, $arFields = array())
 	{
 		global $DB;
 		$ID = intval($ID);
@@ -91,7 +91,7 @@ class CAllForumPrivateMessage
 		return false;
 	}
 
-	function Update($ID, $arFields)
+	public static function Update($ID, $arFields)
 	{
 		global $DB, $USER;
 		$ID = intval($ID);
@@ -125,7 +125,7 @@ class CAllForumPrivateMessage
 		return false;
 	}
 
-	function Delete($ID)
+	public static function Delete($ID)
 	{
 		global $DB, $USER;
 		$ID = IntVal($ID);
@@ -163,7 +163,7 @@ class CAllForumPrivateMessage
 		return $result;
 	}
 
-	function MakeRead($ID)
+	public static function MakeRead($ID)
 	{
 		global $DB;
 		$ID = IntVal($ID);
@@ -196,7 +196,7 @@ class CAllForumPrivateMessage
 		return false;
 	}
 
-	function CheckPermissions($ID)
+	public static function CheckPermissions($ID)
 	{
 		global $USER, $APPLICATION;
 
@@ -213,7 +213,7 @@ class CAllForumPrivateMessage
 		return false;
 	}
 
-	function CheckFields(&$arFields, $update = false)
+	public static function CheckFields(&$arFields, $update = false)
 	{
 		global $APPLICATION, $USER;
 		$strError = "";
@@ -243,7 +243,7 @@ class CAllForumPrivateMessage
 		return true;
 	}
 
-	function GetByID($ID)
+	public static function GetByID($ID)
 	{
 		global $DB;
 		static $arMessage = array();
@@ -269,7 +269,7 @@ class CAllForumPrivateMessage
 		return $result;
 	}
 
-	function GetList($arOrder = Array("ID" => "DESC"), $arFilter, $bCnt=false)
+	public static function GetList($arOrder = Array("ID" => "DESC"), $arFilter, $bCnt=false)
 	{
 		global $DB;
 
@@ -385,7 +385,7 @@ class CAllForumPrivateMessage
 		return $dbRes;
 	}
 
-	function PMSize($USER_ID, $CountMess = false)
+	public static function PMSize($USER_ID, $CountMess = false)
 	{
 		$USER_ID = intVal($USER_ID);
 		if (COption::GetOptionString("forum", "UsePMVersion", "2") == 2)
@@ -402,7 +402,7 @@ class CAllForumPrivateMessage
 		return $count["CNT"];
 	}
 
-	function GetNewPM($FOLDER_ID = false)
+	public static function GetNewPM($FOLDER_ID = false)
 	{
 		global $DB, $USER;
 		$FOLDER_ID = ($FOLDER_ID === false ? 1 : intVal($FOLDER_ID));
@@ -431,7 +431,7 @@ class CAllForumPrivateMessage
 //************************************!****************************************************************************
 class CALLForumPMFolder
 {
-	function Add($title)
+	public static function Add($title)
 	{
 		global $DB, $USER, $APPLICATION;
 		$res = CForumPMFolder::GetList(array(), array("TITLE"=>$title, "USER_ID"=>$USER->GetId()));
@@ -443,7 +443,7 @@ class CALLForumPMFolder
 		return $DB->Add("b_forum_pm_folder", array("TITLE"=>$title, "USER_ID"=>$USER->GetId(), "SORT"=>"0"));
 	}
 
-	function Update($ID, $arFields = array())
+	public static function Update($ID, $arFields = array())
 	{
 		global $DB, $USER, $APPLICATION;
 		$ID = intval($ID);
@@ -464,7 +464,7 @@ class CALLForumPMFolder
 
 	}
 
-	function GetByID($ID)
+	public static function GetByID($ID)
 	{
 		global $DB;
 
@@ -473,7 +473,7 @@ class CALLForumPMFolder
 		return $dbRes;
 	}
 
-	function GetList($arOrder = array("SORT" => "DESC", "TITLE"=>"DESC"), $arFilter, $bCnt=false)
+	public static function GetList($arOrder = array("SORT" => "DESC", "TITLE"=>"DESC"), $arFilter, $bCnt=false)
 	{
 		global $DB;
 
@@ -539,7 +539,7 @@ class CALLForumPMFolder
 		return $dbRes;
 	}
 
-	function CheckPermissions($ID)
+	public static function CheckPermissions($ID)
 	{
 		global $USER, $APPLICATION;
 		$ID = intVal($ID);
@@ -554,7 +554,7 @@ class CALLForumPMFolder
 		return false;
 	}
 
-	function Delete($ID)
+	public static function Delete($ID)
 	{
 		global $DB;
 		$ID = IntVal($ID);
@@ -565,4 +565,3 @@ class CALLForumPMFolder
 		return $DB->Query("DELETE FROM b_forum_pm_folder WHERE ID=".$ID);
 	}
 }
-?>

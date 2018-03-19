@@ -80,7 +80,7 @@ if($REQUEST_METHOD=="POST" && (strlen($save)>0 || strlen($apply)>0)&& $isAdmin &
 
 
 	$em = new CEventMessage;
-	$arFields = Array(
+	$arFields = array(
 		"ACTIVE"		    => $ACTIVE,
 		"EVENT_NAME"	    => $EVENT_NAME,
 		"LID"			    => $LID,
@@ -99,8 +99,9 @@ if($REQUEST_METHOD=="POST" && (strlen($save)>0 || strlen($apply)>0)&& $isAdmin &
 		"MESSAGE"		    => $MESSAGE,
 		"BODY_TYPE"		    => $BODY_TYPE,
 		"SITE_TEMPLATE_ID"	=> $SITE_TEMPLATE_ID,
-		"ADDITIONAL_FIELD" => $ADDITIONAL_FIELD
-		);
+		"ADDITIONAL_FIELD" => $ADDITIONAL_FIELD,
+		"LANGUAGE_ID" => $_POST["LANGUAGE_ID"],
+	);
 
 	if($ID>0 && $COPY_ID<=0)
 		$res = $em->Update($ID, $arFields);
@@ -137,7 +138,7 @@ if($REQUEST_METHOD=="POST" && (strlen($save)>0 || strlen($apply)>0)&& $isAdmin &
 				while($arDeleteFile = $deleteFileDb->fetch())
 				{
 					CFile::Delete($arDeleteFile["FILE_ID"]);
-					\Bitrix\Main\Mail\Internal\EventMessageAttachmentTable::delete($arDeleteFile['FILE_ID']);
+					\Bitrix\Main\Mail\Internal\EventMessageAttachmentTable::delete($ID);
 				}
 			}
 		}
@@ -399,20 +400,6 @@ $tabControl->Begin();
 
 $tabControl->BeginNextTab();
 ?>
-	<?if($ID>0 && $COPY_ID<=0):?>
-	<tr>
-		<td width="40%"><?echo GetMessage('LAST_UPDATE')?></td>
-		<td width="60%"><?echo $str_TIMESTAMP_X?></td>
-	</tr>
-	<? endif; ?>
-	<tr>
-		<td><label for="active"><?echo GetMessage('ACTIVE')?></label></td>
-		<td><input type="checkbox" name="ACTIVE" id="active" value="Y"<?if($str_ACTIVE=="Y")echo " checked"?>></td>
-	</tr>
-	<tr class="adm-detail-required-field">
-		<td class="adm-detail-valign-top"><?echo GetMessage('LID')?></td>
-		<td><?=CLang::SelectBoxMulti("LID", $str_LID);?></td>
-	</tr>
 	<tr>
 		<td><?echo GetMessage("EVENT_NAME")?></td>
 		<td><?
@@ -436,7 +423,7 @@ $tabControl->BeginNextTab();
 			{
 				$id_1st = false;
 				?>
-				<select name="EVENT_NAME" style="width:370px" onChange="window.location='message_edit.php?lang=<?=LANGUAGE_ID?>&EVENT_NAME='+this[this.selectedIndex].value">
+				<select name="EVENT_NAME" style="width:370px" onchange="window.location='message_edit.php?lang=<?=LANGUAGE_ID?>&EVENT_NAME='+this[this.selectedIndex].value">
 				<?
 				foreach($event_type_ref as $ev_name=>$arType):
 					if($id_1st===false)
@@ -457,6 +444,42 @@ $tabControl->BeginNextTab();
 				$type_DESCRIPTION = htmlspecialcharsbx($event_type_ref[$id_1st]["DESCRIPTION"]);
 			}
 		?></td>
+	</tr>
+	<?if($ID>0 && $COPY_ID<=0):?>
+	<tr>
+		<td width="40%"><?echo GetMessage('LAST_UPDATE')?></td>
+		<td width="60%"><?echo $str_TIMESTAMP_X?></td>
+	</tr>
+	<? endif; ?>
+	<tr>
+		<td><label for="active"><?echo GetMessage('ACTIVE')?></label></td>
+		<td><input type="checkbox" name="ACTIVE" id="active" value="Y"<?if($str_ACTIVE=="Y")echo " checked"?>></td>
+	</tr>
+	<tr class="adm-detail-required-field">
+		<td class="adm-detail-valign-top"><?echo GetMessage('LID')?></td>
+		<td><?=CLang::SelectBoxMulti("LID", $str_LID);?></td>
+	</tr>
+	<tr>
+		<td><?echo GetMessage("main_mess_edit_lang")?></td>
+		<td>
+			<select name="LANGUAGE_ID">
+				<option value=""><?echo GetMessage("main_mess_edit_lang_not_set")?></option>
+				<?
+				$languages = \Bitrix\Main\Localization\LanguageTable::getList(array(
+					"filter" => array("ACTIVE" => "Y"),
+					"order" => array("SORT" => "ASC", "NAME" => "ASC")
+				));
+				?>
+				<? while($language = $languages->fetch()): ?>
+					<option value="<?=$language["LID"]?>"<? if($str_LANGUAGE_ID == $language["LID"]) echo " selected" ?>>
+						<?=\Bitrix\Main\Text\HtmlFilter::encode($language["NAME"])?>
+					</option>
+				<? endwhile ?>
+			</select>
+		</td>
+	</tr>
+	<tr class="heading">
+		<td colspan="2"><?echo GetMessage("main_mess_edit_fields")?></td>
 	</tr>
 	<tr class="adm-detail-required-field">
 		<td><? echo GetMessage('MSG_EMAIL_FROM')?></td>

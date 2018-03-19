@@ -26,22 +26,15 @@ if(!Service::isRegistered())
  id="seo_authorize_btn" />
 <?
 }
-elseif(!Service::isAuthorized())
-{
-	$authAction = "authorizeClient();";
-?>
-	<input type=button onclick="<?=$authAction?>" value="<?=Loc::getMessage('SEO_AUTH_YANDEX')?>"
- id="seo_authorize_btn" />
-<?
-}
 else
 {
 	$authInfo = Service::getAuth($engine->getCode());
 	if(!$authInfo)
 	{
-		$authorizeUrl = Service::getAuthorizeLink($engine->getCode());
+		$authorizeUrl = Service::getAuthorizeLink();
+		$authorizeData = Service::getAuthorizeData($engine->getCode());
 ?>
-		<input type=button onclick="authorizeUser('<?= $authorizeUrl ?>')" value="<?= Loc::getMessage('SEO_AUTH_YANDEX') ?>" id="seo_authorize_btn"/>
+		<input type=button onclick="authorizeUser('<?= $authorizeUrl ?>', <?=CUtil::PhpToJSObject($authorizeData)?>)" value="<?= Loc::getMessage('SEO_AUTH_YANDEX') ?>" id="seo_authorize_btn"/>
 <?
 	}
 	else
@@ -80,7 +73,7 @@ echo EndNote();
 		{
 			if(result['result'])
 			{
-				authorizeClient();
+				BX.reload();
 			}
 			else if(result["error"])
 			{
@@ -90,35 +83,24 @@ echo EndNote();
 		});
 	}
 
-	function authorizeClient()
-	{
-		BX('seo_authorize_btn').value = '<?=CUtil::JSEscape(Loc::getMessage("SEO_YANDEX_AUTH_RPOGRESS"))?>';
 
-		BX.ajax.loadJSON('/bitrix/tools/seo_yandex_direct.php?action=authorize&sessid=' + BX.bitrix_sessid(), function(result)
+	function authorizeUser(url, data)
+	{
+		var s = '<form action="'+BX.util.htmlspecialchars(url)+'">';
+
+		for(var i in data)
 		{
-			if(result["location"])
+			if(data.hasOwnProperty(i))
 			{
-//				BX('seo_authorize_btn').value = '<?=CUtil::JSEscape(Loc::getMessage("SEO_YANDEX_AUTH_CONFIRM_RPOGRESS"))?>';
-
-				BX.ajax.loadJSON(result["location"], function(r)
-				{
-					if(r['result'] == "ok")
-					{
-						BX.reload();
-					}
-					else if(r['error'])
-					{
-						alert('<?=CUtil::JSEscape(Loc::getMessage("SEO_ERROR"))?> ' + r['error'] + ': ' + r['error_description']);
-						BX('seo_authorize_btn').value = '<?=CUtil::JSEscape(Loc::getMessage('SEO_AUTH_YANDEX'))?>';
-					}
-				})
+				s += '<input type="hidden" name="'+BX.util.htmlspecialchars(i)+'" value="'+BX.util.htmlspecialchars(data[i])+'" />';
 			}
-		});
-	}
+		}
 
-	function authorizeUser(url)
-	{
-		BX.util.popup(url, 680, 600);
+		s += '</form>';
+
+		var popup = BX.util.popup('', 680, 600);
+		popup.document.write(s);
+		popup.document.forms[0].submit();
 	}
 
 <?

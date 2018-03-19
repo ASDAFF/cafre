@@ -134,7 +134,10 @@ if (!empty($arResult["ERROR_MESSAGE"]))
 					)
 				),
 				"UPLOAD_FILE_PARAMS" => array("width" => $arParams["IMAGE_SIZE"], "height" => $arParams["IMAGE_SIZE"]),
-				"PROPERTIES" => array($arResult["USER_FIELDS"]["UF_FORUM_MESSAGE_DOC"]),
+				"PROPERTIES" => array(
+					array_merge(is_array($arResult["USER_FIELDS"]["UF_FORUM_MESSAGE_DOC"]) ? $arResult["USER_FIELDS"]["UF_FORUM_MESSAGE_DOC"] : array(), (is_array($arParams["USER_FIELDS_SETTINGS"]["UF_FORUM_MESSAGE_DOC"]) ? $arParams["USER_FIELDS_SETTINGS"]["UF_FORUM_MESSAGE_DOC"] : array())),
+					array_merge(is_array($arResult["USER_FIELDS"]["UF_FORUM_MES_URL_PRV"]) ? $arResult["USER_FIELDS"]["UF_FORUM_MES_URL_PRV"] : array(), (is_array($arParams["USER_FIELDS_SETTINGS"]["UF_FORUM_MES_URL_PRV"]) ? $arParams["USER_FIELDS_SETTINGS"]["UF_FORUM_MES_URL_PRV"] : array())),
+				),
 
 				"SMILES" => Array("VALUE" => $arSmiles),
 				"HTML_BEFORE_TEXTAREA" => $APPLICATION->GetViewContent(implode('_', array($tplID, 'EDIT', 'BEFORE'))).$html_before_textarea,

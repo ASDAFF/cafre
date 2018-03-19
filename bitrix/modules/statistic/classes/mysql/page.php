@@ -1,7 +1,8 @@
-<?
+<?php
+
 class CPage
 {
-	function GetDynamicList($URL, &$by, &$order, $arFilter=Array())
+	public static function GetDynamicList($URL, &$by, &$order, $arFilter=Array())
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -111,7 +112,7 @@ class CPage
 		return $res;
 	}
 
-	function GetList($COUNTER_TYPE, &$by, &$order, $arFilter=Array(), &$is_filtered)
+	public static function GetList($COUNTER_TYPE, &$by, &$order, $arFilter=Array(), &$is_filtered)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -249,4 +250,3 @@ class CPage
 		return $res;
 	}
 }
-?>

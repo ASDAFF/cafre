@@ -7,6 +7,13 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admi
 if(!check_bitrix_sessid())
 	die();
 
+/**
+ * @global CUser $USER
+ * @global CMain $APPLICATION
+ * @global CAdminPage $adminPage
+ * @global CAdminMenu $adminMenu
+ */
+
 IncludeModuleLangFile(__FILE__);
 
 $aUserOpt = CUserOptions::GetOption("global", "settings", array());
@@ -176,6 +183,7 @@ else
 		{
 			if($db_fav_arr["COMMON"] == "Y" && $db_fav_arr["MODULE_ID"] <> "" && $APPLICATION->GetGroupRight($db_fav_arr["MODULE_ID"]) < "R")
 				continue;
+
 			if($db_fav_arr["COMMON"] <> $prevCommon)
 			{
 				$aFav[] = array("SEPARATOR"=>true);
@@ -273,7 +281,6 @@ else
 	//generate JavaScript array for popup menu
 	echo CAdminPopup::PhpToJavaScript($aPopup);
 
-} //$_REQUEST["mode"]
+}
 
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin_js.php");
-?>

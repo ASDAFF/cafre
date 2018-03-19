@@ -1,7 +1,7 @@
-<?
+<?php
 define("STOP_STATISTICS", true);
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
-
+/** @var CMain $APPLICATION */
 $STAT_RIGHT = $APPLICATION->GetGroupRight("statistic");
 if($STAT_RIGHT=="D")
 	$APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
@@ -25,8 +25,8 @@ $min_grid = isset($_GET["min_grid"]) && !is_array($_GET["min_grid"]) ? intval($_
 // create image canvas
 $ImageHandle = CreateImageHandle($width, $height, "FFFFFF", true);
 
-$colorFFFFFF = ImageColorAllocate($ImageHandle,255,255,255);
-ImageFill($ImageHandle, 0, 0, $colorFFFFFF);
+$colorFFFFFF = imagecolorallocate($ImageHandle,255,255,255);
+imagefill($ImageHandle, 0, 0, $colorFFFFFF);
 
 $arrX=Array();
 $arrY=Array();
@@ -282,4 +282,3 @@ else
 *******************************************************/
 
 ShowImageHeader($ImageHandle);
-?>

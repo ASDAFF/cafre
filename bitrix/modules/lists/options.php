@@ -82,15 +82,6 @@ if($REQUEST_METHOD=="POST" && strlen($Update.$Apply.$RestoreDefaults)>0 && check
 			CLists::EnableSocnet($_POST["socnet_enable"] === "Y");
 		}
 
-		if(($_POST["turnProcessesOn"]))
-		{
-			COption::SetOptionString("lists", "turnProcessesOn", $_POST["turnProcessesOn"]);
-		}
-		elseif($_POST["turnProcessesOn"] == "")
-		{
-			COption::SetOptionString("lists", "turnProcessesOn", "N");
-		}
-
 		if(isset($_POST["livefeed_iblock_type_id"]) && isset($_POST["livefeed_url"]))
 		{
 			COption::SetOptionString("lists", "livefeed_iblock_type_id", $_POST["livefeed_iblock_type_id"]);
@@ -141,15 +132,14 @@ $tabControl->BeginNextTab();
 	<?
 	$i = 0;
 	foreach(CLists::GetPermission() as $type_id => $groups):
-		foreach($groups as $group):
-	?>
-			<tr>
-				<td><?echo SelectBoxFromArray("group_right[n".$i."]", $arGroups, $group, GetMessage("LISTS_OPTIONS_CHOOSE_GROUP"))?></td>
-				<td><?echo SelectBoxFromArray("type_right[n".$i."]", $arIBTypes, $type_id, GetMessage("LISTS_OPTIONS_CHOOSE_TYPE"))?></td>
-			</tr>
-	<?
-		$i++;
-		endforeach;
+		if (in_array($type_id, $arIBTypes["REFERENCE_ID"])):
+			foreach($groups as $group):?>
+				<tr>
+					<td><?echo SelectBoxFromArray("group_right[n".$i."]", $arGroups, $group, GetMessage("LISTS_OPTIONS_CHOOSE_GROUP"))?></td>
+					<td><?echo SelectBoxFromArray("type_right[n".$i."]", $arIBTypes, $type_id, GetMessage("LISTS_OPTIONS_CHOOSE_TYPE"))?></td>
+				</tr>
+			<? $i++; endforeach;
+		endif;
 	endforeach;
 	if($i == 0)
 	{
@@ -189,13 +179,8 @@ if(IsModuleInstalled('socialnetwork'))
 
 	$livefeed_iblock_type_id = COption::GetOptionString("lists", "livefeed_iblock_type_id");
 	$livefeed_url = COption::GetOptionString('lists', 'livefeed_url');
-	$turnProcessesOn = COption::GetOptionString("lists", "turnProcessesOn");
 	$tabControl->BeginNextTab();
 	?>
-		<tr>
-			<td width="30%"><?echo GetMessage("LISTS_OPTIONS_LIVE_FEED_CHECK")?>:</td>
-			<td width="70%"><input type="checkbox" name="turnProcessesOn" <?if($turnProcessesOn == "Y") echo "checked"?> value="Y"></td>
-		</tr>
 		<tr>
 			<td width="30%"><?echo GetMessage("LISTS_OPTIONS_LIVE_FEED_IBLOCK_TYPE")?>:</td>
 			<td width="70%"><?echo SelectBoxFromArray("livefeed_iblock_type_id", $arIBTypes, $livefeed_iblock_type_id, GetMessage("MAIN_NO"))?></td>
@@ -203,7 +188,7 @@ if(IsModuleInstalled('socialnetwork'))
 		<tr>
 			<td width="30%"><?echo GetMessage("LISTS_OPTIONS_LIVE_FEED_SEF_FOLDER")?>:</td>
 			<td width="70%">
-				<input type="text" name="livefeed_url" id="livefeed_url" value="<? echo $livefeed_url; ?>">
+				<input type="text" name="livefeed_url" id="livefeed_url" value="<?=htmlspecialcharsbx($livefeed_url); ?>">
 			</td>
 		</tr>
 	<?

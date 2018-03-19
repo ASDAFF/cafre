@@ -1,12 +1,11 @@
 <?
 class CCountry
 {
-	function GetList(&$by, &$order, $arFilter=Array(), &$is_filtered)
+	public static function GetList(&$by, &$order, $arFilter=Array(), &$is_filtered)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
 		$arSqlSearch = Array();
-		$strSqlSearch = "";
 		if (is_array($arFilter))
 		{
 			foreach ($arFilter as $key => $val)
@@ -108,13 +107,12 @@ class CCountry
 	}
 
 	// returns arrays needed to plot graph and diagram
-	function GetGraphArray($arFilter, &$arLegend)
+	public static function GetGraphArray($arFilter, &$arLegend)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		global $arCountryColor;
 		$DB = CDatabase::GetModuleConnection('statistic');
 		$arSqlSearch = Array();
-		$strSqlSearch = "";
 		if (is_array($arFilter))
 		{
 			foreach ($arFilter as $key => $val)
@@ -198,9 +196,9 @@ class CCountry
 			$arLegend[$arD["COUNTRY_ID"]]["TOTAL_HITS"] = $arD["TOTAL_HITS"];
 			$arLegend[$arD["COUNTRY_ID"]]["TOTAL_C_EVENTS"] = $arD["TOTAL_C_EVENTS"];
 		}
-		reset($arLegend);
+		$color_getnext = "";
 		$total = sizeof($arLegend);
-		while (list($key, $arr) = each($arLegend))
+		foreach ($arLegend as $key => $arr)
 		{
 			if (strlen($arCountryColor[$key])>0)
 			{

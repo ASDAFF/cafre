@@ -203,4 +203,18 @@ $MESS["MAIN_OPTION_ATTACH_IMAGES"] = "Отправлять картинки в виде вложений в пись
 $MESS["MAIN_OPTION_MAX_FILE_SIZE"] = "Максимальный размер файлов вложения в байтах (0 - без ограничений):";
 $MESS["MAIN_OPTION_SESS_AUTH"] = "Продлевать сессию только для авторизованных посетителей:";
 $MESS["MAIN_OPTIONS_AUTH_TEMPLATE"] = "Шаблон системных компонентов авторизации (system.auth.*):";
+$MESS["MAIN_OPTIONS_URL_PREVIEW"] = "Богатые ссылки";
+$MESS["MAIN_OPTION_URL_PREVIEW_ENABLE"] = "Включить богатые ссылки:";
+$MESS["MAIN_OPTION_URL_PREVIEW_SAVE_IMAGES"] = "Сохранять изображения локально:";
+$MESS["main_sett_public_panel_hide"] = "Никогда не показывать панель для пользователей:";
+$MESS["MAIN_OPTIONS_UPDATE_DEVSRV"] = "Установка для разработки:";
+$MESS["MAIN_OPTIONS_USE_CAPTCHA"] = "Использовать CAPTCHA при восстановлении пароля:";
+$MESS["MAIN_OPTIONS_IMAGES"] = "Изображения в профиле пользователя";
+$MESS["MAIN_OPTIONS_IMAGES_WIDTH"] = "Максимальная ширина в пикселях:";
+$MESS["MAIN_OPTIONS_IMAGES_HEIGHT"] = "Максимальная высота в пикселях:";
+$MESS["MAIN_OPTIONS_IMAGES_SIZE"] = "Максимальный размер файла в байтах:";
+$MESS["MAIN_REGISTER_AGREEMENT_TITLE"] = "Настройка соглашений. <a href=\"#AGGREMENT_CREATE_URL#\" target=\"_blank\">Создать новое соглашение.</a>";
+$MESS["MAIN_REGISTER_AGREEMENT_DEFAUTL_VALUE"] = "(Выберите соглашение)";
+$MESS["MAIN_OPTIONS_PHONE_NUMBER_FORMAT"] = "Форматирование телефонных номеров";
+$MESS["MAIN_OPTIONS_PHONE_NUMBER_DEFAULT_COUNTRY"] = "Страна по умолчанию:";
 ?>

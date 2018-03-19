@@ -1,5 +1,17 @@
 <?
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
+/** @var SocialnetworkGroupUsersEx $this */
+/** @var array $arParams */
+/** @var array $arResult */
+/** @var string $componentPath */
+/** @var string $componentName */
+/** @var string $componentTemplate */
+/** @global CDatabase $DB */
+/** @global CUser $USER */
+/** @global CMain $APPLICATION */
+/** @global CCacheManager $CACHE_MANAGER */
+/** @global CUserTypeManager $USER_FIELD_MANAGER */
+global $CACHE_MANAGER, $USER_FIELD_MANAGER;
 
 if (!CModule::IncludeModule("socialnetwork"))
 {
@@ -10,6 +22,7 @@ if (!CModule::IncludeModule("socialnetwork"))
 $arParams["GROUP_ID"] = IntVal($arParams["GROUP_ID"]);
 
 $arParams["SET_NAV_CHAIN"] = ($arParams["SET_NAV_CHAIN"] == "N" ? "N" : "Y");
+$arParams["USE_AUTO_MEMBERS"] = ($arParams["USE_AUTO_MEMBERS"] == "Y" ? "Y" : "N");
 
 if (strLen($arParams["USER_VAR"]) <= 0)
 {
@@ -39,6 +52,11 @@ if (strlen($arParams["PATH_TO_GROUP_EDIT"]) <= 0)
 {
 	$arParams["PATH_TO_GROUP_EDIT"] = htmlspecialcharsbx($APPLICATION->GetCurPage()."?".$arParams["PAGE_VAR"]."=group_edit&".$arParams["GROUP_VAR"]."=#group_id#");
 }
+$arParams["PATH_TO_CONPANY_DEPARTMENT"] = trim($arParams["PATH_TO_CONPANY_DEPARTMENT"]);
+if (strlen($arParams["PATH_TO_CONPANY_DEPARTMENT"]) <= 0)
+{
+	$arParams["PATH_TO_CONPANY_DEPARTMENT"] = \Bitrix\Main\Config\Option::get('main', 'TOOLTIP_PATH_TO_CONPANY_DEPARTMENT', SITE_DIR."company/structure.php?set_filter_structure=Y&structure_UF_DEPARTMENT=#ID#");
+}
 
 $arParams["ITEMS_COUNT"] = IntVal($arParams["ITEMS_COUNT"]);
 if ($arParams["ITEMS_COUNT"] <= 0)
@@ -54,8 +72,10 @@ $arParams["NAME_TEMPLATE_WO_NOBR"] = str_replace(
 	array("", ""), 
 	$arParams["NAME_TEMPLATE"]
 );
-$bUseLogin = $arParams['SHOW_LOGIN'] != "N" ? true : false;
-	
+
+$arResult["bIntranetInstalled"] = \Bitrix\Main\ModuleManager::isModuleInstalled('intranet');
+$arResult["bIntranetIncluded"] = ($arResult["bIntranetInstalled"] && \Bitrix\Main\Loader::includeModule('intranet'));
+
 $arGroup = CSocNetGroup::GetByID($arParams["GROUP_ID"]);
 
 if ($arGroup["CLOSED"] == "Y" && COption::GetOptionString("socialnetwork", "work_with_closed_groups", "N") != "Y")
@@ -94,11 +114,11 @@ else
 	{
 		$arResult["Group"] = $arGroup;
 
-		$arResult["CurrentUserPerms"] = CSocNetUserToGroup::InitUserPerms($GLOBALS["USER"]->GetID(), $arResult["Group"], CSocNetUser::IsCurrentUserModuleAdmin());
+		$arResult["CurrentUserPerms"] = CSocNetUserToGroup::InitUserPerms($USER->GetID(), $arResult["Group"], CSocNetUser::IsCurrentUserModuleAdmin());
 
 		if (!$arResult["CurrentUserPerms"] || !$arResult["CurrentUserPerms"]["UserCanViewGroup"])
 		{
-			$arResult["FatalError"] = GetMessage("SONET_GUE_NO_PERMS").". ";
+			$arResult["FatalError"] = GetMessage($arResult["Group"]["PROJECT"] == 'Y' ? "SONET_GUE_NO_PERMS_PROJECT" : "SONET_GUE_NO_PERMS").". ";
 		}
 		else
 		{
@@ -108,7 +128,9 @@ else
 			$arResult["Urls"]["GroupEdit"] = CComponentEngine::MakePathFromTemplate($arParams["PATH_TO_GROUP_EDIT"], array("group_id" => $arResult["Group"]["ID"]));
 
 			if ($arParams["SET_TITLE"] == "Y")
-				$APPLICATION->SetTitle($arResult["Group"]["NAME"].": ".GetMessage("SONET_GUE_PAGE_TITLE"));
+			{
+				$APPLICATION->SetTitle($arResult["Group"]["NAME"].": ".GetMessage($arResult["Group"]["PROJECT"] == 'Y' ? "SONET_GUE_PAGE_TITLE_PROJECT" : "SONET_GUE_PAGE_TITLE"));
+			}
 
 			if ($arParams["SET_NAV_CHAIN"] != "N")
 			{
@@ -116,290 +138,35 @@ else
 				$APPLICATION->AddChainItem(GetMessage("SONET_GUE_PAGE_TITLE"));
 			}
 
-			$arSelect = array("ID", "USER_ID", "USER_ACTIVE", "ROLE", "DATE_CREATE", "DATE_UPDATE", "USER_NAME", "USER_LAST_NAME", "USER_SECOND_NAME", "USER_LOGIN", "USER_PERSONAL_PHOTO", "USER_PERSONAL_GENDER", "USER_IS_ONLINE", "USER_WORK_POSITION");
-			// Users
-
-			$arFilter = array(
-				"GROUP_ID" => $arResult["Group"]["ID"],
-				"<=ROLE" => SONET_ROLES_USER
-			);
-
-			if (!$arResult["CurrentUserPerms"]["UserCanModifyGroup"])
-			{
-				$arFilter["USER_ACTIVE"] = "Y";
-			}
-
-			$arResult["Users"] = false;
-			$dbRequests = CSocNetUserToGroup::GetList(
-				array("USER_LAST_NAME" => "ASC", "USER_NAME" => "ASC"),
-				$arFilter,
-				false,
-				$arNavParams,
-				$arSelect
-			);
-
-			if ($dbRequests)
-			{
-				$arResult["Users"] = array();
-				$arResult["Users"]["List"] = false;
-
-				while ($arRequests = $dbRequests->GetNext())
-				{
-					$pu = CComponentEngine::MakePathFromTemplate($arParams["PATH_TO_USER"], array("user_id" => $arRequests["USER_ID"]));
-					$canViewProfile = CSocNetUserPerms::CanPerformOperation($GLOBALS["USER"]->GetID(), $arRequests["USER_ID"], "viewprofile", CSocNetUser::IsCurrentUserModuleAdmin());
-
-					if (intval($arParams["THUMBNAIL_LIST_SIZE"]) > 0)
-					{
-						if (intval($arRequests["USER_PERSONAL_PHOTO"]) <= 0)
-						{
-							switch ($arRequests["USER_PERSONAL_GENDER"])
-							{
-								case "M":
-									$suffix = "male";
-									break;
-								case "F":
-									$suffix = "female";
-									break;
-								default:
-									$suffix = "unknown";
-							}
-							$arRequests["USER_PERSONAL_PHOTO"] = COption::GetOptionInt("socialnetwork", "default_user_picture_".$suffix, false, SITE_ID);
-						}
-
-						$arImage = CFile::ResizeImageGet(
-							$arRequests["USER_PERSONAL_PHOTO"],
-							array("width" => $arParams["THUMBNAIL_LIST_SIZE"], "height" => $arParams["THUMBNAIL_LIST_SIZE"]),
-							BX_RESIZE_IMAGE_EXACT,
-							false
-						);
-					}
-
-					$arTmpUser = array(
-						"NAME" => $arRequests["USER_NAME"],
-						"LAST_NAME" => $arRequests["USER_LAST_NAME"],
-						"SECOND_NAME" => $arRequests["USER_SECOND_NAME"],
-						"LOGIN" => $arRequests["USER_LOGIN"],
-					);
-					$NameFormatted = CUser::FormatName($arParams['NAME_TEMPLATE_WO_NOBR'], $arTmpUser, $bUseLogin);
-
-					if ($arResult["Users"]["List"] == false)
-						$arResult["Users"]["List"] = array();
-
-					$arResult["Users"]["List"][] = array(
-						"ID" => $arRequests["ID"],
-						"USER_ID" => $arRequests["USER_ID"],
-						"USER_ACTIVE" => $arRequests["USER_ACTIVE"],
-						"USER_NAME" => $arRequests["USER_NAME"],
-						"USER_LAST_NAME" => $arRequests["USER_LAST_NAME"],
-						"USER_SECOND_NAME" => $arRequests["USER_SECOND_NAME"],
-						"USER_LOGIN" => $arRequests["USER_LOGIN"],
-						"USER_NAME_FORMATTED" => $NameFormatted,
-						"USER_PERSONAL_PHOTO" => $arRequests["USER_PERSONAL_PHOTO"],
-						"USER_PERSONAL_PHOTO_IMG" => $arImage,
-						"USER_PERSONAL_GENDER" => $arRequests["USER_PERSONAL_GENDER"],
-						"USER_WORK_POSITION" => $arRequests["USER_WORK_POSITION"],
-						"USER_PROFILE_URL" => $pu,
-						"SHOW_PROFILE_LINK" => $canViewProfile,
-						"IS_ONLINE" => ($arRequests["USER_IS_ONLINE"] == "Y"),
-						"USER_IS_EXTRANET" => (isset($GLOBALS["arExtranetUserID"]) && is_array($GLOBALS["arExtranetUserID"]) && in_array($arRequests["USER_ID"], $GLOBALS["arExtranetUserID"]) ? "Y" : "N")
-					);
-				}
-				$arResult["Users"]["NAV_STRING"] = $dbRequests->GetPageNavStringEx($navComponentObject, GetMessage("SONET_GUE_USERS_NAV"), "", false);
-			}
-
-			// Moderators
-
-			$arFilter = array(
-				"GROUP_ID" => $arResult["Group"]["ID"],
-				"<=ROLE" => SONET_ROLES_MODERATOR
-			);
-
-			if (!$arResult["CurrentUserPerms"]["UserCanModifyGroup"])
-			{
-				$arFilter["USER_ACTIVE"] = "Y";
-			}
-
-			$arResult["Moderators"] = false;
-			$dbRequests = CSocNetUserToGroup::GetList(
-				array("USER_LAST_NAME" => "ASC", "USER_NAME" => "ASC"),
-				$arFilter,
-				false,
-				$arNavParams,
-				$arSelect
-			);
-
-			if ($dbRequests)
-			{
-				$arResult["Moderators"] = array();
-				$arResult["Moderators"]["List"] = false;
-
-				while ($arRequests = $dbRequests->GetNext())
-				{
-					$pu = CComponentEngine::MakePathFromTemplate($arParams["PATH_TO_USER"], array("user_id" => $arRequests["USER_ID"]));
-					$canViewProfile = CSocNetUserPerms::CanPerformOperation($GLOBALS["USER"]->GetID(), $arRequests["USER_ID"], "viewprofile", CSocNetUser::IsCurrentUserModuleAdmin());
-
-					if (intval($arParams["THUMBNAIL_LIST_SIZE"]) > 0)
-					{
-						if (intval($arRequests["USER_PERSONAL_PHOTO"]) <= 0)
-						{
-							switch ($arRequests["USER_PERSONAL_GENDER"])
-							{
-								case "M":
-									$suffix = "male";
-									break;
-								case "F":
-									$suffix = "female";
-									break;
-								default:
-									$suffix = "unknown";
-							}
-							$arRequests["USER_PERSONAL_PHOTO"] = COption::GetOptionInt("socialnetwork", "default_user_picture_".$suffix, false, SITE_ID);
-						}
-
-						$arImage = CFile::ResizeImageGet(
-							$arRequests["USER_PERSONAL_PHOTO"],
-							array("width" => $arParams["THUMBNAIL_LIST_SIZE"], "height" => $arParams["THUMBNAIL_LIST_SIZE"]),
-							BX_RESIZE_IMAGE_EXACT,
-							false
-						);
-					}
-
-					$arTmpUser = array(
-						"NAME" => $arRequests["USER_NAME"],
-						"LAST_NAME" => $arRequests["USER_LAST_NAME"],
-						"SECOND_NAME" => $arRequests["USER_SECOND_NAME"],
-						"LOGIN" => $arRequests["USER_LOGIN"],
-					);
-					$NameFormatted = CUser::FormatName($arParams['NAME_TEMPLATE_WO_NOBR'], $arTmpUser, $bUseLogin);
-
-					if ($arResult["Moderators"]["List"] == false)
-						$arResult["Moderators"]["List"] = array();
-
-					$arResult["Moderators"]["List"][] = array(
-						"ID" => $arRequests["ID"],
-						"USER_ID" => $arRequests["USER_ID"],
-						"USER_ACTIVE" => $arRequests["USER_ACTIVE"],
-						"USER_NAME" => $arRequests["USER_NAME"],
-						"USER_LAST_NAME" => $arRequests["USER_LAST_NAME"],
-						"USER_SECOND_NAME" => $arRequests["USER_SECOND_NAME"],
-						"USER_LOGIN" => $arRequests["USER_LOGIN"],
-						"USER_NAME_FORMATTED" => $NameFormatted,
-						"USER_PERSONAL_PHOTO" => $arRequests["USER_PERSONAL_PHOTO"],
-						"USER_PERSONAL_PHOTO_IMG" => $arImage,
-						"USER_PERSONAL_GENDER" => $arRequests["USER_PERSONAL_GENDER"],
-						"USER_WORK_POSITION" => $arRequests["USER_WORK_POSITION"],						
-						"USER_PROFILE_URL" => $pu,
-						"SHOW_PROFILE_LINK" => $canViewProfile,
-						"IS_ONLINE" => ($arRequests["USER_IS_ONLINE"] == "Y"),
-						"IS_OWNER" => ($arRequests["ROLE"] == SONET_ROLES_OWNER),
-						"USER_IS_EXTRANET" => (isset($GLOBALS["arExtranetUserID"]) && is_array($GLOBALS["arExtranetUserID"]) && in_array($arRequests["USER_ID"], $GLOBALS["arExtranetUserID"]) ? "Y" : "N")
-					);
-				}
-				$arResult["Moderators"]["NAV_STRING"] = $dbRequests->GetPageNavStringEx($navComponentObject, GetMessage("SONET_GUE_MODS_NAV"), "", false);
-			}
-
+			$arResult["Departments"] = array();
 			if (
-				$arParams["GROUP_USE_BAN"] == "Y" 
-				&& $arResult["CurrentUserPerms"] 
-				&& $arResult["CurrentUserPerms"]["UserCanModerateGroup"]
+				!empty($arResult["Group"]["UF_SG_DEPT"])
+				&& is_array($arResult["Group"]["UF_SG_DEPT"])
+				&& $arResult["bIntranetIncluded"]
 			)
 			{
-				// Ban
-
-				$arResult["Ban"] = false;
-
-				$arFilter = array(
-					"GROUP_ID" => $arResult["Group"]["ID"],
-					"ROLE" => SONET_ROLES_BAN
-				);
-
-				if (!$arResult["CurrentUserPerms"]["UserCanModifyGroup"])
+				$arDepartments = CIntranetUtils::GetDepartmentsData($arResult["Group"]["UF_SG_DEPT"]);
+				if (!empty($arDepartments))
 				{
-					$arFilter["USER_ACTIVE"] = "Y";
-				}
-
-				$dbRequests = CSocNetUserToGroup::GetList(
-					array("USER_LAST_NAME" => "ASC", "USER_NAME" => "ASC"),
-					$arFilter,
-					false,
-					$arNavParams,
-					$arSelect
-				);
-
-				if ($dbRequests)
-				{
-					$arResult["Ban"] = array();
-					$arResult["Ban"]["List"] = false;
-
-					while ($arRequests = $dbRequests->GetNext())
+					$arResult["Departments"]["List"] = array();
+					foreach($arDepartments as $departmentId => $departmentName)
 					{
-						$pu = CComponentEngine::MakePathFromTemplate($arParams["PATH_TO_USER"], array("user_id" => $arRequests["USER_ID"]));
-						$canViewProfile = CSocNetUserPerms::CanPerformOperation($GLOBALS["USER"]->GetID(), $arRequests["USER_ID"], "viewprofile", CSocNetUser::IsCurrentUserModuleAdmin());
-
-						if (intval($arParams["THUMBNAIL_LIST_SIZE"]) > 0)
-						{
-							if (intval($arRequests["USER_PERSONAL_PHOTO"]) <= 0)
-							{
-								switch ($arRequests["USER_PERSONAL_GENDER"])
-								{
-									case "M":
-										$suffix = "male";
-										break;
-									case "F":
-										$suffix = "female";
-										break;
-									default:
-										$suffix = "unknown";
-								}
-								$arRequests["USER_PERSONAL_PHOTO"] = COption::GetOptionInt("socialnetwork", "default_user_picture_".$suffix, false, SITE_ID);
-							}					
-
-							$arImage = CFile::ResizeImageGet(
-								$arRequests["USER_PERSONAL_PHOTO"],
-								array("width" => $arParams["THUMBNAIL_LIST_SIZE"], "height" => $arParams["THUMBNAIL_LIST_SIZE"]),
-								BX_RESIZE_IMAGE_EXACT,
-								false
-							);
-						}
-
-						$arTmpUser = array(
-							"NAME" => $arRequests["USER_NAME"],
-							"LAST_NAME" => $arRequests["USER_LAST_NAME"],
-							"SECOND_NAME" => $arRequests["USER_SECOND_NAME"],
-							"LOGIN" => $arRequests["USER_LOGIN"],
-						);
-						$NameFormatted = CUser::FormatName($arParams['NAME_TEMPLATE_WO_NOBR'], $arTmpUser, $bUseLogin);
-
-						if ($arResult["Ban"]["List"] == false)
-							$arResult["Ban"]["List"] = array();
-
-						$arResult["Ban"]["List"][] = array(
-							"ID" => $arRequests["ID"],
-							"USER_ID" => $arRequests["USER_ID"],
-							"USER_ACTIVE" => $arRequests["USER_ACTIVE"],
-							"USER_NAME" => $arRequests["USER_NAME"],
-							"USER_LAST_NAME" => $arRequests["USER_LAST_NAME"],
-							"USER_SECOND_NAME" => $arRequests["USER_SECOND_NAME"],
-							"USER_LOGIN" => $arRequests["USER_LOGIN"],
-							"USER_NAME_FORMATTED" => $NameFormatted,
-							"USER_PERSONAL_PHOTO" => $arRequests["USER_PERSONAL_PHOTO"],
-							"USER_PERSONAL_PHOTO_IMG" => $arImage,
-							"USER_PERSONAL_GENDER" => $arRequests["USER_PERSONAL_GENDER"],
-							"USER_WORK_POSITION" => $arRequests["USER_WORK_POSITION"],						
-							"USER_PROFILE_URL" => $pu,
-							"SHOW_PROFILE_LINK" => $canViewProfile,
-							"IS_ONLINE" => ($arRequests["USER_IS_ONLINE"] == "Y"),
-							"USER_IS_EXTRANET" => (isset($GLOBALS["arExtranetUserID"]) && is_array($GLOBALS["arExtranetUserID"]) && in_array($arRequests["USER_ID"], $GLOBALS["arExtranetUserID"]) ? "Y" : "N")
+						$arResult["Departments"]["List"][] = array(
+							"ID" => $departmentId,
+							"NAME" => $departmentName,
+							"URL" => str_replace('#ID#', $departmentId, $arParams["PATH_TO_CONPANY_DEPARTMENT"])
 						);
 					}
-					$arResult["Ban"]["NAV_STRING"] = $dbRequests->GetPageNavStringEx($navComponentObject, GetMessage("SONET_GUE_BAN_NAV"), "", false);
 				}
 			}
+
+			$arResult["Users"] = $this->getUserList("Users", $arParams, $arResult, $arNavParams);
+			$arResult["UsersAuto"] = $this->getUserList("UsersAuto", $arParams, $arResult, $arNavParams);
+			$arResult["Moderators"] = $this->getUserList("Moderators", $arParams, $arResult, $arNavParams);
+			$arResult["Ban"] = $this->getUserList("Ban", $arParams, $arResult, $arNavParams);
 		}
 	}
 }
-
-$arResult["bIntranetInstalled"] = IsModuleInstalled("intranet");
 
 $this->IncludeComponentTemplate();
 ?>

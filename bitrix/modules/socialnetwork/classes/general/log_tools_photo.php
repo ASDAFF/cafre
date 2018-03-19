@@ -3,7 +3,7 @@ IncludeModuleLangFile(__FILE__);
 
 class CSocNetLogToolsPhoto
 {
-	function OnAfterPhotoUpload($arFields, $arComponentParams, $arComponentResult)
+	public static function OnAfterPhotoUpload($arFields, $arComponentParams, $arComponentResult)
 	{
 		static $arSiteWorkgroupsPage;
 
@@ -119,7 +119,7 @@ class CSocNetLogToolsPhoto
 				"ENTITY_ID" => $entity_id,
 				"EVENT_ID" => "photo",
 				"EXTERNAL_ID" => $arFields["IBLOCK_SECTION"]."_".$arFields["MODIFIED_BY"],
-				">=LOG_UPDATE" => ConvertTimeStamp(AddToTimeStamp(array("MI" => -5))+CTimeZone::GetOffset(), "FULL")
+				">=LOG_UPDATE" => ConvertTimeStamp(AddToTimeStamp(array("MI" => -30))+CTimeZone::GetOffset(), "FULL")
 			)
 		);
 
@@ -273,7 +273,7 @@ class CSocNetLogToolsPhoto
 		}
 	}
 
-	function OnAfterPhotoDrop($arFields, $arComponentParams)
+	public static function OnAfterPhotoDrop($arFields, $arComponentParams)
 	{
 		if (
 			array_key_exists("IS_SOCNET", $arComponentParams)
@@ -381,7 +381,7 @@ class CSocNetLogToolsPhoto
 			CSocNetLog::Delete($res["ID"]);
 	}
 
-	function OnBeforeSectionDrop($sectionID, $arComponentParams, $arComponentResult, &$arSectionID, &$arElementID)
+	public static function OnBeforeSectionDrop($sectionID, $arComponentParams, $arComponentResult, &$arSectionID, &$arElementID)
 	{
 		if (!CModule::IncludeModule("iblock"))
 			return;
@@ -430,7 +430,7 @@ class CSocNetLogToolsPhoto
 		}
 	}
 
-	function OnAfterSectionDrop($ID, $arFields, $arComponentParams, $arComponentResult)
+	public static function OnAfterSectionDrop($ID, $arFields, $arComponentParams, $arComponentResult)
 	{
 		if (
 			array_key_exists("IS_SOCNET", $arComponentParams)
@@ -510,7 +510,7 @@ class CSocNetLogToolsPhoto
 		}
 	}
 
-	function OnAfterSectionEdit($arFields, $arComponentParams, $arComponentResult)
+	public static function OnAfterSectionEdit($arFields, $arComponentParams, $arComponentResult)
 	{
 		if (!CModule::IncludeModule("iblock"))
 			return;
@@ -839,7 +839,7 @@ class CSocNetPhotoCommentEvent
 		);
 	}
 
-	function AddComment_Photo($arFields)
+	public static function AddComment_Photo($arFields)
 	{
 		$arLogType = self::FindLogType($arFields["LOG_ID"]);
 
@@ -882,7 +882,7 @@ class CSocNetPhotoCommentEvent
 		return $arReturn;
 	}
 
-	function AddComment_Photo_Forum($arFields, $FORUM_ID, $arLog)
+	public static function AddComment_Photo_Forum($arFields, $FORUM_ID, $arLog)
 	{
 		if (!CModule::IncludeModule("forum"))
 			return false;
@@ -993,8 +993,10 @@ class CSocNetPhotoCommentEvent
 		);
 	}
 
-	function AddComment_Photo_Blog($arFields, $BLOG_ID, $arLog)
+	public static function AddComment_Photo_Blog($arFields, $BLOG_ID, $arLog)
 	{
+		global $USER;
+
 		if (!CModule::IncludeModule("blog"))
 			return false;
 
@@ -1040,8 +1042,8 @@ class CSocNetPhotoCommentEvent
 					"PARENT_ID" => false
 				);
 
-				if($GLOBALS["USER"]->IsAuthorized())
-					$arFieldsComment["AUTHOR_ID"] = $GLOBALS["USER"]->GetID();
+				if($USER->IsAuthorized())
+					$arFieldsComment["AUTHOR_ID"] = $USER->GetID();
 
 				$commentID = CBlogComment::Add($arFieldsComment);
 				if (!$commentID)
@@ -1368,9 +1370,9 @@ class CSocNetPhotoCommentEvent
 			{
 				$arForum = CForumNew::GetByID($this->ForumID);
 				
-				$parser = new textParser(LANGUAGE_ID, $this->arPath["PATH_TO_SMILE"]);
-				$parser->image_params["width"] = false;
-				$parser->image_params["height"] = false;
+				$parser = new forumTextParser(LANGUAGE_ID, $this->arPath["PATH_TO_SMILE"]);
+				$parser->imageWidth = false;
+				$parser->imageHeight = false;
 				
 				$arAllow = array(
 					"HTML" => "N",

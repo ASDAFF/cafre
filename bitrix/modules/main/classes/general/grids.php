@@ -156,6 +156,23 @@ class CGridOptions
 		return array();
 	}
 
+	public function SetVisibleColumns($arColumns)
+	{
+		$this->options['columns'] = implode(',', $arColumns);
+		$aOptions = CUserOptions::GetOption('main.interface.grid', $this->grid_id, array());
+		if (!is_array($aOptions['views']))
+			$aOptions['views'] = array();
+		if (!is_array($aOptions['filters']))
+			$aOptions['filters'] = array();
+		if (!array_key_exists('default', $aOptions['views']))
+			$aOptions['views']['default'] = array('columns'=>'');
+		if ($aOptions['current_view'] == '' || !array_key_exists($aOptions['current_view'], $aOptions['views']))
+			$aOptions['current_view'] = 'default';
+
+		$aOptions['views'][$aOptions['current_view']]['columns'] = $this->options['columns'];
+		CUserOptions::SetOption('main.interface.grid', $this->grid_id, $aOptions);
+	}
+
 	public function GetFilter($arFilter)
 	{
 		$aRes = array();
@@ -237,7 +254,7 @@ class CGridOptions
 		}
 		elseif(is_array($_SESSION["main.interface.grid"][$this->grid_id]["filter"]))
 		{
-			return $_SESSION["main.interface.grid"][$this->grid_id]["filter"];
+			$aRes = $_SESSION["main.interface.grid"][$this->grid_id]["filter"];
 		}
 		else
 		{
@@ -253,16 +270,34 @@ class CGridOptions
 						continue;
 					}
 					if($this->filter[$field["id"]."_list"] <> '' && $this->filter[$field["id"]] <> '')
+					{
 						$aRes[$field["id"]."_list"] = $this->filter[$field["id"]."_list"];
+					}
 					if($this->filter[$field["id"]."_from"] <> '')
+					{
 						$aRes[$field["id"]."_from"] = $this->filter[$field["id"]."_from"];
+					}
 					if($this->filter[$field["id"]."_to"] <> '')
+					{
 						$aRes[$field["id"]."_to"] = $this->filter[$field["id"]."_to"];
-					if(is_array($this->filter[$field["id"]]) && !empty($this->filter[$field["id"]]) && reset($this->filter[$field["id"]]) <> '' || !is_array($this->filter[$field["id"]]) && $this->filter[$field["id"]] <> '')
+					}
+					if(is_array($this->filter[$field["id"]]))
+					{
+						//multiselect values
+						if(!empty($this->filter[$field["id"]]) && reset($this->filter[$field["id"]]) <> '')
+						{
+							$aRes[$field["id"]] = array_values($this->filter[$field["id"]]);
+						}
+					}
+					elseif($this->filter[$field["id"]] <> '')
+					{
 						$aRes[$field["id"]] = $this->filter[$field["id"]];
+					}
 				}
 				if(!empty($aRes))
+				{
 					$_SESSION["main.interface.grid"][$this->grid_id]["filter"] = $aRes;
+				}
 			}
 		}
 
@@ -308,7 +343,7 @@ class CGridOptions
 		);
 	}
 
-	public function SetDefaultView($settings, $apply = false)
+	public function SetDefaultView($settings)
 	{
 		$options = array(
 			"view" => array(
@@ -318,6 +353,7 @@ class CGridOptions
 				"sort_order"=>$settings["sort_order"],
 				"page_size"=>$settings["page_size"],
 				"saved_filter"=>$settings["saved_filter"],
+				"custom_names"=>$settings["custom_names"],
 			)
 		);
 
@@ -428,6 +464,9 @@ class CGridOptions
 				break;
 			case "yesterday":
 				$aRes[$field_id."_from"] = $aRes[$field_id."_to"] = ConvertTimeStamp(time()-86400);
+				break;
+			case "tomorrow":
+				$aRes[$field_id."_from"] = $aRes[$field_id."_to"] = ConvertTimeStamp(time()+86400);
 				break;
 			case "week":
 				$day = date("w");

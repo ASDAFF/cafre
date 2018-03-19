@@ -12,6 +12,7 @@ $arResult["INTERVALS"] = array(
 	""=>GetMessage("interface_grid_no_no_no_2"),
 	"today"=>GetMessage("inerface_grid_today"),
 	"yesterday"=>GetMessage("inerface_grid_yesterday"),
+	"tomorrow"=>GetMessage("inerface_grid_tomorrow"),
 	"week"=>GetMessage("inerface_grid_week"),
 	"week_ago"=>GetMessage("inerface_grid_week_ago"),
 	"month"=>GetMessage("inerface_grid_month"),

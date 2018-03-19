@@ -8,6 +8,7 @@ $arDescription = Array(
 		"LANG_ONLY" => "ru",
 		"GROUP"=> Array("ID"=>"services"),
 		"SU"=> true,
-		"SG"=> true
+		"SG"=> true,
+		"AI"=> true,
 	);
 ?>

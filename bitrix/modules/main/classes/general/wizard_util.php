@@ -1,12 +1,12 @@
 <?php
 class CWizardUtil
 {
-	function GetRepositoryPath()
+	public static function GetRepositoryPath()
 	{
 		return BX_ROOT."/wizards";
 	}
 
-	function MakeWizardPath($wizardName)
+	public static function MakeWizardPath($wizardName)
 	{
 		if (!CWizardUtil::CheckName($wizardName))
 			return "";
@@ -14,7 +14,7 @@ class CWizardUtil
 		return Rel2Abs("/", "/".str_replace(":", "/", $wizardName));
 	}
 
-	function CheckName($wizardName)
+	public static function CheckName($wizardName)
 	{
 		return (
 			strlen($wizardName) > 0
@@ -22,7 +22,7 @@ class CWizardUtil
 		);
 	}
 
-	function GetWizardList($filterNamespace = false, $bLoadFromModules = false)
+	public static function GetWizardList($filterNamespace = false, $bLoadFromModules = false)
 	{
 		$arWizards = array();
 		$arLoadedWizards = array();
@@ -162,7 +162,7 @@ class CWizardUtil
 		return $arWizards;
 	}
 
-	function GetNamespaceList()
+	public static function GetNamespaceList()
 	{
 		$arNamespaces = array();
 		$namespacePath = $_SERVER["DOCUMENT_ROOT"].CWizardUtil::GetRepositoryPath();
@@ -186,7 +186,7 @@ class CWizardUtil
 		return $arNamespaces;
 	}
 
-	function DeleteWizard($wizardName)
+	public static function DeleteWizard($wizardName)
 	{
 		if (!CWizardUtil::CheckName($wizardName))
 			return false;
@@ -199,7 +199,7 @@ class CWizardUtil
 		return $success;
 	}
 
-	function CopyWizard($wizardName, $newName)
+	public static function CopyWizard($wizardName, $newName)
 	{
 		if (!CWizardUtil::CheckName($wizardName) || !CWizardUtil::CheckName($newName))
 			return false;
@@ -219,7 +219,7 @@ class CWizardUtil
 		return true;
 	}
 
-	function ReplaceMacros($filePath, $arReplace, $skipSharp = false)
+	public static function ReplaceMacros($filePath, $arReplace, $skipSharp = false)
 	{
 		clearstatcache();
 
@@ -259,7 +259,7 @@ class CWizardUtil
 		@fclose($handle);
 	}
 
-	function ReplaceMacrosRecursive($filePath, $arReplace)
+	public static function ReplaceMacrosRecursive($filePath, $arReplace)
 	{
 		clearstatcache();
 
@@ -319,7 +319,7 @@ class CWizardUtil
 		}
 	}
 
-	function CopyFile($fileID, $destPath, $deleteAfterCopy = true)
+	public static function CopyFile($fileID, $destPath, $deleteAfterCopy = true)
 	{
 		$arFile = CFile::GetFileArray($fileID);
 		if (!$arFile)
@@ -339,7 +339,7 @@ class CWizardUtil
 		return true;
 	}
 
-	function GetModules()
+	public static function GetModules()
 	{
 		$arModules = array();
 
@@ -377,7 +377,7 @@ class CWizardUtil
 		return $arModules;
 	}
 
-	function CreateThumbnail($sourcePath, $previewPath, $maxWidth, $maxHeight)
+	public static function CreateThumbnail($sourcePath, $previewPath, $maxWidth, $maxHeight)
 	{
 		if (!is_file($sourcePath))
 			return false;

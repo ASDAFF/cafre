@@ -1,4 +1,5 @@
 <?
+/** @global CUser $USER */
 
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
 
@@ -11,6 +12,12 @@ foreach ($requiredModules as $requiredModule)
 		ShowError(GetMessage("F_NO_MODULE"));
 		return 0;
 	}
+}
+
+if (!isset($arParams['REPORT_HELPER_CLASS']) || strlen($arParams['REPORT_HELPER_CLASS']) < 1)
+{
+	ShowError(GetMessage("REPORT_HELPER_NOT_DEFINED"));
+	return 0;
 }
 
 // Suppress the timezone, while report works in server time
@@ -108,10 +115,15 @@ try
 		throw new BXUserException(sprintf(GetMessage('REPORT_NOT_FOUND'), $arParams['REPORT_ID']));
 	}
 
-	if ($report['CREATED_BY'] != $USER->GetID())
-	{
+	$userId = $USER->GetID();
+
+	$rightsManager = new Bitrix\Report\RightsManager($userId);
+	if(!$rightsManager->canRead($report['ID']))
 		throw new BXUserException(GetMessage('REPORT_VIEW_PERMISSION_DENIED'));
-	}
+
+	$arResult['AUTHOR'] = true;
+	if($userId != $report['CREATED_BY'])
+		$arResult['AUTHOR'] = false;
 
 	$arResult['MARK_DEFAULT'] = 0;
 	if (isset($report['MARK_DEFAULT']))
@@ -180,8 +192,11 @@ try
 			break;
 
 		case 'month_ago':
-			$date_from = strtotime(date("Y-m-01", strtotime("-1 month")));
-			$date_to = strtotime(date("Y-m-t", strtotime("-1 month"))) + (3600*24-1);
+			$curTime = time();
+			$curTimeInfo = getdate($curTime);
+			$date_from = strtotime(date("Y-m-01", strtotime('-'.$curTimeInfo['mday'].'day', $curTime)));
+			$date_to = strtotime(date("Y-m-t", strtotime('-'.$curTimeInfo['mday'].'day', $curTime))) + (3600*24-1);
+			unset($curTime, $curTimeInfo);
 			break;
 
 		case 'week':
@@ -255,11 +270,11 @@ try
 	}
 	else if (!is_null($date_from))
 	{
-		$sqlTimeInterval = "> ".$db_date_from;
+		$sqlTimeInterval = ">= ".$db_date_from;
 	}
 	else if (!is_null($date_to))
 	{
-		$sqlTimeInterval = "< ".$db_date_to;
+		$sqlTimeInterval = "<= ".$db_date_to;
 	}
 	else
 	{
@@ -464,6 +479,11 @@ try
 			$grcSettingsNum[] = $num;
 		}
 
+		if (CReport::checkSelectViewElementCyclicDependency($settings['select'], $num))
+		{
+			throw new BXUserException(GetMessage('REPORT_COLUMNS_HAS_CYCLIC_DEPENDENCY'));
+		}
+
 		list($alias, $selElem) = CReport::prepareSelectViewElement($elem, $settings['select'], $is_init_entity_aggregated, $fList, $fChainList, $arParams['REPORT_HELPER_CLASS'], $entity);
 
 		if (is_array($selElem) && !empty($selElem['expression']))
@@ -492,6 +512,8 @@ try
 			}
 		}
 
+		$arUF = call_user_func(array($arParams['REPORT_HELPER_CLASS'], 'detectUserField'), $field);
+
 		// default sort
 		if ($is_grc
 			|| ((in_array($fType, array('file', 'disk_file', 'employee', 'crm', 'crm_status', 'iblock_element',
@@ -514,7 +536,6 @@ try
 			$defaultSort = 'DESC';
 		}
 
-		$arUF = call_user_func(array($arParams['REPORT_HELPER_CLASS'], 'detectUserField'), $field);
 		$viewColumns[$num] = array(
 			'field' => $field,
 			'fieldName' => $elem['name'],
@@ -810,7 +831,9 @@ try
 						$fElem_start['value'] .= ' 00:00:00';
 
 						$fElem_end['compare'] = 'LESS_OR_EQUAL';
-						$fElem_end['value'] .= ' 23:59:59';
+						$dtValue = new Bitrix\Main\Type\DateTime($fElem_end['value']);
+						$dtValue->setTime(23, 59, 59);
+						$fElem_end['value'] = ConvertTimeStamp($dtValue->getTimestamp(), 'FULL');
 
 						// replace filter by subfilter
 						$settings['filter'][] = array('LOGIC' => 'AND', $fElem_start, $fElem_end);
@@ -829,7 +852,9 @@ try
 						$fElem_start['value'] .= ' 00:00:00';
 
 						$fElem_end['compare'] = 'GREATER';
-						$fElem_end['value'] .= ' 23:59:59';
+						$dtValue = new Bitrix\Main\Type\DateTime($fElem_end['value']);
+						$dtValue->setTime(23, 59, 59);
+						$fElem_end['value'] = ConvertTimeStamp($dtValue->getTimestamp(), 'FULL');
 
 						// replace filter by subfilter
 						$settings['filter'][] = array('LOGIC' => 'AND', $fElem_start, $fElem_end);
@@ -840,7 +865,9 @@ try
 					}
 					else if ($fElem['compare'] == 'LESS_OR_EQUAL')
 					{
-						$fElem['value'] .= ' 23:59:59';
+						$dtValue = new Bitrix\Main\Type\DateTime($fElem['value']);
+						$dtValue->setTime(23, 59, 59);
+						$fElem['value'] = ConvertTimeStamp($dtValue->getTimestamp(), 'FULL');
 					}
 					else if ($fElem['compare'] == 'GREATER_OR_EQUAL')
 					{
@@ -852,7 +879,9 @@ try
 					}
 					else if ($fElem['compare'] == 'GREATER')
 					{
-						$fElem['value'] .= ' 23:59:59';
+						$dtValue = new Bitrix\Main\Type\DateTime($fElem['value']);
+						$dtValue->setTime(23, 59, 59);
+						$fElem['value'] = ConvertTimeStamp($dtValue->getTimestamp(), 'FULL');
 					}
 				}
 			}

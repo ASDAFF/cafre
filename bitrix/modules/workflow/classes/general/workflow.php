@@ -1,16 +1,14 @@
-<?
+<?php
 IncludeModuleLangFile(__FILE__);
 
 class CAllWorkflow
 {
-	function err_mess()
+	public static function err_mess()
 	{
-		$module_id = "workflow";
-		@include($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/".$module_id."/install/version.php");
-		return "<br>Module: ".$module_id." (".$arModuleVersion["VERSION"].")<br>Class: CAllWorkflow<br>File: ".__FILE__;
+		return "<br>Module: workflow<br>Class: CAllWorkflow<br>File: ".__FILE__;
 	}
 
-	function OnPanelCreate()
+	public static function OnPanelCreate()
 	{
 		global $APPLICATION, $USER;
 		$cur_page_param = $APPLICATION->GetCurPageParam();
@@ -104,13 +102,12 @@ class CAllWorkflow
 		}
 	}
 
-	function OnChangeFile($path, $site)
+	public static function OnChangeFile($path, $site)
 	{
 		global $BX_WORKFLOW_PUBLISHED_PATH, $BX_WORKFLOW_PUBLISHED_SITE;
 		if($BX_WORKFLOW_PUBLISHED_PATH == $path && $BX_WORKFLOW_PUBLISHED_SITE == $site)
 			return ;
 
-		$err_mess = (CWorkflow::err_mess())."<br>Function: OnChangeFile<br>Line: ";
 		global $DB, $USER, $APPLICATION;
 		$HISTORY_SIMPLE_EDITING = COption::GetOptionString("workflow","HISTORY_SIMPLE_EDITING","N");
 		if ($HISTORY_SIMPLE_EDITING=="Y")
@@ -126,7 +123,7 @@ class CAllWorkflow
 				$BODY = $arContent["CONTENT"];
 				$arFields = array(
 					"DOCUMENT_ID" => 0,
-					"MODIFIED_BY" => $USER->GetID(),
+					"MODIFIED_BY" => $USER? $USER->GetID(): 1,
 					"TITLE" => $TITLE,
 					"FILENAME" => $path,
 					"SITE_ID" => $site,
@@ -140,10 +137,11 @@ class CAllWorkflow
 		}
 	}
 
-	function SetHistory($DOCUMENT_ID)
+	public static function SetHistory($DOCUMENT_ID)
 	{
-		$err_mess = (CWorkflow::err_mess())."<br>Function: SetHistory<br>Line: ";
 		global $DB;
+
+		$LOG_ID = false;
 		$DOCUMENT_ID = intval($DOCUMENT_ID);
 		$HISTORY_COPIES = intval(COption::GetOptionString("workflow","HISTORY_COPIES","10"));
 		$z = CWorkflow::GetByID($DOCUMENT_ID);
@@ -171,16 +169,26 @@ class CAllWorkflow
 	}
 
 	// Deletes old copies from document's history
-	function CleanUpHistoryCopies($DOCUMENT_ID=false, $HISTORY_COPIES=false)
+	public static function CleanUpHistoryCopies($DOCUMENT_ID=false, $HISTORY_COPIES=false)
 	{
 		$err_mess = (CAllWorkflow::err_mess())."<br>Function: CleanUpHistoryCopies<br>Line: ";
 		global $DB;
+
 		if($HISTORY_COPIES===false)
 		{
 			$HISTORY_COPIES = intval(COption::GetOptionString("workflow","HISTORY_COPIES","10"));
 		}
+
 		$DOCUMENT_ID = intval($DOCUMENT_ID);
-		if ($DOCUMENT_ID>0) $strSqlSearch = " and ID = $DOCUMENT_ID ";
+		if ($DOCUMENT_ID > 0)
+		{
+			$strSqlSearch = " and ID = $DOCUMENT_ID ";
+		}
+		else
+		{
+			$strSqlSearch = "";
+		}
+
 		$strSql = "SELECT ID FROM b_workflow_document WHERE 1=1 ".$strSqlSearch;
 		$z = $DB->Query($strSql, false, $err_mess.__LINE__);
 		while ($zr=$z->Fetch())
@@ -197,11 +205,15 @@ class CAllWorkflow
 					ID desc
 				";
 			$t = $DB->Query($strSql, false, $err_mess.__LINE__);
+			$i = 0;
 			$str_id = "0";
 			while ($tr = $t->Fetch())
 			{
 				$i++;
-				if ($i>$HISTORY_COPIES) $str_id .= ",".$tr["ID"];
+				if ($i > $HISTORY_COPIES)
+				{
+					$str_id .= ",".$tr["ID"];
+				}
 			}
 			$strSql = "DELETE FROM b_workflow_log WHERE ID in ($str_id)";
 			$DB->Query($strSql, false, $err_mess.__LINE__);
@@ -209,7 +221,7 @@ class CAllWorkflow
 	}
 
 	// Deletes old copies from document's history (simple edit - SE)
-	function CleanUpHistoryCopies_SE($FILENAME, $HISTORY_COPIES=false)
+	public static function CleanUpHistoryCopies_SE($FILENAME, $HISTORY_COPIES=false)
 	{
 		$err_mess = (CAllWorkflow::err_mess())."<br>Function: CleanUpHistoryCopies_SE<br>Line: ";
 		global $DB;
@@ -229,18 +241,22 @@ class CAllWorkflow
 				ID desc
 			";
 		$t = $DB->Query($strSql, false, $err_mess.__LINE__);
+		$i = 0;
 		$str_id = "0";
 		while ($tr = $t->Fetch())
 		{
 			$i++;
-			if ($i>$HISTORY_COPIES) $str_id .= ",".$tr["ID"];
+			if ($i > $HISTORY_COPIES)
+			{
+				$str_id .= ",".$tr["ID"];
+			}
 		}
 		$strSql = "DELETE FROM b_workflow_log WHERE ID in ($str_id)";
 		$DB->Query($strSql, false, $err_mess.__LINE__);
 	}
 
 	// saves changes history and send e-mails on status change
-	function SetMove($DOCUMENT_ID, $STATUS_ID, $OLD_STATUS_ID, $LOG_ID)
+	public static function SetMove($DOCUMENT_ID, $STATUS_ID, $OLD_STATUS_ID, $LOG_ID)
 	{
 		$err_mess = (CAllWorkflow::err_mess())."<br>Function: SetMove<br>Line: ";
 		global $DB, $USER, $APPLICATION;
@@ -422,7 +438,7 @@ class CAllWorkflow
 		}
 	}
 
-	function Delete($DOCUMENT_ID)
+	public static function Delete($DOCUMENT_ID)
 	{
 		$err_mess = (CAllWorkflow::err_mess())."<br>Function: Delete<br>Line: ";
 		global $DB;
@@ -432,38 +448,55 @@ class CAllWorkflow
 		$DB->Query("DELETE FROM b_workflow_document WHERE ID=".intval($DOCUMENT_ID), false, $err_mess.__LINE__);
 	}
 
-	function IsAdmin()
+	public static function IsAdmin()
 	{
-		$err_mess = (CAllWorkflow::err_mess())."<br>Function: IsAdmin<br>Line: ";
-		global $DB, $USER;
-		$USER_ID = $USER->GetID();
-		if ($USER->IsAdmin()) return true;
+		global $USER;
+
+		if ($USER->IsAdmin())
+		{
+			return true;
+		}
 		else
 		{
 			$WORKFLOW_ADMIN_GROUP_ID = COption::GetOptionString("workflow", "WORKFLOW_ADMIN_GROUP_ID");
-			if (in_array($WORKFLOW_ADMIN_GROUP_ID, $USER->GetUserGroupArray())) return true;
-			else return false;
+			if (in_array($WORKFLOW_ADMIN_GROUP_ID, $USER->GetUserGroupArray()))
+			{
+				return true;
+			}
 		}
+		return false;
 	}
 
 	// check edit rights for the document
 	// depending on it's status and lock
-	function IsAllowEdit($DOCUMENT_ID, &$locked_by, &$date_lock, $CHECK_RIGHTS="Y")
+	public static function IsAllowEdit($DOCUMENT_ID, &$locked_by, &$date_lock, $CHECK_RIGHTS="Y")
 	{
-		$err_mess = (CAllWorkflow::err_mess())."<br>Function: IsAllowEdit<br>Line: ";
-		global $DB, $USER;
+
 		$DOCUMENT_ID = intval($DOCUMENT_ID);
 		$LOCK_STATUS = CWorkflow::GetLockStatus($DOCUMENT_ID, $locked_by, $date_lock);
-		if ($LOCK_STATUS=="red") return false;
-		elseif ($LOCK_STATUS=="yellow") return true;
+		if ($LOCK_STATUS=="red")
+		{
+			return false;
+		}
+		elseif ($LOCK_STATUS=="yellow")
+		{
+			return true;
+		}
 		elseif ($LOCK_STATUS=="green")
 		{
-			if ($CHECK_RIGHTS=="Y") return CWorkflow::IsHaveEditRights($DOCUMENT_ID);
-			else return true;
+			if ($CHECK_RIGHTS=="Y")
+			{
+				return CWorkflow::IsHaveEditRights($DOCUMENT_ID);
+			}
+			else
+			{
+				return true;
+			}
 		}
+		return false;
 	}
 
-	function GetStatus($DOCUMENT_ID)
+	public static function GetStatus($DOCUMENT_ID)
 	{
 		$err_mess = (CAllWorkflow::err_mess())."<br>Function: GetStatus<br>Line: ";
 		global $DB;
@@ -484,7 +517,7 @@ class CAllWorkflow
 
 	// check edit rights for the document
 	// check is based only on status no lock
-	function IsHaveEditRights($DOCUMENT_ID)
+	public static function IsHaveEditRights($DOCUMENT_ID)
 	{
 		$err_mess = (CAllWorkflow::err_mess())."<br>Function: IsHaveEditRights<br>Line: ";
 		global $DB, $USER;
@@ -516,7 +549,7 @@ class CAllWorkflow
 			return false;
 	}
 
-	function UnLock($DOCUMENT_ID)
+	public static function UnLock($DOCUMENT_ID)
 	{
 		$err_mess = (CAllWorkflow::err_mess())."<br>Function: UnLock<br>Line: ";
 		global $DB, $USER;
@@ -535,7 +568,7 @@ class CAllWorkflow
 		return false;
 	}
 
-	function Lock($DOCUMENT_ID)
+	public static function Lock($DOCUMENT_ID)
 	{
 		$err_mess = (CAllWorkflow::err_mess())."<br>Function: Lock<br>Line: ";
 		global $DB, $USER;
@@ -555,10 +588,9 @@ class CAllWorkflow
 	}
 
 	// return edit link depending on rights and status
-	function GetEditLink($FILENAME, &$status_id, &$status_title, $template="", $lang=LANGUAGE_ID, $return_url="")
+	public static function GetEditLink($FILENAME, &$status_id, &$status_title, $template="", $lang=LANGUAGE_ID, $return_url="")
 	{
-		$err_mess = (CAllWorkflow::err_mess())."<br>Function: GetEditLink<br>Line: ";
-		global $DB, $APPLICATION, $USER;
+		global $USER;
 
 		$link = '';
 		CMain::InitPathVars($SITE_ID, $FILENAME);
@@ -599,7 +631,7 @@ class CAllWorkflow
 		return $link;
 	}
 
-	function DeleteHistory($ID)
+	public static function DeleteHistory($ID)
 	{
 		global $DB;
 		$DB->Query("
@@ -608,7 +640,7 @@ class CAllWorkflow
 		", false, CAllWorkflow::err_mess()."<br>Function: DeleteHistory<br>Line: ".__LINE__);
 	}
 
-	function CleanUp()
+	public static function CleanUp()
 	{
 		CWorkflow::CleanUpPublished();
 		CWorkflow::CleanUpHistory();
@@ -617,7 +649,7 @@ class CAllWorkflow
 		return "CWorkflow::CleanUp();";
 	}
 
-	function CleanUpFiles($DOCUMENT_ID=false, $FILE_ID=false)
+	public static function CleanUpFiles($DOCUMENT_ID=false, $FILE_ID=false)
 	{
 		$err_mess = (CWorkflow::err_mess())."<br>Function: CleanUpFiles<br>Line: ";
 		global $DB;
@@ -640,7 +672,7 @@ class CAllWorkflow
 			CWorkflow::DeleteFile($zr["TEMP_FILENAME"]);
 	}
 
-	function CleanUpPreview($DOCUMENT_ID=false)
+	public static function CleanUpPreview($DOCUMENT_ID=false)
 	{
 		$err_mess = (CWorkflow::err_mess())."<br>Function:  CleanUpPreview<br>Line: ";
 		global $DB;
@@ -674,7 +706,7 @@ class CAllWorkflow
 			CWorkflow::DeletePreview($zr["FILENAME"], $zr["SITE"]);
 	}
 
-	function DeletePreview($FILENAME, $site = false)
+	public static function DeletePreview($FILENAME, $site = false)
 	{
 		$err_mess = (CAllWorkflow::err_mess())."<br>Function: DeletePreview<br>Line: ";
 		global $DB, $APPLICATION;
@@ -685,7 +717,7 @@ class CAllWorkflow
 		if (file_exists($path)) unlink($path);
 	}
 
-	function DeleteFile($FILENAME)
+	public static function DeleteFile($FILENAME)
 	{
 		$err_mess = (CAllWorkflow::err_mess())."<br>Function: DeleteFile<br>Line: ";
 		global $DB;
@@ -695,7 +727,7 @@ class CAllWorkflow
 		if (file_exists($temp_path)) unlink($temp_path);
 	}
 
-	function IsFilenameExists($FILENAME)
+	public static function IsFilenameExists($FILENAME)
 	{
 		$err_mess = (CAllWorkflow::err_mess())."<br>Function: IsFilenameExists<br>Line: ";
 		global $DB;
@@ -705,7 +737,7 @@ class CAllWorkflow
 		return intval($zr["ID"]);
 	}
 
-	function GetUniqueFilename($filename)
+	public static function GetUniqueFilename($filename)
 	{
 		$ext = GetFileExtension($filename);
 		$temp_file = md5($filename.uniqid(rand())).".".$ext;
@@ -714,7 +746,7 @@ class CAllWorkflow
 		return $temp_file;
 	}
 
-	function IsPreviewExists($FILENAME)
+	public static function IsPreviewExists($FILENAME)
 	{
 		global $DB;
 
@@ -728,7 +760,7 @@ class CAllWorkflow
 		return intval($zr["ID"]);
 	}
 
-	function GetUniquePreview($DOCUMENT_ID)
+	public static function GetUniquePreview($DOCUMENT_ID)
 	{
 		global $DB;
 
@@ -751,7 +783,7 @@ class CAllWorkflow
 		return $temp_file;
 	}
 
-	function SetStatus($DOCUMENT_ID, $STATUS_ID, $OLD_STATUS_ID, $history=true)
+	public static function SetStatus($DOCUMENT_ID, $STATUS_ID, $OLD_STATUS_ID, $history=true)
 	{
 		$err_mess = (CAllWorkflow::err_mess())."<br>Function: SetStatus<br>Line: ";
 		global $DB, $APPLICATION, $USER, $strError;
@@ -850,7 +882,7 @@ class CAllWorkflow
 		CWorkflow::CleanUpPublished();
 	}
 
-	function LinkFiles2Document($arUploadedFiles,$DOCUMENT_ID)
+	public static function LinkFiles2Document($arUploadedFiles,$DOCUMENT_ID)
 	{
 		$err_mess = (CAllWorkflow::err_mess())."<br>Function: SetStatus<br>Line: ";
 		global $DB;
@@ -867,7 +899,7 @@ class CAllWorkflow
 		CWorkflow::CleanUpFiles();
 	}
 
-	function GetFileByID($DOCUMENT_ID, $FILENAME)
+	public static function GetFileByID($DOCUMENT_ID, $FILENAME)
 	{
 		$err_mess = (CAllWorkflow::err_mess())."<br>Function: GetFileByID<br>Line: ";
 		global $DB;
@@ -885,7 +917,7 @@ class CAllWorkflow
 		return $z;
 	}
 
-	function GetTempDir()
+	public static function GetTempDir()
 	{
 		$upload_dir = COption::GetOptionString("","upload_dir","/upload/");
 		$dir = $_SERVER["DOCUMENT_ROOT"]."/".$upload_dir."/workflow/";
@@ -893,7 +925,7 @@ class CAllWorkflow
 		return $dir;
 	}
 
-	function GetFileContent($did, $fname, $wf_path="", $site=false)
+	public static function GetFileContent($did, $fname, $wf_path="", $site=false)
 	{
 		$err_mess = (CAllWorkflow::err_mess())."<br>Function: GetFileContent<br>Line: ";
 		global $DB, $APPLICATION, $USER;
@@ -986,7 +1018,7 @@ class CAllWorkflow
 		}
 	}
 
-	function __CheckSite($site)
+	public static function __CheckSite($site)
 	{
 		if($site!==false)
 		{
@@ -1003,4 +1035,3 @@ class CAllWorkflow
 		return $site;
 	}
 }
-?>

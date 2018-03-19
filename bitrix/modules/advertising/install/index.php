@@ -170,17 +170,9 @@ class advertising extends CModule
 			{
 				$errors = false;
 
-				$this->UnInstallDB(array(
-					"savedata" => $_REQUEST["savedata"],
-				));
-
-				$this->UnInstallFiles(array(
-					"savedata" => $_REQUEST["savedata"],
-				));
-
-				$this->UnInstallEvents(array(
-					"savedata" => $_REQUEST["savedata"],
-				));
+				$this->UnInstallDB();
+				$this->UnInstallFiles();
+				$this->UnInstallEvents();
 
 				$APPLICATION->IncludeAdminFile(
 					GetMessage("AD_DELETE_TITLE"),
@@ -190,15 +182,17 @@ class advertising extends CModule
 		}
 	}
 
-	function UnInstallFiles($arParams = array())
+	function UnInstallFiles()
 	{
 		global $DB;
 
-		if(!array_key_exists("savedata", $arParams) || $arParams["savedata"] != "Y")
+		if (!array_key_exists("savedata", $_REQUEST) || $_REQUEST["savedata"] !== "Y")
 		{
 			$db_res = $DB->Query("SELECT ID FROM b_file WHERE MODULE_ID = 'advertising'");
 			while ($arRes = $db_res->Fetch())
+			{
 				CFile::Delete($arRes["ID"]);
+			}
 		}
 
 		DeleteDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/advertising/install/admin", $_SERVER["DOCUMENT_ROOT"]."/bitrix/admin");
@@ -211,11 +205,11 @@ class advertising extends CModule
 		return true;
 	}
 
-	function UnInstallDB($arParams = array())
+	function UnInstallDB()
 	{
 		global $APPLICATION, $DB, $errors;
 
-		if(!array_key_exists("savedata", $arParams) || $arParams["savedata"] != "Y")
+		if (!array_key_exists("savedata", $_REQUEST) || $_REQUEST["savedata"] !== "Y")
 		{
 			$errors = false;
 			// delete whole base
@@ -245,11 +239,11 @@ class advertising extends CModule
 		return true;
 	}
 
-	function UnInstallEvents($arParams)
+	function UnInstallEvents()
 	{
 		global $DB;
 
-		if(!array_key_exists("savedata", $arParams) || $arParams["savedata"] != "Y")
+		if (!array_key_exists("savedata", $_REQUEST) || $_REQUEST["savedata"] !== "Y")
 		{
 			include($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/advertising/install/events/del_events.php");
 		}

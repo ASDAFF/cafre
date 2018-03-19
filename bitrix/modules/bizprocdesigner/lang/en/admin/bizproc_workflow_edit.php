@@ -3,7 +3,7 @@ $MESS["BIZPROC_WFEDIT_TITLE_EDIT"] = "Edit Business Process Template";
 $MESS["BIZPROC_WFEDIT_ERROR_TYPE"] = "The document type is required.";
 $MESS["BIZPROC_WFEDIT_DEFAULT_TITLE"] = "Business Process Template";
 $MESS["BIZPROC_WFEDIT_MENU_PARAMS_TITLE"] = "Template parameters; variables; autorun";
-$MESS["BIZPROC_WFEDIT_SAVE_ERROR"] = "An error occurred while saving an object:";
+$MESS["BIZPROC_WFEDIT_SAVE_ERROR"] = "Error saving template.";
 $MESS["BIZPROC_WFEDIT_CATEGORY_MAIN"] = "Main";
 $MESS["BIZPROC_WFEDIT_CATEGORY_DOC"] = "Document Processing";
 $MESS["BIZPROC_WFEDIT_CATEGORY_CONSTR"] = "Constructions";
@@ -37,4 +37,5 @@ $MESS["BIZPROC_EMPTY_EXPORT"] = "Please save the template before exporting it.";
 $MESS["BIZPROC_WFEDIT_CATEGORY_REST"] = "Application actions";
 $MESS["BIZPROC_WFEDIT_CHECK_ERROR"] = "Error opening the template: not all of the actions present in the template are installed on the portal.";
 $MESS["BIZPROC_WFEDIT_BEFOREUNLOAD"] = "Attention! All the unsaved data will be lost. Are you sure you want to leave this page?";
+$MESS["BIZPROC_WFEDIT_CATEGORY_TASKS"] = "Tasks";
 ?>

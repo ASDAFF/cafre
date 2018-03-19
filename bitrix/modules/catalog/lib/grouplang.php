@@ -15,6 +15,7 @@ Loc::loadMessages(__FILE__);
  * <li> CATALOG_GROUP_ID int mandatory
  * <li> LANG string(2) mandatory
  * <li> NAME string(100) optional
+ * <li> CATALOG_GROUP reference to {@link \Bitrix\Catalog\CatalogGroupTable}
  * </ul>
  *
  * @package Bitrix\Catalog
@@ -56,6 +57,11 @@ class GroupLangTable extends Main\Entity\DataManager
 				'validation' => array(__CLASS__, 'validateName'),
 				'title' => Loc::getMessage('GROUP_LANG_ENTITY_NAME_FIELD')
 			)),
+			'CATALOG_GROUP' => new Main\Entity\ReferenceField(
+				'CATALOG_GROUP',
+				'\Bitrix\Catalog\Group',
+				array('=this.CATALOG_GROUP_ID' => 'ref.ID')
+			)
 		);
 	}
 	/**

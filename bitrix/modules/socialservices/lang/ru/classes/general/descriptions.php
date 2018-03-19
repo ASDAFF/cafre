@@ -4,5 +4,5 @@ $MESS["socserv_openid_yandex"] = "яндекс";
 $MESS["socserv_openid_yandex_openid"] = "яндекс OpenID";
 $MESS["socserv_vk_name"] = "¬ онтакте";
 $MESS["socserv_odnoklassniki_name"] = "ќдноклассники";
-$MESS["socserv_bitrix24net_name"] = "Ѕитрикс24.Network";
+$MESS["socserv_bitrix24net_name"] = "Ѕитрикс24";
 ?>

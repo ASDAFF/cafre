@@ -33,7 +33,7 @@ final class SocialnetworkBlogPostComment extends CBitrixComponent
 	{
 		if ($this->prepareMobileData)
 		{
-			$url = COption::GetOptionString("socialnetwork", "urlToPost", "/mobile/log/index.php");
+			$url = SITE_DIR."mobile/log/index.php";
 			$url .= (strpos($url, "?") === false ? "?" : "&").
 				http_build_query(array(
 					"detail_log_id" => $this->arParams["LOG_ID"],
@@ -41,7 +41,7 @@ final class SocialnetworkBlogPostComment extends CBitrixComponent
 				)
 			);
 
-			$arResult["urlMobileToPost"] = $url;
+			$arResult["urlMobileToPost"] = $url.'#LAST_LOG_TS#';
 			$arResult["urlMobileToComment"] = $url."&".$this->arParams["COMMENT_ID_VAR"]."=#comment_id#";
 			$arResult["urlMobileToDelete"] = $url."&delete_comment_id=#comment_id#";
 			$arResult["urlMobileToHide"] = $url."&hide_comment_id=#comment_id#";

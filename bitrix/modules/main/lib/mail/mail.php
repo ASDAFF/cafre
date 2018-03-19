@@ -10,6 +10,8 @@ namespace Bitrix\Main\Mail;
 
 use Bitrix\Main\Config as Config;
 use Bitrix\Main\IO\File;
+use Bitrix\Main\Application;
+use Bitrix\Main\Web\Uri;
 
 class Mail
 {
@@ -22,6 +24,7 @@ class Mail
 	protected $settingMaxFileSize;
 	protected $settingAttachImages;
 	protected $settingServerName;
+	protected $settingMailEncodeBase64;
 
 	protected $eol;
 	protected $boundary;
@@ -35,11 +38,14 @@ class Mail
 	protected $trackClickUrlParams;
 	protected $bitrixDirectory;
 
+	protected $contentTransferEncoding = '8bit';
 	protected $to;
 	protected $subject;
 	protected $headers;
 	protected $body;
 	protected $additionalParameters;
+	/** @var  Context */
+	protected $context;
 
 	public function __construct(array $mailParams)
 	{
@@ -56,14 +62,16 @@ class Mail
 		{
 			$this->trackReadLink = Tracking::getLinkRead(
 				$mailParams['TRACK_READ']['MODULE_ID'],
-				$mailParams['TRACK_READ']['FIELDS']
+				$mailParams['TRACK_READ']['FIELDS'],
+				isset($mailParams['TRACK_READ']['URL_PAGE']) ? $mailParams['TRACK_READ']['URL_PAGE'] : null
 			);
 		}
 		if(array_key_exists('TRACK_CLICK', $mailParams) && !empty($mailParams['TRACK_CLICK']))
 		{
 			$this->trackClickLink = Tracking::getLinkClick(
 				$mailParams['TRACK_CLICK']['MODULE_ID'],
-				$mailParams['TRACK_CLICK']['FIELDS']
+				$mailParams['TRACK_CLICK']['FIELDS'],
+				isset($mailParams['TRACK_CLICK']['URL_PAGE']) ? $mailParams['TRACK_CLICK']['URL_PAGE'] : null
 			);
 			if(!empty($mailParams['TRACK_CLICK']['URL_PARAMS']))
 			{
@@ -90,6 +98,11 @@ class Mail
 		$this->setBody($mailParams['BODY']);
 		$this->setHeaders($mailParams['HEADER']);
 		$this->setAdditionalParameters();
+
+		if(array_key_exists('CONTEXT', $mailParams) && is_object($mailParams['CONTEXT']))
+		{
+			$this->context = $mailParams['CONTEXT'];
+		}
 	}
 
 	/**
@@ -128,10 +141,13 @@ class Mail
 			$mail = static::createInstance($mailParams);
 
 			$mailResult = bxmail(
-				$mail->getTo(), $mail->getSubject(), $mail->getBody(), $mail->getHeaders(),
-				$mail->getAdditionalParameters()
+				$mail->getTo(),
+				$mail->getSubject(),
+				$mail->getBody(),
+				$mail->getHeaders(),
+				$mail->getAdditionalParameters(),
+				$mail->getContext()
 			);
-
 
 			if($mailResult)
 				$result = true;
@@ -162,6 +178,9 @@ class Mail
 
 		if(Config\Option::get("main", "attach_images", "N")=="Y")
 			$this->settingAttachImages = true;
+		
+		if(Config\Option::get("main", "mail_encode_base64", "N") == "Y")
+			$this->settingMailEncodeBase64 = true;
 
 		if(!isset($this->settingServerName) || strlen($this->settingServerName) <= 0)
 		{
@@ -204,20 +223,50 @@ class Mail
 			$bodyPart = $this->trackRead($bodyPart);
 		}
 
+		if($this->settingMailAddMessageId && !empty($messageId))
+		{
+			$bodyPart .= ($this->contentType == "html" ? "<br><br>" : "\n\n" );
+			$bodyPart .= "MID #".$messageId."\r\n";
+		}
+
 		if($this->hasAttachment())
 		{
 			$body = "--" . $this->boundary . $eol;
 			$body .= "Content-Type: " . $contentType . "; charset=" . $charset . $eol;
-			$body .= "Content-Transfer-Encoding: 8bit" . $eol . $eol;
+
+			// If it has attachment, message is multipart.
+			// By default for message part uses encoding of all mail.
+			$bodyPartCTE = $this->contentTransferEncoding;
+			if($this->settingMailEncodeBase64)
+			{
+				// Set base64 encoding of part
+				$bodyPartCTE = 'base64';
+			}
+			$body .= "Content-Transfer-Encoding: " . $bodyPartCTE . $eol . $eol;
+		}
+		elseif($this->settingMailEncodeBase64)
+		{
+			// Message is non multipart, change encoding of all mail.
+			$this->contentTransferEncoding = 'base64';
+		}
+
+		if($this->settingMailEncodeBase64)
+		{
+			// Line length is 70 chars. As a recommended in mail() php documentation.
+			$bodyPart = chunk_split(base64_encode($bodyPart), 70);
+		}
+		else
+		{
+			//Some MTA has 4K limit for fgets function. So we have to split the message body.
+			$bodyPart = implode(
+				"\n",
+				array_filter(
+					preg_split("/(.{512}[^ ]*[ ])/", $bodyPart . " ", -1, PREG_SPLIT_DELIM_CAPTURE)
+				)
+			);
 		}
 
 		$body .= $bodyPart;
-		if($this->settingMailAddMessageId && !empty($messageId))
-		{
-			$body .= ($this->contentType == "html" ? "<br><br>" : "\n\n" );
-			$body .= "MID #".$messageId."\r\n";
-		}
-
 		$body = str_replace("\r\n", "\n", $body);
 		if($this->settingConvertNewLineUnixToWindows)
 			$body = str_replace("\n", "\r\n", $body);
@@ -288,42 +337,72 @@ class Mail
 	 */
 	public function setHeaders(array $headers)
 	{
-		if(strlen($headers["Reply-To"])==0)
-			$headers["Reply-To"] = preg_replace("/(.*)\\<(.*)\\>/i", '$2', $headers["From"]);
-
-		if(strlen($headers["Reply-To"])==0)
-			$headers["X-Priority"] = '3 (Normal)';
-
 		foreach($headers as $k=>$v)
 		{
 			$headers[$k] = trim($v, "\r\n");
-			if(strlen($headers[$k])==0)
+			if($headers[$k] == '')
+			{
 				unset($headers[$k]);
+			}
 		}
 
+		if($headers["Reply-To"] == '' && $headers["From"] <> '')
+		{
+			$headers["Reply-To"] = preg_replace("/(.*)\\<(.*)\\>/i", '$2', $headers["From"]);
+		}
+
+		if($headers["X-Priority"] == '')
+		{
+			$headers["X-Priority"] = '3 (Normal)';
+		}
+
+		if($headers["Date"] == '')
+		{
+			$headers["Date"] = date("r");
+		}
 
 		if($this->settingMailConvertMailHeader)
 		{
-			foreach($headers as $k=>$v)
-				if($k == 'From' || $k == 'CC')
+			foreach($headers as $k => $v)
+			{
+				if ($k == 'From' || $k == 'CC' || $k == 'Reply-To')
+				{
 					$headers[$k] = $this->encodeHeaderFrom($v, $this->charset);
+				}
 				else
+				{
 					$headers[$k] = $this->encodeMimeString($v, $this->charset);
+				}
+			}
 		}
 
 		if($this->settingServerMsSmtp)
 		{
-			if($headers["From"]!='')
+			if($headers["From"] != '')
+			{
 				$headers["From"] = preg_replace("/(.*)\\<(.*)\\>/i", '$2', $headers["From"]);
-			if($headers["To"]!='')
+			}
+
+			if($headers["To"] != '')
+			{
 				$headers["To"] = preg_replace("/(.*)\\<(.*)\\>/i", '$2', $headers["To"]);
+			}
+
+			if($headers["Reply-To"] != '')
+			{
+				$headers["Reply-To"] = preg_replace("/(.*)\\<(.*)\\>/i", '$2', $headers["Reply-To"]);
+			}
 		}
 
 		if($this->settingMailFillToEmail && $headers["To"] != $this->to)
+		{
 			$headers["To"] = $this->to;
+		}
 
-		if($this->messageId !='')
+		if($this->messageId != '')
+		{
 			$headers['X-MID'] = $this->messageId;
+		}
 
 		if($this->hasAttachment())
 		{
@@ -339,13 +418,12 @@ class Mail
 			$headers['Content-Type'] = $contentType . "; charset=" . $this->charset;
 		}
 
-
 		$header = "";
 		foreach($headers as $k=>$v)
 		{
 			$header .= $k.': '.$v.$this->eol;
 		}
-		$header .= "Content-Transfer-Encoding: 8bit";
+		$header .= "Content-Transfer-Encoding: " . $this->contentTransferEncoding;
 
 		$this->headers = $header;
 	}
@@ -369,17 +447,17 @@ class Mail
 		$resultTo = $to;
 
 		if($this->settingMailConvertMailHeader)
+		{
 			$resultTo = $this->encodeHeaderFrom($resultTo, $this->charset);
+		}
 
 		if($this->settingServerMsSmtp)
+		{
 			$resultTo = preg_replace("/(.*)\\<(.*)\\>/i", '$2', $resultTo);
+		}
 
 		$this->to = $resultTo;
 	}
-
-
-
-
 
 	/**
 	 * @return string
@@ -427,6 +505,14 @@ class Mail
 	public function getAdditionalParameters()
 	{
 		return $this->additionalParameters;
+	}
+
+	/**
+	 * @return Context|null
+	 */
+	public function getContext()
+	{
+		return $this->context;
 	}
 
 	/**
@@ -540,7 +626,9 @@ class Mail
 		$src = $matches[3];
 
 		if($src == "")
+		{
 			return $matches[0];
+		}
 
 		if(array_key_exists($src, $this->filesReplacedFromBody))
 		{
@@ -548,10 +636,14 @@ class Mail
 			return $matches[1].$matches[2]."cid:".$uid.$matches[4].$matches[5];
 		}
 
+		$uri = new Uri($src);
+		$filePath = Application::getDocumentRoot() . $uri->getPath();
 		$io = \CBXVirtualIo::GetInstance();
-		$filePath = $io->GetPhysicalName(\Bitrix\Main\Application::getDocumentRoot().$src);
+		$filePath = $io->GetPhysicalName($filePath);
 		if(!File::isFileExists($filePath))
+		{
 			return $matches[0];
+		}
 
 		foreach($this->attachment as $attach)
 		{
@@ -565,18 +657,26 @@ class Mail
 		{
 			$fileIoObject = new File($filePath);
 			if ($fileIoObject->getSize() > $this->settingMaxFileSize)
+			{
 				return $matches[0];
+			}
 		}
 
 
-		$aImage = \CFile::GetImageSize($filePath, true);
-		if (!is_array($aImage))
+		$imageSize = \CFile::GetImageSize($filePath, true);
+		if (!is_array($imageSize))
+		{
 			return $matches[0];
+		}
 
 		if (function_exists("image_type_to_mime_type"))
-			$contentType = image_type_to_mime_type($aImage[2]);
+		{
+			$contentType = image_type_to_mime_type($imageSize[2]);
+		}
 		else
-			$contentType = $this->imageTypeToMimeType($aImage[2]);
+		{
+			$contentType = $this->imageTypeToMimeType($imageSize[2]);
+		}
 
 		$uid = uniqid(md5($src));
 
@@ -602,7 +702,11 @@ class Mail
 			return $matches[0];
 
 		$srcTrimmed = trim($src);
-		if(substr($srcTrimmed,0, 1) == "/")
+		if(substr($srcTrimmed,0, 2) == "//")
+		{
+			$src = $this->trackLinkProtocol . ":" . $srcTrimmed;
+		}
+		else if(substr($srcTrimmed,0, 1) == "/")
 		{
 			$srcModified = false;
 			if(count($this->attachment)>0)
@@ -621,7 +725,9 @@ class Mail
 			}
 
 			if(!$srcModified)
-				$src = "http://".$this->settingServerName . $srcTrimmed;
+			{
+				$src = $this->trackLinkProtocol . "://".$this->settingServerName . $srcTrimmed;
+			}
 		}
 
 		return $matches[1].$matches[2].$src.$matches[4].$matches[5];
@@ -646,7 +752,7 @@ class Mail
 		if($textReplaced !== null) $text = $textReplaced;
 
 		$textReplaced = preg_replace_callback(
-			"/(background-image\\s*:\\s*url\\s*\\()([\"']?)(.*?)(\\2)(\\s*\\);)/is",
+			"/(background|background-image\\s*:\\s*url\\s*\\()([\"']?)(.*?)(\\2)(\\s*\\)(.*?);)/is",
 			array($this, $replaceImageFunction),
 			$text
 		);
@@ -694,10 +800,18 @@ class Mail
 	 */
 	private function trackRead($html)
 	{
-		if($this->trackReadLink)
+		if(!$this->trackReadLink)
 		{
-			$html .= '<img src="' . $this->trackLinkProtocol . "://" . $this->settingServerName . $this->trackReadLink . '" border="0" height="1" width="1" alt="Read" />';
+			return $html;
 		}
+
+		$url = $this->trackReadLink;
+		if (substr($url, 0, 4) !== 'http')
+		{
+			$url = $this->trackLinkProtocol . "://" . $this->settingServerName . $url;
+		}
+
+		$html .= '<img src="' . $url . '" border="0" height="1" width="1" alt="" />';
 
 		return $html;
 	}
@@ -736,7 +850,12 @@ class Mail
 				$parsedHref[0] .= (strpos($parsedHref[0], '?') === false ? '?' : '&') . substr($hrefAddParam, 1);
 				$href = implode("#", $parsedHref);
 			}
-			$href = $this->trackLinkProtocol . '://' . $this->settingServerName . $this->trackClickLink . '&url=' . urlencode($href);
+
+			$href = $this->trackClickLink . '&url=' . urlencode($href) . '&sign=' . urlencode(Tracking::getSign($href));
+			if (!preg_match('/^http:\/\/|https:\/\//', $this->trackClickLink))
+			{
+				$href = $this->trackLinkProtocol . '://' . $this->settingServerName . $href;
+			}
 		}
 
 		return $matches[1].$matches[2].$href.$matches[4].$matches[5];

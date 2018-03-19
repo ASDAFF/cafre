@@ -1,208 +1,325 @@
-<?
-if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true)
-	die();
+<? if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) die();
+
+/** @var array $arResult */
+/** @var array $arParams */
+/** @global CMain $APPLICATION */
+/** @global CUser $USER */
+/** @var CBitrixComponentTemplate $this */
+/** @var CBitrixComponent $component */
+
+use Bitrix\Main\Localization\Loc;
+use Bitrix\Main\Config\Option;
+
+CJSCore::Init(array('lists'));
+Bitrix\Main\Page\Asset::getInstance()->addJs('/bitrix/js/main/utils.js');
+Bitrix\Main\Page\Asset::getInstance()->addCss('/bitrix/js/lists/css/autorun_progress_bar.css');
+Bitrix\Main\Page\Asset::getInstance()->addJs('/bitrix/js/lists/js/autorun_progress_bar.js');
 
 if($arResult["PROCESSES"] && $arResult["USE_COMMENTS"])
 	\Bitrix\Main\Page\Asset::getInstance()->addJs('/bitrix/js/bizproc/tools.js');
 
-$arToolbar = array();
-
+$listAction = array();
+$listActionAdd = array();
 if($arResult["CAN_ADD_ELEMENT"])
 {
-	$arToolbar[] = array(
-		"TEXT"=>$arResult["IBLOCK"]["ELEMENT_ADD"],
-		"TITLE"=>GetMessage("CT_BLL_TOOLBAR_ADD_ELEMENT_TITLE"),
-		"LINK"=>$arResult["LIST_NEW_ELEMENT_URL"],
-		"ICON"=>"btn-add-element",
+	$listActionAdd[] = array(
+		"id" => "addElement",
+		"text" => $arResult["IBLOCK"]["ELEMENT_ADD"],
+		"url" => $arResult["LIST_NEW_ELEMENT_URL"],
+		"action" => 'document.location.href="'.$arResult["LIST_NEW_ELEMENT_URL"].'"',
 	);
 }
-
 if($arResult["CAN_EDIT_SECTIONS"])
 {
-	$arToolbar[] = array(
-		"TEXT"=>GetMessage("CT_BLL_TOOLBAR_EDIT_SECTION"),
-		"TITLE"=>GetMessage("CT_BLL_TOOLBAR_EDIT_SECTION_TITLE"),
-		"LINK"=>$arResult["LIST_SECTION_URL"],
-		"ICON"=>"btn-edit-sections",
+	$listActionAdd[] = array(
+		"id" => "addSection",
+		"text" => $arResult["IBLOCK"]["SECTION_ADD"],
+		"url" => $arResult["LIST_SECTION_URL"],
+		"action" => "BX.Lists['".$arResult["JS_OBJECT"]."'].addSection();",
 	);
 }
-
 if($arParams["CAN_EDIT"])
 {
-	if(count($arToolbar))
-		$arToolbar[] = array("SEPARATOR" => true);
-
+	$listAction[] = array(
+		"text" => $arParams["IBLOCK_TYPE_ID"] == Option::get("lists", "livefeed_iblock_type_id") ?
+			Loc::getMessage("CT_BLL_TOOLBAR_PROCESS_TITLE") : Loc::getMessage("CT_BLL_TOOLBAR_LIST_TITLE"),
+		"url" => $arResult["LIST_EDIT_URL"],
+		"action" => 'document.location.href="'.$arResult["~LIST_EDIT_URL"].'"',
+	);
+	$listAction[] = array(
+		"text" => Loc::getMessage("CT_BLL_TOOLBAR_FIELDS"),
+		"url" => $arResult["LIST_FIELDS_URL"],
+		"action" => 'document.location.href="'.$arResult["~LIST_FIELDS_URL"].'"',
+	);
 	if($arResult["IBLOCK"]["BIZPROC"] == "Y" && $arParams["CAN_EDIT_BIZPROC"])
 	{
-		$arToolbar[] = array(
-			"TEXT"=>GetMessage("CT_BLL_TOOLBAR_BIZPROC"),
-			"TITLE"=>GetMessage("CT_BLL_TOOLBAR_BIZPROC_TITLE"),
-			"LINK"=>$arResult["BIZPROC_WORKFLOW_ADMIN_URL"],
-			"ICON"=>"btn-list-bizproc",
+		$listAction[] = array(
+			"text" => Loc::getMessage("CT_BLL_TOOLBAR_BIZPROC_SETTINGS"),
+			"url" => $arResult["BIZPROC_WORKFLOW_ADMIN_URL"],
+			"action" => 'document.location.href="'.$arResult["~BIZPROC_WORKFLOW_ADMIN_URL"].'"',
 		);
 	}
-
-	if($arParams["IBLOCK_TYPE_ID"] == COption::GetOptionString("lists", "livefeed_iblock_type_id"))
-	{
-		$text = GetMessage("CT_BLL_TOOLBAR_PROCESS");
-		$title = GetMessage("CT_BLL_TOOLBAR_PROCESS_TITLE");
-	}
-	else
-	{
-		$text = GetMessage("CT_BLL_TOOLBAR_LIST");
-		$title = GetMessage("CT_BLL_TOOLBAR_LIST_TITLE");
-	}
-
-	$arToolbar[] = array(
-		"TEXT"=>$text,
-		"TITLE"=>$title,
-		"LINK"=>$arResult["LIST_EDIT_URL"],
-		"ICON"=>"btn-edit-list",
-	);
 }
-
+if($arResult["SHOW_SECTION_GRID"] == "Y")
+{
+	$textForActionSectionGrid = Loc::getMessage("CT_BLL_HIDE_SECTION_GRID");
+}
+else
+{
+	$textForActionSectionGrid = Loc::getMessage("CT_BLL_SHOW_SECTION_GRID");
+}
 if($arResult["CAN_READ"])
 {
-	$arToolbar[] = array(
-		"TEXT" => GetMessage("CT_BLL_EXPORT_EXCEL"),
-		"TITLE" => GetMessage("CT_BLL_EXPORT_EXCEL_TITLE"),
-		"LINK" => CHTTP::urlAddParams((strpos($APPLICATION->GetCurPageParam(), "?") == false) ?
+	if($USER->IsAuthorized())
+	{
+		$listAction[] = array(
+			"id" => "showSectionGrid",
+			"text" => $textForActionSectionGrid,
+			"action" => "BX.Lists['".$arResult["JS_OBJECT"]."'].toogleSectionGrid();"
+		);
+
+		$url = CHTTP::urlAddParams((strpos($APPLICATION->GetCurPageParam(), "?") == false) ?
 			$arResult["EXPORT_EXCEL_URL"] : $arResult["EXPORT_EXCEL_URL"].substr($APPLICATION->GetCurPageParam(),
-				strpos($APPLICATION->GetCurPageParam(), "?")), array("ncc" => "y")),
-		"ICON" => "btn-list-excel",
-	);
+				strpos($APPLICATION->GetCurPageParam(), "?")), array("ncc" => "y"));
+		$listAction[] = array(
+			"text" => Loc::getMessage("CT_BLL_EXPORT_IN_EXCEL"),
+			"url" => $url,
+			"action" => 'document.location.href="'.$url.'"',
+		);
+	}
 }
 
-if (IsModuleInstalled('intranet') && CBXFeatures::IsFeatureEnabled('intranet_sharepoint'))
+if(!IsModuleInstalled("bitrix24")
+	&& IsModuleInstalled("intranet") && CBXFeatures::IsFeatureEnabled("intranet_sharepoint"))
 {
-	if ($arIcons = $APPLICATION->IncludeComponent('bitrix:sharepoint.link', '', array(
+	if($icons = $APPLICATION->IncludeComponent('bitrix:sharepoint.link', '', array(
 		'IBLOCK_ID' => $arParams['IBLOCK_ID'],
 		'OUTPUT' => 'N',
 	), null, array('HIDE_ICONS' => 'Y')))
 	{
-		if (count($arIcons['LINKS']) > 0)
+		if(count($icons['LINKS']) > 0)
 		{
-			$arMenu = array();
-			foreach ($arIcons['LINKS'] as $link)
+			$items = array();
+			foreach ($icons['LINKS'] as $link)
 			{
-				$arMenu[] = array(
-					'TEXT' => $link['TEXT'],
-					'ONCLICK' => $link['ONCLICK'],
-					'ICONCLASS' => $link['ICON']
+				$items[] = array(
+					'text' => $link['TEXT'],
+					'action' => $link['ONCLICK'],
 				);
 			}
-
-			$arToolbar[] = array(
-				'TEXT' => 'SharePoint',
-				'ICON' => 'bx-sharepoint',
-				'MENU' => $arMenu,
+			$listAction[] = array(
+				'text' => 'SharePoint',
+				'items' => $items
 			);
 		}
 	}
 }
 
-if(count($arToolbar))
+$filterId = "";
+foreach($arResult["FILTER_CUSTOM_ENTITY"] as $fieldType => $listField)
 {
-	$APPLICATION->IncludeComponent(
-		"bitrix:main.interface.toolbar",
+	switch($fieldType)
+	{
+		case 'employee':
+			$filterId = $arResult["FILTER_ID"];
+			break;
+		case 'ECrm':
+			$filterId = $arResult["FILTER_ID"];
+			break;
+		case 'E':
+			$filterId = $arResult["FILTER_ID"];
+			break;
+		case 'CREATED_BY':
+		case 'MODIFIED_BY':
+		$filterId = $arResult["FILTER_ID"];
+			$fieldType = 'employee';
+			break;
+	}
+	if($filterId)
+	{
+		echo Bitrix\Iblock\Helpers\Filter\Property::render($filterId, $fieldType, $listField);
+	}
+}
+
+$isBitrix24Template = (SITE_TEMPLATE_ID == "bitrix24");
+$pagetitleFlexibleSpace = "lists-pagetitle-flexible-space";
+$pagetitleAlignRightContainer = "lists-align-right-container";
+if($isBitrix24Template)
+{
+	$bodyClass = $APPLICATION->GetPageProperty("BodyClass");
+	$APPLICATION->SetPageProperty("BodyClass", "pagetitle-toolbar-field-view");
+	$this->SetViewTarget("inside_pagetitle");
+	$pagetitleFlexibleSpace = "";
+	$pagetitleAlignRightContainer = "";
+}
+elseif(!IsModuleInstalled("intranet"))
+{
+	$APPLICATION->SetAdditionalCSS("/bitrix/js/lists/css/intranet-common.css");
+}
+?>
+<div class="pagetitle-container pagetitle-flexible-space <?=$pagetitleFlexibleSpace?>">
+	<? $APPLICATION->IncludeComponent(
+		"bitrix:main.ui.filter",
 		"",
 		array(
-			"BUTTONS"=>$arToolbar,
+			"FILTER_ID" => $arResult["FILTER_ID"],
+			"GRID_ID" => $arResult["GRID_ID"],
+			"FILTER" => $arResult["FILTER"],
+			"ENABLE_LABEL" => true,
+			"ENABLE_LIVE_SEARCH" => true
 		),
-		$component, array("HIDE_ICONS" => "Y")
-	);
-}
-
-$arActions = array();
-
-if(!empty($arResult["ELEMENTS_CAN_DELETE"]))
+		$component,
+		array("HIDE_ICONS" => true)
+	); ?>
+</div>
+<div class="pagetitle-container pagetitle-align-right-container <?=$pagetitleAlignRightContainer?>">
+	<? if($arResult["SECTION_ID"]):?>
+		<a href="<?=$arResult["LIST_PARENT_URL"]?>" class="lists-list-back">
+			<?=GetMessage("CT_BLL_SECTION_RETURN")?>
+		</a>
+	<?endif;?>
+	<? if($listAction):?>
+		<span id="lists-title-action" class="webform-small-button webform-small-button-transparent webform-small-button-dropdown">
+		<span class="webform-small-button-text"><?=Loc::getMessage("CT_BLL_TOOLBAR_ACTION")?></span>
+		<span id="lists-title-action-icon" class="webform-small-button-icon"></span>
+	</span>
+	<?endif;?>
+	<?if($arResult["CAN_ADD_ELEMENT"] || $arResult["CAN_EDIT_SECTIONS"]):?>
+		<span class="webform-small-button-separate-wrap">
+		<a href="<?=$arResult["LIST_NEW_ELEMENT_URL"]?>" class="
+			webform-small-button webform-small-button-blue" id="lists-title-action-add">
+			<span class="webform-small-button-icon"></span>
+			<span class="webform-small-button-text"><?=Loc::getMessage("CT_BLL_TOOLBAR_ADD")?></span>
+		</a>
+		<span class="webform-small-button-right-part" id="lists-title-action-select-add"></span>
+	</span>
+	<?endif?>
+</div>
+<?
+if($isBitrix24Template)
 {
-	$arActions["delete"] = true;
+	$this->EndViewTarget();
 }
 
-if($arResult["ELEMENTS_CAN_EDIT"] > 0)
-{
-	$sections = '&nbsp;<select name="section_to_move" size="1">';
-	foreach($arResult["LIST_SECTIONS"] as $id => $name)
-	{
-		$sections .= '<option value="'.$id.'">'.$name.'</option>';
-	}
-	$sections .= '</select>&nbsp;';
-
-	$arActions["list"] = array("section" => GetMessage("CT_BLL_MOVE_TO_SECTION"));
-	$arActions["custom_html"] = $sections;
-}
-
-if(empty($arActions))
-	$arActions = false;
-
-foreach($arResult["FILTER"] as $i => $arFilter)
-{
-	if($arFilter["type"] == "E"):
-		$FIELD_ID = $arFilter["id"];
-		$arField = $arFilter["value"];
-		$values = CIBlockPropertyElementAutoComplete::GetValueForAutoCompleteMulti($arField, $arResult["GRID_FILTER"][$FIELD_ID]);
-		ob_start();
-		?><input type="hidden" name="<?echo $FIELD_ID?>" value=""><? //This will emulate empty input
-		$control_id = $APPLICATION->IncludeComponent(
-			"bitrix:main.lookup.input",
-			"elements",
-			array(
-				"INPUT_NAME" => $FIELD_ID,
-				"INPUT_NAME_STRING" => "inp_".$FIELD_ID,
-				"INPUT_VALUE_STRING" => is_array($values)? htmlspecialcharsback(current($values)): "",
-				"START_TEXT" => "",
-				"MULTIPLE" => "N",
-				//These params will go throught ajax call to ajax.php in template
-				"IBLOCK_TYPE_ID" => $arParams["~IBLOCK_TYPE_ID"],
-				"IBLOCK_ID" => $arField["LINK_IBLOCK_ID"],
-				"FILTER" => "Y",
-			), $component, array("HIDE_ICONS" => "Y")
-		);
-		$html = ob_get_contents();
-		ob_end_clean();
-
-		$arResult["FILTER"][$i]["type"] = "custom";
-		$arResult["FILTER"][$i]["value"] = $html;
-		$arResult["FILTER"][$i]["filtered"] = isset($_REQUEST[$FIELD_ID]) && (is_array($_REQUEST[$FIELD_ID]) || strlen($_REQUEST[$FIELD_ID]));
-		$arResult["FILTER"][$i]["filter_value"] = $_REQUEST[$FIELD_ID];
-		$arResult["FILTER"][$i]["enable_settings"] = false;
-
-	endif;
-}
+$sectionId = $arResult["SECTION_ID"] ? $arResult["SECTION_ID"] : 0;
+$socnetGroupId = $arParams["SOCNET_GROUP_ID"] ? $arParams["SOCNET_GROUP_ID"] : 0;
+$rebuildedData = Option::get("lists", "rebuild_seachable_content");
+$rebuildedData = unserialize($rebuildedData);
+$shouldStartRebuildSeachableContent = isset($rebuildedData[$arResult["IBLOCK_ID"]]);
+$dataForAjax = array(
+	"iblockTypeId" => $arParams["IBLOCK_TYPE_ID"],
+	"iblockId" => $arResult["IBLOCK_ID"],
+	"sectionId" => $sectionId,
+	"socnetGroupId" => $socnetGroupId
+);
+if($shouldStartRebuildSeachableContent):?>
+	<?
+		$dataForAjax["totalItems"] = CLists::getNumberOfElements($arResult["IBLOCK_ID"]);
+	?>
+	<div id="rebuildSeachableContent"></div>
+	<script>
+		BX.ready(function(){
+			if(BX.Lists.AutorunProcessPanel.isExists("rebuildSeachableContent"))
+			{
+				return;
+			}
+			BX.Lists.AutorunProcessManager.messages =
+			{
+				title: "<?=GetMessageJS("CT_BLL_REBUILD_SEARCH_CONTENT_TITLE")?>",
+				stateTemplate: "<?=GetMessageJS("CT_BLL_REBUILD_SEARCH_CONTENT_STATE")?>"
+			};
+			var manager = BX.Lists.AutorunProcessManager.create("rebuildSeachableContent",
+				{
+					serviceUrl: "<?='/bitrix/components/bitrix/lists.list/ajax.php'?>",
+					ajaxAction: "rebuildSeachableContent",
+					dataForAjax: <?=Bitrix\Main\Web\Json::encode($dataForAjax)?>,
+					container: "rebuildSeachableContent",
+					enableLayout: true
+				}
+			);
+			manager.runAfter(100);
+		});
+	</script>
+<?endif;
 
 $APPLICATION->IncludeComponent(
-	"bitrix:main.interface.grid",
+	"bitrix:main.ui.grid",
 	"",
 	array(
-		"GRID_ID"=>$arResult["GRID_ID"],
-		"HEADERS"=>$arResult["ELEMENTS_HEADERS"],
-		"ROWS"=>$arResult["ELEMENTS_ROWS"],
-		"ACTIONS"=>$arActions,
-		"NAV_OBJECT"=>$arResult["NAV_OBJECT"],
-		"SORT"=>$arResult["SORT"],
-		"FILTER"=>$arResult["FILTER"],
-		"FOOTER" => array(
-			array("title" => GetMessage("CT_BLL_SELECTED"), "value" => $arResult["NAV_OBJECT"]->SelectedRowsCount())
-		),
+		"GRID_ID" => $arResult["GRID_ID"],
+		"COLUMNS" => $arResult["ELEMENTS_HEADERS"],
+		"ROWS" => $arResult["ELEMENTS_ROWS"],
+		"NAV_STRING" => $arResult["NAV_STRING"],
+		"TOTAL_ROWS_COUNT" => $arResult["NAV_OBJECT"]->NavRecordCount,
+		"PAGE_SIZES" => $arResult["GRID_PAGE_SIZES"],
 		"AJAX_MODE" => "Y",
-		"AJAX_OPTION_JUMP"=>"N",
+		"AJAX_ID" => CAjax::getComponentID('bitrix:main.ui.grid', '.default', ''),
+		"ENABLE_NEXT_PAGE" => $arResult["GRID_ENABLE_NEXT_PAGE"],
+		"ACTION_PANEL" => $arResult["GRID_ACTION_PANEL"],
+		"AJAX_OPTION_JUMP" => "N",
+		"SHOW_CHECK_ALL_CHECKBOXES" => true,
+		"SHOW_ROW_CHECKBOXES" => true,
+		"SHOW_ROW_ACTIONS_MENU" => true,
+		"SHOW_GRID_SETTINGS_MENU" => true,
+		"SHOW_NAVIGATION_PANEL" => true,
+		"SHOW_PAGINATION" => true,
+		"SHOW_SELECTED_COUNTER" => true,
+		"SHOW_TOTAL_COUNTER" => true,
+		"SHOW_PAGESIZE" => true,
+		"SHOW_ACTION_PANEL" => true,
+		"ALLOW_COLUMNS_SORT" => true,
+		"ALLOW_COLUMNS_RESIZE" => true,
+		"ALLOW_HORIZONTAL_SCROLL" => true,
+		"ALLOW_SORT" => true,
+		"ALLOW_PIN_HEADER" => true,
+		"AJAX_OPTION_HISTORY" => "N"
 	),
 	$component, array("HIDE_ICONS" => "Y")
 );
-if($arResult["SECTION_ID"])
-	$sectionId = $arResult["SECTION_ID"];
-else
-	$sectionId = 0;
 ?>
 
 <script type="text/javascript">
-	BX(function () {
-		BX['ListClass_<?= $arResult["RAND_STRING"] ?>'] = new BX.ListClass({
+	BX.ready(function(){
+		BX.Lists['<?= $arResult['JS_OBJECT'] ?>'] = new BX.Lists.ListClass({
 			randomString: '<?= $arResult["RAND_STRING"] ?>',
 			iblockTypeId: '<?= $arParams["IBLOCK_TYPE_ID"] ?>',
 			iblockId: '<?= $arResult["IBLOCK_ID"] ?>',
-			sectionId: '<?= $sectionId ?>'
+			sectionId: '<?= $sectionId ?>',
+			socnetGroupId: '<?=$socnetGroupId?>',
+			jsObject: '<?= $arResult['JS_OBJECT'] ?>',
+			listAction: <?=\Bitrix\Main\Web\Json::encode($listAction)?>,
+			listActionAdd: <?=\Bitrix\Main\Web\Json::encode($listActionAdd)?>,
+			gridId: '<?=$arResult["GRID_ID"]?>',
+			filterId: '<?=$arResult["FILTER_ID"]?>'
 		});
+
+		BX.message({
+			CT_BLL_ADD_SECTION_POPUP_TITLE: '<?=GetMessageJS("CT_BLL_ADD_SECTION_POPUP_TITLE")?>',
+			CT_BLL_ADD_SECTION_POPUP_INPUT_NAME: '<?=GetMessageJS("CT_BLL_ADD_SECTION_POPUP_INPUT_NAME")?>',
+			CT_BLL_ADD_SECTION_POPUP_BUTTON_ADD: '<?=GetMessageJS("CT_BLL_ADD_SECTION_POPUP_BUTTON_ADD")?>',
+			CT_BLL_ADD_SECTION_POPUP_BUTTON_EDIT: '<?=GetMessageJS("CT_BLL_ADD_SECTION_POPUP_BUTTON_EDIT")?>',
+			CT_BLL_ADD_SECTION_POPUP_BUTTON_CLOSE: '<?=GetMessageJS("CT_BLL_ADD_SECTION_POPUP_BUTTON_CLOSE")?>',
+			CT_BLL_ADD_SECTION_POPUP_ERROR_NAME: '<?=GetMessageJS("CT_BLL_ADD_SECTION_POPUP_ERROR_NAME")?>',
+			CT_BLL_EDIT_SECTION_POPUP_TITLE: '<?=GetMessageJS("CT_BLL_EDIT_SECTION_POPUP_TITLE")?>',
+			CT_BLL_TOOLBAR_ELEMENT_DELETE_WARNING: '<?=GetMessageJS("CT_BLL_TOOLBAR_ELEMENT_DELETE_WARNING")?>',
+			CT_BLL_TOOLBAR_SECTION_DELETE_WARNING: '<?=GetMessageJS("CT_BLL_TOOLBAR_SECTION_DELETE_WARNING")?>',
+			CT_BLL_DELETE_POPUP_TITLE: '<?=GetMessageJS("CT_BLL_DELETE_POPUP_TITLE")?>',
+			CT_BLL_DELETE_POPUP_ACCEPT_BUTTON: '<?=GetMessageJS("CT_BLL_DELETE_POPUP_ACCEPT_BUTTON")?>',
+			CT_BLL_DELETE_POPUP_CANCEL_BUTTON: '<?=GetMessageJS("CT_BLL_DELETE_POPUP_CANCEL_BUTTON")?>',
+			CT_BLL_SHOW_SECTION_GRID: '<?=GetMessageJS("CT_BLL_SHOW_SECTION_GRID")?>',
+			CT_BLL_HIDE_SECTION_GRID: '<?=GetMessageJS("CT_BLL_HIDE_SECTION_GRID")?>'
+		});
+
+		if(BX["viewElementBind"])
+		{
+			BX.viewElementBind('<?=$arResult["GRID_ID"]?>', {showTitle: true},
+				function(node)
+				{
+					return BX.type.isElementNode(node) && (node.getAttribute('data-bx-viewer')
+						|| node.getAttribute('data-bx-image'));
+				}
+			);
+		}
 	});
 </script>
+

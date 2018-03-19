@@ -8,7 +8,7 @@ use Bitrix\Main\Entity;
 class OracleSqlHelper extends SqlHelper
 {
 	/**
-	 * Identificator escaping - left char
+	 * Returns an identificator escaping left character.
 	 *
 	 * @return string
 	 */
@@ -18,7 +18,7 @@ class OracleSqlHelper extends SqlHelper
 	}
 
 	/**
-	 * Identificator escaping - left char
+	 * Returns an identificator escaping right character.
 	 *
 	 * @return string
 	 */
@@ -165,10 +165,10 @@ class OracleSqlHelper extends SqlHelper
 	 * - M      A short textual representation of a month, three letters
 	 * - DD     Day of the month, 2 digits with leading zeros
 	 * - HH     24-hour format of an hour with leading zeros
-	 * - H      12-hour format of an hour with leading zeros
-	 * - GG     24-hour format of an hour with leading zeros
-	 * - G      12-hour format of an hour with leading zeros
-	 * - SS     Minutes with leading zeros
+	 * - H      24-hour format of an hour without leading zeros
+	 * - GG     12-hour format of an hour with leading zeros
+	 * - G      12-hour format of an hour without leading zeros
+	 * - SS     Seconds with leading zeros
 	 * - TT     AM or PM
 	 * - T      AM or PM
 	 * <p>
@@ -381,6 +381,30 @@ class OracleSqlHelper extends SqlHelper
 	}
 
 	/**
+	 * {@inheritDoc}
+	 *
+	 * @param string $fieldName
+	 *
+	 * return string
+	 */
+	public function castToChar($fieldName)
+	{
+		return 'TO_CHAR('.$fieldName.')';
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @param string $fieldName
+	 *
+	 * return string
+	 */
+	public function softCastTextToChar($fieldName)
+	{
+		return 'dbms_lob.substr('.$fieldName.', 4000, 1)';
+	}
+
+	/**
 	 * Converts lob object into string.
 	 * <p>
 	 * Helper function.
@@ -428,82 +452,11 @@ class OracleSqlHelper extends SqlHelper
 	}
 
 	/**
-	 * Converts values to the string according to the column type to use it in a SQL query.
-	 *
-	 * @param mixed $value Value to be converted.
-	 * @param Entity\ScalarField $field Type "source".
-	 *
-	 * @return string Value to write to column.
-	 * @throws \Bitrix\Main\ArgumentTypeException
+	 * @inheritdoc
 	 */
-	public function convertToDb($value, Entity\ScalarField $field)
+	public function convertToDbText($value)
 	{
-		if ($value === null)
-		{
-			return "NULL";
-		}
-
-		if ($value instanceof SqlExpression)
-		{
-			return $value->compile();
-		}
-
-		if ($field instanceof Entity\DatetimeField)
-		{
-			if (empty($value))
-			{
-				$result = "NULL";
-			}
-			elseif ($value instanceof Type\Date)
-			{
-				if ($value instanceof Type\DateTime)
-				{
-					$value = clone($value);
-					$value->setDefaultTimeZone();
-				}
-				$result = $this->getCharToDateFunction($value->format("Y-m-d H:i:s"));
-			}
-			else
-			{
-				throw new Main\ArgumentTypeException('value', '\Bitrix\Main\Type\Date');
-			}
-		}
-		elseif ($field instanceof Entity\TextField)
-		{
-			if (empty($value))
-			{
-				$result = "NULL";
-			}
-			else
-			{
-				$result = "EMPTY_CLOB()";
-			}
-		}
-		elseif ($field instanceof Entity\IntegerField)
-		{
-			$result = "'".intval($value)."'";
-		}
-		elseif ($field instanceof Entity\FloatField)
-		{
-			if (($scale = $field->getScale()) !== null)
-			{
-				$result = "'".round(doubleval($value), $scale)."'";
-			}
-			else
-			{
-				$result = "'".doubleval($value)."'";
-			}
-		}
-		elseif ($field instanceof Entity\StringField)
-		{
-			$result = "'".$this->forSql($value, $field->getSize())."'";
-		}
-		else
-		{
-			$result = "'".$this->forSql($value)."'";
-		}
-
-		return $result;
+		return empty($value) ? "NULL" : "EMPTY_CLOB()";
 	}
 
 	/**
@@ -599,7 +552,7 @@ class OracleSqlHelper extends SqlHelper
 			return new Entity\FloatField($name);
 
 		case "NUMBER":
-			if ($parameters["precision"] == '' && $parameters["scale"] == '')
+			if ($parameters["precision"] == 0 && $parameters["scale"] == -127)
 			{
 				//NUMBER
 				return new Entity\FloatField($name);
@@ -638,7 +591,7 @@ class OracleSqlHelper extends SqlHelper
 	 *
 	 * @param string $sql Sql text.
 	 * @param integer $limit Maximum number of rows to return.
-	 * @param integer $offset Offset of the first row to return.
+	 * @param integer $offset Offset of the first row to return, starting from 0.
 	 *
 	 * @return string
 	 * @throws Main\ArgumentException
@@ -653,6 +606,7 @@ class OracleSqlHelper extends SqlHelper
 
 		if ($limit > 0)
 		{
+			//The first row selected has a ROWNUM of 1, the second has 2, and so on
 			if ($offset <= 0)
 			{
 				$sql =
@@ -667,9 +621,9 @@ class OracleSqlHelper extends SqlHelper
 					"FROM (".
 					"   SELECT rownum_query_alias.*, ROWNUM rownum_alias ".
 					"   FROM (".$sql.") rownum_query_alias ".
-					"   WHERE ROWNUM <= ".($offset + $limit - 1)." ".
+					"   WHERE ROWNUM <= ".($offset + $limit)." ".
 					") ".
-					"WHERE rownum_alias >= ".$offset;
+					"WHERE rownum_alias >= ".($offset + 1);
 			}
 		}
 		return $sql;
@@ -719,7 +673,15 @@ class OracleSqlHelper extends SqlHelper
 			if (in_array($columnName, $primaryFields))
 			{
 				$sourceSelectColumns[] = $this->convertToDb($insertFields[$columnName], $tableField)." AS ".$quotedName;
-				$targetConnectColumns[] = "source.".$quotedName." = target.".$quotedName;
+				if($insertFields[$columnName] === null)
+				{
+					//can't just compare NULLs
+					$targetConnectColumns[] = "(source.".$quotedName." IS NULL AND target.".$quotedName." IS NULL)";
+				}
+				else
+				{
+					$targetConnectColumns[] = "(source.".$quotedName." = target.".$quotedName.")";
+				}
 			}
 
 			if (isset($updateFields[$columnName]) || array_key_exists($columnName, $updateFields))

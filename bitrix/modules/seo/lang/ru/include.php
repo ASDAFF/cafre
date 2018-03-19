@@ -11,4 +11,11 @@ $MESS ['SEO_YANDEX_ORIGINAL_TEXT_TOO_SHORT'] = "“екст слишком короткий. —ервис п
 $MESS ['SEO_YANDEX_ORIGINAL_TEXT_TOO_LONG'] = "“екст слишком длинный. —ервис принимает тексты не длиннее #NUM# символов";
 $MESS ['SEO_YANDEX_ORIGINAL_TEXT_OK'] = "ќпераци€ успешна";
 $MESS ['SEO_YANDEX_ORIGINAL_TEXT_OK_DETAILS'] = "ќригинальный текст успешно добавлен. <a href=\"/bitrix/admin/seo_search_yandex.php?lang=#LANGUAGE_ID#\">ѕерейти к управлению оригинальными текстами.</a>";
+
+$MESS["YANDEX_ERROR__INVALID_USER_ID"] = "ID пользовател€, выдавшего токен, отличаетс€ от указанного в запросе";
+$MESS["YANDEX_ERROR__HOST_NOT_VERIFIED"] = "—айт отсутствует в списке сайтов пользовател€ или на него не подтверждены права";
+$MESS["YANDEX_ERROR__TEXT_LENGTH_CONSTRAINTS_VIOLATION"] = "ѕереданный текст слишком короткий или длинный.";
+$MESS["YANDEX_ERROR__ORIGINALS_TEXT_ALREADY_ADDED"] = "ѕереданный текст уже был добавлен ранее";
+$MESS["YANDEX_ERROR__ORIGINAL_TEXT_ALREADY_ADDED"] = "ѕереданный текст уже был добавлен ранее";
+$MESS["YANDEX_ERROR__QUOTA_EXCEEDED"] = "ѕревышена квота добавлени€ оригинальных текстов";
 ?>

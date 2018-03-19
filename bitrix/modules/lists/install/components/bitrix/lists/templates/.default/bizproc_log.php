@@ -22,20 +22,24 @@ else
 if(!preg_match('#^(?:/|\?|https?://)(?:\w|$)#D', $backUrl))
 	$backUrl = '#';
 
-$buttons = array(
-	array(
-		"TEXT" => GetMessage("CT_BL_LIST_GO_BACK"),
-		"TITLE" => GetMessage("CT_BL_LIST_GO_BACK"),
-		"LINK" => $backUrl,
-		"ICON" => "btn-list",
-	),
-);
-$APPLICATION->includeComponent(
-	"bitrix:main.interface.toolbar",
-	"",
-	array("BUTTONS" => $buttons),
-	$component
-);
+CJSCore::Init(array('lists'));
+$isBitrix24Template = (SITE_TEMPLATE_ID == "bitrix24");
+if($isBitrix24Template)
+{
+	$this->SetViewTarget("pagetitle", 100);
+}
+?>
+	<div class="pagetitle-container pagetitle-align-right-container">
+		<a href="<?=htmlspecialcharsbx($backUrl)?>" class="lists-list-back">
+			<?=GetMessage("CT_BL_LIST_GO_BACK")?>
+		</a>
+	</div>
+<?
+if($isBitrix24Template)
+{
+	$this->EndViewTarget();
+}
+
 
 if($arParams["IBLOCK_TYPE_ID"] == COption::GetOptionString("lists", "livefeed_iblock_type_id"))
 {
@@ -44,8 +48,8 @@ if($arParams["IBLOCK_TYPE_ID"] == COption::GetOptionString("lists", "livefeed_ib
 }
 else
 {
-	$moduleId = "iblock";
-	$entity = "CIBlockDocument";
+	$moduleId = "lists";
+	$entity = 'Bitrix\Lists\BizprocDocumentLists';
 }
 $APPLICATION->IncludeComponent("bitrix:bizproc.log", ".default", array(
 	"MODULE_ID" => $moduleId,

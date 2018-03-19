@@ -2,6 +2,7 @@
 	width: 100%;
 	min-width: 220px;
 	font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+	margin-bottom: 20px;
 }
 .bx-filter .bx-filter-section {
 	/*background: #edf6fc; /* color */
@@ -397,6 +398,11 @@ COLOR
 *	LABEL
 *
 */
+.bx-filter .bx-filter-param-label {
+	min-height: 20px;
+	font-weight: normal;
+	cursor: pointer;
+}
 
 .bx-filter .bx-filter-param-btn-inline .bx-filter-param-label {
 	float: left;

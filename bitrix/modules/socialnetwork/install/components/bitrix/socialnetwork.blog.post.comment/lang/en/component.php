@@ -1,5 +1,6 @@
 <?
 $MESS["BLOG_MODULE_NOT_INSTALL"] = "Blog module is not installed.";
+$MESS["SONET_MODULE_NOT_INSTALL"] = "The Social Network module is not installed.";
 $MESS["B_B_PC_CAPTCHA_ERROR"] = "The automated form submission prevention code is incorrect.";
 $MESS["B_B_PC_COM_ERROR"] = "Error adding comment:";
 $MESS["B_B_PC_NO_RIGHTS"] = "Insufficient permissions to comment the message";

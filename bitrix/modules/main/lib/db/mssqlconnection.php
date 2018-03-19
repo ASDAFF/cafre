@@ -66,12 +66,7 @@ class MssqlConnection extends Connection
 		// hide cautions
 		sqlsrv_configure("WarningsReturnAsErrors", 0);
 
-		/** @noinspection PhpUnusedLocalVariableInspection */
-		global $DB, $USER, $APPLICATION;
-		if ($fn = \Bitrix\Main\Loader::getPersonal("php_interface/after_connect_d7.php"))
-		{
-			include($fn);
-		}
+		$this->afterConnected();
 	}
 
 	/**

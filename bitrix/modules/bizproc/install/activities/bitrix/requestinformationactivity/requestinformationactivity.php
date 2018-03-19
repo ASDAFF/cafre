@@ -5,6 +5,9 @@ class CBPRequestInformationActivity
 	extends CBPActivity
 	implements IBPEventActivity, IBPActivityExternalEventListener
 {
+	const ACTIVITY = 'RequestInformationActivity';
+	const CONTROLS_PREFIX = 'bpriact_';
+
 	private $taskId = 0;
 	private $taskUsers = array();
 	private $subscriptionId = 0;
@@ -27,6 +30,7 @@ class CBPRequestInformationActivity
 			"TaskButtonMessage" => "",
 			"CommentLabelMessage" => "",
 			"ShowComment" => "Y",
+			'CommentRequired' => 'N',
 			"StatusMessage" => "",
 			"SetStatusMessage" => "Y",
 			"AccessControl" => "N",
@@ -34,6 +38,8 @@ class CBPRequestInformationActivity
 			"TimeoutDuration" => 0,
 			"TimeoutDurationType" => "s",
 			"IsTimeout" => 0,
+			"Changes" => array(),
+			'DelegationType' => 0,
 		);
 
 		$this->SetPropertiesTypes(array(
@@ -46,6 +52,10 @@ class CBPRequestInformationActivity
 			'IsTimeout' => array(
 				'Type' => 'int',
 			),
+			'Changes' => array(
+				'Type' => 'string',
+				'Multiple' => true
+			),
 		));
 	}
 
@@ -56,6 +66,7 @@ class CBPRequestInformationActivity
 		$this->Comments = '';
 		$this->InfoUser = null;
 		$this->IsTimeout = 0;
+		$this->Changes = array();
 	}
 
 	public function Execute()
@@ -108,6 +119,8 @@ class CBPRequestInformationActivity
 		$arParameters["ShowComment"] = $this->IsPropertyExists("ShowComment") ? $this->ShowComment : "Y";
 		if ($arParameters["ShowComment"] != "Y" && $arParameters["ShowComment"] != "N")
 			$arParameters["ShowComment"] = "Y";
+
+		$arParameters["CommentRequired"] = $this->IsPropertyExists("CommentRequired") ? $this->CommentRequired : "N";
 		$arParameters["AccessControl"] = $this->IsPropertyExists("AccessControl") && $this->AccessControl == 'Y' ? 'Y' : 'N';
 
 		$requestedInformation = $this->RequestedInformation;
@@ -117,17 +130,26 @@ class CBPRequestInformationActivity
 				$arParameters["REQUEST"][] = $v;
 		}
 
+		$overdueDate = $this->OverdueDate;
+		$timeoutDuration = $this->CalculateTimeoutDuration();
+		if ($timeoutDuration > 0)
+		{
+			$overdueDate = ConvertTimeStamp(time() + max($timeoutDuration, CBPSchedulerService::getDelayMinLimit()), "FULL");
+		}
+
+		/** @var CBPTaskService $taskService */
 		$taskService = $this->workflow->GetService("TaskService");
 		$this->taskId = $taskService->CreateTask(
 			array(
 				"USERS" => $arUsers,
 				"WORKFLOW_ID" => $this->GetWorkflowInstanceId(),
-				"ACTIVITY" => "RequestInformationActivity",
+				"ACTIVITY" => static::ACTIVITY,
 				"ACTIVITY_NAME" => $this->name,
-				"OVERDUE_DATE" => $this->OverdueDate,
+				"OVERDUE_DATE" => $overdueDate,
 				"NAME" => $this->Name,
 				"DESCRIPTION" => $this->Description,
 				"PARAMETERS" => $arParameters,
+				'DELEGATION_TYPE' => (int)$this->DelegationType,
 				'DOCUMENT_NAME' => $documentService->GetDocumentName($documentId)
 			)
 		);
@@ -139,9 +161,9 @@ class CBPRequestInformationActivity
 			$this->SetStatusTitle($message);
 		}
 
-		$timeoutDuration = $this->CalculateTimeoutDuration();
 		if ($timeoutDuration > 0)
 		{
+			/** @var CBPSchedulerService $schedulerService */
 			$schedulerService = $this->workflow->GetService("SchedulerService");
 			$this->subscriptionId = $schedulerService->SubscribeOnTime($this->workflow->GetInstanceId(), $this->name, time() + $timeoutDuration);
 		}
@@ -201,7 +223,7 @@ class CBPRequestInformationActivity
 		return CBPActivityExecutionStatus::Closed;
 	}
 
-	public function OnExternalEvent($arEventParameters = array())
+	public function OnExternalEvent($eventParameters = array())
 	{
 		if ($this->executionStatus == CBPActivityExecutionStatus::Closed)
 			return;
@@ -209,7 +231,7 @@ class CBPRequestInformationActivity
 		$timeoutDuration = $this->CalculateTimeoutDuration();
 		if ($timeoutDuration > 0)
 		{
-			if (array_key_exists("SchedulerService", $arEventParameters) && $arEventParameters["SchedulerService"] == "OnAgent")
+			if (array_key_exists("SchedulerService", $eventParameters) && $eventParameters["SchedulerService"] == "OnAgent")
 			{
 				$this->IsTimeout = 1;
 				$this->taskStatus = CBPTaskStatus::Timeout;
@@ -219,46 +241,45 @@ class CBPRequestInformationActivity
 			}
 		}
 
-		if (!array_key_exists("USER_ID", $arEventParameters) || intval($arEventParameters["USER_ID"]) <= 0)
+		if (!array_key_exists("USER_ID", $eventParameters) || intval($eventParameters["USER_ID"]) <= 0)
 			return;
 
-		if (empty($arEventParameters["REAL_USER_ID"]))
-			$arEventParameters["REAL_USER_ID"] = $arEventParameters["USER_ID"];
+		if (empty($eventParameters["REAL_USER_ID"]))
+			$eventParameters["REAL_USER_ID"] = $eventParameters["USER_ID"];
 
 		$rootActivity = $this->GetRootActivity();
 		$arUsers = $this->taskUsers;
 		if (empty($arUsers)) //compatibility
 			$arUsers = CBPHelper::ExtractUsers($this->Users, $this->GetDocumentId(), false);
 
-		$arEventParameters["USER_ID"] = intval($arEventParameters["USER_ID"]);
-		$arEventParameters["REAL_USER_ID"] = intval($arEventParameters["REAL_USER_ID"]);
-		if (!in_array($arEventParameters["USER_ID"], $arUsers))
+		$eventParameters["USER_ID"] = intval($eventParameters["USER_ID"]);
+		$eventParameters["REAL_USER_ID"] = intval($eventParameters["REAL_USER_ID"]);
+		if (!in_array($eventParameters["USER_ID"], $arUsers))
 			return;
 
-		$taskService = $this->workflow->GetService("TaskService");
-		$taskService->MarkCompleted($this->taskId, $arEventParameters["REAL_USER_ID"], CBPTaskUserStatus::Ok);
-
-		$this->Comments = $arEventParameters["COMMENT"];
+		$this->Comments = $eventParameters["COMMENT"];
+		$this->Changes = $this->findRequestChanges($this->RequestedInformation, $eventParameters["RESPONCE"]);
 
 		if ($this->IsPropertyExists("InfoUser"))
-			$this->InfoUser = "user_".$arEventParameters["REAL_USER_ID"];
+			$this->InfoUser = "user_".$eventParameters["REAL_USER_ID"];
+
+		$taskService = $this->workflow->GetService("TaskService");
+		$taskService->MarkCompleted($this->taskId, $eventParameters["REAL_USER_ID"], CBPTaskUserStatus::Ok);
 
 		$this->WriteToTrackingService(
 			str_replace(
 				array("#PERSON#", "#COMMENT#"),
-				array("{=user:user_".$arEventParameters["REAL_USER_ID"]."}", (strlen($arEventParameters["COMMENT"]) > 0 ? ": ".$arEventParameters["COMMENT"] : "")),
+				array("{=user:user_".$eventParameters["REAL_USER_ID"]."}", (strlen($eventParameters["COMMENT"]) > 0 ? ": ".$eventParameters["COMMENT"] : "")),
 				GetMessage("BPRIA_ACT_APPROVE_TRACK")
 			),
-			$arEventParameters["REAL_USER_ID"]
+			$eventParameters["REAL_USER_ID"]
 		);
 
-		$this->ResponcedInformation = $arEventParameters["RESPONCE"];
-		//$rootActivity->SetVariablesTypes($arEventParameters["RESPONCE_TYPES"]);
-		$rootActivity->SetVariables($arEventParameters["RESPONCE"]);
+		$this->ResponcedInformation = $eventParameters["RESPONCE"];
+		$rootActivity->SetVariables($eventParameters["RESPONCE"]);
 
 		$this->taskStatus = CBPTaskStatus::CompleteOk;
 		$this->Unsubscribe($this);
-		//$this->SetStatusTitle();
 
 		$this->workflow->CloseActivity($this);
 	}
@@ -294,12 +315,12 @@ class CBPRequestInformationActivity
 				if ($arRequest === null)
 					$realValue = $parameter["Default"];
 				else
-					$realValue = $arRequest[$parameter["Name"]];
+					$realValue = $arRequest[static::CONTROLS_PREFIX.$parameter["Name"]];
 
 				$form .= $documentService->GetFieldInputControl(
 					$arTask["PARAMETERS"]["DOCUMENT_TYPE"],
 					$parameter,
-					array("task_form1", $parameter["Name"]),
+					array("task_form1", static::CONTROLS_PREFIX.$parameter["Name"]),
 					$realValue,
 					false,
 					true
@@ -311,10 +332,20 @@ class CBPRequestInformationActivity
 
 		if (!array_key_exists("ShowComment", $arTask["PARAMETERS"]) || ($arTask["PARAMETERS"]["ShowComment"] != "N"))
 		{
+			$required = '';
+			if (isset($arTask['PARAMETERS']['CommentRequired']) && $arTask['PARAMETERS']['CommentRequired'] == 'Y')
+			{
+				$required = '<span style="color: red">*</span>';
+			}
+
+			$commentText = $arRequest ? $arRequest['task_comment'] : '';
 			$form .=
-				'<tr><td valign="top" width="30%" align="right" class="bizproc-field-name">'.(strlen($arTask["PARAMETERS"]["CommentLabelMessage"]) > 0 ? $arTask["PARAMETERS"]["CommentLabelMessage"] : GetMessage("BPRIA_ACT_COMMENT")).':</td>'.
+				'<tr><td valign="top" width="30%" align="right" class="bizproc-field-name">'
+					.(strlen($arTask["PARAMETERS"]["CommentLabelMessage"]) > 0 ? $arTask["PARAMETERS"]["CommentLabelMessage"] : GetMessage("BPRIA_ACT_COMMENT"))
+					.$required
+				.':</td>'.
 				'<td valign="top" width="70%" class="bizproc-field-value">'.
-				'<textarea rows="3" cols="50" name="task_comment"></textarea>'.
+				'<textarea rows="3" cols="50" name="task_comment">'.htmlspecialcharsbx($commentText).'</textarea>'.
 				'</td></tr>';
 		}
 
@@ -339,13 +370,108 @@ class CBPRequestInformationActivity
 		);
 	}
 
-	public static function PostTaskForm($arTask, $userId, $arRequest, &$arErrors, $userName = "", $realUserId = null)
+	protected static function getEventParameters($task, $request)
 	{
-		$arErrors = array();
+		return array(
+			"COMMENT" => isset($request["task_comment"]) ? trim($request["task_comment"]) : '',
+			"RESPONCE" => static::getTaskResponse($task),
+		);
+	}
 
+	protected static function getTaskResponse($task)
+	{
 		$runtime = CBPRuntime::GetRuntime();
 		$runtime->StartRuntime();
 		$documentService = $runtime->GetService("DocumentService");
+
+		$result = array();
+
+		if ($task["PARAMETERS"] && is_array($task["PARAMETERS"]) && count($task["PARAMETERS"]) > 0
+			&& $task["PARAMETERS"]["REQUEST"] && is_array($task["PARAMETERS"]["REQUEST"]) && count($task["PARAMETERS"]["REQUEST"]) > 0)
+		{
+			$request = $_REQUEST;
+
+			foreach ($_FILES as $k => $v)
+			{
+				if (array_key_exists("name", $v))
+				{
+					if (is_array($v["name"]))
+					{
+						$ks = array_keys($v["name"]);
+						if (!is_array($request[$k]))
+							$request[$k] = array();
+						for ($i = 0, $cnt = count($ks); $i < $cnt; $i++)
+						{
+							$ar = array();
+							foreach ($v as $k1 => $v1)
+								$ar[$k1] = $v1[$ks[$i]];
+
+							$request[$k][] = $ar;
+						}
+					}
+					else
+					{
+						$request[$k] = $v;
+					}
+				}
+			}
+
+			foreach ($task["PARAMETERS"]["REQUEST"] as $parameter)
+			{
+				$arErrorsTmp = array();
+
+				$result[$parameter["Name"]] = $documentService->GetFieldInputValue(
+					$task["PARAMETERS"]["DOCUMENT_TYPE"],
+					$parameter,
+					static::CONTROLS_PREFIX.$parameter["Name"],
+					$request,
+					$arErrorsTmp
+				);
+
+				if (count($arErrorsTmp) > 0)
+				{
+					$m = "";
+					foreach ($arErrorsTmp as $e)
+						$m .= $e["message"]."<br />";
+					throw new CBPArgumentException($m);
+				}
+
+				if (
+					CBPHelper::getBool($parameter['Required'])
+					&& CBPHelper::isEmptyValue($result[$parameter['Name']])
+				)
+					throw new CBPArgumentNullException($parameter["Name"], str_replace("#PARAM#", htmlspecialcharsbx($parameter["Title"]), GetMessage("BPRIA_ARGUMENT_NULL")));
+			}
+		}
+
+		return $result;
+	}
+
+	protected static function validateTaskEventParameters($arTask, $eventParameters)
+	{
+		if (
+			isset($arTask['PARAMETERS']['ShowComment'])
+			&& $arTask['PARAMETERS']['ShowComment'] === 'Y'
+			&& isset($arTask['PARAMETERS']['CommentRequired'])
+			&& empty($eventParameters['COMMENT'])
+			&& $arTask['PARAMETERS']['CommentRequired'] === 'Y'
+		)
+		{
+			$label = strlen($arTask["PARAMETERS"]["CommentLabelMessage"]) > 0 ? $arTask["PARAMETERS"]["CommentLabelMessage"] : GetMessage("BPAR_ACT_COMMENT");
+			throw new CBPArgumentNullException(
+				'task_comment',
+				GetMessage("BPRIA_ACT_COMMENT_ERROR", array(
+					'#COMMENT_LABEL#' => $label
+				))
+			);
+		}
+
+		return true;
+	}
+
+	public static function PostTaskForm($task, $userId, $request, &$errors, $userName = "", $realUserId = null)
+	{
+		$errors = array();
 
 		try
 		{
@@ -353,78 +479,18 @@ class CBPRequestInformationActivity
 			if ($userId <= 0)
 				throw new CBPArgumentNullException("userId");
 
-			$arEventParameters = array(
-				"USER_ID" => $userId,
-				"REAL_USER_ID" => $realUserId,
-				"USER_NAME" => $userName,
-				"COMMENT" => $arRequest["task_comment"],
-				"RESPONCE" => array(),
-				//"RESPONCE_TYPES" => array(),
-			);
+			$arEventParameters = static::getEventParameters($task, $request);
+			$arEventParameters["USER_ID"]= $userId;
+			$arEventParameters["REAL_USER_ID"] = $realUserId;
+			$arEventParameters["USER_NAME"] = $userName;
 
-			if ($arTask["PARAMETERS"] && is_array($arTask["PARAMETERS"]) && count($arTask["PARAMETERS"]) > 0
-				&& $arTask["PARAMETERS"]["REQUEST"] && is_array($arTask["PARAMETERS"]["REQUEST"]) && count($arTask["PARAMETERS"]["REQUEST"]) > 0)
-			{
-				$arRequest = $_REQUEST;
-
-				foreach ($_FILES as $k => $v)
-				{
-					if (array_key_exists("name", $v))
-					{
-						if (is_array($v["name"]))
-						{
-							$ks = array_keys($v["name"]);
-							for ($i = 0, $cnt = count($ks); $i < $cnt; $i++)
-							{
-								$ar = array();
-								foreach ($v as $k1 => $v1)
-									$ar[$k1] = $v1[$ks[$i]];
-
-								$arRequest[$k][] = $ar;
-							}
-						}
-						else
-						{
-							$arRequest[$k] = $v;
-						}
-					}
-				}
-
-				foreach ($arTask["PARAMETERS"]["REQUEST"] as $parameter)
-				{
-					$arErrorsTmp = array();
-
-					$arEventParameters["RESPONCE"][$parameter["Name"]] = $documentService->GetFieldInputValue(
-						$arTask["PARAMETERS"]["DOCUMENT_TYPE"],
-						$parameter,
-						$parameter["Name"],
-						$arRequest,
-						$arErrorsTmp
-					);
-
-					if (count($arErrorsTmp) > 0)
-					{
-						$m = "";
-						foreach ($arErrorsTmp as $e)
-							$m .= $e["message"]."<br />";
-						throw new CBPArgumentException($m);
-					}
-
-					if (
-						CBPHelper::getBool($parameter['Required'])
-						&& CBPHelper::isEmptyValue($arEventParameters['RESPONCE'][$parameter['Name']])
-					)
-						throw new CBPArgumentNullException($parameter["Name"], str_replace("#PARAM#", htmlspecialcharsbx($parameter["Title"]), GetMessage("BPRIA_ARGUMENT_NULL")));
-				}
-			}
-
-			CBPRuntime::SendExternalEvent($arTask["WORKFLOW_ID"], $arTask["ACTIVITY_NAME"], $arEventParameters);
-
+			static::validateTaskEventParameters($task, $arEventParameters);
+			CBPRuntime::SendExternalEvent($task["WORKFLOW_ID"], $task["ACTIVITY_NAME"], $arEventParameters);
 			return true;
 		}
 		catch (Exception $e)
 		{
-			$arErrors[] = array(
+			$errors[] = array(
 				"code" => $e->getCode(),
 				"message" => $e->getMessage(),
 				"file" => $e->getFile()." [".$e->getLine()."]",
@@ -470,6 +536,22 @@ class CBPRequestInformationActivity
 		return array_merge($arErrors, parent::ValidateProperties($arTestProperties, $user));
 	}
 
+	private function findRequestChanges($properties, $values)
+	{
+		$result = array();
+
+		foreach ($properties as $key => $property)
+		{
+			$a = (array) $property['Default'];
+			$b = (array) (isset($values[$property['Name']]) ? $values[$property['Name']] : null);
+
+			if ($a != $b)
+				$result[$property['Name']] = $property['Title'];
+		}
+
+		return $result;
+	}
+
 	private function CalculateTimeoutDuration()
 	{
 		$timeoutDuration = ($this->IsPropertyExists("TimeoutDuration") ? $this->TimeoutDuration : 0);
@@ -513,11 +595,13 @@ class CBPRequestInformationActivity
 			"TaskButtonMessage" => "task_button_message",
 			"CommentLabelMessage" => "comment_label_message",
 			"ShowComment" => "show_comment",
+			'CommentRequired' => 'comment_required',
 			"StatusMessage" => "status_message",
 			"SetStatusMessage" => "set_status_message",
 			'AccessControl' => 'access_control',
 			"TimeoutDuration" => "timeout_duration",
 			"TimeoutDurationType" => "timeout_duration_type",
+			"DelegationType" => "delegation_type",
 		);
 
 		if (!is_array($arWorkflowParameters))
@@ -554,6 +638,7 @@ class CBPRequestInformationActivity
 		}
 
 		$arFieldTypes = $documentService->GetDocumentFieldTypes($documentType);
+		unset($arFieldTypes['N:Sequence']);
 		$arDocumentFields = $documentService->GetDocumentFields($documentType);
 
 		$ar = array();
@@ -614,11 +699,13 @@ class CBPRequestInformationActivity
 			"task_button_message" => "TaskButtonMessage",
 			"comment_label_message" => "CommentLabelMessage",
 			"show_comment" => "ShowComment",
+			'comment_required' => 'CommentRequired',
 			"status_message" => "StatusMessage",
 			"set_status_message" => "SetStatusMessage",
 			'access_control' => 'AccessControl',
 			"timeout_duration" => "TimeoutDuration",
 			"timeout_duration_type" => "TimeoutDurationType",
+			"delegation_type" => "DelegationType",
 		);
 
 		$arProperties = array();
@@ -671,4 +758,3 @@ class CBPRequestInformationActivity
 		return true;
 	}
 }
-?>

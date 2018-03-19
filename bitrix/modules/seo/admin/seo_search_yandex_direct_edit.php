@@ -47,6 +47,22 @@ $engine = new Engine\YandexDirect();
 $currentUser = $engine->getCurrentUser();
 $bNeedAuth = !is_array($currentUser);
 
+//get string of campaign CURRENCY name
+try
+{
+	$clientsSettings = $engine->getClientsSettings();
+	$clientCurrency = current($clientsSettings);
+	$clientCurrency = Loc::getMessage('SEO_YANDEX_CURRENCY__'.$clientCurrency['Currency']);
+}
+catch(Engine\YandexDirectException $e)
+{
+	$seoproxyAuthError = new CAdminMessage(array(
+		"TYPE" => "ERROR",
+		"MESSAGE" => Loc::getMessage('SEO_YANDEX_SEOPROXY_AUTH_ERROR'),
+		"DETAILS" => $e->getMessage(),
+	));
+}
+
 $bReadOnly = $bNeedAuth;
 $bAllowUpdate = !$bNeedAuth;
 
@@ -160,7 +176,7 @@ if($bShowStats)
 	$first = true;
 
 	$statsBanners = array();
-	$currency = Loc::getMessage('SEO_YANDEX_STATS_GRAPH_AXIS_CURRENCY');
+	$currency = $clientCurrency;
 	while($banner = $data->NavNext())
 	{
 		$statsBanners[$banner['BANNER_ID']] = $banner;
@@ -387,7 +403,9 @@ if($request->isPost() && ($request["save"]<>'' || $request["apply"]<>'') && chec
 	}
 }
 
-$campaign['SETTINGS']['MinusKeywords'] = implode(', ', $campaign['SETTINGS']['MinusKeywords']);
+$campaign['SETTINGS']['MinusKeywords'] = $campaign['SETTINGS']['MinusKeywords'] ?
+	implode(', ', $campaign['SETTINGS']['MinusKeywords']) :
+	'';
 
 $APPLICATION->SetTitle(
 	$ID > 0
@@ -445,6 +463,9 @@ if(!defined('BX_PUBLIC_MODE') || !BX_PUBLIC_MODE)
 {
 	require_once("tab/seo_search_yandex_direct_auth.php");
 }
+
+if(isset($seoproxyAuthError))
+	echo $seoproxyAuthError->Show();
 
 $context = new CAdminContextMenu($aMenu);
 $context->Show();
@@ -630,7 +651,7 @@ if(!$bReadOnly)
 	<tr<?=$config['mandatory'] ? ' class="adm-detail-required-field"' : ''?>>
 		<td><?=Loc::getMessage('SEO_CAMPAIGN_STRATEGY_PARAM_'.ToUpper($param))?></td>
 		<td><input type="text" name="STRATEGY_SETTINGS[<?=$strategy?>][<?=$param?>]"
-				value="<?=$v === 0 ? '' : $v?>" size="5" id="param_<?=$key?>_<?=$param?>"> <?=($config['type'] === 'float')?Loc::getMessage('SEO_YANDEX_CURRENCY'):'';?></td>
+				value="<?=$v === 0 ? '' : $v?>" size="5" id="param_<?=$key?>_<?=$param?>"> <?=($config['type'] === 'float')?$clientCurrency:'';?></td>
 	</tr>
 <?
 		}
@@ -681,11 +702,11 @@ if($ID > 0)
 		<td colspan="3"><?=Loc::getMessage('SEO_YANDEX_STATS_GENERAL');?></td>
 	</tr>
 	<tr>
-		<td width="50%" colspan="2"><?ShowJSHint(Loc::getMessage('SEO_CAMPAIGN_SUM_HINT'))?> <?=Loc::getMessage('SEO_CAMPAIGN_SUM')?>:</td>
+		<td width="50%" colspan="2"><?ShowJSHint(Loc::getMessage('SEO_CAMPAIGN_SUM_HINT'))?> <?=Loc::getMessage('SEO_CAMPAIGN_SUM')?>, <?=$clientCurrency?>:</td>
 		<td width="50%"><?=doubleval($campaign['SETTINGS']['Sum']);?></td>
 	</tr>
 	<tr>
-		<td colspan="2"><?ShowJSHint(Loc::getMessage('SEO_CAMPAIGN_REST_HINT'))?> <?=Loc::getMessage('SEO_CAMPAIGN_REST')?>:</td>
+		<td colspan="2"><?ShowJSHint(Loc::getMessage('SEO_CAMPAIGN_REST_HINT'))?> <?=Loc::getMessage('SEO_CAMPAIGN_REST')?>, <?=$clientCurrency?>:</td>
 		<td><?=doubleval($campaign['SETTINGS']['Rest']);?></td>
 	</tr>
 	<tr>
@@ -711,7 +732,7 @@ if($ID > 0)
 
 		$graphData = array();
 
-		$currency = Loc::getMessage('SEO_YANDEX_STATS_GRAPH_AXIS_CURRENCY');
+		$currency = $clientCurrency;
 		foreach($statsData as $date => $dayData)
 		{
 			if($dayData['CURRENCY'] != '')
@@ -814,7 +835,7 @@ span.loading-message-text
 
 		if(data.length > 0)
 		{
-			yandexAxis['sum'].title = "<?=Loc::getMessage('SEO_YANDEX_STATS_GRAPH_AXIS_SUM')?>, " + (data[0].CURRENCY || '<?=Loc::getMessage('SEO_YANDEX_STATS_GRAPH_AXIS_CURRENCY')?>');
+			yandexAxis['sum'].title = "<?=Loc::getMessage('SEO_YANDEX_STATS_GRAPH_AXIS_SUM')?>, " + (data[0].CURRENCY || '<?=$clientCurrency?>');
 
 			if (currentGraph == 'sum')
 			{

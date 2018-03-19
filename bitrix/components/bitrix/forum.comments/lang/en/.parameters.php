@@ -33,4 +33,6 @@ $MESS["F_PERMISSION"] = "Access permissions";
 $MESS["F_USER_FIELDS"] = "Show message custom fields";
 $MESS["F_IMAGE_SIZE"] = "Size of Images in Post (px)";
 $MESS["F_IMAGE_HTML_SIZE"] = "Dimension of images embedded in text (px) (used for HTML compression)";
+$MESS["ALLOW_MENTION_TITLE"] = "allow user mentions";
+$MESS["F_SET_LAST_VISIT"] = "Update forum visit statistics";
 ?>

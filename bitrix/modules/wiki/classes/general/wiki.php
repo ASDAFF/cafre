@@ -793,7 +793,7 @@ class CWiki
 					if (!empty($arParams['PATH_TO_SEARCH']))
 					{
 						$arP = $arParams['IN_COMPLEX'] == 'Y' && $arParams['SEF_MODE'] == 'N' ? array($arParams['OPER_VAR'] => 'search') : array();
-						$arP['tags'] = urlencode($sTag);
+						$arP['tags'] = rawurlencode($sTag);
 						$arTag['LINK'] = CHTTP::urlAddParams(
 									CComponentEngine::MakePathFromTemplate($arParams['PATH_TO_SEARCH'],
 										array(
@@ -890,7 +890,7 @@ class CWiki
 					if (!empty($arComponentParams) && isset($arComponentParams['PATH_TO_SEARCH']))
 					{
 						$arP = $arComponentParams['IN_COMPLEX'] == 'Y' && $arComponentParams['SEF_MODE'] == 'N' ? array($arComponentParams['OPER_VAR'] => 'search') : array();
-						$arP['tags'] = urlencode($sTag);
+						$arP['tags'] = rawurlencode($sTag);
 						$arTag['LINK'] = CHTTP::urlAddParams(
 									CComponentEngine::MakePathFromTemplate($arComponentParams['PATH_TO_SEARCH'],
 										array(
@@ -920,12 +920,12 @@ class CWiki
 		return $this->errorCollection;
 	}
 
-	private function CleanCacheById($ID, $iBlockId = false)
+	public function CleanCacheById($ID, $iBlockId = false)
 	{
 		return $this->CleanCache($ID, false, $iBlockId);
 	}
 
-	private function CleanCache($ID = false, $Name = false, $iBlockId = false)
+	public function CleanCache($ID = false, $Name = false, $iBlockId = false)
 	{
 		if($ID === false && !$Name)
 			return false;

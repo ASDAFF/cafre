@@ -70,6 +70,7 @@ Class ldap extends CModule
 				RegisterModule("ldap");
 				RegisterModuleDependences("main", "OnUserLoginExternal", "ldap", "CLdap", "OnUserLogin", 1);
 				RegisterModuleDependences("main", "OnExternalAuthList", "ldap", "CLdap", "OnExternalAuthList");
+				RegisterModuleDependences('main', 'OnFindExternalUser', 'ldap', 'CLDAP', 'OnFindExternalUser');
 			}
 		}
 		
@@ -98,6 +99,7 @@ Class ldap extends CModule
 			UnRegisterModuleDependences("main", "OnUserLoginExternal", "ldap", "CLdap", "OnUserLogin");
 			UnRegisterModuleDependences("main", "OnExternalAuthList", "ldap", "CLdap", "OnExternalAuthList");
 			UnRegisterModuleDependences('main', 'OnBeforeProlog', 'ldap', 'CLDAP', 'NTLMAuth');
+			UnRegisterModuleDependences('main', 'OnFindExternalUser', 'ldap', 'CLDAP', 'OnFindExternalUser');
 			UnRegisterModule("ldap");
 		}
 		else

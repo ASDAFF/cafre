@@ -1,11 +1,11 @@
-<?
+<?php
 class CAllStatEvent
 {
 	///////////////////////////////////////////////////////////////////
 	// Returns string formatted as follows:
 	// [sites group ID].<session ID>.<guest ID>.<country ID>.<adv compaign ID>.<adv compaign return Y|N>.<site ID>
 	///////////////////////////////////////////////////////////////////
-	function GetGID($site_id=false)
+	public static function GetGID($site_id=false)
 	{
 		$s = "";
 
@@ -35,10 +35,9 @@ class CAllStatEvent
 	///////////////////////////////////////////////////////////////////
 	// Event creation
 	///////////////////////////////////////////////////////////////////
-	function AddCurrent($event1, $event2="", $event3="", $money="", $currency="", $goto="", $chargeback="N", $site_id=false)
+	public static function AddCurrent($event1, $event2="", $event3="", $money="", $currency="", $goto="", $chargeback="N", $site_id=false)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
-		global $APPLICATION;
 		$DB = CDatabase::GetModuleConnection('statistic');
 
 		$event1 = trim($event1);
@@ -327,22 +326,23 @@ class CAllStatEvent
 	}
 
 	// creates new event by ID
-	function AddByID($EVENT_ID, $EVENT3, $DATE_ENTER, $PARAM, $MONEY="", $CURRENCY="", $CHARGEBACK="N")
+	public static function AddByID($EVENT_ID, $EVENT3, $DATE_ENTER, $PARAM, $MONEY="", $CURRENCY="", $CHARGEBACK="N")
 	{
 		return CStatEvent::Add($EVENT_ID, $EVENT3, $DATE_ENTER, $PARAM, $MONEY, $CURRENCY, $CHARGEBACK);
 	}
 
 	// creates new event by event1 and event2
-	function AddByEvents($EVENT1, $EVENT2, $EVENT3, $DATE_ENTER, $PARAM, $MONEY="", $CURRENCY="", $CHARGEBACK="N")
+	public static function AddByEvents($EVENT1, $EVENT2, $EVENT3, $DATE_ENTER, $PARAM, $MONEY="", $CURRENCY="", $CHARGEBACK="N")
 	{
 		$EVENT_ID = CStatEvent::SetEventType($EVENT1, $EVENT2, $arEventType);
 		if ($EVENT_ID>0 && strlen($PARAM)>0)
 		{
 			return CStatEvent::Add($EVENT_ID, $EVENT3, $DATE_ENTER, $PARAM, $MONEY, $CURRENCY, $CHARGEBACK);
 		}
+		return 0;
 	}
 
-	function GetHandlerList(&$arUSER_HANDLERS)
+	public static function GetHandlerList(&$arUSER_HANDLERS)
 	{
 		$arr = array();
 		$arReferenceId = array();
@@ -351,7 +351,6 @@ class CAllStatEvent
 		$i=0;
 
 		// system loaders
-		$path = "";
 		$path = COption::GetOptionString("statistic", "EVENTS_LOAD_HANDLERS_PATH");
 		$handle=@opendir($_SERVER["DOCUMENT_ROOT"].$path);
 		if($handle)
@@ -391,7 +390,7 @@ class CAllStatEvent
 	}
 
 	// decodes EVENT_GID into array
-	function DecodeGID($EVENT_GID)
+	public static function DecodeGID($EVENT_GID)
 	{
 		$ar = explode(".",$EVENT_GID);
 		$sid = intval($ar[1]);
@@ -425,11 +424,22 @@ class CAllStatEvent
 	}
 
 	// compatibility
-	function SetEventType($event1, $event2, &$arEventType) { return CStatEventType::ConditionSet($event1, $event2, $arEventType); }
-	function GetByEvents($event1, $event2) { return CStatEventType::GetByEvents($event1, $event2); }
-	function GetEventsByGuest($GUEST_ID, $EVENT_ID=false, $EVENT3=false, $SEC=false) { return CStatEvent::GetListByGuest($GUEST_ID, $EVENT_ID, $EVENT3, $SEC); }
+	public static function SetEventType($event1, $event2, &$arEventType)
+	{
+		return CStatEventType::ConditionSet($event1, $event2, $arEventType);
+	}
 
-	function GetListUniqueCheck($arFilter=Array(), $LIMIT=1)
+	public static function GetByEvents($event1, $event2)
+	{
+		return CStatEventType::GetByEvents($event1, $event2);
+	}
+
+	public static function GetEventsByGuest($GUEST_ID, $EVENT_ID=false, $EVENT3=false, $SEC=false)
+	{
+		return CStatEvent::GetListByGuest($GUEST_ID, $EVENT_ID, $EVENT3, $SEC);
+	}
+
+	public static function GetListUniqueCheck($arFilter=Array(), $LIMIT=1)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -490,4 +500,3 @@ class CAllStatEvent
 		return $res;
 	}
 }
-?>

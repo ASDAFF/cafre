@@ -4,11 +4,22 @@ namespace Bitrix\Sale\Internals;
 use Bitrix\Sale;
 use Bitrix\Main;
 
+/**
+ * Class EntityCollection
+ * @package Bitrix\Sale\Internals
+ */
 abstract class EntityCollection
 	extends CollectionBase
 {
 	private $index = -1;
 
+	protected $isClone = false;
+
+	protected $anyItemDeleted = false;
+
+	/**
+	 * EntityCollection constructor.
+	 */
 	protected function __construct()
 	{
 
@@ -40,14 +51,20 @@ abstract class EntityCollection
 
 		$oldItem = $this->collection[$index];
 
-		/** @var Main\Entity\Event $event */
-		$event = new Main\Event('sale', 'OnBeforeCollectionDeleteItem', array(
-			'COLLECTION' => $this->collection,
-			'ENTITY' => $oldItem,
-		));
-		$event->send();
+		$eventManager = Main\EventManager::getInstance();
+		$eventsList = $eventManager->findEventHandlers('sale', 'OnBeforeCollectionDeleteItem');
+		if (!empty($eventsList))
+		{
+			/** @var Main\Entity\Event $event */
+			$event = new Main\Event('sale', 'OnBeforeCollectionDeleteItem', array(
+				'COLLECTION' => $this->collection,
+				'ENTITY' => $oldItem,
+			));
+			$event->send();
+		}
 
 		unset($this->collection[$index]);
+		$this->setAnyItemDeleted(true);
 
 		return $oldItem;
 	}
@@ -59,27 +76,47 @@ abstract class EntityCollection
 	 */
 	protected function addItem(CollectableEntity $item)
 	{
-		$this->index++;
-		$item->setInternalIndex($this->index);
-		$this->collection[$this->index] = $item;
+		$index = $this->createIndex();
+		$item->setInternalIndex($index);
 
-		/** @var Main\Entity\Event $event */
-		$event = new Main\Event('sale', 'OnCollectionAddItem', array(
-			'COLLECTION' => $this->collection,
-			'ENTITY' => $item,
-		));
-		$event->send();
+		$this->collection[$index] = $item;
+
+		$eventManager = Main\EventManager::getInstance();
+		$eventsList = $eventManager->findEventHandlers('sale', 'OnCollectionAddItem');
+		if (!empty($eventsList))
+		{
+			/** @var Main\Entity\Event $event */
+			$event = new Main\Event('sale', 'OnCollectionAddItem', array(
+				'COLLECTION' => $this->collection,
+				'ENTITY' => $item,
+			));
+			$event->send();
+		}
 
 		return $item;
 	}
 
+	/**
+	 * @return int
+	 */
+	protected function createIndex()
+	{
+		$this->index++;
+		return $this->index;
+	}
+
 	public function clearCollection()
 	{
-		/** @var Main\Entity\Event $event */
-		$event = new Main\Event('sale', 'OnBeforeCollectionClear', array(
-			'COLLECTION' => $this->collection,
-		));
-		$event->send();
+		$eventManager = Main\EventManager::getInstance();
+		$eventsList = $eventManager->findEventHandlers('sale', 'OnBeforeCollectionClear');
+		if (!empty($eventsList))
+		{
+			/** @var Main\Entity\Event $event */
+			$event = new Main\Event('sale', 'OnBeforeCollectionClear', array(
+				'COLLECTION' => $this->collection,
+			));
+			$event->send();
+		}
 		/** @var CollectableEntity $item */
 		foreach ($this->collection as $item)
 			$item->delete();
@@ -89,7 +126,7 @@ abstract class EntityCollection
 	/**
 	 * @param $id
 	 *
-	 * @return bool
+	 * @return CollectableEntity|bool
 	 * @throws Main\ArgumentNullException
 	 */
 	public function getItemById($id)
@@ -138,6 +175,33 @@ abstract class EntityCollection
 		return null;
 	}
 
+	/**
+	 * @param $index
+	 *
+	 * @return CollectableEntity|null
+	 * @throws Main\ArgumentNullException
+	 */
+	public function getItemByIndex($index)
+	{
+		if (intval($index) < 0)
+		{
+			throw new Main\ArgumentNullException('id');
+		}
+
+		/** @var CollectableEntity $item */
+		foreach ($this->collection as $item)
+		{
+			if ($item->getInternalIndex() == $index)
+			{
+				return $item;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * @return Entity
+	 */
 	abstract protected function getEntityParent();
 
 	/**
@@ -227,6 +291,99 @@ abstract class EntityCollection
 					return true;
 			}
 		}
-		return false;
+
+		return $this->isAnyItemDeleted();
 	}
+
+	/**
+	 * @return Sale\Result
+	 */
+	public function verify()
+	{
+		return new Sale\Result();
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function isClone()
+	{
+		return $this->isClone;
+	}
+
+
+	/**
+	 * @return bool
+	 */
+	public function isAnyItemDeleted()
+	{
+		return $this->anyItemDeleted;
+	}
+
+	/**
+	 * @param $value
+	 *
+	 * @return bool
+	 */
+	protected function setAnyItemDeleted($value)
+	{
+		return $this->anyItemDeleted = ($value === true);
+	}
+	/**
+	 * @internal
+	 */
+	public function clearChanged()
+	{
+		if (!empty($this->collection))
+		{
+			foreach ($this->collection as $entityItem)
+			{
+				if ($entityItem instanceof Entity)
+				{
+					$entityItem->clearChanged();
+				}
+			}
+		}
+	}
+
+	/**
+	 * @internal
+	 * @param \SplObjectStorage $cloneEntity
+	 *
+	 * @return EntityCollection
+	 */
+	public function createClone(\SplObjectStorage $cloneEntity)
+	{
+		if ($this->isClone() && $cloneEntity->contains($this))
+		{
+			return $cloneEntity[$this];
+		}
+
+		$entityClone = clone $this;
+		$entityClone->isClone = true;
+
+		if (!$cloneEntity->contains($this))
+		{
+			$cloneEntity[$this] = $entityClone;
+		}
+
+		/**
+		 * @var int key
+		 * @var CollectableEntity $entity
+		 */
+		foreach ($entityClone->collection as $key => $entity)
+		{
+			if (!$cloneEntity->contains($entity))
+			{
+				$cloneEntity[$entity] = $entity->createClone($cloneEntity);
+			}
+
+			$entityClone->collection[$key] = $cloneEntity[$entity];
+		}
+
+		return $entityClone;
+	}
+
+
+
 }

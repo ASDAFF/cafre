@@ -12,6 +12,5 @@ $MESS["DELIVERY_SERVICE_ENTITY_MARGIN_FIELD"] = "Surcharge";
 $MESS["DELIVERY_SERVICE_ENTITY_CURRENCY_FIELD"] = "Currency";
 $MESS["DELIVERY_SERVICE_ENTITY_STORE_FIELD"] = "Warehouses";
 $MESS["DELIVERY_SERVICE_ENTITY_CLASS_NAME_FIELD"] = "Handler class";
-$MESS["DELIVERY_SERVICE_ENTITY_ERROR_DELETE_IN_ORDERS_EXIST"] = "This delivery service cannot be deleted because there are orders using it.";
-$MESS["DELIVERY_SERVICE_ENTITY_ERROR_DELETE_IN_ORDERS_EXIST_CHLD"] = "This delivery service cannot be deleted because a child service is used with one or more orders.";
+$MESS["DELIVERY_SERVICE_ENTITY_VAT_ID_FIELD"] = "Tax rate";
 ?>

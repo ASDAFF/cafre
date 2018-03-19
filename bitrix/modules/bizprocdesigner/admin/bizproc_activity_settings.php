@@ -1,4 +1,5 @@
 <?
+define("NOT_CHECK_FILE_PERMISSIONS", true);
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_js.php");
 
@@ -9,29 +10,7 @@ $popupWindow = new CJSPopup(GetMessage("BIZPROC_AS_TITLE"));
 
 $popupWindow->ShowTitlebar(GetMessage("BIZPROC_AS_TITLE"));
 
-CUtil::DecodeUriComponent($_POST);
-
-if (LANG_CHARSET != "UTF-8")
-{
-	function BPasDecodeArrayKeys($item)
-	{
-		if (is_array($item))
-		{
-			$ar = array();
-
-			foreach ($item as $k => $v)
-				$ar[$GLOBALS["APPLICATION"]->ConvertCharset($k, "UTF-8", LANG_CHARSET)] = BPasDecodeArrayKeys($v);
-
-			return $ar;
-		}
-		else
-		{
-			return $item;
-		}
-	}
-
-	$_POST = BPasDecodeArrayKeys($_POST);
-}
+CBPHelper::decodeTemplatePostData($_POST);
 
 $activityName = $_REQUEST['id'];
 $activityType = $_REQUEST['activity'];
@@ -70,14 +49,6 @@ $runtime->IncludeActivityFile($activityType);
 
 $popupWindow->EndDescription();
 $popupWindow->StartContent();
-
-foreach (array('arWorkflowTemplate', 'arWorkflowParameters', 'arWorkflowVariables') as $k)
-{
-	if (!is_array($_POST[$k]))
-	{
-		$_POST[$k] = (array) CUtil::JsObjectToPhp($_POST[$k]);
-	}
-}
 
 $arWorkflowTemplate = $_POST['arWorkflowTemplate'];
 $arWorkflowParameters = $_POST['arWorkflowParameters'];
@@ -137,8 +108,11 @@ if($_POST["save"] == "Y" && check_bitrix_sessid())
 function PHPToHiddens($ob, $name)
 {
 	global $APPLICATION;
-	if(strtolower(SITE_CHARSET) != 'utf-8')
-		$ob = $APPLICATION->ConvertCharsetArray($ob, SITE_CHARSET, 'utf-8');
+	if (strtolower(LANG_CHARSET) != 'utf-8')
+	{
+		$ob = $APPLICATION->ConvertCharsetArray($ob, LANG_CHARSET, 'utf-8');
+		$ob = CBPHelper::decodeArrayKeys($ob, true);
+	}
 	$ob = json_encode($ob);
 	//if(is_array($ob))
 	//{
@@ -169,7 +143,7 @@ if(count($arErrors)>0)
 {
 	echo '<tr><td colspan="2">';
 	foreach($arErrors as $e)
-		echo '<font color="red">'.$e["message"].'</font><br>';
+		echo '<font color="red">'.htmlspecialcharsbx($e["message"]).'</font><br>';
 	echo '</td></tr>';
 }
 
@@ -249,7 +223,9 @@ setTimeout("document.getElementById('bpastitle').focus();", 100);
 			}
 		}
 	}
-
+	BX.namespace('BX.Bizproc');
+	if (typeof BX.Bizproc.Selector !== 'undefined')
+		BX.Bizproc.Selector.initSelectors();
 })();
 
 

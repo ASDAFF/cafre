@@ -21,7 +21,7 @@ $MESS["TRIAL_ATTENTION_TEXT4_1c_bitrix_portal"] = "Trial period of the Bitrix24 
 $MESS["TRIAL_ATTENTION_TEXT5_1c_bitrix_portal"] = "You can purchase the full version of 1C-Bitrix Intranet from the <a href=\"http://www.bitrixsoft.com/buy/\">http://www.bitrixsoft.com/buy/</a> page.";
 $MESS["TRIAL_ATTENTION_TEXT1_bitrix_portal"] = "This is trial version of Bitrix24 product.";
 $MESS["TRIAL_ATTENTION_TEXT4_bitrix_portal"] = "Trial period of the Bitrix24 product has expired. This site will completely stop working in two weeks. ";
-$MESS["TRIAL_ATTENTION_TEXT5_bitrix_portal"] = "You can purchase the full version of Bitrix24 from the <a href=\"http://www.bitrixsoft.com/buy/\">http://www.bitrixsoft.com/buy/</a> page.";
+$MESS["TRIAL_ATTENTION_TEXT5_bitrix_portal"] = "You can purchase the full version of Bitrix24 from the <a href=\"https://www.bitrix24.com/prices/self-hosted.php\">https://www.bitrix24.com/prices/self-hosted.php</a> page.";
 $MESS["prolog_main_more_buttons"] = "Enlarge buttons";
 $MESS["prolog_main_support1"] = "<span class=\"required\">Attention!</span> Your techsupport and update subscription <b>will expire</b> on #FINISH_DATE#, #DAYS_AGO#. You can buy <a href=\"http://www.bitrixsoft.com/support/key_info.php?license_key=#LICENSE_KEY#\" target=\"_blank\">Early subscription renewal</a> within one month after expiration date.";
 $MESS["prolog_main_support_days"] = "in <b>#N_DAYS_AGO#&nbsp;day(s)</b>";
@@ -63,11 +63,12 @@ For more details, please feel free to refer to the <a href=\"https://store.bitri
 $MESS["prolog_main_support_button_prolong"] = "Renew Subscription";
 $MESS["prolog_main_support_button_no_prolong"] = "No, thanks";
 $MESS["prolog_main_support11"] = "<span class=\"required\">Attention!</span> Your techsupport and update subscription <b>will expire</b> on #FINISH_DATE#, #DAYS_AGO#.#WHAT_IS_IT#<br /> Your early renewal grace period will end on #SUP_FINISH_DATE#.";
-$MESS["prolog_main_support21"] = "<span class=\"required\">Attention!</span> Your techsupport and update subscription has expired on #FINISH_DATE#, <b>#DAYS_AGO#&nbsp;</b> days ago.#WHAT_IS_IT#<br />Your early renewal garce period will end on #SUP_FINISH_DATE#.";
+$MESS["prolog_main_support21"] = "<span class=\"required\">Attention!</span> Your techsupport and update subscription has expired on #FINISH_DATE#, <b>#DAYS_AGO#&nbsp;</b> days ago.#WHAT_IS_IT#<br />Your early renewal grace period will end on #SUP_FINISH_DATE#.";
 $MESS["prolog_main_support31"] = "<span class=\"required\"><span class=\"required\">Attention!</span> Your techsupport and update subscription has expired on #FINISH_DATE#.#WHAT_IS_IT#<br />You can now renew your subscription.";
 $MESS["prolog_main_support_button_no_prolong2"] = "Remind me later";
 $MESS["prolog_main_support_menu1"] = "in:";
 $MESS["prolog_main_support_menu2"] = "week";
 $MESS["prolog_main_support_menu3"] = "two weeks";
 $MESS["prolog_main_support_menu4"] = "<span style=\"color:red;\">month</span>";
+$MESS["DEVSERVER_ADMIN_MESSAGE"] = "This installation exists as a Bitrix Site Manager development workbench. It must not be used as a publicly available website.";
 ?>

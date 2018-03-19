@@ -29,7 +29,7 @@ class CPHPCache
 
 	public function Clean($uniq_str, $initdir = false, $basedir = "cache")
 	{
-		if(is_object($this) && ($this instanceof CPHPCache))
+		if(isset($this) && is_object($this) && ($this instanceof CPHPCache))
 		{
 			return $this->cache->clean($uniq_str, $initdir, $basedir);
 		}
@@ -93,7 +93,7 @@ class CPHPCache
 
 	function IsCacheExpired($path)
 	{
-		if(is_object($this) && ($this instanceof CPHPCache))
+		if(isset($this) && is_object($this) && ($this instanceof CPHPCache))
 		{
 			return $this->cache->isCacheExpired($path);
 		}
@@ -129,7 +129,7 @@ class CPageCache
 
 	function Clean($uniq_str, $initdir = false, $basedir = "cache")
 	{
-		if(is_object($this) && is_object($this->_cache))
+		if(isset($this) && is_object($this) && is_object($this->_cache))
 		{
 			$basedir = BX_PERSONAL_ROOT."/".$basedir."/";
 			$filename = CPageCache::GetPath($uniq_str);
@@ -282,7 +282,7 @@ class CPageCache
 
 	function IsCacheExpired($path)
 	{
-		if(is_object($this) && is_object($this->_cache))
+		if(isset($this) && is_object($this) && is_object($this->_cache))
 		{
 			return $this->_cache->IsCacheExpired($path);
 		}
@@ -624,14 +624,14 @@ class CStackCacheEntry
 		)
 		{
 			$objCache = \Bitrix\Main\Data\Cache::createInstance();
-			//Force cache rewrite
-			$saveClearState = $objCache->setClearCache(true);
 
-			if($objCache->StartDataCache($this->ttl, $this->entity, $DB->type."/".$this->entity,  $this->values, "stack_cache"))
+			//Force cache rewrite
+			$objCache->forceRewriting(true);
+
+			if($objCache->startDataCache($this->ttl, $this->entity, $DB->type."/".$this->entity, $this->values, "stack_cache"))
 			{
-				$objCache->EndDataCache();
+				$objCache->endDataCache();
 			}
-			$objCache->setClearCache($saveClearState);
 
 			$this->cleanGet = true;
 			$this->cleanSet = true;
@@ -770,7 +770,7 @@ class CStackCacheManager
 			$this->cache[$entity]->Save();
 	}
 
-	function SaveAll()
+	public static function SaveAll()
 	{
 		if(defined("BITRIX_SKIP_STACK_CACHE") && BITRIX_SKIP_STACK_CACHE)
 			return;

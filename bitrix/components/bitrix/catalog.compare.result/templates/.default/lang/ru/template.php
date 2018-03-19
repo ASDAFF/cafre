@@ -46,4 +46,7 @@ $MESS["IBLOCK_OFFER_FIELD_ACTIVE"] = "Активность предложения";
 $MESS["IBLOCK_OFFER_FIELD_BP_PUBLISHED"] = "Опубликован предложения";
 $MESS["IBLOCK_OFFER_FIELD_ACTIVE_PERIOD_FROM"] = "Начало активности предложения";
 $MESS["IBLOCK_OFFER_FIELD_ACTIVE_PERIOD_TO"] = "Окончание активности предложения";
+$MESS["CP_TPL_CCR_RANGE_TO"] = "до #TO#";
+$MESS["CP_TPL_CCR_RANGE_FROM"] = "от #FROM#";
+$MESS["CP_TPL_CCR_RANGE_FULL"] = "от #FROM# до #TO#";
 ?>

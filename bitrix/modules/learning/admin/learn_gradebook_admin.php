@@ -16,6 +16,7 @@ if (!CModule::IncludeModule('learning'))
 
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/learning/prolog.php");
 IncludeModuleLangFile(__FILE__);
+IncludeModuleLangFile(__DIR__."/common.php");
 
 ClearVars();
 
@@ -38,6 +39,7 @@ $filter = new CAdminFilter(
 
 $arFilterFields = Array(
 	"filter_user",
+	"filter_user_type",
 	"filter_id",
 	"filter_test_id",
 	"filter_completed",
@@ -67,8 +69,17 @@ if(!empty($filter_result_from))
 if(!empty($filter_result_to))
 	$arFilter["<=RESULT"] = $filter_result_to;
 
-if(!empty($filter_user))
-	$arFilter["USER"] = $filter_user;
+$filterTypeMap = array(
+	"login" => "USER_LOGIN",
+	"last_name" => "USER_LAST_NAME",
+	"id" => "STUDENT_ID",
+	"name" => "USER_NAME",
+);
+
+if(!empty($filter_user) && !empty($filter_user_type) && array_key_exists($filter_user_type, $filterTypeMap))
+{
+	$arFilter["=".$filterTypeMap[$filter_user_type]] = $filter_user;
+}
 
 if($lAdmin->EditAction()) //save from the list
 {
@@ -238,7 +249,31 @@ if (defined("LEARNING_ADMIN_ACCESS_DENIED"))
 
 	<tr>
 		<td><b><?=GetMessage("LEARNING_ADMIN_STUDENT")?>:</b></td>
-		<td><input type="text" name="filter_user" value="<?echo htmlspecialcharsbx($filter_user)?>" size="47"></td>
+		<td>
+			<input type="text" name="filter_user" value="<?=htmlspecialcharsbx($filter_user)?>" size="25">
+
+			<?=SelectBoxFromArray(
+				"filter_user_type",
+				array(
+					"reference" => array(
+						GetMessage("LEARNING_FILTER_USER_LOGIN"),
+						GetMessage("LEARNING_FILTER_USER_LAST_NAME"),
+						"ID",
+						GetMessage("LEARNING_FILTER_USER_NAME")
+					),
+					"reference_id" => array(
+						"login",
+						"last_name",
+						"id",
+						"name",
+					)
+				),
+				$filter_user_type,
+				"",
+				""
+			);?>
+
+		</td>
 	</tr>
 
 

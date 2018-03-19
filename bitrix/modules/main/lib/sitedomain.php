@@ -11,11 +11,6 @@ use Bitrix\Main\Entity;
 
 class SiteDomainTable extends Entity\DataManager
 {
-	public static function getFilePath()
-	{
-		return __FILE__;
-	}
-
 	public static function getTableName()
 	{
 		return 'b_lang_domain';

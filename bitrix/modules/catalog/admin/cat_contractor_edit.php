@@ -26,9 +26,9 @@ ClearVars();
 
 $errorMessage = "";
 $bVarsFromForm = false;
-$ID = IntVal($_REQUEST["ID"]);
+$ID = (isset($_REQUEST["ID"]) ? (int)$_REQUEST["ID"] : 0);
 $typeReadOnly = false;
-$userId = intval($USER->GetID());
+$userId = (int)$USER->GetID();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && check_bitrix_sessid() && strlen($_REQUEST["Update"]) > 0 && !$bReadOnly)
 {
@@ -56,7 +56,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && check_bitrix_sessid() && strlen($_RE
 		"MODIFIED_BY" => $userId,
 	);
 	$DB->StartTransaction();
-	if (strlen($errorMessage) == 0 && $ID > 0 && $res = CCatalogContractor::Update($ID, $arFields))
+	if (strlen($errorMessage) == 0 && $ID > 0 && $res = CCatalogContractor::update($ID, $arFields))
 	{
 		$ID = $res;
 		$DB->Commit();

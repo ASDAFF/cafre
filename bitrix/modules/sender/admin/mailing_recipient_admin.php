@@ -20,11 +20,6 @@ $ID = intval($_REQUEST['ID']);
 if($find_mailing_chain_id>0)
 	$ID = $find_mailing_chain_id;
 
-if($find_click_show_url != 'Y')
-	$find_click_show_url = 'N';
-
-$showClickUrl = $find_click_show_url;;
-
 if($ID <= 0)
 {
 	$postingDb = \Bitrix\Sender\PostingTable::getList(array(
@@ -60,9 +55,6 @@ $FilterArr = Array(
 );
 
 $lAdmin->InitFilter($FilterArr);
-$arRuntime = array();
-$arGroup = array();
-$arSelect = array('NAME', 'EMAIL');
 
 if (CheckFilter() || $ID>0)
 {
@@ -80,95 +72,42 @@ if (CheckFilter() || $ID>0)
 	{
 		$arFilter["=STATUS"] = $find_sent;
 	}
-
-	if($find_read=='Y')
+	if(in_array($find_read, array('Y', 'N')))
 	{
-		$arRuntime[] = new \Bitrix\Main\Entity\ReferenceField(
-			'READ_TBL',
-			'Bitrix\Sender\PostingReadTable',
-			array('=this.ID' => 'ref.RECIPIENT_ID'),
-			array('join_type' => 'INNER')
-		);
-
-		$arGroup = $arSelect;
+		$arFilter['=IS_READ'] = $find_read;
 	}
-	elseif($find_read=='N')
+	if(in_array($find_click, array('Y', 'N')))
 	{
-		$arRuntime[] = new \Bitrix\Main\Entity\ReferenceField(
-			'READ_TBL',
-			'Bitrix\Sender\PostingReadTable',
-			array('=this.ID' => 'ref.RECIPIENT_ID'),
-			array('join_type' => 'LEFT')
-		);
-
-		$arFilter['READ_TBL.RECIPIENT_ID'] = null;
-		$arGroup = $arSelect;
+		$arFilter['=IS_CLICK'] = $find_click;
 	}
-
-	if($find_click=='Y')
+	if(in_array($find_unsub, array('Y', 'N')))
 	{
-		$arRuntime[] = new \Bitrix\Main\Entity\ReferenceField(
-			'CLICK_TBL',
-			'Bitrix\Sender\PostingClickTable',
-			array('=this.ID' => 'ref.RECIPIENT_ID'),
-			array('join_type' => 'INNER')
-		);
-
-		$arGroup = $arSelect;
-	}
-	elseif($find_click=='N')
-	{
-		$arRuntime[] = new \Bitrix\Main\Entity\ReferenceField(
-			'CLICK_TBL',
-			'Bitrix\Sender\PostingClickTable',
-			array('=this.ID' => 'ref.RECIPIENT_ID'),
-			array('join_type' => 'LEFT')
-		);
-
-		$arFilter['CLICK_TBL.RECIPIENT_ID'] = null;
-		$arGroup = $arSelect;
-	}
-
-	if($find_unsub=='Y')
-	{
-		$arRuntime[] = new \Bitrix\Main\Entity\ReferenceField(
-			'UNSUB_TBL',
-			'Bitrix\Sender\PostingUnsubTable',
-			array('=this.ID' => 'ref.RECIPIENT_ID'),
-			array('join_type' => 'INNER')
-		);
-
-		$arGroup = $arSelect;
-	}
-	elseif($find_unsub=='N')
-	{
-		$arRuntime[] = new \Bitrix\Main\Entity\ReferenceField(
-			'UNSUB_TBL',
-			'Bitrix\Sender\PostingUnsubTable',
-			array('=this.ID' => 'ref.RECIPIENT_ID'),
-			array('join_type' => 'LEFT')
-		);
-
-		$arFilter['UNSUB_TBL.RECIPIENT_ID'] = null;
-		$arGroup = $arSelect;
+		$arFilter['=IS_UNSUB'] = $find_unsub;
 	}
 
 }
 
 if(isset($order)) $order = ($order=='asc'?'ASC': 'DESC');
 
-$groupListDb = \Bitrix\Sender\PostingRecipientTable::getList(array(
-	'select' => $arSelect,
+$nav = new \Bitrix\Main\UI\AdminPageNavigation("nav-sender-recipient");
+$recipientListDb = \Bitrix\Sender\PostingRecipientTable::getList(array(
+	'select' => array('NAME', 'EMAIL', 'CALC_IS_READ', 'CALC_IS_CLICK', 'CALC_IS_UNSUB'),
 	'filter' => $arFilter,
-	'runtime' => $arRuntime,
-	'group' => $arGroup,
-	'order' => array($by=>$order)
+	'runtime' => array(
+		new \Bitrix\Main\Entity\ExpressionField('CALC_IS_READ', 'MAX(%s)', 'IS_READ'),
+		new \Bitrix\Main\Entity\ExpressionField('CALC_IS_CLICK', 'MAX(%s)', 'IS_CLICK'),
+		new \Bitrix\Main\Entity\ExpressionField('CALC_IS_UNSUB', 'MAX(%s)', 'IS_UNSUB'),
+	),
+	'group' => array('NAME', 'EMAIL'),
+	'order' => array($by=>$order),
+	'count_total' => true,
+	'offset' => $nav->getOffset(),
+	'limit' => $nav->getLimit(),
 ));
 
 $aContext = array();
-$rsData = new CAdminResult($groupListDb, $sTableID);
-$rsData->NavStart();
-$lAdmin->NavText($rsData->GetNavPrint(GetMessage("rub_nav")));
+$nav->setRecordCount($recipientListDb->getCount());
+$lAdmin->setNavigation($nav, \Bitrix\Main\Localization\Loc::getMessage("rub_nav"));
 
 $lAdmin->AddHeaders(array(
 	array(	"id"		=>"EMAIL",
@@ -181,17 +120,35 @@ $lAdmin->AddHeaders(array(
 		"sort"		=>"NAME",
 		"default"	=>true,
 	),
+	array(	"id"		=>"IS_READ",
+		"content"	=>GetMessage("rub_f_read"),
+		"sort"		=>"IS_READ",
+		"default"	=>true,
+	),
+	array(	"id"		=>"IS_CLICK",
+		"content"	=>GetMessage("rub_f_click"),
+		"sort"		=>"IS_CLICK",
+		"default"	=>true,
+	),
+	array(	"id"		=>"IS_UNSUB",
+		"content"	=>GetMessage("rub_f_unsub"),
+		"sort"		=>"IS_UNSUB",
+		"default"	=>true,
+	),
 ));
 
-while($arRes = $rsData->NavNext(true, "f_")):
-	$row =& $lAdmin->AddRow(false, $arRes);
-	$row->AddViewField("NAME", $f_NAME);
-	$row->AddViewField("EMAIL", $f_EMAIL);
+while($resultRow = $recipientListDb->fetch()):
+	$row =& $lAdmin->AddRow(false, $resultRow);
+	$row->AddViewField("NAME", htmlspecialcharsbx($resultRow['NAME']));
+	$row->AddViewField("EMAIL", htmlspecialcharsbx($resultRow['EMAIL']));
+	$row->AddViewField("IS_READ", $resultRow['CALC_IS_READ'] == 'Y' ? GetMessage("POST_U_YES") : GetMessage("POST_U_NO"));
+	$row->AddViewField("IS_CLICK", $resultRow['CALC_IS_CLICK'] == 'Y' ? GetMessage("POST_U_YES") : GetMessage("POST_U_NO"));
+	$row->AddViewField("IS_UNSUB", $resultRow['CALC_IS_UNSUB'] == 'Y' ? GetMessage("POST_U_YES") : GetMessage("POST_U_NO"));
 endwhile;
 
 $lAdmin->AddFooter(
 	array(
-		array("title"=>GetMessage("MAIN_ADMIN_LIST_SELECTED"), "value"=>$rsData->SelectedRowsCount()),
+		array("title"=>GetMessage("MAIN_ADMIN_LIST_SELECTED"), "value"=>$recipientListDb->getCount()),
 		array("counter"=>true, "title"=>GetMessage("MAIN_ADMIN_LIST_CHECKED"), "value"=>"0"),
 	)
 );
@@ -225,13 +182,13 @@ $oFilter = new CAdminFilter(
 				<?
 				$arr = array();
 				$mailingChainDb = \Bitrix\Sender\MailingChainTable::getList(array(
-					'select' => array('REFERENCE'=>'SUBJECT','REFERENCE_ID'=>'ID'),
+					'select' => array('SUBJECT', 'TITLE', 'ID'),
 					'filter' => array('MAILING_ID' => $MAILING_ID)
 				));
 				while($arMailingChain = $mailingChainDb->fetch())
 				{
-					$arr['reference'][] = $arMailingChain['REFERENCE'];
-					$arr['reference_id'][] = $arMailingChain['REFERENCE_ID'];
+					$arr['reference'][] = $arMailingChain['TITLE'] ? $arMailingChain['TITLE'] : $arMailingChain['SUBJECT'];
+					$arr['reference_id'][] = $arMailingChain['ID'];
 				}
 				echo SelectBoxFromArray("find_mailing_chain_id", $arr, $ID, false, "");
 				?>
@@ -298,8 +255,6 @@ $oFilter = new CAdminFilter(
 		);
 		echo SelectBoxFromArray("find_click", $arr, $find_click, GetMessage("MAIN_ALL"), "");
 		?>
-		<input type="checkbox" name="find_click_show_url" value="Y" <?=($find_click_show_url=='Y'?'checked':'')?>>
-		<label for="find_click_show_url"><?=GetMessage("rub_f_click_show_url")?></label>
 	</td>
 </tr>
 <tr>

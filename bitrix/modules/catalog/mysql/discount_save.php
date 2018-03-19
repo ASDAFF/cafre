@@ -3,7 +3,7 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/catalog/general/discount
 
 class CCatalogDiscountSave extends CAllCatalogDiscountSave
 {
-	public function Add($arFields, $boolCalc = false)
+	public static function Add($arFields, $boolCalc = false)
 	{
 		global $DB;
 
@@ -40,7 +40,7 @@ class CCatalogDiscountSave extends CAllCatalogDiscountSave
 		return $ID;
 	}
 
-	public function Update($intID, $arFields, $boolCalc = false)
+	public static function Update($intID, $arFields, $boolCalc = false)
 	{
 		global $DB;
 
@@ -97,7 +97,7 @@ class CCatalogDiscountSave extends CAllCatalogDiscountSave
 	 * @param array $arSelectFields
 	 * @return bool|CDBResult
 	 */
-	public function GetList($arOrder = array(), $arFilter = array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array())
+	public static function GetList($arOrder = array(), $arFilter = array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array())
 	{
 		global $DB;
 
@@ -123,6 +123,7 @@ class CCatalogDiscountSave extends CAllCatalogDiscountSave
 			"MODIFIED_BY" => array("FIELD" => "DS.MODIFIED_BY", "TYPE" => "int"),
 			"DATE_CREATE" => array("FIELD" => "DS.DATE_CREATE", "TYPE" => "datetime"),
 			"CREATED_BY" => array("FIELD" => "DS.CREATED_BY", "TYPE" => "int"),
+			"SALE_ID" => array("FIELD" => "DS.SALE_ID", "TYPE" => "int"),
 
 			"RANGE_FROM" => array("FIELD" => "DSR.RANGE_FROM", "TYPE" => "double", "FROM" => "LEFT JOIN b_catalog_disc_save_range DSR ON (DS.ID = DSR.DISCOUNT_ID)"),
 			"VALUE" => array("FIELD" => "DSR.VALUE", "TYPE" => "double", "FROM" => "LEFT JOIN b_catalog_disc_save_range DSR ON (DS.ID = DSR.DISCOUNT_ID)"),
@@ -209,7 +210,7 @@ class CCatalogDiscountSave extends CAllCatalogDiscountSave
 		return $dbRes;
 	}
 
-	public function GetRangeByDiscount($arOrder = array(), $arFilter = array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array())
+	public static function GetRangeByDiscount($arOrder = array(), $arFilter = array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array())
 	{
 		global $DB;
 
@@ -290,7 +291,7 @@ class CCatalogDiscountSave extends CAllCatalogDiscountSave
 		return $dbRes;
 	}
 
-	public function GetGroupByDiscount($arOrder = array(), $arFilter = array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array())
+	public static function GetGroupByDiscount($arOrder = array(), $arFilter = array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array())
 	{
 		global $DB;
 
@@ -369,7 +370,7 @@ class CCatalogDiscountSave extends CAllCatalogDiscountSave
 		return $dbRes;
 	}
 
-	public function GetUserInfoByDiscount($arOrder = array(), $arFilter = array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array())
+	public static function GetUserInfoByDiscount($arOrder = array(), $arFilter = array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array())
 	{
 		global $DB;
 
@@ -451,7 +452,7 @@ class CCatalogDiscountSave extends CAllCatalogDiscountSave
 		return $dbRes;
 	}
 
-	protected function __GetDiscountIDByGroup($arUserGroup = array())
+	protected static function __GetDiscountIDByGroup($arUserGroup = array())
 	{
 		global $DB;
 
@@ -489,7 +490,7 @@ class CCatalogDiscountSave extends CAllCatalogDiscountSave
 		return $arResult;
 	}
 
-	protected function __GetUserInfoByDiscount($arParams, $arSettings = array())
+	protected static function __GetUserInfoByDiscount($arParams, $arSettings = array())
 	{
 		global $DB;
 
@@ -534,7 +535,7 @@ class CCatalogDiscountSave extends CAllCatalogDiscountSave
 		return $arResult;
 	}
 
-	protected function __UpdateUserInfoByDiscount($arParams, $arSettings = array())
+	protected static function __UpdateUserInfoByDiscount($arParams, $arSettings = array())
 	{
 		global $DB;
 		if (!empty($arParams) && is_array($arParams))

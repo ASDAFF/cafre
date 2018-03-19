@@ -143,7 +143,6 @@ $MESS["DUMP_MAIN_BXCLOUD_INFO"] = "Bitrix Inc. provides cloud space for three ba
 $MESS["MAIN_DUMP_BXCLOUD_ENC"] = "Encryption cannot be disabled for backups saved to Bitrix Cloud Storage.";
 $MESS["MAIN_DUMP_FROM"] = "from";
 $MESS["DUMP_ERR_BIG_BACKUP"] = "Backup size exceeds your Bitrix Cloud quota. The archive has been saved on the local machine.";
-$MESS["DUMP_BACK"] = "back";
 $MESS["DUMP_RETRY"] = "Try again";
 $MESS["MAIN_DUMP_ERR_DELETE"] = "You cannot manually delete files stored in Bitrix Cloud. The outdated archives are replaced with the new one as soon as you create and upload a new backup.";
 $MESS["ERR_NO_BX_CLOUD"] = "The cloud service support module is not installed";
@@ -201,4 +200,5 @@ By default, the backup copy is saved to Bitrix Cloud in encrypted form in multip
 
 If Bitrix Cloud services are inaccessible but the agents are scheduled using cron, the backup copy will be created locally.";
 $MESS["DUMP_TABLE_BROKEN"] = "The table #TABLE# has been destroyed due to internal MySQL error. Use <a href=\"/bitrix/admin/site_checker.php?tabControl_active_tab=edit1\" target=_blank>Site Checker</a> to fully recover the table, or just restore table structure.";
+$MESS["DUMP_ERR_AUTO"] = "Error creating backup copy. <a href=\"#LINK#\">View details</a>";
 ?>

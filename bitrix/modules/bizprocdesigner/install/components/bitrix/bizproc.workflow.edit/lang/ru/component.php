@@ -8,6 +8,7 @@ $MESS ['BIZPROC_WFEDIT_CATEGORY_CONSTR'] = "Конструкции";
 $MESS ['BIZPROC_WFEDIT_CATEGORY_INTER'] = "Уведомления";
 $MESS ['BIZPROC_WFEDIT_CATEGORY_OTHER'] = "Прочее";
 $MESS ['BIZPROC_WFEDIT_CATEGORY_REST'] = "Действия приложений";
+$MESS ['BIZPROC_WFEDIT_CATEGORY_TASKS'] = "Задания";
 $MESS ['BIZPROC_WFEDIT_TITLE_ADD'] = "Создание шаблона бизнес-процесса";
 $MESS ['BIZPROC_WFEDIT_TITLE_EDIT'] = "Редактирование шаблона бизнес-процесса";
 $MESS ['BIZPROC_WFEDIT_IMPORT_ERROR'] = "Ошибка импортирования шаблона бизнес-процесса";

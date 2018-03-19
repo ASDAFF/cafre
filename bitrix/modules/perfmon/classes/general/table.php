@@ -101,7 +101,7 @@ class CAllPerfomanceTable
 	function NavQuery($arNavParams, $arQuerySelect, $strTableName, $strQueryWhere, $arQueryOrder)
 	{
 		global $DB;
-		if (IntVal($arNavParams["nTopCount"]) <= 0)
+		if (intval($arNavParams["nTopCount"]) <= 0)
 		{
 			$strSql = "
 				SELECT
@@ -173,12 +173,12 @@ class CAllPerfomanceTable
 		}
 	}
 
-	function escapeColumn($column)
+	public static function escapeColumn($column)
 	{
 		return $column;
 	}
 
-	function escapeTable($tableName)
+	public static function escapeTable($tableName)
 	{
 		return $tableName;
 	}

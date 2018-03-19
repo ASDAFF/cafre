@@ -1,8 +1,11 @@
 <?
-if(!CModule::IncludeModule('rest') || !CModule::IncludeModule('calendar'))
+if(!\Bitrix\Main\Loader::includeModule('rest') || !\Bitrix\Main\Loader::includeModule('calendar'))
 {
 	return;
 }
+
+use Bitrix\Main;
+use Bitrix\Rest\RestException;
 
 IncludeModuleLangFile(__FILE__);
 /**
@@ -34,7 +37,6 @@ final class CCalendarRestService extends IRestService
 			"calendar.meeting.params.set" => array(__CLASS__, "MeetingParamsSet"),
 			"calendar.accessibility.get" => array(__CLASS__, "MeetingAccessibilityGet"),
 			"calendar.settings.get" => array(__CLASS__, "SettingsGet"),
-			//"calendar.settings.set" => array(__CLASS__, "SettingsSet"),
 			"calendar.user.settings.get" => array(__CLASS__, "UserSettingsGet"),
 			"calendar.user.settings.set" => array(__CLASS__, "UserSettingsSet")
 		);
@@ -52,6 +54,7 @@ final class CCalendarRestService extends IRestService
 	 * $arParams['to'] - datetime, "to" limit, default value - 3 month after current date
 	 * $arParams['section'] - inline or array of sections
 	 * @return array of events
+	 * @throws \Bitrix\Rest\RestException
 	 *
 	 * @example (Javascript)
 	 * BX24.callMethod("calendar.event.get",
@@ -73,7 +76,7 @@ final class CCalendarRestService extends IRestService
 		foreach ($necessaryParams as $param)
 		{
 			if (!isset($arParams[$param]) || empty($arParams[$param]))
-				throw new Exception(GetMessage('CAL_REST_PARAM_EXCEPTION', array('#PARAM_NAME#' => $param,'#REST_METHOD#' => $methodName)));
+				throw new RestException(GetMessage('CAL_REST_PARAM_EXCEPTION', array('#PARAM_NAME#' => $param,'#REST_METHOD#' => $methodName)));
 		}
 
 		$type = $arParams['type'];
@@ -81,9 +84,9 @@ final class CCalendarRestService extends IRestService
 		$from = false;
 		$to = false;
 		if (isset($arParams['from']))
-			$from = CRestUtil::unConvertDate($arParams['from']);
+			$from = CRestUtil::unConvertDateTime($arParams['from']);
 		if (isset($arParams['to']))
-			$to = CRestUtil::unConvertDate($arParams['to']);
+			$to = CRestUtil::unConvertDateTime($arParams['to']);
 
 		// Default values for from-to period
 		if ($from === false && $to === false)
@@ -168,6 +171,7 @@ final class CCalendarRestService extends IRestService
 		'reinvite' => true|false
 	)
 	 * @return id of the new event.
+	 * @throws \Bitrix\Rest\RestException
 	 *
 	 * @example (Javascript)
 	 * BX24.callMethod("calendar.event.add",
@@ -178,7 +182,7 @@ final class CCalendarRestService extends IRestService
 	 * 		description: 'Description for event',
 	 * 		from: '2013-06-14',
 	 * 		to: '2013-06-14',
-	 * 		skipTime: 'Y',
+	 * 		skip_time: 'Y',
 	 * 		section: 5,
 	 * 		color: '#9cbe1c',
 	 * 		text_color: '#283033',
@@ -204,22 +208,22 @@ final class CCalendarRestService extends IRestService
 		$methodName = "calendar.event.add";
 
 		if (isset($arParams['from']))
-		{
-			$from = CRestUtil::unConvertDate($arParams['from']);
-			$arParams['from_ts'] = CCalendar::Timestamp($from);
-		}
+			$arParams['from'] = CRestUtil::unConvertDateTime($arParams['from']);
 
 		if (isset($arParams['to']))
-		{
-			$to = CRestUtil::unConvertDate($arParams['to']);
-			$arParams['to_ts'] = CCalendar::Timestamp($to);
-		}
+			$arParams['to'] = CRestUtil::unConvertDateTime($arParams['to']);
 
-		$necessaryParams = array('from_ts', 'to_ts', 'name', 'ownerId', 'type', 'section');
+		if (isset($arParams['from_ts']) && !isset($arParams['from']))
+			$arParams['from'] = CCalendar::Date($arParams['from_ts']);
+
+		if (isset($arParams['to_ts']) && !isset($arParams['to']))
+			$arParams['to'] = CCalendar::Date($arParams['to_ts']);
+
+		$necessaryParams = array('from', 'to', 'name', 'ownerId', 'type', 'section');
 		foreach ($necessaryParams as $param)
 		{
 			if (!isset($arParams[$param]) || empty($arParams[$param]))
-				throw new Exception(GetMessage('CAL_REST_PARAM_EXCEPTION', array('#PARAM_NAME#' => $param,'#REST_METHOD#' => $methodName)));
+				throw new RestException(GetMessage('CAL_REST_PARAM_EXCEPTION', array('#PARAM_NAME#' => $param,'#REST_METHOD#' => $methodName)));
 		}
 
 		$type = $arParams['type'];
@@ -230,24 +234,26 @@ final class CCalendarRestService extends IRestService
 		if ($res && is_array($res) && isset($res[0]))
 		{
 			if (!$res[0]['PERM']['add'])
-				throw new Exception(GetMessage('CAL_REST_ACCESS_DENIED'));
+				throw new RestException(GetMessage('CAL_REST_ACCESS_DENIED'));
 		}
 		else
 		{
-			throw new Exception('CAL_REST_SECTION_ERROR');
+			throw new RestException('CAL_REST_SECTION_ERROR');
 		}
 
 		$arFields = array(
 			"CAL_TYPE" => $type,
 			"OWNER_ID" => $ownerId,
 			"NAME" => trim($arParams['name']),
-			"DT_FROM_TS" => $arParams['from_ts'],
-			"DT_TO_TS" => $arParams['to_ts'],
+			"DATE_FROM" => $arParams['from'],
+			"DATE_TO" => $arParams['to'],
 			"SECTIONS" => $sectionId
 		);
 
 		if (isset($arParams['skip_time']))
 			$arFields["SKIP_TIME"] = $arParams['skip_time'] == 'Y';
+		if (isset($arParams['skipTime']))
+			$arFields["SKIP_TIME"] = $arParams['skipTime'] == 'Y';
 
 		if (isset($arParams['description']))
 			$arFields["DESCRIPTION"] = trim($arParams['description']);
@@ -287,9 +293,23 @@ final class CCalendarRestService extends IRestService
 		if (isset($arParams['remind']))
 			$arFields["REMIND"] = $arParams['remind'];
 
+		$saveParams = array();
 		if ($arFields['IS_MEETING'])
 		{
-			$arFields['ATTENDEES'] = isset($arParams['attendees']) ? $arParams['attendees'] : false;
+			$arFields['ATTENDEES'] = (isset($arParams['attendees']) && is_array($arParams['attendees'])) ? $arParams['attendees'] : false;
+			$arFields['ATTENDEES_CODES'] = array();
+			if (is_array($arFields['ATTENDEES']))
+			{
+				foreach($arFields['ATTENDEES'] as $attendeeId)
+				{
+					$code = 'U'.intval($attendeeId);
+					if (in_array($code, $arFields['ATTENDEES_CODES']))
+					{
+						$arFields['ATTENDEES_CODES'][] = $code;
+					}
+				}
+			}
+
 			$meeting = isset($arParams['meeting']) ? $arParams['meeting'] : array();
 			$arFields['MEETING_HOST'] = isset($arParams['host']) ? intVal($arParams['host']) : $userId;
 			$arFields['MEETING'] = array(
@@ -299,14 +319,14 @@ final class CCalendarRestService extends IRestService
 				'NOTIFY' => (boolean) $meeting['notify'],
 				'REINVITE' => (boolean) $meeting['reinvite']
 			);
-		}
 
-		$newId = CCalendar::SaveEvent(array(
-			'arFields' => $arFields
-		));
+			$saveParams['userId'] = $arFields['MEETING_HOST'];
+		}
+		$saveParams['arFields'] = $arFields;
+		$newId = CCalendar::SaveEvent($saveParams);
 
 		if (!$newId)
-			throw new Exception(GetMessage("CAL_REST_EVENT_NEW_ERROR"));
+			throw new RestException(GetMessage("CAL_REST_EVENT_NEW_ERROR"));
 
 		return $newId;
 	}
@@ -349,6 +369,7 @@ final class CCalendarRestService extends IRestService
 	 * 		'reinvite' => true|false
 	 * 	)
 	 * @return id of edited event
+	 * @throws \Bitrix\Rest\RestException
 	 *
 	 * @example (Javascript)
 	 * BX24.callMethod("calendar.event.update",
@@ -360,7 +381,7 @@ final class CCalendarRestService extends IRestService
 	 * 		description: 'New description for event',
 	 * 		from: '2013-06-17',
 	 * 		to: '2013-06-17',
-	 * 		skipTime: 'Y',
+	 * 		skip_time: 'Y',
 	 * 		section: 5,
 	 * 		color: '#9cbe1c',
 	 * 		text_color: '#283033',
@@ -380,22 +401,33 @@ final class CCalendarRestService extends IRestService
 		foreach ($necessaryParams as $param)
 		{
 			if (!isset($arParams[$param]) || empty($arParams[$param]))
-				throw new Exception(GetMessage('CAL_REST_PARAM_EXCEPTION', array('#PARAM_NAME#' => $param,'#REST_METHOD#' => $methodName)));
+				throw new RestException(GetMessage('CAL_REST_PARAM_EXCEPTION', array('#PARAM_NAME#' => $param,'#REST_METHOD#' => $methodName)));
 		}
 
 		$id = intVal($arParams['id']);
 		$type = $arParams['type'];
 		$ownerId = intval($arParams['ownerId']);
+
+		if (isset($arParams['from']))
+			$arParams['from'] = CRestUtil::unConvertDateTime($arParams['from']);
+
+		if (isset($arParams['to']))
+			$arParams['to'] = CRestUtil::unConvertDateTime($arParams['to']);
+
+		if (isset($arParams['from_ts']) && !isset($arParams['from']))
+			$arParams['from'] = CCalendar::Date($arParams['from_ts']);
+
+		if (isset($arParams['to_ts']) && !isset($arParams['to']))
+			$arParams['to'] = CCalendar::Date($arParams['to_ts']);
+
 		$arFields = array(
-			"ID" => $id
+			"ID" => $id,
+			"DATE_FROM" => $arParams['from'],
+			"DATE_TO" => $arParams['to']
 		);
 
-		if (isset($arParams['from_ts']))
-			$arFields["DT_FROM_TS"] = intVal($arParams['from_ts']);
-
-		if (isset($arParams['to_ts']))
-			$arFields["DT_TO_TS"] = intVal($arParams['to_ts']);
-
+		if (isset($arParams['skipTime']))
+			$arFields["SKIP_TIME"] = $arParams['skipTime'] == 'Y';
 		if (isset($arParams['skip_time']))
 			$arFields["SKIP_TIME"] = $arParams['skip_time'] == 'Y';
 
@@ -414,11 +446,11 @@ final class CCalendarRestService extends IRestService
 			if ($res && is_array($res) && isset($res[0]))
 			{
 				if (!$res[0]['PERM']['edit'])
-					throw new Exception(GetMessage('CAL_REST_ACCESS_DENIED'));
+					throw new RestException(GetMessage('CAL_REST_ACCESS_DENIED'));
 			}
 			else
 			{
-				throw new Exception('CAL_REST_SECTION_ERROR');
+				throw new RestException('CAL_REST_SECTION_ERROR');
 			}
 		}
 
@@ -457,9 +489,23 @@ final class CCalendarRestService extends IRestService
 		if (isset($arParams['remind']))
 			$arFields["REMIND"] = $arParams['REMIND'];
 
+		$saveParams = array();
 		if ($arFields['IS_MEETING'])
 		{
-			$arFields['ATTENDEES'] = isset($arParams['attendees']) ? $arParams['attendees'] : false;
+			$arFields['ATTENDEES'] = (isset($arParams['attendees']) && is_array($arParams['attendees'])) ? $arParams['attendees'] : false;
+			$arFields['ATTENDEES_CODES'] = array();
+			if (is_array($arFields['ATTENDEES']))
+			{
+				foreach($arFields['ATTENDEES'] as $attendeeId)
+				{
+					$code = 'U'.intval($attendeeId);
+					if (in_array($code, $arFields['ATTENDEES_CODES']))
+					{
+						$arFields['ATTENDEES_CODES'][] = $code;
+					}
+				}
+			}
+
 			$meeting = isset($arParams['meeting']) ? $arParams['meeting'] : array();
 			$arFields['MEETING_HOST'] = isset($arParams['host']) ? intVal($arParams['host']) : $userId;
 			$arFields['MEETING'] = array(
@@ -469,14 +515,14 @@ final class CCalendarRestService extends IRestService
 				'NOTIFY' => (boolean) $meeting['notify'],
 				'REINVITE' => (boolean) $meeting['reinvite']
 			);
-		}
 
-		$newId = CCalendar::SaveEvent(array(
-			'arFields' => $arFields
-		));
+			$saveParams['userId'] = $arFields['MEETING_HOST'];
+		}
+		$saveParams['arFields'] = $arFields;
+		$newId = CCalendar::SaveEvent($saveParams);
 
 		if (!$newId)
-			throw new Exception(GetMessage("CAL_REST_EVENT_UPDATE_ERROR"));
+			throw new RestException(GetMessage("CAL_REST_EVENT_UPDATE_ERROR"));
 
 		return $newId;
 	}
@@ -489,6 +535,7 @@ final class CCalendarRestService extends IRestService
 	 * $arParams['ownerId'] (required) owner id
 	 * $arParams['id'] (required) event id
 	 * @return true if everything ok
+	 * @throws \Bitrix\Rest\RestException
 	 *
 	 * @example (Javascript)
 	 * BX24.callMethod("calendar.event.delete",
@@ -504,16 +551,16 @@ final class CCalendarRestService extends IRestService
 		if (isset($arParams['id']) && intVal($arParams['id']) > 0)
 			$id = intVal($arParams['id']);
 		else
-			throw new Exception(GetMessage('CAL_REST_EVENT_ID_EXCEPTION'));
+			throw new RestException(GetMessage('CAL_REST_EVENT_ID_EXCEPTION'));
 
 		$res = CCalendar::DeleteEvent($id, false);
 
 		if ($res !== true)
 		{
 			if ($res === false)
-				throw new Exception(GetMessage('CAL_REST_EVENT_DELETE_ERROR'));
+				throw new RestException(GetMessage('CAL_REST_EVENT_DELETE_ERROR'));
 			else
-				throw new Exception($res);
+				throw new RestException($res);
 		}
 
 		return $res;
@@ -531,6 +578,8 @@ final class CCalendarRestService extends IRestService
 	 * $arParams['detailUrl'] - url for calendar
 	 *
 	 * @return array of events
+	 *
+	 * @throws \Bitrix\Rest\RestException
 	 *
 	 * @example (Javascript)
 	 * BX24.callMethod("calendar.event.get.nearest",
@@ -574,7 +623,7 @@ final class CCalendarRestService extends IRestService
 
 		if ($arEvents == 'access_denied' || $arEvents == 'inactive_feature')
 		{
-			throw new Exception(GetMessage('CAL_REST_ACCESS_DENIED'));
+			throw new RestException(GetMessage('CAL_REST_ACCESS_DENIED'));
 		}
 		elseif (is_array($arEvents))
 		{
@@ -587,7 +636,7 @@ final class CCalendarRestService extends IRestService
 
 				for ($i = 0, $l = count($arEvents); $i < $l; $i++)
 				{
-					$arEvents[$i]['~detailUrl'] = $arParams['detailUrl'].'?EVENT_ID='.$arEvents[$i]['ID'].'&EVENT_DATE='.$arEvents[$i]['DT_FROM'];
+					$arEvents[$i]['~detailUrl'] = $arParams['detailUrl'].'?EVENT_ID='.$arEvents[$i]['ID'].'&EVENT_DATE='.$arEvents[$i]['DATE_FROM'];
 				}
 			}
 
@@ -607,6 +656,8 @@ final class CCalendarRestService extends IRestService
 	 *
 	 * @return array of sections
 	 *
+	 * @throws \Bitrix\Rest\RestException
+	 *
 	 *  @example (Javascript)
 	 * BX24.callMethod("calendar.section.get",
 	 * {
@@ -622,14 +673,14 @@ final class CCalendarRestService extends IRestService
 		if (isset($arParams['type']))
 			$type = $arParams['type'];
 		else
-			throw new Exception(GetMessage('CAL_REST_PARAM_EXCEPTION', array('#REST_METHOD#' => $methodName, '#PARAM_NAME#' => 'type')));
+			throw new RestException(GetMessage('CAL_REST_PARAM_EXCEPTION', array('#REST_METHOD#' => $methodName, '#PARAM_NAME#' => 'type')));
 
 		if (isset($arParams['ownerId']))
 			$ownerId = intval($arParams['ownerId']);
 		elseif($type == 'user')
 			$ownerId = $userId;
 		else
-			throw new Exception(GetMessage('CAL_REST_PARAM_EXCEPTION', array('#REST_METHOD#' => $methodName, '#PARAM_NAME#' => 'ownerId')));
+			throw new RestException(GetMessage('CAL_REST_PARAM_EXCEPTION', array('#REST_METHOD#' => $methodName, '#PARAM_NAME#' => 'ownerId')));
 
 		$arFilter = array(
 			'CAL_TYPE' => $type,
@@ -677,6 +728,8 @@ final class CCalendarRestService extends IRestService
 	 *
 	 * @return id of created section
 	 *
+	 * @throws \Bitrix\Rest\RestException
+	 *
 	 * @example (Javascript)
 	 * BX24.callMethod("calendar.section.add",
 	 * {
@@ -704,14 +757,14 @@ final class CCalendarRestService extends IRestService
 		if (isset($arParams['type']))
 			$type = $arParams['type'];
 		else
-			throw new Exception(GetMessage('CAL_REST_PARAM_EXCEPTION', array('#REST_METHOD#' => $methodName, '#PARAM_NAME#' => 'type')));
+			throw new RestException(GetMessage('CAL_REST_PARAM_EXCEPTION', array('#REST_METHOD#' => $methodName, '#PARAM_NAME#' => 'type')));
 
 		if (isset($arParams['ownerId']))
 			$ownerId = intval($arParams['ownerId']);
 		elseif($type == 'user')
 			$ownerId = $userId;
 		else
-			throw new Exception(GetMessage('CAL_REST_PARAM_EXCEPTION', array('#REST_METHOD#' => $methodName, '#PARAM_NAME#' => 'ownerId')));
+			throw new RestException(GetMessage('CAL_REST_PARAM_EXCEPTION', array('#REST_METHOD#' => $methodName, '#PARAM_NAME#' => 'ownerId')));
 
 		$perm = CCalendar::GetPermissions(array(
 			'type' => $type,
@@ -723,12 +776,12 @@ final class CCalendarRestService extends IRestService
 		if (($type == 'group' || $type == 'user'))
 		{
 			if (!$perm['section_edit'])
-				throw new Exception(GetMessage('CAL_REST_ACCESS_DENIED'));
+				throw new RestException(GetMessage('CAL_REST_ACCESS_DENIED'));
 		}
 		else // other types
 		{
 			if (!CCalendarType::CanDo('calendar_type_edit_section'))
-				throw new Exception(GetMessage('CAL_REST_ACCESS_DENIED'));
+				throw new RestException(GetMessage('CAL_REST_ACCESS_DENIED'));
 		}
 
 		$arFields = Array(
@@ -767,7 +820,7 @@ final class CCalendarRestService extends IRestService
 		);
 
 		if (!$id)
-			throw new Exception(GetMessage('CAL_REST_SECTION_NEW_ERROR'));
+			throw new RestException(GetMessage('CAL_REST_SECTION_NEW_ERROR'));
 
 		CCalendarSect::SetClearOperationCache(true);
 		return $id;
@@ -791,6 +844,8 @@ final class CCalendarRestService extends IRestService
 	 * $arParams['access'] - array of access data
 	 *
 	 * @return id of modified section
+	 *
+	 * @throws \Bitrix\Rest\RestException
 	 *
 	 * @example (Javascript)
 	 * BX24.callMethod("calendar.section.update",
@@ -818,22 +873,22 @@ final class CCalendarRestService extends IRestService
 		if (isset($arParams['type']))
 			$type = $arParams['type'];
 		else
-			throw new Exception(GetMessage('CAL_REST_PARAM_EXCEPTION', array('#REST_METHOD#' => $methodName, '#PARAM_NAME#' => 'type')));
+			throw new RestException(GetMessage('CAL_REST_PARAM_EXCEPTION', array('#REST_METHOD#' => $methodName, '#PARAM_NAME#' => 'type')));
 
 		if (isset($arParams['ownerId']))
 			$ownerId = intval($arParams['ownerId']);
 		elseif($type == 'user')
 			$ownerId = $userId;
 		else
-			throw new Exception(GetMessage('CAL_REST_PARAM_EXCEPTION', array('#REST_METHOD#' => $methodName, '#PARAM_NAME#' => 'ownerId')));
+			throw new RestException(GetMessage('CAL_REST_PARAM_EXCEPTION', array('#REST_METHOD#' => $methodName, '#PARAM_NAME#' => 'ownerId')));
 
 		if (isset($arParams['id']) && intVal($arParams['id']) > 0)
 			$id = intVal($arParams['id']);
 		else
-			throw new Exception(GetMessage('CAL_REST_SECT_ID_EXCEPTION'));
+			throw new RestException(GetMessage('CAL_REST_SECT_ID_EXCEPTION'));
 
 		if (!CCalendar::IsPersonal($type, $ownerId, $userId) && !CCalendarSect::CanDo('calendar_edit_section', $id, $userId))
-			throw new Exception(GetMessage('CAL_REST_ACCESS_DENIED'));
+			throw new RestException(GetMessage('CAL_REST_ACCESS_DENIED'));
 
 		$arFields = Array(
 			'ID' => $id,
@@ -864,7 +919,7 @@ final class CCalendarRestService extends IRestService
 		));
 
 		if (!$id)
-			throw new Exception(GetMessage('CAL_REST_SECTION_SAVE_ERROR'));
+			throw new RestException(GetMessage('CAL_REST_SECTION_SAVE_ERROR'));
 
 		return $id;
 	}
@@ -878,6 +933,8 @@ final class CCalendarRestService extends IRestService
 	 * $arParams['id'] (required) section id
 	 *
 	 * @return true if everything ok
+	 *
+	 * @throws \Bitrix\Rest\RestException
 	 *
 	 * @example (Javascript)
 	 * BX24.callMethod("calendar.section.delete",
@@ -895,27 +952,27 @@ final class CCalendarRestService extends IRestService
 		if (isset($arParams['type']))
 			$type = $arParams['type'];
 		else
-			throw new Exception(GetMessage('CAL_REST_PARAM_EXCEPTION', array('#REST_METHOD#' => $methodName, '#PARAM_NAME#' => 'type')));
+			throw new RestException(GetMessage('CAL_REST_PARAM_EXCEPTION', array('#REST_METHOD#' => $methodName, '#PARAM_NAME#' => 'type')));
 
 		if (isset($arParams['ownerId']))
 			$ownerId = intval($arParams['ownerId']);
 		elseif($type == 'user')
 			$ownerId = $userId;
 		else
-			throw new Exception(GetMessage('CAL_REST_PARAM_EXCEPTION', array('#REST_METHOD#' => $methodName, '#PARAM_NAME#' => 'ownerId')));
+			throw new RestException(GetMessage('CAL_REST_PARAM_EXCEPTION', array('#REST_METHOD#' => $methodName, '#PARAM_NAME#' => 'ownerId')));
 
 		if (isset($arParams['id']) && intVal($arParams['id']) > 0)
 			$id = intVal($arParams['id']);
 		else
-			throw new Exception(GetMessage('CAL_REST_SECT_ID_EXCEPTION'));
+			throw new RestException(GetMessage('CAL_REST_SECT_ID_EXCEPTION'));
 
 		if (!CCalendar::IsPersonal($type, $ownerId, $userId) && !CCalendarSect::CanDo('calendar_edit_section', $id, $userId))
-			throw new Exception(GetMessage('CAL_REST_ACCESS_DENIED'));
+			throw new RestException(GetMessage('CAL_REST_ACCESS_DENIED'));
 
 		$res = CCalendar::DeleteSection($id);
 
 		if (!$res)
-			throw new Exception(GetMessage('CAL_REST_SECTION_DELETE_ERROR'));
+			throw new RestException(GetMessage('CAL_REST_SECTION_DELETE_ERROR'));
 
 		return $res;
 	}
@@ -928,6 +985,8 @@ final class CCalendarRestService extends IRestService
 	 * $arParams['status'] = 'Y' | 'N' | 'Q'
 	 *
 	 * @return true if everything ok
+	 *
+	 * @throws \Bitrix\Rest\RestException
 	 *
 	 * @example (Javascript)
 	 * BX24.callMethod("calendar.meeting.status.set",
@@ -945,18 +1004,18 @@ final class CCalendarRestService extends IRestService
 		foreach ($necessaryParams as $param)
 		{
 			if (!isset($arParams[$param]) || empty($arParams[$param]))
-				throw new Exception(GetMessage('CAL_REST_PARAM_EXCEPTION', array('#PARAM_NAME#' => $param,'#REST_METHOD#' => $methodName)));
+				throw new RestException(GetMessage('CAL_REST_PARAM_EXCEPTION', array('#PARAM_NAME#' => $param,'#REST_METHOD#' => $methodName)));
 		}
 
 		$arParams['status'] = strtoupper($arParams['status']);
 		if (!in_array($arParams['status'], array('Y', 'N', 'Q')))
-			throw new Exception(GetMessage('CAL_REST_PARAM_ERROR', array('#PARAM_NAME#')));
+			throw new RestException(GetMessage('CAL_REST_PARAM_ERROR', array('#PARAM_NAME#')));
 
-		CCalendarEvent::SetMeetingStatus(
-			$userId,
-			$arParams['eventId'],
-			$arParams['status']
-		);
+		CCalendarEvent::SetMeetingStatus(array(
+			'userId' => $userId,
+			'eventId' => $arParams['eventId'],
+			'status' => $arParams['status']
+		));
 
 		return true;
 	}
@@ -968,6 +1027,8 @@ final class CCalendarRestService extends IRestService
 	 * $arParams['eventId'] - (required) event id
 	 *
 	 * @return status - "Y" | "N" | "Q"
+	 *
+	 * @throws \Bitrix\Rest\RestException
 	 *
 	 * @example (Javascript)
 	 * BX24.callMethod("calendar.meeting.status.get",
@@ -984,7 +1045,7 @@ final class CCalendarRestService extends IRestService
 		foreach ($necessaryParams as $param)
 		{
 			if (!isset($arParams[$param]) || empty($arParams[$param]))
-				throw new Exception(GetMessage('CAL_REST_PARAM_EXCEPTION', array('#PARAM_NAME#' => $param,'#REST_METHOD#' => $methodName)));
+				throw new RestException(GetMessage('CAL_REST_PARAM_EXCEPTION', array('#PARAM_NAME#' => $param,'#REST_METHOD#' => $methodName)));
 		}
 
 		$status = CCalendarEvent::GetMeetingStatus(
@@ -994,7 +1055,7 @@ final class CCalendarRestService extends IRestService
 		);
 
 		if ($status === false)
-			throw new Exception(GetMessage('CAL_REST_GET_STATUS_ERROR'));
+			throw new RestException(GetMessage('CAL_REST_GET_STATUS_ERROR'));
 
 		return $status;
 	}
@@ -1008,6 +1069,8 @@ final class CCalendarRestService extends IRestService
 	 * $arParams['remind']
 	 *
 	 * @return true if everything ok
+	 *
+	 * @throws \Bitrix\Rest\RestException
 	 *
 	 * @example (Javascript)
 	 * BX24.callMethod("calendar.meeting.params.set",
@@ -1026,7 +1089,7 @@ final class CCalendarRestService extends IRestService
 		foreach ($necessaryParams as $param)
 		{
 			if (!isset($arParams[$param]) || empty($arParams[$param]))
-				throw new Exception(GetMessage('CAL_REST_PARAM_EXCEPTION', array('#PARAM_NAME#' => $param,'#REST_METHOD#' => $methodName)));
+				throw new RestException(GetMessage('CAL_REST_PARAM_EXCEPTION', array('#PARAM_NAME#' => $param,'#REST_METHOD#' => $methodName)));
 		}
 
 		$result = CCalendarEvent::SetMeetingParams(
@@ -1039,7 +1102,7 @@ final class CCalendarRestService extends IRestService
 		);
 
 		if (!$result)
-			throw new Exception(GetMessage('CAL_REST_GET_DATA_ERROR'));
+			throw new RestException(GetMessage('CAL_REST_GET_DATA_ERROR'));
 
 		return true;
 	}
@@ -1053,6 +1116,8 @@ final class CCalendarRestService extends IRestService
 	 * $arParams['to'] - (required) date, to limit
 	 *
 	 * @return array - array('user_id' => array()) - information about accessibility for each asked user
+	 *
+	 * @throws \Bitrix\Rest\RestException
 	 *
 	 * @example (Javascript)
 	 * BX24.callMethod("calendar.accessibility.get",
@@ -1071,7 +1136,7 @@ final class CCalendarRestService extends IRestService
 		foreach ($necessaryParams as $param)
 		{
 			if (!isset($arParams[$param]) || empty($arParams[$param]))
-				throw new Exception(GetMessage('CAL_REST_PARAM_EXCEPTION', array('#PARAM_NAME#' => $param,'#REST_METHOD#' => $methodName)));
+				throw new RestException(GetMessage('CAL_REST_PARAM_EXCEPTION', array('#PARAM_NAME#' => $param,'#REST_METHOD#' => $methodName)));
 		}
 
 		$from = CRestUtil::unConvertDate($arParams['from']);
@@ -1111,6 +1176,8 @@ final class CCalendarRestService extends IRestService
 	 *
 	 * @return true if everything ok
 	 *
+	 * @throws \Bitrix\Rest\RestException
+	 *
 	 * @example (Javascript)
 	 * BX24.callMethod("calendar.settings.set",
 	 * {
@@ -1129,10 +1196,10 @@ final class CCalendarRestService extends IRestService
 		$methodName = "calendar.settings.set";
 
 		if (!$USER->CanDoOperation('bitrix24_config') && !$USER->CanDoOperation('edit_php'))
-			throw new Exception(GetMessage('CAL_REST_ACCESS_DENIED'));
+			throw new RestException(GetMessage('CAL_REST_ACCESS_DENIED'));
 
 		if (!isset($arParams['settings']))
-			throw new Exception(GetMessage('CAL_REST_PARAM_EXCEPTION', array('#PARAM_NAME#' => 'settings','#REST_METHOD#' => $methodName)));
+			throw new RestException(GetMessage('CAL_REST_PARAM_EXCEPTION', array('#PARAM_NAME#' => 'settings','#REST_METHOD#' => $methodName)));
 
 		CCalendar::SetSettings($arParams['settings']);
 
@@ -1144,6 +1211,8 @@ final class CCalendarRestService extends IRestService
 	 *
 	 * @return true if everything ok
 	 *
+	 * @throws \Bitrix\Rest\RestException
+	 *
 	 * @example (Javascript)
 	 * BX24.callMethod("calendar.settings.clear",{});
 	 */
@@ -1153,7 +1222,7 @@ final class CCalendarRestService extends IRestService
 		$methodName = "calendar.settings.clear";
 
 		if (!$USER->CanDoOperation('bitrix24_config') && !$USER->CanDoOperation('edit_php'))
-			throw new Exception(GetMessage('CAL_REST_ACCESS_DENIED'));
+			throw new RestException(GetMessage('CAL_REST_ACCESS_DENIED'));
 
 		CCalendar::SetSettings(array(), true);
 		return true;
@@ -1183,6 +1252,8 @@ final class CCalendarRestService extends IRestService
 	 *
 	 * @return true if everything ok
 	 *
+	 * @throws \Bitrix\Rest\RestException
+	 *
 	 * @example (Javascript)
 	 * BX24.callMethod("calendar.user.settings.set",
 	 * {
@@ -1201,9 +1272,9 @@ final class CCalendarRestService extends IRestService
 		$methodName = "calendar.user.settings.set";
 
 		if (!isset($arParams['settings']))
-			throw new Exception(GetMessage('CAL_REST_PARAM_EXCEPTION', array('#PARAM_NAME#' => 'settings','#REST_METHOD#' => $methodName)));
+			throw new RestException(GetMessage('CAL_REST_PARAM_EXCEPTION', array('#PARAM_NAME#' => 'settings','#REST_METHOD#' => $methodName)));
 
-		CCalendar::SetUserSettings($arParams['settings'], $userId);
+		CCalendarUserSettings::Set($arParams['settings'], $userId);
 		return true;
 	}
 
@@ -1219,7 +1290,7 @@ final class CCalendarRestService extends IRestService
 	{
 		$userId = CCalendar::GetCurUserId();
 		$methodName = "calendar.user.settings.clear";
-		CCalendar::SetUserSettings(false, $userId);
+		CCalendarUserSettings::Set(false, $userId);
 		return true;
 	}
 }

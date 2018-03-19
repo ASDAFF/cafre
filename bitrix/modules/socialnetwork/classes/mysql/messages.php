@@ -26,15 +26,7 @@ class CSocNetMessages extends CAllSocNetMessages
 		if (defined("INTASK_SKIP_SOCNET_MESSAGES1") && INTASK_SKIP_SOCNET_MESSAGES1)
 			$arFields["=DATE_VIEW"] = $DB->CurrentTimeFunction();
 
-		$arFields1 = array();
-		foreach ($arFields as $key => $value)
-		{
-			if (substr($key, 0, 1) == "=")
-			{
-				$arFields1[substr($key, 1)] = $value;
-				unset($arFields[$key]);
-			}
-		}
+		$arFields1 = \Bitrix\Socialnetwork\Util::getEqualityFields($arFields);
 
 		if (!CSocNetMessages::CheckFields("ADD", $arFields))
 			return false;
@@ -45,16 +37,7 @@ class CSocNetMessages extends CAllSocNetMessages
 				return false;
 
 		$arInsert = $DB->PrepareInsert("b_sonet_messages", $arFields);
-
-		foreach ($arFields1 as $key => $value)
-		{
-			if (strlen($arInsert[0]) > 0)
-				$arInsert[0] .= ", ";
-			$arInsert[0] .= $key;
-			if (strlen($arInsert[1]) > 0)
-				$arInsert[1] .= ", ";
-			$arInsert[1] .= $value;
-		}
+		\Bitrix\Socialnetwork\Util::processEqualityFieldsToInsert($arFields1, $arInsert);
 
 		$ID = false;
 		if (strlen($arInsert[0]) > 0)
@@ -87,15 +70,7 @@ class CSocNetMessages extends CAllSocNetMessages
 
 		$ID = IntVal($ID);
 
-		$arFields1 = array();
-		foreach ($arFields as $key => $value)
-		{
-			if (substr($key, 0, 1) == "=")
-			{
-				$arFields1[substr($key, 1)] = $value;
-				unset($arFields[$key]);
-			}
-		}
+		$arFields1 = \Bitrix\Socialnetwork\Util::getEqualityFields($arFields);
 
 		if (!CSocNetMessages::CheckFields("UPDATE", $arFields, $ID))
 			return false;
@@ -106,13 +81,7 @@ class CSocNetMessages extends CAllSocNetMessages
 				return false;
 
 		$strUpdate = $DB->PrepareUpdate("b_sonet_messages", $arFields);
-
-		foreach ($arFields1 as $key => $value)
-		{
-			if (strlen($strUpdate) > 0)
-				$strUpdate .= ", ";
-			$strUpdate .= $key."=".$value." ";
-		}
+		\Bitrix\Socialnetwork\Util::processEqualityFieldsToUpdate($arFields1, $strUpdate);
 
 		if (strlen($strUpdate) > 0)
 		{
@@ -137,7 +106,7 @@ class CSocNetMessages extends CAllSocNetMessages
 	/***************************************/
 	/**********  DATA SELECTION  ***********/
 	/***************************************/
-	function GetList($arOrder = Array("ID" => "DESC"), $arFilter = Array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array())
+	public static function GetList($arOrder = Array("ID" => "DESC"), $arFilter = Array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array())
 	{
 		global $DB;
 

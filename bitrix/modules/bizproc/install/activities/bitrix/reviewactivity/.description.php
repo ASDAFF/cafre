@@ -9,6 +9,8 @@ $arActivityDescription = array(
 	"JSCLASS" => "BizProcActivity",
 	"CATEGORY" => array(
 		"ID" => "document",
+		'OWN_ID' => 'task',
+		'OWN_NAME' => GetMessage('BPAR_DESCR_TASKS')
 	),
 	"RETURN" => array(
 		"Comments" => array(

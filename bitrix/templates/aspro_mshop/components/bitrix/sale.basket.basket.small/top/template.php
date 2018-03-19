@@ -1,4 +1,4 @@
-<?if(!CModule::IncludeModule("iblock")||!CModule::IncludeModule("catalog")) break;
+<?if(!CModule::IncludeModule("iblock")||!CModule::IncludeModule("catalog")) die();
 global $isBasketPage, $arBasketItems;
 $count = $delayCount =  $summ = 0;
 $currency='';

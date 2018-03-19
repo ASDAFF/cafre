@@ -12,6 +12,9 @@
 if (!CModule::IncludeModule("forum"))
 	return 0;
 $this->IncludeComponentLang("action.php");
+$post = $this->request->getPostList()->toArray();
+if ($post["AJAX_POST"] == "Y")
+	CUtil::decodeURIComponent($post);
 
 if ((strlen($action) > 0 || strlen($s_action) > 0) && ($_REQUEST["MESSAGE_MODE"] != "VIEW") && check_bitrix_sessid())
 {
@@ -69,12 +72,12 @@ if ((strlen($action) > 0 || strlen($s_action) > 0) && ($_REQUEST["MESSAGE_MODE"]
 				$arFields = array(
 						"FID" => $arParams["FID"],
 						"TID" => $arParams["TID"],
-						"POST_MESSAGE" => $_POST["POST_MESSAGE"],
-						"AUTHOR_NAME" => $_POST["AUTHOR_NAME"],
-						"AUTHOR_EMAIL" => $_POST["AUTHOR_EMAIL"],
-						"USE_SMILES" => $_POST["USE_SMILES"],
-						"captcha_word" =>  $_POST["captcha_word"],
-						"captcha_code" => $_POST["captcha_code"],
+						"POST_MESSAGE" => $post["POST_MESSAGE"],
+						"AUTHOR_NAME" => $post["AUTHOR_NAME"],
+						"AUTHOR_EMAIL" => $post["AUTHOR_EMAIL"],
+						"USE_SMILES" => $post["USE_SMILES"],
+						"captcha_word" =>  $post["captcha_word"],
+						"captcha_code" => $post["captcha_code"],
 						"NAME_TEMPLATE" => $arParams["NAME_TEMPLATE"]
 						);
 				if (!empty($_FILES["ATTACH_IMG"]))
@@ -296,7 +299,7 @@ elseif ((strlen($action) > 0) && ($_REQUEST["MESSAGE_MODE"] != "VIEW") && !check
 	$bVarsFromForm = true;
 	$strErrorMessage = GetMessage("F_ERR_SESS_FINISH");
 }
-elseif($_POST["MESSAGE_MODE"] == "VIEW")
+elseif($post["MESSAGE_MODE"] == "VIEW")
 {
 	$View = true;
 	$bVarsFromForm = true;
@@ -355,9 +358,9 @@ elseif($_POST["MESSAGE_MODE"] == "VIEW")
 	$arFilesExists = array_keys($arFilesExists);
 	sort($arFilesExists);
 	$arResult["MESSAGE_VIEW"]["FILES"] = $_REQUEST["FILES"] = $arFilesExists;
-	$arResult["POST_MESSAGE_VIEW"] = $parser->convert($_POST["POST_MESSAGE"], $arAllow, "html", $arResult["MESSAGE_VIEW"]["FILES"]);
+	$arResult["POST_MESSAGE_VIEW"] = $parser->convert($post["POST_MESSAGE"], $arAllow, "html", $arResult["MESSAGE_VIEW"]["FILES"]);
 	$arResult["MESSAGE_VIEW"]["FILES_PARSED"] = $parser->arFilesIDParsed;
-	$arResult["MESSAGE_VIEW"]["AUTHOR_NAME"] = ($USER->IsAuthorized() || empty($_POST["AUTHOR_NAME"]) ? $arResult["USER"]["SHOW_NAME"] : trim($_POST["AUTHOR_NAME"]));
+	$arResult["MESSAGE_VIEW"]["AUTHOR_NAME"] = ($USER->IsAuthorized() || empty($post["AUTHOR_NAME"]) ? $arResult["USER"]["SHOW_NAME"] : trim($post["AUTHOR_NAME"]));
 	$arResult["MESSAGE_VIEW"]["TEXT"] = $arResult["POST_MESSAGE_VIEW"];
 	$arResult["VIEW"] = "Y";
 }

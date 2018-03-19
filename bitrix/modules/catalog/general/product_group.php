@@ -3,7 +3,7 @@ IncludeModuleLangFile(__FILE__);
 
 class CAllCatalogProductGroups
 {
-	function CheckFields($ACTION, &$arFields, $ID = 0)
+	public static function CheckFields($ACTION, &$arFields, $ID = 0)
 	{
 		if ((is_set($arFields, "PRODUCT_ID") || $ACTION=="ADD") && intval($arFields["PRODUCT_ID"]) <= 0)
 			return false;
@@ -26,11 +26,11 @@ class CAllCatalogProductGroups
 		return true;
 	}
 
-	function GetByID($ID)
+	public static function GetByID($ID)
 	{
 		global $DB;
-		$ID = intval($ID);
-		if (0 >= $ID)
+		$ID = (int)$ID;
+		if ($ID <= 0)
 			return false;
 
 		$strSql = "SELECT ID, PRODUCT_ID, GROUP_ID, ACCESS_LENGTH, ACCESS_LENGTH_TYPE FROM b_catalog_product2group WHERE ID = ".$ID;
@@ -41,15 +41,15 @@ class CAllCatalogProductGroups
 		return false;
 	}
 
-	function Update($ID, $arFields)
+	public static function Update($ID, $arFields)
 	{
 		global $DB;
 
-		$ID = intval($ID);
+		$ID = (int)$ID;
 		if ($ID <= 0)
 			return false;
 
-		if (!CCatalogProductGroups::CheckFields("UPDATE", $arFields, $ID))
+		if (!self::CheckFields("UPDATE", $arFields, $ID))
 			return False;
 
 		$strUpdate = $DB->PrepareUpdate("b_catalog_product2group", $arFields);
@@ -62,31 +62,30 @@ class CAllCatalogProductGroups
 		return $ID;
 	}
 
-	function Delete($ID)
+	public static function Delete($ID)
 	{
 		global $DB;
 
-		$ID = intval($ID);
-		if (0 >= $ID)
+		$ID = (int)$ID;
+		if ($ID <= 0)
 			return false;
 
 		return $DB->Query("DELETE FROM b_catalog_product2group WHERE ID = ".$ID, true);
 	}
 
-	function DeleteByGroup($ID)
+	public static function DeleteByGroup($ID)
 	{
 		global $DB;
 
-		$ID = intval($ID);
-		if (0 >= $ID)
+		$ID = (int)$ID;
+		if ($ID <= 0)
 			return false;
 
 		return $DB->Query("DELETE FROM b_catalog_product2group WHERE GROUP_ID = ".$ID, true);
 	}
 
-	function OnGroupDelete($ID)
+	public static function OnGroupDelete($ID)
 	{
-		CCatalogProductGroups::DeleteByGroup($ID);
+		static::DeleteByGroup($ID);
 	}
 }
-?>

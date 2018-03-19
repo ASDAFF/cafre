@@ -19,4 +19,6 @@ $MESS["LISTS_CANCEL_BUTTON_INSTALL"] = "Install";
 $MESS["LISTS_TITLE_POPUP_MARKETPLACE"] = "Workflows Directory";
 $MESS["LISTS_MARKETPLACE_TITLE_SYSTEM_PROCESSES"] = "Standard workflows";
 $MESS["LISTS_MARKETPLACE_TITLE_USER_PROCESSES"] = "Custom workflows";
+$MESS["LISTS_DESIGNER_POPUP_TITLE"] = "Templates";
+$MESS["LISTS_DESIGNER_POPUP_DESCRIPTION"] = "You have multiple templates. Please select a workflow designer to open.";
 ?>

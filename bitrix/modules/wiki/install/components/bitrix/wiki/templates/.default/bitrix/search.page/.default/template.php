@@ -158,7 +158,7 @@ endif;?>
 		CComponentEngine::MakePathFromTemplate(
 			$arResult['PATH_TO_POST_EDIT'],
 			array(
-				'wiki_name' => urlencode(!empty($arResult["REQUEST"]["TAGS"]) ? $arResult["REQUEST"]["TAGS"] : $arResult["REQUEST"]["QUERY"]),
+				'wiki_name' => rawurlencode(!empty($arResult["REQUEST"]["TAGS"]) ? $arResult["REQUEST"]["TAGS"] : $arResult["REQUEST"]["QUERY"]),
 				'group_id' => CWikiSocnet::$iSocNetId
 			)
 		),

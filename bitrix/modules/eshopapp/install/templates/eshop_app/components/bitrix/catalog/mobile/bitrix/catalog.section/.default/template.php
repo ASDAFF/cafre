@@ -76,16 +76,21 @@ if ($_REQUEST["ajax_get_page"] == "Y")
 			</tr>
 		</table>
 	</li>
-<?endforeach; // foreach($arResult["ITEMS"] as $arElement):?>
+<?endforeach;?>
 <?
 if ($_REQUEST["ajax_get_page"] == "Y")
 {
 	require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_after.php");
+	die();
 }
+else
+{
 ?>
 	</ul>
 </div>
-
+<?
+$ajaxPath = CHTTP::urlAddParams(htmlspecialcharsback(POST_FORM_ACTION_URI), array("ajax_get_page" => "Y", "PAGEN_1" => "#page#"));
+?>
 <script type="text/javascript">
 	app.setPageTitle({"title" : "<?=CUtil::JSEscape(htmlspecialcharsback($arResult["NAME"]))?>"});
 
@@ -106,15 +111,18 @@ if ($_REQUEST["ajax_get_page"] == "Y")
 
 	function getBottomItems()
 	{
-		if (!(<?=$arResult["NAV_STRING"]?> > <?=$arParams["PAGE_ELEMENT_COUNT"]?>*window.pagenNum))
+		if (!('<?=$arResult["NAV_STRING"]?>' > <?=$arParams["PAGE_ELEMENT_COUNT"]?>*window.pagenNum))
 			return;
 
 		window.pagenNum++;
 
+		var path = "<?=CUtil::JSEscape($ajaxPath)?>";
+		path = path.replace("#page#", window.pagenNum);
+
 		BX.ajax({
 			timeout:   30,
 			method:   'POST',
-			url: "<?=CUtil::JSEscape(POST_FORM_ACTION_URI)?>&ajax_get_page=Y&PAGEN_1="+window.pagenNum,
+			url: path,
 			processData: false,
 			onsuccess: function(sectionHTML){
 				var sectionDomObjCont = BX("new_items_container");
@@ -140,4 +148,7 @@ if ($_REQUEST["ajax_get_page"] == "Y")
 	};
 
 </script>
+<?
+}
+?>
 

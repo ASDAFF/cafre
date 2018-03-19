@@ -20,7 +20,8 @@ $APPLICATION->SetTitle("Заказы");
 	"PATH_TO_ORDER" => SITE_DIR."eshop_app/personal/order/make/",
 	"SET_TITLE" => "Y" ,
 	"DELIVERY2PAY_SYSTEM" => Array(),
-	"SHOW_ACCOUNT_NUMBER" => "Y"
+	"SHOW_ACCOUNT_NUMBER" => "Y",
+	"DELIVERY_NO_SESSION " => "Y"
 	),
 	false
 );?><?require($_SERVER["DOCUMENT_ROOT"]."/bitrix/footer.php");?>

@@ -1,5 +1,23 @@
 <?
 //<title>CSV</title>
+/** @global int $line_num */
+/** @global int $correct_lines */
+/** @global int $error_lines */
+/** @global string $tmpid */
+
+/** @global int $IBLOCK_ID */
+/** @global array $arIBlock */
+/** @global string $first_names_r */
+/** @global string $first_names_f */
+/** @global int $CUR_FILE_POS */
+/** @global string $USE_TRANSLIT */
+/** @global string $TRANSLIT_LANG */
+/** @global string $USE_UPDATE_TRANSLIT */
+/** @global string $PATH2IMAGE_FILES */
+/** @global string $outFileAction */
+
+use Bitrix\Catalog;
+
 IncludeModuleLangFile($_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/catalog/import_setup_templ.php');
 $startImportExecTime = getmicrotime();
 
@@ -10,11 +28,7 @@ if (!CCatalog::IsUserExists())
 {
 	$bTmpUserCreated = true;
 	if (isset($USER))
-	{
 		$USER_TMP = $USER;
-		unset($USER);
-	}
-
 	$USER = new CUser();
 }
 
@@ -286,6 +300,13 @@ if ('' == $strImportErrorMessage)
 			$strImportErrorMessage .= GetMessage("CATI_CODE_TRANSLIT_LANG_ERR")."<br>";
 		}
 	}
+	$updateTranslit = false;
+	if ($USE_TRANSLIT == 'Y')
+	{
+		$updateTranslit = true;
+		if (isset($USE_UPDATE_TRANSLIT) && $USE_UPDATE_TRANSLIT == 'N')
+			$updateTranslit = false;
+	}
 }
 
 $IMAGE_RESIZE = (isset($IMAGE_RESIZE) && 'Y' == $IMAGE_RESIZE ? 'Y' : 'N');
@@ -341,6 +362,7 @@ if ('' == $strImportErrorMessage)
 		}
 
 		$boolTranslitElement = false;
+
 		$boolTranslitSection = false;
 		$arTranslitElement = array();
 		$arTranslitSection = array();
@@ -349,27 +371,27 @@ if ('' == $strImportErrorMessage)
 			if (isset($arIBlock['FIELDS']['CODE']['DEFAULT_VALUE']))
 			{
 				$arTransSettings = $arIBlock['FIELDS']['CODE']['DEFAULT_VALUE'];
-				$boolTranslitElement = ('Y' == $arTransSettings['TRANSLITERATION'] ? true : false);
+				$boolTranslitElement = ($arTransSettings['TRANSLITERATION'] == 'Y');
 				$arTranslitElement = array(
 					"max_len" => $arTransSettings['TRANS_LEN'],
 					"change_case" => $arTransSettings['TRANS_CASE'],
 					"replace_space" => $arTransSettings['TRANS_SPACE'],
 					"replace_other" => $arTransSettings['TRANS_OTHER'],
-					"delete_repeat_replace" => ('Y' == $arTransSettings['TRANS_EAT'] ? true : false),
-					"use_google" => ('Y' == $arTransSettings['USE_GOOGLE'] ? true : false),
+					"delete_repeat_replace" => ($arTransSettings['TRANS_EAT'] == 'Y'),
+					"use_google" => ($arTransSettings['USE_GOOGLE'] == 'Y'),
 				);
 			}
 			if (isset($arIBlock['FIELDS']['SECTION_CODE']['DEFAULT_VALUE']))
 			{
 				$arTransSettings = $arIBlock['FIELDS']['SECTION_CODE']['DEFAULT_VALUE'];
-				$boolTranslitSection = ('Y' == $arTransSettings['TRANSLITERATION'] ? true : false);
+				$boolTranslitSection = ($arTransSettings['TRANSLITERATION'] == 'Y');
 				$arTranslitSection = array(
 					"max_len" => $arTransSettings['TRANS_LEN'],
 					"change_case" => $arTransSettings['TRANS_CASE'],
 					"replace_space" => $arTransSettings['TRANS_SPACE'],
 					"replace_other" => $arTransSettings['TRANS_OTHER'],
-					"delete_repeat_replace" => ('Y' == $arTransSettings['TRANS_EAT'] ? true : false),
-					"use_google" => ('Y' == $arTransSettings['USE_GOOGLE'] ? true : false),
+					"delete_repeat_replace" => ($arTransSettings['TRANS_EAT'] == 'Y'),
+					"use_google" => ($arTransSettings['USE_GOOGLE'] == 'Y'),
 				);
 			}
 		}
@@ -456,6 +478,7 @@ if ('' == $strImportErrorMessage)
 
 		$previousProductId = false;
 		$updateFacet = false;
+		$newProducts = array();
 		CIBlock::disableClearTagCache();
 		// main
 		do
@@ -544,14 +567,6 @@ if ('' == $strImportErrorMessage)
 				$sectionIndex = $sectionKey.$sectionFilter;
 				if (!isset($arSectionCache[$sectionIndex]))
 				{
-					if ($boolTranslitSection)
-					{
-						if (!isset($arGroupsTmp[$i]['CODE']) || '' === $arGroupsTmp[$i]['CODE'])
-						{
-							$arGroupsTmp[$i]['CODE'] = CUtil::translit($arGroupsTmp[$i]["NAME"], $TRANSLIT_LANG, $arTranslitSection);
-						}
-					}
-
 					if (isset($arGroupsTmp[$i]["PICTURE"]))
 					{
 						$bFilePres = false;
@@ -602,6 +617,13 @@ if ('' == $strImportErrorMessage)
 					$res = CIBlockSection::GetList(array(), $arFilter, false, array('ID'));
 					if ($arr = $res->Fetch())
 					{
+						if ($boolTranslitSection && $updateTranslit)
+						{
+							if (!isset($arGroupsTmp[$i]['CODE']) || '' === $arGroupsTmp[$i]['CODE'])
+							{
+								$arGroupsTmp[$i]['CODE'] = CUtil::translit($arGroupsTmp[$i]["NAME"], $TRANSLIT_LANG, $arTranslitSection);
+							}
+						}
 						$LAST_GROUP_CODE = $arr["ID"];
 						$res = $bs->Update($LAST_GROUP_CODE, $arGroupsTmp[$i], true, true, 'Y' === $IMAGE_RESIZE);
 						if (!$res)
@@ -611,6 +633,13 @@ if ('' == $strImportErrorMessage)
 					}
 					else
 					{
+						if ($boolTranslitSection)
+						{
+							if (!isset($arGroupsTmp[$i]['CODE']) || '' === $arGroupsTmp[$i]['CODE'])
+							{
+								$arGroupsTmp[$i]['CODE'] = CUtil::translit($arGroupsTmp[$i]["NAME"], $TRANSLIT_LANG, $arTranslitSection);
+							}
+						}
 						$arGroupsTmp[$i]["IBLOCK_ID"] = $IBLOCK_ID;
 						$arGroupsTmp[$i]["ACTIVE"] = (isset($arGroupsTmp[$i]["ACTIVE"]) && 'N' === $arGroupsTmp[$i]["ACTIVE"] ? 'N' : 'Y');
 						$LAST_GROUP_CODE = $bs->Add($arGroupsTmp[$i], true, true, 'Y' === $IMAGE_RESIZE);
@@ -631,6 +660,7 @@ if ('' == $strImportErrorMessage)
 				}
 			}
 
+			$arFilter = array("IBLOCK_ID" => $IBLOCK_ID);
 			if ('' === $strErrorR)
 			{
 				$arLoadProductArray = array(
@@ -656,7 +686,6 @@ if ('' == $strImportErrorMessage)
 					}
 				}
 
-				$arFilter = array("IBLOCK_ID" => $IBLOCK_ID);
 				if (isset($arLoadProductArray["XML_ID"]) && '' !== $arLoadProductArray["XML_ID"])
 				{
 					$arFilter["=XML_ID"] = $arLoadProductArray["XML_ID"];
@@ -724,14 +753,6 @@ if ('' == $strImportErrorMessage)
 						unset($arLoadProductArray["DETAIL_PICTURE"]);
 				}
 
-				if ($boolTranslitElement)
-				{
-					if (!isset($arLoadProductArray['CODE']) || '' === $arLoadProductArray['CODE'])
-					{
-						$arLoadProductArray['CODE'] = CUtil::translit($arLoadProductArray["NAME"], $TRANSLIT_LANG, $arTranslitElement);
-					}
-				}
-
 				$res = CIBlockElement::GetList(
 					array(),
 					$arFilter,
@@ -749,6 +770,13 @@ if ('' == $strImportErrorMessage)
 					if (isset($arLoadProductArray["DETAIL_PICTURE"]) && intval($arr["DETAIL_PICTURE"])>0)
 					{
 						$arLoadProductArray["DETAIL_PICTURE"]["old_file"] = $arr["DETAIL_PICTURE"];
+					}
+					if ($boolTranslitElement && $updateTranslit)
+					{
+						if (!isset($arLoadProductArray['CODE']) || '' === $arLoadProductArray['CODE'])
+						{
+							$arLoadProductArray['CODE'] = CUtil::translit($arLoadProductArray["NAME"], $TRANSLIT_LANG, $arTranslitElement);
+						}
 					}
 					if ($bThereIsGroups)
 					{
@@ -772,6 +800,13 @@ if ('' == $strImportErrorMessage)
 					}
 					if ($arLoadProductArray["ACTIVE"] != "N")
 						$arLoadProductArray["ACTIVE"] = "Y";
+					if ($boolTranslitElement)
+					{
+						if (!isset($arLoadProductArray['CODE']) || '' === $arLoadProductArray['CODE'])
+						{
+							$arLoadProductArray['CODE'] = CUtil::translit($arLoadProductArray["NAME"], $TRANSLIT_LANG, $arTranslitElement);
+						}
+					}
 
 					$PRODUCT_ID = $el->Add($arLoadProductArray, $bWorkflow, false, 'Y' === $IMAGE_RESIZE);
 					if ($bThereIsGroups)
@@ -781,6 +816,8 @@ if ('' == $strImportErrorMessage)
 						$arProductGroups[$PRODUCT_ID][] = (($LAST_GROUP_CODE > 0) ? $LAST_GROUP_CODE : false);
 					}
 					$res = ($PRODUCT_ID > 0);
+					if ($res)
+						$newProducts[$PRODUCT_ID] = true;
 				}
 
 				if (!$res)
@@ -903,7 +940,8 @@ if ('' == $strImportErrorMessage)
 			if ('' == $strErrorR && $bIBlockIsCatalog)
 			{
 				$arLoadOfferArray = array(
-					"ID" => $PRODUCT_ID
+					'ID' => $PRODUCT_ID,
+					'TMP_ID' => $tmpid
 				);
 				foreach ($arAvailPriceFields_names as $key => $value)
 				{
@@ -1008,6 +1046,8 @@ if ('' == $strImportErrorMessage)
 							}
 							else
 							{
+								if (isset($value['PRICE']))
+									$value['PRICE'] = str_replace(array(' ', ','), array('', '.'), $value['PRICE']);
 								if (CPrice::Update($arr["ID"], $value))
 								{
 									$bUpdatePrice = 'Y';
@@ -1033,6 +1073,8 @@ if ('' == $strImportErrorMessage)
 							);
 							if (!$boolEmptyNewPrice)
 							{
+								if (isset($value['PRICE']))
+									$value['PRICE'] = str_replace(array(' ', ','), array('', '.'), $value['PRICE']);
 								if (CPrice::Add($value))
 								{
 									$bUpdatePrice = 'Y';
@@ -1071,8 +1113,15 @@ if ('' == $strImportErrorMessage)
 				if ($previousProductId != $PRODUCT_ID)
 				{
 					CIBlockElement::UpdateSearch($previousProductId);
+					$ipropValues = new \Bitrix\Iblock\InheritedProperty\ElementValues($IBLOCK_ID, $previousProductId);
+					$ipropValues->clearValues();
+					unset($ipropValues);
 					if ($updateFacet)
+					{
+						if (isset($newProducts[$previousProductId]))
+							CCatalogSKU::ClearCache();
 						\Bitrix\Iblock\PropertyIndex\Manager::updateElementIndex($IBLOCK_ID, $previousProductId);
+					}
 					$updateFacet = false;
 					$previousProductId = $PRODUCT_ID;
 				}
@@ -1090,8 +1139,15 @@ if ('' == $strImportErrorMessage)
 	if ($PRODUCT_ID > 0)
 	{
 		CIBlockElement::UpdateSearch($PRODUCT_ID);
+		$ipropValues = new \Bitrix\Iblock\InheritedProperty\ElementValues($IBLOCK_ID, $previousProductId);
+		$ipropValues->clearValues();
+		unset($ipropValues);
 		if ($updateFacet)
+		{
+			if (isset($newProducts[$PRODUCT_ID]))
+				CCatalogSKU::ClearCache();
 			\Bitrix\Iblock\PropertyIndex\Manager::updateElementIndex($IBLOCK_ID, $PRODUCT_ID);
+		}
 		$updateFacet = false;
 	}
 
@@ -1149,10 +1205,7 @@ if ('' == $strImportErrorMessage)
 			{
 				CIBlockSection::Delete($arr["ID"]);
 			}
-			elseif ($outFileAction=="F")
-			{
-			}
-			else // H or M
+			elseif ($outFileAction == 'H' || $outFileAction == 'M') // H or M
 			{
 				$bDeactivationStarted = true;
 				$bs->Update($arr["ID"], array("NAME"=>$arr["NAME"], "ACTIVE" => "N", "TMP_ID" => $tmpid));
@@ -1165,43 +1218,50 @@ if ('' == $strImportErrorMessage)
 	// update or delete 'not-in-file' elements
 	if ($bAllLinesLoaded && $outFileAction != "F")
 	{
-		$arProductArray = array(
-			'QUANTITY' => 0,
-			'QUANTITY_TRACE' => 'Y',
-			'CAN_BUY_ZERO' => 'N',
-			'NEGATIVE_AMOUNT_TRACE' => 'N'
-		);
-		$res = CIBlockElement::GetList(
-			array(),
-			array("IBLOCK_ID" => $IBLOCK_ID, "!TMP_ID" => $tmpid),
-			false,
-			false,
-			array('ID')
-		);
-		while($arr = $res->Fetch())
+		if ($bIBlockIsCatalog && $outFileAction=="M")
 		{
-			if ($outFileAction=="D")
-			{
-				CIBlockElement::Delete($arr["ID"], "Y", "N");
-				$killed_lines++;
-			}
-			elseif ($outFileAction=="F")
-			{
-
-			}
-			elseif ($bIBlockIsCatalog && $outFileAction=="M")
+			$arProductArray = Catalog\ProductTable::getDefaultAvailableSettings();
+			$arProductArray['TMP_ID'] = $tmpid;
+			$res = Catalog\ProductTable::getList(array(
+				'select' => array('ID'),
+				'filter' => array('=IBLOCK_ELEMENT.IBLOCK_ID' => $IBLOCK_ID, '!=TMP_ID' => $tmpid),
+				'order' => array('ID' => 'ASC')
+			));
+			while($arr = $res->fetch())
 			{
 				CCatalogProduct::Update($arr['ID'], $arProductArray);
 				$killed_lines++;
-			}
-			else // H
-			{
-				$bDeactivationStarted = true;
-				$el->Update($arr["ID"], array("ACTIVE" => "N", "TMP_ID" => $tmpid));
-				$killed_lines++;
-			}
 
-			if (!($bAllLinesLoaded = CSVCheckTimeout($max_execution_time))) break;
+				if (!($bAllLinesLoaded = CSVCheckTimeout($max_execution_time))) break;
+			}
+			unset($arr, $res);
+		}
+		else
+		{
+			$res = CIBlockElement::GetList(
+				array('ID' => 'ASC'),
+				array("IBLOCK_ID" => $IBLOCK_ID, "!TMP_ID" => $tmpid),
+				false,
+				false,
+				array('ID')
+			);
+			while($arr = $res->Fetch())
+			{
+				if ($outFileAction == "D")
+				{
+					CIBlockElement::Delete($arr["ID"]);
+					$killed_lines++;
+				}
+				elseif ($outFileAction == "H") // H
+				{
+					$bDeactivationStarted = true;
+					$el->Update($arr["ID"], array("ACTIVE" => "N", "TMP_ID" => $tmpid));
+					$killed_lines++;
+				}
+
+				if (!($bAllLinesLoaded = CSVCheckTimeout($max_execution_time))) break;
+			}
+			unset($arr, $res);
 		}
 	}
 
@@ -1243,7 +1303,6 @@ if ('' == $strImportErrorMessage)
 
 if ($bTmpUserCreated)
 {
-	unset($USER);
 	if (isset($USER_TMP))
 	{
 		$USER = $USER_TMP;

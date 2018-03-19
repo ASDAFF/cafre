@@ -35,7 +35,7 @@ $first = true;
 foreach ($arResult["USERS"] as $res)
 {
 	if($arParams["WORD_WRAP_CUT"] > 0 && strLen($res["~SHOW_NAME"])>$arParams["WORD_WRAP_CUT"])
-		$res["SHOW_NAME"] = htmlspecialcharsEx(subStr($res["~SHOW_NAME"], 0, $arParams["WORD_WRAP_CUT"]))."...";
+		$res["SHOW_NAME"] = htmlspecialcharsbx(subStr($res["~SHOW_NAME"], 0, $arParams["WORD_WRAP_CUT"]))."...";
 	?><?=(!$first ? ", ": "")?><span class="forum-user-online"><?
 		?><?=str_replace(array("#URL#", "#NAME#"), array($res["profile_view"], $res["SHOW_NAME"]), $arParams["USER_TMPL"])
 	?></span><?
@@ -46,7 +46,7 @@ if (CForumUser::IsAdmin() && !empty($arResult["USERS_HIDDEN"]))
 	foreach ($arResult["USERS_HIDDEN"] as $res)
 	{
 		if($arParams["WORD_WRAP_CUT"] > 0 && strLen($res["~SHOW_NAME"])>$arParams["WORD_WRAP_CUT"])
-			$res["SHOW_NAME"] = htmlspecialcharsEx(subStr($res["~SHOW_NAME"], 0, $arParams["WORD_WRAP_CUT"]))."...";
+			$res["SHOW_NAME"] = htmlspecialcharsbx(subStr($res["~SHOW_NAME"], 0, $arParams["WORD_WRAP_CUT"]))."...";
 		?><?=(!$first ? ", ": "")?><span class="forum-user-online-hidden"><?
 			?><?=str_replace(array("#URL#", "#NAME#"), array($res["profile_view"], $res["SHOW_NAME"]), $arParams["USER_TMPL"])
 		?></span><?

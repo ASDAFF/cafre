@@ -204,7 +204,11 @@ if (strlen($arResult["FatalErrorMessage"]) <= 0)
 		$prefix = "";
 		if (!$arResult["AdminMode"])
 		{
-			if ($arTrack["TYPE"] != CBPTrackingType::Custom && $arTrack["TYPE"] != CBPTrackingType::FaultActivity && $arTrack["TYPE"] != CBPTrackingType::Report)
+			if ($arTrack["TYPE"] != CBPTrackingType::Custom
+				&& $arTrack["TYPE"] != CBPTrackingType::FaultActivity
+				&& $arTrack["TYPE"] != CBPTrackingType::Report
+				&& $arTrack["TYPE"] != CBPTrackingType::Error
+			)
 				continue;
 		}
 		/*else

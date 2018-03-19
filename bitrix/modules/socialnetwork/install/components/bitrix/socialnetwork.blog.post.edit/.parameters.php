@@ -106,18 +106,6 @@ $arComponentParameters = Array(
 			"DEFAULT" => array(),	
 		),
 		"DATE_TIME_FORMAT" => CComponentUtil::GetDateTimeFormatField(GetMessage("BC_DATE_TIME_FORMAT"), "VISUAL"),		
-		"IMAGE_MAX_WIDTH" => Array(
-				"NAME" => GetMessage("BPC_IMAGE_MAX_WIDTH"),
-				"TYPE" => "STRING",
-				"DEFAULT" => 600,
-				"PARENT" => "VISUAL",
-			),		
-		"IMAGE_MAX_HEIGHT" => Array(
-				"NAME" => GetMessage("BPC_IMAGE_MAX_HEIGHT"),
-				"TYPE" => "STRING",
-				"DEFAULT" => 600,
-				"PARENT" => "VISUAL",
-			),
 		"ALLOW_POST_CODE" => Array(
 				"NAME" => GetMessage("BPC_ALLOW_POST_CODE"),
 				"TYPE" => "CHECKBOX",

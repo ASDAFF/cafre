@@ -1,8 +1,9 @@
-<?
+<?php
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/statistic/classes/general/stoplist.php");
+
 class CStoplist extends CAllStopList
 {
-	function GetList(&$by, &$order, $arFilter=Array(), &$is_filtered)
+	public static function GetList(&$by, &$order, $arFilter=Array(), &$is_filtered)
 	{
 		$err_mess = "File: ".__FILE__."<br>Line: ";
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -143,7 +144,7 @@ class CStoplist extends CAllStopList
 		return $res;
 	}
 
-	function Check($test="N", $arParams = false)
+	public static function Check($test="N", $arParams = false)
 	{
 		$DB = CDatabase::GetModuleConnection('statistic');
 
@@ -270,4 +271,3 @@ class CStoplist extends CAllStopList
 		}
 	}
 }
-?>

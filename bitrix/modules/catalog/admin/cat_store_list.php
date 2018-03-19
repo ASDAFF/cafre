@@ -1,4 +1,9 @@
 <?
+use Bitrix\Main,
+	Bitrix\Main\Loader,
+	Bitrix\Main\Localization\Loc,
+	Bitrix\Catalog;
+
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/catalog/prolog.php");
 global $APPLICATION;
@@ -7,18 +12,18 @@ global $USER;
 global $USER_FIELD_MANAGER;
 
 if(!($USER->CanDoOperation('catalog_read') || $USER->CanDoOperation('catalog_store')))
-	$APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
-CModule::IncludeModule("catalog");
+	$APPLICATION->AuthForm('');
+Loader::includeModule('catalog');
 $bReadOnly = !$USER->CanDoOperation('catalog_store');
 
-IncludeModuleLangFile(__FILE__);
+Loc::loadMessages(__FILE__);
 
 $bCanAdd = true;
 $bExport = false;
-if($_REQUEST["mode"] == "excel")
+if ($_REQUEST["mode"] == "excel")
 	$bExport = true;
 
-if(!CBXFeatures::IsFeatureEnabled('CatMultiStore'))
+if (!CBXFeatures::IsFeatureEnabled('CatMultiStore'))
 {
 	$dbResultList = CCatalogStore::GetList(array());
 	if($arResult = $dbResultList->Fetch())
@@ -65,16 +70,156 @@ function getSiteTitle($siteId)
 }
 
 $sTableID = "b_catalog_store";
-$entityId = "CAT_STORE";
+$entityId = Catalog\StoreTable::getUfId();
 
-$oSort = new CAdminSorting($sTableID, "SORT", "asc");
+$oSort = new CAdminSorting($sTableID, "SORT", "ASC");
 $lAdmin = new CAdminList($sTableID, $oSort);
 
-$arFilter = array();
-if(strlen($filter_site_id) > 0 && $filter_site_id != "NOT_REF")
-	$arFilter["SITE_ID"] = $filter_site_id;
+$filter = array();
+$filterFields = array(
+	'filter_id_from',
+	'filter_id_to',
+	'filter_site_id',
+	'filter_active',
+	'filter_title',
+	'filter_code',
+	'filter_xml_id',
+	'filter_issuing_center',
+	'filter_shipping_center',
+	'filter_address',
+	'filter_phone',
+	'filter_email'
+);
+$USER_FIELD_MANAGER->AdminListAddFilterFields($entityId, $filterFields);
+$filterValues = array_fill_keys($filterFields, null);
 
-$USER_FIELD_MANAGER->AdminListAddFilter($entityId, $arFilter);
+$lAdmin->InitFilter($filterFields);
+
+if (isset($filter_id_from) && is_string($filter_id_from))
+{
+	$filter_id_from = trim($filter_id_from);
+	if ($filter_id_from !== '')
+		$filterValues['filter_id_from'] = (int)$filter_id_from;
+}
+if (isset($filter_id_to) && is_string($filter_id_to))
+{
+	$filter_id_to = trim($filter_id_to);
+	if ($filter_id_to !== '')
+		$filterValues['filter_id_to'] = (int)$filter_id_to;
+}
+
+if (isset($filter_site_id) && is_string($filter_site_id))
+{
+	if ($filter_site_id != 'NOT_REF' && $filter_site_id !== '')
+		$filterValues['filter_site_id'] = $filter_site_id;
+}
+
+if (isset($filter_active) && is_string($filter_active))
+{
+	if ($filter_active === 'Y' || $filter_active === 'N')
+		$filterValues['filter_active'] = $filter_active;
+}
+
+if (isset($filter_title) && is_string($filter_title))
+{
+	$filter_title = trim($filter_title);
+	if ($filter_title !== '')
+		$filterValues['filter_title'] = $filter_title;
+}
+
+if (isset($filter_code) && is_string($filter_code))
+{
+	$filter_code = trim($filter_code);
+	if ($filter_code !== '')
+		$filterValues['filter_code'] = $filter_code;
+}
+
+if (isset($filter_xml_id) && is_string($filter_xml_id))
+{
+	$filter_xml_id = trim($filter_xml_id);
+	if ($filter_xml_id !== '')
+		$filterValues['filter_xml_id'] = $filter_xml_id;
+}
+
+if (isset($filter_issuing_center) && is_string($filter_issuing_center))
+{
+	if ($filter_issuing_center === 'Y' || $filter_issuing_center === 'N')
+		$filterValues['filter_issuing_center'] = $filter_issuing_center;
+}
+
+if (isset($filter_shipping_center) && is_string($filter_shipping_center))
+{
+	if ($filter_shipping_center === 'Y' || $filter_shipping_center === 'N')
+		$filterValues['filter_shipping_center'] = $filter_shipping_center;
+}
+
+if (isset($filter_address) && is_string($filter_address))
+{
+	$filter_address = trim($filter_address);
+	if ($filter_address !== '')
+		$filterValues['filter_address'] = $filter_address;
+}
+
+if (isset($filter_phone) && is_string($filter_phone))
+{
+	$filter_phone = trim($filter_phone);
+	if ($filter_phone !== '')
+		$filterValues['filter_phone'] = $filter_phone;
+}
+
+if (isset($filter_email) && is_string($filter_email))
+{
+	$filter_email = trim($filter_email);
+	if ($filter_email !== '')
+		$filterValues['filter_email'] = $filter_email;
+}
+
+if ($filterValues['filter_id_from'] !== null || $filterValues['filter_id_to'] !==  null)
+{
+	if ($filterValues['filter_id_from'] === $filterValues['filter_id_to'])
+	{
+		$filter['=ID'] = $filterValues['filter_id_from'];
+	}
+	else
+	{
+		if ($filterValues['filter_id_from'] !== null)
+			$filter['>=ID'] = $filterValues['filter_id_from'];
+		if ($filterValues['filter_id_to'] !== null)
+			$filter['<=ID'] = $filterValues['filter_id_to'];
+	}
+}
+
+if ($filterValues['filter_site_id'] !== null)
+	$filter['=SITE_ID'] = ($filterValues['filter_site_id'] == '-' ? null : $filterValues['filter_site_id']);
+
+if ($filterValues['filter_active'] !== null)
+	$filter['=ACTIVE'] = $filterValues['filter_active'];
+
+if ($filterValues['filter_title'] !== null)
+	$filter['%TITLE'] = $filterValues['filter_title'];
+
+if ($filterValues['filter_code'] !== null)
+	$filter['=CODE'] = $filterValues['filter_code'];
+
+if ($filterValues['filter_xml_id'] !== null)
+	$filter['=XML_ID'] = $filterValues['filter_xml_id'];
+
+if ($filterValues['filter_issuing_center'] !== null)
+	$filter['=ISSUING_CENTER'] = $filterValues['filter_issuing_center'];
+
+if ($filterValues['filter_shipping_center'] !== null)
+	$filter['=ACTIVE'] = $filterValues['filter_shipping_center'];
+
+if ($filterValues['filter_address'] !== null)
+	$filter['%ADDRESS'] = $filterValues['filter_address'];
+
+if ($filterValues['filter_phone'] !== null)
+	$filter['%PHONE'] = $filterValues['filter_phone'];
+
+if ($filterValues['filter_email'] !== null)
+	$filter['%EMAIL'] = $filterValues['filter_email'];
+
+$USER_FIELD_MANAGER->AdminListAddFilter($entityId, $filter);
 
 if($lAdmin->EditAction() && !$bReadOnly)
 {
@@ -86,6 +231,10 @@ if($lAdmin->EditAction() && !$bReadOnly)
 			continue;
 		if(isset($arFields["IMAGE_ID"]))
 			unset($arFields["IMAGE_ID"]);
+		if (isset($arFields['GPS_N']))
+			$arFields['GPS_N'] = str_replace(',', '.', $arFields['GPS_N']);
+		if (isset($arFields['GPS_S']))
+			$arFields['GPS_S'] = str_replace(',', '.', $arFields['GPS_S']);
 
 		$DB->StartTransaction();
 		if(!CCatalogStore::Update($ID, $arFields))
@@ -93,7 +242,7 @@ if($lAdmin->EditAction() && !$bReadOnly)
 			if($ex = $APPLICATION->GetException())
 				$lAdmin->AddUpdateError($ex->GetString(), $ID);
 			else
-				$lAdmin->AddUpdateError(GetMessage("ERROR_UPDATING_REC")." (".$arFields["ID"].", ".$arFields["TITLE"].", ".$arFields["SORT"].")", $ID);
+				$lAdmin->AddUpdateError(Loc::getMessage("ERROR_UPDATING_REC")." (".$arFields["ID"].", ".$arFields["TITLE"].", ".$arFields["SORT"].")", $ID);
 
 			$DB->Rollback();
 		}
@@ -109,8 +258,8 @@ if(($arID = $lAdmin->GroupAction()) && !$bReadOnly)
 {
 	if($_REQUEST['action_target']=='selected')
 	{
-		$arID = Array();
-		$dbResultList = CCatalogStore::GetList(array($_REQUEST["by"] => $_REQUEST["order"], $arFilter, false, false, array('ID')));
+		$arID = array();
+		$dbResultList = CCatalogStore::GetList(array(), $filter, false, false, array('ID'));
 		while ($arResult = $dbResultList->Fetch())
 			$arID[] = $arResult['ID'];
 	}
@@ -134,13 +283,27 @@ if(($arID = $lAdmin->GroupAction()) && !$bReadOnly)
 					if($ex = $APPLICATION->GetException())
 						$lAdmin->AddGroupError($ex->GetString(), $ID);
 					else
-						$lAdmin->AddGroupError(GetMessage("ERROR_DELETING_TYPE"), $ID);
+						$lAdmin->AddGroupError(Loc::getMessage("ERROR_DELETING_TYPE"), $ID);
 				}
 				$DB->Commit();
 				break;
 		}
 	}
 }
+
+$filterSiteList = array();
+$siteList = array();
+$siteIterator = Main\SiteTable::getList(array(
+	'select' => array('LID', 'NAME', 'ACTIVE', 'SORT'),
+	'order' => array('SORT' => 'ASC')
+));
+while ($site = $siteIterator->fetch())
+{
+	$filterSiteList[] = $site;
+	$siteList[$site['LID']] = $site['LID'];
+}
+unset($site, $siteIterator);
+
 $arSelect = array(
 	"ID",
 	"ACTIVE",
@@ -162,8 +325,14 @@ $arSelect = array(
 	"ISSUING_CENTER",
 	"SHIPPING_CENTER",
 	"SITE_ID",
+	"CODE",
 	"UF_*"
 );
+
+if (!isset($by))
+	$by = 'ID';
+if (!isset($order))
+	$order = 'ASC';
 
 if(array_key_exists("mode", $_REQUEST) && $_REQUEST["mode"] == "excel")
 	$arNavParams = false;
@@ -171,10 +340,8 @@ else
 	$arNavParams = array("nPageSize"=>CAdminResult::GetNavSize($sTableID));
 
 $dbResultList = CCatalogStore::GetList(
-	array(
-		$_REQUEST["by"] => $_REQUEST["order"]
-	),
-	$arFilter,
+	array($by => $order),
+	$filter,
 	false,
 	$arNavParams,
 	$arSelect
@@ -182,7 +349,7 @@ $dbResultList = CCatalogStore::GetList(
 
 $dbResultList = new CAdminResult($dbResultList, $sTableID);
 $dbResultList->NavStart();
-$lAdmin->NavText($dbResultList->GetNavPrint(GetMessage("group_admin_nav")));
+$lAdmin->NavText($dbResultList->GetNavPrint(Loc::getMessage("group_admin_nav")));
 
 $headers = array(
 	array(
@@ -193,111 +360,123 @@ $headers = array(
 	),
 	array(
 		"id" => "SORT",
-		"content" => GetMessage("CSTORE_SORT"),
+		"content" => Loc::getMessage("CSTORE_SORT"),
 		"sort" => "SORT",
 		"default" => true
 	),
 	array(
 		"id" => "TITLE",
-		"content" => GetMessage("TITLE"),
+		"content" => Loc::getMessage("TITLE"),
 		"sort" => "TITLE",
 		"default" => true
 	),
 	array(
 		"id" => "ACTIVE",
-		"content" => GetMessage("STORE_ACTIVE"),
+		"content" => Loc::getMessage("STORE_ACTIVE"),
 		"sort" => "ACTIVE",
 		"default" => true
 	),
 	array(
 		"id" => "ADDRESS",
-		"content" => GetMessage("ADDRESS"),
+		"content" => Loc::getMessage("ADDRESS"),
 		"sort" => "",
 		"default" => true
 	),
 	array(
 		"id" => "IMAGE_ID",
-		"content" => GetMessage("STORE_IMAGE"),
+		"content" => Loc::getMessage("STORE_IMAGE"),
 		"sort" => "",
 		"default" => false
 	),
 	array(
 		"id" => "DESCRIPTION",
-		"content" => GetMessage("DESCRIPTION"),
+		"content" => Loc::getMessage("DESCRIPTION"),
 		"sort" => "",
 		"default" => true
 	),
 	array(
 		"id" => "GPS_N",
-		"content" => GetMessage("GPS_N"),
+		"content" => Loc::getMessage("GPS_N"),
 		"sort" => "GPS_N",
 		"default" => false
 	),
 	array(
 		"id" => "GPS_S",
-		"content" => GetMessage("GPS_S"),
+		"content" => Loc::getMessage("GPS_S"),
 		"sort" => "GPS_S",
 		"default" => false
 	),
 	array(
 		"id" => "PHONE",
-		"content" => GetMessage("PHONE"),
+		"content" => Loc::getMessage("PHONE"),
 		"sort" => "",
 		"default" => true
 	),
 	array(
 		"id" => "SCHEDULE",
-		"content" => GetMessage("SCHEDULE"),
+		"content" => Loc::getMessage("SCHEDULE"),
 		"sort" => "",
 		"default" => true
 	),
 	array(
 		"id" => "DATE_MODIFY",
-		"content" => GetMessage("DATE_MODIFY"),
+		"content" => Loc::getMessage("DATE_MODIFY"),
 		"sort" => "DATE_MODIFY",
 		"default" => true
 	),
 	array(
 		"id" => "MODIFIED_BY",
-		"content" => GetMessage("MODIFIED_BY"),
+		"content" => Loc::getMessage("MODIFIED_BY"),
 		"sort" => "MODIFIED_BY",
 		"default" => true
 	),
 	array(
 		"id" => "DATE_CREATE",
-		"content" => GetMessage("DATE_CREATE"),
+		"content" => Loc::getMessage("DATE_CREATE"),
 		"sort" => "DATE_CREATE",
 		"default" => false
 	),
 	array(
 		"id" => "USER_ID",
-		"content" => GetMessage("USER_ID"),
+		"content" => Loc::getMessage("USER_ID"),
 		"sort" => "USER_ID",
 		"default" => false
 	),
 	array(
 		"id" => "EMAIL",
-		"content" => "Email",
+		"content" => "E-mail",
 		"sort" => "EMAIL",
 		"default" => false
 	),
 	array(
 		"id" => "ISSUING_CENTER",
-		"content" => GetMessage("ISSUING_CENTER"),
+		"content" => Loc::getMessage("ISSUING_CENTER"),
 		"sort" => "ISSUING_CENTER",
 		"default" => false
 	),
 	array(
 		"id" => "SHIPPING_CENTER",
-		"content" => GetMessage("SHIPPING_CENTER"),
+		"content" => Loc::getMessage("SHIPPING_CENTER"),
 		"sort" => "SHIPPING_CENTER",
 		"default" => false
 	),
 	array(
 		"id" => "SITE_ID",
-		"content" => GetMessage("STORE_SITE_ID"),
+		"content" => Loc::getMessage("STORE_SITE_ID"),
 		"sort" => "SITE_ID",
 		"default" => true
+	),
+	array(
+		"id" => "CODE",
+		"content" => Loc::getMessage("STORE_CODE"),
+		"sort" => "CODE",
+		"default" => false
+	),
+	array(
+		"id" => "XML_ID",
+		"content" => Loc::getMessage("STORE_XML_ID"),
+		"sort" => "XML_ID",
+		"default" => false
 	)
 );
 
@@ -321,7 +500,9 @@ $arSelectFieldsMap = array(
 	"EMAIL" => false,
 	"ISSUING_CENTER" => false,
 	"SHIPPING_CENTER" => false,
-	"SITE_ID" => false
+	"SITE_ID" => false,
+	"CODE" => false,
+	"XML_ID" => false
 );
 
 $lAdmin->AddHeaders($headers);
@@ -341,6 +522,7 @@ $arRows = array();
 while ($arRes = $dbResultList->Fetch())
 {
 	$arRes['ID'] = (int)$arRes['ID'];
+	$arRes['SORT'] = (int)$arRes['SORT'];
 	if($arSelectFieldsMap['USER_ID'])
 	{
 		$arRes['USER_ID'] = (int)$arRes['USER_ID'];
@@ -358,7 +540,9 @@ while ($arRes = $dbResultList->Fetch())
 	$row->AddField("ID", "<a href=\""."cat_store_edit.php?ID=".$arRes['ID']."&lang=".LANGUAGE_ID."&".GetFilterParams("filter_")."\">".$arRes['ID']."</a>");
 	if($bReadOnly)
 	{
-		$row->AddViewField("SORT", $f_SORT);
+		$row->AddViewField("SORT", $arRes['SORT']);
+		if($arSelectFieldsMap['CODE'])
+			$row->AddInputField("CODE", false);
 		if($arSelectFieldsMap['TITLE'])
 			$row->AddInputField("TITLE", false);
 		if($arSelectFieldsMap['ADDRESS'])
@@ -379,12 +563,18 @@ while ($arRes = $dbResultList->Fetch())
 			$row->AddInputField("EMAIL", false);
 		if($arSelectFieldsMap['IMAGE_ID'] && !$bExport)
 			$row->AddField("IMAGE_ID", CFile::ShowImage($arRes['IMAGE_ID'], 100, 100, "border=0", "", true));
+		if($arSelectFieldsMap['GPS_N'])
+			$row->AddInputField('GPS_N', false);
+		if($arSelectFieldsMap['GPS_S'])
+			$row->AddInputField('GPS_S', false);
+		if($arSelectFieldsMap['XML_ID'])
+			$row->AddInputField("XML_ID", false);
 	}
 	else
 	{
 		$row->AddInputField("SORT", array("size" => "3"));
-		if($arSelectFieldsMap['SITE_ID'])
-			$row->AddViewField("SITE_ID", getSiteTitle($arRes['SITE_ID']));
+		if($arSelectFieldsMap['CODE'])
+			$row->AddInputField("CODE");
 		if($arSelectFieldsMap['TITLE'])
 			$row->AddInputField("TITLE");
 		if($arSelectFieldsMap['ACTIVE'])
@@ -405,20 +595,28 @@ while ($arRes = $dbResultList->Fetch())
 			$row->AddInputField("EMAIL", array("size" => 35));
 		if($arSelectFieldsMap['IMAGE_ID'] && !$bExport)
 			$row->AddField("IMAGE_ID", CFile::ShowImage($arRes['IMAGE_ID'], 100, 100, "border=0", "", true));
+		if($arSelectFieldsMap['GPS_N'])
+			$row->AddInputField('GPS_N', array('size' => 35));
+		if($arSelectFieldsMap['GPS_S'])
+			$row->AddInputField('GPS_S', array('size' => 35));
+		if($arSelectFieldsMap['XML_ID'])
+			$row->AddInputField("XML_ID");
 	}
 
+	if($arSelectFieldsMap['SITE_ID'])
+		$row->AddViewField("SITE_ID", htmlspecialcharsbx(getSiteTitle($arRes['SITE_ID'])));
 	if($arSelectFieldsMap['DATE_CREATE'])
 		$row->AddCalendarField("DATE_CREATE", false);
 	if($arSelectFieldsMap['DATE_MODIFY'])
 		$row->AddCalendarField("DATE_MODIFY", false);
 
 	$arActions = array();
-	$arActions[] = array("ICON"=>"edit", "TEXT"=>GetMessage("EDIT_STORE_ALT"), "ACTION"=>$lAdmin->ActionRedirect("cat_store_edit.php?ID=".$arRes['ID']."&lang=".LANGUAGE_ID."&".GetFilterParams("filter_").""), "DEFAULT"=>true);
+	$arActions[] = array("ICON"=>"edit", "TEXT"=>Loc::getMessage("EDIT_STORE_ALT"), "ACTION"=>$lAdmin->ActionRedirect("cat_store_edit.php?ID=".$arRes['ID']."&lang=".LANGUAGE_ID."&".GetFilterParams("filter_").""), "DEFAULT"=>true);
 
 	if(!$bReadOnly)
 	{
 		$arActions[] = array("SEPARATOR" => true);
-		$arActions[] = array("ICON"=>"delete", "TEXT"=>GetMessage("DELETE_STORE_ALT"), "ACTION"=>"if(confirm('".GetMessageJS('DELETE_STORE_CONFIRM')."')) ".$lAdmin->ActionDoGroup($arRes['ID'], "delete"));
+		$arActions[] = array("ICON"=>"delete", "TEXT"=>Loc::getMessage("DELETE_STORE_ALT"), "ACTION"=>"if(confirm('".CUtil::JSEscape(Loc::getMessage('DELETE_STORE_CONFIRM'))."')) ".$lAdmin->ActionDoGroup($arRes['ID'], "delete"));
 	}
 
 	$row->AddActions($arActions);
@@ -473,12 +671,12 @@ if($arSelectFieldsMap['USER_ID'] || $arSelectFieldsMap['MODIFIED_BY'])
 $lAdmin->AddFooter(
 	array(
 		array(
-			"title" => GetMessage("MAIN_ADMIN_LIST_SELECTED"),
+			"title" => Loc::getMessage("MAIN_ADMIN_LIST_SELECTED"),
 			"value" => $dbResultList->SelectedRowsCount()
 		),
 		array(
 			"counter" => true,
-			"title" => GetMessage("MAIN_ADMIN_LIST_CHECKED"),
+			"title" => Loc::getMessage("MAIN_ADMIN_LIST_CHECKED"),
 			"value" => "0"
 		),
 	)
@@ -488,7 +686,7 @@ if(!$bReadOnly)
 {
 	$lAdmin->AddGroupActionTable(
 		array(
-			"delete" => GetMessage("MAIN_ADMIN_LIST_DELETE"),
+			"delete" => Loc::getMessage("MAIN_ADMIN_LIST_DELETE"),
 		)
 	);
 }
@@ -497,10 +695,10 @@ if(!$bReadOnly && $bCanAdd)
 {
 	$aContext = array(
 		array(
-			"TEXT" => GetMessage("STORE_ADD_NEW"),
+			"TEXT" => Loc::getMessage("STORE_ADD_NEW"),
 			"ICON" => "btn_new",
 			"LINK" => "cat_store_edit.php?lang=".LANGUAGE_ID,
-			"TITLE" => GetMessage("STORE_ADD_NEW_ALT")
+			"TITLE" => Loc::getMessage("STORE_ADD_NEW_ALT")
 		),
 	);
 	$lAdmin->AddAdminContextMenu($aContext);
@@ -508,45 +706,145 @@ if(!$bReadOnly && $bCanAdd)
 
 $lAdmin->CheckListMode();
 
-$APPLICATION->SetTitle(GetMessage("STORE_TITLE"));
+$APPLICATION->SetTitle(Loc::getMessage("STORE_TITLE"));
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_after.php");
 ?>
+<form name="find_form" method="GET" action="<?echo $APPLICATION->GetCurPage()?>?">
+<?
+$findFields = array(
+	'ID',
+	Loc::getMessage('STORE_SITE_ID'),
+	Loc::getMessage('STORE_ACTIVE'),
+	Loc::getMessage('TITLE'),
+	Loc::getMessage('STORE_CODE'),
+	Loc::getMessage('STORE_XML_ID'),
+	Loc::getMessage('ISSUING_CENTER'),
+	Loc::getMessage('SHIPPING_CENTER'),
+	Loc::getMessage('ADDRESS'),
+	Loc::getMessage('PHONE'),
+	'E-mail'
+);
+$USER_FIELD_MANAGER->AddFindFields($entityId, $arFindFields);
+$oFilter = new CAdminFilter(
+	$sTableID."_filter",
+	$findFields
+);
+$oFilter->Begin();
+?>
+	<tr>
+		<td>ID:</td>
+		<td>
+			<?=Loc::getMessage('BX_CATALOG_STORE_LIST_MESS_RANGE_FROM'); ?>
+			<input id="filter_id_from" type="text" name="filter_id_from" value="<?=htmlspecialcharsbx($filterValues['filter_id_from']); ?>" size="6">
+			<?echo Loc::getMessage("BX_CATALOG_STORE_LIST_MESS_RANGE_TO"); ?>
+			<input id="filter_id_to" type="text" name="filter_id_to" value="<?=htmlspecialcharsbx($filterValues['filter_id_to']); ?>" size="6">
+		</td>
+	</tr>
+	<tr>
+		<td><?=Loc::getMessage("STORE_SITE_ID"); ?>:</td>
+		<td>
+			<select name="filter_site_id">
+				<option value="NOT_REF"<?=($filterValues['filter_site_id'] == 'NOT_REF' ? ' selected' : ''); ?>><?=Loc::getMessage('BX_CATALOG_STORE_LIST_EMPTY_FILTER'); ?></option>
+				<option value="-"<?=($filterValues['filter_site_id'] == '-' ? ' selected' : ''); ?>><?=Loc::getMessage('BX_CATALOG_STORE_LIST_FILTER_EMPTY_SITE_ID'); ?></option>
+				<?
+				foreach ($filterSiteList as $row)
+				{
+					?><option value="<?=$row['LID']; ?>"<?=($row['LID'] == $filterValues['filter_site_id'] ? ' selected' : ''); ?>>[<?=$row['LID']; ?>]&nbsp;<?=htmlspecialcharsEx($row['NAME']); ?></option><?
+				}
+				unset($row);
+				?>
+			</select>
+		</td>
+	</tr>
+	<tr>
+		<td><?=Loc::getMessage('STORE_ACTIVE'); ?>:</td>
+		<td>
+			<select name="filter_active">
+				<option value=""><?=Loc::getMessage('BX_CATALOG_STORE_LIST_FILTER_ANY_VALUE'); ?></option>
+				<option value="Y"<?=($filterValues['filter_active'] === 'Y' ? ' selected' : ''); ?>><?= htmlspecialcharsEx(Loc::getMessage('BX_CATALOG_STORE_LIST_FILTER_YES_VALUE')) ?></option>
+				<option value="N"<?=($filterValues['filter_active'] === 'N' ? ' selected' : ''); ?>><?= htmlspecialcharsEx(Loc::getMessage('BX_CATALOG_STORE_LIST_FILTER_NO_VALUE')) ?></option>
+			</select>
+		</td>
+	</tr>
+	<tr>
+		<td><?=Loc::getMessage('TITLE'); ?>:</td>
+		<td><input type="text" name="filter_title" value="<?=htmlspecialcharsbx($filterValues['filter_title']); ?>"></td>
+	</tr>
+	<tr>
+		<td><?=Loc::getMessage('STORE_CODE'); ?>:</td>
+		<td><input type="text" name="filter_code" value="<?=htmlspecialcharsbx($filterValues['filter_code']); ?>"></td>
+	</tr>
+	<tr>
+		<td><?=Loc::getMessage('STORE_XML_ID'); ?>:</td>
+		<td><input type="text" name="filter_xml_id" value="<?=htmlspecialcharsbx($filterValues['filter_xml_id']); ?>"></td>
+	</tr>
+	<tr>
+		<td><?=Loc::getMessage('ISSUING_CENTER'); ?>:</td>
+		<td>
+			<select name="filter_issuing_center">
+				<option value=""><?=Loc::getMessage('BX_CATALOG_STORE_LIST_FILTER_ANY_VALUE'); ?></option>
+				<option value="Y"<?=($filterValues['filter_issuing_center'] === 'Y' ? ' selected' : ''); ?>><?= htmlspecialcharsEx(Loc::getMessage('BX_CATALOG_STORE_LIST_FILTER_YES_VALUE')) ?></option>
+				<option value="N"<?=($filterValues['filter_issuing_center'] === 'N' ? ' selected' : ''); ?>><?= htmlspecialcharsEx(Loc::getMessage('BX_CATALOG_STORE_LIST_FILTER_NO_VALUE')) ?></option>
+			</select>
+		</td>
+	</tr>
+	<tr>
+		<td><?=Loc::getMessage('SHIPPING_CENTER'); ?>:</td>
+		<td>
+			<select name="filter_shipping_center">
+				<option value=""><?=Loc::getMessage('BX_CATALOG_STORE_LIST_FILTER_ANY_VALUE'); ?></option>
+				<option value="Y"<?=($filterValues['filter_shipping_center'] === 'Y' ? ' selected' : ''); ?>><?= htmlspecialcharsEx(Loc::getMessage('BX_CATALOG_STORE_LIST_FILTER_YES_VALUE')) ?></option>
+				<option value="N"<?=($filterValues['filter_shipping_center'] === 'N' ? ' selected' : ''); ?>><?= htmlspecialcharsEx(Loc::getMessage('BX_CATALOG_STORE_LIST_FILTER_NO_VALUE')) ?></option>
+			</select>
+		</td>
+	</tr>
+	<tr>
+		<td><?=Loc::getMessage('ADDRESS'); ?>:</td>
+		<td><input type="text" name="filter_address" value="<?=htmlspecialcharsbx($filterValues['filter_address']); ?>"></td>
+	</tr>
+	<tr>
+		<td><?=Loc::getMessage('PHONE'); ?>:</td>
+		<td><input type="text" name="filter_phone" value="<?=htmlspecialcharsbx($filterValues['filter_phone']); ?>"></td>
+	</tr>
+	<tr>
+		<td>E-mail:</td>
+		<td><input type="text" name="filter_email" value="<?=htmlspecialcharsbx($filterValues['filter_email']); ?>"></td>
+	</tr>
+	<?
+	$USER_FIELD_MANAGER->AdminListShowFilter($entityId);
 
-	<form name="find_form" method="GET" action="<?echo $APPLICATION->GetCurPage()?>?">
-		<?
-		$arFindFields = array(GetMessage("STORE_SITE_ID"));
-		$entityId = "CAT_STORE";
-		$USER_FIELD_MANAGER->AddFindFields($entityId, $arFindFields);
-		$oFilter = new CAdminFilter(
-			$sTableID."_filter",
-			$arFindFields
-		);
-		$oFilter->Begin();
-		?>
-		<tr>
-			<td><?= GetMessage("STORE_SITE_ID") ?>:</td>
-			<td>
-				<?echo CSite::SelectBox("filter_site_id", $filter_site_id, "(".GetMessage("STORE_SITE_ID").")"); ?>
-			</td>
-		</tr>
-		<?
-			$USER_FIELD_MANAGER->AdminListShowFilter($entityId);
-		?>
-		<?
-		$oFilter->Buttons(
-			array(
-				"table_id" => $sTableID,
-				"url" => $APPLICATION->GetCurPage(),
-				"form" => "find_form"
-			)
-		);
-		$oFilter->End();
-		?>
-	</form>
+	$oFilter->Buttons(
+		array(
+			"table_id" => $sTableID,
+			"url" => $APPLICATION->GetCurPage(),
+			"form" => "find_form"
+		)
+	);
+	$oFilter->End();
+	?>
+</form>
+<script type="text/javascript">
+	function changeIdTo()
+	{
+		var destination = BX('filter_id_to');
 
-
+		if (this.value === '')
+			return;
+		if (!BX.type.isElementNode(destination))
+			return;
+		if (destination.value !== '')
+			return;
+		destination.value = this.value;
+		destination = null;
+	}
+	BX.ready(function(){
+		var control = BX('filter_id_from');
+		if (!BX.type.isElementNode(control))
+			return;
+		BX.bind(control, 'change', changeIdTo);
+	});
+</script>
 <?
 $lAdmin->DisplayList();
-?>
 
-<?require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");?>
+require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");

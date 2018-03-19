@@ -1,4 +1,7 @@
 <?
+use Bitrix\Main\ModuleManager;
+use Bitrix\Socialnetwork\Integration;
+
 global $DBType;
 
 IncludeModuleLangFile(__FILE__);
@@ -71,10 +74,6 @@ $arClasses = array(
 	"CSocNetLogDestination" => "classes/general/log_destination.php",
 	"CSocNetNotifySchema" => "classes/general/notify_schema.php",
 	"CSocNetPullSchema" => "classes/general/notify_schema.php",
-	"Bitrix\\Socialnetwork\\WorkgroupTable" => "lib/workgroup.php",
-	"\\Bitrix\\Socialnetwork\\WorkgroupTable" => "lib/workgroup.php",
-	"Bitrix\\Socialnetwork\\LogPageTable" => "lib/logpags.php",
-	"\\Bitrix\\Socialnetwork\\LogPageTable" => "lib/logpage.php",
 	"socialnetwork" => "install/index.php",
 );
 CModule::AddAutoloadClasses("socialnetwork", $arClasses);
@@ -189,6 +188,7 @@ if (
 {
 	CModule::IncludeModule('intranet');
 	IncludeModuleLangFile($_SERVER["DOCUMENT_ROOT"].'/bitrix/modules/socialnetwork/install/js/log_destination.php');
+
 	CJSCore::RegisterExt('socnetlogdest', array(
 		'js' => '/bitrix/js/socialnetwork/log-destination.js',
 		'css' => '/bitrix/js/main/core/css/core_finder.css',
@@ -196,27 +196,114 @@ if (
 			'LM_POPUP_TITLE' => GetMessage("LM_POPUP_TITLE"),
 			'LM_POPUP_TAB_LAST' => GetMessage("LM_POPUP_TAB_LAST"),
 			'LM_POPUP_TAB_SG' => GetMessage("LM_POPUP_TAB_SG"),
+			'LM_POPUP_TAB_SG_PROJECT' => GetMessage("LM_POPUP_TAB_SG_PROJECT"),
 			'LM_POPUP_TAB_STRUCTURE' => GetMessage("LM_POPUP_TAB_STRUCTURE"),
+			'LM_POPUP_TAB_EMAIL' => GetMessage("LM_POPUP_TAB_EMAIL"),
+			'LM_POPUP_TAB_CRMEMAIL' => GetMessage("LM_POPUP_TAB_CRMEMAIL"),
+			'LM_POPUP_TAB_STRUCTURE_EXTRANET' => GetMessage("LM_POPUP_TAB_STRUCTURE_EXTRANET"),
 			'LM_POPUP_CHECK_STRUCTURE' => GetMessage("LM_POPUP_CHECK_STRUCTURE"),
 			'LM_POPUP_TAB_LAST_USERS' => GetMessage("LM_POPUP_TAB_LAST_USERS"),
+			'LM_POPUP_TAB_LAST_CRMEMAILS' => GetMessage("LM_POPUP_TAB_LAST_CRMEMAILS"),
 			'LM_POPUP_TAB_LAST_CONTACTS' => GetMessage("LM_POPUP_TAB_LAST_CONTACTS"),
 			'LM_POPUP_TAB_LAST_COMPANIES' => GetMessage("LM_POPUP_TAB_LAST_COMPANIES"),
 			'LM_POPUP_TAB_LAST_LEADS' => GetMessage("LM_POPUP_TAB_LAST_LEADS"),
 			'LM_POPUP_TAB_LAST_DEALS' => GetMessage("LM_POPUP_TAB_LAST_DEALS"),
 			'LM_POPUP_TAB_LAST_SG' => GetMessage("LM_POPUP_TAB_LAST_SG"),
+			'LM_POPUP_TAB_LAST_SG_PROJECT' => GetMessage("LM_POPUP_TAB_LAST_SG_PROJECT"),
 			'LM_POPUP_TAB_LAST_STRUCTURE' => GetMessage("LM_POPUP_TAB_LAST_STRUCTURE"),
-			'LM_POPUP_CHECK_STRUCTURE' => GetMessage("LM_POPUP_CHECK_STRUCTURE"),
+			'LM_POPUP_TAB_SEARCH' => GetMessage("LM_POPUP_TAB_SEARCH"),
 			'LM_SEARCH_PLEASE_WAIT' => GetMessage("LM_SEARCH_PLEASE_WAIT"),
 			'LM_EMPTY_LIST' => GetMessage("LM_EMPTY_LIST"),
 			'LM_PLEASE_WAIT' => GetMessage("LM_PLEASE_WAIT"),
 			'LM_CREATE_SONETGROUP_TITLE' => GetMessage("LM_CREATE_SONETGROUP_TITLE"),
 			'LM_CREATE_SONETGROUP_BUTTON_CREATE' => GetMessage("LM_CREATE_SONETGROUP_BUTTON_CREATE"),
 			'LM_CREATE_SONETGROUP_BUTTON_CANCEL' => GetMessage("LM_CREATE_SONETGROUP_BUTTON_CANCEL"),
-			'LM_POPUP_WAITER_TEXT' => GetMessage("LM_POPUP_WAITER_TEXT")
+			'LM_INVITE_EMAIL_USER_BUTTON_OK' => GetMessage("LM_INVITE_EMAIL_USER_BUTTON_OK"),
+			'LM_INVITE_EMAIL_USER_TITLE' => GetMessage("LM_INVITE_EMAIL_USER_TITLE"),
+			'LM_INVITE_EMAIL_USER_PLACEHOLDER_NAME' => GetMessage("LM_INVITE_EMAIL_USER_PLACEHOLDER_NAME"),
+			'LM_INVITE_EMAIL_USER_PLACEHOLDER_LAST_NAME' => GetMessage("LM_INVITE_EMAIL_USER_PLACEHOLDER_LAST_NAME"),
+			'LM_INVITE_EMAIL_CRM_CREATE_CONTACT' => GetMessage("LM_INVITE_EMAIL_CRM_CREATE_CONTACT"),
+			'LM_POPUP_WAITER_TEXT' => GetMessage("LM_POPUP_WAITER_TEXT"),
+			'LM_POPUP_SEARCH_NETWORK' => GetMessage("LM_POPUP_SEARCH_NETWORK"),
 		),
 		'rel' => array('core', 'popup', 'json', 'finder')
 	));
 }
+
+$transformationLimit = 0;
+if(
+	ModuleManager::isModuleInstalled('disk') &&
+	ModuleManager::isModuleInstalled('transformer') &&
+	\Bitrix\Main\Config\Option::get('disk', 'disk_allow_video_transformation', 'N') == 'Y'
+)
+{
+	$transformationLimit = \Bitrix\Main\Config\Option::get('disk', 'disk_max_size_for_video_transformation', 300) * 1024 * 1024;
+}
+IncludeModuleLangFile($_SERVER["DOCUMENT_ROOT"].'/bitrix/modules/socialnetwork/install/js/video_recorder.php');
+CJSCore::RegisterExt('videorecorder', array(
+	'js' => '/bitrix/js/socialnetwork/video_recorder.js',
+	'css' => '/bitrix/js/socialnetwork/css/video_recorder.css',
+	'lang_additional' => array(
+		'BLOG_VIDEO_RECORD_BUTTON' => GetMessage('BLOG_VIDEO_RECORD_BUTTON'),
+		'BLOG_VIDEO_RECORD_CANCEL_BUTTON' => GetMessage('BLOG_VIDEO_RECORD_CANCEL_BUTTON'),
+		'BLOG_VIDEO_RECORD_LOGO' => GetMessage('BLOG_VIDEO_RECORD_LOGO'),
+		'BLOG_VIDEO_RECORD_STOP_BUTTON' => GetMessage('BLOG_VIDEO_RECORD_STOP_BUTTON'),
+		'BLOG_VIDEO_RECORD_USE_BUTTON' => GetMessage('BLOG_VIDEO_RECORD_USE_BUTTON'),
+		'BLOG_VIDEO_RECORD_IN_PROGRESS_LABEL' => GetMessage('BLOG_VIDEO_RECORD_IN_PROGRESS_LABEL'),
+		'BLOG_VIDEO_RECORD_AGREE' => GetMessage('BLOG_VIDEO_RECORD_AGREE'),
+		'BLOG_VIDEO_RECORD_CLOSE' => GetMessage('BLOG_VIDEO_RECORD_CLOSE'),
+		'BLOG_VIDEO_RECORD_ASK_PERMISSIONS' => GetMessage('BLOG_VIDEO_RECORD_ASK_PERMISSIONS'),
+		'BLOG_VIDEO_RECORD_REQUIREMENTS' => GetMessage('BLOG_VIDEO_RECORD_REQUIREMENTS'),
+		'BLOG_VIDEO_RECORD_REQUIREMENTS_TITLE' => GetMessage('BLOG_VIDEO_RECORD_REQUIREMENTS_TITLE'),
+		'BLOG_VIDEO_RECORD_PERMISSIONS_ERROR' => GetMessage('BLOG_VIDEO_RECORD_PERMISSIONS_ERROR'),
+		'BLOG_VIDEO_RECORD_PERMISSIONS_TITLE' => GetMessage('BLOG_VIDEO_RECORD_PERMISSIONS_TITLE'),
+		'BLOG_VIDEO_RECORD_SPOTLIGHT_MESSAGE' => GetMessage('BLOG_VIDEO_RECORD_SPOTLIGHT_MESSAGE'),
+		'DISK_VIDEO_TRANSFORMATION_LIMIT' => $transformationLimit,
+		'BLOG_VIDEO_RECORD_TRANFORM_LIMIT_TEXT' => GetMessage('BLOG_VIDEO_RECORD_TRANFORM_LIMIT_TEXT'),
+		'BLOG_VIDEO_RECORD_RESTART_BUTTON' => GetMessage('BLOG_VIDEO_RECORD_RESTART_BUTTON'),
+		'BLOG_VIDEO_RECORD_PERMISSIONS_ERROR_TITLE' => GetMessage('BLOG_VIDEO_RECORD_PERMISSIONS_ERROR_TITLE'),
+	),
+	'rel' => array('core', 'popup'),
+));
+
+IncludeModuleLangFile($_SERVER["DOCUMENT_ROOT"].'/bitrix/modules/socialnetwork/install/js/comment_aux.php');
+CJSCore::RegisterExt('comment_aux', array(
+	'js' => '/bitrix/js/socialnetwork/comment_aux.js',
+	'lang_additional' => array(
+		'SONET_COMMENTAUX_JS_SHARE_TEXT' => GetMessage("SONET_COMMENTAUX_JS_SHARE_TEXT"),
+		'SONET_COMMENTAUX_JS_SHARE_TEXT_1' => GetMessage("SONET_COMMENTAUX_JS_SHARE_TEXT_1"),
+		'SONET_COMMENTAUX_JS_CREATETASK_BLOG_POST' => GetMessage("SONET_COMMENTAUX_JS_CREATETASK_BLOG_POST"),
+		'SONET_COMMENTAUX_JS_CREATETASK_BLOG_COMMENT' => GetMessage("SONET_COMMENTAUX_JS_CREATETASK_BLOG_COMMENT"),
+		'SONET_COMMENTAUX_JS_CREATETASK_BLOG_COMMENT_LINK' => GetMessage("SONET_COMMENTAUX_JS_CREATETASK_BLOG_COMMENT_LINK"),
+		'SONET_COMMENTAUX_JS_FILEVERSION_TEXT' => GetMessage("SONET_COMMENTAUX_JS_FILEVERSION_TEXT"),
+		'SONET_COMMENTAUX_JS_FILEVERSION_TEXT_M' => GetMessage("SONET_COMMENTAUX_JS_FILEVERSION_TEXT_M"),
+		'SONET_COMMENTAUX_JS_FILEVERSION_TEXT_F' => GetMessage("SONET_COMMENTAUX_JS_FILEVERSION_TEXT_F"),
+		'SONET_COMMENTAUX_JS_HEAD_FILEVERSION_TEXT' => GetMessage("SONET_COMMENTAUX_JS_HEAD_FILEVERSION_TEXT"),
+		'SONET_COMMENTAUX_JS_HEAD_FILEVERSION_TEXT_M' => GetMessage("SONET_COMMENTAUX_JS_HEAD_FILEVERSION_TEXT_M"),
+		'SONET_COMMENTAUX_JS_HEAD_FILEVERSION_TEXT_F' => GetMessage("SONET_COMMENTAUX_JS_HEAD_FILEVERSION_TEXT_F")
+	),
+	'rel' => array('render_parts')
+));
+
+IncludeModuleLangFile($_SERVER["DOCUMENT_ROOT"].'/bitrix/modules/socialnetwork/install/js/render_parts.php');
+CJSCore::RegisterExt('render_parts', array(
+	'js' => '/bitrix/js/socialnetwork/render_parts.js',
+	'lang_additional' => array(
+		'SONET_RENDERPARTS_JS_DESTINATION_ALL' => GetMessage(IsModuleInstalled('intranet') ? "SONET_RENDERPARTS_JS_DESTINATION_ALL" : GetMessage("SONET_RENDERPARTS_JS_DESTINATION_ALL_BUS")),
+		'SONET_RENDERPARTS_JS_HIDDEN' => GetMessage("SONET_RENDERPARTS_JS_HIDDEN")
+	),
+	'rel' => array()
+));
+
+IncludeModuleLangFile($_SERVER["DOCUMENT_ROOT"].'/bitrix/modules/socialnetwork/install/js/content_view.php');
+CJSCore::RegisterExt('content_view', array(
+	'js' => '/bitrix/js/socialnetwork/content_view.js',
+	'css' => '/bitrix/js/socialnetwork/css/content_view.css',
+	'lang_additional' => array(
+		'SONET_CONTENTVIEW_JS_HIDDEN_COUNT' => GetMessage("SONET_CONTENTVIEW_JS_HIDDEN_COUNT"),
+	),
+	'rel' => array('ajax', 'popup')
+));
 
 // forum
 $arFeatureTmp = array(
@@ -406,6 +493,7 @@ if ($bIntranet)
 		"operations" => array(
 			"view" => array(),
 			"view_all" => array(),
+			"sort" => array(),
 			"create_tasks" => array(),
 			"edit_tasks" => array(),
 			"delete_tasks" => array(),
@@ -415,20 +503,7 @@ if ($bIntranet)
 		"minoperation" => array("view_all", "view")
 	);
 
-	$use_tasks_2_0 = COption::GetOptionString("intranet", "use_tasks_2_0", "N");
-	if ($use_tasks_2_0 != "Y")
-	{
-		$arFeatureTmp["subscribe_events"] = array(
-			"tasks" =>  array(
-				"ENTITIES" => array(),
-				"OPERATION" => "view_all",
-				"CLASS_FORMAT" => "CSocNetLogTools",
-				"METHOD_FORMAT" => "FormatEvent_Task",
-				"HAS_CB" => "Y",
-			)
-		);
-	}
-	else
+	if (IsModuleInstalled('tasks'))
 	{
 		$arFeatureTmp["subscribe_events"] = array(
 			"tasks" =>  array(
@@ -437,18 +512,19 @@ if ($bIntranet)
 				"CLASS_FORMAT" => "CSocNetLogTools",
 				"METHOD_FORMAT" => "FormatEvent_Task2",
 				"HAS_CB" => "Y",
-				"FULL_SET"	=> array("tasks", "tasks_comment"),
-				"COMMENT_EVENT"	=> array(
+				"FULL_SET" => array("tasks", "tasks_comment", "crm_activity_add"),
+				"COMMENT_EVENT" => array(
 					"EVENT_ID" => "tasks_comment",
 					"OPERATION" => "view",
 					"OPERATION_ADD"	=> "log_rights",
 					"ADD_CALLBACK" => array("CSocNetLogTools", "AddComment_Tasks"),
-					"UPDATE_CALLBACK" => array("CSocNetLogTools", "UpdateComment_Forum"),
+					"UPDATE_CALLBACK" => array("CSocNetLogTools", "UpdateComment_Task"),
 					"DELETE_CALLBACK" => array("CSocNetLogTools", "DeleteComment_Task"),
 					"CLASS_FORMAT" => "CSocNetLogTools",
 					"METHOD_FORMAT"	=> "FormatComment_Forum",
 					"METHOD_CANEDIT" => array("CSocNetLogTools", "CanEditComment_Task"),
 					"METHOD_CANEDITOWN" => array("CSocNetLogTools", "CanEditOwnComment_Task"),
+					"METHOD_GET_URL" => array("CSocNetLogTools", "GetCommentUrl_Task"),
 					"RATING_TYPE_ID" => "FORUM_POST"
 				)
 			)
@@ -486,6 +562,7 @@ if ($bIntranet)
 		$arFeatureTmp["allowed"][] = SONET_ENTITY_GROUP;
 		$arFeatureTmp["operations"]["view"][SONET_ENTITY_GROUP] = COption::GetOptionString("socialnetwork", "default_tasks_operation_view_group", SONET_ROLES_USER);
 		$arFeatureTmp["operations"]["view_all"][SONET_ENTITY_GROUP] = COption::GetOptionString("socialnetwork", "default_tasks_operation_view_all_group", SONET_ROLES_USER);
+		$arFeatureTmp["operations"]["sort"][SONET_ENTITY_GROUP] = COption::GetOptionString("socialnetwork", "default_tasks_operation_sort_group", SONET_ROLES_USER);
 		$arFeatureTmp["operations"]["create_tasks"][SONET_ENTITY_GROUP] = COption::GetOptionString("socialnetwork", "default_tasks_operation_create_tasks_group", SONET_ROLES_USER);
 		$arFeatureTmp["operations"]["edit_tasks"][SONET_ENTITY_GROUP] = COption::GetOptionString("socialnetwork", "default_tasks_operation_edit_tasks_group", SONET_ROLES_MODERATOR);
 		$arFeatureTmp["operations"]["delete_tasks"][SONET_ENTITY_GROUP] = COption::GetOptionString("socialnetwork", "default_tasks_operation_delete_tasks_group", SONET_ROLES_MODERATOR);
@@ -500,7 +577,7 @@ if ($bIntranet)
 if (
 	$bIntranet
 	&& (
-		COption::GetOptionString("socialnetwork", "allow_files_user", "Y") == "Y" 
+		COption::GetOptionString("socialnetwork", "allow_files_user", "Y") == "Y"
 		|| COption::GetOptionString("socialnetwork", "allow_files_group", "Y") == "Y"
 	)
 )
@@ -573,10 +650,12 @@ if (
 }
 
 if (
-	COption::GetOptionString("socialnetwork", "allow_blog_user", "Y") == "Y" 
+	COption::GetOptionString("socialnetwork", "allow_blog_user", "Y") == "Y"
 	|| COption::GetOptionString("socialnetwork", "allow_blog_group", "Y") == "Y"
 )
 {
+	$livefeedProvider = new \Bitrix\Socialnetwork\Livefeed\BlogPost;
+
 	$arFeatureTmp = array(
 		"allowed" => array(),
 		"operations" => array(
@@ -598,7 +677,7 @@ if (
 				"OPERATION" => "",
 				"NO_SET" => true,
 				"REAL_EVENT_ID" => "blog_post",
-				"FULL_SET"	=> array("blog", "blog_post", "blog_post_important", "blog_comment")
+				"FULL_SET" => array_unique(array_merge($livefeedProvider->getEventId(), array("blog", "blog_comment")))
 			),
 			"blog_post" => array(
 				"ENTITIES" => array(),
@@ -680,14 +759,21 @@ if (
 		$arFeatureTmp["operations"]["full_comment"]["restricted"][SONET_ENTITY_GROUP] = array(SONET_ROLES_ALL);
 	}
 	$arFeatureTmp["subscribe_events"]["blog_post_important"] = $arFeatureTmp["subscribe_events"]["blog_post"];
-
+	if (ModuleManager::isModuleInstalled('vote'))
+	{
+		$arFeatureTmp["subscribe_events"]["blog_post_vote"] = $arFeatureTmp["subscribe_events"]["blog_post"];
+	}
+	if (ModuleManager::isModuleInstalled('intranet'))
+	{
+		$arFeatureTmp["subscribe_events"]["blog_post_grat"] = $arFeatureTmp["subscribe_events"]["blog_post"];
+	}
 	CSocNetAllowed::AddAllowedFeature("blog", $arFeatureTmp);
 }
 
 if (
 	IsModuleInstalled('search')
 	&& (
-		COption::GetOptionString("socialnetwork", "allow_search_user", "N") == "Y" 
+		COption::GetOptionString("socialnetwork", "allow_search_user", "N") == "Y"
 		|| COption::GetOptionString("socialnetwork", "allow_search_group", "Y") == "Y"
 	)
 )
@@ -710,7 +796,21 @@ if (
 		$arFeatureTmp["operations"]["view"][SONET_ENTITY_GROUP] = COption::GetOptionString("socialnetwork", "default_search_operation_view_group", SONET_ROLES_USER);
 	}
 
-	CSocNetAllowed::AddAllowedFeature("search", $arFeatureTmp);
+	CSocNetAllowed::addAllowedFeature("search", $arFeatureTmp);
+}
+
+if (
+	ModuleManager::isModuleInstalled('im')
+	&& (COption::GetOptionString('socialnetwork', 'use_workgroup_chat', "Y") == "Y")
+)
+{
+	$arFeatureTmp = array(
+		"allowed" => array(SONET_ENTITY_GROUP),
+		"operations" => array(),
+		"minoperation" => array(),
+	);
+
+	CSocNetAllowed::addAllowedFeature("chat", $arFeatureTmp);
 }
 
 $arLogEvents = array(

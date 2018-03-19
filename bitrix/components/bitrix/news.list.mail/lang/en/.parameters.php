@@ -33,4 +33,6 @@ $MESS["CP_BNL_INCLUDE_SUBSECTIONS"] = "Show elements from subsections";
 $MESS["CP_BNL_SET_META_KEYWORDS"] = "Set page keywords";
 $MESS["CP_BNL_SET_META_DESCRIPTION"] = "Set page description";
 $MESS["CP_BNL_SET_BROWSER_TITLE"] = "Set browser window title";
+$MESS["T_IBLOCK_DESC_PREVENT_SEND_IF_NO_NEWS"] = "Don't send message if there are no sufficient new items.";
+$MESS["T_IBLOCK_DESC_SENDER_CHAIN_ID"] = "Scheduled newsletter message ID";
 ?>

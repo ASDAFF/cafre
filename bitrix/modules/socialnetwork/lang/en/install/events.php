@@ -239,4 +239,17 @@ $MESS["SONET_NEW_EVENT_DESC"] = "#ENTITY_ID# - The event source ID
 #SUBSCRIBER_EMAIL# - The recipient's e-mail address
 #SUBSCRIBER_ID# - The recipient's ID";
 $MESS["SONET_NEW_EVENT_SUBJECT"] = "#SITE_NAME#: #ENTITY# - New event in #ENTITY_TYPE#";
+$MESS["SONET_LOG_NEW_ENTRY_NAME"] = "New message added";
+$MESS["SONET_LOG_NEW_ENTRY_DESC"] = "#EMAIL_TO# - message recipient e-mail 
+#LOG_ENTRY_ID# - message ID
+#RECIPIENT_ID# - recipient ID
+#URL_ID# - message view URL
+";
+$MESS["SONET_LOG_NEW_COMMENT_NAME"] = "New comment added";
+$MESS["SONET_LOG_NEW_COMMENT_DESC"] = "#EMAIL_TO# - message recipient e-mail 
+#COMMENT_ID# - comment ID
+#LOG_ENTRY_ID# - message ID
+#RECIPIENT_ID# - recipient ID
+#URL_ID# - message view URL
+";
 ?>

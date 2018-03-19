@@ -1,7 +1,8 @@
-<?
+<?php
+
 class CAllTraffic
 {
-	function DynamicDays($date1="", $date2="", $site_id="")
+	public static function DynamicDays($date1="", $date2="", $site_id="")
 	{
 		$by = "";
 		$order = "";
@@ -15,13 +16,13 @@ class CAllTraffic
 	}
 
 	// updates traffic counters
-	function DecParam($arParam, $arParamSite=false, $SITE_ID=false, $DATE=false, $DATE_FORMAT="FULL")
+	public static function DecParam($arParam, $arParamSite=false, $SITE_ID=false, $DATE=false, $DATE_FORMAT="FULL")
 	{
 		return CTraffic::IncParam($arParam, $arParamSite, $SITE_ID, $DATE, $DATE_FORMAT, "-");
 	}
 
 	// updates traffic counters
-	function IncParam($arParam, $arParamSite=false, $SITE_ID=false, $DATE=false, $DATE_FORMAT="FULL", $SIGN="+")
+	public static function IncParam($arParam, $arParamSite=false, $SITE_ID=false, $DATE=false, $DATE_FORMAT="FULL", $SIGN="+")
 	{
 		$DB = CDatabase::GetModuleConnection('statistic');
 
@@ -35,11 +36,12 @@ class CAllTraffic
 			$stmp = MakeTimeStamp($DATE, $DATE_FORMAT=="SHORT" ? FORMAT_DATE : FORMAT_DATETIME);
 			$strWhere = "WHERE ".CStatistics::DBDateCompare("DATE_STAT", ConvertTimeStamp($stmp));
 		}
-		$HOUR = date("G",$stmp);	// 0..23
-		$WEEKDAY = date("w",$stmp);	// 0..6
-		$MONTH = date("n",$stmp);	// 1..12
 
-		static $arKeys = array("HOUR", "WEEKDAY", "MONTH");
+		$arKeys = array(
+			"HOUR" => date("G",$stmp),
+			"WEEKDAY" => date("w",$stmp),
+			"MONTH" => date("n",$stmp),
+		);
 		static $arPreKeys = array("HITS"=>0,"FAVORITES"=>0,"SESSIONS"=>0,"C_HOSTS"=>0,"GUESTS"=>0,"NEW_GUESTS"=>0);
 
 		$rows = false;
@@ -56,9 +58,9 @@ class CAllTraffic
 				}
 				else
 				{
-					foreach ($arKeys as $key)
+					foreach ($arKeys as $key => $v)
 					{
-						$k = $key."_".$name."_".${$key};
+						$k = $key."_".$name."_".$v;
 						$arFields[$k] = "$k ".($SIGN==="-"? "-": "+")." ".intval($value);
 					}
 				}
@@ -71,8 +73,10 @@ class CAllTraffic
 		if ($SITE_ID===false)
 		{
 			$SITE_ID = "";
-			if (defined("ADMIN_SECTION") && ADMIN_SECTION===true) $SITE_ID = "";
-			elseif (defined("SITE_ID")) $SITE_ID = SITE_ID;
+			if (defined("ADMIN_SECTION") && ADMIN_SECTION===true)
+				$SITE_ID = "";
+			elseif (defined("SITE_ID"))
+				$SITE_ID = SITE_ID;
 		}
 
 		if (strlen($SITE_ID)>0 && is_array($arParamSite) && count($arParamSite)>0)
@@ -86,9 +90,9 @@ class CAllTraffic
 				}
 				else
 				{
-					foreach ($arKeys as $key)
+					foreach ($arKeys as $key => $v)
 					{
-						$k = $key."_".$name."_".${$key};
+						$k = $key."_".$name."_".$v;
 						$arFields[$k] = "$k ".($SIGN==="-"? "-": "+")." ".intval($value);
 					}
 				}
@@ -99,4 +103,3 @@ class CAllTraffic
 		return $rows;
 	}
 }
-?>

@@ -10,7 +10,7 @@ IncludeModuleLangFile(__FILE__);
 class CAllForumMessage
 {
 	//---------------> Message add, update, delete
-	function CanUserAddMessage($TID, $arUserGroups, $iUserID = 0, $ExternalPermission = false)
+	public static function CanUserAddMessage($TID, $arUserGroups, $iUserID = 0, $ExternalPermission = false)
 	{
 		$TID = intVal($TID);
 		$arTopic = ($TID > 0 ? CForumTopic::GetByID($TID) : false);
@@ -33,7 +33,7 @@ class CAllForumMessage
 		return False;
 	}
 
-	function CanUserUpdateMessage($MID, $arUserGroups, $iUserID = 0, $ExternalPermission = false)
+	public static function CanUserUpdateMessage($MID, $arUserGroups, $iUserID = 0, $ExternalPermission = false)
 	{
 		$MID = intVal($MID);
 		$arMessage = CForumMessage::GetByIDEx($MID, array("GET_FORUM_INFO" => "Y", "GET_TOPIC_INFO" => "Y", "FILTER" => "N"));
@@ -57,7 +57,7 @@ class CAllForumMessage
 			$iUserID = intVal($iUserID);
 			if ($iUserID <= 0 || intVal($arMessage["AUTHOR_ID"]) != $iUserID)
 				return false;
-			if (COption::GetOptionString("forum", "USER_EDIT_OWN_POST", "N") == "Y")
+			if (COption::GetOptionString("forum", "USER_EDIT_OWN_POST", "Y") == "Y")
 				return true;
 			$iCnt = CForumMessage::GetList(array("ID" => "ASC"), array("TOPIC_ID"=>$arTopic["ID"], ">ID"=>$MID), True);
 			if (intVal($iCnt) <= 0)
@@ -66,7 +66,7 @@ class CAllForumMessage
 		return false;
 	}
 
-	function CanUserDeleteMessage($MID, $arUserGroups, $iUserID = 0, $ExternalPermission = false)
+	public static function CanUserDeleteMessage($MID, $arUserGroups, $iUserID = 0, $ExternalPermission = false)
 	{
 		$MID = intVal($MID);
 		$arMessage = CForumMessage::GetByIDEx($MID, array("GET_FORUM_INFO" => "Y", "GET_TOPIC_INFO" => "N", "FILTER" => "N"));
@@ -88,7 +88,7 @@ class CAllForumMessage
 		return false;
 	}
 
-	function CheckFields($ACTION, &$arFields, $ID = 0, $arParams = array())
+	public static function CheckFields($ACTION, &$arFields, $ID = 0, $arParams = array())
 	{
 		$aMsg = array();
 		$ID = intVal($ID);
@@ -209,13 +209,14 @@ class CAllForumMessage
 			}
 		}
 
+		global $APPLICATION, $USER_FIELD_MANAGER;
 		if(!empty($aMsg))
 		{
 			$e = new CAdminException(array_reverse($aMsg));
-			$GLOBALS["APPLICATION"]->ThrowException($e);
+			$APPLICATION->ThrowException($e);
 			return false;
 		}
-		else if(!$GLOBALS["USER_FIELD_MANAGER"]->CheckFields("FORUM_MESSAGE", $ID, $arFields))
+		else if(!$USER_FIELD_MANAGER->CheckFields("FORUM_MESSAGE", $ID, $arFields, (array_key_exists("USER_ID", $arFields) ? $arFields["USER_ID"] : false)))
 			return false;
 
 		if (is_set($arFields, "AUTHOR_ID") || $ACTION=="ADD") $arFields["AUTHOR_ID"] = intVal($arFields["AUTHOR_ID"]) <= 0 ? false : $arFields["AUTHOR_ID"];
@@ -236,9 +237,9 @@ class CAllForumMessage
 		return True;
 	}
 
-	function Update($ID, $arFields, $skip_counts = false, $strUploadDir = false)
+	public static function Update($ID, $arFields, $skip_counts = false, $strUploadDir = false)
 	{
-		global $DB;
+		global $DB, $USER_FIELD_MANAGER;
 		$ID = intVal($ID);
 		$strSql = "";
 		$strUploadDir = ($strUploadDir === false ? "forum" : $strUploadDir);
@@ -355,7 +356,7 @@ class CAllForumMessage
 /***************** Quota *******************************************/
 		$_SESSION["SESS_RECOUNT_DB"] = "Y";
 
-		$GLOBALS["USER_FIELD_MANAGER"]->Update("FORUM_MESSAGE", $ID, $arFields);
+		$USER_FIELD_MANAGER->Update("FORUM_MESSAGE", $ID, $arFields, (array_key_exists("USER_ID", $arFields) ? $arFields["USER_ID"] : false));
 /***************** Event onAfterMessageUpdate **********************/
 		foreach (GetModuleEvents("forum", "onAfterMessageUpdate", true) as $arEvent)
 			ExecuteModuleEventEx($arEvent, array(&$ID, &$arFields, $arMessage_prev));
@@ -422,7 +423,7 @@ class CAllForumMessage
 		return $ID;
 	}
 
-	function Reindex($ID, &$arMessage)
+	public static function Reindex($ID, &$arMessage)
 	{
 		if (!($ID > 0) || !CModule::IncludeModule("search"))
 			return array("FORUM_ID", "TOPIC_ID", "TITLE_SEO", "MESSAGE_ID", "SOCNET_GROUP_ID", "OWNER_ID", "PARAM1", "PARAM2");
@@ -457,7 +458,7 @@ class CAllForumMessage
 			"TITLE" => $arMessage["TOPIC_INFO"]["TITLE"].($arMessage["NEW_TOPIC"] == "Y" && !empty($arMessage["TOPIC_INFO"]["DESCRIPTION"]) ?
 					", ".$arMessage["TOPIC_INFO"]["DESCRIPTION"] : ""),
 			"TAGS" => (($arMessage["NEW_TOPIC"] == "Y") ? $arMessage["TOPIC_INFO"]["TAGS"] : ""),
-			"BODY" => GetMessage("AVTOR_PREF")." ".$arMessage["AUTHOR_NAME"].". ".(forumTextParser::clearAllTags($arMessage["POST_MESSAGE"])),
+			"BODY" => GetMessage("AVTOR_PREF")." ".$arMessage["AUTHOR_NAME"].". ".(CSearch::KillTags(forumTextParser::clearAllTags($arMessage["POST_MESSAGE"]))),
 			"ENTITY_TYPE_ID"  => $arMessage["NEW_TOPIC"] == "Y"? "FORUM_TOPIC": "FORUM_POST",
 			"ENTITY_ID"  => $arMessage["NEW_TOPIC"] == "Y"? $arMessage["TOPIC_ID"]: $arMessage["ID"],
 			"USER_ID" => $arMessage["AUTHOR_ID"],
@@ -506,12 +507,24 @@ class CAllForumMessage
 			$arSearchInd["URL"] = CForumNew::PreparePath2Message($arParams["DEFAULT_URL"], $urlPatterns);
 		}
 		CSearch::DeleteIndex("forum", $ID);
-		CSearch::Index("forum", $ID, $arSearchInd, true);
+		/***************** Events onMessageIsIndexed ***********************/
+		$index = true;
+		foreach(GetModuleEvents("forum", "onMessageIsIndexed", true) as $arEvent)
+		{
+			if (ExecuteModuleEventEx($arEvent, array($ID, $arMessage, &$arSearchInd)) === false)
+			{
+				$index = false;
+				break;
+			}
+		}
+		/***************** /Events *****************************************/
+		if ($index == true)
+			CSearch::Index("forum", $ID, $arSearchInd, true);
 	}
 
-	function Delete($ID)
+	public static function Delete($ID)
 	{
-		global $DB;
+		global $DB, $USER_FIELD_MANAGER;
 		$ID = intVal($ID);
 		$arMessage = array();
 		if ($ID > 0)
@@ -552,7 +565,7 @@ class CAllForumMessage
 		endif;
 		$DB->Commit();
 
-		$GLOBALS["USER_FIELD_MANAGER"]->Delete("FORUM_MESSAGE", $ID);
+		$USER_FIELD_MANAGER->Delete("FORUM_MESSAGE", $ID);
 
 		if ($AUTHOR_ID > 0):
 			CForumUser::SetStat($AUTHOR_ID);
@@ -572,7 +585,7 @@ class CAllForumMessage
 	}
 
 	//---------------> Message list
-	function GetByID($ID, $arAddParams = array())
+	public static function GetByID($ID, $arAddParams = array())
 	{
 		global $DB;
 		$ID = intVal($ID);
@@ -585,7 +598,8 @@ class CAllForumMessage
 
 		if (!array_key_exists($ID, $GLOBALS["FORUM_CACHE"]["MESSAGE"]))
 		{
-			$strSql = "SELECT FM.*, ".$DB->DateToCharFunction("FM.POST_DATE", "FULL")." as POST_DATE
+			$strSql = "SELECT FM.*, ".$DB->DateToCharFunction("FM.POST_DATE", "FULL")." as POST_DATE,
+					".$DB->DateToCharFunction("FM.EDIT_DATE", "FULL")." as EDIT_DATE
 				FROM b_forum_message FM
 				WHERE FM.ID = ".$ID;
 			$db_res = $DB->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
@@ -612,7 +626,7 @@ class CAllForumMessage
 		return $res;
 	}
 
-	function GetByIDEx($ID, $arAddParams = array())
+	public static function GetByIDEx($ID, $arAddParams = array())
 	{
 		global $DB;
 		$ID = intVal($ID);
@@ -660,6 +674,7 @@ class CAllForumMessage
 
 		$strSql =
 			"SELECT FM.*, ".$DB->DateToCharFunction("FM.POST_DATE", "FULL")." as POST_DATE,
+				".$DB->DateToCharFunction("FM.EDIT_DATE", "FULL")." as EDIT_DATE,
 				FU.SHOW_NAME, FU.DESCRIPTION, FU.NUM_POSTS, FU.POINTS as NUM_POINTS, FU.SIGNATURE, FU.AVATAR, FU.RANK_ID,
 				".$DB->DateToCharFunction("FU.DATE_REG", "SHORT")." as DATE_REG,
 				U.EMAIL, U.PERSONAL_ICQ, U.LOGIN, U.NAME, U.SECOND_NAME, U.LAST_NAME, U.PERSONAL_PHOTO".
@@ -723,7 +738,7 @@ class CAllForumMessage
 	}
 
 	//---------------> Message utils
-	function GetMessagePage($ID, $mess_per_page, $arUserGroups, $TID = false, $arAddParams = array())
+	public static function GetMessagePage($ID, $mess_per_page, $arUserGroups, $TID = false, $arAddParams = array())
 	{
 		$ID = intVal($ID);
 		$mess_per_page = intVal($mess_per_page);
@@ -759,7 +774,7 @@ class CAllForumMessage
 		return intVal($iCnt/$mess_per_page) + 1;
 	}
 
-	function SendMailMessage($MID, $arFields = array(), $strLang = false, $mailTemplate = false)
+	public static function SendMailMessage($MID, $arFields = array(), $strLang = false, $mailTemplate = false)
 	{
 		global $USER;
 		$MID = intVal($MID);
@@ -991,7 +1006,7 @@ class CAllForumMessage
 		return true;
 	}
 
-	function GetFirstUnreadEx($FID, $TID, $arUserGroups) // out-of-date function
+	public static function GetFirstUnreadEx($FID, $TID, $arUserGroups) // out-of-date function
 	{
 		$FID = intVal($FID);
 		$TID = intVal($TID);
@@ -1001,7 +1016,7 @@ class CAllForumMessage
 		return CForumMessage::GetFirstUnread($FID, $TID, $f_PERMISSION);
 	}
 
-	function GetFirstUnread($FID, $TID, $PERMISSION) // out-of-date function
+	public static function GetFirstUnread($FID, $TID, $PERMISSION) // out-of-date function
 	{
 		$FID = intVal($FID);
 		$TID = intVal($TID);
@@ -1083,7 +1098,7 @@ class CAllForumMessage
 		return array($TOPIC_ID, $MESSAGE_ID);
 	}
 
-	function OnSocNetLogFormatEvent($arEvent, $arParams)
+	public static function OnSocNetLogFormatEvent($arEvent, $arParams)
 	{
 		if ($arEvent["EVENT_ID"] == "forum")
 		{
@@ -1133,7 +1148,7 @@ class CAllForumMessage
 		}
 	}
 
-	function GetMentionedUserID($strMessage)
+	public static function GetMentionedUserID($strMessage)
 	{
 		$arMentionedUserID = array();
 								
@@ -1160,7 +1175,8 @@ class _CMessageDBResult extends CDBResult
 		$this->arUserFields = false;
 		if (array_key_exists("SELECT", $params))
 		{
-			$this->arUserFields = $GLOBALS["USER_FIELD_MANAGER"]->GetUserFields("FORUM_MESSAGE", 0, LANGUAGE_ID);
+			global $USER_FIELD_MANAGER;
+			$this->arUserFields = $USER_FIELD_MANAGER->GetUserFields("FORUM_MESSAGE", 0, LANGUAGE_ID);
 			$this->checkUserFields = (!empty($this->arUserFields));
 		}
 		parent::CDBResult($res);
@@ -1331,7 +1347,7 @@ class _CMessageDBResult extends CDBResult
 
 class CALLForumFiles
 {
-	function getByMessageID($ID)
+	public static function getByMessageID($ID)
 	{
 		$ID = intval($ID);
 		$res = array();
@@ -1356,7 +1372,7 @@ class CALLForumFiles
 		return $res;
 	}
 
-	function CheckFields(&$arFields, &$arParams, $ACTION = "ADD", $extParams = array())
+	public static function CheckFields(&$arFields, &$arParams, $ACTION = "ADD", $extParams = array())
 	{
 		$aMsg = array();
 		$arFiles = (!is_array($arFields) ? array($arFields) : $arFields);
@@ -1455,7 +1471,7 @@ class CALLForumFiles
 		return true;
 	}
 
-	function Add($arFileID, &$arParams, $bCheckFields = false)
+	public static function Add($arFileID, &$arParams, $bCheckFields = false)
 	{
 		if (!is_array($arFileID))
 			$arFileID = array($arFileID);
@@ -1474,7 +1490,7 @@ class CALLForumFiles
 		return true;
 	}
 
-	function Save(&$arFields, $arParams, $bCheckFields = true)
+	public static function Save(&$arFields, $arParams, $bCheckFields = true)
 	{
 		global $DB;
 		if ($bCheckFields && !CForumFiles::CheckFields($arFields, $arParams, "ADD"))
@@ -1517,7 +1533,7 @@ class CALLForumFiles
 		return $arFiles;
 	}
 
-	function UpdateByID($ID, $arFields)
+	public static function UpdateByID($ID, $arFields)
 	{
 		$ID = (is_array($ID) ? $ID : array($ID));
 		$arFields = (is_array($arFields) ? $arFields : array($arFields));
@@ -1541,7 +1557,7 @@ class CALLForumFiles
 		$GLOBALS["DB"]->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
 	}
 
-	function Delete($arFields = array(), $arParams = array())
+	public static function Delete($arFields = array(), $arParams = array())
 	{
 		global $DB;
 		$arFields = (is_array($arFields) ? $arFields : array($arFields));
@@ -1569,7 +1585,7 @@ class CALLForumFiles
 		}
 	}
 
-	function OnFileDelete($arFile)
+	public static function OnFileDelete($arFile)
 	{
 		$result = true;
 		if($arFile["MODULE_ID"] == "forum")
@@ -1579,4 +1595,3 @@ class CALLForumFiles
 		return $result;
 	}
 }
-?>

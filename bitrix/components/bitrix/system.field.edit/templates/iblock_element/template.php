@@ -11,6 +11,7 @@ else
 {
 	$arResult['VALUE'] = array_filter($arResult["VALUE"]);
 }
+
 if($arParams['arUserField']["SETTINGS"]["DISPLAY"] != "CHECKBOX")
 {
 	if($arParams["arUserField"]["MULTIPLE"] == "Y")
@@ -72,14 +73,6 @@ else
 	}
 	else
 	{
-		if($arParams["arUserField"]["MANDATORY"] != "Y")
-		{
-			$id = $arParams["arUserField"]["FIELD_NAME"]."_no";
-			?>
-			<input type="radio" value="" name="<?echo $arParams["arUserField"]["FIELD_NAME"]?>" id="<?echo $id?>"><label for="<?echo $id?>"><?echo GetMessage("MAIN_NO")?></label><br />
-			<?
-		}
-
 		$bWasSelect = false;
 		foreach ($arParams["arUserField"]["USER_TYPE"]["FIELDS"] as $key => $val)
 		{

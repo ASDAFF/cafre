@@ -38,4 +38,11 @@ $MESS["MAIN_ALL"] = "(all)";
 $MESS["MAIN_ADMIN_LIST_DELETE"] = "delete";
 $MESS["MAIN_ADMIN_LIST_ACTIVATE"] = "activate";
 $MESS["MAIN_ADMIN_LIST_DEACTIVATE"] = "deactivate";
+$MESS["MAILING_ADM_SENDING_STOP"] = "Newsletter e-mail delivery has been aborted.";
+$MESS["sender_mailing_chain_adm_action_pause"] = "Pause";
+$MESS["sender_mailing_chain_adm_action_stop"] = "Stop";
+$MESS["sender_mailing_chain_adm_action_stat"] = "sent";
+$MESS["sender_mailing_chain_adm_field_title"] = "Name";
+$MESS["sender_mailing_chain_adm_action_copy"] = "Copy";
+$MESS["sender_mailing_chain_adm_action_stats"] = "Statistics";
 ?>

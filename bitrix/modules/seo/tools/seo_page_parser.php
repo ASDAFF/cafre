@@ -32,6 +32,7 @@ if (
 		{
 			$arKeywords = explode(',', $_REQUEST['keywords']);
 			foreach ($arKeywords as $k => $v) $arKeywords[$k] = trim($v);
+			$arKeywords = array_unique($arKeywords);
 			TrimArr($arKeywords);
 
 			$arPageResult = $obChecker->CheckKeyword($arKeywords);

@@ -72,7 +72,7 @@ abstract class OtpAlgorithm
 		$this->secret = $secret;
 
 		// Backward compatibility. Use sha256 for eToken with 256bits key
-		if (\Bitrix\Main\Text\String::getBinaryLength($this->secret) > 25)
+		if (\Bitrix\Main\Text\BinaryString::getLength($this->secret) > 25)
 			$this->digest = 'sha256';
 
 		return $this;
@@ -220,7 +220,7 @@ abstract class OtpAlgorithm
 	}
 
 	/**
-	 * Return used digest
+	 * Returns digest algorithm used to calculate the OTP.
 	 * Mostly used for generate provision URI
 	 *
 	 * @return string

@@ -485,6 +485,8 @@ class CSocNetTextParser
 
 	function convert_video($params, $path)
 	{
+		global $APPLICATION;
+
 		if (strLen($path) <= 0)
 			return "";
 
@@ -496,7 +498,7 @@ class CSocNetTextParser
 		$height = ($height > 0 ? $height : 300);
 
 		ob_start();
-		$GLOBALS["APPLICATION"]->IncludeComponent(
+		$APPLICATION->IncludeComponent(
 			"bitrix:player", "",
 			Array(
 				"PLAYER_TYPE" => "auto",
@@ -902,7 +904,7 @@ class CSocNetTextParser
 		{
 			$dbSite = CSite::GetByID(SITE_ID);
 			$arSite = $dbSite->Fetch();
-			$arParams["SERVER_NAME"] = $arSite["SERVER_NAME"];
+			$arParams["SERVER_NAME"] = htmlspecialcharsEx($arSite["SERVER_NAME"]);
 			if (strLen($arParams["SERVER_NAME"]) <=0)
 			{
 				if (defined("SITE_SERVER_NAME") && strlen(SITE_SERVER_NAME)>0)
@@ -984,7 +986,7 @@ class CSocNetTextParser
 		return $result;
 	}
 
-	function closetags($html)
+	public static function closetags($html)
 	{
 		$arNoClose = array('br','hr','img','area','base','basefont','col','frame','input','isindex','link','meta','param');
 
@@ -1210,20 +1212,24 @@ class CSocNetTools
 
 	function GetMyGroups()
 	{
+		global $USER;
+
 		$arGroupsMy = array();
 		$dbRequests = CSocNetUserToGroup::GetList(
 			array(),
 			array(
-				"USER_ID" 		=> $GLOBALS["USER"]->GetID(),
-				"<=ROLE" 		=> SONET_ROLES_USER,
-				"GROUP_ACTIVE"	=> "Y"
+				"USER_ID" => $USER->getId(),
+				"<=ROLE" => SONET_ROLES_USER,
+				"GROUP_ACTIVE" => "Y"
 			),
 			false,
 			false,
 			array("GROUP_ID")
 		);
 		while ($arRequests = $dbRequests->Fetch())
+		{
 			$arGroupsMy[] = $arRequests["GROUP_ID"];
+		}
 
 		return $arGroupsMy;
 	}
@@ -1253,13 +1259,15 @@ class CSocNetTools
 
 	function IsMyGroup($entity_id)
 	{
+		global $USER;
+
 		$is_my = false;
 		$dbRequests = CSocNetUserToGroup::GetList(
 			array(),
 			array(
-				"USER_ID" 		=> $GLOBALS["USER"]->GetID(),
-				"GROUP_ID" 		=> $entity_id,
-				"<=ROLE" 		=> SONET_ROLES_USER,
+				"USER_ID" => $USER->getId(),
+				"GROUP_ID" => $entity_id,
+				"<=ROLE" => SONET_ROLES_USER,
 			)
 		);
 		if ($arRequests = $dbRequests->Fetch())
@@ -1270,8 +1278,12 @@ class CSocNetTools
 
 	function GetMyUsers($user_id = false)
 	{
+		global $USER;
+
 		if (!$user_id)
-			$user_id = $GLOBALS["USER"]->GetID();
+		{
+			$user_id = $USER->getId();
+		}
 
 		$arUsersMy = false;
 		if (CSocNetUser::IsFriendsAllowed())
@@ -1290,10 +1302,12 @@ class CSocNetTools
 
 	function IsMyUser($entity_id)
 	{
+		global $USER;
+
 		$is_my = false;
 		if (
 			CSocNetUser::IsFriendsAllowed()
-			&& CSocNetUserRelations::IsFriends($GLOBALS["USER"]->GetID(), $entity_id)
+			&& CSocNetUserRelations::IsFriends($USER->getId(), $entity_id)
 		)
 			$is_my = true;
 
@@ -1307,6 +1321,8 @@ class CSocNetTools
 
 	public static function InitGlobalExtranetArrays($SITE_ID = SITE_ID)
 	{
+		global $USER;
+
 		if (
 			!isset($GLOBALS["arExtranetGroupID"])
 			|| !isset($GLOBALS["arExtranetUserID"])
@@ -1315,97 +1331,23 @@ class CSocNetTools
 			$GLOBALS["arExtranetGroupID"] = array();
 			$GLOBALS["arExtranetUserID"] = array();
 
-			if($GLOBALS["USER"]->IsAuthorized())
+			if($USER->IsAuthorized())
 			{
-				$ttl = (defined("BX_COMP_MANAGED_CACHE") ? 2592000 : 600);
-				$cache_id = 'sonet_ex_gr_'.$SITE_ID;
-				$obCache = new CPHPCache;
-				$cache_dir = '/bitrix/sonet_log_sg';
-
-				if($obCache->InitCache($ttl, $cache_id, $cache_dir))
-				{
-					$tmpVal = $obCache->GetVars();
-					$GLOBALS["arExtranetGroupID"] = $tmpVal['EX_GROUP_ID'];
-					$GLOBALS["arExtranetUserID"] = $tmpVal['EX_USER_ID'];
-					unset($tmpVal);
-				}
-				elseif (CModule::IncludeModule("extranet"))
-				{
-					global $CACHE_MANAGER;
-					if (defined("BX_COMP_MANAGED_CACHE"))
-					{
-						$CACHE_MANAGER->StartTagCache($cache_dir);
-					}
-
-					if (!CExtranet::IsExtranetSite())
-					{
-						$dbGroupTmp = CSocNetGroup::GetList(
-							array(),
-							array(
-								"SITE_ID" => CExtranet::GetExtranetSiteID()
-							),
-							false,
-							false,
-							array("ID")
-						);
-						while($arGroupTmp = $dbGroupTmp->Fetch())
-						{
-							$GLOBALS["arExtranetGroupID"][] = $arGroupTmp["ID"];
-							if (defined("BX_COMP_MANAGED_CACHE"))
-							{
-								$CACHE_MANAGER->RegisterTag('sonet_group_'.$arGroupTmp["ID"]);
-							}
-						}
-
-						if (defined("BX_COMP_MANAGED_CACHE"))
-						{
-							$CACHE_MANAGER->RegisterTag('sonet_group');
-						}
-					}
-
-					$rsUsers = CUser::GetList(
-						($by="ID"),
-						($order="asc"),
-						array(
-							"GROUPS_ID" => array(CExtranet::GetExtranetUserGroupID()),
-							"UF_DEPARTMENT" => false
-						),
-						array("FIELDS" => array("ID"))
-					);
-					while($arUser = $rsUsers->Fetch())
-					{
-						$GLOBALS["arExtranetUserID"][] = $arUser["ID"];
-						if (defined("BX_COMP_MANAGED_CACHE"))
-						{
-							$CACHE_MANAGER->RegisterTag('sonet_user2group');
-						}
-					}
-
-					if (defined("BX_COMP_MANAGED_CACHE"))
-					{
-						$CACHE_MANAGER->EndTagCache();
-					}
-
-					if($obCache->StartDataCache())
-					{
-						$obCache->EndDataCache(array(
-							'EX_GROUP_ID' => $GLOBALS["arExtranetGroupID"],
-							'EX_USER_ID' => $GLOBALS["arExtranetUserID"]
-						));
-					}
-				}
+				$GLOBALS["arExtranetGroupID"] = \Bitrix\Socialnetwork\ComponentHelper::getExtranetSonetGroupIdList();
+				$GLOBALS["arExtranetUserID"] = \Bitrix\Socialnetwork\ComponentHelper::getExtranetUserIdList();
 			}
 		}
 	}
 
 	public static function GetSubordinateGroups($userID = false)
 	{
+		global $USER;
 		static $arSubordinateGroupsByUser = array();
 
 		$userID = intval($userID);
 		if ($userID <= 0)
 		{
-			$userID = $GLOBALS["USER"]->GetID();
+			$userID = $USER->getId();
 		}
 
 		if ($userID <= 0)
@@ -1470,7 +1412,7 @@ class CSocNetAllowed
 		unset($arSocNetAllowedSubscribeEntityTypesDesc);
 	}
 
-	function AddAllowedEntityType($entityType)
+	public static function AddAllowedEntityType($entityType)
 	{
 		if (is_array($entityType))
 		{
@@ -1502,7 +1444,7 @@ class CSocNetAllowed
 		self::$arAllowedEntityTypes[] = $entityType;
 	}
 
-	function GetAllowedEntityTypes()
+	public static function GetAllowedEntityTypes()
 	{
 		self::RunEvents();
 		return self::$arAllowedEntityTypes;
@@ -1510,7 +1452,7 @@ class CSocNetAllowed
 
 	/* --- entity types desc --- */
 
-	function AddAllowedEntityTypeDesc($entityTypeDescCode, $arEntityTypeDesc)
+	public static function AddAllowedEntityTypeDesc($entityTypeDescCode, $arEntityTypeDesc)
 	{
 		$entityTypeDescCode = trim($entityTypeDescCode);
 
@@ -1534,7 +1476,7 @@ class CSocNetAllowed
 		self::$arAllowedEntityTypesDesc[$entityTypeDescCode] = $arEntityTypeDesc;
 	}
 
-	function GetAllowedEntityTypesDesc()
+	public static function GetAllowedEntityTypesDesc()
 	{
 		self::RunEvents();
 		return self::$arAllowedEntityTypesDesc;
@@ -1550,15 +1492,15 @@ class CSocNetAllowed
 		while ($arEvent = $events->Fetch())
 		{
 			ExecuteModuleEventEx($arEvent, array(&$newAllowedFeatures, SITE_ID));
-		}	
+		}
 
 		foreach($newAllowedFeatures as $strFeatureCode => $arFeature)
 		{
-			self::AddAllowedFeature($strFeatureCode, $arFeature);
+			self::addAllowedFeature($strFeatureCode, $arFeature);
 		}
 	}
 
-	function AddAllowedFeature($strFeatureCode, $arFeature)
+	public static function addAllowedFeature($strFeatureCode, $arFeature)
 	{
 		$strFeatureCode = trim($strFeatureCode);
 
@@ -1639,6 +1581,8 @@ class CSocNetAllowed
 				}
 			}
 		}
+
+		return true;
 	}
 
 	function UpdateAllowedFeature($strFeatureCode, $arFeature)
@@ -1672,9 +1616,11 @@ class CSocNetAllowed
 		}
 
 		self::$arAllowedFeatures[$strFeatureCode] = $arFeature;
+
+		return true;
 	}
 
-	function GetAllowedFeatures()
+	public static function GetAllowedFeatures()
 	{
 		self::RunEvents();
 		return self::$arAllowedFeatures;
@@ -1760,7 +1706,7 @@ class CSocNetAllowed
 		self::$arAllowedLogEvents[$strEventCode] = $arLogEvent;
 	}
 	
-	function GetAllowedLogEvents()
+	public static function GetAllowedLogEvents()
 	{
 		self::RunEvents();
 		return self::$arAllowedLogEvents;

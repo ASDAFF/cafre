@@ -7,6 +7,8 @@
  */
 
 use Bitrix\Main\Localization\CultureTable;
+use Bitrix\Main\Service\GeoIp;
+
 
 IncludeModuleLangFile(__FILE__);
 
@@ -76,6 +78,22 @@ class main extends CModule
 		{
 			$APPLICATION->ThrowException(implode("", $errors));
 			return false;
+		}
+
+		if (strtolower($DB->type) == 'mysql')
+		{
+			if($DB->Query("CREATE fulltext index IXF_B_USER_INDEX_1 on b_user_index (SEARCH_USER_CONTENT)", true))
+			{
+				\Bitrix\Main\UserTable::getEntity()->enableFullTextIndex("SEARCH_USER_CONTENT");
+			}
+			if($DB->Query("CREATE fulltext index IXF_B_USER_INDEX_2 on b_user_index (SEARCH_DEPARTMENT_CONTENT)", true))
+			{
+				\Bitrix\Main\UserTable::getEntity()->enableFullTextIndex("SEARCH_DEPARTMENT_CONTENT");
+			}
+			if($DB->Query("CREATE fulltext index IXF_B_USER_INDEX_3 on b_user_index (SEARCH_ADMIN_CONTENT)", true))
+			{
+				\Bitrix\Main\UserTable::getEntity()->enableFullTextIndex("SEARCH_ADMIN_CONTENT");
+			}
 		}
 
 		$this->InstallTasks();
@@ -358,11 +376,13 @@ class main extends CModule
 		RegisterModuleDependences("main", "OnUserTypeBuildList", "main", "CUserTypeDateTime", "GetUserTypeDescription", 140);
 		RegisterModuleDependences("main", "OnUserTypeBuildList", "main", "CUserTypeDate", "GetUserTypeDescription", 145);
 		RegisterModuleDependences("main", "OnUserTypeBuildList", "main", "CUserTypeBoolean", "GetUserTypeDescription", 150);
+		RegisterModuleDependences("main", "OnUserTypeBuildList", "main", "CUserTypeUrl", "GetUserTypeDescription", 155);
 		RegisterModuleDependences("main", "OnUserTypeBuildList", "main", "CUserTypeFile", "GetUserTypeDescription", 160);
 		RegisterModuleDependences("main", "OnUserTypeBuildList", "main", "CUserTypeEnum", "GetUserTypeDescription", 170);
 		RegisterModuleDependences("main", "OnUserTypeBuildList", "main", "CUserTypeIBlockSection", "GetUserTypeDescription", 180);
 		RegisterModuleDependences("main", "OnUserTypeBuildList", "main", "CUserTypeIBlockElement", "GetUserTypeDescription", 190);
 		RegisterModuleDependences("main", "OnUserTypeBuildList", "main", "CUserTypeStringFormatted", "GetUserTypeDescription", 200);
+		RegisterModuleDependences("main", "OnUserTypeBuildList", "main", "\\Bitrix\\Main\\UrlPreview\\UrlPreviewUserType", "getUserTypeDescription", 210);
 
 		RegisterModuleDependences("main", "OnBeforeEndBufferContent", "main", "\\Bitrix\\Main\\Analytics\\Counter", "onBeforeEndBufferContent");
 		RegisterModuleDependences("main", "OnBeforeRestartBuffer", "main", "\\Bitrix\\Main\\Analytics\\Counter", "onBeforeRestartBuffer");
@@ -391,22 +411,33 @@ class main extends CModule
 		COption::SetOptionString("main", "optimize_css_files", "Y");
 		COption::SetOptionString("main", "optimize_js_files", "Y");
 
-		CAgent::AddAgent("CEvent::CleanUpAgent();","main", "Y", 86400);
-		CAgent::AddAgent("CUser::CleanUpHitAuthAgent();","main", "Y", 86400);
+		CAgent::AddAgent("CEvent::CleanUpAgent();","main", "N", 86400);
+		CAgent::AddAgent("CUser::CleanUpHitAuthAgent();","main", "N", 86400);
 		CAgent::AddAgent("CCaptchaAgent::DeleteOldCaptcha(3600);","main", "N", 3600);
-		CAgent::AddAgent("CUndo::CleanUpOld();", "main", "Y", 86400);
+		CAgent::AddAgent("CUndo::CleanUpOld();", "main", "N", 86400);
+		CAgent::AddAgent("CUser::AuthActionsCleanUpAgent();", "main", "N", 86400, ConvertTimeStamp(strtotime(date('Y-m-d 04:15:00', time() + 86400)), 'FULL'));
 		if (!file_exists($_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/bitrix24'))
 			CAgent::AddAgent("CSiteCheckerTest::CommonTest();", "main", "N", 86400, "", "Y", ConvertTimeStamp(strtotime(date('Y-m-d 03:00:00', time() + 86400)), 'FULL'));
-
 		CAgent::AddAgent('\\Bitrix\\Main\\Analytics\\CounterDataTable::submitData();', "main", "N", 60);
 
-		RegisterModuleDependences("sale", "OnBasketAdd", "main", "\\Bitrix\\Main\\Analytics\\Catalog", "catchCatalogBasket");
-		RegisterModuleDependences("sale", "OnOrderSave", "main", "\\Bitrix\\Main\\Analytics\\Catalog", "catchCatalogOrder");
-		RegisterModuleDependences("sale", "OnSalePayOrder", "main", "\\Bitrix\\Main\\Analytics\\Catalog", "catchCatalogOrderPayment");
+		$eventManager = \Bitrix\Main\EventManager::getInstance();
+
+		$eventManager->registerEventHandler("sale", "OnSaleBasketItemSaved", "main", "\\Bitrix\\Main\\Analytics\\Catalog", "catchCatalogBasket");
+		$eventManager->registerEventHandler("sale", "OnSaleOrderSaved", "main", "\\Bitrix\\Main\\Analytics\\Catalog", "catchCatalogOrder");
+		$eventManager->registerEventHandler("sale", "OnSaleOrderPaid", "main", "\\Bitrix\\Main\\Analytics\\Catalog", "catchCatalogOrderPayment");
 
 		self::InstallDesktop();
 
 		self::InstallSmiles();
+
+		/* geolocation handlers */
+		if(function_exists('geoip_db_avail')) //if available php geoip extension
+		{
+			GeoIp\HandlerTable::add(array('SORT' => 90, 'ACTIVE' => 'Y', 'CLASS_NAME' => '\Bitrix\Main\Service\GeoIp\Extension'));
+		}
+
+		GeoIp\HandlerTable::add(array('SORT' => 100, 'ACTIVE' => 'N', 'CLASS_NAME' => '\Bitrix\Main\Service\GeoIp\MaxMind'));
+		GeoIp\HandlerTable::add(array('SORT' => 110, 'ACTIVE' => 'Y', 'CLASS_NAME' => '\Bitrix\Main\Service\GeoIp\SypexGeo'));
 
 		return true;
 	}
@@ -897,29 +928,34 @@ class main extends CModule
 								"ROW" => 1,
 								"HIDE" => "N"
 							),
-							"ADMIN_PERFMON@666666666" => array(
+							"ADMIN_SITESPEED@666666777" => array(
 								"COLUMN" => 1,
 								"ROW" => 2,
 								"HIDE" => "N"
 							),
+							"ADMIN_PERFMON@666666666" => array(
+								"COLUMN" => 1,
+								"ROW" => 3,
+								"HIDE" => "N"
+							),
 							"ADMIN_PRODUCTS@111111111" => array(
 								"COLUMN" => 1,
-								"ROW" => 5,
+								"ROW" => 65,
 								"HIDE" => "N"
 							),
 							"ADMIN_INFO@333333333" => array(
 								"COLUMN" => 1,
-								"ROW" => 6,
+								"ROW" => 7,
 								"HIDE" => "N"
 							),
 							"ADMIN_CHECKLIST@777888999" => array(
 								"COLUMN" => 1,
-								"ROW" => 7,
+								"ROW" => 8,
 								"HIDE" => "N",
 							),
 							"RSSREADER@777777777" => array(
 								"COLUMN" => 1,
-								"ROW" => 8,
+								"ROW" => 9,
 								"HIDE" => "N",
 								"SETTINGS" => array(
 									"TITLE_STD" => GetMessage("MAIN_DESKTOP_RSS_TITLE"),
@@ -934,12 +970,12 @@ class main extends CModule
 				{
 					$arOptions[0]["GADGETS"]["ADMIN_MARKETPALCE@22549"] = Array(
 						"COLUMN" => 1,
-						"ROW" => 3,
+						"ROW" => 4,
 						"HIDE" => "N",
 					);
 					$arOptions[0]["GADGETS"]["ADMIN_MOBILESHOP@13391"] = Array(
 						"COLUMN" => 1,
-						"ROW" => 4,
+						"ROW" => 5,
 						"HIDE" => "N"
 					);
 				}
@@ -990,9 +1026,14 @@ class main extends CModule
 								"ROW" => 1,
 								"HIDE" => "N"
 							),
-							"ADMIN_PERFMON@666666666" => array(
+							"ADMIN_SITESPEED@666666777" => array(
 								"COLUMN" => 1,
 								"ROW" => 2,
+								"HIDE" => "N"
+							),
+							"ADMIN_PERFMON@666666666" => array(
+								"COLUMN" => 1,
+								"ROW" => 3,
 								"HIDE" => "N"
 							),
 						)
@@ -1002,7 +1043,7 @@ class main extends CModule
 				{
 					$arOptions[0]["GADGETS"]["ADMIN_MARKETPALCE@22549"] = Array(
 						"COLUMN" => 1,
-						"ROW" => 3,
+						"ROW" => 4,
 						"HIDE" => "N",
 					);
 				}
@@ -1041,29 +1082,34 @@ class main extends CModule
 								"ROW" => 1,
 								"HIDE" => "N"
 							),
-							"ADMIN_PERFMON@666666666" => array(
+							"ADMIN_SITESPEED@666666777" => array(
 								"COLUMN" => 1,
 								"ROW" => 2,
 								"HIDE" => "N"
 							),
-							"ADMIN_PRODUCTS@111111111" => array(
+							"ADMIN_PERFMON@666666666" => array(
 								"COLUMN" => 1,
-								"ROW" => 5,
+								"ROW" => 3,
 								"HIDE" => "N"
 							),
-							"ADMIN_INFO@333333333" => array(
+							"ADMIN_PRODUCTS@111111111" => array(
 								"COLUMN" => 1,
 								"ROW" => 6,
 								"HIDE" => "N"
 							),
-							"ADMIN_CHECKLIST@777888999" => array(
+							"ADMIN_INFO@333333333" => array(
 								"COLUMN" => 1,
 								"ROW" => 7,
+								"HIDE" => "N"
+							),
+							"ADMIN_CHECKLIST@777888999" => array(
+								"COLUMN" => 1,
+								"ROW" => 8,
 								"HIDE" => "N",
 							),
 							"RSSREADER@777777777" => array(
 								"COLUMN" => 1,
-								"ROW" => 8,
+								"ROW" => 9,
 								"HIDE" => "N",
 								"SETTINGS" => array(
 									"TITLE_STD" => GetMessage("MAIN_DESKTOP_RSS_TITLE"),
@@ -1078,12 +1124,12 @@ class main extends CModule
 				{
 					$arOptions[0]["GADGETS"]["ADMIN_MARKETPALCE@22549"] = Array(
 						"COLUMN" => 1,
-						"ROW" => 3,
+						"ROW" => 4,
 						"HIDE" => "N",
 					);
 					$arOptions[0]["GADGETS"]["ADMIN_MOBILESHOP@13391"] = Array(
 						"COLUMN" => 1,
-						"ROW" => 4,
+						"ROW" => 5,
 						"HIDE" => "N"
 					);
 				}
@@ -1129,9 +1175,14 @@ class main extends CModule
 								"ROW" => 0,
 								"HIDE" => "N"
 							),
-							"ADMIN_PERFMON@666666666" => array(
+							"ADMIN_SITESPEED@666666777" => array(
 								"COLUMN" => 1,
 								"ROW" => 1,
+								"HIDE" => "N"
+							),
+							"ADMIN_PERFMON@666666666" => array(
+								"COLUMN" => 1,
+								"ROW" => 2,
 								"HIDE" => "N"
 							),
 						)
@@ -1141,7 +1192,7 @@ class main extends CModule
 				{
 					$arOptions[0]["GADGETS"]["ADMIN_MARKETPALCE@22549"] = Array(
 						"COLUMN" => 1,
-						"ROW" => 2,
+						"ROW" => 3,
 						"HIDE" => "N",
 					);
 				}
@@ -1336,6 +1387,13 @@ class main extends CModule
 				"DESCRIPTION" => GetMessage("MF_EVENT_DESCRIPTION"),
 				"SORT" => 7
 			);
+			$eventTypes[] = array(
+				'LID'         => $lid,
+				'EVENT_NAME'  => 'MAIN_MAIL_CONFIRM_CODE',
+				'NAME'        => getMessage('MAIN_MAIL_CONFIRM_EVENT_TYPE_NAME'),
+				'DESCRIPTION' => getMessage('MAIN_MAIL_CONFIRM_EVENT_TYPE_DESC'),
+				'SORT'        => 8,
+			);
 		}
 
 		$type = new CEventType;
@@ -1348,6 +1406,7 @@ class main extends CModule
 		$arMessages[] = array(
 			"EVENT_NAME" => "NEW_USER",
 			"LID" => "s1",
+			"LANGUAGE_ID" => LANGUAGE_ID,
 			"EMAIL_FROM" => "#DEFAULT_EMAIL_FROM#",
 			"EMAIL_TO" => "#DEFAULT_EMAIL_FROM#",
 			"SUBJECT" => GetMessage("MAIN_NEW_USER_EVENT_NAME"),
@@ -1356,6 +1415,7 @@ class main extends CModule
 		$arMessages[] = array(
 			"EVENT_NAME" => "USER_INFO",
 			"LID" => "s1",
+			"LANGUAGE_ID" => LANGUAGE_ID,
 			"EMAIL_FROM" => "#DEFAULT_EMAIL_FROM#",
 			"EMAIL_TO" => "#EMAIL#",
 			"SUBJECT" => GetMessage("MAIN_USER_INFO_EVENT_NAME"),
@@ -1364,6 +1424,7 @@ class main extends CModule
 		$arMessages[] = array(
 			"EVENT_NAME" => "USER_PASS_REQUEST",
 			"LID" => "s1",
+			"LANGUAGE_ID" => LANGUAGE_ID,
 			"EMAIL_FROM" => "#DEFAULT_EMAIL_FROM#",
 			"EMAIL_TO" => "#EMAIL#",
 			"SUBJECT" => GetMessage("MAIN_USER_PASS_REQUEST_EVENT_NAME"),
@@ -1372,6 +1433,7 @@ class main extends CModule
 		$arMessages[] = array(
 			"EVENT_NAME" => "USER_PASS_CHANGED",
 			"LID" => "s1",
+			"LANGUAGE_ID" => LANGUAGE_ID,
 			"EMAIL_FROM" => "#DEFAULT_EMAIL_FROM#",
 			"EMAIL_TO" => "#EMAIL#",
 			"SUBJECT" => GetMessage("MAIN_USER_PASS_CHANGED_EVENT_NAME"),
@@ -1380,6 +1442,7 @@ class main extends CModule
 		$arMessages[] = array(
 			"EVENT_NAME" => "NEW_USER_CONFIRM",
 			"LID" => "s1",
+			"LANGUAGE_ID" => LANGUAGE_ID,
 			"EMAIL_FROM" => "#DEFAULT_EMAIL_FROM#",
 			"EMAIL_TO" => "#EMAIL#",
 			"SUBJECT" => GetMessage("MAIN_NEW_USER_CONFIRM_EVENT_NAME"),
@@ -1388,6 +1451,7 @@ class main extends CModule
 		$arMessages[] = array(
 			"EVENT_NAME" => "USER_INVITE",
 			"LID" => "s1",
+			"LANGUAGE_ID" => LANGUAGE_ID,
 			"EMAIL_FROM" => "#DEFAULT_EMAIL_FROM#",
 			"EMAIL_TO" => "#EMAIL#",
 			"SUBJECT" => GetMessage("MAIN_USER_INVITE_EVENT_NAME"),
@@ -1396,10 +1460,21 @@ class main extends CModule
 		$arMessages[] = array(
 			"EVENT_NAME" => "FEEDBACK_FORM",
 			"LID" => "s1",
+			"LANGUAGE_ID" => LANGUAGE_ID,
 			"EMAIL_FROM" => "#DEFAULT_EMAIL_FROM#",
 			"EMAIL_TO" => "#EMAIL_TO#",
 			"SUBJECT" => GetMessage("MF_EVENT_SUBJECT"),
 			"MESSAGE" => GetMessage("MF_EVENT_MESSAGE")
+		);
+		$arMessages[] = array(
+			'EVENT_NAME'       => 'MAIN_MAIL_CONFIRM_CODE',
+			'LID'              => 's1',
+			'EMAIL_FROM'       => '#DEFAULT_EMAIL_FROM#',
+			'EMAIL_TO'         => '#EMAIL_TO#',
+			'SUBJECT'          => '#MESSAGE_SUBJECT#',
+			'MESSAGE'          => "<? EventMessageThemeCompiler::includeComponent('bitrix:main.mail.confirm', '', \$arParams); ?>",
+			'BODY_TYPE'        => 'html',
+			'SITE_TEMPLATE_ID' => 'mail_join',
 		);
 
 		$message = new CEventMessage;
@@ -1419,6 +1494,7 @@ class main extends CModule
 		CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/install/bitrix", $_SERVER["DOCUMENT_ROOT"]."/bitrix", true, true);
 		CopyDirFiles($_SERVER['DOCUMENT_ROOT']."/bitrix/modules/main/install/admin", $_SERVER['DOCUMENT_ROOT']."/bitrix/admin");
 		CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/install/tools", $_SERVER["DOCUMENT_ROOT"]."/bitrix/tools", true, true);
+		CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/install/services", $_SERVER["DOCUMENT_ROOT"]."/bitrix/services", true, true);
 		CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/install/images", $_SERVER["DOCUMENT_ROOT"]."/bitrix/images", true, true);
 		CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/install/js", $_SERVER["DOCUMENT_ROOT"]."/bitrix/js", true, true);
 		CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/install/themes", $_SERVER["DOCUMENT_ROOT"]."/bitrix/themes", true, true);

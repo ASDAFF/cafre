@@ -2,6 +2,7 @@
 class CAllUserCounter
 {
 	const ALL_SITES = '**';
+	const LIVEFEED_CODE = '**';
 	const SYSTEM_USER_ID = 0;
 
 	protected static $counters = false;
@@ -49,36 +50,6 @@ class CAllUserCounter
 			)
 			{
 				$arAll = $CACHE_MANAGER->Get("user_counter".$user_id);
-				if(is_array($arAll))
-				{
-					foreach($arAll as $arItem)
-					{
-						if (
-							$arItem["SITE_ID"] == $site_id
-							|| $arItem["SITE_ID"] == self::ALL_SITES
-						)
-						{
-							if (!isset(self::$counters[$user_id][$site_id][$arItem["CODE"]]))
-							{
-								self::$counters[$user_id][$site_id][$arItem["CODE"]] = 0;
-							}
-							self::$counters[$user_id][$site_id][$arItem["CODE"]] += $arItem["CNT"];
-
-							if (isset($arItem["LAST_DATE_TS"]))
-							{
-								if (!isset($arLastDate[$user_id]))
-								{
-									$arLastDate[$user_id] = array();
-								}
-								if (!isset($arLastDate[$user_id][$site_id]))
-								{
-									$arLastDate[$user_id][$site_id] = array();
-								}
-								$arLastDate[$user_id][$site_id][$arItem["CODE"]] = $arItem["LAST_DATE_TS"] - $diff;
-							}
-						}
-					}
-				}
 			}
 			else
 			{
@@ -92,17 +63,31 @@ class CAllUserCounter
 
 				while ($arRes = $dbRes->Fetch())
 				{
-					$code = (strpos($arRes["CODE"], "**") === 0 ? "**" : $arRes["CODE"]);
-					$arRes["CODE"] = $code;
-
+					$arRes["CODE"] = self::getGroupedCode($arRes["CODE"]);
 					$arAll[] = $arRes;
-					if ($arRes["SITE_ID"] == $site_id || $arRes["SITE_ID"] == self::ALL_SITES)
+				}
+
+				if (CACHED_b_user_counter !== false)
+				{
+					$CACHE_MANAGER->Set("user_counter".$user_id, $arAll);
+				}
+			}
+
+			if(is_array($arAll))
+			{
+				foreach($arAll as $arItem)
+				{
+					if (
+						$arItem["SITE_ID"] == $site_id
+						|| $arItem["SITE_ID"] == self::ALL_SITES
+					)
 					{
-						if (!isset(self::$counters[$user_id][$site_id][$arRes["CODE"]]))
+						if (!isset(self::$counters[$user_id][$site_id][$arItem["CODE"]]))
 						{
-							self::$counters[$user_id][$site_id][$arRes["CODE"]] = 0;
+							self::$counters[$user_id][$site_id][$arItem["CODE"]] = 0;
 						}
-						self::$counters[$user_id][$site_id][$arRes["CODE"]] += $arRes["CNT"];
+						self::$counters[$user_id][$site_id][$arItem["CODE"]] += $arItem["CNT"];
+
 						if (!isset($arLastDate[$user_id]))
 						{
 							$arLastDate[$user_id] = array();
@@ -111,12 +96,12 @@ class CAllUserCounter
 						{
 							$arLastDate[$user_id][$site_id] = array();
 						}
-						$arLastDate[$user_id][$site_id][$arRes["CODE"]] = $arRes["LAST_DATE_TS"]  - $diff;
+
+						if (isset($arItem["LAST_DATE_TS"]))
+						{
+							$arLastDate[$user_id][$site_id][$arItem["CODE"]] = $arItem["LAST_DATE_TS"] - $diff;
+						}
 					}
-				}
-				if (CACHED_b_user_counter !== false)
-				{
-					$CACHE_MANAGER->Set("user_counter".$user_id, $arAll);
 				}
 			}
 		}
@@ -152,10 +137,15 @@ class CAllUserCounter
 			$dbRes = $DB->Query($strSQL, false, "File: ".__FILE__."<br>Line: ".__LINE__);
 			$arAll = array();
 			while ($arRes = $dbRes->Fetch())
+			{
+				$arRes["CODE"] = self::getGroupedCode($arRes["CODE"]);
 				$arAll[] = $arRes;
+			}
 
 			if (CACHED_b_user_counter !== false)
+			{
 				$CACHE_MANAGER->Set("user_counter".$user_id, $arAll);
+			}
 		}
 
 		foreach($arAll as $arItem)
@@ -266,10 +256,13 @@ class CAllUserCounter
 			while ($row = $res->Fetch())
 				$arSites[] = $row['ID'];
 
+			$helper = \Bitrix\Main\Application::getConnection()->getSqlHelper();
+
 			$strSQL = "
 				SELECT pc.CHANNEL_ID, pc.CHANNEL_TYPE, uc.USER_ID, uc.SITE_ID, uc.CODE, uc.CNT
 				FROM b_user_counter uc
 				INNER JOIN b_pull_channel pc ON pc.USER_ID = uc.USER_ID
+				INNER JOIN b_user u ON u.ID = uc.USER_ID AND (CASE WHEN u.EXTERNAL_AUTH_ID IN ('".join("', '", \Bitrix\Main\UserTable::getExternalUserTypes())."') THEN 'Y' ELSE 'N' END) = 'N' AND u.LAST_ACTIVITY_DATE > ".$helper->addSecondsToDateTime('(-3600)')."
 				WHERE TAG = '".$DB->ForSQL($tag)."' AND CODE = '".$DB->ForSQL($code)."'
 				AND (SITE_ID = '".$site_id."' OR SITE_ID = '".self::ALL_SITES."')";
 
@@ -303,9 +296,10 @@ class CAllUserCounter
 
 			foreach ($pullMessage as $channelId => $arMessage)
 			{
-				CPullStack::AddByChannel($channelId, Array(
+				\Bitrix\Pull\Event::add($channelId, Array(
 					'module_id' => 'main',
 					'command'   => 'user_counter',
+					'expiry' 	=> 3600,
 					'params'    => $arMessage,
 				));
 			}
@@ -314,9 +308,12 @@ class CAllUserCounter
 		return true;
 	}
 
-	protected static function CheckLiveMode()
+	public static function CheckLiveMode()
 	{
-		return CModule::IncludeModule('pull') && CPullOptions::GetNginxStatus();
+		return (
+			CModule::IncludeModule('pull')
+			&& CPullOptions::GetNginxStatus()
+		);
 	}
 
 	protected static function SendPullEvent($user_id, $code = "", $bMultiple = false)
@@ -334,10 +331,12 @@ class CAllUserCounter
 			while ($row = $res->Fetch())
 				$arSites[] = $row['ID'];
 
+			$helper = \Bitrix\Main\Application::getConnection()->getSqlHelper();
 			$strSQL = "
 				SELECT pc.CHANNEL_ID, pc.CHANNEL_TYPE, uc.USER_ID, uc.SITE_ID, uc.CODE, uc.CNT
 				FROM b_user_counter uc
 				INNER JOIN b_pull_channel pc ON pc.USER_ID = uc.USER_ID
+				INNER JOIN b_user u ON u.ID = uc.USER_ID AND (CASE WHEN u.EXTERNAL_AUTH_ID IN ('".join("', '", \Bitrix\Main\UserTable::getExternalUserTypes())."') THEN 'Y' ELSE 'N' END) = 'N' AND u.LAST_ACTIVITY_DATE > ".$helper->addSecondsToDateTime('(-3600)')."
 				WHERE uc.USER_ID = ".intval($user_id).(
 					strlen($code) > 0
 					? (
@@ -380,9 +379,10 @@ class CAllUserCounter
 
 			foreach ($pullMessage as $channelId => $arMessage)
 			{
-				CPullStack::AddByChannel($channelId, Array(
+				\Bitrix\Pull\Event::add($channelId, Array(
 					'module_id' => 'main',
 					'command'   => 'user_counter',
+					'expiry' 	=> 3600,
 					'params'    => $arMessage,
 				));
 			}
@@ -391,7 +391,7 @@ class CAllUserCounter
 
 	public static function addValueToPullMessage($row, $arSites = array(), &$pullMessage = array())
 	{
-		$code = (strpos($row["CODE"], "**") === 0 ? "**" : $row["CODE"]);
+		$code = self::getGroupedCode($row["CODE"]);
 
 		if ($row['SITE_ID'] == self::ALL_SITES)
 		{
@@ -420,14 +420,59 @@ class CAllUserCounter
 		}
 	}
 
+	public static function getGroupedCounters($counters)
+	{
+		$result = array();
+
+		foreach ($counters as $siteId => $data)
+		{
+			$result[$siteId] = self::getGroupedCounterRecords($data);
+		}
+
+		return $result;
+	}
+
+	public static function getGroupedCounterRecords($records)
+	{
+		$result = array();
+
+		foreach ($records as $code => $value)
+		{
+			$code = self::getGroupedCode($code);
+
+			if (isset($result[$code]))
+			{
+				$result[$code] += $value;
+			}
+			else
+			{
+				$result[$code] = $value;
+			}
+		}
+
+		return $result;
+	}
+
+	private static function getGroupedCode($code)
+	{
+		$result = $code;
+
+		if (strpos($code, self::LIVEFEED_CODE) === 0)
+		{
+			$result = self::LIVEFEED_CODE;
+		}
+
+		return $result;
+	}
+
 	public static function OnSocNetLogCommentDelete($commentId)
 	{
-		CUserCounter::DeleteByCode("**LC".intval($commentId));
+		CUserCounter::DeleteByCode(self::LIVEFEED_CODE."LC".intval($commentId));
 	}
 
 	public static function OnSocNetLogDelete($logId)
 	{
-		CUserCounter::DeleteByCode("**L".intval($logId));
+		CUserCounter::DeleteByCode(self::LIVEFEED_CODE."L".intval($logId));
 	}
 
 	// legacy function
@@ -442,6 +487,91 @@ class CAllUserCounter
 	public static function GetLastDateByUserAndCode($user_id, $site_id = SITE_ID, $code = self::ALL_SITES)
 	{
 		return self::GetLastDate($user_id, $code, $site_id);
+	}
+
+	public static function DeleteOld()
+	{
+		global $DB;
+
+		$days = intval(\Bitrix\Main\Config\Option::get('main', 'user_counter_days', 20));
+
+		$time = $DB->CharToDateFunction(GetTime(time()- $days*60*60*24, "FULL"));
+		$DB->Query("DELETE FROM b_user_counter WHERE TIMESTAMP_X <= ".$time);
+
+		return "CUserCounter::DeleteOld();";
+	}
+}
+
+class CAllUserCounterPage
+{
+	protected static function setUserIdOption($value = false)
+	{
+//		\Bitrix\Main\Config\Option::set('main', 'user_counter_pull_page_start', $value);
+	}
+
+	protected static function getUserIdOption()
+	{
+//		return \Bitrix\Main\Config\Option::get('main', 'user_counter_pull_page_start', false);
+	}
+
+	public static function getPageSizeOption($defaultValue = 100)
+	{
+		$value = intval(\Bitrix\Main\Config\Option::get('main', 'user_counter_pull_page_size', $defaultValue));
+		if ($value <= 0)
+		{
+			$value = $defaultValue;
+		}
+
+		return $value;
+	}
+
+	public static function setNewEvent()
+	{
+		self::setUserIdOption(0);
+	}
+
+	protected static function getMinMax($prevMax = 0)
+	{
+		global $DB;
+
+		$pageSize = self::getPageSizeOption(100);
+
+		$strSQL = "
+				SELECT USER_ID
+				FROM b_user_counter uc
+				WHERE SENT = '0' AND USER_ID > ".intval($prevMax)."
+				GROUP BY USER_ID
+				ORDER BY USER_ID ASC
+				LIMIT ".$pageSize."
+			";
+
+		$res = $DB->query($strSQL, false, "FILE: ".__FILE__."<br> LINE: ".__LINE__);
+
+		$i = 0;
+		while($row = $res->fetch())
+		{
+			if (!$i)
+			{
+				$minValue = $row["USER_ID"];
+			}
+			else
+			{
+				$maxValue = $row["USER_ID"];
+			}
+			$i++;
+		}
+
+		if ($i)
+		{
+			return array(
+				"MIN" => intval($minValue),
+				"MAX" => intval($maxValue)
+			);
+		}
+		else
+		{
+			return false;
+		}
 	}
 }
 ?>

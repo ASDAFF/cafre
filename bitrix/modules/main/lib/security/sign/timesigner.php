@@ -10,8 +10,55 @@ use Bitrix\Main\ArgumentTypeException;
  * @package Bitrix\Main\Security\Sign
  */
 class TimeSigner
-	extends Signer
 {
+	/** @var Signer */
+	protected $signer = null;
+
+	/**
+	 * Creates new TimeSigner object. If you want use your own signing algorithm - you can this
+	 *
+	 * @param SigningAlgorithm $algorithm Custom signing algorithm.
+	 */
+	public function __construct(SigningAlgorithm $algorithm = null)
+	{
+		$this->signer = new Signer($algorithm);
+	}
+
+	/**
+	 * Set key for signing
+	 *
+	 * @param string $value Key.
+	 * @return $this
+	 * @throws \Bitrix\Main\ArgumentTypeException
+	 */
+	public function setKey($value)
+	{
+		$this->signer->setKey($value);
+		return $this;
+	}
+
+	/**
+	 * Return separator, used for packing/unpacking
+	 *
+	 * @return string
+	 */
+	public function getSeparator()
+	{
+		return $this->signer->getSeparator();
+	}
+
+	/**
+	 * Set separator, used for packing/unpacking
+	 *
+	 * @param string $value Separator.
+	 * @return $this
+	 * @throws \Bitrix\Main\ArgumentTypeException
+	 */
+	public function setSeparator($value)
+	{
+		$this->signer->setSeparator($value);
+		return $this;
+	}
 
 	/**
 	 * Sign message with expired time, return string in format:
@@ -37,7 +84,6 @@ class TimeSigner
 		$signature = $this->getSignature($value, $timestamp, $salt);
 		return $this->pack(array($value, $timestamp, $signature));
 	}
-
 
 	/**
 	 * Check message signature and it lifetime. If everything is OK - return original message.
@@ -80,7 +126,7 @@ class TimeSigner
 	 */
 	public function unsign($signedValue, $salt = null)
 	{
-		$timedValue = parent::unsign($signedValue, $salt);
+		$timedValue = $this->signer->unsign($signedValue, $salt);
 
 		if (strpos($signedValue, $timedValue) === false)
 			throw new BadSignatureException('Timestamp missing');
@@ -112,7 +158,7 @@ class TimeSigner
 			throw new ArgumentTypeException('value', 'string');
 
 		$timedValue = $this->pack(array($value, $timestamp));
-		return parent::getSignature($timedValue, $salt);
+		return $this->signer->getSignature($timedValue, $salt);
 	}
 
 	/**
@@ -166,5 +212,41 @@ class TimeSigner
 			throw new ArgumentException(sprintf('Timestamp %d must be greater than now()', $timestamp));
 
 		return $timestamp;
+	}
+
+	/**
+	 * Pack array values to single string:
+	 * pack(['test', 'all', 'values']) -> 'test.all.values'
+	 *
+	 * @param array $values Values for packing.
+	 * @return string
+	 */
+	public function pack(array $values)
+	{
+		return $this->signer->pack($values);
+	}
+
+	/**
+	 * Unpack values from string (something like rsplit).
+	 * Simple example for separator ".":
+	 * <code>
+	 *  // Unpack all values:
+	 *  unpack('test.all.values', 0) -> ['test', 'all', 'values']
+	 *
+	 *  // Unpack 2 values (by default). First element containing the rest of string.
+	 *  unpack('test.all.values') -> ['test.all', 'values']
+	 *
+	 *  // Exception if separator is missing
+	 *  unpack('test.all values', 3) -> throws BadSignatureException
+	 * </code>
+	 *
+	 * @param string $value String for unpacking.
+	 * @param int $limit If $limit === 0 - unpack all values, default - 2.
+	 * @return array
+	 * @throws BadSignatureException
+	 */
+	public function unpack($value, $limit = 2)
+	{
+		return $this->signer->unpack($value, $limit);
 	}
 }

@@ -1,22 +1,22 @@
 function BXBannerTemplate(oConfig)
 {
-    this.oConfig = oConfig;
-    this.MESS = oConfig.lang;
-    this.templates = {};
-    this.templatesExtended = {};
-    this.oldTemplates = {};
-    this.tPosition = {};
-    this.tCount = {};
-    this.aNames = [];
-    this.canAdd = {};
-    this.canEdit = oConfig.canEdit || false;
-    this.nType = BX('banner_type');
-    this.nComponentHead = BX('eTemplateComponentHead');
-    this.nComponent = BX('eTemplateComponent');
-    this.nAddTemplate = BX('eAddTemplateBanner');
-    this.nTemplateProperties = BX('eTemplateProperties');
-    this.nBannerContainer = BX('ADV_BANNER_PROPERTIES_CONTAINER');
-    this.nExtMode = BX('EXTENDED_MODE');
+	this.oConfig = oConfig;
+	this.MESS = oConfig.lang;
+	this.templates = {};
+	this.templatesExtended = {};
+	this.oldTemplates = {};
+	this.tPosition = {};
+	this.tCount = {};
+	this.aNames = [];
+	this.canAdd = {};
+	this.canEdit = oConfig.canEdit || false;
+	this.nType = BX('banner_type');
+	this.nComponentHead = BX('eTemplateComponentHead');
+	this.nComponent = BX('eTemplateComponent');
+	this.nAddTemplate = BX('eAddTemplateBanner');
+	this.nTemplateProperties = BX('eTemplateProperties');
+	this.nBannerContainer = BX('ADV_BANNER_PROPERTIES_CONTAINER');
+	this.nExtMode = BX('EXTENDED_MODE');
 }
 
 BXBannerTemplate.prototype =
@@ -165,29 +165,29 @@ BXBannerTemplate.prototype =
                             display: 'none'
                         },
                         children: [
-                                    BX.create('table', {
+                            BX.create('table', {
+                                props: {
+                                    className: 'internal'
+                                },
+                                style: {
+                                    width: '100%',
+                                    marginBottom: '10px'
+                                },
+                                children: [
+                                    BX.create('thead', {
                                         props: {
-                                            className: 'internal'
-                                        },
-                                        style: {
-                                            width: '100%',
-                                            marginBottom: '10px'
-                                        },
-                                        children: [
-                                            BX.create('thead', {
-                                                props: {
-                                                    className: 'adv-banner-thead'
-                                                }
-                                            }),
-                                            BX.create('tbody', {
-                                                props: {
-                                                    className: 'adv-banner-tbody'
-                                                }
-                                            })
-                                        ]
+                                            className: 'adv-banner-thead'
+                                        }
+                                    }),
+                                    BX.create('tbody', {
+                                        props: {
+                                            className: 'adv-banner-tbody'
+                                        }
                                     })
                                 ]
-                            });
+                            })
+                        ]
+                    });
 
                 var targetNode = cleanNode.firstChild.firstChild,
                     positions = this.tPosition[name];
@@ -618,17 +618,17 @@ BXBannerTemplate.prototype =
     createTemplatePropHead: function (a)
     {
         var del = this.canEdit && this.canAdd[this.getName()] ? BX.create('span', {
-            props: {
-                className: 'adv-banner-delete-button',
-                title: this.MESS.DELETE
-            },
-            style: {
-                float: 'right',
-                marginRight: '10px',
-                cursor: 'pointer'
-            },
-            text: 'x'
-        }) : {};
+                props: {
+                    className: 'adv-banner-delete-button',
+                    title: this.MESS.DELETE
+                },
+                style: {
+                    float: 'right',
+                    marginRight: '10px',
+                    cursor: 'pointer'
+                },
+                text: 'x'
+            }) : {};
         return BX.create('tr', {
             props: {
                 id: 'eTemplatePropsHead' + a,

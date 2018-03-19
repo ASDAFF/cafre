@@ -703,18 +703,7 @@ foreach($arResult["OPTIONS"]["views"] as $view_id=>$view):
 endforeach;
 ?>
 	{'SEPARATOR': true},
-	{'TEXT': '<?=CUtil::JSEscape(GetMessage("interface_grid_views"))?>', 'TITLE': '<?=CUtil::JSEscape(GetMessage("interface_grid_views_mnu_title"))?>', 'ONCLICK':'bxGrid_<?=$arParams["GRID_ID"]?>.ShowViews()', 'DISABLED':<?=($USER->IsAuthorized()? 'false':'true')?>, 'ICONCLASS':'grid-views'},
-	{'TEXT': '<?=CUtil::JSEscape(GetMessage("interface_grid_colors"))?>', 'TITLE': '<?=CUtil::JSEscape(GetMessage("interface_grid_colors_title"))?>', 'CLASS': 'bx-grid-themes-menu-item', 'MENU':[
-<?
-$i = 0;
-foreach($arThemes as $theme):
-?>
-		<?if($i > 0) echo ','?>{'TEXT': '<?=CUtil::JSEscape($theme["name"])?><?if($theme["theme"] == $arResult["GLOBAL_OPTIONS"]["theme"]) echo ' '.CUtil::JSEscape(GetMessage("interface_grid_default"))?>', 'ONCLICK': 'bxGrid_<?=$arParams["GRID_ID"]?>.SetTheme(this, \'<?=CUtil::JSEscape($theme["theme"])?>\')'<?if($theme["theme"] == $arResult["OPTIONS"]["theme"] || $theme["theme"] == "grey" && $arResult["OPTIONS"]["theme"] == ''):?>, 'ICONCLASS':'checked'<?endif?>}
-<?
-	$i++;
-endforeach;
-?>
-	], 'DISABLED':<?=($USER->IsAuthorized()? 'false':'true')?>, 'ICONCLASS':'grid-themes'}
+	{'TEXT': '<?=CUtil::JSEscape(GetMessage("interface_grid_views"))?>', 'TITLE': '<?=CUtil::JSEscape(GetMessage("interface_grid_views_mnu_title"))?>', 'ONCLICK':'bxGrid_<?=$arParams["GRID_ID"]?>.ShowViews()', 'DISABLED':<?=($USER->IsAuthorized()? 'false':'true')?>, 'ICONCLASS':'grid-views'}
 ];
 <?
 $isAjaxRequest = isset($_REQUEST['bxajaxid']) || isset($_REQUEST['AJAX_CALL']);

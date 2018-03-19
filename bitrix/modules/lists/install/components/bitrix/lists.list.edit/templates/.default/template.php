@@ -1,9 +1,21 @@
 <?
-if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)
-	die();
+if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) die();
 
-$arToolbar = array();
+/** @var array $arParams */
+/** @var array $arResult */
+/** @global CMain $APPLICATION */
+/** @global CUser $USER */
+/** @global CDatabase $DB */
+/** @var CBitrixComponentTemplate $this */
+/** @var string $templateName */
+/** @var string $templateFile */
+/** @var string $templateFolder */
+/** @var string $componentPath */
+/** @var CBitrixComponent $component */
 
+CJSCore::Init(array('lists', 'popup'));
+
+$jsClass = 'ListsEditClass_'.$arResult['RAND_STRING'];
 if($arParams["IBLOCK_TYPE_ID"] == COption::GetOptionString("lists", "livefeed_iblock_type_id"))
 {
 	$processes = true;
@@ -15,48 +27,67 @@ else
 	$typeTranslation = '';
 }
 
+$listAction = array();
 if($arResult["IBLOCK_ID"])
 {
-	$arToolbar[] = array(
-		"TEXT"=>GetMessage("CT_BLLE_TOOLBAR_FIELDS".$typeTranslation),
-		"TITLE"=>GetMessage("CT_BLLE_TOOLBAR_FIELDS".$typeTranslation),
-		"LINK"=>$arResult["LIST_FIELDS_URL"],
-		"ICON"=>"btn-view-fields",
+	$listAction[] = array(
+		"id" => 'deleteList',
+		"text" => GetMessage("CT_BLLE_TOOLBAR_DELETE".$typeTranslation),
+		"action"=>"BX.Lists['".$jsClass."'].deleteIblock('". CUtil::JSEscape("form_".$arResult["FORM_ID"])."', '".
+			GetMessage("CT_BLLE_TOOLBAR_DELETE_WARNING".$typeTranslation)."')",
 	);
-	$arToolbar[] = array(
-		"TEXT"=>GetMessage("CT_BLLE_TOOLBAR_DELETE".$typeTranslation),
-		"TITLE"=>GetMessage("CT_BLLE_TOOLBAR_DELETE_TITLE".$typeTranslation),
-		"LINK"=>"javascript:jsDelete('".CUtil::JSEscape("form_".$arResult["FORM_ID"])."', '".GetMessage("CT_BLLE_TOOLBAR_DELETE_WARNING".$typeTranslation)."')",
-		"ICON"=>"btn-delete-list",
-	);
-	$arToolbar[] = array(
-		"SEPARATOR"=>"Y",
-	);
-	$arToolbar[] = array(
-		"TEXT"=>$arResult["IBLOCK"]["ELEMENTS_NAME"],
-		"TITLE"=>GetMessage("CT_BLLE_TOOLBAR_LIST_TITLE"),
-		"LINK"=>$arResult["LIST_URL"],
-		"ICON"=>"btn-view-elements",
-	);
+
 	if(!$processes && IsModuleInstalled('intranet') && !$arParams["SOCNET_GROUP_ID"])
-		$arToolbar[] = array(
-			"TEXT"=>GetMessage("CT_BLLE_TOOLBAR_MIGRATE_PROCESSES"),
-			"TITLE"=>GetMessage("CT_BLLE_TOOLBAR_MIGRATE_PROCESSES"),
-			"LINK"=>"javascript:jsMigrate('".CUtil::JSEscape("form_".$arResult["FORM_ID"])."', '".GetMessage("CT_BLLE_TOOLBAR_MIGRATE_WARNING_PROCESS")."')",
-			"ICON"=>"btn-delete-list",
+	{
+		$listAction[] = array(
+			"id" => 'migrateList',
+			"text" => GetMessage("CT_BLLE_TOOLBAR_MIGRATE_PROCESSES"),
+			"action"=>"BX.Lists['".$jsClass."'].migrateList('".CUtil::JSEscape("form_".$arResult["FORM_ID"])."', '".
+				GetMessage("CT_BLLE_TOOLBAR_MIGRATE_WARNING_PROCESS")."')",
 		);
+	}
+	$listAction[] = array(
+		"id" => 'copyList',
+		"text" => GetMessage("CT_BLLE_TOOLBAR_LIST_COPY".$typeTranslation),
+		"action" => "BX.Lists['".$jsClass."'].copyIblock()",
+	);
+
+	$listAction[] = array(
+		"id" => 'fieldSettings',
+		"text" => GetMessage("CT_BLLE_TOOLBAR_FIELDS_TITLE".$typeTranslation),
+		"action" => 'document.location.href="'.$arResult["LIST_FIELDS_URL"].'"',
+	);
 }
 
-if(count($arToolbar))
+$isBitrix24Template = (SITE_TEMPLATE_ID == "bitrix24");
+$pagetitleAlignRightContainer = "lists-align-right-container";
+if($isBitrix24Template)
 {
-	$APPLICATION->IncludeComponent(
-		"bitrix:main.interface.toolbar",
-		"",
-		array(
-			"BUTTONS"=>$arToolbar,
-		),
-		$component, array("HIDE_ICONS" => "Y")
-	);
+	$this->SetViewTarget("pagetitle", 100);
+	$pagetitleAlignRightContainer = "";
+}
+elseif(!IsModuleInstalled("intranet"))
+{
+	$APPLICATION->SetAdditionalCSS("/bitrix/js/lists/css/intranet-common.css");
+}
+?>
+<div class="pagetitle-container pagetitle-align-right-container <?=$pagetitleAlignRightContainer?>">
+	<?if($arResult["IBLOCK_ID"]):?>
+	<a href="<?=$arResult["LIST_URL"]?>" class="lists-list-back">
+		<?=GetMessage("CT_BLLE_TOOLBAR_RETURN_LIST_ELEMENT")?>
+	</a>
+	<?endif;?>
+	<?if($listAction):?>
+	<span id="lists-title-action" class="webform-small-button webform-small-button-transparent bx-filter-button">
+		<span class="webform-small-button-text"><?=GetMessage("CT_BLLE_TOOLBAR_ACTION")?></span>
+		<span id="lists-title-action-icon" class="webform-small-button-icon"></span>
+	</span>
+	<?endif;?>
+</div>
+<?
+if($isBitrix24Template)
+{
+	$this->EndViewTarget();
 }
 
 ob_start();
@@ -69,9 +100,7 @@ IBlockShowRights(
 	/*$arPossibleRights=*/$arResult["TASKS"],
 	/*$arActualRights=*/$arResult["RIGHTS"],
 	/*$bDefault=*/true,
-	/*$bForceInherited=*/false,
-	/*$arSelected=*/$arResult["SELECTED"],
-	/*$arHighLight=*/$arResult["HIGHLIGHT"]
+	/*$bForceInherited=*/false
 );
 $rights_html = ob_get_contents();
 ob_end_clean();
@@ -121,6 +150,8 @@ else
 		);
 }
 
+$backUrl = $arResult["IBLOCK"] ? $arResult["~LIST_URL"] : $arResult["~LISTS_URL"];
+
 $APPLICATION->IncludeComponent(
 	"bitrix:main.interface.form",
 	"",
@@ -148,11 +179,41 @@ $APPLICATION->IncludeComponent(
 				"fields"=>$rights_fields,
 			),
 		),
-		"BUTTONS"=>array("back_url"=>$arResult["~LISTS_URL"], "custom_html"=>$custom_html),
+		"BUTTONS"=>array("back_url"=>$backUrl, "custom_html"=>$custom_html),
 		"DATA"=>$arResult["FORM_DATA"],
 		"SHOW_SETTINGS"=>"N",
 		"THEME_GRID_ID"=>$arResult["GRID_ID"],
 	),
 	$component, array("HIDE_ICONS" => "Y")
 );
+
+$socnetGroupId = $arParams["SOCNET_GROUP_ID"] ? $arParams["SOCNET_GROUP_ID"] : 0;
 ?>
+
+<script type="text/javascript">
+	BX(function () {
+		BX.Lists['<?=$jsClass?>'] = new BX.Lists.ListsEditClass({
+			randomString: '<?=$arResult['RAND_STRING']?>',
+			iblockTypeId: '<?=$arParams["IBLOCK_TYPE_ID"]?>',
+			iblockId: '<?=$arResult["IBLOCK_ID"]?>',
+			socnetGroupId: '<?=$socnetGroupId?>',
+			listsUrl: '<?=CUtil::JSEscape($arResult["LISTS_URL"])?>',
+			listAction: <?=\Bitrix\Main\Web\Json::encode($listAction)?>,
+			listTemplateEditUrl: '<?=$arParams["LIST_EDIT_URL"]?>'
+		});
+
+		BX.message({
+			CT_BLLE_TOOLBAR_LIST_COPY_BUTTON_TITLE: '<?=GetMessageJS("CT_BLLE_TOOLBAR_LIST_COPY_BUTTON_TITLE")?>',
+			CT_BLLE_MIGRATE_POPUP_TITLE: '<?=GetMessageJS("CT_BLLE_MIGRATE_POPUP_TITLE")?>',
+			CT_BLLE_MIGRATE_POPUP_ACCEPT_BUTTON: '<?=GetMessageJS("CT_BLLE_MIGRATE_POPUP_ACCEPT_BUTTON")?>',
+			CT_BLLE_MIGRATE_POPUP_CANCEL_BUTTON: '<?=GetMessageJS("CT_BLLE_MIGRATE_POPUP_CANCEL_BUTTON")?>',
+			CT_BLLE_DELETE_POPUP_TITLE: '<?=GetMessageJS("CT_BLLE_DELETE_POPUP_TITLE")?>',
+			CT_BLLE_DELETE_POPUP_ACCEPT_BUTTON: '<?=GetMessageJS("CT_BLLE_DELETE_POPUP_ACCEPT_BUTTON")?>',
+			CT_BLLE_DELETE_POPUP_CANCEL_BUTTON: '<?=GetMessageJS("CT_BLLE_DELETE_POPUP_CANCEL_BUTTON")?>',
+			CT_BLLE_COPY_POPUP_TITLE: '<?=GetMessageJS("CT_BLLE_COPY_POPUP_TITLE")?>',
+			CT_BLLE_COPY_POPUP_CONTENT: '<?=GetMessageJS("CT_BLLE_COPY_POPUP_CONTENT")?>',
+			CT_BLLE_COPY_POPUP_ACCEPT_BUTTON: '<?=GetMessageJS("CT_BLLE_COPY_POPUP_ACCEPT_BUTTON")?>',
+			CT_BLLE_COPY_POPUP_CANCEL_BUTTON: '<?=GetMessageJS("CT_BLLE_COPY_POPUP_CANCEL_BUTTON")?>'
+		});
+	});
+</script>

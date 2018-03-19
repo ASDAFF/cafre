@@ -1,4 +1,4 @@
-<?
+<?php
 IncludeModuleLangFile(__FILE__);
 
 class CAllClusterDBNode
@@ -71,7 +71,7 @@ class CAllClusterDBNode
 		return $ID;
 	}
 
-	function Delete($ID, $bStopSlave = true)
+	public static function Delete($ID, $bStopSlave = true)
 	{
 		global $DB, $CACHE_MANAGER;
 		$ID = intval($ID);
@@ -402,4 +402,3 @@ class CAllClusterDBNode
 		);
 	}
 }
-?>

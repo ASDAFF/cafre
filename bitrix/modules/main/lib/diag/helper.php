@@ -25,6 +25,11 @@ class Helper
 	 */
 	public static function getBackTrace($limit = 0, $options = null, $skip = 1)
 	{
+		if(!defined("DEBUG_BACKTRACE_PROVIDE_OBJECT"))
+		{
+			define("DEBUG_BACKTRACE_PROVIDE_OBJECT", 1);
+		}
+
 		if ($options === null)
 		{
 			$options = ~DEBUG_BACKTRACE_PROVIDE_OBJECT;

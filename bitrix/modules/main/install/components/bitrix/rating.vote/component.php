@@ -71,7 +71,7 @@ if (!(isset($arParams['TEMPLATE_HIDE']) && $arParams['TEMPLATE_HIDE'] == 'Y'))
 		define("MAIN_RATING_VOTE_JS_INCLUDE", true);
 
 		if (!$isMobileLog)
-			echo CJSCore::Init(array('popup', 'ajax'), true);
+			CJSCore::Init(array('popup', 'ajax'));
 
 		if (!$isMobileLog)
 		{

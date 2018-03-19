@@ -19,4 +19,6 @@ $MESS["LISTS_CANCEL_BUTTON_INSTALL"] = "Установить";
 $MESS["LISTS_TITLE_POPUP_MARKETPLACE"] = "Каталог Бизнес процессов";
 $MESS["LISTS_MARKETPLACE_TITLE_SYSTEM_PROCESSES"] = "Системные процессы";
 $MESS["LISTS_MARKETPLACE_TITLE_USER_PROCESSES"] = "Пользовательские процессы";
+$MESS["LISTS_DESIGNER_POPUP_TITLE"] = "Список шаблонов";
+$MESS["LISTS_DESIGNER_POPUP_DESCRIPTION"] = "У вас создано несколько шаблонов, выберите в какой именно дизайнер Бизнес-процесса перейти.";
 ?>

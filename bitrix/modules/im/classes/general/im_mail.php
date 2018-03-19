@@ -19,6 +19,12 @@ class CIMMail
 			if (!isset($arMark[$arNotify["CHAT_ID"]]) || $arMark[$arNotify["CHAT_ID"]] < $arNotify["ID"])
 				$arMark[$arNotify["CHAT_ID"]] = $arNotify["ID"];
 
+			if ($arNotify['TO_EXTERNAL_AUTH_ID'] == \Bitrix\Im\Bot::EXTERNAL_AUTH_ID || $arNotify['TO_EXTERNAL_AUTH_ID'] == "network")
+			{
+				unset($arUnsendNotify[$id]);
+				continue;
+			}
+
 			if ($arNotify['TO_USER_ACTIVE'] != 'Y')
 			{
 				unset($arUnsendNotify[$id]);
@@ -59,11 +65,20 @@ class CIMMail
 					"SECOND_NAME"	=> $arNotify["TO_USER_SECOND_NAME"],
 					"LOGIN"		=> $arNotify["TO_USER_LOGIN"]), true));
 
-			$arNotify["FROM_USER"] = htmlspecialcharsback(CUser::FormatName(CSite::GetNameFormat(false),
-				array("NAME" 		=> $arNotify["FROM_USER_NAME"],
-					"LAST_NAME" 	=> $arNotify["FROM_USER_LAST_NAME"],
-					"SECOND_NAME"	=> $arNotify["FROM_USER_SECOND_NAME"],
-					"LOGIN"		=> $arNotify["FROM_USER_LOGIN"]), true));
+			if ($arNotify["FROM_USER_ID"] == 0)
+			{
+				$arNotify["FROM_USER"] = GetMessage('IM_MAIL_USER_SYSTEM');
+			}
+			else
+			{
+				$arNotify["FROM_USER"] = htmlspecialcharsback(CUser::FormatName(CSite::GetNameFormat(false),
+					array("NAME" 		=> $arNotify["FROM_USER_NAME"],
+						"LAST_NAME" 	=> $arNotify["FROM_USER_LAST_NAME"],
+						"SECOND_NAME"	=> $arNotify["FROM_USER_SECOND_NAME"],
+						"LOGIN"		=> $arNotify["FROM_USER_LOGIN"]
+					), true)
+				);
+			}
 
 			$arNotify['NOTIFY_TAG_MD5'] = md5($arNotify["TO_USER_ID"].'|'.$arNotify['NOTIFY_TAG']);
 			$arUnsendNotify[$id] = $arNotify;
@@ -146,6 +161,12 @@ class CIMMail
 			if (!isset($arMark[$arMessage["TO_USER_ID"]][$arMessage["CHAT_ID"]]) || $arMark[$arMessage["TO_USER_ID"]][$arMessage["CHAT_ID"]] < $arMessage["ID"])
 				$arMark[$arMessage["TO_USER_ID"]][$arMessage["CHAT_ID"]] = $arMessage["ID"];
 
+			if ($arMessage['TO_EXTERNAL_AUTH_ID'] == \Bitrix\Im\Bot::EXTERNAL_AUTH_ID || $arMessage['TO_EXTERNAL_AUTH_ID'] == "network")
+			{
+				unset($arUnsendMessage[$id]);
+				continue;
+			}
+
 			if ($arMessage['TO_USER_ACTIVE'] != 'Y')
 			{
 				unset($arUnsendMessage[$id]);
@@ -196,11 +217,20 @@ class CIMMail
 			}
 			if (!isset($arFromUser[$arMessage["FROM_USER_ID"]]))
 			{
-				$arMessage["FROM_USER"] = htmlspecialcharsback(CUser::FormatName(CSite::GetNameFormat(false),
-					array("NAME" 		=> $arMessage["FROM_USER_NAME"],
-						"LAST_NAME" 	=> $arMessage["FROM_USER_LAST_NAME"],
-						"SECOND_NAME"	=> $arMessage["FROM_USER_SECOND_NAME"],
-						"LOGIN"			=> $arMessage["FROM_USER_LOGIN"]), true));
+				if ($arMessage["FROM_USER_ID"] == 0)
+				{
+					$arMessage["FROM_USER"] = GetMessage('IM_MAIL_USER_SYSTEM');
+				}
+				else
+				{
+					$arMessage["FROM_USER"] = htmlspecialcharsback(CUser::FormatName(CSite::GetNameFormat(false),
+						array("NAME" 		=> $arMessage["FROM_USER_NAME"],
+							"LAST_NAME" 	=> $arMessage["FROM_USER_LAST_NAME"],
+							"SECOND_NAME"	=> $arMessage["FROM_USER_SECOND_NAME"],
+							"LOGIN"			=> $arMessage["FROM_USER_LOGIN"]
+						), true)
+					);
+				}
 
 				$arFromUser[$arMessage["FROM_USER_ID"]] = Array(
 					"FROM_USER" => $arMessage["FROM_USER"],

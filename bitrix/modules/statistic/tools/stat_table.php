@@ -6,7 +6,7 @@ class CCityLookup_stat_table extends CCityLookup
 	var $country_avail = false;
 	var $city_avail = false;
 
-	function OnCityLookup($arDBRecord = false)
+	public static function OnCityLookup($arDBRecord = false)
 	{
 		return new CCityLookup_stat_table($arDBRecord);
 	}

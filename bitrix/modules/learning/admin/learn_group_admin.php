@@ -136,7 +136,7 @@ while($arRes = $rsData->NavNext(true, "f_"))
 	$row->AddViewField(
 		"COURSE_TITLE",
 		'<a href="learn_unilesson_admin.php?lang=' . LANG . '&PARENT_LESSON_ID=' . (int) $arRes['COURSE_LESSON_ID'] . '&LESSON_PATH=' . (int) $arRes['COURSE_LESSON_ID'] . '">'
-		. $arRes['COURSE_TITLE'] . ' [' . $arRes['COURSE_LESSON_ID'] . ']'
+		. htmlspecialcharsbx($arRes['COURSE_TITLE']) . ' [' . $arRes['COURSE_LESSON_ID'] . ']'
 		. '</a>'
 	);
 

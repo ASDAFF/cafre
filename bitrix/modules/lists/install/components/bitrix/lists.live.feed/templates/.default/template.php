@@ -15,6 +15,8 @@
 use Bitrix\Main\Localization\Loc;
 use \Bitrix\Main\Page\Asset;
 
+CJSCore::Init(array('lists'));
+
 Asset::getInstance()->addJs($this->GetFolder().'/right.js');
 ?>
 
@@ -34,7 +36,7 @@ Asset::getInstance()->addJs($this->GetFolder().'/right.js');
 	<input type="hidden" id="bx-lists-template-id" name="TEMPLATE_ID">
 </div>
 <input type="hidden" id="bx-lists-title-notify-admin-popup">
-<input type="hidden" id="bx-lists-cjeck-notify-admin">
+<input type="hidden" id="bx-lists-check-notify-admin">
 <input type="hidden" id="bx-lists-select-site-id" value="<?= SITE_ID ?>" />
 <input type="hidden" id="bx-lists-select-site-dir" value="<?= SITE_DIR ?>" />
 <input type="hidden" id="bx-lists-random-string" value="<?= $arResult['RAND_STRING'] ?>" />
@@ -42,13 +44,13 @@ Asset::getInstance()->addJs($this->GetFolder().'/right.js');
 <? $frame = $this->createFrame("bp-livefeed")->begin(""); ?>
 <script type="text/javascript">
 	BX(function () {
-		BX['LiveFeedClass_<?= $arResult['RAND_STRING']?>'] = new BX.LiveFeedClass({
+		BX.Lists['LiveFeedClass_<?= $arResult['RAND_STRING']?>'] = new BX.Lists.LiveFeedClass({
 			socnetGroupId: '<?= $arResult['SOCNET_GROUP_ID'] ?>',
 			randomString: '<?= $arResult['RAND_STRING'] ?>',
 			listData: <?= \Bitrix\Main\Web\Json::encode($arResult['LIST_DATA']) ?>
 		});
 		BX.bind(BX('bx-lists-settings-btn'), 'click', function(e) {
-			BX['LiveFeedClass_<?= $arResult['RAND_STRING']?>'].createSettingsDropdown(e);
+			BX.Lists['LiveFeedClass_<?= $arResult['RAND_STRING']?>'].createSettingsDropdown(e);
 		});
 	});
 </script>
@@ -73,13 +75,11 @@ Asset::getInstance()->addJs($this->GetFolder().'/right.js');
 		LISTS_CANCEL_BUTTON_INSTALL: '<?=GetMessageJS("LISTS_CANCEL_BUTTON_INSTALL")?>',
 		LISTS_TITLE_POPUP_MARKETPLACE: '<?=GetMessageJS("LISTS_TITLE_POPUP_MARKETPLACE")?>',
 		LISTS_MARKETPLACE_TITLE_SYSTEM_PROCESSES: '<?=GetMessageJS("LISTS_MARKETPLACE_TITLE_SYSTEM_PROCESSES")?>',
-		LISTS_MARKETPLACE_TITLE_USER_PROCESSES: '<?=GetMessageJS("LISTS_MARKETPLACE_TITLE_USER_PROCESSES")?>'
+		LISTS_MARKETPLACE_TITLE_USER_PROCESSES: '<?=GetMessageJS("LISTS_MARKETPLACE_TITLE_USER_PROCESSES")?>',
+		LISTS_DESIGNER_POPUP_TITLE: '<?=GetMessageJS("LISTS_DESIGNER_POPUP_TITLE")?>',
+		LISTS_DESIGNER_POPUP_DESCRIPTION: '<?=GetMessageJS("LISTS_DESIGNER_POPUP_DESCRIPTION")?>'
 	});
 </script>
-
-<div id="bx-lists-set-responsible" style="display:none;">
-	<div id="bx-lists-set-responsible-content" class="bx-lists-set-responsible-content"></div>
-</div>
 
 <div class="feed-add-lists-right" id="feed-add-lists-right" style="display: none;">
 	<div class="feed-add-lists-form">
@@ -139,5 +139,10 @@ Asset::getInstance()->addJs($this->GetFolder().'/right.js');
 
 <div id="bx-lists-marketplace_processes" style="display:none;">
 	<div id="bx-lists-marketplace_processes-content" class="bx-lists-marketplace_processes-content">
+	</div>
+</div>
+
+<div id="bx-lists-designer-template-popup" style="display:none;">
+	<div id="bx-lists-designer-template-popup-content" class="bx-lists-designer-template-popup-content">
 	</div>
 </div>

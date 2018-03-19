@@ -6,7 +6,7 @@ class CSticker
 	static $Params = null;
 	public static $TextParser;
 
-	function GetOperations()
+	public static function GetOperations()
 	{
 		global $USER;
 		static $arOp;
@@ -51,7 +51,7 @@ class CSticker
 	}
 
 
-	function GetAccessPermissions()
+	public static function GetAccessPermissions()
 	{
 		global $DB;
 
@@ -65,7 +65,7 @@ class CSticker
 		return $arResult;
 	}
 
-	function SaveAccessPermissions($arTaskPerm)
+	public static function SaveAccessPermissions($arTaskPerm)
 	{
 		global $DB;
 		$DB->Query("DELETE FROM b_sticker_group_task WHERE 1=1", false, "FILE: ".__FILE__."<br> LINE: ".__LINE__);
@@ -78,7 +78,7 @@ class CSticker
 		}
 	}
 
-	function GetTasks()
+	public static function GetTasks()
 	{
 		$arTasks = Array();
 		$res = CTask::GetList(Array('LETTER' => 'asc'), Array('MODULE_ID' => 'fileman', 'BINDING' => 'stickers'));
@@ -94,7 +94,7 @@ class CSticker
 		return $arTasks;
 	}
 
-	function GetList($Params = array())
+	public static function GetList($Params = array())
 	{
 		if (!CSticker::CanDoOperation('sticker_view'))
 			return false;
@@ -244,7 +244,7 @@ class CSticker
 		return $arResult;
 	}
 
-	function ClearCache()
+	public static function ClearCache()
 	{
 		global $CACHE_MANAGER;
 		$cache = new CPHPCache;
@@ -252,7 +252,7 @@ class CSticker
 		$CACHE_MANAGER->CleanDir("fileman_stickers_count");
 	}
 
-	function GetById($id)
+	public static function GetById($id)
 	{
 		global $USER;
 		$res = CSticker::GetList(
@@ -267,7 +267,7 @@ class CSticker
 		return false;
 	}
 
-	function GetPagesList($site)
+	public static function GetPagesList($site)
 	{
 		if (!CSticker::CanDoOperation('sticker_view'))
 			return false;
@@ -319,7 +319,7 @@ class CSticker
 		return $arResult;
 	}
 
-	function GetCurPageCount()
+	public static function GetCurPageCount()
 	{
 		global $APPLICATION;
 		return CSticker::GetCount(array(
@@ -328,7 +328,7 @@ class CSticker
 		));
 	}
 
-	function GetCount($Params)
+	public static function GetCount($Params)
 	{
 		global $DB, $USER, $CACHE_MANAGER;
 		$userId = $USER->GetId();
@@ -366,7 +366,7 @@ class CSticker
 		return $count;
 	}
 
-	function Edit($Params)
+	public static function Edit($Params)
 	{
 		if (!CSticker::CanDoOperation('sticker_edit'))
 			return;
@@ -420,7 +420,7 @@ class CSticker
 		return $ID;
 	}
 
-	function DeleteAll()
+	public static function DeleteAll()
 	{
 		if (!CSticker::CanDoOperation('sticker_del'))
 			return GetMessage('FMST_DEL_ACCESS_ERROR');
@@ -433,7 +433,7 @@ class CSticker
 		return true;
 	}
 
-	function Delete($ids = array())
+	public static function Delete($ids = array())
 	{
 		if (!is_array($ids))
 			$ids = array($ids);
@@ -457,12 +457,12 @@ class CSticker
 		return true;
 	}
 
-	function CheckFields()
+	public static function CheckFields()
 	{
 		return true;
 	}
 
-	function SetHiden($ids = array(), $bHide)
+	public static function SetHiden($ids = array(), $bHide)
 	{
 		if (!is_array($ids))
 			$ids = array($ids);
@@ -492,10 +492,10 @@ class CSticker
 		return true;
 	}
 
-	function InitJS($Params)
+	public static function InitJS($Params)
 	{
 		global $APPLICATION, $USER;
-		CUtil::InitJSCore(array('window', 'ajax'));
+		CUtil::InitJSCore(array('window', 'ajax', 'date'));
 		$APPLICATION->AddHeadScript('/bitrix/js/fileman/sticker.js', true);
 		$APPLICATION->SetAdditionalCSS('/bitrix/js/fileman/sticker.css', true);
 
@@ -540,7 +540,7 @@ class CSticker
 		self::$Params = array("JSCONFIG" => $JSConfig, "STICKERS" => $Params['stickers']);
 	}
 
-	function InitJsAfter()
+	public static function InitJsAfter()
 	{
 		if(is_array(self::$Params))
 		{
@@ -548,7 +548,7 @@ class CSticker
 		}
 	}
 
-	function GetUserName($id = false)
+	public static function GetUserName($id = false)
 	{
 		global $USER;
 		static $arUsersCache = array();
@@ -576,7 +576,7 @@ class CSticker
 		return $arUsersCache[$id];
 	}
 
-	function AppendLangMessages()
+	public static function AppendLangMessages()
 	{
 		return 'var BXST_MESS =
 {
@@ -608,7 +608,7 @@ class CSticker
 };';
 	}
 
-	function Init($Params = array())
+	public static function Init($Params = array())
 	{
 		global $APPLICATION, $USER;
 
@@ -644,12 +644,12 @@ class CSticker
 		));
 	}
 
-	function GetErrorMess()
+	public static function GetErrorMess()
 	{
 		return "Class: CSticker<br>File: ".__FILE__;
 	}
 
-	function GetScriptStr($mode)
+	public static function GetScriptStr($mode)
 	{
 		if ($mode == 'add')
 			return "if (window.oBXSticker){window.oBXSticker.AddSticker();}";
@@ -662,7 +662,7 @@ class CSticker
 		return '';
 	}
 
-	function GetBShowStickers()
+	public static function GetBShowStickers()
 	{
 		if (isset($_SESSION["SESS_SHOW_STICKERS"]) && $_SESSION["SESS_SHOW_STICKERS"] == "Y")
 			return true;
@@ -671,13 +671,13 @@ class CSticker
 		return false;
 	}
 
-	function SetBShowStickers($bShow = false)
+	public static function SetBShowStickers($bShow = false)
 	{
 		$_SESSION["SESS_SHOW_STICKERS"] = $bShow ? "Y" : "N";
 		return $bShow;
 	}
 
-	function BBParseToHTML($text, $bForList = false)
+	public static function BBParseToHTML($text, $bForList = false)
 	{
 		if ($text != "")
 		{
@@ -735,7 +735,7 @@ class CSticker
 		return $html;
 	}
 
-	function GetStickerInfo($createdBy, $dateCreate, $modBy, $dateMod)
+	public static function GetStickerInfo($createdBy, $dateCreate, $modBy, $dateMod)
 	{
 		$str = GetMessage("FMST_CREATED").": <b>".htmlspecialcharsEx(CSticker::GetUserName($createdBy))."</b> ".CSticker::GetUsableDate($dateCreate).
 			"<br/>".
@@ -743,18 +743,18 @@ class CSticker
 		return $str;
 	}
 
-	function GetUsableDate($d)
+	public static function GetUsableDate($d)
 	{
 		$ts = MakeTimeStamp(ConvertDateTime($d, "DD.MM.YYYY HH:MI"), "DD.MM.YYYY HH:MI");
 		return FormatDate("FULL", $ts);
 	}
 
-	function SetFilterParams($Filter)
+	public static function SetFilterParams($Filter)
 	{
 		CUserOptions::SetOption('fileman', "stickers_list_filter", serialize($Filter));
 	}
 
-	function GetFilterParams()
+	public static function GetFilterParams()
 	{
 		$result = array(
 			'type' => 'all',
@@ -783,4 +783,3 @@ class CSticker
 		return $result;
 	}
 }
-?>

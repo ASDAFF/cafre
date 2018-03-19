@@ -19,7 +19,7 @@ foreach($arResult["ITEMS"] as $key => $item)
 				BX_RESIZE_IMAGE_PROPORTIONAL,
 				false
 			);
-			$arResult["ITEMS"][$key]["IMAGE"] = '<img src="'.$imageFile["src"].'" width="36" height="30" border="0" />';
+			$arResult["ITEMS"][$key]["IMAGE"] = CFile::ShowImage($imageFile['src'], 36, 30, 'border=0');
 		}
 	}
 	if(!$arResult["ITEMS"][$key]["IMAGE"])

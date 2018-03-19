@@ -1,7 +1,6 @@
 <?
 $MESS["VOTE_EDIT_RECORD"] = "Preferences for the poll # #ID#";
 $MESS["VOTE_NEW_RECORD"] = "New poll";
-$MESS["VOTE_RECORDS_LIST"] = "Poll list";
 $MESS["VOTE_QUESTIONS"] = "Questions";
 $MESS["VOTE_QUESTIONS_TITLE"] = "Open question list";
 $MESS["VOTE_QUESTIONS_ADD"] = "Add a question";
@@ -60,4 +59,6 @@ $MESS["VOTE_NOTIFY_EMAIL"] = "Yes, by e-mail";
 $MESS["VOTE_NOTIFY_N"] = "Do not notify";
 $MESS["VOTE_URL"] = "URL:";
 $MESS["VOTE_AUTHOR"] = "Author:";
+$MESS["VOTE_EXPORT"] = "Export";
+$MESS["VOTE_EXPORT_XLS"] = "Export poll data to Microsoft Excel";
 ?>

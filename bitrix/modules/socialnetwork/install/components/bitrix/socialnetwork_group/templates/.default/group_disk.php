@@ -131,22 +131,37 @@ include("util_group_profile.php");
 					<a href="javascript: BX.Disk.deactiveBanner('install_disk'); BX.Disk.getDownloadDesktop();"><img src="/bitrix/images/disk/<?= $bannerName ?>" alt=""></a>
 				</div>
 				<? }
-				if ($folder->canAdd($arResult['VARIABLES']['STORAGE']->getCurrentUserSecurityContext()))
-				{ ?>
-				<div class="bx-disk-sidebar-section">
-					<div class="wduf-uploader">
-						<span class="bx-disk wd-fa-add-file-light">
-							<span class="wd-fa-add-file-light-text">
-								<span class="wd-fa-add-file-light-title">
-									<span class="wd-fa-add-file-light-title-text"><?= Loc::getMessage('DISK_UPLOAD_FILE_OR_IMAGE') ?></span>
-								</span>
-								<span class="wd-fa-add-file-light-descript"><?= Loc::getMessage('DISK_UPLOAD_WITH_FILE_DRAG_AND_DROP') ?></span>
-							</span>
-						</span>
 
-						<input type="file" size="1" multiple="multiple" class="wduf-fileUploader" id="BXDiskRightInputPlug"></div>
-				</div>
-				<? } ?>
+				if ($folder->canAdd($arResult['VARIABLES']['STORAGE']->getCurrentUserSecurityContext()))
+				{
+					$groupFields = \CSocNetGroup::getByID($arResult['VARIABLES']['group_id']);
+					if (
+						!empty($groupFields)
+						&& is_array($groupFields)
+						&& !(
+							isset($groupFields['CLOSED'])
+							&& $groupFields['CLOSED'] == 'Y'
+							&& \Bitrix\Main\Config\Option::get('socialnetwork', 'work_with_closed_groups', 'N') !== 'Y'
+						)
+					)
+					{
+						?>
+						<div class="bx-disk-sidebar-section">
+							<div class="wduf-uploader">
+								<span class="bx-disk wd-fa-add-file-light">
+									<span class="wd-fa-add-file-light-text">
+										<span class="wd-fa-add-file-light-title">
+											<span class="wd-fa-add-file-light-title-text"><?= Loc::getMessage('DISK_UPLOAD_FILE_OR_IMAGE') ?></span>
+										</span>
+										<span class="wd-fa-add-file-light-descript"><?= Loc::getMessage('DISK_UPLOAD_WITH_FILE_DRAG_AND_DROP') ?></span>
+									</span>
+								</span>
+								<input type="file" size="1" multiple="multiple" class="wduf-fileUploader" id="BXDiskRightInputPlug">
+							</div>
+						</div>
+						<?
+					}
+ 				} ?>
 			</td>
 		</tr>
 	</table>

@@ -5,6 +5,11 @@ interface IBPEventActivity
 	public function Unsubscribe(IBPActivityExternalEventListener $eventHandler);
 }
 
+interface IBPEventDrivenActivity
+{
+
+}
+
 interface IBPActivityEventListener
 {
 	public function OnEvent(CBPActivity $sender, $arEventParameters = array());
@@ -36,134 +41,134 @@ interface IBPRootActivity
 interface IBPWorkflowDocument
 {
 	/**
-	* Метод возвращает свойства (поля) документа в виде ассоциативного массива вида array(код_свойства => значение, ...). Определены все свойства, которые возвращает метод GetDocumentFields.
-	*
-	* @param string $documentId - код документа.
-	* @return array - массив свойств документа.
-	*/
+	 * Method returns document fields values as array (field_code => value, ...). Must be compatible with GetDocumentFields.
+	 *
+	 * @param string $documentId - Document id.
+	 * @return array - Fields values.
+	 */
 	static public function GetDocument($documentId);
 
 	/**
-	* Метод возвращает массив свойств (полей), которые имеет документ данного типа. Метод GetDocument возвращает значения свойств для заданного документа.
-	*
-	* @param string $documentType - тип документа.
-	* @return array - массив свойств вида array(код_свойства => array("NAME" => название_свойства, "TYPE" => тип_свойства), ...).
-	*/
+	 * Method returns document type fields list.
+	 *
+	 * @param string $documentType - Document type.
+	 * @return array - Fields array(field_code => array("NAME" => field_name, "TYPE" => field_type), ...).
+	 */
 	static public function GetDocumentFields($documentType);
 
 	/**
-	* Метод создает новый документ с указанными свойствами (полями).
-	*
-	* @param array $arFields - массив значений свойств документа в виде array(код_свойства => значение, ...). Коды свойств соответствуют кодам свойств, возвращаемым методом GetDocumentFields.
-	* @return int - код созданного документа.
-	*/
+	 * Method creates new document with specified fields.
+	 *
+	 * @param $parentDocumentId - Parent document id.
+	 * @param array $arFields - Fields values array(field_code => value, ...). Fields codes must be compatible with codes from GetDocumentFields.
+	 * @return int - New document id.
+	 */
 	static public function CreateDocument($parentDocumentId, $arFields);
 
 	/**
-	* Метод изменяет свойства (поля) указанного документа на указанные значения.
-	*
-	* @param string $documentId - код документа.
-	* @param array $arFields - массив новых значений свойств документа в виде array(код_свойства => значение, ...). Коды свойств соответствуют кодам свойств, возвращаемым методом GetDocumentFields.
-	*/
+	 * Method updates document fields.
+	 *
+	 * @param string $documentId - Document id.
+	 * @param array $arFields - New fields values array(field_code => value, ...). Fields codes must be compatible with codes from GetDocumentFields.
+	 */
 	static public function UpdateDocument($documentId, $arFields);
 
 	/**
-	* Метод удаляет указанный документ.
-	*
-	* @param string $documentId - код документа.
-	*/
+	 * Method deletes specified document.
+	 *
+	 * @param string $documentId - Document id.
+	 */
 	static public function DeleteDocument($documentId);
 
 	/**
-	* Метод публикует документ. То есть делает его доступным в публичной части сайта.
-	*
-	* @param string $documentId - код документа.
-	*/
+	 * Method publishes document.
+	 *
+	 * @param string $documentId - Document id.
+	 */
 	static public function PublishDocument($documentId);
 
 	/**
-	* Метод снимает документ с публикации. То есть делает его недоступным в публичной части сайта.
-	*
-	* @param string $documentId - код документа.
-	*/
+	 * Method unpublishes document.
+	 *
+	 * @param string $documentId - Document id.
+	 */
 	static public function UnpublishDocument($documentId);
 
 	/**
-	* Метод блокирует указанный документ для указанного рабочего потока. Заблокированый документ может изменяться только указанным рабочим потоком.
-	*
-	* @param string $documentId - код документа
-	* @param string $workflowId - код рабочего потока
-	* @return bool - если удалось заблокировать документ, то возвращается true, иначе - false.
-	*/
+	 * Method locks specified document for specified workflow state. A locked document can be changed only by the specified workflow.
+	 *
+	 * @param string $documentId - Document id.
+	 * @param string $workflowId - Workflow id.
+	 * @return bool - True on success, false on failure.
+	 */
 	static public function LockDocument($documentId, $workflowId);
 
 	/**
-	* Метод разблокирует указанный документ. При разблокировке вызываются обработчики события вида "Сущность_OnUnlockDocument", которым входящим параметром передается код документа.
-	*
-	* @param string $documentId - код документа
-	* @param string $workflowId - код рабочего потока
-	* @return bool - если удалось разблокировать документ, то возвращается true, иначе - false.
-	*/
+	 * Method unlocks specified document. On unlock fires events like "Entity_OnUnlockDocument" with document id as first parameter.
+	 *
+	 * @param string $documentId - Document id.
+	 * @param string $workflowId - Workflow id.
+	 * @return bool - True on success, false on failure.
+	 */
 	static public function UnlockDocument($documentId, $workflowId);
 
 	/**
-	* Метод проверяет, заблокирован ли указанный документ для указанного рабочего потока. Т.е. если для данного рабочего потока документ не доступен для записи из-за того, что он заблокирован другим рабочим потоком, то метод должен вернуть true, иначе - false.
-	*
-	* @param string $documentId - код документа
-	* @param string $workflowId - код рабочего потока
-	* @return bool
-	*/
+	 * Method checks lock status.
+	 *
+	 * @param string $documentId - Document id.
+	 * @param string $workflowId - Workflow id.
+	 * @return bool True if document locked.
+	 */
 	static public function IsDocumentLocked($documentId, $workflowId);
 
 	/**
-	* Метод проверяет права на выполнение операций над заданным документом. Проверяются операции 0 - просмотр данных рабочего потока, 1 - запуск рабочего потока, 2 - право изменять документ, 3 - право смотреть документ.
-	*
-	* @param int $operation - операция.
-	* @param int $userId - код пользователя, для которого проверяется право на выполнение операции.
-	* @param string $documentId - код документа, к которому применяется операция.
-	* @param array $arParameters - ассициативный массив вспомогательных параметров. Используется для того, чтобы не рассчитывать заново те вычисляемые значения, которые уже известны на момент вызова метода. Стандартными являются ключи массива DocumentStates - массив состояний рабочих потоков данного документа, WorkflowId - код рабочего потока (если требуется проверить операцию на одном рабочем потоке). Массив может быть дополнен другими произвольными ключами.
-	* @return bool
-	*/
+	 * Method checks can user operate specified document with specified operation.
+	 *
+	 * @param int $operation - Operation.
+	 * @param int $userId - User id.
+	 * @param string|int $documentId - Document id.
+	 * @param array $arParameters - Additional parameters.
+	 * @return bool
+	 */
 	static public function CanUserOperateDocument($operation, $userId, $documentId, $arParameters = array());
 
 	/**
-	* Метод проверяет права на выполнение операций над документами заданного типа. Проверяются операции 4 - право изменять шаблоны рабочий потоков для данного типа документа.
-	*
-	* @param int $operation - операция.
-	* @param int $userId - код пользователя, для которого проверяется право на выполнение операции.
-	* @param string $documentId - код типа документа, к которому применяется операция.
-	* @param array $arParameters - ассициативный массив вспомогательных параметров. Используется для того, чтобы не рассчитывать заново те вычисляемые значения, которые уже известны на момент вызова метода. Стандартными являются ключи массива DocumentStates - массив состояний рабочих потоков данного документа, WorkflowId - код рабочего потока (если требуется проверить операцию на одном рабочем потоке). Массив может быть дополнен другими произвольными ключами.
-	* @return bool
-	*/
+	 * Method checks can user operate specified document type with specified operation.
+	 *
+	 * @param int $operation - Operation.
+	 * @param int $userId - User id.
+	 * @param string $documentType - Document type.
+	 * @param array $arParameters - Additional parameters.
+	 * @return bool
+	 */
 	static public function CanUserOperateDocumentType($operation, $userId, $documentType, $arParameters = array());
 
 	/**
-	* Метод по коду документа возвращает ссылку на страницу документа в административной части.
-	*
-	* @param string $documentId - код документа.
-	* @return string - ссылка на страницу документа в административной части.
-	*/
+	 * Get document admin page URL.
+	 *
+	 * @param string|int $documentId - Document id.
+	 * @return string - URL.
+	 */
 	static public function GetDocumentAdminPage($documentId);
 
 	/**
-	* Метод возвращает массив произвольной структуры, содержащий всю информацию о документе. По этому массиву документ восстановливается методом RecoverDocumentFromHistory.
-	*
-	* @param string $documentId - код документа.
-	* @return array - массив документа.
-	*/
+	 * Method returns document information. This information uses in method RecoverDocumentFromHistory.
+	 *
+	 * @param string $documentId - Document id.
+	 * @param $historyIndex - History index.
+	 * @return array - Document data.
+	 */
 	static public function GetDocumentForHistory($documentId, $historyIndex);
 
 	/**
-	* Метод восстанавливает указанный документ из массива. Массив создается методом RecoverDocumentFromHistory.
-	*
-	* @param string $documentId - код документа.
-	* @param array $arDocument - массив.
-	*/
+	 * Method recovers specified document from information, provided by method RecoverDocumentFromHistory.
+	 *
+	 * @param string $documentId - Document id.
+	 * @param array $arDocument - Document data.
+	 */
 	static public function RecoverDocumentFromHistory($documentId, $arDocument);
 
-	// array("read" => "Ета чтение", "write" => "Ета запысь")
 	static public function GetAllowableOperations($documentType);
-	// array("1" => "Админы", 2 => "Гости", 3 => ..., "Author" => "Афтар")
 	static public function GetAllowableUserGroups($documentType);
 	static public function GetUsersFromUserGroup($group, $documentId);
 }

@@ -23,7 +23,7 @@ foreach ($URL_NAME_DEFAULT as $URL => $URL_VALUE)
 	if (strLen(trim($arParams["URL_TEMPLATES_".strToUpper($URL)])) <= 0)
 		$arParams["URL_TEMPLATES_".strToUpper($URL)] = $APPLICATION->GetCurPage()."?".$URL_VALUE;
 	$arParams["~URL_TEMPLATES_".strToUpper($URL)] = $arParams["URL_TEMPLATES_".strToUpper($URL)];
-	$arParams["URL_TEMPLATES_".strToUpper($URL)] = htmlspecialcharsEx($arParams["~URL_TEMPLATES_".strToUpper($URL)]);
+	$arParams["URL_TEMPLATES_".strToUpper($URL)] = htmlspecialcharsbx($arParams["~URL_TEMPLATES_".strToUpper($URL)]);
 }
 /***************** ADDITIONAL **************************************/
 $arParams["USER_PROPERTY"] = (is_array($arParams["USER_PROPERTY"]) ? $arParams["USER_PROPERTY"] : array());
@@ -48,8 +48,11 @@ if ($arParams["UID"] > 0)
 	{
 		while (list($key, $val) = each($ar_user))
 		{
-			${"str_".$key} = htmlspecialcharsEx($val);
-			$arResult["str_".$key] = htmlspecialcharsEx($val);
+			if (is_string($val))
+			{
+				${"str_".$key} = htmlspecialcharsbx($val);
+				$arResult["str_".$key] = htmlspecialcharsbx($val);
+			}
 		}
 		$arResult["USER"] = $ar_user;
 
@@ -59,7 +62,7 @@ if ($arParams["UID"] > 0)
 			while (list($key, $val) = each($ar_forum_user))
 			{
 				${"str_FORUM_".$key} = htmlspecialcharsbx($val);
-				$arResult["str_FORUM_".$key] = htmlspecialcharsEx($val);
+				$arResult["str_FORUM_".$key] = htmlspecialcharsbx($val);
 			}
 			$arResult["FORUM_USER"] = $ar_forum_user;
 		}
@@ -79,7 +82,7 @@ endif;
 ********************************************************************/
 $arResult["~profile_view"] = CComponentEngine::MakePathFromTemplate($arParams["~URL_TEMPLATES_PROFILE_VIEW"],
 	array("UID" => $arParams["UID"]));
-$arResult["profile_view"] = htmlspecialcharsEx($arResult["~profile_view"]);
+$arResult["profile_view"] = htmlspecialcharsbx($arResult["~profile_view"]);
 $arResult["IsAuthorized"] = $USER->IsAuthorized() ? "Y" : "N";
 $arResult["IsAdmin"] = $USER->IsAdmin() ? "Y" : "N";
 $bVarsFromForm = false;
@@ -223,7 +226,7 @@ if ($bVarsFromForm)
 		if (array_key_exists($arUserFields[$i], $_REQUEST))
 		{
 			${"str_".$arUserFields[$i]} = htmlspecialcharsbx($_REQUEST[$arUserFields[$i]]);
-			$arResult["str_".$arUserFields[$i]] = htmlspecialcharsEx($_REQUEST[$arUserFields[$i]]);
+			$arResult["str_".$arUserFields[$i]] = htmlspecialcharsbx($_REQUEST[$arUserFields[$i]]);
 		}
 	}
 
@@ -233,7 +236,7 @@ if ($bVarsFromForm)
 		if (array_key_exists("FORUM_".$arUserFields[$i], $_REQUEST))
 		{
 			${"str_FORUM_".$arUserFields[$i]} = htmlspecialcharsbx($_REQUEST["FORUM_".$arUserFields[$i]]);
-			$arResult["str_FORUM_".$arUserFields[$i]] = htmlspecialcharsEx($_REQUEST["FORUM_".$arUserFields[$i]]);
+			$arResult["str_FORUM_".$arUserFields[$i]] = htmlspecialcharsbx($_REQUEST["FORUM_".$arUserFields[$i]]);
 		}
 	}
 }
@@ -276,7 +279,7 @@ $arCountry = GetCountryArray();
 $arCountryReturn = array();
 for ($i=0; $i<count($arCountry["reference"]); $i++)
 {
-	$arCountryReturn[$arCountry["reference_id"][$i]] = htmlspecialcharsEx($arCountry["reference"][$i]);
+	$arCountryReturn[$arCountry["reference_id"][$i]] = htmlspecialcharsbx($arCountry["reference"][$i]);
 }
 $arResult["str_PERSONAL_COUNTRY"] = $str_PERSONAL_COUNTRY;
 $arResult["arr_PERSONAL_COUNTRY"]["data"] = $arCountryReturn;
@@ -298,7 +301,7 @@ if (!empty($arParams["USER_PROPERTY"]))
 			if (!in_array($FIELD_NAME, $arParams["USER_PROPERTY"]))
 				continue;
 			$arUserField["EDIT_FORM_LABEL"] = strLen($arUserField["EDIT_FORM_LABEL"]) > 0 ? $arUserField["EDIT_FORM_LABEL"] : $arUserField["FIELD_NAME"];
-			$arUserField["EDIT_FORM_LABEL"] = htmlspecialcharsEx($arUserField["EDIT_FORM_LABEL"]);
+			$arUserField["EDIT_FORM_LABEL"] = htmlspecialcharsbx($arUserField["EDIT_FORM_LABEL"]);
 			$arUserField["~EDIT_FORM_LABEL"] = $arUserField["EDIT_FORM_LABEL"];
 			$arResult["USER_PROPERTIES"]["DATA"][$FIELD_NAME] = $arUserField;
 		}

@@ -8,7 +8,7 @@ use Bitrix\Main\Entity;
 abstract class MysqlCommonSqlHelper extends SqlHelper
 {
 	/**
-	 * Identificator escaping - left char
+	 * Returns an identificator escaping left character.
 	 *
 	 * @return string
 	 */
@@ -18,7 +18,7 @@ abstract class MysqlCommonSqlHelper extends SqlHelper
 	}
 
 	/**
-	 * Identificator escaping - left char
+	 * Returns an identificator escaping right character.
 	 *
 	 * @return string
 	 */
@@ -114,10 +114,10 @@ abstract class MysqlCommonSqlHelper extends SqlHelper
 	 * - M      A short textual representation of a month, three letters
 	 * - DD     Day of the month, 2 digits with leading zeros
 	 * - HH     24-hour format of an hour with leading zeros
-	 * - H      12-hour format of an hour with leading zeros
-	 * - GG     24-hour format of an hour with leading zeros
-	 * - G      12-hour format of an hour with leading zeros
-	 * - SS     Minutes with leading zeros
+	 * - H      24-hour format of an hour without leading zeros
+	 * - GG     12-hour format of an hour with leading zeros
+	 * - G      12-hour format of an hour without leading zeros
+	 * - SS     Seconds with leading zeros
 	 * - TT     AM or PM
 	 * - T      AM or PM
 	 * <p>
@@ -326,6 +326,30 @@ abstract class MysqlCommonSqlHelper extends SqlHelper
 	}
 
 	/**
+	 * {@inheritDoc}
+	 *
+	 * @param string $fieldName
+	 *
+	 * return string
+	 */
+	public function castToChar($fieldName)
+	{
+		return 'CAST('.$fieldName.' AS char)';
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @param string $fieldName
+	 *
+	 * return string
+	 */
+	public function softCastTextToChar($fieldName)
+	{
+		return $fieldName;
+	}
+
+	/**
 	 * Returns a column type according to ScalarField object.
 	 *
 	 * @param Entity\ScalarField $field Type "source".
@@ -396,7 +420,7 @@ abstract class MysqlCommonSqlHelper extends SqlHelper
 	 *
 	 * @param string $sql Sql text.
 	 * @param integer $limit Maximum number of rows to return.
-	 * @param integer $offset Offset of the first row to return.
+	 * @param integer $offset Offset of the first row to return, starting from 0.
 	 *
 	 * @return string
 	 * @throws Main\ArgumentException

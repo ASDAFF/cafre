@@ -13,7 +13,7 @@ BX.SGCP =
 	pathToCreate: {},
 	pathToEdit: {},
 	pathToInvite: {}
-}
+};
 
 BX.SGCP.Init = function(obParams)
 {
@@ -50,9 +50,7 @@ BX.SGCP.Init = function(obParams)
 			BX.SGCP.destroyPopup();
 		});
 	}
-
-	return;
-}
+};
 
 BX.SGCP.ShowForm = function(action, popupName, event)
 {
@@ -95,6 +93,8 @@ BX.SGCP.ShowForm = function(action, popupName, event)
 		&& actionURL.length > 0
 	)
 	{
+		var initialStyles = action === "invite" ? "width:450px;height:230px" : "width:600px;height: 650px";
+
 		BX.SGCP.popup = new BX.PopupWindow("BXSGCP", null, {
 			autoHide: false,
 			zIndex: 0,
@@ -106,21 +106,19 @@ BX.SGCP.ShowForm = function(action, popupName, event)
 				restrict:true
 			},
 			closeByEsc: true,
-			titleBar: {
-				content: BX.create("span", {
-					html: popupTitle
-				})
-			},
-			closeIcon: { 
+			titleBar: popupTitle,
+			contentColor : 'white',
+			contentNoPaddings: true,
+			closeIcon: {
 				right : "12px", 
 				top : "10px"
 			},
 			buttons: [],
-			content: '<div style="width:450px;height:230px"></div>',
+			content: '<div style="' + initialStyles + '"></div>',
 			events: {
 				onAfterPopupShow: function()
 				{
-					this.setContent('<div style="width:450px;height:230px">' + BX.message('SONET_SGCP_LOADING_' + popupName) + '</div>');
+					this.setContent('<div style="' + initialStyles +'">' + BX.message('SONET_SGCP_LOADING_' + popupName) + '</div>');
 
 					BX.ajax.post(
 						actionURL,
@@ -132,6 +130,12 @@ BX.SGCP.ShowForm = function(action, popupName, event)
 						BX.delegate(function(result)
 							{
 								this.setContent(result);
+								if (BX.SGCP.popup)
+								{
+									setTimeout(function() {
+										BX.SGCP.popup.adjustPosition();
+									}, 100);
+								}
 							},
 							this)
 					);
@@ -152,16 +156,19 @@ BX.SGCP.ShowForm = function(action, popupName, event)
 
 BX.SGCP.onPopupClose = function()
 {
-	if (BX.SocNetLogDestination.popupWindow != null)
+	if (typeof BX.SocNetLogDestination != 'undefined')
 	{
-		BX.SocNetLogDestination.popupWindow.close();
-	}
+		if (BX.SocNetLogDestination.popupWindow != null)
+		{
+			BX.SocNetLogDestination.popupWindow.close();
+		}
 
-	if (BX.SocNetLogDestination.popupSearchWindow != null)
-	{
-		BX.SocNetLogDestination.popupSearchWindow.close();
+		if (BX.SocNetLogDestination.popupSearchWindow != null)
+		{
+			BX.SocNetLogDestination.popupSearchWindow.close();
+		}
 	}
-}
+};
 
 BX.SGCP.destroyPopup = function()
 {

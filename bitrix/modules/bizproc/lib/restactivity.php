@@ -22,6 +22,7 @@ use Bitrix\Main\Entity;
  * <li> RETURN_PROPERTIES text optional
  * <li> DOCUMENT_TYPE text optional
  * <li> FILTER text optional
+ * <li> IS_ROBOT bool optional default 'N'
  * </ul>
  *
  * @package Bitrix\Bizproc
@@ -119,6 +120,10 @@ class RestActivityTable extends Entity\DataManager
 			'FILTER' => array(
 				'data_type' => 'text',
 				'serialized' => true,
+			),
+			'IS_ROBOT' => array(
+				'data_type' => 'boolean',
+				'values' => array('Y', 'N')
 			),
 		);
 	}

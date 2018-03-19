@@ -6,6 +6,7 @@ use Bitrix\Main\ArgumentOutOfRangeException;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Sale\Delivery\Restrictions;
 use Bitrix\Sale\Delivery\Services;
+use Bitrix\Sale\Services\PaySystem\Restrictions\Manager;
 
 Loc::loadMessages(__FILE__);
 
@@ -28,6 +29,10 @@ class DeliveryPaySystemTable extends \Bitrix\Main\Entity\DataManager
 
 	const ENTITY_TYPE_DELIVERY = "DELIVERY_ID";
 	const ENTITY_TYPE_PAYSYSTEM = "PAYSYSTEM_ID";
+
+	protected static $unLinked = null;
+	protected static $entityItemsFullList = array();
+	protected static $entityItemsFieldsList = array();
 
 	public static function getFilePath()
 	{
@@ -68,7 +73,7 @@ class DeliveryPaySystemTable extends \Bitrix\Main\Entity\DataManager
 				'title' => Loc::getMessage('DELIVERY_PAYSYSTEM_ENTITY_PAYSYSTEM_ID_FIELD'),
 			),
 			'PAYSYSTEM' => array(
-				'data_type' => '\Bitrix\Sale\Internals\PaySystemTable',
+				'data_type' => '\Bitrix\Sale\Internals\PaySystemActionTable',
 				'reference' => array(
 					'=this.PAYSYSTEM_ID' => 'ref.ID'
 				)
@@ -92,7 +97,7 @@ class DeliveryPaySystemTable extends \Bitrix\Main\Entity\DataManager
 	 * @throws ArgumentOutOfRangeException
 	 * @throws \Bitrix\Main\ArgumentException
 	 */
-	public static function setLinks($entityId, $entityType, array $linkedIds = array(), $actualizeRestrictions = true)
+	public static function  setLinks($entityId, $entityType, array $linkedIds = array(), $actualizeRestrictions = true)
 	{
 		if(intval($entityId) <= 0)
 			throw new ArgumentNullException("entityId");
@@ -104,24 +109,42 @@ class DeliveryPaySystemTable extends \Bitrix\Main\Entity\DataManager
 		$con = \Bitrix\Main\Application::getConnection();
 		$sqlHelper = $con->getSqlHelper();
 		$entityId = $sqlHelper->forSql($entityId);
+		$reverseParentLinks = array();
 
 		if($entityType == self::ENTITY_TYPE_DELIVERY)
 		{
 			$linkDirection = self::LINK_DIRECTION_DELIVERY_PAYSYSTEM ;
 			$reverseLinkDirection = self::LINK_DIRECTION_PAYSYSTEM_DELIVERY;
 			$reverseEntityType = self::ENTITY_TYPE_PAYSYSTEM;
+			$parentId = self::getDeliveryParentId($entityId);
 		}
 		else
 		{
 			$linkDirection =  self::LINK_DIRECTION_PAYSYSTEM_DELIVERY;
 			$reverseLinkDirection = self::LINK_DIRECTION_DELIVERY_PAYSYSTEM;
 			$reverseEntityType = self::ENTITY_TYPE_DELIVERY;
+			$parentId = 0;
+
+			if(!empty($linkedIds)) // for delivery profiles
+			{
+				$reverseFieldsList = self::getEntityItemsFieldsList($reverseEntityType);
+
+				foreach($linkedIds as $id)
+					if(isset($reverseFieldsList[$id]['PARENT_ID']) && self::isValidParent($reverseFieldsList[$id]['PARENT_ID'], $reverseEntityType))
+						if(!in_array($reverseFieldsList[$id]['PARENT_ID'], $linkedIds))
+							$reverseParentLinks[] = $reverseFieldsList[$id]['PARENT_ID'];
+
+				if(!empty($reverseParentLinks))
+				{
+					$linkedIds = array_unique(array_merge($linkedIds, $reverseParentLinks));
+				}
+			}
 		}
 
 		//delete current entity links
 		$con->queryExecute(
 			"DELETE FROM ".self::getTableName().
-			" WHERE ".$entityType."=".$entityId." AND LINK_DIRECTION='".$linkDirection."'"
+			" WHERE ".$entityType."=".$entityId ." AND LINK_DIRECTION='".$linkDirection."'"
 		);
 
 		//insert new links
@@ -162,25 +185,95 @@ class DeliveryPaySystemTable extends \Bitrix\Main\Entity\DataManager
 		if(!empty($reverseIdsToAdd))
 			self::insertLinks($entityId, $reverseLinkDirection, $entityType, $reverseIdsToAdd);
 
-		$reverseIdsToDelete = array_diff($linkedToEntity, $linkedIds);
+		//delete reverse links we didn't choose
+		$glParams = array(
+			'filter' => array(
+				'=LINK_DIRECTION' => $reverseLinkDirection,
+				'='.$entityType => $entityId,
+			)
+		);
 
-		if(!empty($reverseIdsToDelete))
+		if(!empty($linkedIds))
+			$glParams['filter']['!='.$reverseEntityType] = $linkedIds;
+
+		$res = self::getList($glParams);
+
+		while($rec = $res->fetch())
 		{
-			//delete reverse links we didn't choose
-			foreach($reverseIdsToDelete as $id)
+			self::delete(array(
+				'DELIVERY_ID' => $rec['DELIVERY_ID'],
+				'PAYSYSTEM_ID' => $rec['PAYSYSTEM_ID'],
+				'LINK_DIRECTION' => $rec['LINK_DIRECTION']
+			));
+		}
+
+		self::$unLinked = null;
+
+		//Modify delivery parent links for working profile links.
+		if(!empty($linkedIds))
+		{
+			$unlinked = self::getUnlinkedEnityItems($entityType);
+			if($entityType == self::ENTITY_TYPE_DELIVERY && self::isValidParent($parentId, $entityType) && !in_array($parentId, $unlinked))
 			{
-				self::delete(array(
-					$entityType => $entityId,
-					$reverseEntityType => $id,
-					"LINK_DIRECTION" => $reverseLinkDirection
-				));
+				$parentLinks = self::getLinks($parentId, $entityType, array(), false);
+
+				self::setLinks(
+					$parentId,
+					$entityType,
+					array_unique(array_merge($parentLinks, $linkedIds)),
+					false
+				);
+			}
+			elseif($entityType == self::ENTITY_TYPE_PAYSYSTEM)
+			{
+				$reverseFieldsList = self::getEntityItemsFieldsList($reverseEntityType);
+				$unlinkedReverse = self::getUnlinkedEnityItems($reverseEntityType);
+				$entityList = self::getEntityItemsFullList($entityType);
+				$entityList = array_diff($entityList, array($entityId));
+
+				foreach($reverseFieldsList as $id => $fields)
+				{
+					if(intval($fields['PARENT_ID']) > 0 && in_array($fields['PARENT_ID'], $reverseParentLinks) && in_array($id, $unlinkedReverse))
+					{
+						self::setLinks(
+							$id,
+							$reverseEntityType,
+							$entityList,
+							false
+						);
+					}
+				}
 			}
 		}
 
 		if($actualizeRestrictions)
+		{
 			self::actualizeDeliveriesRestrictionByPS();
+			self::actualizePaySystemRestrictionByDelivery();
+		}
 
 		return $result;
+	}
+
+	protected static function isValidParent($parentId, $entityType)
+	{
+		$parentId = intval($parentId);
+
+		if($parentId <= 0)
+			return false;
+
+		if($entityType == self::ENTITY_TYPE_DELIVERY)
+		{
+			$activeDeliveryData = self::getActiveDeliveryData();
+
+			if(!in_array($parentId, array_keys($activeDeliveryData)))
+				return false;
+
+			if($activeDeliveryData[$parentId]['PARENT_CLASS_NAME'] == '\Bitrix\Sale\Delivery\Services\Group')
+				return false;
+		}
+
+		return true;
 	}
 
 	protected static function actualizeDeliveriesRestrictionByPS()
@@ -189,15 +282,15 @@ class DeliveryPaySystemTable extends \Bitrix\Main\Entity\DataManager
 		$sqlHelper = $con->getSqlHelper();
 
 		$restrictions = array();
-		$dbR = Restrictions\Table::getList(array(
+		$dbR = \Bitrix\Sale\Internals\ServiceRestrictionTable::getList(array(
 			'filter' => array(
 				'=CLASS_NAME' => '\Bitrix\Sale\Delivery\Restrictions\ByPaySystem'
 			),
-			'select' => array('DELIVERY_ID')
+			'select' => array('SERVICE_ID')
 		));
 
 		while($restr = $dbR->fetch())
-			$restrictions[] = $restr['DELIVERY_ID'];
+			$restrictions[] = $restr['SERVICE_ID'];
 
 		$deliveryList = self::getEntityItemsFullList(self::ENTITY_TYPE_DELIVERY);
 		$dLinkedToP = array();
@@ -257,9 +350,9 @@ class DeliveryPaySystemTable extends \Bitrix\Main\Entity\DataManager
 			$sql = "";
 
 			foreach($notNeedRestriction as $deliveryId)
-				$sql .= " ".($sql == "" ? "WHERE CLASS_NAME='".$sqlHelper->forSql('\Bitrix\Sale\Delivery\Restrictions\ByPaySystem')."' AND (" : "OR " )."DELIVERY_ID=".$sqlHelper->forSql($deliveryId);
+				$sql .= " ".($sql == "" ? "WHERE CLASS_NAME='".$sqlHelper->forSql('\Bitrix\Sale\Delivery\Restrictions\ByPaySystem')."' AND (" : "OR " )."SERVICE_ID=".$sqlHelper->forSql($deliveryId)." AND SERVICE_TYPE=".Restrictions\Manager::SERVICE_TYPE_SHIPMENT;
 
-			$sql = "DELETE FROM ".Restrictions\Table::getTableName().$sql.")";
+			$sql = "DELETE FROM ".\Bitrix\Sale\Internals\ServiceRestrictionTable::getTableName().$sql.")";
 			$con->queryExecute($sql);
 		}
 
@@ -271,9 +364,104 @@ class DeliveryPaySystemTable extends \Bitrix\Main\Entity\DataManager
 			$sql = "";
 
 			foreach($needRestriction as $deliveryId)
-				$sql .= ($sql == "" ? " " : ", ")."(".$sqlHelper->forSql($deliveryId).", '".$sqlHelper->forSql('\Bitrix\Sale\Delivery\Restrictions\ByPaySystem')."')";
+				$sql .= ($sql == "" ? " " : ", ")."(".$sqlHelper->forSql($deliveryId).", '".$sqlHelper->forSql('\Bitrix\Sale\Delivery\Restrictions\ByPaySystem')."', ".Restrictions\Manager::SERVICE_TYPE_SHIPMENT.")";
 
-			$sql = "INSERT INTO ".Restrictions\Table::getTableName()."(DELIVERY_ID, CLASS_NAME) VALUES".$sql;
+			$sql = "INSERT INTO ".\Bitrix\Sale\Internals\ServiceRestrictionTable::getTableName()."(SERVICE_ID, CLASS_NAME, SERVICE_TYPE) VALUES".$sql;
+			$con->queryExecute($sql);
+		}
+	}
+
+	protected static function actualizePaySystemRestrictionByDelivery()
+	{
+		$con = \Bitrix\Main\Application::getConnection();
+		$sqlHelper = $con->getSqlHelper();
+
+		$restrictions = array();
+		$dbR = \Bitrix\Sale\Internals\ServiceRestrictionTable::getList(array(
+			'filter' => array(
+				'=CLASS_NAME' => '\Bitrix\Sale\Services\PaySystem\Restrictions\Delivery'
+			),
+			'select' => array('SERVICE_ID')
+		));
+
+		while($restr = $dbR->fetch())
+			$restrictions[] = $restr['SERVICE_ID'];
+
+		$deliveryList = self::getEntityItemsFullList(self::ENTITY_TYPE_PAYSYSTEM);
+		$dLinkedToP = array();
+		$deliveriesToPs = array();
+		$linkedPS = array();
+
+		$dbP2S = DeliveryPaySystemTable::getList();
+
+		while($d2p = $dbP2S->fetch())
+		{
+			if($d2p["LINK_DIRECTION"] == self::LINK_DIRECTION_PAYSYSTEM_DELIVERY && !in_array($d2p["PAYSYSTEM_ID"], $dLinkedToP))
+				$dLinkedToP[] = $d2p["PAYSYSTEM_ID"];
+
+			if($d2p["LINK_DIRECTION"] == self::LINK_DIRECTION_DELIVERY_PAYSYSTEM)
+			{
+				if(!isset($deliveriesToPs[$d2p["PAYSYSTEM_ID"]]))
+					$deliveriesToPs[$d2p["PAYSYSTEM_ID"]] = array();
+
+				$linkedPS[] = $d2p["DELIVERY_ID"];
+				$deliveriesToPs[$d2p["PAYSYSTEM_ID"]][] = $d2p["DELIVERY_ID"];
+			}
+		}
+
+		$notLinkedToPS = array_diff($deliveryList, $dLinkedToP);
+		$existLinkedPs = !empty($linkedPS);
+		$notNeedRestriction = array();
+		$needRestriction = array();
+
+		foreach($deliveryList as $id)
+		{
+			$need = true;
+
+			//DS not linked to PS and (All PS having links linked to current DS
+			if(in_array($id, $notLinkedToPS))
+			{
+				if(isset($deliveriesToPs[$id]))
+					$diff = array_diff($linkedPS, $deliveriesToPs[$id]);
+				else
+					$diff = $linkedPS;
+
+				if(!$existLinkedPs || empty($diff))
+				{
+					$notNeedRestriction[] = $id;
+					$need = false;
+				}
+			}
+
+			// DS linked to PS or exist linked PS but not linked to current DS
+			if($need)
+				$needRestriction[] = $id;
+		}
+
+		$notNeedRestriction = array_intersect($notNeedRestriction, $restrictions);
+
+		if(!empty($notNeedRestriction))
+		{
+			$sql = "";
+
+			foreach($notNeedRestriction as $deliveryId)
+				$sql .= " ".($sql == "" ? "WHERE CLASS_NAME='".$sqlHelper->forSql('\Bitrix\Sale\Services\PaySystem\Restrictions\Delivery')."' AND (" : "OR " )."SERVICE_ID=".$sqlHelper->forSql($deliveryId)." AND SERVICE_TYPE=".Manager::SERVICE_TYPE_PAYMENT;
+
+			$sql = "DELETE FROM ".\Bitrix\Sale\Internals\ServiceRestrictionTable::getTableName().$sql.")";
+			$con->queryExecute($sql);
+		}
+
+		$needRestriction = array_diff($needRestriction, $restrictions);
+
+		//let's... add missing
+		if(!empty($needRestriction))
+		{
+			$sql = "";
+
+			foreach($needRestriction as $deliveryId)
+				$sql .= ($sql == "" ? " " : ", ")."(".$sqlHelper->forSql($deliveryId).", '".$sqlHelper->forSql('\Bitrix\Sale\Services\PaySystem\Restrictions\Delivery')."', ".Manager::SERVICE_TYPE_PAYMENT.")";
+
+			$sql = "INSERT INTO ".\Bitrix\Sale\Internals\ServiceRestrictionTable::getTableName()."(SERVICE_ID, CLASS_NAME, SERVICE_TYPE) VALUES".$sql;
 			$con->queryExecute($sql);
 		}
 	}
@@ -320,7 +508,7 @@ class DeliveryPaySystemTable extends \Bitrix\Main\Entity\DataManager
 	 * @throws ArgumentOutOfRangeException
 	 * @throws \Bitrix\Main\ArgumentException
 	 */
-	public static function getLinks($entityId, $entityType, array $preparedData = array())
+	public static function getLinks($entityId, $entityType, array $preparedData = array(), $considerParent = true)
 	{
 		$result = array();
 
@@ -332,15 +520,17 @@ class DeliveryPaySystemTable extends \Bitrix\Main\Entity\DataManager
 
 		if($entityType == self::ENTITY_TYPE_DELIVERY)
 		{
-			$linkDirection = self::LINK_DIRECTION_DELIVERY_PAYSYSTEM ;
+			$linkDirection = self::LINK_DIRECTION_DELIVERY_PAYSYSTEM;
 			$reverseLinkDirection = self::LINK_DIRECTION_PAYSYSTEM_DELIVERY;
 			$reverseEntityType = self::ENTITY_TYPE_PAYSYSTEM;
+			$parentId = self::getDeliveryParentId($entityId);
 		}
 		else
 		{
 			$linkDirection =  self::LINK_DIRECTION_PAYSYSTEM_DELIVERY;
 			$reverseLinkDirection = self::LINK_DIRECTION_DELIVERY_PAYSYSTEM;
 			$reverseEntityType = self::ENTITY_TYPE_DELIVERY;
+			$parentId = 0;
 		}
 
 		if(isset($preparedData[$entityId]["DIRECT"]))
@@ -365,7 +555,22 @@ class DeliveryPaySystemTable extends \Bitrix\Main\Entity\DataManager
 
 		//if entity has links they must be actual
 		if(!empty($result))
+		{
+			if($considerParent)
+			{
+				if($entityType == self::ENTITY_TYPE_PAYSYSTEM)
+				{
+					$result = self::includeDeliveryByParent($result);
+					$result = self::excludeDeliveryByParent($result);
+				}
+				elseif($entityType == self::ENTITY_TYPE_DELIVERY && $parentId > 0)
+				{
+					$result = self::considerDeliveryParent($result, $entityId, $parentId, $preparedData);
+				}
+			}
+
 			return $result;
+		}
 
 		if(isset($preparedData[$entityId]["REVERSE"]))
 		{
@@ -373,89 +578,218 @@ class DeliveryPaySystemTable extends \Bitrix\Main\Entity\DataManager
 		}
 		else
 		{
-			$res = self::getList(array(
+			$glParams = array(
 				'filter' => array(
 					"=".$entityType => $entityId,
 					"=LINK_DIRECTION" => $reverseLinkDirection
 				),
 				'select' => array($reverseEntityType)
-			));
+			);
+
+			$res = self::getList($glParams);
 
 			while($rec = $res->fetch())
 				$result[] = $rec[$reverseEntityType];
 		}
 
-		$result = array_merge($result, self::getUnlinkedEnityItems($reverseEntityType));
+		$result = array_merge($result, self::getUnlinkedEnityItems($reverseEntityType, $reverseLinkDirection));
+
+		if($considerParent)
+		{
+			if($entityType == self::ENTITY_TYPE_DELIVERY && $parentId > 0)
+			{
+				$result = self::considerDeliveryParent($result, $entityId, $parentId, $preparedData);
+			}
+			elseif($entityType == self::ENTITY_TYPE_PAYSYSTEM && !empty($result))
+			{
+				$result = self::excludeDeliveryByParent($result);
+			}
+		}
+
 		return $result;
 	}
 
-
-	protected static function getUnlinkedEnityItems($entityType)
+	protected static function getActiveDeliveryData()
 	{
-		static $result = array();
+		$result = array();
+		self::getEntityItemsFullList(self::ENTITY_TYPE_DELIVERY);
 
-		if(!isset($result[$entityType]))
+		if(is_array(self::$entityItemsFieldsList[self::ENTITY_TYPE_DELIVERY]))
 		{
-			$list = self::getEntityItemsFullList($entityType);
-
-			if($entityType == self::ENTITY_TYPE_DELIVERY)
-				$linkDirection = self::LINK_DIRECTION_DELIVERY_PAYSYSTEM;
-			else
-				$linkDirection =  self::LINK_DIRECTION_PAYSYSTEM_DELIVERY;
-
-			$res = DeliveryPaySystemTable::getList(array(
-				'group' => array($entityType),
-				'select' => array($entityType),
-				'filter' => array(
-					"LINK_DIRECTION" => $linkDirection
-				)
-			));
-
-			while($item = $res->fetch())
+			foreach(self::$entityItemsFieldsList[self::ENTITY_TYPE_DELIVERY] as $fields)
 			{
-				if(in_array($item[$entityType], $list))
+				$result[$fields['ID']] = $fields;
+			}
+		}
+
+		return $result;
+	}
+
+	protected static function excludeDeliveryByParent(array $dlvIds)
+	{
+		$result = array();
+		$activeDeliveryData = self::getActiveDeliveryData();
+
+		foreach($dlvIds as $id)
+		{
+			if(intval($activeDeliveryData[$id]['PARENT_ID']) <= 0)
+				$result[] = $id;
+			elseif($activeDeliveryData[$id]['PARENT_CLASS_NAME'] == '\Bitrix\Sale\Delivery\Services\Group')
+				$result[] = $id;
+			elseif(in_array($activeDeliveryData[$id]['PARENT_ID'], $dlvIds))
+				$result[] = $id;
+		}
+
+		return $result;
+	}
+
+	protected static function includeDeliveryByParent(array $dlvIds)
+	{
+		$result = $dlvIds;
+		$unlinkedDlvIds = self::getUnlinkedEnityItems(self::ENTITY_TYPE_DELIVERY);
+
+		foreach(self::getActiveDeliveryData() as $id => $fields)
+		{
+			if(in_array($fields['PARENT_ID'], $dlvIds)) //is profile
+				if(in_array($id, $unlinkedDlvIds) && !in_array($id, $result))  //profile doesn't have own restriction by PS
+					$result[] = $id;
+		}
+
+		return $result;
+	}
+
+	protected static function considerDeliveryParent(array $profilePsIds, $profileId, $parentId, $preparedData)
+	{
+		if(intval($parentId) <= 0)
+			return $profilePsIds;
+
+		$result = $profilePsIds;
+		$unlinkedIds = self::getUnlinkedEnityItems(self::ENTITY_TYPE_DELIVERY);
+		$parentPSIds = self::getLinks($parentId, self::ENTITY_TYPE_DELIVERY, $preparedData);
+
+		if(!in_array($parentId, $unlinkedIds) && in_array($profileId, $unlinkedIds))
+			$result = $parentPSIds;
+		elseif(!in_array($parentId, $unlinkedIds) && !in_array($profileId, $unlinkedIds))
+			$result = array_intersect($profilePsIds, $parentPSIds);
+
+		return $result;
+	}
+	protected static function getDeliveryParentId($deliveryId)
+	{
+		$activeData = self::getActiveDeliveryData();
+
+		if(empty($activeData[$deliveryId]))
+			return 0;
+
+		$parentId = intval($activeData[$deliveryId]['PARENT_ID']);
+
+		if($parentId <= 0 || empty($activeData[$parentId]))
+			return 0;
+
+		if($activeData[$parentId]['CLASS_NAME'] == '\Bitrix\Sale\Delivery\Services\Group')
+			return 0;
+
+		return $parentId;
+	}
+
+	protected static function getUnlinkedEnityItems($entityType, $linkDirection = null)
+	{
+		if($entityType != self::ENTITY_TYPE_DELIVERY && $entityType != self::ENTITY_TYPE_PAYSYSTEM)
+			throw  new ArgumentOutOfRangeException('entityType');
+
+		if($linkDirection != null)
+			if($linkDirection != self::LINK_DIRECTION_DELIVERY_PAYSYSTEM && $linkDirection != self::LINK_DIRECTION_PAYSYSTEM_DELIVERY)
+				throw  new ArgumentOutOfRangeException('linkDirection');
+
+		if(!isset(self::$unLinked[$entityType]))
+		{
+			$entityList = array_flip(self::getEntityItemsFullList($entityType));
+
+			self::$unLinked[$entityType] = array(
+				self::LINK_DIRECTION_DELIVERY_PAYSYSTEM => $entityList,
+				self::LINK_DIRECTION_PAYSYSTEM_DELIVERY => $entityList
+			);
+
+			$glParams = array(
+				'group' => array($entityType, 'LINK_DIRECTION'),
+				'select' => array($entityType, 'LINK_DIRECTION')
+			);
+
+			$res = DeliveryPaySystemTable::getList($glParams);
+
+			while($row = $res->fetch())
+			{
+				if(isset(self::$unLinked[$entityType][$row['LINK_DIRECTION']][$row[$entityType]]))
 				{
-					unset($list[array_search($item[$entityType], $list)]);
+					unset(self::$unLinked[$entityType][$row['LINK_DIRECTION']][$row[$entityType]]);
 				}
 			}
 
-			$result[$entityType] = $list;
+			self::$unLinked[$entityType][self::LINK_DIRECTION_DELIVERY_PAYSYSTEM] = array_keys(self::$unLinked[$entityType][self::LINK_DIRECTION_DELIVERY_PAYSYSTEM]);
+			self::$unLinked[$entityType][self::LINK_DIRECTION_PAYSYSTEM_DELIVERY] = array_keys(self::$unLinked[$entityType][self::LINK_DIRECTION_PAYSYSTEM_DELIVERY]);
 		}
 
-		return $result[$entityType];
+		if($linkDirection == null)
+		{
+			$result = array_intersect(self::$unLinked[$entityType][self::LINK_DIRECTION_DELIVERY_PAYSYSTEM], self::$unLinked[$entityType][self::LINK_DIRECTION_PAYSYSTEM_DELIVERY]);
+		}
+		else
+		{
+			$result = self::$unLinked[$entityType][$linkDirection];
+		}
+
+		return $result;
+	}
+
+	protected static function getEntityItemsFieldsList($entityType)
+	{
+		self::getEntityItemsFullList($entityType);
+		return self::$entityItemsFieldsList[$entityType];
 	}
 
 	protected static function getEntityItemsFullList($entityType)
 	{
-		static $result = array();
+		if(isset(self::$entityItemsFullList[$entityType]))
+			return self::$entityItemsFullList[$entityType];
 
-		if(isset($result[$entityType]))
-			return $result[$entityType];
-
-		$result[$entityType] = array();
+		self::$entityItemsFullList[$entityType] = array();
 
 		if($entityType == self::ENTITY_TYPE_DELIVERY)
 		{
-			$dbRes = Services\Table::getList(array(
-				'filter' => array("ACTIVE" =>  "Y"),
-				'select' => array("ID")
+			\Bitrix\Sale\Delivery\Services\Manager::getActiveList();
+			$res = Services\Table::getList(array(
+				'filter' => array(
+					'ACTIVE' => 'Y'
+				),
+				'select' => array('*', 'PARENT_CLASS_NAME' => 'PARENT.CLASS_NAME')
 			));
+			
+			while($dsrv = $res->fetch())
+			{
+				$obj = Services\Manager::createObject($dsrv);
 
-			while($dsrv = $dbRes->fetch())
-				$result[$entityType][] = $dsrv["ID"];
+				if ($obj && $obj->canHasChildren()) //groups
+					continue;
+
+				self::$entityItemsFullList[$entityType][] = $dsrv["ID"];
+				self::$entityItemsFieldsList[$entityType][$dsrv["ID"]] = $dsrv;
+			}
 		}
 		else
 		{
-			$dbRes = PaySystemServiceTable::getList(array(
+			$dbRes = PaySystemActionTable::getList(array(
 				'filter' => array("ACTIVE" =>  "Y"),
 				'select' => array("ID")
 			));
 
 			while($ps = $dbRes->fetch())
-				$result[$entityType][] = $ps["ID"];
+			{
+				self::$entityItemsFullList[$entityType][] = $ps["ID"];
+				self::$entityItemsFieldsList[$entityType][$ps["ID"]] = $ps;
+			}
 		}
 
-		return $result[$entityType];
+		return self::$entityItemsFullList[$entityType];
 	}
 
 	public static function prepareData(array $entityIds, $entityType)
@@ -510,6 +844,6 @@ class DeliveryPaySystemTable extends \Bitrix\Main\Entity\DataManager
 				$preparedData[$entityType][$rec[$entityType]]["REVERSE"][] = $rec[$reverseEntityType];
 		}
 
-		return array_intersect_key($preparedData[$entityType], $entityIds);
+		return $preparedData[$entityType];
 	}
 }

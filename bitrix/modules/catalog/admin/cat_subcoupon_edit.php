@@ -233,7 +233,7 @@ if (!$boolMulti)
 	$arDefaultValues = array(
 		'DISCOUNT_ID' => $intDiscountID,
 		'ACTIVE' => 'Y',
-		'ONE_TIME' => Catalog\DiscountCouponTable::TYPE_ONE_ROW,
+		'ONE_TIME' => Catalog\DiscountCouponTable::TYPE_ONE_ORDER,
 		'COUPON' => '',
 		'DATE_APPLY' => '',
 		'DESCRIPTION' => '',
@@ -405,7 +405,7 @@ if (!$boolMulti)
 else
 {
 	$arCoupon = array(
-		'ONE_TIME' => 'Y',
+		'ONE_TIME' => Catalog\DiscountCouponTable::TYPE_ONE_ORDER,
 		'COUNT' => ''
 	);
 

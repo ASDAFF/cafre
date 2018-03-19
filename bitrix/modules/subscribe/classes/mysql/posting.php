@@ -161,13 +161,13 @@ class CPosting extends CPostingGeneral
 			$strSql = $strSql." HAVING ".$strSqlSearch_h;
 		}
 		$strSql.=$strSqlOrder;
-//		echo htmlspecialcharsbx($strSql);
+
 		$res = $DB->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
 		$res->is_filtered = (IsFiltered($strSqlSearch));
 		return $res;
 	}
 
-	function Lock($ID=0)
+	public static function Lock($ID=0)
 	{
 		global $DB, $APPLICATION;
 		$ID = intval($ID);
@@ -179,7 +179,8 @@ class CPosting extends CPostingGeneral
 		else
 			return false;
 	}
-	function UnLock($ID=0)
+
+	public static function UnLock($ID=0)
 	{
 		global $DB;
 		$ID = intval($ID);

@@ -142,7 +142,7 @@ echo htmlspecialcharsbx($arPaySys["NAME"]);
 $priceTotal = 0;
 $bUseVat = false;
 $arBasketOrder = array();
-for ($i = 0; $i < count($arBasketIDs); $i++)
+for ($i = 0, $max = count($arBasketIDs); $i < $max; $i++)
 {
 	$arBasketTmp = CSaleBasket::GetByID($arBasketIDs[$i]);
 
@@ -196,14 +196,16 @@ while ($ar_tax_list = $db_tax_list->Fetch())
 ClearVars("b_");
 //$db_basket = CSaleBasket::GetList(($b="NAME"), ($o="ASC"), array("ORDER_ID"=>$ORDER_ID));
 //if ($db_basket->ExtractFields("b_")):
+$arCurFormat = CCurrencyLang::GetCurrencyFormat($arOrder["CURRENCY"]);
+$currency = preg_replace('/(^|[^&])#/', '${1}', $arCurFormat['FORMAT_STRING']);
 	?>
 	<table border="0" cellspacing="0" cellpadding="2" width="100%">
 		<tr bgcolor="#E2E2E2">
 			<td align="center" style="border: 1pt solid #000000; border-right:none;">№</td>
 			<td align="center" style="border: 1pt solid #000000; border-right:none;">Предмет счета</td>
 			<td nowrap align="center" style="border: 1pt solid #000000; border-right:none;">Кол-во</td>
-			<td nowrap align="center" style="border: 1pt solid #000000; border-right:none;">Цена, руб</td>
-			<td nowrap align="center" style="border: 1pt solid #000000;">Сумма, руб</td>
+			<td nowrap align="center" style="border: 1pt solid #000000; border-right:none;">Цена,<?=$currency;?></td>
+			<td nowrap align="center" style="border: 1pt solid #000000;">Сумма,<?=$currency;?></td>
 		</tr>
 		<?
 		$n = 1;
@@ -236,7 +238,7 @@ ClearVars("b_");
 			{
 				$basket_tax = CSaleOrderTax::CountTaxes($b_AMOUNT*$arQuantities[$mi], $arTaxList, $arOrder["CURRENCY"]);
 
-				for ($i = 0; $i < count($arTaxList); $i++)
+				for ($i = 0, $max = count($arTaxList); $i < $max; $i++)
 				{
 					if ($arTaxList[$i]["IS_IN_PRICE"] == "Y")
 					{
@@ -266,13 +268,16 @@ ClearVars("b_");
 					?>
 				</td>
 				<td align="right" bgcolor="#ffffff" style="border: 1pt solid #000000; border-right:none; border-top:none;">
-					<?echo $arQuantities[$mi]; ?>
+					<?echo Bitrix\Sale\BasketItem::formatQuantity($arQuantities[$mi]); ?>
 				</td>
 				<td align="right" bgcolor="#ffffff" style="border: 1pt solid #000000; border-right:none; border-top:none;">
-					<?echo number_format($arBasket["PRICE"], 2, ',', ' ') ?>
+					<?echo CCurrencyLang::CurrencyFormat($arBasket["PRICE"], $arOrder["CURRENCY"], false) ?>
 				</td>
 				<td align="right" bgcolor="#ffffff" style="border: 1pt solid #000000; border-top:none;">
-					<?echo number_format(($arBasket["PRICE"])*$arQuantities[$mi], 2, ',', ' ') ?>
+					<?
+						$sum = $arBasket["PRICE"] * $arQuantities[$mi];
+						echo CCurrencyLang::CurrencyFormat($sum, $arOrder["CURRENCY"], false);
+					?>
 				</td>
 			</tr>
 			<?
@@ -291,50 +296,45 @@ ClearVars("b_");
 				</td>
 				<td valign="top" align="right" bgcolor="#ffffff" style="border: 1pt solid #000000; border-right:none; border-top:none;">1 </td>
 				<td align="right" bgcolor="#ffffff" style="border: 1pt solid #000000; border-right:none; border-top:none;">
-					<?echo number_format($arOrder["DISCOUNT_VALUE"], 2, ',', ' ') ?>
+					<?echo CCurrencyLang::CurrencyFormat($arOrder["DISCOUNT_VALUE"], $arOrder["CURRENCY"], false);?>
 				</td>
 				<td align="right" bgcolor="#ffffff" style="border: 1pt solid #000000; border-top:none;">
-					<?echo number_format($arOrder["DISCOUNT_VALUE"], 2, ',', ' ') ?>
+					<?echo CCurrencyLang::CurrencyFormat($arOrder["DISCOUNT_VALUE"], $arOrder["CURRENCY"], false);?>
 				</td>
 			</tr>
 		<?endif?>
 
 
 
-		<?if (DoubleVal($arOrder["PRICE_DELIVERY"])>0):?>
+		<?if ($arOrder["DELIVERY_ID"]):?>
 			<tr>
 				<td bgcolor="#ffffff" style="border: 1pt solid #000000; border-right:none; border-top:none;">
 					<?echo $n?>
 				</td>
 				<td bgcolor="#ffffff" style="border: 1pt solid #000000; border-right:none; border-top:none;">
 					Доставка <?
-					$arDelivery_tmp = CSaleDelivery::GetByID($arOrder["DELIVERY_ID"]);
-					if (strlen($arDelivery_tmp["NAME"]) > 0)
-					{
-						echo "(".$arDelivery_tmp["NAME"].")";
-					}
+					$res = \Bitrix\Sale\Delivery\Services\Table::getList(array(
+						'filter' => array(
+							'=CODE' => $arOrder["DELIVERY_ID"]
+						)
+					));
 
-					$basket_tax = CSaleOrderTax::CountTaxes(DoubleVal($arOrder["PRICE_DELIVERY"]), $arTaxList, $arOrder["CURRENCY"]);
-					$nds_val = 0;
-					$item_price = DoubleVal($arOrder["PRICE_DELIVERY"]);
-					for ($i = 0; $i < count($arTaxList); $i++)
-					{
-						if ($arTaxList[$i]["IS_IN_PRICE"] == "Y")
-						{
-							$item_price -= $arTaxList[$i]["TAX_VAL"];
-						}
-						$nds_val += ($arTaxList[$i]["TAX_VAL"]);
-						$total_nds += $nds_val;
-					}
-					$total_sum += $nds_val+$item_price
+					if ($deliveryService = $res->fetch())
+						if(strlen($deliveryService["NAME"]) > 0)
+							echo "(".htmlspecialcharsEx($deliveryService["NAME"]).")";
+
+					$total_nds += $arOrder["DELIVERY_VAT_SUM"];
+					$total_sum += $arOrder["PRICE_DELIVERY"];
 					?>
 				</td>
 				<td valign="top" align="right" bgcolor="#ffffff" style="border: 1pt solid #000000; border-right:none; border-top:none;">1 </td>
 				<td align="right" bgcolor="#ffffff" style="border: 1pt solid #000000; border-right:none; border-top:none;">
-					<?echo number_format($arOrder["PRICE_DELIVERY"], 2, ',', ' ') ?>
+					<?
+                    echo CCurrencyLang::CurrencyFormat($arOrder["PRICE_DELIVERY"], $arOrder["CURRENCY"], false);
+                    ?>
 				</td>
 				<td align="right" bgcolor="#ffffff" style="border: 1pt solid #000000; border-top:none;">
-					<?echo number_format($arOrder["PRICE_DELIVERY"], 2, ',', ' ') ?>
+					<?echo CCurrencyLang::CurrencyFormat($arOrder["PRICE_DELIVERY"], $arOrder["CURRENCY"], false);?>
 				</td>
 			</tr>
 		<?endif?>
@@ -359,7 +359,7 @@ ClearVars("b_");
 					?>:
 				</td>
 				<td align="right" bgcolor="#ffffff" style="border: 1pt solid #000000; border-top:none;">
-					<?=number_format($total_nds, 2, ',', ' ')?>
+					<?echo CCurrencyLang::CurrencyFormat($total_nds, $arOrder["CURRENCY"], false);?>
 				</td>
 			</tr>
 			<?
@@ -367,7 +367,9 @@ ClearVars("b_");
 		?>
 		<tr>
 			<td align="right" bgcolor="#ffffff" colspan="4" style="border: 1pt solid #000000; border-right:none; border-top:none;">Итого:</td>
-			<td align="right" bgcolor="#ffffff" style="border: 1pt solid #000000; border-top:none;"><?echo number_format($total_sum, 2, ',', ' ') ?></td>
+			<td align="right" bgcolor="#ffffff" style="border: 1pt solid #000000; border-top:none;">
+				<?=CCurrencyLang::CurrencyFormat($total_sum, $arOrder["CURRENCY"], false);?>
+			</td>
 		</tr>
 	</table>
 <?//endif?>
@@ -382,10 +384,15 @@ ClearVars("b_");
 		echo SaleFormatCurrency($arOrder["PRICE"], $arOrder["CURRENCY"]);
 	}
 	?>.</p>
-
+<?
+	if ($arOrder['CURRENCY'] === 'UAH')
+		$contextCurrency = 'гривнах';
+	else
+		$contextCurrency = 'рублях';
+?>
 <p><font size="2">В случае непоступления средств на расчетный счет продавца в течение пяти
 банковских дней со дня выписки счета, продавец оставляет за собой право
-пересмотреть отпускную цену товара в рублях пропорционально изменению курса доллара
+пересмотреть отпускную цену товара в <?=$contextCurrency;?> пропорционально изменению курса доллара
 и выставить счет на доплату.<br><br>
 В платежном поручении обязательно указать - "Оплата по счету № <?echo $arOrder["ACCOUNT_NUMBER"]?> от <?echo $arOrder["DATE_INSERT_FORMAT"] ?>".<br><br>
 Получение товара только после прихода денег на расчетный счет компании.

@@ -45,6 +45,8 @@ class HostRestriction
 
 	/**
 	 * Handler for system event "OnPageStart", does nothing in CLI mode because it does not make sense
+	 *
+	 * @return void
 	 */
 	public static function onPageStart()
 	{
@@ -446,7 +448,7 @@ class HostRestriction
 	/**
 	 * Checks the host to detect logical errors (eg blocking the current host)
 	 *
-	 * @param string $hosts
+	 * @param string $hosts Allowed hosts (wild card supported, e.g.: *.example.com).
 	 * @return $this
 	 * @throws \Bitrix\Security\LogicException
 	 */

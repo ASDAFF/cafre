@@ -75,6 +75,8 @@ $MESS['SALE_REPORT_DEFAULT_MOST_EXPECTED_GOODS'] = 'Самые ожидаемые товары';
 $MESS['SALE_REPORT_DEFAULT_MOST_EXPECTED_GOODS_DESCR'] = 'Отчет показывает товары, появление которых на складе '.
 	'ожидается наибольшим количеством клиентов магазина. Отчет предназначен для определения наиболее ценных товаров '.
 	'для поставки в магазин и предназначен для менеджеров по закупкам.';
+$MESS['SALE_REPORT_DEFAULT_MOST_EXPECTED_GOODS_ALIAS_0'] = 'ID товара';
+$MESS['SALE_REPORT_DEFAULT_MOST_EXPECTED_GOODS_ALIAS_1'] = 'Наименование товара';
 $MESS['SALE_REPORT_DEFAULT_MOST_EXPECTED_GOODS_ALIAS_5'] = 'Кол-во подписок';
 $MESS['SALE_REPORT_DEFAULT_MOST_EXPECTED_GOODS_ALIAS_8'] = 'Возможный доход';
 

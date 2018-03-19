@@ -119,7 +119,7 @@ abstract class NameHelper extends Helper
 	##############################################
 	##############################################
 
-	public static function validateUpdateRequest(&$data)
+	public static function validateUpdateRequest($data)
 	{
 		$errors = parent::validateUpdateRequest($data);
 
@@ -305,7 +305,7 @@ abstract class NameHelper extends Helper
 		$map = static::readMap('name', 'detail');
 
 		// actually, NAME is not required when adding through LocationTable::add(), unless SHORT_NAME is set
-		unset($map['NAME']['required']);
+		// unset($map['NAME']['required']);
 
 		return $map;
 	}

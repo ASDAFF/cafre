@@ -6,11 +6,16 @@
 # http://www.bitrix.ru						#
 # mailto:admin@bitrix.ru					#
 ##############################################
+*//**
+ * @global CMain $APPLICATION
+ * @global CUser $USER
+ * @param integer $ID
 */
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/vote/prolog.php");
-$VOTE_RIGHT = $APPLICATION->GetGroupRight("vote");
-if($VOTE_RIGHT=="D") $APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
+if($APPLICATION->GetGroupRight("vote") <= "D")
+	$APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
+
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/vote/include.php");
 
 ClearVars();
@@ -24,70 +29,65 @@ $aTabs = array(
 	array("DIV" => "edit2", "TAB" => GetMessage("VOTE_QUESTION"), "ICON"=>"vote_question_edit", "TITLE"=>GetMessage("VOTE_QUESTION_TEXT")),
 	array("DIV" => "edit3", "TAB" => GetMessage("VOTE_ANSWERS"), "ICON"=>"vote_question_edit", "TITLE"=>GetMessage("VOTE_ANSWER_LIST")),
 );
+/* @var $request \Bitrix\Main\HttpRequest */
+$request = \Bitrix\Main\Context::getCurrent()->getRequest();
+
 $tabControl = new CAdminTabControl("tabControl", $aTabs);
 $message = null;
 $arSort = array(0);
 
-$ID = intval($ID);
+$ID = intval($request->getQuery("ID"));
+$voteId = intval($request->getQuery("VOTE_ID"));
+
 $arQuestion = array();
 $arAnswers = array();
 $arAnswersFields = array();
 
+if ($ID > 0 && ($db_res = CVoteQuestion::GetByID($ID)) && ($arQuestion = $db_res->fetch()))
+{
+	$ii = 1;
+	$voteId = intval($arQuestion["VOTE_ID"]);
+	$db_res = CVoteAnswer::GetList($ID);
+	while ($db_res && ($res = $db_res->fetch()))
+	{
+		$arAnswers[$ii] = $res;
+		$ii++;
+	}
+}
+else
+{
+	$ID = 0;
+}
 
-if ($ID > 0):
-	$db_res = CVoteQuestion::GetByID($ID);
-	if (!($db_res && $arQuestion = $db_res->Fetch())):
-		$ID = 0;
-	else:
-		$ii = 1;
-		$VOTE_ID = intVal($arQuestion["VOTE_ID"]);
-		$db_res = CVoteAnswer::GetList($ID);
-		if ($db_res && $res = $db_res->Fetch()):
-			do 
-			{
-				$arAnswers[$ii] = $res;
-				$ii++;
-			} while ($res = $db_res->Fetch());
-		endif;
-	endif;
-endif;
-if ($ID <= 0):
+if ($ID <= 0)
+{
 	$arQuestion = array(
 		"ACTIVE"		=> "Y",
-		"VOTE_ID"		=> $VOTE_ID,
-		"C_SORT"		=> CVoteQuestion::GetNextSort($VOTE_ID),
+		"VOTE_ID"		=> $voteId,
+		"C_SORT"		=> CVoteQuestion::GetNextSort($voteId),
 		"QUESTION"		=> "",
 		"QUESTION_TYPE"	=> "html",
-		"IMAGE_ID"		=> "", 
+		"IMAGE_ID"		=> "",
 		"DIAGRAM"		=> "Y",
 		"REQUIRED"		=> "N",
-		"DIAGRAM_TYPE"	=> VOTE_DEFAULT_DIAGRAM_TYPE, 
+		"DIAGRAM_TYPE"	=> VOTE_DEFAULT_DIAGRAM_TYPE,
 		"TEMPLATE"		=> "default.php",
 		"TEMPLATE_NEW"	=> "default.php");
-endif;
-$VOTE_ID = intVal($VOTE_ID);
-$arVote = array();
-$db_res = CVote::GetByID($VOTE_ID);
-if (!($db_res && $arVote = $db_res->Fetch())) 
+}
+
+try
+{
+	$vote = \Bitrix\Vote\Vote::loadFromId($voteId);
+	if (!$vote->canEdit($USER->GetID()))
+		throw new \Bitrix\Main\ArgumentException(GetMessage("ACCESS_DENIED"), "Access denied.");
+}
+catch(Exception $e)
 {
 	require_once ($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_after.php");
-	echo "<a href='vote_list.php?lang=".LANGUAGE_ID."' class='navchain'>".GetMessage("VOTE_VOTE_LIST")."</a>";
-	echo ShowError(GetMessage("VOTE_NOT_FOUND"));
+	ShowError($e->getMessage());
 	require_once ($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");
 	die();
 }
-$arVote["TITLE"] = (strlen($arVote["TITLE"]) > 0 ? $arVote["TITLE"] : TruncateText(
-	($arVote["DESCRIPTION_TYPE"] == "html" ? strip_tags($arVote["DESCRIPTION"]) : $arVote["DESCRIPTION"]), 200));
-
-$db_res = CVoteChannel::GetByID($arVote["CHANNEL_ID"]);
-$arChannel = $db_res->Fetch();
-
-$adminChain->AddItem(array(
-	"TEXT" => htmlspecialcharsbx($arChannel["TITLE"]), 
-	"LINK" => "vote_channel_edit.php?ID=$arChannel[ID]&lang=".LANGUAGE_ID));
-$adminChain->AddItem(array(
-	"TEXT" => htmlspecialcharsbx($arVote["TITLE"]), 
-	"LINK" => "vote_edit.php?ID=$arVote[ID]&lang=".LANGUAGE_ID));
 
 $sDocTitle = ($ID > 0 ? str_replace("#ID#", $ID, GetMessage("VOTE_EDIT_RECORD")) : GetMessage("VOTE_NEW_RECORD"));
 $APPLICATION->SetTitle($sDocTitle);
@@ -95,16 +95,17 @@ $APPLICATION->SetTitle($sDocTitle);
 /********************************************************************
 				ACTIONS
 ********************************************************************/
-if (!($_SERVER["REQUEST_METHOD"] == "POST" && (strlen($save)>0 || strlen($apply)>0))) {} 
-elseif ($VOTE_RIGHT < "W") { /* bad rights */ }
-elseif (!check_bitrix_sessid()) { /* bad sessid */ }
+
+
+if (!($_SERVER["REQUEST_METHOD"] == "POST" && (strlen($save)>0 || strlen($apply)>0))) {}
+elseif (!check_bitrix_sessid()) {}
 else
 {
 	$bVarsFromForm = false;
 	$_FILES["IMAGE_ID"] = (is_array($_FILES["IMAGE_ID"]) ? $_FILES["IMAGE_ID"] : array());
 	$arFields = array(
 		"ACTIVE"		=> (isset($_REQUEST["ACTIVE"])?$_REQUEST["ACTIVE"]:'N'),
-		"VOTE_ID"		=> $VOTE_ID,
+		"VOTE_ID"		=> $voteId,
 		"C_SORT"		=> $_REQUEST["C_SORT"],
 		"QUESTION"		=> $_REQUEST["QUESTION"],
 		"QUESTION_TYPE"	=> $_REQUEST["QUESTION_TYPE"],
@@ -119,14 +120,14 @@ else
 		if (intval($pid) <= 0) 
 			continue;
 		$arAnswer = array(
-			"ID" => intVal($_REQUEST["ANSWER_ID_".$pid]), 
+			"ID" => intval($_REQUEST["ANSWER_ID_".$pid]),
 			"QUESTION_ID" => $ID, 
 			"ACTIVE" => ($_REQUEST["ACTIVE_".$pid] == 'Y' ? 'Y' : 'N'), 
 			"C_SORT" => $_REQUEST["C_SORT_".$pid], 
 			"MESSAGE" => ($_REQUEST["MESSAGE_".$pid] != ' ') ? trim($_REQUEST["MESSAGE_".$pid]):' ', 
 			"FIELD_TYPE" => $_REQUEST["FIELD_TYPE_".$pid], 
-			"FIELD_WIDTH" => intVal($_REQUEST["FIELD_WIDTH_".$pid]), 
-			"FIELD_HEIGHT" => intVal($_REQUEST["FIELD_HEIGHT_".$pid]), 
+			"FIELD_WIDTH" => intval($_REQUEST["FIELD_WIDTH_".$pid]),
+			"FIELD_HEIGHT" => intval($_REQUEST["FIELD_HEIGHT_".$pid]),
 			"FIELD_PARAM" => trim($_REQUEST["FIELD_PARAM_".$pid]), 
 			"COLOR" => trim($_REQUEST["COLOR_".$pid]));
 		$arAnswersFields[$pid] = $arAnswer;
@@ -175,16 +176,16 @@ else
 	}
 	if (!$bVarsFromForm):
 		if (strlen($save)>0): 
-			LocalRedirect("vote_question_list.php?lang=".LANGUAGE_ID."&VOTE_ID=".$VOTE_ID);
+			LocalRedirect("vote_question_list.php?lang=".LANGUAGE_ID."&VOTE_ID=".$voteId);
 		endif;
-		LocalRedirect("vote_question_edit.php?lang=".LANGUAGE_ID."&ID=$ID&VOTE_ID=".$VOTE_ID."&".$tabControl->ActiveTabParam());
+		LocalRedirect("vote_question_edit.php?lang=".LANGUAGE_ID."&ID=$ID&VOTE_ID=".$voteId."&".$tabControl->ActiveTabParam());
 	elseif (!empty($aMsg)):
 		$e = new CAdminException($aMsg);
 	else:
 		$e = $APPLICATION->GetException();
 	endif;
 	$message = new CAdminMessage(GetMessage("VOTE_GOT_ERROR"), $e);
-	$arFields["IMAGE_ID"] = (intVal($arQuestion["IMAGE_ID"]) > 0 ? $arQuestion["IMAGE_ID"] : "");
+	$arFields["IMAGE_ID"] = (intval($arQuestion["IMAGE_ID"]) > 0 ? $arQuestion["IMAGE_ID"] : "");
 	$arQuestion = $arFields;
 	$arAnswers = $arAnswersFields;
 }
@@ -203,23 +204,23 @@ endif;
 
 $aMenu = array(
 	array(
-		"TEXT"	=> GetMessage("VOTE_LIST"),
+		"TEXT"	=> GetMessage("VOTE_QUESTIONS"),
 		"TITLE"	=> GetMessage("VOTE_QUESTIONS_LIST"), 
-		"LINK"	=> "/bitrix/admin/vote_question_list.php?lang=".LANGUAGE_ID."&VOTE_ID=".$VOTE_ID,
+		"LINK"	=> "/bitrix/admin/vote_question_list.php?lang=".LANGUAGE_ID."&VOTE_ID=".$voteId,
 		"ICON" => "btn_list"));
 
-if ($VOTE_RIGHT >= "W" && $ID > 0)
+if ($ID > 0)
 {
 	$aMenu[] = array(
 		"TEXT"	=> GetMessage("VOTE_CREATE"),
 		"TITLE"	=> GetMessage("VOTE_CREATE_NEW_RECORD"),
-		"LINK"	=> "/bitrix/admin/vote_question_edit.php?VOTE_ID=$VOTE_ID&lang=".LANGUAGE_ID,
+		"LINK"	=> "/bitrix/admin/vote_question_edit.php?VOTE_ID=$voteId&lang=".LANGUAGE_ID,
 		"ICON" => "btn_new");
 
 	$aMenu[] = array(
 		"TEXT"	=> GetMessage("VOTE_DELETE"), 
 		"TITLE"	=> GetMessage("VOTE_DELETE_RECORD"),
-		"LINK"	=> "javascript:if(confirm('".GetMessage("VOTE_DELETE_RECORD_CONFIRM")."')) window.location='/bitrix/admin/vote_question_list.php?action=delete&ID=$ID&VOTE_ID=$VOTE_ID&".bitrix_sessid_get()."&lang=".LANGUAGE_ID."';",
+		"LINK"	=> "javascript:if(confirm('".GetMessage("VOTE_DELETE_RECORD_CONFIRM")."')) window.location='/bitrix/admin/vote_question_list.php?action=delete&ID=$ID&VOTE_ID=$voteId&".bitrix_sessid_get()."&lang=".LANGUAGE_ID."';",
 		"ICON" => "btn_delete");
 }
 
@@ -324,7 +325,7 @@ function OnDiagramFlagChange()
 </SCRIPT>
 <?=bitrix_sessid_post()?>
 <input type="hidden" name="ID" value="<?=$ID?>" />
-<input type="hidden" name="VOTE_ID" value="<?=$VOTE_ID?>" />
+<input type="hidden" name="VOTE_ID" value="<?=$voteId?>" />
 <input type="hidden" name="lang" value="<?=LANGUAGE_ID?>">
 
 <?
@@ -336,13 +337,9 @@ $tabControl->Begin();
 $tabControl->BeginNextTab();
 ?>
 	<tr>
-		<td><?=GetMessage("VOTE_CHANNEL")?></td>
-		<td><?="[<a href='vote_channel_edit.php?ID=".$arChannel["ID"]."&lang=".LANGUAGE_ID."' title='".GetMessage("VOTE_GRP_CONF")."'>".$arChannel["ID"]."</a>] ".htmlspecialcharsbx($arChannel["TITLE"])?></td>
-	</tr>
-	<tr>
 		<td><?=GetMessage("VOTE_VOTE")?></td>
-		<td>[<a href="vote_edit.php?ID=<?=$arVote["ID"]?>&lang=<?=LANGUAGE_ID?>" title="<?=GetMessage("VOTE_CONF")?>"><?=$arVote["ID"]?></a>]&nbsp;
-			<?=htmlspecialcharsbx($arVote["TITLE"])?></td>
+		<td>[<a href="vote_edit.php?lang=<?=LANGUAGE_ID?>&ID=<?=$vote["ID"]?>" title="<?=GetMessage("VOTE_CONF")?>"><?=$vote["ID"]?></a>]&nbsp;
+			<?=htmlspecialcharsbx($vote["TITLE"])?></td>
 	</tr>
 	<?if (strlen($arQuestion["TIMESTAMP_X"]) > 0):?>
 	<tr><td><?=GetMessage("VOTE_TIMESTAMP")?></td>
@@ -357,7 +354,7 @@ $tabControl->BeginNextTab();
 		<td width="60%"><?=InputType("checkbox", "ACTIVE", "Y", $arQuestion["ACTIVE"], false)?></td>
 	</tr>
 	<tr><td><?=GetMessage("VOTE_C_SORT")?></td>
-		<td><input type="text" id="C_SORT" name="C_SORT" size="5" maxlength="18" value="<?=$arQuestion["C_SORT"]?>" /></td>
+		<td><input type="text" id="C_SORT" name="C_SORT" size="5" maxlength="18" value="<?=intval($arQuestion["C_SORT"])?>" /></td>
 	</tr>
 	<tr>
 		<td><?=GetMessage("VOTE_DIAGRAM")?></td>
@@ -409,7 +406,7 @@ $tabControl->BeginNextTab();
 	if(COption::GetOptionString("vote", "USE_HTML_EDIT")=="Y" && CModule::IncludeModule("fileman")):?>
 	<tr>
 		<td align="center" colspan="2"><?
-			CFileMan::AddHTMLEditorFrame("QUESTION", $arQuestion["QUESTION"], "QUESTION_TYPE", $arQuestion["QUESTION_TYPE"], array('height' => '200', 'width' => '100%'));
+			CFileMan::AddHTMLEditorFrame("QUESTION", htmlspecialcharsbx($arQuestion["QUESTION"]), "QUESTION_TYPE", $arQuestion["QUESTION_TYPE"], array('height' => '200', 'width' => '100%'));
 		?></td>
 	</tr>
 	<?else:?>
@@ -528,15 +525,15 @@ $tabControl->BeginNextTab();
 				<tr>
 					<td>
 						<input type="hidden" name="ANSWER[]" value="<?=$i?>" />
-						<input type="hidden" name="ANSWER_ID_<?=$i?>" value="<?=intVal($arAnswer["ID"])?>" />
-						<?=(intVal($arAnswer["ID"]) > 0 ? $arAnswer["ID"] : "")?></td>
+						<input type="hidden" name="ANSWER_ID_<?=$i?>" value="<?=intval($arAnswer["ID"])?>" />
+						<?=(intval($arAnswer["ID"]) > 0 ? $arAnswer["ID"] : "")?></td>
 					<td><input type="text" name="MESSAGE_<?=$i?>" value="<?=htmlspecialcharsbx($arAnswer["MESSAGE"])?>" style="width:100%;" /></td>
 					<td><?=SelectBoxFromArray("FIELD_TYPE_".$i, GetAnswerTypeList(), $arAnswer["FIELD_TYPE"], "", "OnChange=\"FIELD_TYPE_CHANGE(".$i.")\" class='typeselect'")?></td>
 					<td><input type="text" name="FIELD_WIDTH_<?=$i?>" id="FIELD_WIDTH_<?=$i?>" size="3" <?
-						?>value="<?=(intval($arAnswer["FIELD_WIDTH"])>0 ? intVal($arAnswer["FIELD_WIDTH"]) : "")?>" <?
+						?>value="<?=(intval($arAnswer["FIELD_WIDTH"])>0 ? intval($arAnswer["FIELD_WIDTH"]) : "")?>" <?
 						?><?=($arAnswer["FIELD_TYPE"]!=4 && $arAnswer["FIELD_TYPE"]!=5 ? "disabled='disabled'" : "")?> /></td>
 					<td><input type="text" name="FIELD_HEIGHT_<?=$i?>" id="FIELD_HEIGHT_<?=$i?>" size="3" <?
-						?>value="<?=(intval($arAnswer["FIELD_HEIGHT"])>0 ? intVal($arAnswer["FIELD_HEIGHT"]) : "")?>" <?
+						?>value="<?=(intval($arAnswer["FIELD_HEIGHT"])>0 ? intval($arAnswer["FIELD_HEIGHT"]) : "")?>" <?
 						?><?=($arAnswer["FIELD_TYPE"]!=4 && $arAnswer["FIELD_TYPE"]!=5 ? "disabled='disabled'" : "")?> /></td>
 					<td><input type="text" name="FIELD_PARAM_<?=$i?>" value="<?=htmlspecialcharsbx($arAnswer["FIELD_PARAM"])?>" size="10" /></td>
 					<td><input type="text" name="C_SORT_<?=$i?>" value="<?=htmlspecialcharsbx($arAnswer["C_SORT"])?>" size="3" /></td>
@@ -586,7 +583,7 @@ $tabControl->BeginNextTab();
 	</tr>
 <?
 $tabControl->EndTab();
-$tabControl->Buttons(array("disabled"=>($VOTE_RIGHT < "W"), "back_url"=>"vote_question_list.php?lang=".LANGUAGE_ID."&VOTE_ID=".$VOTE_ID));
+$tabControl->Buttons(array("back_url"=>"vote_question_list.php?lang=".LANGUAGE_ID."&VOTE_ID=".$voteId));
 $tabControl->End();
 ?>
 </form>

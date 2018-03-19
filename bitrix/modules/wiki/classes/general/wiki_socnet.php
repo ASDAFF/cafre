@@ -426,7 +426,7 @@ class CWikiSocnet
 
 		$arResult["EVENT_FORMATTED"] = array(
 			"TITLE" => $title,
-			"MESSAGE" => ($bMail ? CSocNetTextParser::killAllTags($arFields['MESSAGE']) : $arFields['MESSAGE'])
+			"MESSAGE" => ($bMail ? CSocNetTextParser::killAllTags($arFields['MESSAGE']) : htmlspecialcharsBack($arFields['MESSAGE']))
 		);
 
 		if ($bMail)
@@ -795,7 +795,7 @@ class CWikiSocnet
 					$bxSocNetSearch->Url(
 						str_replace(
 							"#wiki_name#",
-							urlencode($arFields["TITLE"]),
+							rawurlencode($arFields["TITLE"]),
 							$bxSocNetSearch->_params["PATH_TO_GROUP_WIKI_POST_COMMENT"]
 						),
 						array(

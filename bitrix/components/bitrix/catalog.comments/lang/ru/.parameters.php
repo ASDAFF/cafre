@@ -44,4 +44,5 @@ $MESS["CP_CC_ALLOW_IMAGE_UPLOAD"] = "Разрешить загрузку изображений";
 $MESS["CP_CC_ALLOW_IMAGE_UPLOAD_VALUE_A"] = "Всем";
 $MESS["CP_CC_ALLOW_IMAGE_UPLOAD_VALUE_R"] = "Зарегистрированным пользователям";
 $MESS["CP_CC_ALLOW_IMAGE_UPLOAD_VALUE_N"] = "Никому";
+$MESS["CATALOG_SC_CHECK_DATES"] = "Показывать коментарии только для активных на данный момент элементов";
 ?>

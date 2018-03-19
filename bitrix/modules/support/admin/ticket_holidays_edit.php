@@ -268,7 +268,7 @@ class CSupportPage
 			self::$holidaysFields = self::$postHolidaysFields;
 			self::$holidaysSlaFields = self::$postHolidaysSlaFields;
 		}	
-		self::$objCAdminForm = new CAdminForm("supTabControl", self::GetArrayOfTabs());
+		self::$objCAdminForm = new CAdminForm("supHolidaysTabControl", self::GetArrayOfTabs());
 		$APPLICATION->SetTitle(GetMessage("SUP_ADMIN_TITLE"));
 	}
 	

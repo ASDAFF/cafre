@@ -17,4 +17,6 @@ $MESS ['BPFC_PD_VALUE'] = "Значение";
 $MESS ['BPFC_PD_YES'] = "Да";
 $MESS ['BPFC_PD_IN'] = "содержится в";
 $MESS ['BPFC_PD_CONTAIN'] = "содержит";
+$MESS["BPFC_PD_PARAMS"] = "Параметры";
+$MESS["BPFC_PD_VARS"] = "Переменные";
 ?>

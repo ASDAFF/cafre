@@ -15,4 +15,6 @@ $MESS["REPORT_HELPER_NOT_DEFINED"] = "No helper class defined.";
 $MESS["REPORT_CHART_TYPE_LINE1"] = "Linear";
 $MESS["REPORT_CHART_TYPE_BAR1"] = "Bar";
 $MESS["REPORT_DEFAULT_CAN_NOT_BE_EDITED"] = "Cannot edit the standard report.";
+$MESS["REPORT_DEFAULT_CAN_NOT_BE_DELETED"] = "Default report cannot be deleted.";
+$MESS["REPORT_ERROR_ACCESS_DENIED"] = "Access denied.";
 ?>

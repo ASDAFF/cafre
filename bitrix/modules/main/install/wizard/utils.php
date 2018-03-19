@@ -38,7 +38,7 @@ function InstallGetMessage($name)
 
 class BXInstallServices
 {
-	function CreateWizardIndex($wizardName, &$errorMessage)
+	public static function CreateWizardIndex($wizardName, &$errorMessage)
 	{
 		$indexContent = '<'.'?'.
 			'define("WIZARD_DEFAULT_SITE_ID", "'.(defined("WIZARD_DEFAULT_SITE_ID") ? WIZARD_DEFAULT_SITE_ID : "s1").'");'.
@@ -80,7 +80,7 @@ class BXInstallServices
 		return true;
 	}
 
-	function LoadWizardData($wizard)
+	public static function LoadWizardData($wizard)
 	{
 		$arTmp = explode(":", $wizard);
 		$ar = array();
@@ -150,7 +150,7 @@ class BXInstallServices
 		);
 	}
 
-	function GetWizardsList($moduleName = "")
+	public static function GetWizardsList($moduleName = "")
 	{
 		$arWizardsList = array();
 		if (strlen($moduleName) <= 0)
@@ -251,7 +251,7 @@ class BXInstallServices
 		return array_values($arWizardsList);
 	}
 
-	function CopyDirFiles($path_from, $path_to, $rewrite = true)
+	public static function CopyDirFiles($path_from, $path_to, $rewrite = true)
 	{
 		if (strpos($path_to."/", $path_from."/")===0)
 			return false;
@@ -304,23 +304,17 @@ class BXInstallServices
 		}
 	}
 
-	function GetDBTypes()
+	public static function GetDBTypes()
 	{
 		$arTypes = Array();
 
 		if (file_exists($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/classes/mysql/database.php"))
-			$arTypes["mysql"] = function_exists("mysql_connect");
-
-		if (file_exists($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/classes/oracle/database.php"))
-			$arTypes["oracle"] = function_exists("OCILogon");
-
-		if (file_exists($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/classes/mssql/database.php"))
-			$arTypes["mssql"] = function_exists("sqlsrv_connect");
+			$arTypes["mysql"] = (function_exists("mysql_connect") || function_exists("mysqli_connect"));
 
 		return $arTypes;
 	}
 
-	function CheckDirPath($path)
+	public static function CheckDirPath($path, $dirPermissions = 0755)
 	{
 		$badDirs = Array();
 		$path = str_replace("\\", "/", $path);
@@ -341,7 +335,7 @@ class BXInstallServices
 			if (file_exists($path) && is_dir($path))
 			{
 				if (!is_writable($path))
-					@chmod($path, BX_DIR_PERMISSIONS);
+					@chmod($path, $dirPermissions);
 				break;
 			}
 			$badDirs[] = substr($path, $p+1);
@@ -352,7 +346,7 @@ class BXInstallServices
 		for ($i = count($badDirs)-1; $i>=0; $i--)
 		{
 			$path = $path."/".$badDirs[$i];
-			$success = @mkdir($path, BX_DIR_PERMISSIONS);
+			$success = @mkdir($path, $dirPermissions);
 			if (!$success)
 				return false;
 		}
@@ -360,7 +354,7 @@ class BXInstallServices
 		return true;
 	}
 
-	function DeleteDirRec($path)
+	public static function DeleteDirRec($path)
 	{
 		$path = str_replace("\\", "/", $path);
 		if (!file_exists($path)) return;
@@ -384,7 +378,7 @@ class BXInstallServices
 		@rmdir($path);
 	}
 
-	function DeleteDbFiles($dbType)
+	public static function DeleteDbFiles($dbType)
 	{
 		if (defined("DEBUG_MODE"))
 			return;
@@ -411,7 +405,7 @@ class BXInstallServices
 		closedir($handle);
 	}
 
-	function VersionCompare($strCurver, $strMinver, $strMaxver = "0.0.0")
+	public static function VersionCompare($strCurver, $strMinver, $strMaxver = "0.0.0")
 	{
 		$curver = explode(".", $strCurver);for ($i = 0; $i < 3; $i++) $curver[$i] = (isset($curver[$i]) ? intval($curver[$i]) : 0);
 		$minver = explode(".", $strMinver);  for ($i = 0; $i < 3; $i++) $minver[$i] = (isset($minver[$i]) ? intval($minver[$i]) : 0);
@@ -435,7 +429,7 @@ class BXInstallServices
 			return true;
 	}
 
-	function Add2Log($sText, $sErrorCode = "")
+	public static function Add2Log($sText, $sErrorCode = "")
 	{
 		$MAX_LOG_SIZE = 1000000;
 		$READ_PSIZE = 8000;
@@ -501,12 +495,12 @@ class BXInstallServices
 		ignore_user_abort($old_abort_status);
 	}
 
-	function ParseForSql($sqlString)
+	public static function ParseForSql($sqlString)
 	{
 	}
 
 
-	function GetDemoWizard()
+	public static function GetDemoWizard()
 	{
 		if (!defined("B_PROLOG_INCLUDED"))
 			define("B_PROLOG_INCLUDED",true);
@@ -540,7 +534,7 @@ class BXInstallServices
 		return $defaultWizard;
 	}
 
-	function GetWizardCharset($wizardName)
+	public static function GetWizardCharset($wizardName)
 	{
 		if (!defined("B_PROLOG_INCLUDED"))
 			define("B_PROLOG_INCLUDED",true);
@@ -558,7 +552,7 @@ class BXInstallServices
 		return false;
 	}
 
-	function IsShortInstall()
+	public static function IsShortInstall()
 	{
 		$dbconnPath = $_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/php_interface/dbconn.php";
 
@@ -566,15 +560,15 @@ class BXInstallServices
 			return false;
 
 		define("DELAY_DB_CONNECT", false); //For check connection in $DB->Connect
-		global $DBType, $DBHost, $DBLogin, $DBPassword, $DBName, $DBDebug, $DBSQLServerType;
+		global $DBType, $DBHost, $DBLogin, $DBPassword, $DBName, $DBDebug;
 		@include($dbconnPath);
 
 		return defined("SHORT_INSTALL");
 	}
 
-	function CheckShortInstall()
+	public static function CheckShortInstall()
 	{
-		global $DB, $DBType, $DBHost, $DBLogin, $DBPassword, $DBName, $DBDebug, $DBSQLServerType;
+		global $DB, $DBType, $DBHost, $DBLogin, $DBPassword, $DBName, $DBDebug;
 
 		if (defined("SHORT_INSTALL_CHECK"))
 			return true;
@@ -602,11 +596,24 @@ class BXInstallServices
 
 		$DBType = strtolower($DBType);
 		if ($DBType == 'mysql')
-			$dbClassName = "\\Bitrix\\Main\\DB\\MysqlConnection";
+		{
+			if(defined("BX_USE_MYSQLI") && BX_USE_MYSQLI === true)
+			{
+				$dbClassName = "\\Bitrix\\Main\\DB\\MysqliConnection";
+			}
+			else
+			{
+				$dbClassName = "\\Bitrix\\Main\\DB\\MysqlConnection";
+			}
+		}
 		elseif ($DBType == 'mssql')
+		{
 			$dbClassName = "\\Bitrix\\Main\\DB\\MssqlConnection";
+		}
 		else
+		{
 			$dbClassName = "\\Bitrix\\Main\\DB\\OracleConnection";
+		}
 
 		$conPool->setConnectionParameters(
 			\Bitrix\Main\Data\ConnectionPool::DEFAULT_CONNECTION_NAME,
@@ -616,7 +623,7 @@ class BXInstallServices
 				'database' => $DBName,
 				'login' => $DBLogin,
 				'password' => $DBPassword,
-				'options' => (function_exists("mysql_pconnect") ? 1 : 0) | 2
+				'options' => 2
 			)
 		);
 
@@ -629,8 +636,8 @@ class BXInstallServices
 		$databaseStep->DB =& $DB;
 		$databaseStep->dbType = $DBType;
 		$databaseStep->dbName = $DBName;
-		$databaseStep->filePermission = (defined("BX_FILE_PERMISSIONS") ? BX_FILE_PERMISSIONS : 0);
-		$databaseStep->folderPermission = (defined("BX_DIR_PERMISSIONS") ? BX_DIR_PERMISSIONS : 0);
+		$databaseStep->filePermission = (defined("BX_FILE_PERMISSIONS")? sprintf("%04o", BX_FILE_PERMISSIONS) : 0);
+		$databaseStep->folderPermission = (defined("BX_DIR_PERMISSIONS")? sprintf("%04o", BX_DIR_PERMISSIONS) : 0);
 		$databaseStep->createDBType = (defined("MYSQL_TABLE_TYPE") ? MYSQL_TABLE_TYPE : "");
 		$databaseStep->utf8 = defined("BX_UTF");
 		$databaseStep->createCharset = null;
@@ -673,17 +680,23 @@ class BXInstallServices
 			}
 
 			if (strlen($databaseStep->createDBType) > 0)
-				$DB->Query("SET storage_engine = '".$databaseStep->createDBType."'", false);
+			{
+				$res = $DB->Query("SET storage_engine = '".$databaseStep->createDBType."'", true);
+				if(!$res)
+				{
+					//mysql 5.7 removed storage_engine variable
+					$DB->Query("SET default_storage_engine = '".$databaseStep->createDBType."'");
+				}
+			}
 
 			//SQL mode
 			$dbResult = $DB->Query("SELECT @@sql_mode", true);
 			if ($dbResult && ($arResult = $dbResult->Fetch()))
 			{
 				$sqlMode = trim($arResult["@@sql_mode"]);
-				if (strpos($sqlMode, "STRICT_TRANS_TABLES") !== false )
+				if ($sqlMode <> "")
 				{
-					$databaseStep->sqlMode = preg_replace("~,?STRICT_TRANS_TABLES~i", "", $sqlMode);
-					$databaseStep->sqlMode = ltrim($databaseStep->sqlMode, ",");
+					$databaseStep->sqlMode = "";
 				}
 			}
 
@@ -723,7 +736,7 @@ class BXInstallServices
 		return true;
 	}
 
-	function ShowStepErrors($obStep)
+	public static function ShowStepErrors($obStep)
 	{
 		header("Content-Type: text/html; charset=".INSTALL_CHARSET);
 
@@ -744,16 +757,16 @@ class BXInstallServices
 	}
 
 	//UTF Functions
-	function IsUTF8Support()
+	public static function IsUTF8Support()
 	{
 		return (
 			extension_loaded("mbstring")
 			&& ini_get("mbstring.func_overload") == 2
-			&& strtoupper(ini_get("mbstring.internal_encoding")) == "UTF-8"
+			&& strtoupper(ini_get("default_charset")) == "UTF-8"
 		);
 	}
 
-	function IsUTFString($string)
+	public static function IsUTFString($string)
 	{
 		return preg_match('%^(?:
 			[\x09\x0A\x0D\x20-\x7E]             # ASCII
@@ -767,7 +780,7 @@ class BXInstallServices
 		)*$%xs', $string);
 	}
 
-	function EncodeFile($filePath, $charsetFrom)
+	public static function EncodeFile($filePath, $charsetFrom)
 	{
 		$position = strrpos($filePath, ".");
 		$extension = strtolower(substr($filePath, $position + 1, strlen($filePath) - $position));
@@ -793,7 +806,7 @@ class BXInstallServices
 		}
 	}
 
-	function EncodeDir($dirPath, $charsetFrom, $encodeALL = false)
+	public static function EncodeDir($dirPath, $charsetFrom, $encodeALL = false)
 	{
 		$dirPath = str_replace("\\", "/", $dirPath);
 		$dirPath = rtrim($dirPath, "/");
@@ -837,7 +850,7 @@ class BXInstallServices
 		}
 	}
 
-	function SetStatus($status)
+	public static function SetStatus($status)
 	{
 		$bCgi = (stristr(php_sapi_name(), "cgi") !== false);
 		$bFastCgi = ($bCgi && (array_key_exists('FCGI_ROLE', $_SERVER) || array_key_exists('FCGI_ROLE', $_ENV)));
@@ -847,7 +860,7 @@ class BXInstallServices
 			header($_SERVER["SERVER_PROTOCOL"]." ".$status);
 	}
 
-	function LocalRedirect($url)
+	public static function LocalRedirect($url)
 	{
 		global $HTTP_HOST, $SERVER_PORT;
 
@@ -881,7 +894,7 @@ class BXInstallServices
 	}
 
 
-	function SetSession()
+	public static function SetSession()
 	{
 		if (!function_exists("session_start"))
 			return false;
@@ -892,7 +905,7 @@ class BXInstallServices
 		return true;
 	}
 
-	function CheckSession()
+	public static function CheckSession()
 	{
 		if (!function_exists("session_start"))
 			return false;
@@ -902,7 +915,7 @@ class BXInstallServices
 		return ( isset($_SESSION["session_check"]) && $_SESSION["session_check"] == "Y" );
 	}
 
-	function GetWizardsSettings()
+	public static function GetWizardsSettings()
 	{
 		$arWizardConfig = Array();
 		$configFile = $_SERVER["DOCUMENT_ROOT"]."/install.config";
@@ -930,5 +943,114 @@ class BXInstallServices
 		return $arWizardConfig;
 	}
 
+	public static function GetRegistrationKey($lic_key_user_name, $lic_key_user_surname, $lic_key_email, $DBType)
+	{
+		$lic_site = $_SERVER["HTTP_HOST"];
+		if(strlen($lic_site) <= 0)
+			$lic_site = "localhost";
 
+		$arClientModules = Array();
+		$handle = @opendir($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules");
+		if ($handle)
+		{
+			while (false !== ($dir = readdir($handle)))
+			{
+				if (is_dir($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/".$dir)
+					&& $dir!="." && $dir!="..")
+				{
+					$module_dir = $_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/".$dir;
+					if (file_exists($module_dir."/install/index.php"))
+					{
+						$arClientModules[] = $dir;
+					}
+				}
+			}
+			closedir($handle);
+		}
+
+		$lic_edition = serialize($arClientModules);
+
+		if (defined("INSTALL_CHARSET") && strlen(INSTALL_CHARSET) > 0)
+			$charset = INSTALL_CHARSET;
+		else
+			$charset = "windows-1251";
+
+		if(LANGUAGE_ID == "ru")
+			$host = "www.1c-bitrix.ru";
+		else
+			$host = "www.bitrixsoft.com";
+
+		$path = "/bsm_register_key.php";
+		$port = 80;
+		$query = "sur_name=$lic_key_user_surname&first_name=$lic_key_user_name&email=$lic_key_email&site=$lic_site&modules=".urlencode($lic_edition)."&db=$DBType&lang=".LANGUAGE_ID."&bx=Y&max_users=".TRIAL_RENT_VERSION_MAX_USERS;
+
+		if(defined("install_license_type"))
+			$query .= "&cp_type=".install_license_type;
+		if(defined("install_edition"))
+			$query .= "&edition=".install_edition;
+
+		$page_content = "";
+		$fp = @fsockopen("$host", "$port", $errnum, $errstr, 30);
+		if ($fp)
+		{
+			fputs($fp, "POST {$path} HTTP/1.1\r\n");
+			fputs($fp, "Host: {$host}\r\n");
+			fputs($fp, "Content-type: application/x-www-form-urlencoded; charset=\"".$charset."\"\r\n");
+			fputs($fp, "User-Agent: bitrixKeyReq\r\n");
+			fputs($fp, "Content-length: ".(function_exists("mb_strlen")? mb_strlen($query, 'latin1'): strlen($query))."\r\n");
+			fputs($fp, "Connection: close\r\n\r\n");
+			fputs($fp, $query."\r\n\r\n");
+			$headersEnded = 0;
+			while(!feof($fp))
+			{
+				$returned_data = fgets($fp, 128);
+				if($returned_data=="\r\n")
+				{
+					$headersEnded = 1;
+				}
+
+				if($headersEnded==1)
+				{
+					$page_content .= htmlspecialcharsbx($returned_data);
+				}
+			}
+			fclose($fp);
+		}
+		$arContent = explode("\n", $page_content);
+
+		$bOk = false;
+		$key = "";
+		foreach($arContent as $v)
+		{
+			if($v == "OK")
+				$bOk = true;
+
+			if(strlen($v) > 10)
+				$key = trim($v);
+		}
+		if($bOk && strlen($key) > 0)
+			return $key;
+
+		return false;
+	}
+
+	public static function CreateLicenseFile($licenseKey)
+	{
+		if (strlen($licenseKey) <= 0)
+			$licenseKey = "DEMO";
+
+		$filePath = $_SERVER["DOCUMENT_ROOT"]."/bitrix/license_key.php";
+
+		if (!$fp = @fopen($filePath, "wb"))
+			return false;
+
+		$fileContent = "<"."? \$"."LICENSE_KEY = \"".addslashes($licenseKey)."\"; ?".">";
+
+		if (!fwrite($fp, $fileContent))
+			return false;
+
+		@fclose($fp);
+
+		return true;
+	}
 }

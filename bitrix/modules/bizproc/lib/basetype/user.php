@@ -18,17 +18,37 @@ class User extends Base
 		return FieldType::USER;
 	}
 
-	/** @var array $formats	 */
-	protected static $formats = array(
-		'printable' => 	array(
-			'callable' =>'formatValuePrintable',
-			'separator' => ', ',
-		),
-		'friendly' => array(
+	/**
+	 * Get formats list.
+	 * @return array
+	 */
+	public static function getFormats()
+	{
+		$formats = parent::getFormats();
+		$formats['friendly'] = array(
 			'callable' =>'formatValueFriendly',
 			'separator' => ', ',
-		)
-	);
+		);
+		return $formats;
+	}
+
+	/**
+	 * Normalize single value.
+	 *
+	 * @param FieldType $fieldType Document field type.
+	 * @param mixed $value Field value.
+	 * @return mixed Normalized value
+	 */
+	public static function toSingleValue(FieldType $fieldType, $value)
+	{
+		if (is_array($value))
+		{
+			reset($value);
+			$value = current($value);
+		}
+
+		return $value;
+	}
 
 	/**
 	 * @param FieldType $fieldType
@@ -71,12 +91,13 @@ class User extends Base
 			case FieldType::DOUBLE:
 			case FieldType::INT:
 				$value = (string)$value;
-				if (strpos($value, 'user_'))
+				if (strpos($value, 'user_') === 0)
 					$value = substr($value, strlen('user_'));
 				$value = (int)$value;
 				break;
 			case FieldType::STRING:
 			case FieldType::TEXT:
+			case FieldType::USER:
 				$value = (string)$value;
 				break;
 			default:
@@ -84,6 +105,23 @@ class User extends Base
 		}
 
 		return $value;
+	}
+
+	/**
+	 * Return conversion map for current type.
+	 * @return array Map.
+	 */
+	public static function getConversionMap()
+	{
+		return array(
+			array(
+				FieldType::DOUBLE,
+				FieldType::INT,
+				FieldType::STRING,
+				FieldType::TEXT,
+				FieldType::USER
+			)
+		);
 	}
 
 	/**

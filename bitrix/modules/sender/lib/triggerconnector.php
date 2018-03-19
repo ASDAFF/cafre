@@ -11,7 +11,7 @@ namespace Bitrix\Sender;
 abstract class TriggerConnector extends Trigger
 {
 	/** @var \Bitrix\Sender\Connector $connector */
-	var $connector;
+	public $connector;
 
 	/** @return string */
 	final protected function getConnectorForm()
@@ -101,6 +101,7 @@ abstract class TriggerConnector extends Trigger
 		return $this->filterConnectorData();
 	}
 
+	/** @return mixed */
 	public function getRecipient()
 	{
 		return $this->recipient;
@@ -111,6 +112,31 @@ abstract class TriggerConnector extends Trigger
 	{
 		$eventData = $this->getParam('EVENT');
 		return array('ID' => $eventData['ID']);
+	}
+
+	/**
+	 * @return \Bitrix\Sender\ConnectorResult
+	 */
+	public function getRecipientResult()
+	{
+		$result = parent::getRecipientResult();
+		if(!$this->connector)
+		{
+			return $result;
+		}
+
+		$personalizeList = array();
+		$connectorPersonalizeList = $this->connector->getPersonalizeList();
+		foreach($connectorPersonalizeList as $tag)
+		{
+			if(strlen($tag['CODE']) > 0)
+			{
+				$personalizeList[] = $tag['CODE'];
+			}
+		}
+		$result->setFilterFields(array_merge($result->getFilterFields(),  $personalizeList));
+
+		return $result;
 	}
 
 	/**

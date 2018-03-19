@@ -56,7 +56,7 @@ body {background:url("images/submenu-bg.png") repeat 0 0;
 
 .bx-ie8 .login-header,
 .bx-ie9 .login-header {
-	background:url("images/bx-admin-sprite-small-1.png") repeat-x 0 -3734px;
+	background:url("images/bx-admin-sprite-small-2.png") repeat-x 0 -3734px;
 	box-shadow:none;
 	top:0;
 	height:56px;
@@ -116,7 +116,7 @@ body {background:url("images/submenu-bg.png") repeat 0 0;
 }
 
 .login-language-btn:after {
-	background:url("images/bx-admin-sprite-small-1.png") no-repeat 0 -3313px;
+	background:url("images/bx-admin-sprite-small-2.png") no-repeat 0 -3313px;
 	content:"";
 	right:0;
 	top:11px;
@@ -169,7 +169,7 @@ body {background:url("images/submenu-bg.png") repeat 0 0;
 }
 
 .login-footer-link {
-	background:url("images/bx-admin-sprite-small-1.png") no-repeat 0 -1652px;
+	background:url("images/bx-admin-sprite-small-2.png") no-repeat 0 -1652px;
 	float:right;
 	padding:0 26px 0 22px;
 }
@@ -246,19 +246,22 @@ body {background:url("images/submenu-bg.png") repeat 0 0;
 	color:#515863;
 	font-size:18px;
 	text-shadow:0 1px rgba(255,255,255, 0.5);
-	padding:3px 0 10px;
+	padding: 3px 0 10px;
 }
 
 
 /********************** login popup interrnals *******************/
 
-.login-popup-field {position:relative;}
+.login-popup-field {
+	padding-bottom: 15px;
+	position:relative;
+}
 
 .login-popup-field-title {
 	color:#333;
 	font-size:18px;
 	font-weight:bold;
-	padding:15px 0 7px;
+	padding: 0 0 7px;
 }
 
 
@@ -271,7 +274,7 @@ body {background:url("images/submenu-bg.png") repeat 0 0;
 .login-popup-link:hover {text-decoration:underline;}
 
 .login-popup-forget-pas {
-	margin-top:32px;
+	margin-top: 24px;
 }
 
 .login-popup-return-auth
@@ -289,6 +292,7 @@ body {background:url("images/submenu-bg.png") repeat 0 0;
 	transition:height 0.3s ease-in;
 	height:0;
 	overflow:hidden;
+	padding-bottom: 0;
 }
 
 .login-captcha-popup-wrap .login-captcha-field {height:101px;}
@@ -323,10 +327,10 @@ body {background:url("images/submenu-bg.png") repeat 0 0;
 
 /************* checkbox block **************/
 
-.login-popup-checbox-block {padding-top:17px;}
+.login-popup-checbox-block {padding-top: 2px;}
 
 .login-popup-checbox-block .adm-designed-checkbox-label {
-	background:url("images/bx-admin-sprite-small-1.png") no-repeat 0 -983px;
+	background:url("images/bx-admin-sprite-small-2.png") no-repeat 0 -983px;
 	border:1px solid transparent;
 	border-radius:2px;
 	box-shadow:0 0 0 2px rgba(140,173,201, 0);
@@ -483,7 +487,7 @@ body {background:url("images/submenu-bg.png") repeat 0 0;
 }
 
 .adm-info-message-close {
-	background:url("images/bx-admin-sprite-small-1.png") no-repeat center -3168px;
+	background:url("images/bx-admin-sprite-small-2.png") no-repeat center -3168px;
 	cursor:pointer;
 	height:30px;
 	right:0;
@@ -636,7 +640,7 @@ body {background:url("images/submenu-bg.png") repeat 0 0;
 	border-radius:5px;
 	border:none;
 	height:37px;
-	bottom:10px;
+	bottom: 25px;
 	cursor:pointer;
 	-webkit-transition:background-color 0.2s ease-in;
 	-moz-transition:background-color 0.2s ease-in;
@@ -767,7 +771,7 @@ body {background:url("images/submenu-bg.png") repeat 0 0;
 .login-loading {
 	height:31px;
 	right:27px;
-	bottom:15px;
+	bottom: 30px;
 	overflow:hidden;
 	position:absolute;
 	width:0;
@@ -1003,3 +1007,38 @@ body {background:url("images/submenu-bg.png") repeat 0 0;
 	opacity:0;
 }
 
+
+
+.login-popup-network-block {
+	border-top: 1px solid #c6cfd3;
+	margin-top: 30px;
+	position: relative;
+	padding-top: 23px;
+}
+
+.login-popup-network-label {
+	background-color: #dde7e9;
+	color: #595f67;
+	font-size: 11px;
+	font-weight: bold;
+	left: 0;
+	top: -7px;
+	text-transform: uppercase;
+	padding-right: 17px;
+	position: absolute;
+}
+
+.login-popup-network-btn {
+	background: url(images/logo-popup-network-btn-text.png) no-repeat center 9px #28c1f2;
+	border-radius: 17px;
+	display: inline-block;
+	height: 35px;
+	width: 130px;
+	cursor: pointer;
+}
+.login-popup-network-btn-ua {
+	background-position: center -25px;
+}
+.login-popup-network-btn-en {
+	background-position: center -60px;
+}

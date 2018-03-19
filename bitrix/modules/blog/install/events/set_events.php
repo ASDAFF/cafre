@@ -6,6 +6,7 @@ while($lang = $langs->Fetch())
 	IncludeModuleLangFile($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/blog/install/events.php", $lid);
 
 	$et = new CEventType;
+
 	$et->Add(array(
 		"LID" => $lid,
 		"EVENT_NAME" => "NEW_BLOG_MESSAGE",
@@ -13,7 +14,6 @@ while($lang = $langs->Fetch())
 		"DESCRIPTION" => GetMessage("NEW_BLOG_MESSAGE_DESC"),
 	));
 
-	$et = new CEventType;
 	$et->Add(array(
 		"LID" => $lid,
 		"EVENT_NAME" => "NEW_BLOG_COMMENT",
@@ -21,7 +21,6 @@ while($lang = $langs->Fetch())
 		"DESCRIPTION" => GetMessage("NEW_BLOG_COMMENT_DESC"),
 	));
 
-	$et = new CEventType;
 	$et->Add(array(
 		"LID" => $lid,
 		"EVENT_NAME" => "NEW_BLOG_COMMENT2COMMENT",
@@ -29,7 +28,6 @@ while($lang = $langs->Fetch())
 		"DESCRIPTION" => GetMessage("NEW_BLOG_COMMENT2COMMENT_DESC"),
 	));
 
-	$et = new CEventType;
 	$et->Add(array(
 		"LID" => $lid,
 		"EVENT_NAME" => "NEW_BLOG_COMMENT_WITHOUT_TITLE",
@@ -37,7 +35,6 @@ while($lang = $langs->Fetch())
 		"DESCRIPTION" => GetMessage("NEW_BLOG_COMMENT_WITHOUT_TITLE_DESC"),
 	));
 
-	$et = new CEventType;
 	$et->Add(array(
 		"LID" => $lid,
 		"EVENT_NAME" => "NEW_BLOG_COMMENT2COMMENT_WITHOUT_TITLE",
@@ -45,7 +42,6 @@ while($lang = $langs->Fetch())
 		"DESCRIPTION" => GetMessage("NEW_BLOG_COMMENT2COMMENT_WITHOUT_TITLE_DESC"),
 	));
 
-	$et = new CEventType;
 	$et->Add(array(
 		"LID" => $lid,
 		"EVENT_NAME" => "BLOG_YOUR_BLOG_TO_USER",
@@ -53,7 +49,6 @@ while($lang = $langs->Fetch())
 		"DESCRIPTION" => GetMessage("BLOG_YOUR_BLOG_TO_USER_DESC"),
 	));
 
-	$et = new CEventType;
 	$et->Add(array(
 		"LID" => $lid,
 		"EVENT_NAME" => "BLOG_YOU_TO_BLOG",
@@ -61,7 +56,6 @@ while($lang = $langs->Fetch())
 		"DESCRIPTION" => GetMessage("BLOG_YOU_TO_BLOG_DESC"),
 	));
 
-	$et = new CEventType;
 	$et->Add(array(
 		"LID" => $lid,
 		"EVENT_NAME" => "BLOG_BLOG_TO_YOU",
@@ -69,12 +63,39 @@ while($lang = $langs->Fetch())
 		"DESCRIPTION" => GetMessage("BLOG_BLOG_TO_YOU_DESC"),
 	));
 
-	$et = new CEventType;
 	$et->Add(array(
 		"LID" => $lid,
 		"EVENT_NAME" => "BLOG_USER_TO_YOUR_BLOG",
 		"NAME" => GetMessage("BLOG_USER_TO_YOUR_BLOG_NAME"),
 		"DESCRIPTION" => GetMessage("BLOG_USER_TO_YOUR_BLOG_DESC"),
+	));
+
+	$et->Add(array(
+		"LID" => $lid,
+		"EVENT_NAME" => "BLOG_SONET_NEW_POST",
+		"NAME" => GetMessage("BLOG_SONET_NEW_POST_NAME"),
+		"DESCRIPTION" => GetMessage("BLOG_SONET_NEW_POST_DESC"),
+	));
+
+	$et->Add(array(
+		"LID" => $lid,
+		"EVENT_NAME" => "BLOG_SONET_NEW_COMMENT",
+		"NAME" => GetMessage("BLOG_SONET_NEW_COMMENT_NAME"),
+		"DESCRIPTION" => GetMessage("BLOG_SONET_NEW_COMMENT_DESC"),
+	));
+
+	$et->Add(array(
+		"LID" => $lid,
+		"EVENT_NAME" => "BLOG_SONET_POST_SHARE",
+		"NAME" => GetMessage("BLOG_SONET_POST_SHARE_NAME"),
+		"DESCRIPTION" => GetMessage("BLOG_SONET_POST_SHARE_DESC"),
+	));
+
+	$et->Add(array(
+		"LID" => $lid,
+		"EVENT_NAME" => "BLOG_POST_BROADCAST",
+		"NAME" => GetMessage("BLOG_POST_BROADCAST_NAME"),
+		"DESCRIPTION" => GetMessage("BLOG_POST_BROADCAST_DESC"),
 	));
 
 	$arSites = array();
@@ -84,8 +105,8 @@ while($lang = $langs->Fetch())
 
 	if(count($arSites) > 0)
 	{
-
 		$emess = new CEventMessage;
+
 		$emess->Add(array(
 			"ACTIVE" => "Y",
 			"EVENT_NAME" => "NEW_BLOG_MESSAGE",
@@ -97,7 +118,6 @@ while($lang = $langs->Fetch())
 			"BODY_TYPE" => "text",
 		));
 
-		$emess = new CEventMessage;
 		$emess->Add(array(
 			"ACTIVE" => "Y",
 			"EVENT_NAME" => "NEW_BLOG_COMMENT",
@@ -109,7 +129,6 @@ while($lang = $langs->Fetch())
 			"BODY_TYPE" => "text",
 		));
 
-		$emess = new CEventMessage;
 		$emess->Add(array(
 			"ACTIVE" => "Y",
 			"EVENT_NAME" => "NEW_BLOG_COMMENT2COMMENT",
@@ -121,7 +140,6 @@ while($lang = $langs->Fetch())
 			"BODY_TYPE" => "text",
 		));
 	
-		$emess = new CEventMessage;
 		$emess->Add(array(
 			"ACTIVE" => "Y",
 			"EVENT_NAME" => "NEW_BLOG_COMMENT_WITHOUT_TITLE",
@@ -133,7 +151,6 @@ while($lang = $langs->Fetch())
 			"BODY_TYPE" => "text",
 		));
 	
-		$emess = new CEventMessage;
 		$emess->Add(array(
 			"ACTIVE" => "Y",
 			"EVENT_NAME" => "NEW_BLOG_COMMENT2COMMENT_WITHOUT_TITLE",
@@ -144,7 +161,7 @@ while($lang = $langs->Fetch())
 			"MESSAGE" => GetMessage("NEW_BLOG_COMMENT2COMMENT_WITHOUT_TITLE_MESSAGE"),
 			"BODY_TYPE" => "text",
 		));
-		$emess = new CEventMessage;
+
 		$emess->Add(array(
 			"ACTIVE" => "Y",
 			"EVENT_NAME" => "BLOG_YOUR_BLOG_TO_USER",
@@ -155,7 +172,7 @@ while($lang = $langs->Fetch())
 			"MESSAGE" => GetMessage("BLOG_YOUR_BLOG_TO_USER_MESSAGE"),
 			"BODY_TYPE" => "text",
 		));		
-		$emess = new CEventMessage;
+
 		$emess->Add(array(
 			"ACTIVE" => "Y",
 			"EVENT_NAME" => "BLOG_YOU_TO_BLOG",
@@ -166,7 +183,7 @@ while($lang = $langs->Fetch())
 			"MESSAGE" => GetMessage("BLOG_YOU_TO_BLOG_MESSAGE"),
 			"BODY_TYPE" => "text",
 		));
-		$emess = new CEventMessage;
+
 		$emess->Add(array(
 			"ACTIVE" => "Y",
 			"EVENT_NAME" => "BLOG_BLOG_TO_YOU",
@@ -177,7 +194,7 @@ while($lang = $langs->Fetch())
 			"MESSAGE" => GetMessage("BLOG_BLOG_TO_YOU_MESSAGE"),
 			"BODY_TYPE" => "text",
 		));
-		$emess = new CEventMessage;
+
 		$emess->Add(array(
 			"ACTIVE" => "Y",
 			"EVENT_NAME" => "BLOG_USER_TO_YOUR_BLOG",
@@ -186,6 +203,53 @@ while($lang = $langs->Fetch())
 			"EMAIL_TO" => "#EMAIL_TO#",
 			"SUBJECT" => GetMessage("BLOG_USER_TO_YOUR_BLOG_SUBJECT"),
 			"MESSAGE" => GetMessage("BLOG_USER_TO_YOUR_BLOG_MESSAGE"),
+			"BODY_TYPE" => "text",
+		));
+
+		$emess->Add(array(
+			"ACTIVE" => "Y",
+			"EVENT_NAME" => "BLOG_SONET_NEW_POST",
+			"LID" => $arSites,
+			"EMAIL_FROM" => "#EMAIL_FROM#",
+			"EMAIL_TO" => "#EMAIL_TO#",
+			"SUBJECT" => "#POST_TITLE#",
+			"MESSAGE" => "<?EventMessageThemeCompiler::includeComponent(\"bitrix:socialnetwork.blog.post.mail\",\"\",Array(\"EMAIL_TO\" => \"{#EMAIL_TO#}\",\"RECIPIENT_ID\" => \"{#RECIPIENT_ID#}\",\"POST_ID\" => \"{#POST_ID#}\",\"URL\" => \"{#URL#}\"));?>",
+			"BODY_TYPE" => "html",
+			"SITE_TEMPLATE_ID" => "mail_user"
+		));
+
+		$emess->Add(array(
+			"ACTIVE" => "Y",
+			"EVENT_NAME" => "BLOG_SONET_NEW_COMMENT",
+			"LID" => $arSites,
+			"EMAIL_FROM" => "#EMAIL_FROM#",
+			"EMAIL_TO" => "#EMAIL_TO#",
+			"SUBJECT" => "Re: #POST_TITLE#",
+			"MESSAGE" => "<?EventMessageThemeCompiler::includeComponent(\"bitrix:socialnetwork.blog.post.comment.mail\",\"\",Array(\"COMMENT_ID\" => \"{#COMMENT_ID#}\",\"RECIPIENT_ID\" => \"{#RECIPIENT_ID#}\",\"EMAIL_TO\" => \"{#EMAIL_TO#}\",\"POST_ID\" => \"{#POST_ID#}\",\"URL\" => \"{#URL#}\"));?>",
+			"BODY_TYPE" => "html",
+			"SITE_TEMPLATE_ID" => "mail_user"
+		));
+
+		$emess->Add(array(
+			"ACTIVE" => "Y",
+			"EVENT_NAME" => "BLOG_SONET_POST_SHARE",
+			"LID" => $arSites,
+			"EMAIL_FROM" => "#EMAIL_FROM#",
+			"EMAIL_TO" => "#EMAIL_TO#",
+			"SUBJECT" => "#POST_TITLE#",
+			"MESSAGE" => "<?EventMessageThemeCompiler::includeComponent(\"bitrix:socialnetwork.blog.post_share.mail\",\"\",Array(\"EMAIL_TO\" => \"{#EMAIL_TO#}\",\"RECIPIENT_ID\" => \"{#RECIPIENT_ID#}\",\"POST_ID\" => \"{#POST_ID#}\",\"URL\" => \"{#URL#}\"));?>",
+			"BODY_TYPE" => "html",
+			"SITE_TEMPLATE_ID" => "mail_user"
+		));
+
+		$emess->Add(array(
+			"ACTIVE" => "Y",
+			"EVENT_NAME" => "BLOG_POST_BROADCAST",
+			"LID" => $arSites,
+			"EMAIL_FROM" => "#DEFAULT_EMAIL_FROM#",
+			"EMAIL_TO" => "#EMAIL_TO#",
+			"SUBJECT" => GetMessage("BLOG_POST_BROADCAST_SUBJECT"),
+			"MESSAGE" => GetMessage("BLOG_POST_BROADCAST_MESSAGE"),
 			"BODY_TYPE" => "text",
 		));
 	}

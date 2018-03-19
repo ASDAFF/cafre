@@ -1,8 +1,8 @@
 <?
-use Bitrix\Main;
-use Bitrix\Main\Localization\loc;
-use Bitrix\Catalog;
-use Bitrix\Sale\DiscountCouponsManager;
+use Bitrix\Main,
+	Bitrix\Main\Localization\Loc,
+	Bitrix\Catalog,
+	Bitrix\Sale\DiscountCouponsManager;
 
 Loc::loadMessages(__FILE__);
 
@@ -22,12 +22,12 @@ class CAllCatalogDiscountCoupon
 	* @param bool $boolFull			Get full description.
 	* @return array
 	*/
-	public function GetCoupontTypes($boolFull = false)
+	public static function GetCoupontTypes($boolFull = false)
 	{
 		return Catalog\DiscountCouponTable::getCouponTypes($boolFull);
 	}
 
-	public function CheckFields($ACTION, &$arFields, $ID = 0)
+	public static function CheckFields($ACTION, &$arFields, $ID = 0)
 	{
 		global $DB, $APPLICATION, $USER;
 
@@ -141,7 +141,7 @@ class CAllCatalogDiscountCoupon
 	* @param string $coupon			Coupon code.
 	* @return bool
 	*/
-	public function SetCoupon($coupon)
+	public static function SetCoupon($coupon)
 	{
 		if (self::$existCouponsManager === null)
 			self::initCouponManager();
@@ -181,7 +181,7 @@ class CAllCatalogDiscountCoupon
 	* @deprecated deprecated since catalog 15.0.4
 	* @see \Bitrix\Sale\DiscountCouponsManager::get
 	*/
-	public function GetCoupons()
+	public static function GetCoupons()
 	{
 		if (self::$existCouponsManager === null)
 			self::initCouponManager();
@@ -209,7 +209,7 @@ class CAllCatalogDiscountCoupon
 	* @param string $strCoupon			Coupon code.
 	* @return bool
 	*/
-	public function EraseCoupon($strCoupon)
+	public static function EraseCoupon($strCoupon)
 	{
 		if (self::$existCouponsManager === null)
 			self::initCouponManager();
@@ -245,7 +245,7 @@ class CAllCatalogDiscountCoupon
 	* @deprecated deprecated since catalog 15.0.4
 	* @see \Bitrix\Sale\DiscountCouponsManager::clear
 	*/
-	public function ClearCoupon()
+	public static function ClearCoupon()
 	{
 		if (self::$existCouponsManager === null)
 			self::initCouponManager();
@@ -269,7 +269,7 @@ class CAllCatalogDiscountCoupon
 	* @param string $strCoupon			Coupon code.
 	* @return bool
 	*/
-	public function SetCouponByManage($intUserID, $strCoupon)
+	public static function SetCouponByManage($intUserID, $strCoupon)
 	{
 		$intUserID = (int)$intUserID;
 		if ($intUserID >= 0)
@@ -316,9 +316,9 @@ class CAllCatalogDiscountCoupon
 	* @see \Bitrix\Sale\DiscountCouponsManager::get
 	*
 	* @param int $intUserID			User id.
-	* @return bool
+	* @return bool|array
 	*/
-	public function GetCouponsByManage($intUserID)
+	public static function GetCouponsByManage($intUserID)
 	{
 		$intUserID = (int)$intUserID;
 		if ($intUserID >= 0)
@@ -354,7 +354,7 @@ class CAllCatalogDiscountCoupon
 	* @param string $strCoupon			Coupon code.
 	* @return bool
 	*/
-	public function EraseCouponByManage($intUserID, $strCoupon)
+	public static function EraseCouponByManage($intUserID, $strCoupon)
 	{
 		$intUserID = (int)$intUserID;
 		if ($intUserID >= 0)
@@ -396,7 +396,7 @@ class CAllCatalogDiscountCoupon
 	* @param int $intUserID				User id.
 	* @return bool
 	*/
-	public function ClearCouponsByManage($intUserID)
+	public static function ClearCouponsByManage($intUserID)
 	{
 		$intUserID = (int)$intUserID;
 		if ($intUserID >= 0)
@@ -431,7 +431,7 @@ class CAllCatalogDiscountCoupon
 	* @param array $arModules			Modules list.
 	* @return bool
 	*/
-	public function OnSetCouponList($intUserID, $arCoupons, $arModules)
+	public static function OnSetCouponList($intUserID, $arCoupons, $arModules)
 	{
 		global $USER;
 		$boolResult = false;
@@ -502,7 +502,7 @@ class CAllCatalogDiscountCoupon
 	* @param array $arModules			Modules list.
 	* @return bool
 	*/
-	public function OnClearCouponList($intUserID, $arCoupons, $arModules)
+	public static function OnClearCouponList($intUserID, $arCoupons, $arModules)
 	{
 		global $USER;
 
@@ -570,7 +570,7 @@ class CAllCatalogDiscountCoupon
 	* @param array $arModules			Modules list.
 	* @return bool
 	*/
-	public function OnDeleteCouponList($intUserID, $arModules)
+	public static function OnDeleteCouponList($intUserID, $arModules)
 	{
 		global $USER;
 
@@ -616,7 +616,7 @@ class CAllCatalogDiscountCoupon
 	* @param string $strCoupon			Coupon code.
 	* @return bool
 	*/
-	public function IsExistCoupon($strCoupon)
+	public static function IsExistCoupon($strCoupon)
 	{
 		return false;
 	}

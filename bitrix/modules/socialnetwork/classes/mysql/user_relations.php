@@ -10,15 +10,7 @@ class CSocNetUserRelations extends CAllSocNetUserRelations
 	{
 		global $DB;
 
-		$arFields1 = array();
-		foreach ($arFields as $key => $value)
-		{
-			if (substr($key, 0, 1) == "=")
-			{
-				$arFields1[substr($key, 1)] = $value;
-				unset($arFields[$key]);
-			}
-		}
+		$arFields1 = \Bitrix\Socialnetwork\Util::getEqualityFields($arFields);
 
 		if (!CSocNetUserRelations::CheckFields("ADD", $arFields))
 			return false;
@@ -31,22 +23,8 @@ class CSocNetUserRelations extends CAllSocNetUserRelations
 		$arInsert = $DB->PrepareInsert("b_sonet_user_relations", $arFields);
 		$strUpdate = $DB->PrepareUpdate("b_sonet_user_relations", $arFields);
 
-		foreach ($arFields1 as $key => $value)
-		{
-			if (strlen($arInsert[0]) > 0)
-				$arInsert[0] .= ", ";
-			$arInsert[0] .= $key;
-			if (strlen($arInsert[1]) > 0)
-				$arInsert[1] .= ", ";
-			$arInsert[1] .= $value;
-		}
-
-		foreach ($arFields1 as $key => $value)
-		{
-			if (strlen($strUpdate) > 0)
-				$strUpdate .= ", ";
-			$strUpdate .= $key."=".$value." ";
-		}
+		\Bitrix\Socialnetwork\Util::processEqualityFieldsToInsert($arFields1, $arInsert);
+		\Bitrix\Socialnetwork\Util::processEqualityFieldsToUpdate($arFields1, $strUpdate);
 
 		$ID = false;
 		if (strlen($arInsert[0]) > 0)
@@ -64,8 +42,11 @@ class CSocNetUserRelations extends CAllSocNetUserRelations
 			while ($arEvent = $events->Fetch())
 				ExecuteModuleEventEx($arEvent, array($ID, &$arFields));
 
-			if ((!array_key_exists("SEND_MAIL", $arFields)
-				|| $arFields["SEND_MAIL"] != "N")
+			if (
+				(
+					!array_key_exists("SEND_MAIL", $arFields)
+					|| $arFields["SEND_MAIL"] != "N"
+				)
 				&& !IsModuleInstalled("im")
 			)
 			{
@@ -92,15 +73,7 @@ class CSocNetUserRelations extends CAllSocNetUserRelations
 
 		$ID = IntVal($ID);
 
-		$arFields1 = array();
-		foreach ($arFields as $key => $value)
-		{
-			if (substr($key, 0, 1) == "=")
-			{
-				$arFields1[substr($key, 1)] = $value;
-				unset($arFields[$key]);
-			}
-		}
+		$arFields1 = \Bitrix\Socialnetwork\Util::getEqualityFields($arFields);
 
 		if (!CSocNetUserRelations::CheckFields("UPDATE", $arFields, $ID))
 			return false;
@@ -113,13 +86,7 @@ class CSocNetUserRelations extends CAllSocNetUserRelations
 		$arUserRelationOld = CSocNetUserRelations::GetByID($ID);
 
 		$strUpdate = $DB->PrepareUpdate("b_sonet_user_relations", $arFields);
-
-		foreach ($arFields1 as $key => $value)
-		{
-			if (strlen($strUpdate) > 0)
-				$strUpdate .= ", ";
-			$strUpdate .= $key."=".$value." ";
-		}
+		\Bitrix\Socialnetwork\Util::processEqualityFieldsToUpdate($arFields1, $strUpdate);
 
 		if (strlen($strUpdate) > 0)
 		{
@@ -133,7 +100,8 @@ class CSocNetUserRelations extends CAllSocNetUserRelations
 			while ($arEvent = $events->Fetch())
 				ExecuteModuleEventEx($arEvent, array($ID, $arFields));
 
-			if ((!array_key_exists("SEND_MAIL", $arFields)
+			if (
+				(!array_key_exists("SEND_MAIL", $arFields)
 				|| $arFields["SEND_MAIL"] != "N")
 				&& !IsModuleInstalled("im")
 			)
@@ -162,7 +130,7 @@ class CSocNetUserRelations extends CAllSocNetUserRelations
 	/***************************************/
 	/**********  DATA SELECTION  ***********/
 	/***************************************/
-	function GetList($arOrder = Array("ID" => "DESC"), $arFilter = Array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array())
+	public static function GetList($arOrder = Array("ID" => "DESC"), $arFilter = Array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array())
 	{
 		global $DB;
 
@@ -253,7 +221,7 @@ class CSocNetUserRelations extends CAllSocNetUserRelations
 		$arSqls["SELECT"] = str_replace("%%_DISTINCT_%%", "", $arSqls["SELECT"]);
 
 		if (
-			is_array($arGroupBy) 
+			is_array($arGroupBy)
 			&& count($arGroupBy) == 0
 		)
 		{
@@ -424,7 +392,7 @@ class CSocNetUserRelations extends CAllSocNetUserRelations
 
 		return $DB->Query($strSql);
 	}
-	
+
 	function GetRelationsTop($userID, $number = 100)
 	{
 		global $DB;

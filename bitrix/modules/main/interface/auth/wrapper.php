@@ -50,7 +50,6 @@ function dump_post_var($vname, $vvalue, $var_stack=array())
 
 //last login from cookie
 $last_login = ${COption::GetOptionString("main", "cookie_name", "BITRIX_SM")."_LOGIN"};
-
 if (isset($_REQUEST['bxsender']))
 {
 	if ($_REQUEST['bxsender'] != 'core_autosave')
@@ -59,7 +58,11 @@ if (isset($_REQUEST['bxsender']))
 	return;
 }
 
-if ($arAuthResult && defined('ADMIN_SECTION_LOAD_AUTH') && ADMIN_SECTION_LOAD_AUTH || $_REQUEST['AUTH_FORM'])
+if(
+	$arAuthResult
+	&& defined('ADMIN_SECTION_LOAD_AUTH')
+	&& ADMIN_SECTION_LOAD_AUTH || $_REQUEST['AUTH_FORM']
+)
 {
 	$APPLICATION->RestartBuffer();
 	include($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/interface/auth/wrapper_auth_result.php");

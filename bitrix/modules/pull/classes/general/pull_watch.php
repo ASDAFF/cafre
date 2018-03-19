@@ -35,7 +35,7 @@ class CAllPullWatch
 		}
 		if ($arResult && $arResult[$tag])
 		{
-			if ($arResult[$tag]['DATE_CREATE']+1800 > time())
+			if ($arResult[$tag]['DATE_CREATE']+1860 > time())
 			{
 				self::$arUpdate[intval($arResult[$tag]['ID'])] = intval($arResult[$tag]['ID']);
 				return true;
@@ -50,7 +50,7 @@ class CAllPullWatch
 
 		self::$arInsert[trim($tag)] = trim($tag);
 
-		if ($immediate)
+		if ($immediate || defined('BX_CHECK_AGENT_START') && !defined('BX_WITH_ON_AFTER_EPILOG'))
 		{
 			self::DeferredSql($userId);
 		}
@@ -64,17 +64,27 @@ class CAllPullWatch
 		if (empty(self::$arUpdate) && empty(self::$arInsert))
 			return false;
 
-		if (defined('PULL_USER_ID'))
-			$userId = PULL_USER_ID;
-
 		$userId = intval($userId);
-
+		if (!$userId)
+		{
+			if (defined('PULL_USER_ID'))
+			{
+				$userId = PULL_USER_ID;
+			}
+			else if (is_object($GLOBALS['USER']) && $GLOBALS['USER']->GetID() > 0)
+			{
+				$userId = $GLOBALS['USER']->GetId();
+			}
+			else if (intval($_SESSION["SESS_SEARCHER_ID"]) <= 0 && intval($_SESSION["SESS_GUEST_ID"]) > 0 && \CPullOptions::GetGuestStatus())
+			{
+				$userId = intval($_SESSION["SESS_GUEST_ID"])*-1;
+			}
+		}
 		if ($userId === 0)
-			$userId = $USER->GetId();
-
-		if ($userId === 0)
+		{
 			return false;
-		
+		}
+
 		$arChannel = CPullChannel::Get($userId);
 		if (!empty(self::$arUpdate))
 		{
@@ -135,45 +145,79 @@ class CAllPullWatch
 		return true;
 	}
 
-	public static function Extend($userId, $tag)
+	public static function Extend($userId, $tags)
 	{
 		global $DB, $CACHE_MANAGER;
 
-		if (intval($userId) == 0 || strlen($tag) <= 0)
-			return false;
-
-		$strSql = "SELECT ID FROM b_pull_watch WHERE USER_ID = ".intval($userId)." AND TAG = '".$DB->ForSQL($tag)."'";
-		$dbRes = $DB->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
-		if ($arRes = $dbRes->Fetch())
+		if (intval($userId) == 0)
 		{
-			$ID = $arRes['ID'];
-			$arChannel = CPullChannel::Get($userId);
-			$DB->Query("UPDATE b_pull_watch SET DATE_CREATE = ".$DB->CurrentTimeFunction().", CHANNEL_ID = '".$DB->ForSQL($arChannel['CHANNEL_ID'])."' WHERE ID = ".$ID);
-			$CACHE_MANAGER->Clean("b_pw_".$userId, "b_pull_watch");
+			return false;
 		}
-		return false;
-	}
 
-	public static function AddToStack($tag, $arMessage)
-	{
-		global $DB;
+		if (is_array($tags))
+		{
+			$isMulti = true;
+			$searchTag = '';
+			if (empty($tags))
+			{
+				return false;
+			}
+		}
+		else
+		{
+			$isMulti = false;
+			$searchTag = trim($tags);
+			if (strlen($searchTag) <= 0)
+			{
+				return false;
+			}
+			else
+			{
+				$tags = Array($searchTag);
+			}
+		}
 
-		$arChannels = Array();
-		$strSql = "
-				SELECT pc.CHANNEL_ID
-				FROM b_pull_watch pw
-				LEFT JOIN b_pull_channel pc ON pw.USER_ID = pc.USER_ID
-				WHERE pw.TAG = '".$DB->ForSQL($tag)."'
-		";
+		$result = Array();
+		foreach ($tags as $id => $tag)
+		{
+			$result[$tag] = false;
+			$tags[$id] = $DB->ForSQL($tag);
+		}
+
+		$updateIds = Array();
+		$strSql = "SELECT ID, TAG FROM b_pull_watch WHERE USER_ID = ".intval($userId)." AND TAG IN ('".implode("', '", $tags)."')";
 		$dbRes = $DB->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
 		while ($arRes = $dbRes->Fetch())
 		{
-			$arChannels[] = $arRes['CHANNEL_ID'];
+			$updateIds[] = $arRes['ID'];
+			$result[$arRes['TAG']] = true;
 		}
 
-		$result = CPullStack::AddByChannel($arChannels, $arMessage);
-		if (!$result)
-			return false;
+		if ($updateIds)
+		{
+			$DB->Query("UPDATE b_pull_watch SET DATE_CREATE = ".$DB->CurrentTimeFunction()." WHERE ID IN (".implode(', ', $updateIds).")");
+			$CACHE_MANAGER->Clean("b_pw_".$userId, "b_pull_watch");
+		}
+
+		return $isMulti? $result: $result[$searchTag];
+	}
+
+	public static function AddToStack($tag, $parameters, $channelType = \CPullChannel::TYPE_PRIVATE)
+	{
+		global $DB;
+
+		$users = Array();
+
+		$result = $DB->Query("SELECT USER_ID FROM b_pull_watch WHERE TAG = '".$DB->ForSQL($tag)."'");
+		while ($row = $result->Fetch())
+		{
+			if (isset($parameters['skip_users']) && in_array($row['USER_ID'], $parameters['skip_users']))
+				continue;
+
+			$users[] = $row['USER_ID'];
+		}
+
+		\Bitrix\Pull\Event::add($users, $parameters, $channelType);
 
 		return true;
 	}

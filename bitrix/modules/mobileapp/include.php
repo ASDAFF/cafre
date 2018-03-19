@@ -1,4 +1,7 @@
 <?
+// delete from updates
+//include("module_updater.php");
+
 CModule::AddAutoloadClasses(
 	"mobileapp",
 	array(
@@ -14,15 +17,26 @@ CModule::AddAutoloadClasses(
 	)
 );
 
+$GLOBALS["APPLICATION"]->AddJSKernelInfo('mobileapp', array('/bitrix/js/mobileapp/fastclick.js'));
+
 CJSCore::RegisterExt('mobile_webrtc', array(
 		'js'   => '/bitrix/js/mobileapp/mobile_webrtc.js',
 		'lang' => '/bitrix/modules/mobileapp/lang/'.LANGUAGE_ID.'/mobile_webrtc.php',
+		'rel'=>array("ajax","ls")
 	));
 
 CJSCore::RegisterExt('mdesigner', array(
 		'js'   => '/bitrix/js/mobileapp/designer.js',
 		'css'  => '/bitrix/js/mobileapp/app_designer.css',
 		'lang' => '/bitrix/modules/mobileapp/lang/'.LANGUAGE_ID.'/mobile_designer.php',
+		'rel' => array('ajax','popup','qrcode')
+	));
+
+CJSCore::RegisterExt('mobile_fastclick', array(
+		'js'   => '/bitrix/js/mobileapp/fastclick.js',
+	));
+CJSCore::RegisterExt('mobile_gesture', array(
+		'js'   => '/bitrix/js/mobileapp/gesture.js',
 	));
 
 ?>

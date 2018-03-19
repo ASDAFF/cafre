@@ -1,4 +1,4 @@
-<?php
+<?
 $MESS["BPTLWGT_TITLE"] = "Бизнес-процессы";
 $MESS["BPTLWGT_RUNNING"] = "Ждут реакции";
 $MESS["BPTLWGT_MODULE_DISK"] = "Документы";

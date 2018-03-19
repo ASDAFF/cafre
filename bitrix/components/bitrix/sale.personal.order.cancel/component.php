@@ -1,6 +1,8 @@
 <?
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
 
+$this->setFramemode(false);
+
 if (!CModule::IncludeModule("sale"))
 {
 	ShowError(GetMessage("SALE_MODULE_NOT_INSTALL"));
@@ -11,7 +13,7 @@ global $APPLICATION, $USER;
 
 if (!$USER->IsAuthorized())
 {
-	$APPLICATION->AuthForm(GetMessage("SALE_ACCESS_DENIED"));
+	$APPLICATION->AuthForm(GetMessage("SALE_ACCESS_DENIED"), false, false, 'N', false);
 }
 
 $ID = urldecode(urldecode($arParams["ID"]));

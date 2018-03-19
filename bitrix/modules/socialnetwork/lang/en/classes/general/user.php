@@ -58,4 +58,6 @@ $MESS["SONET_UP1_BLOG_ALIAS"] = "Nickname";
 $MESS["SONET_UP1_BLOG_DESCRIPTION"] = "Description";
 $MESS["SONET_UP1_BLOG_INTERESTS"] = "Interests";
 $MESS["SONET_UP1_BLOG_AVATAR"] = "Avatar";
+$MESS["SONET_UP1_LAST_ACTIVITY_DATE"] = "Last activity date";
+$MESS["SONET_UP1_IS_ONLINE"] = "Status";
 ?>

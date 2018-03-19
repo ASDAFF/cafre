@@ -1,8 +1,9 @@
 <?if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
 if($arResult["CanUserComment"])
 {
+	/* @deprecated */
 	$arResult["Smiles"] = CBlogSmile::GetSmilesList();
-	$arResult["SmilesCount"] = count($arSmileTmp["Smiles"]);
+	$arResult["SmilesCount"] = count($arResult["Smiles"]);
 
 	$cache = new CPHPCache;
 	$cache_id = "blog_form_comments".serialize($arParams["COMMENT_PROPERTY"]);

@@ -10,4 +10,6 @@ $MESS["BPCRU_PD_MAX_LEVEL_1"] = "1 (immediate supervisor)";
 $MESS["BPCRU_PD_SKIP_ABSENT"] = "Escalate to higher level if absent";
 $MESS["BPCRU_PD_YES"] = "Yes";
 $MESS["BPCRU_PD_NO"] = "No";
+$MESS["BPCRU_PD_TYPE_ORDER"] = "sequential";
+$MESS["BPCRU_PD_SKIP_TIMEMAN"] = "Skip checked out employees";
 ?>

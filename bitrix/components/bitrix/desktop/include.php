@@ -92,7 +92,7 @@ function GDCSaveSettings($arParams, $POS)
 
 class BXGadget
 {
-	function GetGadgetContent(&$arGadget, $arParams)
+	public static function GetGadgetContent(&$arGadget, $arParams)
 	{
 		global $APPLICATION, $USER;
 
@@ -106,7 +106,7 @@ class BXGadget
 		return ob_get_clean();
 	}
 
-	function GetList($bWithParameters = false, $arAllCurrentValues = false)
+	public static function GetList($bWithParameters = false, $arAllCurrentValues = false)
 	{
 		$arGadgets = array();
 
@@ -154,12 +154,12 @@ class BXGadget
 		return $arGadgets;
 	}
 
-	function _sort($ar1, $ar2)
+	public static function _sort($ar1, $ar2)
 	{
 		return strcmp($ar1["NAME"], $ar2["NAME"]);
 	}
 
-	function GetById($id, $bWithParameters = false, $arAllCurrentValues = false)
+	public static function GetById($id, $bWithParameters = false, $arAllCurrentValues = false)
 	{
 		$id = _normalizePath(strtolower($id));
 

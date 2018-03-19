@@ -16,7 +16,7 @@ $MESS["VOTE_PAGES"] = "Visitors";
 $MESS["VOTE_DATE_START"] = "First";
 $MESS["VOTE_DATE_END"] = "Last";
 $MESS["VOTE_COUNTER"] = "Number of votes";
-$MESS["VOTE_USER"] = "Visitor";
+$MESS["VOTE_VISITOR"] = "Visitor";
 $MESS["VOTE_EDIT_USER"] = "User profile";
 $MESS["VOTE_NOT_AUTHORIZED"] = "(not authorized)";
 $MESS["VOTE_USER_VOTES"] = "List of polls that the visitor took part in";
@@ -37,4 +37,5 @@ $MESS["VOTE_EXACT_MATCH"] = "Use exact match";
 $MESS["DELETE_ERROR"] = "An error occurred while deleting an object.";
 $MESS["MAIN_ADMIN_LIST_SELECTED"] = "Selected:";
 $MESS["MAIN_ADMIN_LIST_CHECKED"] = "Checked:";
+$MESS["VOTE_USER"] = "User";
 ?>

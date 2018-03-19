@@ -148,11 +148,38 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && check_bitrix_sessid())
 			"NAME" => trim($_POST["NAME"], " \n\r\t\x0"),
 			"IS_REQUIRED" => $_POST["IS_REQUIRED"],
 			"MULTIPLE" => $_POST["MULTIPLE"],
+			"CODE" => $_POST["CODE"],
 			"TYPE" => $_POST["TYPE"],
 			"DEFAULT_VALUE" => $_POST["DEFAULT_VALUE"],
 			"USER_TYPE_SETTINGS" => $_POST["USER_TYPE_SETTINGS"],
 			"SETTINGS" => $_POST["SETTINGS"],
 		);
+
+		if(isset($arField["SETTINGS"]["ADD_READ_ONLY_FIELD"]) && $arField["SETTINGS"]["ADD_READ_ONLY_FIELD"] == "Y")
+		{
+			switch($arField["TYPE"])
+			{
+				case "SORT":
+					if(strlen($arField["DEFAULT_VALUE"]) <= 0)
+						$strError = GetMessage("CC_BLFE_BAD_FIELD_ADD_READ_ONLY")."<br>";
+					break;
+				case "L":
+					if(is_array($_POST["LIST_DEF"]))
+					{
+						$listDefaultValue = current($_POST["LIST_DEF"]);
+						if(empty($listDefaultValue))
+							$strError = GetMessage("CC_BLFE_BAD_FIELD_ADD_READ_ONLY")."<br>";
+					}
+					break;
+				case "S:HTML":
+					if(empty($arField["DEFAULT_VALUE"]["TEXT"]))
+						$strError = GetMessage("CC_BLFE_BAD_FIELD_ADD_READ_ONLY")."<br>";
+					break;
+				default:
+					if(empty($arField["DEFAULT_VALUE"]))
+						$strError = GetMessage("CC_BLFE_BAD_FIELD_ADD_READ_ONLY")."<br>";
+			}
+		}
 
 		if(strlen($arField["NAME"]) <= 0)
 			$strError = GetMessage("CC_BLFE_BAD_FIELD_NAME")."<br>";
@@ -161,6 +188,20 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && check_bitrix_sessid())
 		{
 			$arField["DEFAULT_VALUE"]["METHOD"] = "resample";
 			$arField["DEFAULT_VALUE"]["COMPRESSION"] = intval(COption::GetOptionString('main', 'image_resize_quality', '95'));
+		}
+		elseif($arField["TYPE"] == "S:Date")
+		{
+			if(!empty($arField["DEFAULT_VALUE"]) && !CheckDateTime($arField["DEFAULT_VALUE"], FORMAT_DATE))
+			{
+				$strError = GetMessage("CC_BLFE_INVALID_DEFAULT_VALUE")."<br>";
+			}
+		}
+		elseif($arField["TYPE"] == "S:DateTime")
+		{
+			if(!empty($arField["DEFAULT_VALUE"]) && !CheckDateTime($arField["DEFAULT_VALUE"]))
+			{
+				$strError = GetMessage("CC_BLFE_INVALID_DEFAULT_VALUE")."<br>";
+			}
 		}
 
 		if(preg_match("/^(G|G:|E|E:)/", $arField["TYPE"]))
@@ -236,37 +277,52 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && check_bitrix_sessid())
 
 		if(!$strError)
 		{
-			if($arResult["FIELD_ID"])
+			try
 			{
-				unset($arField["TYPE"]);
-				$arResult["FIELD_ID"] = $obList->UpdateField($arResult["FIELD_ID"], $arField);
-			}
-			else
-			{
-				$arResult["FIELD_ID"] = $obList->AddField($arField);
-			}
+				if ($arResult["FIELD_ID"])
+				{
+					unset($arField["TYPE"]);
+					$arResult["FIELD_ID"] = $obList->UpdateField($arResult["FIELD_ID"], $arField);
+				}
+				else
+				{
+					$arResult["FIELD_ID"] = $obList->AddField($arField);
+				}
 
-			//Clear components cache
-			$CACHE_MANAGER->ClearByTag("lists_list_".$arIBlock["ID"]);
+				//Clear components cache
+				$CACHE_MANAGER->ClearByTag("lists_list_".$arIBlock["ID"]);
 
-			$tab_name = $arResult["FORM_ID"]."_active_tab";
+				$tab_name = $arResult["FORM_ID"]."_active_tab";
 
-			//And go to proper page
-			if(isset($_POST["save"]))
-				LocalRedirect($arResult["~LIST_FIELDS_URL"]);
-			elseif($arResult["FIELD_ID"])
-				LocalRedirect(
-					CHTTP::urlAddParams(str_replace(
+				$obList->actualizeDocumentAdminPage(str_replace(
+					array("#list_id#", "#group_id#"),
+					array($arResult["IBLOCK_ID"], $arParams["SOCNET_GROUP_ID"]), $arParams["LIST_ELEMENT_URL"]));
+
+				//And go to proper page
+				if (isset($_POST["save"]))
+					LocalRedirect($arResult["~LIST_FIELDS_URL"]);
+				elseif ($arResult["FIELD_ID"])
+					LocalRedirect(
+						CHTTP::urlAddParams(str_replace(
 							array("#list_id#", "#field_id#", "#group_id#"),
 							array($arResult["IBLOCK_ID"], $arResult["FIELD_ID"], $arParams["SOCNET_GROUP_ID"]),
 							$arParams["~LIST_FIELD_EDIT_URL"]
 						),
-						array($tab_name => $_POST[$tab_name]),
-						array("skip_empty" => true, "encode" => true)
-					)
-				);
-			else
-				LocalRedirect($arResult["~LIST_FIELDS_URL"]);
+							array($tab_name => $_POST[$tab_name]),
+							array("skip_empty" => true, "encode" => true)
+						)
+					);
+				else
+					LocalRedirect($arResult["~LIST_FIELDS_URL"]);
+			}
+			catch (Bitrix\Main\SystemException $exception)
+			{
+				ShowError($exception->getMessage());
+				if (!$arResult["FIELD_ID"])
+				{
+					$bVarsFromForm = true;
+				}
+			}
 		}
 		else
 		{
@@ -305,6 +361,7 @@ if($bVarsFromForm)
 	$data["NAME"] = $_POST["NAME"];
 	$data["IS_REQUIRED"] = $_POST["IS_REQUIRED"];
 	$data["MULTIPLE"] = $_POST["MULTIPLE"];
+	$data["CODE"] = $_POST["CODE"];
 	$data["TYPE"] = $_POST["TYPE"];
 	if (isset($_POST["ROW_COUNT"]))
 		$data["ROW_COUNT"] = $_POST["ROW_COUNT"];
@@ -418,6 +475,7 @@ elseif($arResult["FIELD_ID"])
 	$data["NAME"] = $arResult["FIELD"]["NAME"];
 	$data["IS_REQUIRED"] = $arResult["FIELD"]["IS_REQUIRED"];
 	$data["MULTIPLE"] = $arResult["FIELD"]["MULTIPLE"];
+	$data["CODE"] = $arResult["FIELD"]["CODE"];
 	$data["TYPE"] = $arResult["FIELD"]["TYPE"];
 	$data["DEFAULT_VALUE"] = $arResult["FIELD"]["DEFAULT_VALUE"];
 	$data["SETTINGS"] = $arResult["FIELD"]["SETTINGS"];
@@ -462,6 +520,7 @@ else
 	$data["NAME"] = GetMessage("CC_BLFE_FIELD_NAME_DEFAULT");
 	$data["IS_REQUIRED"] = "N";
 	$data["MULTIPLE"] = "N";
+	$data["CODE"] = "";
 	list($data["TYPE"], $temp) = each($arResult["TYPES"]);
 	reset($arResult["TYPES"]);
 	$arResult["LIST"] = false;
@@ -492,9 +551,15 @@ foreach($data as $key => $value)
 	}
 }
 
+$arResult['RAND_STRING'] = $this->randString();
 $arResult["CAN_BE_MULTIPLE"] = !$obList->is_field($data["TYPE"]);
+$arResult["IS_PROPERTY"] = $arResult["CAN_BE_MULTIPLE"];
+
+if($data["TYPE"] == "S:map_yandex")
+	$arResult["CAN_BE_MULTIPLE"] = false;
 $arResult["CAN_BE_OPTIONAL"] = $data["TYPE"] != "NAME";
 $arResult["IS_READ_ONLY"] = $arResult["FIELD_ID"]? $obList->is_readonly($arResult["FIELD_ID"]): CListFieldTypeList::GetByID($data["TYPE"])->IsReadonly();
+$arResult["IS_MULTIPLE_ONLY"] = $data["TYPE"] == "S:DiskFile";
 
 $this->IncludeComponentTemplate();
 

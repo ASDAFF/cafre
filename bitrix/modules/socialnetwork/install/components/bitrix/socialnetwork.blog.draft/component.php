@@ -1,5 +1,14 @@
 <?
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
+/** @var CBitrixComponent $this */
+/** @var array $arParams */
+/** @var array $arResult */
+/** @var string $componentPath */
+/** @var string $componentName */
+/** @var string $componentTemplate */
+/** @global CDatabase $DB */
+/** @global CUser $USER */
+/** @global CMain $APPLICATION */
 
 if (!CModule::IncludeModule("blog"))
 {
@@ -129,7 +138,12 @@ if($user_id > 0 && $user_id == IntVal($arParams["USER_ID"]))
 					{
 						if($arPost["AUTHOR_ID"] == $user_id && $arPost["PUBLISH_STATUS"] != BLOG_PUBLISH_STATUS_PUBLISH)
 						{
-							if(CBlogPost::Update($pub_id, Array("PUBLISH_STATUS" => BLOG_PUBLISH_STATUS_PUBLISH, "=DATE_PUBLISH" => $DB->GetNowFunction())))
+							if(CBlogPost::Update($pub_id, array(
+									"PUBLISH_STATUS" => BLOG_PUBLISH_STATUS_PUBLISH,
+									"=DATE_PUBLISH" => $DB->GetNowFunction(),
+									"SEARCH_GROUP_ID" => \Bitrix\Main\Config\Option::get("socialnetwork", "userbloggroup_id", false, SITE_ID)
+								)
+							))
 							{
 								$arParamsNotify = Array(
 									"bSoNet" => true,

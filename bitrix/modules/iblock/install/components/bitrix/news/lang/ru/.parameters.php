@@ -83,4 +83,6 @@ $MESS["CP_BN_SET_LAST_MODIFIED"] = "Устанавливать в заголовках ответа время моди
 $MESS["CP_BN_DISPLAY_AS_RATING"] = "В качестве рейтинга показывать";
 $MESS["CP_BN_AVERAGE"] = "Среднее значение";
 $MESS["CP_BN_RATING"] = "Рейтинг";
+$MESS["CP_BN_STRICT_SECTION_CHECK"] = "Строгая проверка раздела";
+$MESS["CP_BN_DETAIL_STRICT_SECTION_CHECK"] = "Строгая проверка раздела для детального показа элемента";
 ?>

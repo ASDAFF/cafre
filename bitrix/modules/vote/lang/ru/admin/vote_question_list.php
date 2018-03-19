@@ -1,6 +1,6 @@
 <?
 $MESS ['VOTE_ADD_QUESTION'] = "Добавить вопрос";
-$MESS ['VOTE_PAGE_TITLE'] = "Список вопросов";
+$MESS ['VOTE_PAGE_TITLE'] = "Вопросы опроса ##ID#";
 $MESS ['VOTE_VOTE_LIST'] = "Список опросов";
 $MESS ['VOTE_F_ACTIVE'] = "Активен:";
 $MESS ['VOTE_F_DIAGRAM'] = "Включен в диаграмму:";
@@ -30,4 +30,6 @@ $MESS ['SAVE_ERROR'] = "Ошибка сохранения";
 $MESS ['DELETE_ERROR'] = "Ошибка удаления";
 $MESS ['VOTE_F_REQUIRED'] = "Обязательное";
 $MESS ['VOTE_REQUIRED'] = "Обязательное";
+$MESS ['VOTE_BACK_TO_VOTE'] = "Перейти к опросу";
+$MESS ['VOTE_IMAGE_ID'] = "Картинка опроса";
 ?>

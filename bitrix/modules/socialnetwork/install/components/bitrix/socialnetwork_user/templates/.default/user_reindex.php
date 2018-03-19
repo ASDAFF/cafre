@@ -42,7 +42,7 @@ $APPLICATION->IncludeComponent(
 		"PATH_TO_GROUP_BLOG_COMMENT" => "",
 		"PATH_TO_USER_BLOG" => $arResult["PATH_TO_USER_BLOG"],
 		"PATH_TO_USER_BLOG_POST" => $arResult["PATH_TO_USER_BLOG_POST"],
-		"PATH_TO_USER_BLOG_COMMENT" => $arResult["PATH_TO_USER_BLOG_POST"]."?commentId=#comment_id###comment_id#",
+		"PATH_TO_USER_BLOG_COMMENT" => $arResult["PATH_TO_USER_BLOG_POST"]."?commentId=#comment_id##com#comment_id#",
 
 		"FORUM_ID" => $arParams["FORUM_ID"],
 		"PATH_TO_GROUP_FORUM_MESSAGE" => "",
@@ -58,7 +58,6 @@ $APPLICATION->IncludeComponent(
 		"CALENDAR_GROUP_IBLOCK_ID" => false,
 		"PATH_TO_GROUP_CALENDAR_ELEMENT" => "",
 
-		"TASK_IBLOCK_ID" => $arParams["TASK_IBLOCK_ID"],
 		"PATH_TO_GROUP_TASK_ELEMENT" => "",
 		"PATH_TO_USER_TASK_ELEMENT" => $arResult["PATH_TO_USER_TASKS_TASK"],
 		"TASK_FORUM_ID" => $arParams["TASK_FORUM_ID"],

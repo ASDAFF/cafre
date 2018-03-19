@@ -1,4 +1,4 @@
-<?
+<?php
 IncludeModuleLangFile(__FILE__);
 
 // fix HTTP_REFERER, r1, r2 for  google ads
@@ -238,6 +238,7 @@ function __GetCurrentPage()
 
 function __GetCurrentDir()
 {
+	/** @var CMain $APPLICATION */
 	global $APPLICATION;
 	if (CModule::IncludeModule("wacko"))
 		return CgeneralWacko::GetCurDir();
@@ -396,11 +397,11 @@ function LoadEventsBySteps(
 	&$next_pos
 	)
 {
+	$all_loaded = "";
 	if ($fp = fopen($csvfile,"rb"))
 	{
 		if($next_pos>0) fseek($fp, $next_pos);
 		$start = getmicrotime();
-		$all_loaded = "";
 		$next_line = intval($next_line);
 		$read_lines = 0;
 		$step_loaded = 0;
@@ -450,7 +451,7 @@ function LoadEventsBySteps(
 					$add_event="Y";
 					if ($check_unique=="Y")
 					{
-						$arr = CStatEvent::DecodeGid($PARAMETER);
+						$arr = CStatEvent::DecodeGID($PARAMETER);
 						$arFilter = array(
 							"EVENT_ID"					=> $EVENT_ID,
 							"EVENT3"					=> $EVENT3,
@@ -493,8 +494,8 @@ function LoadEventsBySteps(
 			$all_loaded = "Y";
 			@unlink($csvfile);
 		}
-		return $all_loaded;
 	}
+	return $all_loaded;
 }
 
 function GetStatPathID($URL, $PREV_PATH_ID="")
@@ -509,8 +510,7 @@ function stat_session_register($var_name)
 	{
 		foreach($arrSTAT_SESSION as $key => $value)
 		{
-			global $$key;
-			unset(${$key});
+			unset($GLOBALS[$key]);
 			unset($_SESSION[$key]);
 		}
 		$arrSTAT_SESSION = array();
@@ -525,6 +525,7 @@ function stat_session_register($var_name)
 	{
 		$arrSTAT_SESSION[$var_name] = 0;
 	}
+	return null;
 }
 
 function get_guest_md5()
@@ -1010,7 +1011,7 @@ function StatAdminListFormatURL($url, $arOptions = array())
 
 	$href_title = '';
 	if(isset($arOptions["title"]))
-		$href_title = htmlspecialcharsex($arOptions["title"]);
+		$href_title = htmlspecialcharsEx($arOptions["title"]);
 
 	$max_display_chars = 0;
 	if(isset($arOptions["max_display_chars"]))
@@ -1046,7 +1047,7 @@ function StatAdminListFormatURL($url, $arOptions = array())
 		$url = trim($url, "?&");
 	}
 
-	$htmlA = '<a href="'.htmlspecialcharsex($url).'"';
+	$htmlA = '<a href="'.htmlspecialcharsEx($url).'"';
 
 	if($new_window)
 		$htmlA .= ' target="_blank"';
@@ -1127,15 +1128,10 @@ class CStatisticSort
 
 	function __construct($field = "")
 	{
-		return $this->CStatisticSort($field);
-	}
-
-	function CStatisticSort($field = "")
-	{
 		$this->field = $field;
 	}
 
-	function Sort(&$ar, $field)
+	public static function Sort(&$ar, $field)
 	{
 		$sort = new CStatisticSort($field);
 		uasort($ar, array($sort, "Compare"));
@@ -1154,5 +1150,3 @@ class CStatisticSort
 		return 0;
 	}
 }
-
-?>

@@ -116,15 +116,31 @@ class SectionValues extends BaseValues
 
 			if (empty($result))
 			{
+				$sqlHelper = $connection->getSqlHelper();
 				$result = parent::queryValues();
 				foreach ($result as $row)
 				{
-					$connection->add("b_iblock_section_iprop", array(
-						"IBLOCK_ID" => $this->iblockId,
-						"SECTION_ID" => $this->sectionId,
-						"IPROP_ID" => $row["ID"],
-						"VALUE" => $row["VALUE"],
-					), null);
+					$mergeSql = $sqlHelper->prepareMerge(
+						"b_iblock_section_iprop",
+						array(
+							"SECTION_ID",
+							"IPROP_ID",
+						),
+						array(
+							"IBLOCK_ID" => $this->iblockId,
+							"SECTION_ID" => $this->sectionId,
+							"IPROP_ID" => $row["ID"],
+							"VALUE" => $row["VALUE"],
+						),
+						array(
+							"IBLOCK_ID" => $this->iblockId,
+							"VALUE" => $row["VALUE"],
+						)
+					);
+					foreach ($mergeSql as $sql)
+					{
+						$connection->query($sql);
+					}
 				}
 			}
 		}

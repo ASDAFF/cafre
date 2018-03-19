@@ -97,12 +97,13 @@ Class clouds extends CModule
 			RegisterModuleDependences("main", "OnMakeFileArray", "clouds", "CCloudStorage", "OnMakeFileArray");
 			RegisterModuleDependences("main", "OnBeforeResizeImage", "clouds", "CCloudStorage", "OnBeforeResizeImage");
 			RegisterModuleDependences("main", "OnAfterResizeImage", "clouds", "CCloudStorage", "OnAfterResizeImage");
-			RegisterModuleDependences("clouds", "OnGetStorageService", "clouds", "CCloudStorageService_AmazonS3", "GetObject");
-			RegisterModuleDependences("clouds", "OnGetStorageService", "clouds", "CCloudStorageService_GoogleStorage", "GetObject");
-			RegisterModuleDependences("clouds", "OnGetStorageService", "clouds", "CCloudStorageService_OpenStackStorage", "GetObject");
-			RegisterModuleDependences("clouds", "OnGetStorageService", "clouds", "CCloudStorageService_RackSpaceCloudFiles", "GetObject");
-			RegisterModuleDependences("clouds", "OnGetStorageService", "clouds", "CCloudStorageService_ClodoRU", "GetObject");
-			RegisterModuleDependences("clouds", "OnGetStorageService", "clouds", "CCloudStorageService_Selectel", "GetObject");
+			RegisterModuleDependences("clouds", "OnGetStorageService", "clouds", "CCloudStorageService_AmazonS3", "GetObjectInstance");
+			RegisterModuleDependences("clouds", "OnGetStorageService", "clouds", "CCloudStorageService_GoogleStorage", "GetObjectInstance");
+			RegisterModuleDependences("clouds", "OnGetStorageService", "clouds", "CCloudStorageService_OpenStackStorage", "GetObjectInstance");
+			RegisterModuleDependences("clouds", "OnGetStorageService", "clouds", "CCloudStorageService_RackSpaceCloudFiles", "GetObjectInstance");
+			RegisterModuleDependences("clouds", "OnGetStorageService", "clouds", "CCloudStorageService_ClodoRU", "GetObjectInstance");
+			RegisterModuleDependences("clouds", "OnGetStorageService", "clouds", "CCloudStorageService_Selectel", "GetObjectInstance");
+			RegisterModuleDependences("clouds", "OnGetStorageService", "clouds", "CCloudStorageService_HotBox", "GetObjectInstance");
 
 			return true;
 		}
@@ -130,12 +131,13 @@ Class clouds extends CModule
 		UnRegisterModuleDependences("main", "OnMakeFileArray", "clouds", "CCloudStorage", "OnMakeFileArray");
 		UnRegisterModuleDependences("main", "OnBeforeResizeImage", "clouds", "CCloudStorage", "OnBeforeResizeImage");
 		UnRegisterModuleDependences("main", "OnAfterResizeImage", "clouds", "CCloudStorage", "OnAfterResizeImage");
-		UnRegisterModuleDependences("clouds", "OnGetStorageService", "clouds", "CCloudStorageService_AmazonS3", "GetObject");
-		UnRegisterModuleDependences("clouds", "OnGetStorageService", "clouds", "CCloudStorageService_GoogleStorage", "GetObject");
-		UnRegisterModuleDependences("clouds", "OnGetStorageService", "clouds", "CCloudStorageService_OpenStackStorage", "GetObject");
-		UnRegisterModuleDependences("clouds", "OnGetStorageService", "clouds", "CCloudStorageService_RackSpaceCloudFiles", "GetObject");
-		UnRegisterModuleDependences("clouds", "OnGetStorageService", "clouds", "CCloudStorageService_ClodoRU", "GetObject");
-		UnRegisterModuleDependences("clouds", "OnGetStorageService", "clouds", "CCloudStorageService_Selectel", "GetObject");
+		UnRegisterModuleDependences("clouds", "OnGetStorageService", "clouds", "CCloudStorageService_AmazonS3", "GetObjectInstance");
+		UnRegisterModuleDependences("clouds", "OnGetStorageService", "clouds", "CCloudStorageService_GoogleStorage", "GetObjectInstance");
+		UnRegisterModuleDependences("clouds", "OnGetStorageService", "clouds", "CCloudStorageService_OpenStackStorage", "GetObjectInstance");
+		UnRegisterModuleDependences("clouds", "OnGetStorageService", "clouds", "CCloudStorageService_RackSpaceCloudFiles", "GetObjectInstance");
+		UnRegisterModuleDependences("clouds", "OnGetStorageService", "clouds", "CCloudStorageService_ClodoRU", "GetObjectInstance");
+		UnRegisterModuleDependences("clouds", "OnGetStorageService", "clouds", "CCloudStorageService_Selectel", "GetObjectInstance");
+		UnRegisterModuleDependences("clouds", "OnGetStorageService", "clouds", "CCloudStorageService_HotBox", "GetObjectInstance");
 
 		UnRegisterModule("clouds");
 

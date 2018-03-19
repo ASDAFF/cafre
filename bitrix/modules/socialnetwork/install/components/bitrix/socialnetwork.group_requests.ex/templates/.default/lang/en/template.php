@@ -14,4 +14,9 @@ $MESS["SONET_GRE_T_NO_REQUESTS_DESCR"] = "Shows user requests for group membersh
 $MESS["SONET_GRE_T_NO_REQUESTS_OUT"] = "No invitations.";
 $MESS["SONET_GRE_T_NO_REQUESTS_OUT_DESCR"] = "Shows workgroup membership invitations.";
 $MESS["SONET_GRE_T_INVITE"] = "Invite to group";
+$MESS["SONET_GRE_T_SUBTITLE_IN_PROJECT"] = "Project membership requests";
+$MESS["SONET_GRE_T_SUBTITLE_OUT_PROJECT"] = "Project membership invitations";
+$MESS["SONET_GRE_T_NO_REQUESTS_DESCR_PROJECT"] = "Shows user requests for project membership.";
+$MESS["SONET_GRE_T_NO_REQUESTS_OUT_DESCR_PROJECT"] = "Shows project membership invitations.";
+$MESS["SONET_GRE_T_INVITE_PROJECT"] = "Invite to project";
 ?>

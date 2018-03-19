@@ -60,7 +60,7 @@ class CSecuritySessionDB
 
 		if ($sessionRow && isset($sessionRow['SESSION_DATA']))
 		{
-			return $sessionRow['SESSION_DATA'];
+			return base64_decode($sessionRow['SESSION_DATA']);
 		}
 
 		return '';
@@ -77,7 +77,12 @@ class CSecuritySessionDB
 			return false;
 
 		if (self::$isReadOnly)
-			return true;
+		{
+			if (!CSecuritySession::isOldSessionIdExist())
+			{
+				return true;
+			}
+		}
 
 		if(CSecuritySession::isOldSessionIdExist())
 			$oldSessionId = CSecuritySession::getOldSessionId(true);
@@ -88,7 +93,7 @@ class CSecuritySessionDB
 		$result = SessionTable::add(array(
 			'SESSION_ID' => $id,
 			'TIMESTAMP_X' => new Bitrix\Main\Type\DateTime,
-			'SESSION_DATA' => $sessionData
+			'SESSION_DATA' => base64_encode($sessionData),
 		));
 
 		return $result->isSuccess();

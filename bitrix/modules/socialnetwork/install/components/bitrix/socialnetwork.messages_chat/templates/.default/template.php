@@ -9,7 +9,7 @@ if ($arResult["NEED_AUTH"] == "Y")
 {
 ?>
 	<div class="socnet-chat-warning">
-	<span class='errortext'><?= GetMessage("SONET_C50_T_NEED_AUTH") ?></span>
+	<span class="errortext"><?= GetMessage("SONET_C50_T_NEED_AUTH") ?></span>
 	</div>
 <?
 }
@@ -17,7 +17,7 @@ elseif (strlen($arResult["FatalError"])>0)
 {
 	?>
 	<div class="socnet-chat-warning">
-	<span class='errortext'><?= $arResult["FatalError"] ?></span><br /><br />
+	<span class="errortext"><?= $arResult["FatalError"] ?></span><br /><br />
 	</div>
 	<?
 }
@@ -27,7 +27,7 @@ else
 	{
 		?>
 		<div class="socnet-chat-warning">
-		<span class='errortext'><?= $arResult["ErrorMessage"] ?></span><br /><br />
+		<span class="errortext"><?= $arResult["ErrorMessage"] ?></span><br /><br />
 		</div>
 		<?
 	}
@@ -191,15 +191,15 @@ endif;
 			<div class="form-button button-italic" id="form_i" title="<?=GetMessage("PM_ITAL")?>"></div>
 			<div class="form-button button-underline" id="form_u" title="<?=GetMessage("PM_UNDER")?>"></div>
 			<div class="form-button button-font">
-				<select name='FONT' id='form-font' title="<?=GetMessage("PM_FONT")?>">
-					<option value='0'><?=GetMessage("PM_FONT")?></option>
-					<option value='Arial' style='font-family:Arial'>Arial</option>
-					<option value='Times' style='font-family:Times'>Times</option>
-					<option value='Courier' style='font-family:Courier'>Courier</option>
-					<option value='Impact' style='font-family:Impact'>Impact</option>
-					<option value='Geneva' style='font-family:Geneva'>Geneva</option>
-					<option value='Optima' style='font-family:Optima'>Optima</option>
-					<option value='Verdana' style='font-family:Verdana'>Verdana</option>
+				<select name="FONT" id="form-font" title="<?=GetMessage("PM_FONT")?>">
+					<option value="0"><?=GetMessage("PM_FONT")?></option>
+					<option value="Arial" style="font-family:Arial">Arial</option>
+					<option value="Times" style="font-family:Times">Times</option>
+					<option value="Courier" style="font-family:Courier">Courier</option>
+					<option value="Impact" style="font-family:Impact">Impact</option>
+					<option value="Geneva" style="font-family:Geneva">Geneva</option>
+					<option value="Optima" style="font-family:Optima">Optima</option>
+					<option value="Verdana" style="font-family:Verdana">Verdana</option>
 				</select>
 			</div>
 			<div class="form-button button-color" id="form_palette" title="<?=GetMessage("PM_COLOR")?>"></div>
@@ -217,7 +217,7 @@ foreach($arResult["PrintSmilesList"] as $res)
 	$res_str .= "<img src=\"".$arParams["PATH_TO_SMILE"].$res['IMAGE']."\" alt=\"".$res['NAME']."\" title=\"".$res['NAME']."\" border=\"0\"";
 	if (IntVal($res['IMAGE_WIDTH'])>0) {$res_str .= " width=\"".$res['IMAGE_WIDTH']."\"";}
 	if (IntVal($res['IMAGE_HEIGHT'])>0) {$res_str .= " height=\"".$res['IMAGE_HEIGHT']."\"";}
-	$res_str .= " class=\"chat-smile\"  id='".$strTYPING."' ";
+	$res_str .= " class=\"chat-smile\"  id=\"".$strTYPING."\" ";
 	$res_str .= "/>";
 }
 echo $res_str;

@@ -54,4 +54,7 @@ $MESS["ATTACHMENT_PRESET_LIST_DELETE"] = "Delete";
 $MESS["ATTACHMENT_DYNAMIC"] = "Use e-mail event fields";
 $MESS["AVAILABLE_FIELDS_ATTACHMENT"] = "Attached images:";
 $MESS["MSG_SITE_TEMPLATE_ID"] = "Visual theme:";
+$MESS["main_mess_edit_lang"] = "Language:";
+$MESS["main_mess_edit_lang_not_set"] = "(not set)";
+$MESS["main_mess_edit_fields"] = "Message fields";
 ?>

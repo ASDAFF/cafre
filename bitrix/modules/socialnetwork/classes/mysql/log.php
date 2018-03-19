@@ -1,6 +1,10 @@
 <?
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/socialnetwork/classes/general/log.php");
 
+use Bitrix\Socialnetwork\Item\LogIndex;
+use Bitrix\Socialnetwork\LogIndexTable;
+use Bitrix\Socialnetwork\LogTagTable;
+
 class CSocNetLog extends CAllSocNetLog
 {
 	/***************************************/
@@ -8,39 +12,52 @@ class CSocNetLog extends CAllSocNetLog
 	/***************************************/
 	function Add($arFields, $bSendEvent = true)
 	{
-		global $DB;
+		global $DB, $USER_FIELD_MANAGER;
 
 		$arSocNetAllowedSubscribeEntityTypesDesc = CSocNetAllowed::GetAllowedEntityTypesDesc();
 
-		$arFields1 = array();
-		foreach ($arFields as $key => $value)
-		{
-			if (substr($key, 0, 1) == "=")
-			{
-				$arFields1[substr($key, 1)] = $value;
-				unset($arFields[$key]);
-			}
-		}
+		$arFields1 = \Bitrix\Socialnetwork\Util::getEqualityFields($arFields);
 
 		if (!CSocNetLog::CheckFields("ADD", $arFields))
+		{
 			return false;
+		}
 		else
 		{
+			$db_events = GetModuleEvents("socialnetwork", "OnBeforeSocNetLogAdd");
+			while ($arEvent = $db_events->Fetch())
+			{
+				if (ExecuteModuleEventEx($arEvent, array(&$arFields)) === false)
+				{
+					return false;
+				}
+			}
+
 			$arSiteID = array();
 			if(array_key_exists("SITE_ID", $arFields))
 			{
 				if(is_array($arFields["SITE_ID"]))
+				{
 					foreach($arFields["SITE_ID"] as $site_id)
+					{
 						$arSiteID[$site_id] = $DB->ForSQL($site_id);
+					}
+				}
 				else
+				{
 					$arSiteID[$arFields["SITE_ID"]] = $DB->ForSQL($arFields["SITE_ID"]);
+				}
 			}
 		}
 
 		if(empty($arSiteID))
+		{
 			unset($arFields["SITE_ID"]);
+		}
 		else
+		{
 			$arFields["SITE_ID"] = end($arSiteID);
+		}
 
 		unset($arFields["LOG_UPDATE"]);
 		if (empty($arFields1["LOG_UPDATE"]))
@@ -49,16 +66,7 @@ class CSocNetLog extends CAllSocNetLog
 		}
 
 		$arInsert = $DB->PrepareInsert("b_sonet_log", $arFields);
-
-		foreach ($arFields1 as $key => $value)
-		{
-			if (strlen($arInsert[0]) > 0)
-				$arInsert[0] .= ", ";
-			$arInsert[0] .= $key;
-			if (strlen($arInsert[1]) > 0)
-				$arInsert[1] .= ", ";
-			$arInsert[1] .= $value;
-		}
+		\Bitrix\Socialnetwork\Util::processEqualityFieldsToInsert($arFields1, $arInsert);
 
 		$ID = false;
 		if (strlen($arInsert[0]) > 0)
@@ -70,42 +78,58 @@ class CSocNetLog extends CAllSocNetLog
 
 			$ID = IntVal($DB->LastID());
 
-			if (
-				$ID > 0 
-				&& intval($arFields["USER_ID"]) > 0
-				&& strlen($arFields["ENTITY_TYPE"]) > 0
-				&& array_key_exists($arFields["ENTITY_TYPE"], $arSocNetAllowedSubscribeEntityTypesDesc)
-				&& is_array($arSocNetAllowedSubscribeEntityTypesDesc[$arFields["ENTITY_TYPE"]])
-				&& $arSocNetAllowedSubscribeEntityTypesDesc[$arFields["ENTITY_TYPE"]]["USE_CB_FILTER"] == "Y"
-			)
-			{
-				CSocNetLogFollow::Set($arFields["USER_ID"], "L".$ID, "Y");
-			}
-
-			if (
-				$ID > 0 
-				&& $bSendEvent
-			)
-			{
-				CSocNetLog::SendEvent($ID, "SONET_NEW_EVENT");
-			}
-
-			if ($ID > 0 && !empty($arSiteID))
-			{
-					$DB->Query("
-						DELETE FROM b_sonet_log_site WHERE LOG_ID = ".$ID."
-					", false, "FILE: ".__FILE__."<br> LINE: ".__LINE__);
-
-					$DB->Query("
-						INSERT INTO b_sonet_log_site(LOG_ID, SITE_ID)
-						SELECT ".$ID.", LID
-						FROM b_lang
-						WHERE LID IN ('".implode("', '", $arSiteID)."')
-					", false, "FILE: ".__FILE__."<br> LINE: ".__LINE__);
-			}
-
 			if ($ID > 0)
-				$GLOBALS["USER_FIELD_MANAGER"]->Update("SONET_LOG", $ID, $arFields);
+			{
+				if (
+					intval($arFields["USER_ID"]) > 0
+					&& strlen($arFields["ENTITY_TYPE"]) > 0
+					&& array_key_exists($arFields["ENTITY_TYPE"], $arSocNetAllowedSubscribeEntityTypesDesc)
+					&& is_array($arSocNetAllowedSubscribeEntityTypesDesc[$arFields["ENTITY_TYPE"]])
+					&& $arSocNetAllowedSubscribeEntityTypesDesc[$arFields["ENTITY_TYPE"]]["USE_CB_FILTER"] == "Y"
+				)
+				{
+					CSocNetLogFollow::Set($arFields["USER_ID"], "L".$ID, "Y");
+				}
+
+				if ($bSendEvent)
+				{
+					CSocNetLog::SendEvent($ID, "SONET_NEW_EVENT");
+				}
+
+				if (!empty($arSiteID))
+				{
+					$DB->Query("
+					INSERT INTO b_sonet_log_site(LOG_ID, SITE_ID)
+					SELECT ".$ID.", LID
+					FROM b_lang
+					WHERE LID IN ('".implode("', '", $arSiteID)."')
+				", false, "FILE: ".__FILE__."<br> LINE: ".__LINE__);
+				}
+
+				if (isset($arFields["TAG"]))
+				{
+					LogTagTable::set(array(
+						'itemType' => LogTagTable::ITEM_TYPE_LOG,
+						'itemId' => $ID,
+						'tags' => $arFields["TAG"]
+					));
+				}
+
+				$USER_FIELD_MANAGER->Update("SONET_LOG", $ID, $arFields);
+
+				$arFields["ID"] = $ID;
+				$events = GetModuleEvents("socialnetwork", "OnAfterSocNetLogAdd");
+				while ($arEvent = $events->Fetch())
+				{
+					ExecuteModuleEventEx($arEvent, array($arFields));
+				}
+
+				LogIndex::setIndex(array(
+					'itemType' => LogIndexTable::ITEM_TYPE_LOG,
+					'itemId' => $ID,
+					'fields' => $arFields
+				));
+			}
 		}
 
 		CSocNetLogTools::SetCacheLastLogID("log", $ID);
@@ -115,24 +139,16 @@ class CSocNetLog extends CAllSocNetLog
 
 	function Update($ID, $arFields)
 	{
-		global $DB;
+		global $DB, $CACHE_MANAGER, $APPLICATION, $USER_FIELD_MANAGER;
 
 		$ID = IntVal($ID);
 		if ($ID <= 0)
 		{
-			$GLOBALS["APPLICATION"]->ThrowException(GetMessage("SONET_L_WRONG_PARAMETER_ID"), "ERROR_NO_ID");
+			$APPLICATION->ThrowException(GetMessage("SONET_L_WRONG_PARAMETER_ID"), "ERROR_NO_ID");
 			return false;
 		}
 
-		$arFields1 = array();
-		foreach ($arFields as $key => $value)
-		{
-			if (substr($key, 0, 1) == "=")
-			{
-				$arFields1[substr($key, 1)] = $value;
-				unset($arFields[$key]);
-			}
-		}
+		$arFields1 = \Bitrix\Socialnetwork\Util::getEqualityFields($arFields);
 
 		if (!CSocNetLog::CheckFields("UPDATE", $arFields, $ID))
 			return false;
@@ -157,13 +173,7 @@ class CSocNetLog extends CAllSocNetLog
 		}
 
 		$strUpdate = $DB->PrepareUpdate("b_sonet_log", $arFields);
-
-		foreach ($arFields1 as $key => $value)
-		{
-			if (strlen($strUpdate) > 0)
-				$strUpdate .= ", ";
-			$strUpdate .= $key."=".$value." ";
-		}
+		\Bitrix\Socialnetwork\Util::processEqualityFieldsToUpdate($arFields1, $strUpdate);
 
 		if (strlen($strUpdate) > 0)
 		{
@@ -186,19 +196,49 @@ class CSocNetLog extends CAllSocNetLog
 				$DB->Query($strSql, false, "FILE: ".__FILE__."<br> LINE: ".__LINE__);
 			}
 
-			$GLOBALS["USER_FIELD_MANAGER"]->Update("SONET_LOG", $ID, $arFields);
+			if (isset($arFields["TAG"]))
+			{
+				LogTagTable::set(array(
+					'itemType' => LogTagTable::ITEM_TYPE_LOG,
+					'itemId' => $ID,
+					'tags' => $arFields["TAG"]
+				));
+			}
+
+			$USER_FIELD_MANAGER->Update("SONET_LOG", $ID, $arFields);
 
 			if(defined("BX_COMP_MANAGED_CACHE"))
 			{
-				$GLOBALS["CACHE_MANAGER"]->ClearByTag("SONET_LOG_".$ID);
+				$CACHE_MANAGER->ClearByTag("SONET_LOG_".$ID);
 			}
 
 			$cache = new CPHPCache;
 			$cache->CleanDir("/sonet/log/".intval($ID / 1000)."/".$ID."/comments/");
 		}
-		elseif (!$GLOBALS["USER_FIELD_MANAGER"]->Update("SONET_LOG", $ID, $arFields))
+		elseif (!$USER_FIELD_MANAGER->Update("SONET_LOG", $ID, $arFields))
 		{
-			$ID = False;
+			$ID = false;
+		}
+
+		if (intval($ID) > 0)
+		{
+			$events = GetModuleEvents("socialnetwork", "OnAfterSocNetLogUpdate");
+			while ($arEvent = $events->Fetch())
+			{
+				ExecuteModuleEventEx($arEvent, array($ID, $arFields));
+			}
+
+			if (
+				!empty($arFields['TITLE'])
+				|| !empty($arFields['MESSAGE'])
+			)
+			{
+				LogIndex::setIndex(array(
+					'itemType' => LogIndexTable::ITEM_TYPE_LOG,
+					'itemId' => $ID,
+					'fields' => $arFields
+				));
+			}
 		}
 
 		return $ID;
@@ -224,7 +264,7 @@ class CSocNetLog extends CAllSocNetLog
 	/***************************************/
 	function GetList($arOrder = Array("ID" => "DESC"), $arFilter = Array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array(), $arParams = array())
 	{
-		global $DB, $arSocNetAllowedEntityTypes, $USER, $USER_FIELD_MANAGER;
+		global $DB, $USER, $USER_FIELD_MANAGER;
 
 		$arSocNetAllowedSubscribeEntityTypesDesc = CSocNetAllowed::GetAllowedEntityTypesDesc();
 
@@ -277,6 +317,9 @@ class CSocNetLog extends CAllSocNetLog
 			"COMMENTS_COUNT" => Array("FIELD" => "L.COMMENTS_COUNT", "TYPE" => "int"),
 			"ENABLE_COMMENTS" => Array("FIELD" => "L.ENABLE_COMMENTS", "TYPE" => "string"),
 			"SOURCE_TYPE" => Array("FIELD" => "L.SOURCE_TYPE", "TYPE" => "string"),
+			"CONTENT" => Array("FIELD" => "LI.CONTENT", "TYPE" => "string", "FROM" => "INNER JOIN b_sonet_log_index LI ON (LI.LOG_ID = L.ID)"),
+			"CONTENT_LOG_UPDATE" => Array("FIELD" => "LI.LOG_UPDATE", "TYPE" => "datetime", "FROM" => "INNER JOIN b_sonet_log_index LI ON (LI.LOG_ID = L.ID)"),
+			"CONTENT_DATE_CREATE" => Array("FIELD" => "LI.DATE_CREATE", "TYPE" => "datetime", "FROM" => "INNER JOIN b_sonet_log_index LI ON (LI.LOG_ID = L.ID)"),
 			"GROUP_NAME" => Array("FIELD" => "G.NAME", "TYPE" => "string", "FROM" => "LEFT JOIN b_sonet_group G ON (L.ENTITY_TYPE = 'G' AND L.ENTITY_ID = G.ID)"),
 			"GROUP_OWNER_ID" => Array("FIELD" => "G.OWNER_ID", "TYPE" => "int", "FROM" => "LEFT JOIN b_sonet_group G ON (L.ENTITY_TYPE = 'G' AND L.ENTITY_ID = G.ID)"),
 			"GROUP_INITIATE_PERMS" => Array("FIELD" => "G.INITIATE_PERMS", "TYPE" => "string", "FROM" => "LEFT JOIN b_sonet_group G ON (L.ENTITY_TYPE = 'G' AND L.ENTITY_ID = G.ID)"),
@@ -309,7 +352,11 @@ class CSocNetLog extends CAllSocNetLog
 
 		if (isset($USER) && is_object($USER))
 		{
-			$arFields["RATING_USER_VOTE_VALUE"] = Array("FIELD" => $DB->IsNull('RV.VALUE', '0'), "TYPE" => "double", "FROM" => "LEFT JOIN b_rating_vote RV ON L.RATING_TYPE_ID = RV.ENTITY_TYPE_ID AND L.RATING_ENTITY_ID = RV.ENTITY_ID AND RV.USER_ID = ".intval($USER->GetID()));
+			$arFields["RATING_USER_VOTE_VALUE"] = array(
+				"FIELD" => $DB->IsNull('RV.VALUE', '0'),
+				"TYPE" => "double",
+				"FROM" => "LEFT JOIN b_rating_vote RV ON L.RATING_TYPE_ID = RV.ENTITY_TYPE_ID AND L.RATING_ENTITY_ID = RV.ENTITY_ID AND RV.USER_ID = ".intval($USER->GetID())
+			);
 
 			if (
 				!isset($arParams["USE_FAVORITES"])
@@ -320,12 +367,14 @@ class CSocNetLog extends CAllSocNetLog
 				$field_value = $DB->IsNull("SLF.USER_ID", "0");
 
 				foreach($arFilter as $key => $value)
+				{
 					if (strpos($key, "FAVORITES_USER_ID") !== false)
 					{
 						$join_type = "INNER";
 						$field_value = "SLF.USER_ID";
 						break;
 					}
+				}
 
 				$arFields["FAVORITES_USER_ID"] = Array("FIELD" => $field_value, "TYPE" => "double", "FROM" => $join_type." JOIN b_sonet_log_favorites SLF ON L.ID = SLF.LOG_ID AND SLF.USER_ID = ".intval($USER->GetID()));
 			}
@@ -489,9 +538,38 @@ class CSocNetLog extends CAllSocNetLog
 			}
 		}
 
-		if (array_key_exists("USER_ID|COMMENT_USER_ID", $arFilter))
+		if (
+			array_key_exists("TAG", $arFilter)
+			|| array_key_exists("=TAG", $arFilter)
+			|| array_key_exists("@TAG", $arFilter)
+		)
+		{
+			$arFields["TAG"] = array(
+				"FIELD" => "SLT.NAME",
+				"TYPE" => "string",
+				"FROM" => "INNER JOIN b_sonet_log_tag SLT ON L.ID = SLT.LOG_ID"
+			);
+
+			if (array_key_exists("@TAG", $arFilter))
+			{
+				$strDistinct = " DISTINCT ";
+			}
+		}
+		if (
+			array_key_exists("USER_ID|COMMENT_USER_ID", $arFilter)
+			|| array_key_exists("*CONTENT", $arFilter)
+			|| array_key_exists("*%CONTENT", $arFilter)
+		)
 		{
 			$strDistinct = " DISTINCT ";
+		}
+		if (
+			isset($arFilter["TMP_ID"])
+			&& !isset($arFilter["ID"])
+		)
+		{
+			$arFilter["ID"] = $arFilter["TMP_ID"];
+			unset($arFilter["TMP_ID"]);
 		}
 
 		if($arParams["IS_CRM"] == "Y")
@@ -512,6 +590,7 @@ class CSocNetLog extends CAllSocNetLog
 			ExecuteModuleEventEx($arEvent, array(&$arFields, &$arOrder, &$arFilter, &$arGroupBy, &$arSelectFields, &$arSqls));
 		}
 
+		$strSqlUFFilter = "";
 		$r = $obUserFieldsSql->GetFilter();
 		if (strlen($r) > 0)
 		{
@@ -519,6 +598,7 @@ class CSocNetLog extends CAllSocNetLog
 		}
 
 		$arSqls["RIGHTS"] = "";
+		$arSqls["VIEW"] = "";
 		$arSqls["CRM_RIGHTS"] = "";
 
 		if (
@@ -528,16 +608,21 @@ class CSocNetLog extends CAllSocNetLog
 					array_key_exists("CHECK_RIGHTS", $arParams)
 					&& $arParams["CHECK_RIGHTS"] == "Y"
 				)
-				||
-				(
+				|| (
 					array_key_exists("CHECK_CRM_RIGHTS", $arParams)
 					&& $arParams["CHECK_CRM_RIGHTS"] == "Y"
+				)
+				|| (
+					array_key_exists("CHECK_VIEW", $arParams)
+					&& $arParams["CHECK_VIEW"] == "Y"
 				)
 			)
 			&& !array_key_exists("USER_ID", $arParams)
 			&& is_object($USER)
 		)
+		{
 			$arParams["USER_ID"] = $USER->GetID();
+		}
 
 		if (
 			!empty($arParams)
@@ -572,6 +657,7 @@ class CSocNetLog extends CAllSocNetLog
 				&& !array_key_exists("MY_ENTITIES", $arParams)
 			)
 			{
+				$arMyEntities = array();
 				foreach($arSocNetAllowedSubscribeEntityTypesDesc as $entity_type_tmp => $arEntityTypeTmp)
 				{
 					if (
@@ -597,6 +683,7 @@ class CSocNetLog extends CAllSocNetLog
 			&& array_key_exists("CHECK_RIGHTS", $arParams)
 			&& $arParams["CHECK_RIGHTS"] == "Y"
 			&& array_key_exists("USER_ID", $arParams)
+			&& is_object($USER)
 		)
 		{
 			$acc = new CAccess;
@@ -618,6 +705,8 @@ class CSocNetLog extends CAllSocNetLog
 								(is_object($USER) && CSocNetUser::IsCurrentUserModuleAdmin() ? " OR SLR.GROUP_CODE = 'SA'" : "").
 								(is_object($USER) && $USER->IsAuthorized() ? " OR (SLR.GROUP_CODE = 'AU')" : "").
 								" OR (SLR.GROUP_CODE = 'G2')".
+								(isset($arParams["CHECK_RIGHTS_OSG"]) && $arParams["CHECK_RIGHTS_OSG"] == "Y" && is_object($USER) && $USER->IsAuthorized() ? " OR (SLR.GROUP_CODE LIKE 'OSG%')" : "").
+								(!empty($arFilter['LOG_RIGHTS_SG']) && !is_array($arFilter['LOG_RIGHTS_SG']) ? " OR (SLR.GROUP_CODE = '".$DB->ForSQL($arFilter['LOG_RIGHTS_SG'])."')" : "").
 								(is_object($USER) && $USER->IsAuthorized() ? " OR (UA.ACCESS_CODE = SLR.GROUP_CODE AND UA.USER_ID = ".intval($USER->GetID()).")" : "")."
 							)"
 					).")";
@@ -625,9 +714,26 @@ class CSocNetLog extends CAllSocNetLog
 
 		if (
 			!empty($arParams)
+			&& isset($arParams["CHECK_VIEW"])
+			&& $arParams["CHECK_VIEW"] == "Y"
+			&& array_key_exists("USER_ID", $arParams)
+			&& intval($arParams["USER_ID"]) > 0
+		)
+		{
+			$arSqls["VIEW"] = "NOT EXISTS ( SELECT SLV.USER_ID FROM b_sonet_log_view SLV
+				WHERE
+					L.EVENT_ID = SLV.EVENT_ID
+					AND SLV.USER_ID = ".intval($arParams["USER_ID"])."
+					AND SLV.TYPE = 'N'
+				)";
+		}
+
+		if (
+			!empty($arParams)
 			&& array_key_exists("CHECK_CRM_RIGHTS", $arParams)
 			&& $arParams["CHECK_CRM_RIGHTS"] == "Y"
 			&& array_key_exists("USER_ID", $arParams)
+			&& is_object($USER)
 		)
 		{
 			$permParams = array(
@@ -717,6 +823,12 @@ class CSocNetLog extends CAllSocNetLog
 				$bWhereStarted = true;
 			}
 
+			if (strlen($arSqls["VIEW"]) > 0)
+			{
+				$strSql .= ($bWhereStarted ? " AND " : " WHERE ").$arSqls["VIEW"]." ";
+				$bWhereStarted = true;
+			}
+
 			if (strlen($arSqls["CRM_RIGHTS"]) > 0)
 			{
 				$strSql .= ($bWhereStarted ? " AND " : " WHERE ").$arSqls["CRM_RIGHTS"]." ";
@@ -765,6 +877,12 @@ class CSocNetLog extends CAllSocNetLog
 		if (strlen($arSqls["RIGHTS"]) > 0)
 		{
 			$strSql .= ($bWhereStarted ? " AND " : " WHERE ").$arSqls["RIGHTS"]." ";
+			$bWhereStarted = true;
+		}
+
+		if (strlen($arSqls["VIEW"]) > 0)
+		{
+			$strSql .= ($bWhereStarted ? " AND " : " WHERE ").$arSqls["VIEW"]." ";
 			$bWhereStarted = true;
 		}
 
@@ -868,8 +986,8 @@ class CSocNetLog extends CAllSocNetLog
 			}
 
 			$dbRes = new CDBResult();
-
 			//echo "!2.2!=".htmlspecialcharsbx($strSql)."<br>";
+
 			$dbRes->SetUserFields($USER_FIELD_MANAGER->GetUserFields("SONET_LOG"));
 			$dbRes->NavQuery($strSql, $cnt, $arNavStartParams);
 		}
@@ -879,7 +997,6 @@ class CSocNetLog extends CAllSocNetLog
 			{
 				$strSql .= "LIMIT ".intval($arNavStartParams["nTopCount"]);
 			}
-
 			//echo "!3!=".htmlspecialcharsbx($strSql)."<br>";
 
 			$dbRes = $DB->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
@@ -907,12 +1024,12 @@ class CSocNetLog extends CAllSocNetLog
 
 	function Delete($ID)
 	{
-		global $DB;
+		global $DB, $APPLICATION, $USER_FIELD_MANAGER, $CACHE_MANAGER;
 
 		$ID = IntVal($ID);
 		if ($ID <= 0)
 		{
-			$GLOBALS["APPLICATION"]->ThrowException(GetMessage("SONET_GL_WRONG_PARAMETER_ID"), "ERROR_NO_ID");
+			$APPLICATION->ThrowException(GetMessage("SONET_GL_WRONG_PARAMETER_ID"), "ERROR_NO_ID");
 			return false;
 		}
 
@@ -929,12 +1046,13 @@ class CSocNetLog extends CAllSocNetLog
 		$DB->Query("DELETE FROM b_sonet_log_right WHERE LOG_ID = ".$ID, true);
 		$DB->Query("DELETE FROM b_sonet_log_site WHERE LOG_ID = ".$ID, true);
 		$DB->Query("DELETE FROM b_sonet_log_favorites WHERE LOG_ID = ".$ID, true);
+		$DB->Query("DELETE FROM b_sonet_log_tag WHERE LOG_ID = ".$ID, true);
 
 		$bSuccess = $DB->Query("DELETE FROM b_sonet_log WHERE ID = ".$ID, true);
 
 		if ($bSuccess)
 		{
-			$GLOBALS["USER_FIELD_MANAGER"]->Delete("SONET_LOG", $ID);
+			$USER_FIELD_MANAGER->Delete("SONET_LOG", $ID);
 
 			$db_events = GetModuleEvents("socialnetwork", "OnSocNetLogDelete");
 			while ($arEvent = $db_events->Fetch())
@@ -942,9 +1060,14 @@ class CSocNetLog extends CAllSocNetLog
 				ExecuteModuleEventEx($arEvent, array($ID));
 			}
 
+			LogIndex::deleteIndex(array(
+				'itemType' => LogIndexTable::ITEM_TYPE_LOG,
+				'itemId' => $ID
+			));
+
 			if (defined("BX_COMP_MANAGED_CACHE"))
 			{
-				$GLOBALS["CACHE_MANAGER"]->ClearByTag("SONET_LOG_".$ID);
+				$CACHE_MANAGER->ClearByTag("SONET_LOG_".$ID);
 			}
 
 			$cache = new CPHPCache;
@@ -960,13 +1083,17 @@ class CSocNetLog extends CAllSocNetLog
 
 		$userID = IntVal($userID);
 		if ($userID <= 0)
+		{
 			return false;
+		}
 
 		$DB->Query("DELETE LC FROM b_sonet_log_comment LC INNER JOIN (SELECT L.TMP_ID FROM b_sonet_log L WHERE L.ENTITY_TYPE = '".SONET_ENTITY_USER."' AND L.ENTITY_ID = ".$userID.") L1 ON LC.LOG_ID = L1.TMP_ID", true);
 		$DB->Query("DELETE LS FROM b_sonet_log_site LS INNER JOIN (SELECT L.ID FROM b_sonet_log L WHERE L.ENTITY_TYPE = '".SONET_ENTITY_USER."' AND L.ENTITY_ID = ".$userID.") L1 ON LS.LOG_ID = L1.ID", true);
 		$DB->Query("DELETE LR FROM b_sonet_log_right LR INNER JOIN (SELECT L.ID FROM b_sonet_log L WHERE L.ENTITY_TYPE = '".SONET_ENTITY_USER."' AND L.ENTITY_ID = ".$userID.") L1 ON LR.LOG_ID = L1.ID", true);
 		$DB->Query("DELETE LF FROM b_sonet_log_favorites LF INNER JOIN (SELECT L.ID FROM b_sonet_log L WHERE L.ENTITY_TYPE = '".SONET_ENTITY_USER."' AND L.ENTITY_ID = ".$userID.") L1 ON LF.LOG_ID = L1.ID", true);
 		$DB->Query("DELETE FROM b_sonet_log_favorites WHERE USER_ID = ".$userID, true);
+		$DB->Query("DELETE FROM b_sonet_log_follow WHERE USER_ID = ".$userID, true);
+		$DB->Query("DELETE FROM b_sonet_log_view WHERE USER_ID = ".$userID, true);
 
 		$DB->Query("DELETE FROM b_sonet_log WHERE ENTITY_TYPE = '".SONET_ENTITY_USER."' AND ENTITY_ID = ".$userID, true);
 
@@ -975,7 +1102,8 @@ class CSocNetLog extends CAllSocNetLog
 
 	function OnBlogDelete($blog_id)
 	{
-		return $GLOBALS["DB"]->Query("DELETE SL FROM b_sonet_log SL INNER JOIN b_blog_post BP ON SL.SOURCE_ID = BP.ID AND BP.BLOG_ID = ".intval($blog_id)." WHERE SL.EVENT_ID = 'blog_post_micro' OR SL.EVENT_ID = 'blog_post'", true);
+		global $DB;
+		return $DB->Query("DELETE SL FROM b_sonet_log SL INNER JOIN b_blog_post BP ON SL.SOURCE_ID = BP.ID AND BP.BLOG_ID = ".intval($blog_id)." WHERE SL.EVENT_ID = 'blog_post_micro' OR SL.EVENT_ID = 'blog_post'", true);
 	}
 }
 

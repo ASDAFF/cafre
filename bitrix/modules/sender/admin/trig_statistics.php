@@ -94,21 +94,18 @@ if($MAILING_ID > 0)
 				'START' => 0,
 			)
 		);
-		$statRawDb = \Bitrix\Sender\PostingRecipientTable::getList(array(
+		$statRawDb = \Bitrix\Sender\PostingTable::getList(array(
 			'select' => array(
 				'CNT', 'READ_CNT', 'CLICK_CNT', 'UNSUB_CNT'
 			),
 			'filter' => array(
-				'=POSTING.MAILING_CHAIN_ID' => $chain['ID'],
-				'=STATUS' => array(
-					\Bitrix\Sender\PostingRecipientTable::SEND_RESULT_SUCCESS,
-				)
+				'=MAILING_CHAIN_ID' => $chain['ID'],
 			),
 			'runtime' => array(
-				new \Bitrix\Main\Entity\ExpressionField('CNT', 'COUNT(DISTINCT %s)', 'ID'),
-				new \Bitrix\Main\Entity\ExpressionField('READ_CNT', 'COUNT(DISTINCT %s)', 'POSTING_READ.RECIPIENT_ID'),
-				new \Bitrix\Main\Entity\ExpressionField('CLICK_CNT', 'COUNT(DISTINCT %s)', 'POSTING_CLICK.RECIPIENT_ID'),
-				new \Bitrix\Main\Entity\ExpressionField('UNSUB_CNT', 'COUNT(DISTINCT %s)', 'POSTING_UNSUB.RECIPIENT_ID')
+				new \Bitrix\Main\Entity\ExpressionField('CNT', 'SUM(%s)', 'COUNT_SEND_SUCCESS'),
+				new \Bitrix\Main\Entity\ExpressionField('READ_CNT', 'SUM(%s)', 'COUNT_READ'),
+				new \Bitrix\Main\Entity\ExpressionField('CLICK_CNT', 'SUM(%s)', 'COUNT_CLICK'),
+				new \Bitrix\Main\Entity\ExpressionField('UNSUB_CNT', 'SUM(%s)', 'COUNT_UNSUB')
 			),
 		));
 		while($statRaw = $statRawDb->fetch())
@@ -214,40 +211,40 @@ else:
 		<div id="chartdiv" class="sender-stat-reiterate-graph" style="height: 400px;"></div>
 	</div>
 	<script>
-		 BX.ready(function(){
+		BX.ready(function(){
 			var chart = AmCharts.makeChart("chartdiv", {
 				"theme": "dark",
 				"type": "serial",
 				"pathToImages": "/bitrix/js/main/amcharts/3.3/images/",
 				"dataProvider": <?=CUtil::PhpToJSObject($statList['CHAIN'])?>,
 				"valueAxes": [{
-					 "axisAlpha": 0,
-					 "gridAlpha": 0.1
+					"axisAlpha": 0,
+					"gridAlpha": 0.1
 				}],
 				"startDuration": 1,
 				"graphs": [{
-					 "balloonText": "<?=GetMessage("sender_stat_trig_goal_subject")?>: [[SUBJECT]]<br/><?=GetMessage("sender_stat_trig_goal_start")?>: [[CNT_START]]<br/><?=GetMessage("sender_stat_trig_goal_end")?>: [[CNT_GOAL]]",
-					 "colorField": "color",
-					 "fillAlphas": 0.8,
-					 "lineAlpha": 0,
-					 "openField": "GOAL_START",
-					 "type": "column",
-					 "valueField": "GOAL_END"
+					"balloonText": "<?=GetMessage("sender_stat_trig_goal_subject")?>: [[SUBJECT]]<br/><?=GetMessage("sender_stat_trig_goal_start")?>: [[CNT_START]]<br/><?=GetMessage("sender_stat_trig_goal_end")?>: [[CNT_GOAL]]",
+					"colorField": "color",
+					"fillAlphas": 0.8,
+					"lineAlpha": 0,
+					"openField": "GOAL_START",
+					"type": "column",
+					"valueField": "GOAL_END"
 				}],
 				"rotate": true,
 				"columnWidth": 1,
 				"categoryField": "NAME",
 				"categoryAxis": {
-				 "gridPosition": "start",
-				 "axisAlpha": 0,
-				 "gridAlpha": 0.1,
-				 "position": "left"
+					"gridPosition": "start",
+					"axisAlpha": 0,
+					"gridAlpha": 0.1,
+					"position": "left"
 				},
 				"export": {
 					"enabled": true
 				}
 			});
-		 });
+		});
 
 	</script>
 </div>

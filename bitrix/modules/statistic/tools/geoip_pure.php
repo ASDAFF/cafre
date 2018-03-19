@@ -24,7 +24,7 @@ class CCityLookup_geoip_pure extends CCityLookup
 	var $latitude = false;
 	var $longitude = false;
 
-	function OnCityLookup($arDBRecord = false)
+	public static function OnCityLookup($arDBRecord = false)
 	{
 		return new CCityLookup_geoip_pure($arDBRecord);
 	}

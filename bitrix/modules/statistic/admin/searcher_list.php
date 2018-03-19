@@ -1,14 +1,7 @@
-<?
-/*
-##############################################
-# Bitrix: SiteManager                        #
-# Copyright (c) 2004 - 2006 Bitrix           #
-# http://www.bitrix.ru                       #
-# mailto:admin@bitrix.ru                     #
-##############################################
-*/
+<?php
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/statistic/prolog.php");
+/** @var CMain $APPLICATION */
 $STAT_RIGHT = $APPLICATION->GetGroupRight("statistic");
 if($STAT_RIGHT=="D") $APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
 
@@ -96,7 +89,7 @@ if(($arID = $lAdmin->GroupAction()) && $STAT_RIGHT=="W" && check_bitrix_sessid()
 	{
 		if(strlen($ID)<=0)
 			continue;
-		$ID = IntVal($ID);
+		$ID = intval($ID);
 		switch($_REQUEST['action'])
 		{
 		case "delete":
@@ -146,13 +139,13 @@ $b_yesterday = GetTime(time()-172800);
 $headers=array(
 	array("id"=>"ID", "content"=>"ID", "sort"=>"s_id", "default"=>true),
 	array("id"=>"NAME", "content"=>GetMessage("STAT_NAME"), "sort"=>"s_name", "default"=>true),
-	array("id"=>"USER_AGENT", "content"=>UserAgent, "sort"=>"s_user_agent", "default"=>true),
+	array("id"=>"USER_AGENT", "content"=>"UserAgent", "sort"=>"s_user_agent", "default"=>true),
 	array("id"=>"TODAY_HITS", "content"=>GetMessage("STAT_TODAY_HITS")." $today", "sort"=>"s_today_hits", "default"=>true, "align"=>"right"),
 	array("id"=>"YESTERDAY_HITS", "content"=>GetMessage("STAT_YESTERDAY_HITS")." $yesterday", "sort"=>"s_yesterday_hits", "default"=>true, "align"=>"right"),
 	array("id"=>"B_YESTERDAY_HITS", "content"=>GetMessage("STAT_B_YESTERDAY_HITS")." $b_yesterday", "sort"=>"s_b_yesterday_hits", "default"=>true, "align"=>"right"),
 	);
 if (strlen($arFilter["DATE1_PERIOD"])>0)
-	$headers[]=array("id"=>"PERIOD_HITS", "content"=>GetMessage("STAT_PERIOD_HITS")." ".htmlspecialcharsex($arFilter["DATE1_PERIOD"])." ".htmlspecialcharsex($arFilter["DATE2_PERIOD"]), "sort"=>"s_period_hits", "default"=>true, "align"=>"right");
+	$headers[]=array("id"=>"PERIOD_HITS", "content"=>GetMessage("STAT_PERIOD_HITS")." ".htmlspecialcharsEx($arFilter["DATE1_PERIOD"])." ".htmlspecialcharsEx($arFilter["DATE2_PERIOD"]), "sort"=>"s_period_hits", "default"=>true, "align"=>"right");
 
 $headers[]=array("id"=>"TOTAL_HITS", "content"=>GetMessage("STAT_TOTAL_HITS"), "sort"=>"s_total_hits", "default"=>true, "align"=>"right");
 $headers[]=array("id"=>"DATE_LAST", "content"=>GetMessage("STAT_LAST_DATE"), "sort"=>"s_date_last", "default"=>true);
@@ -348,4 +341,4 @@ if($message)
 $lAdmin->DisplayList();
 ?>
 
-<?require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");?>
+<?require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");

@@ -25,8 +25,16 @@ $MESS["IM_MESSAGE_DELETED"] = "This message has been deleted.";
 $MESS["IM_MESSAGE_DELETED_OUT"] = "Message of #DATE# has been deleted.";
 $MESS["IM_MESSAGE_LIKE"] = "I like your message \"#MESSAGE#\" you made in chat \"#TITLE#\"";
 $MESS["IM_MESSAGE_LIKE_PRIVATE"] = "I like your message \"#MESSAGE#\" in our conversation.";
+$MESS["IM_MESSAGE_MENTION_M"] = "Mentioned you in chat \"#TITLE#\"";
+$MESS["IM_MESSAGE_MENTION_F"] = "Mentioned you in chat \"#TITLE#\"";
+$MESS["IM_MESSAGE_MENTION_PUSH_M"] = "#USER# mentioned you in chat #TITLE#";
+$MESS["IM_MESSAGE_MENTION_PUSH_F"] = "#USER# mentioned you in chat #TITLE#";
+$MESS["IM_PUSH_GROUP_TITLE"] = "#USER# for #GROUP#";
 $MESS["IM_MESSAGE_FILE"] = "File";
 $MESS["IM_MESSAGE_FILE_DOWN"] = "Download:";
 $MESS["IM_QUOTE"] = "Quote";
-$MESS["IM_PUSH_GROUP_TITLE"] = "#USER# for #GROUP#";
+$MESS["IM_MESSAGE_ATTACH"] = "Attachment";
+$MESS["IM_MESSAGE_ICON"] = "icon";
+$MESS["IM_MESSAGE_MENTION_PUSH_2_M"] = "#USER# has mentioned you";
+$MESS["IM_MESSAGE_MENTION_PUSH_2_F"] = "#USER# has mentioned you";
 ?>

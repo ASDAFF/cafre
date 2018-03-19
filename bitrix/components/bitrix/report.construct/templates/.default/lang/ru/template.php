@@ -80,4 +80,15 @@ $MESS["REPORT_CHART_LABEL_TEXT_ARGS"] = "Аргументы";
 $MESS["REPORT_CHART_LABEL_TEXT_VALUES"] = "Значения";
 $MESS["REPORT_CHART_ADD_COL_LABEL_TITLE"] = "Добавить колонку значений";
 $MESS["REPORT_CHART_REMOVE_COL_LABEL_TITLE"] = "Удалить колонку значений";
+
+$MESS["REPORT_SHARING_TITLE"] = "Общий доступ";
+$MESS["REPORT_BTN_SAVE"] = "Сохранить";
+$MESS["REPORT_BTN_CLOSE"] = "Закрыть";
+$MESS["REPORT_SHARING_NAME_RIGHTS_USER"] = "Пользователи";
+$MESS["REPORT_SHARING_NAME_RIGHTS"] = "Права доступа";
+$MESS["REPORT_SHARING_NAME_ADD_RIGHTS_USER"] = "Добавить ещё";
+$MESS["REPORT_TITLE_EXPORT"] = "Экспорт CSV";
+$MESS["REPORT_SHARING_ILLUSTRATION"] = "Вы создали уникальный отчет и можете поделиться им с коллегами.
+Отчет автоматически появится в списке доступных у всех, кого вы укажете. Вы не делитесь данными,
+а передаете только шаблон отчета.";
 ?>

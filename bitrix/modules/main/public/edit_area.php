@@ -361,21 +361,32 @@ class CComponentPanel
 		if($this->iSrcLine > 0 && $this->sSrcFile <> "")
 		{
 			// try to convert absolute path to file within DOCUMENT_ROOT
-			$doc_root = strtolower(str_replace("\\", "/", realpath($_SERVER["DOCUMENT_ROOT"])));
-			if(strpos(strtolower($this->sSrcFile), $doc_root."/") === 0)
+			$lowerScrFile = strtolower($this->sSrcFile);
+			$docRoot = strtolower(str_replace("\\", "/", realpath($_SERVER["DOCUMENT_ROOT"])));
+			if(strpos($lowerScrFile, $docRoot."/") === 0)
 			{
 				//within
-				$this->sSrcFile = substr($this->sSrcFile, strlen($doc_root));
+				$this->sSrcFile = substr($this->sSrcFile, strlen($docRoot));
 				$this->bSrcFound = true;
 			}
 			else
 			{
-				//outside
-				$sRealBitrix = strtolower(str_replace("\\", "/", realpath($_SERVER["DOCUMENT_ROOT"]."/bitrix")));
-				if(strpos(strtolower($this->sSrcFile), substr($sRealBitrix, 0, -6)) === 0)
+				//bitrix outside
+				$realBitrix = strtolower(str_replace("\\", "/", realpath($_SERVER["DOCUMENT_ROOT"]."/bitrix")));
+				if(strpos($lowerScrFile, substr($realBitrix, 0, -6)) === 0)
 				{
-					$this->sSrcFile = substr($this->sSrcFile, strlen($sRealBitrix) - 7);
+					$this->sSrcFile = substr($this->sSrcFile, strlen($realBitrix) - 7);
 					$this->bSrcFound = true;
+				}
+				else
+				{
+					//local outside
+					$realLocal = strtolower(str_replace("\\", "/", realpath($_SERVER["DOCUMENT_ROOT"]."/local")));
+					if(strpos($lowerScrFile, substr($realLocal, 0, -5)) === 0)
+					{
+						$this->sSrcFile = substr($this->sSrcFile, strlen($realLocal) - 6);
+						$this->bSrcFound = true;
+					}
 				}
 			}
 		}
@@ -430,6 +441,8 @@ class CComponentPanel
 			$template = $this->component->GetTemplate();
 			if(is_null($template))
 			{
+				//the component is possibly disabled, need to init the template
+				$this->component->setTemplateName($this->componentTemplate);
 				if($this->component->InitComponentTemplate())
 					$template = $this->component->GetTemplate();
 			}

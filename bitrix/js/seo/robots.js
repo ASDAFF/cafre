@@ -364,7 +364,13 @@ BX.seoEditor.prototype.addRule = function(rule, bSkipUniqueCheck)
 };
 
 var tmpWindow = null;
-var arStandardDisallow = ['*/index.php', '/bitrix/', '/*show_include_exec_time=', '/*show_page_exec_time=', '/*show_sql_stat=', '/*bitrix_include_areas=', '/*clear_cache=', '/*clear_cache_session=', '/*ADD_TO_COMPARE_LIST', '/*ORDER_BY', '/*PAGEN', '/*?print=', '/*&print=', '/*print_course=', '/*?action=', '/*&action=', '/*register=', '/*forgot_password=', '/*change_password=', '/*login=', '/*logout=', '/*auth=', '/*backurl=','/*back_url=', '/*BACKURL=','/*BACK_URL=', '/*back_url_admin=', '/*?utm_source='];
+var arStandardDisallow = ['*/index.php', '/bitrix/', '/*show_include_exec_time=', '/*show_page_exec_time=',
+	'/*show_sql_stat=', '/*bitrix_include_areas=', '/*clear_cache=', '/*clear_cache_session=', '/*ADD_TO_COMPARE_LIST',
+	'/*ORDER_BY', '/*PAGEN', '/*?print=', '/*&print=', '/*print_course=', '/*?action=', '/*&action=', '/*register=',
+	'/*forgot_password=', '/*change_password=', '/*login=', '/*logout=', '/*auth=', '/*backurl=','/*back_url=',
+	'/*BACKURL=','/*BACK_URL=', '/*back_url_admin=', '/*?utm_source=', '/*?bxajaxid=', '/*&bxajaxid=',
+	'/*?view_result=', '/*&view_result='
+];
 var arStandardAllow = ['/bitrix/components/', '/bitrix/cache/', '/bitrix/js/', '/bitrix/templates/', '/bitrix/panel/'];
 
 function getActionWindow()
@@ -510,7 +516,7 @@ ACTIONS.push({
 		{
 			var divContent = BX.create('DIV', {html:'<input type="text" value="www.'+BX.util.htmlspecialchars(host)+'" class="seo-robots-settings-input">'});
 
-			wnd.setTitleBar({content: BX.create('DIV', {text:BX.message('SEO_ROBOT_ACTION_MAIN_HOST')})});
+			wnd.setTitleBar(BX.message('SEO_ROBOT_ACTION_MAIN_HOST'));
 			wnd.setContent(divContent);
 			wnd.setButtons([
 				new BX.PopupWindowButton({
@@ -575,7 +581,7 @@ ACTIONS.push({
 
 		var wnd = getActionWindow();
 
-		wnd.setTitleBar({content: BX.create('DIV', {text:BX.message('SEO_ROBOT_ACTION_DISALLOW_PATH')})});
+		wnd.setTitleBar(BX.message('SEO_ROBOT_ACTION_DISALLOW_PATH'));
 		wnd.setContent(divContent);
 		wnd.setButtons([
 			new BX.PopupWindowButton({
@@ -652,7 +658,7 @@ ACTIONS.push({
 
 		var wnd = getActionWindow();
 
-		wnd.setTitleBar({content: BX.create('DIV', {text:BX.message('SEO_ROBOT_ACTION_ALLOW_PATH')})});
+		wnd.setTitleBar(BX.message('SEO_ROBOT_ACTION_ALLOW_PATH'));
 		wnd.setContent(divContent);
 		wnd.setButtons([
 			new BX.PopupWindowButton({
@@ -732,11 +738,11 @@ ACTIONS.push({
 
 		strContent += '</form>';
 
-		var divContent = BX.create('DIV', {props: {className: 'seo-robots-settings'}, style: {padding:'5px'}, html:strContent});
+		var divContent = BX.create('DIV', {props: {className: 'seo-robots-settings'}, html:strContent});
 
 		var wnd = getActionWindow();
 
-		wnd.setTitleBar({content: BX.create('DIV', {text:BX.message('SEO_ROBOT_MAIN_HOST')})});
+		wnd.setTitleBar(BX.message('SEO_ROBOT_MAIN_HOST'));
 		wnd.setContent(divContent);
 		wnd.setButtons([
 			new BX.PopupWindowButton({
@@ -809,7 +815,7 @@ ACTIONS.push({
 
 		var wnd = getActionWindow();
 
-		wnd.setTitleBar({content: BX.create('DIV', {text:BX.message('SEO_ROBOT_CRAWL_DELAY')})});
+		wnd.setTitleBar(BX.message('SEO_ROBOT_CRAWL_DELAY'));
 		wnd.setContent(divContent);
 		wnd.setButtons([
 			new BX.PopupWindowButton({
@@ -866,7 +872,7 @@ ACTIONS.push({
 
 		var wnd = getActionWindow();
 
-		wnd.setTitleBar({content: BX.create('DIV', {text:BX.message('SEO_ROBOT_ACTION_SITEMAP_URL')})});
+		wnd.setTitleBar(BX.message('SEO_ROBOT_ACTION_SITEMAP_URL'));
 		wnd.setContent(divContent);
 		wnd.setButtons([
 			new BX.PopupWindowButton({

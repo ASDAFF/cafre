@@ -78,6 +78,9 @@ class Select extends Base
 			case FieldType::TEXT:
 				$value = (string) $originalValue;
 				break;
+			case FieldType::SELECT:
+				$value = (string) $key;
+				break;
 			case FieldType::USER:
 				$value = trim($key);
 				if (strpos($value, 'user_') === false
@@ -93,6 +96,25 @@ class Select extends Base
 		}
 
 		return $value;
+	}
+
+	/**
+	 * Return conversion map for current type.
+	 * @return array Map.
+	 */
+	public static function getConversionMap()
+	{
+		return array(
+			array(
+				FieldType::BOOL,
+				FieldType::DOUBLE,
+				FieldType::INT,
+				FieldType::STRING,
+				FieldType::TEXT,
+				FieldType::SELECT,
+				FieldType::USER
+			)
+		);
 	}
 
 	/**
@@ -115,33 +137,76 @@ class Select extends Base
 			if (\CBPActivity::isExpression($v))
 				$selectorValue = $v;
 			else
-				$typeValue[] = $v;
+				$typeValue[] = (string)$v;
 		}
 		// need to show at least one control
 		if (empty($typeValue))
 			$typeValue[] = null;
 
-
 		$renderResult = '<select id="'.htmlspecialcharsbx(static::generateControlId($field))
+			.'" class="'.htmlspecialcharsbx(static::generateControlClassName($fieldType, $field))
 			.'" name="'.htmlspecialcharsbx(static::generateControlName($field))
 			.($fieldType->isMultiple() ? '[]' : '').'"'.($fieldType->isMultiple() ? ' size="5" multiple' : '').'>';
 
 		if (!$fieldType->isRequired() || $allowSelection)
 			$renderResult .= '<option value="">['.Loc::getMessage('BPCGHLP_NOT_SET').']</option>';
 
-		$options = static::getFieldOptions($fieldType);
+		$settings = static::getFieldSettings($fieldType);
+		$groups = $settings['Groups'] ? $settings['Groups'] : null;
 
-		foreach ($options as $k => $v)
+		if(is_array($groups) && !empty($groups))
 		{
-			$ind = array_search($k, $typeValue);
-			$renderResult .= '<option value="'.htmlspecialcharsbx($k).'"'.($ind !== false ? ' selected' : '').'>'.htmlspecialcharsbx($v).'</option>';
+			foreach($groups as $group)
+			{
+				if(!is_array($group))
+				{
+					continue;
+				}
+
+				$name = isset($group['name']) ? $group['name'] : '';
+
+				if($name !== '')
+				{
+					$renderResult .= '<optgroup label="'.htmlspecialcharsbx($name).'">';
+				}
+
+				$options = isset($group['items']) && is_array($group['items']) ? $group['items'] : array();
+				foreach($options as $k => $v)
+				{
+					$renderResult .= '<option value="';
+					$renderResult .= htmlspecialcharsbx($k);
+					$renderResult .= '"';
+
+					if(in_array((string)$k, $typeValue, true))
+					{
+						$renderResult .= ' selected';
+					}
+
+					$renderResult .= '>';
+					$renderResult .= htmlspecialcharsbx($v);
+					$renderResult .= '</option>';
+				}
+
+				if($name !== '')
+				{
+					$renderResult .= '</optgroup>';
+				}
+			}
+		}
+		else
+		{
+			$options = static::getFieldOptions($fieldType);
+			foreach ($options as $k => $v)
+			{
+				$renderResult .= '<option value="'.htmlspecialcharsbx($k).'"'.(in_array((string)$k, $typeValue) ? ' selected' : '').'>'.htmlspecialcharsbx($v).'</option>';
+			}
 		}
 
 		$renderResult .= '</select>';
 
 		if ($allowSelection)
 		{
-			$renderResult .= static::renderControlSelector($field, $selectorValue, true);
+			$renderResult .= static::renderControlSelector($field, $selectorValue, true, '', $fieldType);
 		}
 
 		return $renderResult;
@@ -195,7 +260,7 @@ class Select extends Base
 		$str = '';
 		foreach ($options as $k => $v)
 		{
-			if ($k != $v)
+			if ((string)$k !== (string)$v)
 				$str .= '['.$k.']'.$v;
 			else
 				$str .= $v;
@@ -313,6 +378,22 @@ class Select extends Base
 	/**
 	 * @param FieldType $fieldType Document field type.
 	 * @param mixed $value Field value.
+	 * @param string $format Format name.
+	 * @return mixed|null
+	 */
+	public static function formatValueSingle(FieldType $fieldType, $value, $format = 'printable')
+	{
+		if (is_array($value) && \CBPHelper::isAssociativeArray($value))
+		{
+			$keys = array_keys($value);
+			$value = isset($keys[0]) ? $keys[0] : null;
+		}
+		return parent::formatValueSingle($fieldType, $value, $format);
+	}
+
+	/**
+	 * @param FieldType $fieldType Document field type.
+	 * @param mixed $value Field value.
 	 * @param string $toTypeClass Type class name.
 	 * @return array
 	 */
@@ -332,6 +413,16 @@ class Select extends Base
 	{
 		$options = $fieldType->getOptions();
 		return self::normalizeOptions($options);
+	}
+
+	/**
+	 * Get field settings
+	 * @param FieldType $fieldType
+	 * @return array
+	 */
+	protected static function getFieldSettings(FieldType $fieldType)
+	{
+		return $fieldType->getSettings();
 	}
 
 	/**

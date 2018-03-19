@@ -106,7 +106,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST' && check_bitrix_sessid() && isset($_POST
 			if(count($mailingIdList) > 0)
 			{
 				$arExistedSubscription = array();
-				$subscriptionDb = \Bitrix\Sender\MailingSubscriptionTable::getList(array(
+				$subscriptionDb = \Bitrix\Sender\MailingSubscriptionTable::getSubscriptionList(array(
 					'select' => array('EXISTED_MAILING_ID' => 'MAILING.ID'),
 					'filter' => array('=CONTACT.EMAIL' => strtolower($_POST["SENDER_SUBSCRIBE_EMAIL"]), '!MAILING.ID' => null),
 				));
@@ -204,7 +204,7 @@ if($arParams["USE_PERSONALIZATION"])
 
 		if($subscr_EMAIL <> "")
 		{
-			$subscriptionDb = \Bitrix\Sender\MailingSubscriptionTable::getList(array(
+			$subscriptionDb = \Bitrix\Sender\MailingSubscriptionTable::getSubscriptionList(array(
 				'select' => array('ID' => 'CONTACT_ID', 'EMAIL' => 'CONTACT.EMAIL', 'EXISTED_MAILING_ID' => 'MAILING.ID'),
 				'filter' => array('=CONTACT.EMAIL' => $subscr_EMAIL, '!MAILING.ID' => null),
 			));

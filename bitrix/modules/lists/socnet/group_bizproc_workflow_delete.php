@@ -13,8 +13,8 @@ $APPLICATION->IncludeComponent("bitrix:lists.element.navchain", ".default", arra
 	$component
 );
 
-$moduleId = "iblock";
-$entity = "CIBlockDocument";
+$moduleId = "lists";
+$entity = 'Bitrix\Lists\BizprocDocumentLists';
 
 $APPLICATION->IncludeComponent("bitrix:bizproc.document", ".default", array(
 	"MODULE_ID" => $moduleId,

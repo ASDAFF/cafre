@@ -61,14 +61,14 @@ if (CModule::IncludeModule("sale"))
 	if ($order_amount != $lmi_payment_amount)
 	{
 		$err=2;
-		$err_text='ERR: мебепмюъ ясллю : '.$lmi_payment_amount;
+		$err_text='ERR: мебепмюъ ясллю : '.htmlspecialcharsbx($lmi_payment_amount);
 	}  
 
 	//ОПНБЕПЪЕЛ ID ЛЮЦЮГХМЮ
 	if($lmi_payee_purse != $IdM) 
 	{
 		$err=3;
-		$err_text='ERR: мебепем ID люцюгхмю : '.$lmi_payee_purse;
+		$err_text='ERR: мебепем ID люцюгхмю : '.htmlspecialcharsbx($lmi_payee_purse);
 	}
 
 

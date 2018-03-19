@@ -7,12 +7,12 @@ class CAllCatalogVat
 /*
 * @deprecated deprecated since catalog 12.5.6
 */
-	function err_mess()
+	public static function err_mess()
 	{
 		return "<br>Module: catalog<br>Class: CCatalogVat<br>File: ".__FILE__;
 	}
 
-	function CheckFields($ACTION, &$arFields, $ID = 0)
+	public static function CheckFields($ACTION, &$arFields, $ID = 0)
 	{
 		global $APPLICATION;
 		$arMsg = array();
@@ -98,12 +98,16 @@ class CAllCatalogVat
 		return $boolResult;
 	}
 
-	function GetByID($ID)
+	public static function GetByID($ID)
 	{
 		return CCatalogVat::GetListEx(array(), array('ID' => $ID));
 	}
 
-	function GetList($arOrder = array('SORT' => 'ASC'), $arFilter = array(), $arFields = array())
+/*
+* @deprecated deprecated since catalog 12.5.6
+* @see CCatalogVat::GetListEx()
+*/
+	public static function GetList($arOrder = array('SORT' => 'ASC'), $arFilter = array(), $arFields = array())
 	{
 		if (is_array($arFilter))
 		{
@@ -125,7 +129,7 @@ class CAllCatalogVat
 * @see CCatalogVat::Add()
 * @see CCatalogVat::Update()
 */
-	function Set($arFields)
+	public static function Set($arFields)
 	{
 		if (isset($arFields['ID']) && intval($arFields['ID']) > 0)
 		{
@@ -137,9 +141,8 @@ class CAllCatalogVat
 		}
 	}
 
-	function GetByProductID($PRODUCT_ID)
+	public static function GetByProductID($PRODUCT_ID)
 	{
 
 	}
 }
-?>

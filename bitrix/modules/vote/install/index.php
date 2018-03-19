@@ -40,15 +40,23 @@ Class vote extends CModule
 		$this->MODULE_DESCRIPTION = GetMessage("VOTE_MODULE_DESCRIPTION");
 		$this->MODULE_CSS = "/bitrix/modules/vote/vote.css";
 	}
-	
-	function InstallUserFields()
-	{
 
-	}
+	function InstallUserFields($moduleId = "all")
+	{}
 
 	function UnInstallUserFields()
 	{
-
+		$ent = new CUserTypeEntity;
+		foreach(array("disk_file", "disk_version") as $type)
+		{
+			$rsData = CUserTypeEntity::GetList(array("ID" => "ASC"), array("USER_TYPE_ID" => $type));
+			if ($rsData && ($arRes = $rsData->Fetch()))
+			{
+				do {
+					$ent->Delete($arRes['ID']);
+				} while ($arRes = $rsData->Fetch());
+			}
+		}
 	}
 
 	function InstallDB($arParams = array())
@@ -67,18 +75,17 @@ Class vote extends CModule
 		}
 		else
 		{
-			RegisterModule("vote");
-			CModule::IncludeModule("vote");
 
 			COption::SetOptionString("vote", "VOTE_DIR", "");
 			COption::SetOptionString("vote", "VOTE_COMPATIBLE_OLD_TEMPLATE", "N");
 
 			RegisterModuleDependences("main", "OnBeforeProlog", "main", "", "", 100, "/modules/vote/keepvoting.php");
-			RegisterModuleDependences("main", "OnUserTypeBuildList", "vote", "CUserTypeVote", "GetUserTypeDescription", 200);
+			RegisterModuleDependences("main", "OnUserTypeBuildList", "vote", "Bitrix\\Vote\\Uf\\VoteUserType", "getUserTypeDescription", 200);
 			RegisterModuleDependences("main", "OnUserLogin", "vote", "CVoteUser", "OnUserLogin", 200);
 
 			RegisterModuleDependences("im", "OnGetNotifySchema", "vote", "CVoteNotifySchema", "OnGetNotifySchema");
 
+			RegisterModule("vote");
 			return true;
 		}
 	}
@@ -90,6 +97,7 @@ Class vote extends CModule
 
 		if(!array_key_exists("savedata", $arParams) || $arParams["savedata"] != "Y")
 		{
+			$this->UnInstallUserFields();
 			$this->errors = $DB->RunSQLBatch($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/vote/install/db/".strtolower($DB->type)."/uninstall.sql");
 		}
 
@@ -104,8 +112,8 @@ Class vote extends CModule
 		include($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/vote/install/events/del_events.php");
 
 		UnRegisterModuleDependences("im", "OnGetNotifySchema", "vote", "CVoteNotifySchema", "OnGetNotifySchema");
-		UnRegisterModuleDependences("main", "OnUserLogin", "vote", "CVoteUser", "OnUserLogin", 200);
-		UnRegisterModuleDependences("main", "OnUserTypeBuildList", "vote", "CUserTypeVote", "GetUserTypeDescription", 200);
+		UnRegisterModuleDependences("main", "OnUserLogin", "vote", "CVoteUser", "OnUserLogin");
+		UnRegisterModuleDependences("main", "OnUserTypeBuildList", "vote", "Bitrix\\Vote\\Uf\\VoteUserType", "getUserTypeDescription");
 		UnRegisterModuleDependences("main", "OnBeforeProlog", "main", "", "", "/modules/vote/keepvoting.php");
 		UnRegisterModule("vote");
 
@@ -147,7 +155,7 @@ Class vote extends CModule
 		if($_ENV["COMPUTERNAME"]!='BX')
 		{
 			CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/vote/install/admin", $_SERVER["DOCUMENT_ROOT"]."/bitrix/admin");
-			CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/vote/install/public/tools", $_SERVER["DOCUMENT_ROOT"]."/bitrix/tools");
+			CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/vote/install/tools", $_SERVER["DOCUMENT_ROOT"]."/bitrix/tools/vote");
 			CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/vote/install/themes", $_SERVER["DOCUMENT_ROOT"]."/bitrix/themes", true, true);
 			CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/vote/install/images", $_SERVER["DOCUMENT_ROOT"]."/bitrix/images/vote", true, true);
 			CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/vote/install/components", $_SERVER["DOCUMENT_ROOT"]."/bitrix/components", true, true);

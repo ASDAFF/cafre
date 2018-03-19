@@ -1,5 +1,6 @@
-<?
+<?php
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
+/** @var CMain $APPLICATION */
 $STAT_RIGHT = $APPLICATION->GetGroupRight("statistic");
 if($STAT_RIGHT=="D")
 	$APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
@@ -49,7 +50,7 @@ require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_popup_adm
 if (strlen($find_adv_str)>0) :
 	echo "<h2>".GetMessage("STAT_ADV_LIST")."</h2><p>";
 	$rsAdv = CAdv::GetList($v1="s_dropdown",$v2="asc", Array("ID" => $str), $v3, "", $v4, $v5);
-	while ($arAdv = $rsAdv->Fetch()) :
+	while ($arAdv = $rsAdv->GetNext()) :
 		echo "[".$arAdv["ID"]."]&nbsp;".$arAdv["REFERER1"]."&nbsp;/&nbsp;".$arAdv["REFERER2"]."<br>";
 	endwhile;
 	if ($find_adv_data_type!="B" && $find_adv_data_type!="S") $find_adv_data_type="P";
@@ -154,4 +155,4 @@ else:
 ?>
 <form><input type="button" onClick="window.close()" value="<?echo GetMessage("STAT_CLOSE")?>"></form>
 <?endif?>
-<?require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_popup_admin.php")?>
+<?require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_popup_admin.php");

@@ -47,3 +47,6 @@ $MESS['SALE_ORDER_PAY_VOUCHER_DATE'] = "Дата создания платежного документа";
 $MESS['SALE_ORDER_DATE_PAY_BEFORE'] = "Оплатить до";
 $MESS['SALE_ORDER_DATE_BILL'] = "Дата создания";
 $MESS['SALE_ORDER_PS_STATUS_MESSAGE'] = "Сообщение ПС";
+$MESS['SALE_ORDER_HIDDEN'] = "[Скрыто]";
+$MESS['SALE_ORDER_PAYMENT_PAID'] = "Оплатить";
+$MESS['SALE_ORDER_PAYMENT_PAID_N'] = "Отменить оплату";

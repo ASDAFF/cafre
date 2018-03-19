@@ -1,62 +1,79 @@
 <?
 IncludeModuleLangFile(__FILE__);
-define("POSTING_TEMPLATE_DIR", substr(BX_PERSONAL_ROOT, 1)."/php_interface/subscribe/templates");
 
 class CPostingTemplate
 {
-	var $LAST_ERROR="";
+	var $LAST_ERROR = "";
+
 	//Get list
-	function GetList()
+	public static function GetList()
 	{
+		$io = CBXVirtualIo::GetInstance();
 		$arTemplates = array();
-		$dir = $_SERVER["DOCUMENT_ROOT"]."/".POSTING_TEMPLATE_DIR;
-		if(is_dir($dir) && ($dh = opendir($dir)))
+
+		$dir = substr(getLocalPath("php_interface/subscribe/templates", BX_PERSONAL_ROOT), 1); //cut leading slash
+		$abs_dir = $_SERVER["DOCUMENT_ROOT"]."/".$dir;
+		if ($io->DirectoryExists($abs_dir))
 		{
-			while (($file = readdir($dh)) !== false)
-				if(is_dir($dir."/".$file) && $file!="." && $file!="..")
-					$arTemplates[]=POSTING_TEMPLATE_DIR."/".$file;
-			closedir($dh);
+			$d = $io->GetDirectory($abs_dir);
+			foreach ($d->GetChildren() as $dir_entry)
+			{
+				if ($dir_entry->IsDirectory())
+				{
+					$arTemplates[] = $dir."/".$dir_entry->GetName();
+				}
+			}
 		}
+
 		return $arTemplates;
 	}
 
-	function GetByID($path="")
+	public static function GetByID($path="")
 	{
 		global $MESS;
+
 		if(!CPostingTemplate::IsExists($path))
 			return false;
+
 		$arTemplate = array();
+
 		$strFileName= $_SERVER["DOCUMENT_ROOT"]."/".$path."/lang/".LANGUAGE_ID."/description.php";
-		if(file_exists($strFileName)) include($strFileName);
+		if(file_exists($strFileName))
+			include($strFileName);
+
 		$strFileName= $_SERVER["DOCUMENT_ROOT"]."/".$path."/description.php";
-		if(file_exists($strFileName)) include($strFileName);
+		if(file_exists($strFileName))
+			include($strFileName);
+
 		$arTemplate["PATH"] = $path;
 		return $arTemplate;
 	}
 
-	function IsExists($path="")
+	public static function IsExists($path="")
 	{
-		if(substr($path, 0, strlen(POSTING_TEMPLATE_DIR)+1) !== POSTING_TEMPLATE_DIR."/")
-			return false;
+		$io = CBXVirtualIo::GetInstance();
 
-		$template = substr($path, strlen(POSTING_TEMPLATE_DIR)+1);
-		if(
-			strpos($template, "\0") !== false
-			|| strpos($template, "\\") !== false
-			|| strpos($template, "/") !== false
-			|| strpos($template, "..") !== false
-		)
+		$dir = substr(getLocalPath("php_interface/subscribe/templates", BX_PERSONAL_ROOT), 1);
+		if (strpos($path, $dir."/") === 0)
 		{
-			return false;
-		}
+			$template = substr($path, strlen($dir) + 1);
+			if(
+				strpos($template, "\0") !== false
+				|| strpos($template, "\\") !== false
+				|| strpos($template, "/") !== false
+				|| strpos($template, "..") !== false
+			)
+			{
+				return false;
+			}
 
-		return is_dir($_SERVER["DOCUMENT_ROOT"]."/".$path);
+			return $io->DirectoryExists($_SERVER["DOCUMENT_ROOT"]."/".$path);
+		}
+		return false;
 	}
 
-	function Execute()
+	public static function Execute()
 	{
-		global $DB;
-
 		$rubrics = CRubric::GetList(array(), array("ACTIVE"=>"Y", "AUTO"=>"Y"));
 		$current_time = time();
 		$time_of_exec = false;
@@ -119,7 +136,7 @@ class CPostingTemplate
 		return $result;
 	}
 
-	function AddPosting($arRubric)
+	public static function AddPosting($arRubric)
 	{
 		global $DB, $USER, $MESS;
 		if(!is_object($USER)) $USER = new CUser;
@@ -129,6 +146,7 @@ class CPostingTemplate
 		$rsLang = CLanguage::GetByID($arSite["LANGUAGE_ID"]);
 		$arLang = $rsLang->Fetch();
 
+		$strBody="";
 		$arFields=false;
 		if(CPostingTemplate::IsExists($arRubric["TEMPLATE"]))
 		{
@@ -176,7 +194,7 @@ class CPostingTemplate
 		return $ID;
 	}
 
-	function ParseDaysOfMonth($strDaysOfMonth)
+	public static function ParseDaysOfMonth($strDaysOfMonth)
 	{
 		$arResult=array();
 		if(strlen($strDaysOfMonth) > 0)
@@ -209,7 +227,7 @@ class CPostingTemplate
 		return $arResult;
 	}
 
-	function ParseDaysOfWeek($strDaysOfWeek)
+	public static function ParseDaysOfWeek($strDaysOfWeek)
 	{
 		if(strlen($strDaysOfWeek) <= 0)
 			return false;
@@ -237,7 +255,7 @@ class CPostingTemplate
 		return $arResult;
 	}
 
-	function ParseTimesOfDay($strTimesOfDay)
+	public static function ParseTimesOfDay($strTimesOfDay)
 	{
 		if(strlen($strTimesOfDay) <= 0)
 			return false;

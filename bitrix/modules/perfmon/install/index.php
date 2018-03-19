@@ -168,7 +168,7 @@ Class perfmon extends CModule
 		return $arr;
 	}
 
-	function OnGetTableSchema()
+	public static function OnGetTableSchema()
 	{
 		return array(
 			"perfmon" => array(

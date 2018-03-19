@@ -1,6 +1,7 @@
-<?
+<?php
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/statistic/prolog.php");
+/** @var CMain $APPLICATION */
 $STAT_RIGHT = $APPLICATION->GetGroupRight("statistic");
 if($STAT_RIGHT=="D") $APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
 
@@ -309,12 +310,12 @@ while($arRes = $rsData->NavNext(true, "f_"))
 	$row->AddViewField("USER_ID", $str);
 
 	$str = "";
-	$hours = IntVal($f_SESSION_TIME/3600);
+	$hours = intval($f_SESSION_TIME/3600);
 	if ($hours>0) :
 		$str .= $hours."&nbsp;".GetMessage("STAT_HOURS")."&nbsp;";
 		$f_SESSION_TIME = $f_SESSION_TIME - $hours*3600;
 	endif;
-		$str .= IntVal($f_SESSION_TIME/60)."&nbsp;".GetMessage("STAT_MIN");
+		$str .= intval($f_SESSION_TIME/60)."&nbsp;".GetMessage("STAT_MIN");
 		$str .= " ".($f_SESSION_TIME%60)."&nbsp;".GetMessage("STAT_SEC");
 
 	$row->AddViewField("SESSION_TIME", $str);
@@ -542,4 +543,4 @@ if($message)
 * - <?echo GetMessage("STAT_ADV_BACK_ALT")?>
 <?echo EndNote();?>
 
-<?require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");?>
+<?require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");

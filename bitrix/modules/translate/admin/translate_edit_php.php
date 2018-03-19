@@ -1,19 +1,14 @@
 <?
-/*
-##############################################
-# Bitrix Site Manager                        #
-# Copyright (c) 2002-2007 Bitrix             #
-# http://www.bitrixsoft.com                  #
-# mailto:admin@bitrixsoft.com                #
-##############################################
-*/
+/** @global CMain $APPLICATION */
+/** @global CUser $USER */
+use Bitrix\Main\Loader;
+
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/translate/prolog.php");
 
-if(!$USER->CanDoOperation('edit_php')) 
+if(!$USER->CanDoOperation('edit_php'))
 	$APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
-
-require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/translate/include.php");
+Loader::includeModule('translate');
 
 IncludeModuleLangFile(__FILE__);
 define("HELP_FILE","translate_list.php");
@@ -25,19 +20,20 @@ $strError = "";
 $file = Rel2Abs("/", $file);
 $abs_path = CSite::GetSiteDocRoot($site).$file;
 
-if(strpos($file, "/bitrix/") !== 0 || strpos($file, "/lang/") === false/* || GetFileExtension($file) <> "php"*/)
+if(!isAllowPath($file) || strpos($file, "/lang/") === false)
 	$strError = GetMessage("trans_edit_err")."<br>";
-		
+
+$aTabs = array(
+	array("DIV" => "edit1", "TAB" => GetMessage("TRANS_TITLE"), "ICON" => "translate_edit", "TITLE" => GetMessage("TRANS_TITLE_TITLE")),
+);
+$tabControl = new CAdminTabControl("tabControl", $aTabs);
+
+$chain = "";
+$arPath = array();
+
 if($strError == "")
 {
-	$aTabs = array(
-		array("DIV" => "edit1", "TAB" => GetMessage("TRANS_TITLE"), "ICON" => "translate_edit", "TITLE" => GetMessage("TRANS_TITLE_TITLE")),
-	);
-	$tabControl = new CAdminTabControl("tabControl", $aTabs);
-	
 	// form a way to get back
-	$chain = "";
-	$arPath = array();
 	$path_back = dirname($file);
 	$arSlash = explode("/",$path_back);
 	if (is_array($arSlash))
@@ -65,7 +61,7 @@ if($strError == "")
 				$chain .= "<a href=\"translate_list.php?lang=".LANGUAGE_ID."&path="."/".implode("/",$arPath)."/"."&".bitrix_sessid_get()."\" title=\"".GetMessage("TRANS_CHAIN_FOLDER")."\">".htmlspecialcharsbx($dir)."</a>";
 			}
 		}
-	}	
+	}
 }
 
 $APPLICATION->SetTitle(GetMessage("TRANS_TITLE"));
@@ -76,29 +72,31 @@ if($strError <> "")
 	CAdminMessage::ShowMessage($strError);
 	require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");
 	die();
-}	
+}
 
 $filesrc_tmp = $APPLICATION->GetFileContent($abs_path);
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') 
+if ($_SERVER['REQUEST_METHOD'] == 'POST')
 {
 	if(!check_bitrix_sessid())
 	{
 		$strError = GetMessage("TR_SESSION_EXPIRED");
 		$bVarsFromForm = true;
 	}
-	else 
-	{   
+	else
+	{
 		$filesrc_for_save = $filesrc_tmp;
-		if (isset($_POST['filesrc'])) 
+		if (isset($_POST['filesrc']))
 			$filesrc_for_save = $_POST['filesrc'];
 	}
 
 	if($strError == '')
 	{
-		if (!TR_BACKUP($file)) {
+		if (!TR_BACKUP($file))
+		{
 			$strError = GetMessage("TR_CREATE_BACKUP_ERROR", array('%FILE%' => $file));
-		} else {
+		} else
+		{
 			if(!$APPLICATION->SaveFileContent($abs_path, $filesrc_for_save))
 			{
 				if($APPLICATION->GetException())
@@ -123,18 +121,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 			{
 				LocalRedirect("/bitrix/admin/translate_list.php?lang=".LANGUAGE_ID."&path=/".implode("/",$arPath)."/"."&".bitrix_sessid_get());
 			}
-		} 
-		else 
+		}
+		else
 		{
 			CAdminMessage::ShowMessage($strError);
 			require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");
-			die();		
+			die();
 		}
 
 		$filesrc_tmp = $filesrc_for_save;
-	}				
-	
-	if (isset($_REQUEST['apply'])) 
+	}
+
+	if (isset($_REQUEST['apply']))
 		$filesrc_tmp = $_REQUEST['filesrc'];
 }
 
@@ -150,13 +148,13 @@ $aMenu[] = Array(
 	"TITLE"	=> GetMessage("TRANS_LIST_TITLE"),
 	"ICON"	=> "btn_list"
 	);
-	
+
 $aMenu[] = Array(
 	"TEXT"	=> GetMessage("TR_FILE_SHOW"),
 	"LINK"	=> "/bitrix/admin/translate_show_php.php?lang=".LANGUAGE_ID."&file=$file&".bitrix_sessid_get(),
 	"TITLE"	=> GetMessage("TR_FILE_SHOW_TITLE"),
 	"ICON"	=> ""
-	);	
+	);
 $context = new CAdminContextMenu($aMenu);
 $context->Show();
 ?>
@@ -184,4 +182,3 @@ $tabControl->End();
 </form>
 <?
 require_once ($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");
-?>

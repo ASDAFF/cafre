@@ -1,4 +1,6 @@
 <?
+/** @global CUser $USER
+	@global int $IBLOCK_ID */
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 CModule::IncludeModule("iblock");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/iblock/prolog.php");
@@ -51,7 +53,7 @@ if ($bBadBlock)
 	$APPLICATION->SetTitle($arSubIBlockType["NAME"]);
 	require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_after.php");
 
-	echo ShowError(GetMessage("IBLOCK_BAD_IBLOCK"));?>
+	ShowError(GetMessage("IBLOCK_BAD_IBLOCK"));?>
 	<a href="/bitrix/admin/iblock_admin.php?lang=<?echo LANGUAGE_ID?>&type=<?echo htmlspecialcharsbx($strSubIBlockType)?>"><?echo GetMessage("IBLOCK_BACK_TO_ADMIN")?></a>
 	<?
 	require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");

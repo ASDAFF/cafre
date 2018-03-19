@@ -110,7 +110,6 @@
 
 		// member of stack of initializers, must be defined even if do nothing
 		init: function(){
-
 			var ctx = this,
 				so = this.opts,
 				sv = this.vars,
@@ -437,7 +436,9 @@
 			// when nothing were selected (but there were already an attempt of search), open dropdown if it was closed occasionly by user
 			BX.bind(sc.inputs.fake, 'click', function(){
 				if(!sv.opened && sv.value === false && sv.displayedIndex.length > 0)
+				{
 					ctx.showDropdown();
+				}
 			});
 
 			// clear handle
@@ -650,7 +651,8 @@
 
 			// first fill items themselves
 			for(var k in items)
-				this.addItem2Cache(items[k]);
+				if(items.hasOwnProperty(k))
+					this.addItem2Cache(items[k]);
 
 			if(typeof key == 'number' && key != 0){
 
@@ -658,7 +660,8 @@
 					sv.cache.search[key] = [];
 
 				for(var k in items)
-					sv.cache.search[key].push(items[k].VALUE);
+					if(items.hasOwnProperty(k))
+						sv.cache.search[key].push(items[k].VALUE);
 			}
 		},
 
@@ -1015,6 +1018,7 @@
 			this.vars.opened = true;
 
 			if(this.vars.lastPage == 0){
+				this.whenItemToggle(false, this.ctrls.displayedItems[this.vars.displayedIndex[this.vars.currentGlow]], this.vars.currentGlow);
 				this.vars.currentGlow = 0;
 				this.toggleGlow();
 			}
@@ -1043,7 +1047,6 @@
 		},
 
 		displayVariants: function(items, pageNum){
-
 			var sc = this.ctrls,
 				sv = this.vars,
 				so = this.opts,
@@ -1061,7 +1064,13 @@
 
 			var base = sv.displayedIndex.length;
 
-			for(var k in items){
+			for(var k in items)
+			{
+				if(!items.hasOwnProperty(k))
+					continue;
+
+				if(!items[k])
+					continue;
 
 				var domItem = this.whenRenderVariant(items[k], base + parseInt(k))[0];
 

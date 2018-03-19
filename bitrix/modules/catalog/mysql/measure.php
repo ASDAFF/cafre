@@ -1,26 +1,17 @@
 <?
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/catalog/general/measure.php");
 
-class CCatalogMeasure
-	extends CCatalogMeasureAll
+class CCatalogMeasure extends CCatalogMeasureAll
 {
-	public static function add($arFields)
-	{
-		global $DB;
-		if(!self::CheckFields('ADD',$arFields))
-			return false;
-
-		$arInsert = $DB->PrepareInsert("b_catalog_measure", $arFields);
-		$strSql = "INSERT INTO b_catalog_measure (".$arInsert[0].") VALUES(".$arInsert[1].")";
-
-		$res = $DB->Query($strSql, true, "File: ".__FILE__."<br>Line: ".__LINE__);
-		if(!$res)
-			return false;
-		$lastId = intval($DB->LastID());
-		return $lastId;
-	}
-
-	static function getList($arOrder = array(), $arFilter = array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array())
+	/**
+	 * @param array $arOrder
+	 * @param array $arFilter
+	 * @param bool|array $arGroupBy
+	 * @param bool|array $arNavStartParams
+	 * @param array $arSelectFields
+	 * @return false|CCatalogMeasureResult
+	 */
+	public static function getList($arOrder = array(), $arFilter = array(), $arGroupBy = false, $arNavStartParams = false, $arSelectFields = array())
 	{
 		global $DB;
 
@@ -43,12 +34,15 @@ class CCatalogMeasure
 				unset($selectCodes);
 			}
 		}
+		if (in_array('SYMBOL_RUS', $arSelectFields))
+			$arSelectFields[] = 'SYMBOL';
 
 		$arFields = array(
 			"ID" => array("FIELD" => "CM.ID", "TYPE" => "int"),
 			"CODE" => array("FIELD" => "CM.CODE", "TYPE" => "int"),
 			"MEASURE_TITLE" => array("FIELD" => "CM.MEASURE_TITLE", "TYPE" => "string"),
 			"SYMBOL_RUS" => array("FIELD" => "CM.SYMBOL_RUS", "TYPE" => "string"),
+			"SYMBOL" => array("FIELD" => "CM.SYMBOL_RUS", "TYPE" => "string"),
 			"SYMBOL_INTL" => array("FIELD" => "CM.SYMBOL_INTL", "TYPE" => "string"),
 			"SYMBOL_LETTER_INTL" => array("FIELD" => "CM.SYMBOL_LETTER_INTL", "TYPE" => "string"),
 			"IS_DEFAULT" => array("FIELD" => "CM.IS_DEFAULT", "TYPE" => "char"),
@@ -112,13 +106,11 @@ class CCatalogMeasure
 		else
 		{
 			if ($boolNavStartParams && 0 < $intTopCount)
-			{
 				$strSql .= " LIMIT ".$intTopCount;
-			}
+
 			$dbRes = $DB->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
 		}
 
-		$dbMeasure = new CCatalogMeasureResult($dbRes);
-		return $dbMeasure;
+		return new CCatalogMeasureResult($dbRes);
 	}
 }

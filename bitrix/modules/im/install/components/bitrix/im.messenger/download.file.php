@@ -12,7 +12,6 @@ if(isset($_GET['action']) && $_GET['action'] == 'showFile')
 	define('BX_SECURITY_SESSION_READONLY', true);
 }
 
-
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");
 
 if(!\Bitrix\Main\Loader::includeModule('disk'))
@@ -24,8 +23,8 @@ if($_GET['action'] == 'showFile')
 {
 	if ($_GET['preview'] == 'Y')
 	{
-		$_GET['width'] = 204;
-		$_GET['height'] = 119;
+		$_GET['width'] = 500;
+		$_GET['height'] = 500;
 		$_GET['signature'] = \Bitrix\Disk\Security\ParameterSigner::getImageSignature($_GET['fileId'], $_GET['width'], $_GET['height']);
 
 	}
@@ -53,8 +52,8 @@ class ImagePreviewSizeFilter implements Bitrix\Main\Type\IRequestFilter
 		{
 			if($values['get']['preview'] == 'Y')
 			{
-				$values['get']['width'] = 204;
-				$values['get']['height'] = 119;
+				$values['get']['width'] = 500;
+				$values['get']['height'] = 500;
 				$values['get']['signature'] = \Bitrix\Disk\Security\ParameterSigner::getImageSignature(
 					$values['get']['fileId'], $values['get']['width'], $values['get']['height']
 				);

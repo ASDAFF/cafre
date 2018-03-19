@@ -4,7 +4,10 @@ require_once($_SERVER["DOCUMENT_ROOT"].$componentPath."/functions.php");
 
 //Authorized?
 if (!$USER->IsAuthorized())
-	$APPLICATION->AuthForm(GetMessage("LEARNING_NO_AUTHORIZE"));
+{
+	$APPLICATION->AuthForm(GetMessage("LEARNING_NO_AUTHORIZE"), false, false, "N", false);
+	return;
+}
 
 //Module
 if (!CModule::IncludeModule("learning"))

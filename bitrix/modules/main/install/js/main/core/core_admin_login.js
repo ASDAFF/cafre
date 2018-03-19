@@ -27,12 +27,12 @@ BX.adminLogin = function(params)
 	BX.AUTHAGENT = this;
 
 	BX.ready(BX.proxy(this.Init, this));
-}
+};
 
 BX.adminLogin.prototype.registerForm = function(obForm)
 {
 	this.arForms[obForm.name] = obForm;
-}
+};
 
 BX.adminLogin.prototype.Init = function()
 {
@@ -44,7 +44,12 @@ BX.adminLogin.prototype.Init = function()
 	this.login_variants = BX(this.login_variants);
 
 	for (var i in this.arForms)
-		this.arForms[i].Init(this.form)
+	{
+		if(this.arForms.hasOwnProperty(i))
+		{
+			this.arForms[i].Init(this.form)
+		}
+	}
 
 	var hash = window.location.hash;
 	if (hash.substring(0, 1) == '#')
@@ -57,7 +62,7 @@ BX.adminLogin.prototype.Init = function()
 
 	if (hash != this.start_form)
 	{
-		this.login_variants.appendChild(this.arForms[this.start_form].container)
+		this.login_variants.appendChild(this.arForms[this.start_form].container);
 		this.auth_form_wrapper.appendChild(this.arForms[hash].container);
 	}
 
@@ -67,7 +72,7 @@ BX.adminLogin.prototype.Init = function()
 
 	this.toggleAuthForm(this.arForms[hash]);
 	this._listenerTimeout = setTimeout(BX.delegate(this._checkHash, this), 1000);
-}
+};
 
 BX.adminLogin.prototype._checkHash = function()
 {
@@ -85,7 +90,7 @@ BX.adminLogin.prototype._checkHash = function()
 	}
 
 	this._listenerTimeout = setTimeout(BX.delegate(this._checkHash, this), 1000);
-}
+};
 
 BX.adminLogin.prototype.toggleAuthForm = function(obForm)
 {
@@ -107,7 +112,7 @@ BX.adminLogin.prototype.toggleAuthForm = function(obForm)
 		this.current_form = obForm;
 		this.addAuthForm(obForm);
 	}
-}
+};
 
 BX.adminLogin.prototype.showAuthForm = function(obForm)
 {
@@ -120,7 +125,7 @@ BX.adminLogin.prototype.showAuthForm = function(obForm)
 	BX.bind(this.form, 'submit', BX.proxy(obForm.validate, obForm));
 
 	this._listenerTimeout = setTimeout(BX.delegate(this._checkHash, this), 1000);
-}
+};
 
 BX.adminLogin.prototype.addAuthForm = function (obForm)
 {
@@ -133,7 +138,7 @@ BX.adminLogin.prototype.addAuthForm = function (obForm)
 		this.auth_form_wrapper.appendChild(obForm.container);
 
 	BX.defer(this.showAuthForm, this)(obForm);
-}
+};
 
 BX.adminLogin.prototype.removeAuthForm = function(obForm, cb)
 {
@@ -156,7 +161,7 @@ BX.adminLogin.prototype.removeAuthForm = function(obForm, cb)
 		})();
 
 	}, this)();
-}
+};
 
 BX.adminLogin.prototype._loadAdmin = function(admin_html)
 {
@@ -207,7 +212,7 @@ BX.adminLogin.prototype._loadAdmin = function(admin_html)
 			}, this))();
 		}, this), 30);
 	}
-}
+};
 
 BX.adminLogin.prototype.setAuthResult = function(result)
 {
@@ -233,7 +238,7 @@ BX.adminLogin.prototype.setAuthResult = function(result)
 			}
 		});
 	}
-}
+};
 
 BX.adminLogin.prototype.showError = function(field, error, callback, bSkipCount)
 {
@@ -267,7 +272,7 @@ BX.adminLogin.prototype.showError = function(field, error, callback, bSkipCount)
 	}, this.error_block);
 
 	BX.bind(window, 'resize', this.error_block._bxresizehandler);
-}
+};
 
 BX.adminLogin.prototype.hideError = function()
 {
@@ -276,14 +281,14 @@ BX.adminLogin.prototype.hideError = function()
 
 	if (this.error_block && !!this.error_block.parentNode)
 	{
-		this.error_block.parentNode.removeChild(this.error_block)
+		this.error_block.parentNode.removeChild(this.error_block);
 
 		BX.unbind(window, 'resize', this.error_block._bxresizehandler);
 		this.error_block._bxresizehandler = null;
 	}
 
 	BX.defer(this.enableFields, this)();
-}
+};
 
 BX.adminLogin.prototype.enableFields = function()
 {
@@ -292,13 +297,13 @@ BX.adminLogin.prototype.enableFields = function()
 		if (this.form.elements[i].disabled)
 			this.form.elements[i].disabled = false;
 	}
-}
+};
 
 BX.adminLogin.prototype.Destroy = function()
 {
 	this.arForms = null;
 	BX.adminLogin = null;
-}
+};
 
 /* interface class for admin forms */
 BX.IAdminAuthForm = function(container, params){
@@ -306,19 +311,19 @@ BX.IAdminAuthForm = function(container, params){
 	this.params = params;
 
 	this.form = null;
-}
+};
 BX.IAdminAuthForm.prototype.Init = function(form)
 {
 	this.form = form;
 	this.container = BX(this.container);
-}
+};
 
-BX.IAdminAuthForm.prototype.validate = function(e) {}
+BX.IAdminAuthForm.prototype.validate = function(e) {};
 BX.IAdminAuthForm.prototype.onshow = function() {
 	this.form.action = this.params.url;
-}
-BX.IAdminAuthForm.prototype.onclose = function() {}
-BX.IAdminAuthForm.prototype.onerror = function(error) {alert(error.MESSAGE||error);}
+};
+BX.IAdminAuthForm.prototype.onclose = function() {};
+BX.IAdminAuthForm.prototype.onerror = function(error) {alert(error.MESSAGE||error);};
 
 BX.IAdminAuthForm.prototype.fix = function()
 {
@@ -345,7 +350,23 @@ BX.IAdminAuthForm.prototype.fix = function()
 		else
 			this.style.marginLeft = 115 +'px';
 	}, this.form));
-}
+};
+
+BX.IAdminAuthForm.prototype.showCaptcha = function(error)
+{
+	if(!!error.CAPTCHA)
+	{
+		this.fix();
+
+		this.form.captcha_sid.value = error.CAPTCHA_CODE;
+		this.form.captcha_word.disabled = false;
+		BX('captcha_image').innerHTML = '<img src="/bitrix/tools/captcha.php?captcha_sid=' + error.CAPTCHA_CODE + '" width="180" height="40" alt="CAPTCHA" />';
+
+		BX.addClass(this.container, 'login-captcha-popup-wrap');
+
+		this._setTabIndex();
+	}
+};
 
 /* all forms handlers */
 
@@ -353,7 +374,7 @@ BX.authFormAuthorize = function(container, params)
 {
 	this.name = 'authorize';
 	BX.authFormAuthorize.superclass.constructor.apply(this, arguments);
-}
+};
 BX.extend(BX.authFormAuthorize, BX.IAdminAuthForm);
 
 BX.authFormAuthorize.prototype.validate = function(e)
@@ -379,7 +400,7 @@ BX.authFormAuthorize.prototype.validate = function(e)
 	BX.addClass(this.container, 'login-loading-active');
 
 	return true;
-}
+};
 
 BX.authFormAuthorize.prototype._setTabIndex = function()
 {
@@ -396,7 +417,7 @@ BX.authFormAuthorize.prototype._setTabIndex = function()
 
 	for (var i = 0; i < arFields.length; i++)
 		this.form[arFields[i]].tabIndex = i+1;
-}
+};
 
 BX.authFormAuthorize.prototype.onshow = function()
 {
@@ -408,7 +429,7 @@ BX.authFormAuthorize.prototype.onshow = function()
 		BX.defer(BX.focus)(this.form.USER_PASSWORD);
 
 	this._setTabIndex();
-}
+};
 
 BX.authFormAuthorize.prototype.onerror = function(error)
 {
@@ -426,34 +447,18 @@ BX.authFormAuthorize.prototype.onerror = function(error)
 			BX.removeClass(this.container, 'login-popup-error-shake');
 
 			error.TITLE = BX.message('admin_authorize_error');
-			BX.adminLogin.showError('USER_PASSWORD', error)
+			BX.adminLogin.showError('USER_PASSWORD', error);
 
-			this._showCaptcha(error);
+			this.showCaptcha(error);
 		}, this), 400);
 	}
-}
-
-BX.authFormAuthorize.prototype._showCaptcha = function(error)
-{
-	if (!!error.CAPTCHA)
-	{
-		this.fix();
-
-		this.form.captcha_sid.value = error.CAPTCHA_CODE;
-		this.form.captcha_word.disabled = false;
-		BX('captcha_image').innerHTML = '<img src="/bitrix/tools/captcha.php?captcha_sid='+error.CAPTCHA_CODE+'" width="180" height="40" alt="CAPTCHA" />';
-
-		BX.addClass(this.container, 'login-captcha-popup-wrap');
-
-		this._setTabIndex();
-	}
-}
+};
 
 BX.authFormOtp = function(container, params)
 {
 	this.name = 'otp';
 	BX.authFormOtp.superclass.constructor.apply(this, arguments);
-}
+};
 BX.extend(BX.authFormOtp, BX.IAdminAuthForm);
 
 BX.authFormOtp.prototype.onshow = function()
@@ -462,12 +467,12 @@ BX.authFormOtp.prototype.onshow = function()
 
 	if(!!BX.adminLogin._lastError)
 	{
-		this._showCaptcha(BX.adminLogin._lastError);
+		this.showCaptcha(BX.adminLogin._lastError);
 		BX.adminLogin._lastError = null;
 	}
 
 	BX.defer(BX.focus)(this.form.USER_OTP);
-}
+};
 
 BX.authFormOtp.prototype.validate = function(e)
 {
@@ -488,7 +493,7 @@ BX.authFormOtp.prototype.validate = function(e)
 	BX.addClass(this.container, 'login-loading-active');
 
 	return true;
-}
+};
 
 BX.authFormOtp.prototype.onerror = function(error)
 {
@@ -501,30 +506,17 @@ BX.authFormOtp.prototype.onerror = function(error)
 		error.TITLE = BX.message('admin_authorize_error');
 		BX.adminLogin.showError('USER_OTP', error)
 
-		this._showCaptcha(error);
+		this.showCaptcha(error);
 	}, this), 400);
-}
-
-BX.authFormOtp.prototype._showCaptcha = function(error)
-{
-	if (!!error.CAPTCHA)
-	{
-		this.fix();
-
-		this.form.captcha_sid.value = error.CAPTCHA_CODE;
-		this.form.captcha_word.disabled = false;
-		BX('captcha_image').innerHTML = '<img src="/bitrix/tools/captcha.php?captcha_sid='+error.CAPTCHA_CODE+'" width="180" height="40" alt="CAPTCHA" />';
-
-		BX.addClass(this.container, 'login-captcha-popup-wrap');
-	}
-}
+};
 
 BX.authFormForgotPassword = function(container, params)
 {
 	this.name = 'forgot_password';
+	this.needCaptcha = params.needCaptcha;
 	this.message = params.message;
 	BX.authFormForgotPassword.superclass.constructor.apply(this, arguments);
-}
+};
 BX.extend(BX.authFormForgotPassword, BX.IAdminAuthForm);
 
 BX.authFormForgotPassword.prototype.validate = function(e)
@@ -536,7 +528,7 @@ BX.authFormForgotPassword.prototype.validate = function(e)
 		return BX.PreventDefault(e);
 	}
 	return true;
-}
+};
 
 BX.authFormForgotPassword.prototype.onshow = function()
 {
@@ -544,7 +536,7 @@ BX.authFormForgotPassword.prototype.onshow = function()
 	BX.defer(BX.focus)(
 		document.form_auth.USER_LOGIN
 	);
-}
+};
 
 BX.authFormForgotPassword.prototype.onerror = function(error)
 {
@@ -555,29 +547,48 @@ BX.authFormForgotPassword.prototype.onerror = function(error)
 	}
 	else
 	{
-		error.TITLE = BX.message('admin_forgot_password_error');
-		BX.adminLogin.showError('USER_LOGIN', error);
+		var skipError = this.needCaptcha && !BX.hasClass(this.container, 'login-captcha-popup-wrap');
+
+		if(!skipError)
+		{
+			BX.addClass(this.container, 'login-popup-error-shake');
+			setTimeout(BX.delegate(function()
+			{
+				BX.removeClass(this.container, 'login-loading-active');
+				BX.removeClass(this.container, 'login-popup-error-shake');
+
+				error.TITLE = BX.message('admin_forgot_password_error');
+				BX.adminLogin.showError('USER_LOGIN', error);
+
+				this.showCaptcha(error);
+			}, this), 400);
+		}
+		else
+		{
+			this.showCaptcha(error);
+		}
 	}
-}
+};
 
 BX.authFormForgotPasswordMessage = function(container, params)
 {
 	this.name = 'forgot_password_message';
 	BX.authFormForgotPasswordMessage.superclass.constructor.apply(this, arguments);
-}
+};
 BX.extend(BX.authFormForgotPasswordMessage, BX.IAdminAuthForm);
 
 BX.authFormForgotPasswordMessage.prototype.setContent = function(str)
 {
 	BX('forgot_password_message_inner', true).innerHTML = '<div class="adm-info-message-title">'+BX.message('admin_authorize_info')+'</div>' + str + '<div class="adm-info-message-icon"></div>';
-}
+};
 
 BX.authFormChangePassword = function(container, params)
 {
 	this.name = 'change_password';
+	this.needCaptcha = params.needCaptcha;
 	this.message = params.message;
 	BX.authFormChangePassword.superclass.constructor.apply(this, arguments);
-}
+};
 BX.extend(BX.authFormChangePassword, BX.IAdminAuthForm);
 
 BX.authFormChangePassword.prototype.validate = function(e)
@@ -611,7 +622,7 @@ BX.authFormChangePassword.prototype.validate = function(e)
 	}
 
 	return true;
-}
+};
 
 BX.authFormChangePassword.prototype.onshow = function()
 {
@@ -632,7 +643,7 @@ BX.authFormChangePassword.prototype.onshow = function()
 	{
 		BX.defer(BX.focus)(this.form.USER_LOGIN);
 	}
-}
+};
 
 BX.authFormChangePassword.prototype.onerror = function(error)
 {
@@ -643,37 +654,56 @@ BX.authFormChangePassword.prototype.onerror = function(error)
 	}
 	else
 	{
-		error.TITLE = BX.message('admin_change_password_error');
-		switch(error.FIELD)
+		var skipError = this.needCaptcha && !BX.hasClass(this.container, 'login-captcha-popup-wrap');
+		if(!skipError)
 		{
-			case 'LOGIN':
-				BX.adminLogin.showError('USER_LOGIN', error);
-				break;
-			case 'CHECKWORD':
-				BX.adminLogin.showError('USER_CHECKWORD', error);
-				break;
-			case 'CHECKWORD_EXPIRE':
-				this.fix();
-				BX('change_password_forgot_link').style.display = 'inline-block';
-				BX.adminLogin.showError('USER_CHECKWORD', error);
-				break;
-			default:
-				BX.adminLogin.showError('USER_CONFIRM_PASSWORD', error);
+			BX.addClass(this.container, 'login-popup-error-shake');
+
+			setTimeout(BX.delegate(function()
+			{
+				error.TITLE = BX.message('admin_change_password_error');
+
+				BX.removeClass(this.container, 'login-loading-active');
+				BX.removeClass(this.container, 'login-popup-error-shake');
+
+				switch(error.FIELD)
+				{
+					case 'LOGIN':
+						BX.adminLogin.showError('USER_LOGIN', error);
+						break;
+					case 'CHECKWORD':
+						BX.adminLogin.showError('USER_CHECKWORD', error);
+						break;
+					case 'CHECKWORD_EXPIRE':
+						this.fix();
+						BX('change_password_forgot_link').style.display = 'inline-block';
+						BX.adminLogin.showError('USER_CHECKWORD', error);
+						break;
+					default:
+						BX.adminLogin.showError('USER_CONFIRM_PASSWORD', error);
+				}
+
+				this.showCaptcha(error);
+			}, this), 400);
+		}
+		else
+		{
+			this.showCaptcha(error);
 		}
 	}
-}
+};
 
 BX.authFormChangePasswordMessage = function(container, params)
 {
 	this.name = 'change_password_message';
 	BX.authFormForgotPasswordMessage.superclass.constructor.apply(this, arguments);
-}
+};
 BX.extend(BX.authFormChangePasswordMessage, BX.IAdminAuthForm);
 
 BX.authFormChangePasswordMessage.prototype.setContent = function(str)
 {
 	BX('change_password_message_inner', true).innerHTML = '<div class="adm-info-message-title">'+BX.message('admin_authorize_info')+'</div>' + str + '<div class="adm-info-message-icon"></div>';
-}
+};
 
 
 })();

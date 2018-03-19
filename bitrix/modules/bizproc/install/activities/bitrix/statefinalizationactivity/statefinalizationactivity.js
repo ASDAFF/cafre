@@ -8,4 +8,4 @@ StateFinalizationActivity = function()
 
 
 	return ob;
-}
+};

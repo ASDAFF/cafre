@@ -27,8 +27,6 @@ include("util_profile.php");
 
 		"DATE_TIME_FORMAT" =>  $arResult["DATE_TIME_FORMAT"],
 		"NAME_TEMPLATE"	=> $arParams["NAME_TEMPLATE"],
-		"PATH_TO_SMILE" => $arParams["PATH_TO_FORUM_SMILE"],
-		"PATH_TO_ICON"	=>	$arParams["PATH_TO_FORUM_ICON"],
 		"AJAX_TYPE" => $arParams["AJAX_TYPE"],
 		
 		"SET_TITLE" => $arResult["SET_TITLE"],
@@ -66,9 +64,6 @@ if (!empty($arInfo) && $arInfo["PERMISSION"] >= "I"):
 		"MESSAGE" => $arInfo["MESSAGE"],
 		"ERROR_MESSAGE" => $arInfo["ERROR_MESSAGE"],
 
-		"PATH_TO_SMILE"	=>	$arParams["PATH_TO_FORUM_SMILE"],
-		"PATH_TO_ICON"	=>	$arParams["PATH_TO_FORUM_ICON"],
-		"SMILE_TABLE_COLS" => $arParams["SMILE_TABLE_COLS"],
 		"AJAX_TYPE" => "N",
 		"AJAX_POST" => "N",
 

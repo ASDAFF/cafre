@@ -3,12 +3,12 @@ class CKeepStatistics
 {
 	static $HIT_ID = 0;
 
-	function GetCuurentHitID()
+	public static function GetCuurentHitID()
 	{
 		return self::$HIT_ID;
 	}
 
-	function CheckSkip()
+	public static function CheckSkip()
 	{
 		global $USER;
 		$GO = true;
@@ -64,7 +64,7 @@ class CKeepStatistics
 	/////////////////////////////
 	// Main statistics function
 	/////////////////////////////
-	function Keep($HANDLE_CALL=false)
+	public static function Keep($HANDLE_CALL=false)
 	{
 
 		__SetNoKeepStatistics();
@@ -83,7 +83,7 @@ class CKeepStatistics
 		}
 	}
 
-	function ReallyKeep()
+	public static function ReallyKeep()
 	{
 		global $USER, $APPLICATION, $STOP_SAVE_STATISTIC, $STOP_MESSAGE, $STOP_REDIRECT_URL, $STOP, $STOP_LIST_ID, $STOP_MESSAGE_LID;
 		$DB = CDatabase::GetModuleConnection('statistic');
@@ -1088,7 +1088,7 @@ echo '<html>
 		}
 	}
 
-	function RestoreSession()
+	public static function RestoreSession()
 	{
 		global $APPLICATION;
 		// if there is no session ID
@@ -1120,7 +1120,7 @@ echo '<html>
 	}
 
 	// обновляем счетчики сессий и новых посетителей у страны
-	function UpdateCountry($COUNTRY_ID, $arFields, $DATE=false, $DATE_FORMAT="SHORT", $SIGN="+")
+	public static function UpdateCountry($COUNTRY_ID, $arFields, $DATE=false, $DATE_FORMAT="SHORT", $SIGN="+")
 	{
 		$DB = CDatabase::GetModuleConnection('statistic');
 		$COUNTRY_ID = $DB->ForSql($COUNTRY_ID, 2);
@@ -1156,7 +1156,7 @@ echo '<html>
 		}
 	}
 
-	function UpdateCity($CITY_ID, $arFields, $DATE=false, $DATE_FORMAT="SHORT", $SIGN="+")
+	public static function UpdateCity($CITY_ID, $arFields, $DATE=false, $DATE_FORMAT="SHORT", $SIGN="+")
 	{
 		$DB = CDatabase::GetModuleConnection('statistic');
 		$CITY_ID = intval($CITY_ID);
@@ -1192,7 +1192,7 @@ echo '<html>
 		}
 	}
 
-	function SavePathData($SITE_ID, $CURRENT_PAGE, $ERROR_404)
+	public static function SavePathData($SITE_ID, $CURRENT_PAGE, $ERROR_404)
 	{
 		$DB = CDatabase::GetModuleConnection('statistic');
 		$DB_now = $DB->GetNowFunction();
@@ -1439,7 +1439,7 @@ echo '<html>
 		}
 	}
 
-	function SaveVisits($sql_site, $SESSION_NEW, $CURRENT_DIR, $CURRENT_PAGE, $ERROR_404)
+	public static function SaveVisits($sql_site, $SESSION_NEW, $CURRENT_DIR, $CURRENT_PAGE, $ERROR_404)
 	{
 		$DB = CDatabase::GetModuleConnection('statistic');
 		$DB_now_date = $DB->GetNowDate();
@@ -1665,10 +1665,7 @@ echo '<html>
 		}
 	}
 
-	/************************************************
-			Referring sites
-	************************************************/
-	function GetRefererListID($PROT, $SN, $PAGE_FROM, $CURRENT_URI, $ERROR_404, $sql_site)
+	public static function GetRefererListID($PROT, $SN, $PAGE_FROM, $CURRENT_URI, $ERROR_404, $sql_site)
 	{
 		$DB = CDatabase::GetModuleConnection('statistic');
 		$DB_now = $DB->GetNowFunction();

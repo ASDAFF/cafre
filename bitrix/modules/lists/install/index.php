@@ -65,8 +65,16 @@ Class lists extends CModule
 			RegisterModuleDependences('socialnetwork', 'BeforeIndexSocNet', 'lists', 'CListsLiveFeed', 'BeforeIndexSocNet');
 			RegisterModuleDependences('socialnetwork', 'OnAfterSonetLogEntryAddComment', 'lists', 'CListsLiveFeed', 'OnAfterSonetLogEntryAddComment');
 			RegisterModuleDependences('socialnetwork', 'OnForumCommentIMNotify', 'lists', 'CListsLiveFeed', 'OnForumCommentIMNotify');
-			RegisterModuleDependences("iblock", "OnAfterIBlockElementDelete", "lists", "BizprocDocument", "OnAfterIBlockElementDelete");
 			RegisterModuleDependences("socialnetwork", "OnSendMentionGetEntityFields", "lists", "CListsLiveFeed", "OnSendMentionGetEntityFields");
+			RegisterModuleDependences("socialnetwork", "OnSocNetGroupDelete", "lists", "CListsLiveFeed", "OnSocNetGroupDelete");
+			RegisterModuleDependences('rest', 'onRestServiceBuildDescription', 'lists', '\Bitrix\Lists\Rest\RestService', 'onRestServiceBuildDescription');
+			RegisterModuleDependences("iblock", "OnAfterIBlockElementDelete", "lists", "CLists", "OnAfterIBlockElementDelete");
+			RegisterModuleDependences("iblock", "OnAfterIBlockPropertyAdd", "lists", "CLists", "OnAfterIBlockPropertyAdd");
+			RegisterModuleDependences("iblock", "OnAfterIBlockPropertyUpdate", "lists", "CLists", "OnAfterIBlockPropertyUpdate");
+			RegisterModuleDependences("iblock", "OnAfterIBlockPropertyDelete", "lists", "CLists", "OnAfterIBlockPropertyDelete");
+			RegisterModuleDependences("iblock", "OnBeforeIBlockElementAdd", "lists", "CLists", "OnBeforeIBlockElementAdd");
+			RegisterModuleDependences("iblock", "OnBeforeIBlockElementUpdate", "lists", "CLists", "OnBeforeIBlockElementUpdate");
+
 			if (isset($arParams["INSTALL_DEMO_DATA"]) && $arParams["INSTALL_DEMO_DATA"] == "Y")
 			{
 				$this->installDemoData();
@@ -152,21 +160,26 @@ Class lists extends CModule
 			CLists::SetPermission('bitrix_processes', array(1));
 		}
 
-		$defaultSiteId = CSite::GetDefSite();
-		$siteObject = CSite::GetByID($defaultSiteId);
-		$site = $siteObject->fetch();
-		$defaultLang = $site? $site['LANGUAGE_ID'] : 'en';
-		if($defaultLang == 'ua')
-			$defaultLang = 'ru';
-		\Bitrix\Lists\Importer::installProcesses($defaultLang);
-		if (IsModuleInstalled("bitrix24"))
+		$defaultLang = "en";
+		if(IsModuleInstalled("bitrix24"))
 		{
-			\Bitrix\Main\Config\Option::set("lists", "livefeed_url", "/company/processes/");
+			$gr = COption::GetOptionString("main", "~controller_group_name", "");
+			if($gr != "")
+				$defaultLang = substr($gr, 0, 2);
+			if($defaultLang == "ua")
+				$defaultLang = "ru";
 		}
 		else
 		{
-			\Bitrix\Main\Config\Option::set("lists", "livefeed_url", "/services/processes/");
+			$defaultSiteId = CSite::GetDefSite();
+			$siteObject = CSite::GetByID($defaultSiteId);
+			$site = $siteObject->fetch();
+			$defaultLang = $site ? $site['LANGUAGE_ID'] : "en";
+			if($defaultLang == "ua")
+				$defaultLang = "ru";
 		}
+		\Bitrix\Lists\Importer::installProcesses($defaultLang);
+		\Bitrix\Main\Config\Option::set("lists", "livefeed_url", "/bizproc/processes/");
 
 		if ($isSocnetInstalled && strlen($socnet_iblock_type_id) <= 0)
 		{
@@ -201,7 +214,15 @@ Class lists extends CModule
 		UnRegisterModuleDependences('socialnetwork', 'BeforeIndexSocNet', 'lists', 'CListsLiveFeed', 'BeforeIndexSocNet');
 		UnRegisterModuleDependences('socialnetwork', 'OnAfterSonetLogEntryAddComment', 'lists', 'CListsLiveFeed', 'OnAfterSonetLogEntryAddComment');
 		UnRegisterModuleDependences('socialnetwork', 'OnForumCommentIMNotify', 'lists', 'CListsLiveFeed', 'OnForumCommentIMNotify');
-		UnRegisterModuleDependences("iblock", "OnAfterIBlockElementDelete", "lists", "BizprocDocument", "OnAfterIBlockElementDelete");
+		UnRegisterModuleDependences("socialnetwork", "OnSendMentionGetEntityFields", "lists", "CListsLiveFeed", "OnSendMentionGetEntityFields");
+		UnRegisterModuleDependences("socialnetwork", "OnSocNetGroupDelete", "lists", "CListsLiveFeed", "OnSocNetGroupDelete");
+		UnRegisterModuleDependences("iblock", "OnAfterIBlockElementDelete", "lists", "CLists", "OnAfterIBlockElementDelete");
+		UnRegisterModuleDependences('rest', 'onRestServiceBuildDescription', 'lists', '\Bitrix\Lists\Rest\RestService', 'onRestServiceBuildDescription');
+		UnRegisterModuleDependences("iblock", "OnAfterIBlockPropertyAdd", "lists", "CLists", "OnAfterIBlockPropertyAdd");
+		UnRegisterModuleDependences("iblock", "OnAfterIBlockPropertyUpdate", "lists", "CLists", "OnAfterIBlockPropertyUpdate");
+		UnRegisterModuleDependences("iblock", "OnAfterIBlockPropertyDelete", "lists", "CLists", "OnAfterIBlockPropertyDelete");
+		UnRegisterModuleDependences("iblock", "OnBeforeIBlockElementAdd", "lists", "CLists", "OnBeforeIBlockElementAdd");
+		UnRegisterModuleDependences("iblock", "OnBeforeIBlockElementUpdate", "lists", "CLists", "OnBeforeIBlockElementUpdate");
 		UnRegisterModule("lists");
 
 		if($this->errors !== false)
@@ -230,6 +251,8 @@ Class lists extends CModule
 			CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/lists/install/admin", $_SERVER["DOCUMENT_ROOT"]."/bitrix/admin", true);
 			CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/lists/install/components", $_SERVER["DOCUMENT_ROOT"]."/bitrix/components", True, True);
 			CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/lists/install/images", $_SERVER["DOCUMENT_ROOT"]."/bitrix/images/lists", True, True);
+			CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/lists/install/js", $_SERVER["DOCUMENT_ROOT"]."/bitrix/js", true, true);
+			CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/lists/install/activities", $_SERVER["DOCUMENT_ROOT"]."/bitrix/activities", true, true);
 		}
 		return true;
 	}
@@ -238,7 +261,8 @@ Class lists extends CModule
 	{
 		if($_ENV["COMPUTERNAME"]!='BX')
 		{
-			DeleteDirFilesEx("/bitrix/images/lists/");//images
+			DeleteDirFilesEx("/bitrix/images/lists/");
+			DeleteDirFilesEx("/bitrix/js/lists/");
 		}
 		return true;
 	}

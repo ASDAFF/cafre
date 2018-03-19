@@ -84,10 +84,6 @@ elseif ($componentPage == "group_forum_message_edit")
 	$arParams["AJAX_CALL"] = (($_REQUEST["AJAX_CALL"] == "Y" && $arParams["AJAX_TYPE"] == "Y") ? "Y" : "N");
 	$arParams["FORUM_AJAX_POST"] = ($arParams["AJAX_CALL"] == "Y" ? "N" : "Y");
 
-	$arParams["PATH_TO_SMILE"] = (empty($arParams["PATH_TO_SMILE"]) ? "/bitrix/images/forum/smile/" : $arParams["PATH_TO_SMILE"]);
-	$arParams["PATH_TO_ICON"] = (empty($arParams["PATH_TO_ICON"]) ? "/bitrix/images/forum/icon/" : $arParams["PATH_TO_ICON"]);
-	$arParams["SMILE_TABLE_COLS"] = (intval($arParams["SMILE_TABLE_COLS"]) > 0 ? intval($arParams["SMILE_TABLE_COLS"]) : 3);
-
 /***************** STANDART ****************************************/
 	if ($arParams["CACHE_TYPE"] == "Y" || ($arParams["CACHE_TYPE"] == "A" && COption::GetOptionString("main", "component_cache_on", "Y") == "Y"))
 		$arParams["CACHE_TIME"] = intval($arParams["CACHE_TIME"]);

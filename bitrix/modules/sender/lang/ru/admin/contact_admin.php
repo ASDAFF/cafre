@@ -8,7 +8,9 @@ $MESS["rub_email"] = "Email";
 $MESS["rub_f_email"] = "Email";
 $MESS["rub_list"] = "Списки";
 $MESS["rub_f_list"] = "Списки";
+$MESS["rub_f_yes"] = "(да)";
 $MESS["rub_f_subscribed"] = "Подписан";
+$MESS["rub_f_unsubscribed"] = "Отписан";
 $MESS["SENDER_CONTACT_ADM_FILTER_WITHOUT"] = "(вне списков)";
 $MESS["rub_date_insert"] = "Дата добавления";
 
@@ -30,10 +32,15 @@ $MESS["CONTACT_ADM_BTN_NEXT"] = "Следующий источник";
 $MESS["CONTACT_ADM_BTN_STOP"] = "Остановить";
 $MESS["CONTACT_ADM_BTN_CONT"] = "Продолжить";
 
+$MESS["SENDER_CONTACT_LIST_PRESET_SUB"] = "Подписавшиеся";
+$MESS["SENDER_CONTACT_LIST_PRESET_UN_SUB"] = "Отписавшиеся";
+
 $MESS["SENDER_CONTACT_LIST_EDIT"] = "Редактировать списки";
 $MESS["SENDER_CONTACT_LIST_EDIT_TITLE"] = "Перейти к редактированию или удалению списков";
 $MESS["SENDER_CONTACT_LIST_BUTTON_ADD"] = "Добавить или импортировать";
+$MESS["SENDER_CONTACT_LIST_BUTTON_ADD_FORM"] = "Добавить";
 $MESS["SENDER_CONTACT_LIST_BUTTON_ADD_LIST"] = "Добавить вручную один адрес или список";
 $MESS["SENDER_CONTACT_LIST_BUTTON_ADD_FILE"] = "Добавить файл с адресами";
 $MESS["SENDER_CONTACT_LIST_BUTTON_ADD_PULL"] = "Импортировать из источников(пользователи, веб-формы и прочее)";
+$MESS["SENDER_CONTACT_LIST_BUTTON_ADD_PULL1"] = "Импортировать из источников(пользователи, покупатели и прочее)";
 ?>

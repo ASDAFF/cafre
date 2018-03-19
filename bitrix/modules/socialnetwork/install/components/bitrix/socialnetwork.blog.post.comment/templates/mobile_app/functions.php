@@ -11,8 +11,8 @@ function socialnetworkBlogPostCommentMobile(
 		"AVATAR_SIZE" => intval(array_key_exists("AVATAR_SIZE_COMMON", $arParams) ? $arParams["AVATAR_SIZE_COMMON"] : $arParams["AVATAR_SIZE"]),
 		"AVATAR_SIZE_COMMENT" => intval($arParams["AVATAR_SIZE_COMMENT"])
 	);
-	$arAvatarSizes["AVATAR_SIZE"] = ($arAvatarSizes["AVATAR_SIZE"] > 0 ? $arAvatarSizes["AVATAR_SIZE"] : 42); // reference to CBlogUser::GetUserInfoArray
-	$arAvatarSizes["AVATAR_SIZE_COMMENT"] = ($arAvatarSizes["AVATAR_SIZE_COMMENT"] > 0 ? $arAvatarSizes["AVATAR_SIZE_COMMENT"] : 42); // reference to CBlogUser::GetUserInfoArray
+	$arAvatarSizes["AVATAR_SIZE"] = ($arAvatarSizes["AVATAR_SIZE"] > 0 ? $arAvatarSizes["AVATAR_SIZE"] : 100); // reference to CBlogUser::GetUserInfoArray
+	$arAvatarSizes["AVATAR_SIZE_COMMENT"] = ($arAvatarSizes["AVATAR_SIZE_COMMENT"] > 0 ? $arAvatarSizes["AVATAR_SIZE_COMMENT"] : 100); // reference to CBlogUser::GetUserInfoArray
 	$avatarKey = "PERSONAL_PHOTO_RESIZED";
 	if ($arAvatarSizes["AVATAR_SIZE"] == $arParams["AVATAR_SIZE"])
 		$avatarKey = "PERSONAL_PHOTO_resized";
@@ -74,12 +74,36 @@ function socialnetworkBlogPostCommentMobile(
 			array(
 				"pathToUser" => "/mobile/users/?user_id=#user_id#"
 			));
+
+		if (
+			!empty($comment["COMMENT_PROPERTIES"])
+			&& !empty($comment["COMMENT_PROPERTIES"]["HIDDEN_DATA"])
+			&& !empty($comment["COMMENT_PROPERTIES"]["HIDDEN_DATA"]["UF_BLOG_COMM_URL_PRV"])
+			&& !empty($comment["COMMENT_PROPERTIES"]["HIDDEN_DATA"]["UF_BLOG_COMM_URL_PRV"]["VALUE"])
+		)
+		{
+			$arUF = $comment["COMMENT_PROPERTIES"]["HIDDEN_DATA"]["UF_BLOG_COMM_URL_PRV"];
+
+			$urlPreviewText = \Bitrix\Socialnetwork\ComponentHelper::getUrlPreviewContent($arUF, array(
+				"LAZYLOAD" => $arParams["LAZYLOAD"],
+				"MOBILE" => "Y",
+				"NAME_TEMPLATE" => $arParams["NAME_TEMPLATE"],
+				"PATH_TO_USER" => $arParams["~PATH_TO_USER"]
+			));
+
+			if (!empty($urlPreviewText))
+			{
+				$text .= $urlPreviewText;
+			}
+		}
 	}
 
 	$res = array(
 		"ID" => $comment["ID"],
 		"NEW" => ($arParams["FOLLOW"] != "N" && $comment["NEW"] == "Y" ? "Y" : "N"),
 		"APPROVED" => ($comment["PUBLISH_STATUS"] == BLOG_PUBLISH_STATUS_PUBLISH ? "Y" : "N"),
+		"AUX" => (!empty($comment["AuxType"]) ? $comment["AuxType"] : ''),
+		"AUX_LIVE_PARAMS" => (!empty($comment["AUX_LIVE_PARAMS"]) ? $comment["AUX_LIVE_PARAMS"] : array()),
 		"POST_TIMESTAMP" => (
 			!empty($comment["DATE_CREATE_TS"])
 				? ($comment["DATE_CREATE_TS"] + $arResult["TZ_OFFSET"])
@@ -90,7 +114,8 @@ function socialnetworkBlogPostCommentMobile(
 			"NAME" => $arUser["~NAME"],
 			"LAST_NAME" => $arUser["~LAST_NAME"],
 			"SECOND_NAME" => $arUser["~SECOND_NAME"],
-			"AVATAR" => array_key_exists($avatarKey, $arUser) ? $arUser[$avatarKey]["src"] : ''
+			"AVATAR" => array_key_exists($avatarKey, $arUser) ? $arUser[$avatarKey]["src"] : '',
+			"EXTERNAL_AUTH_ID" => (isset($arUser["EXTERNAL_AUTH_ID"]) ? $arUser["EXTERNAL_AUTH_ID"] : false)
 		),
 		"FILES" => false,
 		"UF" => false,
@@ -136,5 +161,6 @@ function socialnetworkBlogPostCommentMobile(
 			}
 		}
 	}
+
 	return $res;
 }

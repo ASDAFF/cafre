@@ -1,4 +1,4 @@
-<?
+<?php
 IncludeModuleLangFile(__FILE__);
 
 class CClusterDBNode extends CAllClusterDBNode
@@ -59,7 +59,7 @@ class CClusterDBNode extends CAllClusterDBNode
 		return true;
 	}
 
-	function GetUpTime($node_id)
+	public static function GetUpTime($node_id)
 	{
 		if($node_id > 1)
 		{
@@ -82,4 +82,3 @@ class CClusterDBNode extends CAllClusterDBNode
 		return false;
 	}
 }
-?>

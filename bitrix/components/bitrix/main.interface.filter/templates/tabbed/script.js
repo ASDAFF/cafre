@@ -1324,37 +1324,44 @@ if(typeof(BX.InterfaceGridFilterField) === "undefined")
 				return;
 			}
 
-			if(info["typeName"] === "USER")
-			{
-				this._controller = BX.InterfaceGridFilterUser.create(
-					BX.ParamBag.create(
-						{
-							"containerId": this._filter.getFieldContainerId(this._id),
-							"info": info
-						}
-					)
-				);
+			var container = this._filter.getFieldContainerId(this._id);
 
-				if(this._controller)
+			// got custom controller
+			if(info.controller)
+			{
+				this._controller = info.controller;
+				this._controller.setContainerId(container);
+			}
+			else
+			{
+				// hard-coded controller creation for the following two types:
+				if(info["typeName"] === "USER")
 				{
-					this._controller.layout();
+					this._controller = BX.InterfaceGridFilterUser.create(
+						BX.ParamBag.create(
+							{
+								"containerId": container,
+								"info": info
+							}
+						)
+					);
+				}
+				else if(info["typeName"] === "WIDGET_PERIOD")
+				{
+					this._controller = BX.InterfaceGridFilterWidgetPeriod.create(
+						BX.ParamBag.create(
+							{
+								"containerId": container,
+								"info": info
+							}
+						)
+					);
 				}
 			}
-			else if(info["typeName"] === "WIDGET_PERIOD")
-			{
-				this._controller = BX.InterfaceGridFilterWidgetPeriod.create(
-					BX.ParamBag.create(
-						{
-							"containerId": this._filter.getFieldContainerId(this._id),
-							"info": info
-						}
-					)
-				);
 
-				if(this._controller)
-				{
-					this._controller.layout();
-				}
+			if(this._controller)
+			{
+				this._controller.layout();
 			}
 		},
 		getId: function()
@@ -1545,6 +1552,7 @@ if(typeof(BX.InterfaceGridFilterField) === "undefined")
 					case 'select-one':
 					case 'text':
 					case 'textarea':
+					case 'hidden':
 						el.value = v !== null ? v : '';
 						elementChanged = true;
 						break;
@@ -2102,11 +2110,8 @@ if(typeof(BX.InterfaceGridFilterSaveAsDialog) === "undefined")
 					offsetTop: 0,
 					bindOptions: { forceBindPosition: false },
 					closeByEsc: true,
-					closeIcon: { top: '10px', right: '15px' },
-					titleBar:
-					{
-						content: BX.create("span", {"text": BX.InterfaceGridFilter.getMessage('saveAsDialogTitle')})
-					},
+					closeIcon: true,
+					titleBar: BX.InterfaceGridFilter.getMessage('saveAsDialogTitle'),
 					events:
 					{
 						onPopupClose: BX.delegate(this._handleDialogClose, this)
@@ -2664,7 +2669,7 @@ if(typeof(BX.InterfaceGridFilterNavigationBarItem) === "undefined")
 					offsetTop : -8,
 					autoHide : true,
 					closeByEsc : false,
-					angle: { position: "bottom", offset: 24 },
+					angle: { position: "bottom", offset: 42 },
 					events: { onPopupClose : BX.delegate(this.onHintClose, this) },
 					content : BX.create("DIV",
 						{

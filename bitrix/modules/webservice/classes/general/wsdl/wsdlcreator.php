@@ -30,8 +30,8 @@ class CWSDLCreator
 		global $APPLICATION;
 
 		$serviceName = str_replace(" ", "_", $serviceName);
-		if (!$serviceUrl) $serviceUrl = ($APPLICATION->IsHTTPS() ? "https" : "https")."://".$_SERVER["HTTP_HOST"].$APPLICATION->GetCurPage();
-		if (!$targetNamespace) $targetNamespace = ($APPLICATION->IsHTTPS() ? "https" : "https")."://".$_SERVER["HTTP_HOST"]."/";
+		if (!$serviceUrl) $serviceUrl = ($APPLICATION->IsHTTPS() ? "https" : "http")."://".$_SERVER["HTTP_HOST"].$APPLICATION->GetCurPage();
+		if (!$targetNamespace) $targetNamespace = ($APPLICATION->IsHTTPS() ? "https" : "http")."://".$_SERVER["HTTP_HOST"]."/";
 
 		$this->WSDLXML = new CXMLCreator("wsdl:definitions");
 		$this->WSDLXML->setAttribute("name", $serviceName);

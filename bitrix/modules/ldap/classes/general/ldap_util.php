@@ -4,7 +4,7 @@ IncludeModuleLangFile(__FILE__);
 
 class CLdapUtil
 {
-	function GetSynFields()
+	public static function GetSynFields()
 	{
 		static $arSyncFields =	false;
 		if(!is_array($arSyncFields))
@@ -60,14 +60,14 @@ class CLdapUtil
 		return $arSyncFields;
 	}
 
-	function ConvertADDate($d)
+	public static function ConvertADDate($d)
 	{
 		if(preg_match('#(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})\.(\d)Z#', $d, $dt))
 			return gmmktime($dt[4], $dt[5], $dt[6], $dt[2], $dt[3], $dt[1]);
 		return false;
 	}
 
-	function ByteXOR($a,$b,$l)
+	public static function ByteXOR($a,$b,$l)
 	{
 		$c="";
 		for($i=0; $i<$l; $i++)
@@ -76,12 +76,12 @@ class CLdapUtil
 		return($c);
 	}
 
-	function BinMD5($val)
+	public static function BinMD5($val)
 	{
 		return(pack("H*",md5($val)));
 	}
 
-	function Decrypt($str, $key=false)
+	public static function Decrypt($str, $key=false)
 	{
 		if($key===false)
 
@@ -109,7 +109,7 @@ class CLdapUtil
 		return $res;
 	}
 
-	function Crypt($str, $key=false)
+	public static function Crypt($str, $key=false)
 	{
 		if($key===false)
 			$key = COption::GetOptionString("main", "pwdhashadd", "ldap");
@@ -134,7 +134,7 @@ class CLdapUtil
 		return(base64_encode($res));
 	}
 
-	function MkOperationFilter($key)
+	public static function MkOperationFilter($key)
 	{
 		if(substr($key, 0, 1)=="!")
 		{
@@ -172,12 +172,12 @@ class CLdapUtil
 		return Array("FIELD"=>$key, "OPERATION"=>$cOperationType);
 	}
 
-	function FilterCreate($fname, $vals, $type, $cOperationType=false, $bSkipEmpty = true)
+	public static function FilterCreate($fname, $vals, $type, $cOperationType=false, $bSkipEmpty = true)
 	{
 		return CLdapUtil::FilterCreateEx($fname, $vals, $type, $bFullJoin, $cOperationType, $bSkipEmpty);
 	}
 
-	function FilterCreateEx($fname, $vals, $type, &$bFullJoin, $cOperationType=false, $bSkipEmpty = true)
+	public static function FilterCreateEx($fname, $vals, $type, &$bFullJoin, $cOperationType=false, $bSkipEmpty = true)
 	{
 		global $DB;
 		if(!is_array($vals))
@@ -208,7 +208,7 @@ class CLdapUtil
 		$bWasLeftJoin = false;
 
 		$res = Array();
-		for($i=0; $i<count($vals); $i++)
+		for($i=0, $c=count($vals); $i < $c; $i++)
 		{
 			$val = $vals[$i];
 			if(!$bSkipEmpty || strlen($val)>0 || (is_bool($val) && $val===false))
@@ -286,7 +286,7 @@ class CLdapUtil
 		}
 
 		$strResult = "";
-		for($i=0; $i<count($res); $i++)
+		for($i=0, $c=count($res); $i < $c; $i++)
 		{
 			if($i>0)
 				$strResult .= ($cOperationType=="N"?" AND ":" OR ");
@@ -301,16 +301,17 @@ class CLdapUtil
 		return $strResult;
 	}
 
-	function _Upper($str)
+	public static function _Upper($str)
 	{
 		global $DB;
 		return ($DB->type=="ORACLE"?"UPPER(".$str.")":$str);
 	}
 
 	// gets department list from system (iblock) for displaying in select box
-	function getDepartmentListFromSystem($arFilter = Array())
+	public static function getDepartmentListFromSystem($arFilter = Array())
 	{
-		if (!IsModuleInstalled('intranet')) {
+		if (!IsModuleInstalled('intranet'))
+		{
 			return false;
 		}
 
@@ -328,7 +329,7 @@ class CLdapUtil
 		return $l;
 	}
 
-	function SetDepartmentHead($userId, $sectionId)
+	public static function SetDepartmentHead($userId, $sectionId)
 	{
 		//echo "Setting ".$userId." as head of ".$sectionId;
 
@@ -363,7 +364,7 @@ class CLdapUtil
 		}
 	}
 
-	function OnAfterUserAuthorizeHandler()
+	public static function OnAfterUserAuthorizeHandler()
 	{
 		if(defined("LDAP_NO_PORT_REDIRECTION"))
 			return false;
@@ -427,7 +428,7 @@ class CLdapUtil
 		return !empty($hndl);
 	}
 
-	function SetBitrixVMAuthSupport($setOption=false, $netAndMask=false)
+	public static function SetBitrixVMAuthSupport($setOption=false, $netAndMask=false)
 	{
 		RegisterModuleDependences("main", "OnAfterUserAuthorize", 'ldap', 'CLdapUtil', 'OnAfterUserAuthorizeHandler');
 		RegisterModuleDependences("main", "OnEpilog", 'ldap', 'CLdapUtil', 'OnEpilogHandler');
@@ -439,7 +440,7 @@ class CLdapUtil
 			COption::SetOptionString("ldap", "bitrixvm_auth_net", $netAndMask);
 	}
 
-	function UnSetBitrixVMAuthSupport($unSetOption=false)
+	public static function UnSetBitrixVMAuthSupport($unSetOption=false)
 	{
 		UnRegisterModuleDependences("main", "OnAfterUserAuthorize", 'ldap', 'CLdapUtil', 'OnAfterUserAuthorizeHandler');
 		UnRegisterModuleDependences("main", "OnEpilog", 'ldap', 'CLdapUtil', 'OnEpilogHandler');
@@ -454,7 +455,7 @@ class CLdapUtil
 	 * @param str @netAndMask - valid mask/network - xxx.xxx.xxx.xxx/xxx.xxx.xxx.xxx;xxx.xxx.xxx.xxx/xxx.xxx.xxx.xxx;... or xxx.xxx.xxx.xxx/xx;xxx.xxx.xxx.xxx/xx;...
 	 * @return bool true - if in, bool false - not in, or bad params
 	 */
-	function IsIpFromNet($ip,$netsAndMasks)
+	public static function IsIpFromNet($ip,$netsAndMasks)
 	{
 
 		$arNetsMasks = explode(";",$netsAndMasks);
@@ -497,7 +498,7 @@ class CLdapUtil
 	 * @param str $signature - first 12 bytes of the file.
 	 * @return mix (str type if success or bool false in opposite case)
 	 */
-	function GetImgTypeBySignature($signature)
+	public static function GetImgTypeBySignature($signature)
 	{
 		if($signature == "")
 			return false;
@@ -527,7 +528,7 @@ class CLdapUtil
 		return false;
 	}
 
-	function isLdapPaginationAviable()
+	public static function isLdapPaginationAviable()
 	{
 		return function_exists("ldap_control_paged_result");
 	}
@@ -566,4 +567,3 @@ class CLdapUtil
 		return $result;
 	}
 }
-?>

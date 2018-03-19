@@ -545,9 +545,9 @@ endif;
 		if (!empty($arResult["arTopic"]) && $arResult["arTopic"] != "N"):
 ?>
 								&nbsp;&nbsp;<span class="forum-user-messages">
-									<noindex><a rel="nofollow" href="<?=$arResult["arTopic"]["read"]?>" title="<?=htmlspecialcharsEx($arResult["arTopic"]["~TITLE"])?><?
+									<noindex><a rel="nofollow" href="<?=$arResult["arTopic"]["read"]?>" title="<?=htmlspecialcharsbx($arResult["arTopic"]["~TITLE"])?><?
 										if (strlen($arResult["arTopic"]["~DESCRIPTION"])>0):
-											?>, <?=htmlspecialcharsEx($arResult["arTopic"]["~DESCRIPTION"])?><?
+											?>, <?=htmlspecialcharsbx($arResult["arTopic"]["~DESCRIPTION"])?><?
 										endif;?>"><?=GetMessage("F_LAST_MESSAGE")?></a></noindex></span>
 <?
 		endif;

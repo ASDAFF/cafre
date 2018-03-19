@@ -4,17 +4,7 @@ $arParams["RETURN"] = ($arParams["RETURN"] == "Y" ? "Y" : "N");
 if (!empty($arResult["data"])):
 ?><script type="text/javascript">
 //<![CDATA[
-	if (phpVars == null || typeof(phpVars) != "object")
-	{
-		var phpVars = {
-			'ADMIN_THEME_ID': '.default',
-			'titlePrefix': '<?=CUtil::JSEscape(COption::GetOptionString("main", "site_name", $_SERVER["SERVER_NAME"]))?> - '};
-	}
-
-	if (typeof oForum != "object")
-		var oForum = {};
-	if (typeof oObjectForum != "object")
-		oObjectForum = {};
+	var oForum = (oForum||{});
 	oForum['_<?=$arResult["id"]?>'] = <?=CUtil::PhpToJSObject($arResult["data"])?>;
 //]]>
 </script>

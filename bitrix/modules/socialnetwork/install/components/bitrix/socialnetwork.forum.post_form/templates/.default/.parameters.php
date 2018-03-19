@@ -9,11 +9,6 @@ $arTemplateParameters = array(
 		"NAME" => GetMessage("F_FILES_COUNT"),
 		"TYPE" => "STRING",
 		"MULTIPLE" => "N",
-		"DEFAULT" => "2"),
-	"SMILES_COUNT" => array(
-		"NAME" => GetMessage("F_SMILES_COUNT"),
-		"TYPE" => "STRING",
-		"MULTIPLE" => "N",
-		"DEFAULT" => "0")
+		"DEFAULT" => "2")
 );
 ?>

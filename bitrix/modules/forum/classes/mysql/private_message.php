@@ -3,7 +3,7 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/forum/classes/general/pr
 
 class CForumPrivateMessage extends CAllForumPrivateMessage
 {
-	function GetListEx($arOrder = Array("ID"=>"ASC"), $arFilter = Array(), $bCount = false, $iNum = 0, $arAddParams = array())
+	public static function GetListEx($arOrder = Array("ID"=>"ASC"), $arFilter = Array(), $bCount = false, $iNum = 0, $arAddParams = array())
 	{
 		global $DB;
 		$arSqlSearch = array();
@@ -159,4 +159,3 @@ class CForumPMFolder extends CAllForumPMFolder
 {
 	// 
 }
-?>

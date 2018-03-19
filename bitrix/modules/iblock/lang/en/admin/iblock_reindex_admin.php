@@ -10,4 +10,6 @@ $MESS["IBLOCK_RADM_INDEX_OK"] = "In progress";
 $MESS["IBLOCK_RADM_REINDEX_ALL"] = "Create all";
 $MESS["IBLOCK_RADM_ACTIVE_YES"] = "yes";
 $MESS["IBLOCK_RADM_ACTIVE_NO"] = "no";
+$MESS["IBLOCK_RADM_REINDEX_DISABLE"] = "Disable";
+$MESS["IBLOCK_RADM_REINDEX_DISABLE_CONFIRM"] = "Are you sure you want to disable faceted index for this information block?";
 ?>

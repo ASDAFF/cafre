@@ -3,11 +3,106 @@
 namespace Bitrix\Main\Entity;
 
 use Bitrix\Main;
+use Bitrix\Main\Entity\Query\Filter\ConditionTree as Filter;
+use Bitrix\Main\Entity\Query\Filter\Expression\Column;
 
+/**
+ * Query builder for Entities.
+ *
+ * Virtual WHERE methods (proxy to Filter):
+ *
+ * @method Query where(...$filter)
+ * @see Filter::where()
+ *
+ * @method Query whereNot(...$filter)
+ * @see Filter::whereNot()
+ *
+ * @method Query whereColumn(...$filter)
+ * @see Filter::whereColumn()
+ *
+ * @method Query whereNull($column)
+ * @see Filter::whereNull()
+ *
+ * @method Query whereNotNull($column)
+ * @see Filter::whereNotNull()
+ *
+ * @method Query whereIn($column, $values)
+ * @see Filter::whereIn()
+ *
+ * @method Query whereNotIn($column, $values)
+ * @see Filter::whereNotIn()
+ *
+ * @method Query whereBetween($column, $valueMin, $valueMax)
+ * @see Filter::whereBetween()
+ *
+ * @method Query whereNotBetween($column, $valueMin, $valueMax)
+ * @see Filter::whereNotBetween()
+ *
+ * @method Query whereLike($column, $value)
+ * @see Filter::whereLike()
+ *
+ * @method Query whereNotLike($column, $value)
+ * @see Filter::whereNotLike()
+ *
+ * @method Query whereExists($query)
+ * @see Filter::whereExists()
+ *
+ * @method Query whereNotExists($query)
+ * @see Filter::whereNotExists()
+ *
+ * @method Query whereMatch($column, $value)
+ * @see Filter::whereMatch()
+ *
+ * @method Query whereNotMatch($column, $value)
+ * @see Filter::whereNotMatch()
+ *
+ * Virtual HAVING methods (proxy to Filter):
+ *
+ * @method Query having(...$filter)
+ * @see Filter::where()
+ *
+ * @method Query havingNot(...$filter)
+ * @see Filter::whereNot()
+ *
+ * @method Query havingColumn(...$filter)
+ * @see Filter::whereColumn()
+ *
+ * @method Query havingNull($column)
+ * @see Filter::whereNull()
+ *
+ * @method Query havingNotNull($column)
+ * @see Filter::whereNotNull()
+ *
+ * @method Query havingIn($column, $values)
+ * @see Filter::whereIn()
+ *
+ * @method Query havingNotIn($column, $values)
+ * @see Filter::whereNotIn()
+ *
+ * @method Query havingBetween($column, $valueMin, $valueMax)
+ * @see Filter::whereBetween()
+ *
+ * @method Query havingNotBetween($column, $valueMin, $valueMax)
+ * @see Filter::whereNotBetween()
+ *
+ * @method Query havingLike($column, $value)
+ * @see Filter::whereLike()
+ *
+ * @method Query havingNotLike($column, $value)
+ * @see Filter::whereNotLike()
+ *
+ * @method Query havingExists($query)
+ * @see Filter::whereExists()
+ *
+ * @method Query havingNotExists($query)
+ * @see Filter::whereNotExists()
+ *
+ * @package Bitrix\Main\Entity
+ */
 class Query
 {
-	protected
-		$init_entity;
+	/** @var Base */
+	protected $entity;
 
 	protected
 		$select = array(),
@@ -15,12 +110,22 @@ class Query
 		$order = array(),
 		$limit = null,
 		$offset = null,
-		$count_total = null;
+		$countTotal = null;
 
+	// deprecated array filter format
 	protected
 		$filter = array(),
 		$where = array(),
 		$having = array();
+
+	/** @var Filter */
+	protected $filterHandler;
+
+	/** @var Filter */
+	protected $whereHandler;
+
+	/** @var Filter */
+	protected $havingHandler;
 
 	/**
 	 * @var QueryChain[]
@@ -46,15 +151,17 @@ class Query
 		$having_expr_chains = array(), // from having expr "build_from"
 		$hidden_chains = array(); // all expr "build_from" elements;
 
-	protected
-		$runtime_chains;
+	/** @var QueryChain[] */
+	protected $runtime_chains;
 
-	/**
-	 * @var QueryChain[]
-	 */
+	/** @var QueryChain[] */
 	protected $global_chains = array(); // keying by both def and alias
 
+	/** @var string[] */
 	protected $query_build_parts;
+
+	/** @var Main\Entity\Query\Expression */
+	protected static $expressionHelper;
 
 	/**
 	 * Enable or Disable data doubling for 1:N relations in query filter
@@ -63,16 +170,23 @@ class Query
 	 */
 	protected $data_doubling_off = false;
 
+	/** @var string */
 	protected $table_alias_postfix = '';
 
-	protected
-		$join_map = array();
+	/** @var string Custom alias for the table of the init entity  */
+	protected $custom_base_table_alias = null;
+
+	/** @var array */
+	protected $join_map = array();
 
 	/** @var array list of used joins */
 	protected $join_registry;
 
-	protected
-		$is_executing = false;
+	/** @var Query\Union */
+	protected $unionHandler;
+
+	/** @var bool */
+	protected $is_executing = false;
 
 	/** @var string Last executed SQL query */
 	protected static $last_query;
@@ -86,6 +200,10 @@ class Query
 	/** @var callable[] */
 	protected $selectFetchModifiers = array();
 
+	protected
+		$cacheTtl = 0,
+		$cacheJoins = false;
+
 	/**
 	 * @param Base|Query|string $source
 	 * @throws Main\ArgumentException
@@ -94,15 +212,15 @@ class Query
 	{
 		if ($source instanceof $this)
 		{
-			$this->init_entity = Base::getInstanceByQuery($source);
+			$this->entity = Base::getInstanceByQuery($source);
 		}
 		elseif ($source instanceof Base)
 		{
-			$this->init_entity = clone $source;
+			$this->entity = clone $source;
 		}
 		elseif (is_string($source))
 		{
-			$this->init_entity = clone Base::getInstance($source);
+			$this->entity = clone Base::getInstance($source);
 		}
 		else
 		{
@@ -110,6 +228,41 @@ class Query
 				'Unknown source type "%s" for new %s', gettype($source), __CLASS__
 			));
 		}
+
+		$this->filterHandler = static::filter();
+		$this->whereHandler = static::filter();
+		$this->havingHandler = static::filter();
+	}
+
+	/**
+	 * @param $method
+	 * @param $arguments
+	 *
+	 * @return $this
+	 * @throws Main\SystemException
+	 */
+	public function __call($method, $arguments)
+	{
+		// where and having proxies
+		if (substr($method, 0, 6) === 'having')
+		{
+			$method = str_replace('having', 'where', $method);
+		}
+
+		if (substr($method, 0, 5) === 'where')
+		{
+			if (method_exists($this->filterHandler, $method))
+			{
+				call_user_func_array(
+					array($this->filterHandler, $method),
+					$arguments
+				);
+
+				return $this;
+			}
+		}
+
+		throw new Main\SystemException("Unknown method `{$method}`");
 	}
 
 	/**
@@ -245,7 +398,10 @@ class Query
 	}
 
 	/**
-	 * Sets a list of fields for ORDER BY clause
+	 * Sets a list of fields for ORDER BY clause.
+	 * Format:
+	 *   setOrder('ID') -- ORDER BY `ID` ASC
+	 *   setOrder(['ID' => 'DESC', 'NAME' => 'ASC]) -- ORDER BY `ID` DESC, `NAME` ASC
 	 *
 	 * @param mixed $order
 	 * @return Query
@@ -291,7 +447,7 @@ class Query
 			throw new Main\ArgumentException(sprintf('Invalid order "%s"', $order));
 		}
 
-		$connection = $this->init_entity->getConnection();
+		$connection = $this->entity->getConnection();
 		$helper = $connection->getSqlHelper();
 
 		if ($order == 'ASC')
@@ -356,48 +512,139 @@ class Query
 	{
 		if ($count === null)
 		{
-			return $this->count_total;
+			return $this->countTotal;
 		}
 		else
 		{
-			$this->count_total = (bool) $count;
+			$this->countTotal = (bool) $count;
 			return $this;
 		}
 	}
 
 	/**
+	 * Puts additional query to union with current.
+	 * Accepts one ore more Query / SqlExpression.
+	 *
+	 * @return $this
+	 */
+	public function union()
+	{
+		foreach (func_get_args() as $arg)
+		{
+			$this->getUnionHandler()->addQuery(new Query\UnionCondition($arg, false));
+		}
+
+		return $this;
+	}
+
+	/**
+	 * Puts additional query to union (all) with current.
+	 * Accepts one ore more Query / SqlExpression.
+	 *
+	 * @return $this
+	 */
+	public function unionAll()
+	{
+		foreach (func_get_args() as $arg)
+		{
+			$this->getUnionHandler()->addQuery(new Query\UnionCondition($arg, true));
+		}
+
+		return $this;
+	}
+
+	/**
+	 * General order for all the union queries.
+	 * Has the same format as Query::setOrder().
+	 * @see Query::setOrder()
+	 *
+	 * @param $order
+	 *
+	 * @return $this
+	 */
+	public function setUnionOrder($order)
+	{
+		$this->getUnionHandler()->setOrder($order);
+		return $this;
+	}
+
+	/**
+	 * General order for all the union queries.
+	 * Has the same format as Query::addOrder().
+	 * @see Query::addOrder()
+	 *
+	 * @param string $definition
+	 * @param string $order
+	 *
+	 * @return $this
+	 */
+	public function addUnionOrder($definition, $order = 'ASC')
+	{
+		$this->getUnionHandler()->addOrder($definition, $order);
+		return $this;
+	}
+
+	/**
+	 * General limit for all the union queries.
+	 *
+	 * @param $limit
+	 *
+	 * @return $this
+	 */
+	public function setUnionLimit($limit)
+	{
+		$this->getUnionHandler()->setLimit($limit);
+		return $this;
+	}
+
+	/**
+	 * General offset for all the union queries.
+	 *
+	 * @param $offset
+	 *
+	 * @return $this
+	 */
+	public function setUnionOffset($offset)
+	{
+		$this->getUnionHandler()->setOffset($offset);
+		return $this;
+	}
+
+	/**
 	 * @see disableDataDoubling
 	 *
-	 * @return void
+	 * @return $this
 	 */
 	public function enableDataDoubling()
 	{
 		$this->data_doubling_off = false;
+
+		return $this;
 	}
 
 	/**
 	 * Replaces all 1:N relations in filter to ID IN (subquery SELECT ID FROM <1:N relation>)
 	 * Available for Entities with 1 primary field only
 	 *
-	 * @return bool
+	 * @return $this
 	 */
 	public function disableDataDoubling()
 	{
-		if (count($this->init_entity->getPrimaryArray()) !== 1)
+		if (count($this->entity->getPrimaryArray()) !== 1)
 		{
 			// mssql doesn't support constructions WHERE (col1, col2) IN (SELECT col1, col2 FROM SomeOtherTable)
 			/* @see http://connect.microsoft.com/SQLServer/feedback/details/299231/add-support-for-ansi-standard-row-value-constructors */
 			trigger_error(sprintf(
 				'Disabling data doubling available for Entities with 1 primary field only. Number of primaries of your entity `%s` is %d.',
-				$this->init_entity->getFullName(), count($this->init_entity->getPrimaryArray())
+				$this->entity->getFullName(), count($this->entity->getPrimaryArray())
 			), E_USER_WARNING);
-
-			return false;
+		}
+		else
+		{
+			$this->data_doubling_off = true;
 		}
 
-		$this->data_doubling_off = true;
-
-		return true;
+		return $this;
 	}
 
 	/**
@@ -408,14 +655,28 @@ class Query
 	 *
 	 * @return Query
 	 */
-	public function registerRuntimeField($name, $fieldInfo)
+	public function registerRuntimeField($name, $fieldInfo = null)
 	{
-		if ((empty($name) || is_numeric($name)) && $fieldInfo instanceof Field)
+		if ($name instanceof Field && $fieldInfo === null)
+		{
+			// short call for Field objects
+			$fieldInfo = $name;
+			$name = $fieldInfo->getName();
+		}
+		elseif ((empty($name) || is_numeric($name)) && $fieldInfo instanceof Field)
 		{
 			$name = $fieldInfo->getName();
 		}
 
-		$this->init_entity->addField($fieldInfo, $name);
+		// clone field as long as Field object could be initialized only once
+		// there is no need to initialize original object
+		if ($fieldInfo instanceof Field)
+		{
+			$fieldInfo = clone $fieldInfo;
+		}
+
+		// attach field to the entity
+		$this->entity->addField($fieldInfo, $name);
 
 		// force chain creation for further needs
 		$chain = $this->getRegisteredChain($name, true);
@@ -441,6 +702,51 @@ class Query
 	}
 
 	/**
+	 * Sets a custom alias for the table of the init entity
+	 *
+	 * @param string $alias
+	 *
+	 * @return $this
+	 */
+	public function setCustomBaseTableAlias($alias)
+	{
+		$this->custom_base_table_alias = $alias;
+		return $this;
+	}
+
+	/**
+	 * Returns new instance of Filter.
+	 *
+	 * Usage:
+	 *   Query::filter()->where(...)
+	 *
+	 * Alternatively short calls Query::where* can be used.
+	 * @see Query::where()
+	 *
+	 * @return Filter
+	 */
+	public static function filter()
+	{
+		return new Filter;
+	}
+
+	/**
+	 * Used to create ExpressionField in a short way.
+	 * @see Filter::where()
+	 *
+	 * @return Query\Expression
+	 */
+	public static function expr()
+	{
+		if (static::$expressionHelper === null)
+		{
+			static::$expressionHelper = new Query\Expression;
+		}
+
+		return static::$expressionHelper;
+	}
+
+	/**
 	 * Builds and executes the query and returns the result
 	 *
 	 * @return \Bitrix\Main\DB\Result
@@ -451,7 +757,30 @@ class Query
 
 		$query = $this->buildQuery();
 
-		$result = $this->query($query);
+		$cacheId = "";
+		$ttl = 0;
+		$result = null;
+
+		if($this->cacheTtl > 0 && (empty($this->join_map) || $this->cacheJoins == true))
+		{
+			$ttl = $this->entity->getCacheTtl($this->cacheTtl);
+		}
+
+		if($ttl > 0)
+		{
+			$cacheId = md5($query);
+			$result = $this->entity->readFromCache($ttl, $cacheId, $this->countTotal);
+		}
+
+		if($result === null)
+		{
+			$result = $this->query($query);
+
+			if($ttl > 0)
+			{
+				$result = $this->entity->writeToCache($result, $cacheId, $this->countTotal);
+			}
+		}
 
 		$this->is_executing = false;
 
@@ -490,6 +819,74 @@ class Query
 		}
 		else
 		{
+			// localize definition (get last field segment e.g. NAME from REF1.REF2.NAME)
+			$localDefinitionPos = strrpos($definition, '.');
+
+			if ($localDefinitionPos !== false)
+			{
+				$localDefinition = substr($definition, $localDefinitionPos+1);
+				$localEntityDef = substr($definition, 0, $localDefinitionPos);
+				$localChain = QueryChain::getChainByDefinition($this->entity, $localEntityDef.'.*');
+				$lastElemValue = $localChain->getLastElement()->getValue();
+
+				if ($lastElemValue instanceof ReferenceField)
+				{
+					$localEntity = $lastElemValue->getRefEntity();
+				}
+				elseif (is_array($lastElemValue))
+				{
+					list($localEntity, ) = $lastElemValue;
+				}
+				else
+				{
+					$localEntity = $lastElemValue;
+				}
+			}
+			else
+			{
+				$localDefinition = $definition;
+				$localEntityDef = "";
+				$dataClass = $this->entity->getDataClass();
+				$localEntity = $dataClass::getEntity();
+			}
+
+			// if there is a shell pattern in final segment, run recursively
+			if ((strlen($localDefinition) > 1 && strpos($localDefinition, '*') !== false)
+				|| strpos($localDefinition, '?') !== false
+			)
+			{
+				// get fields by pattern
+				foreach ($localEntity->getFields() as $field)
+				{
+					if (
+						($field instanceof ScalarField || $field instanceof ExpressionField)
+						&& fnmatch($localDefinition, $field->getName())
+					)
+					{
+						// build alias
+						$customAlias = null;
+
+						if ($alias !== null)
+						{
+							// put alias as a prefix
+							$customAlias = $alias.$field->getName();
+						}
+
+						// build definition
+						$fieldDefinition = $field->getName();
+
+						if (!empty($localEntityDef))
+						{
+							$fieldDefinition = $localEntityDef.'.'.$fieldDefinition;
+						}
+
+						$this->addToSelectChain($fieldDefinition, $customAlias);
+					}
+				}
+
+				return $this;
+			}
+
 			// there is normal scalar field, or Reference, or Entity (all fields of)
 			$chain = $this->getRegisteredChain($definition, true);
 
@@ -523,10 +920,10 @@ class Query
 			{
 				// we have a single field, lets cheks its custom alias
 				if (
-					$this->init_entity->hasField($alias)
+					$this->entity->hasField($alias)
 					&& (
 						// if it's not the same field
-						$this->init_entity->getFullName() !== $last_elem->getValue()->getEntity()->getFullName()
+						$this->entity->getFullName() !== $last_elem->getValue()->getEntity()->getFullName()
 						||
 						$last_elem->getValue()->getName() !== $alias
 					)
@@ -536,7 +933,7 @@ class Query
 					throw new Main\ArgumentException(sprintf(
 						'Alias "%s" matches already existing field "%s" of initial entity "%s". '.
 						'Please choose another name for alias.',
-						$alias, $alias, $this->init_entity->getFullName()
+						$alias, $alias, $this->entity->getFullName()
 					));
 				}
 			}
@@ -560,12 +957,12 @@ class Query
 							$fieldAlias = $alias . $exp_field->getName();
 
 							// deny aliases eq. existing fields
-							if ($this->init_entity->hasField($fieldAlias))
+							if ($this->entity->hasField($fieldAlias))
 							{
 								throw new Main\ArgumentException(sprintf(
 									'Alias "%s" + field "%s" match already existing field "%s" of initial entity "%s". '.
 									'Please choose another name for alias.',
-									$alias, $exp_field->getName(), $fieldAlias, $this->init_entity->getFullName()
+									$alias, $exp_field->getName(), $fieldAlias, $this->entity->getFullName()
 								));
 							}
 
@@ -608,7 +1005,8 @@ class Query
 
 			if (!is_numeric($filter_def))
 			{
-				$csw_result = \CSQLWhere::makeOperation($filter_def);
+				$sqlWhere = new \CSQLWhere();
+				$csw_result = $sqlWhere->makeOperation($filter_def);
 				list($definition, ) = array_values($csw_result);
 
 				// do not register it in global chain registry - get it in a smuggled way
@@ -625,7 +1023,7 @@ class Query
 					}
 					else
 					{
-						$chain = QueryChain::getChainByDefinition($this->init_entity, $definition);
+						$chain = QueryChain::getChainByDefinition($this->entity, $definition);
 					}
 				}
 
@@ -703,13 +1101,162 @@ class Query
 					$this->filter_chains[$definition] = $chain;
 
 					// and we will need primary chain in filter later when overwriting data-doubling
-					$this->getRegisteredChain($this->init_entity->getPrimary(), true);
+					$this->getRegisteredChain($this->entity->getPrimary(), true);
 				}
 			}
-
-			if (is_array($filter_match))
+			elseif (is_array($filter_match))
 			{
 				$this->setFilterChains($filter_match, $section);
+			}
+		}
+	}
+
+	public function setFilterHandlerChains(Filter $where, $section = 'filter')
+	{
+		foreach ($where->getConditions() as $condition)
+		{
+			if ($condition instanceof Filter)
+			{
+				// subfilter
+				$this->setFilterHandlerChains($condition, $section);
+			}
+			else
+			{
+				$definition = $condition->getDefinition();
+
+				// check for runtime fields
+				if ($definition instanceof Field)
+				{
+					// register runtime field
+					$this->registerRuntimeField($definition);
+
+					// rewrite definition in filter - replace field with its name
+					$definition = $definition->getName();
+					$condition->setDefinition($definition);
+				}
+
+				// check if it's a regular condition, not kind of boolean/exists expression
+				if ($definition !== null)
+				{
+					// regular condition
+					$chain = $this->getRegisteredChain($definition);
+
+					if (!$chain)
+					{
+						// try to find it in filter chains if it is 2nd call of method (when dividing filter for where/having)
+						// and chain is still not registered in global (e.g. when forcesDataDoublingOff)
+						if (isset($this->filter_chains[$definition]))
+						{
+							$chain = $this->filter_chains[$definition];
+						}
+						else
+						{
+							$chain = QueryChain::getChainByDefinition($this->entity, $definition);
+						}
+					}
+
+					// dirty hack for UF multiple fields: replace text UF_SMTH by UF_SMTH_SINGLE
+					$dstField = $chain->getLastElement()->getValue();
+					$dstEntity = $dstField->getEntity();
+
+					if ($dstField instanceof ExpressionField && count($dstField->getBuildFromChains()) == 1)
+					{
+						// hold entity, but get real closing field
+						$dstBuildFromChains = $dstField->getBuildFromChains();
+
+						/** @var QueryChain $firstChain */
+						$firstChain = $dstBuildFromChains[0];
+						$dstField = $firstChain->getLastElement()->getValue();
+					}
+
+					// check for base linking
+					if ($dstField instanceof TextField && $dstEntity->hasField($dstField->getName().'_SINGLE'))
+					{
+						$utmLinkField = $dstEntity->getField($dstField->getName().'_SINGLE');
+
+						if ($utmLinkField instanceof ExpressionField)
+						{
+							$buildFromChains = $utmLinkField->getBuildFromChains();
+
+							// check for back-reference
+							if (count($buildFromChains) == 1 && $buildFromChains[0]->hasBackReference())
+							{
+								$endField = $buildFromChains[0]->getLastElement()->getValue();
+
+								// and final check for entity name
+								if (strpos($endField->getEntity()->getName(), 'Utm'))
+								{
+									$expressionChain = clone $chain;
+									$expressionChain->removeLastElement();
+									$expressionChain->addElement(new QueryChainElement(clone $utmLinkField));
+									$expressionChain->forceDataDoublingOff();
+
+									$chain = $expressionChain;
+
+									// rewrite filter definition
+									$definition .= '_SINGLE';
+									$condition->setDefinition($definition);
+								}
+							}
+						}
+					}
+
+					// continue
+					$registerChain = true;
+
+					// if data doubling disabled and it is back-reference - do not register, it will be overwritten
+					if ($chain->forcesDataDoublingOff() || ($this->data_doubling_off && $chain->hasBackReference()))
+					{
+						$registerChain = false;
+					}
+
+					if ($registerChain)
+					{
+						$this->registerChain($section, $chain, $definition);
+
+						// fill hidden select
+						if ($chain->getLastElement()->getValue() instanceof ExpressionField)
+						{
+							$this->collectExprChains($chain);
+						}
+					}
+					else
+					{
+						// hide from global registry to avoid "join table"
+						// but we still need it in filter chains
+						$this->filter_chains[$chain->getAlias()] = $chain;
+						$this->filter_chains[$definition] = $chain;
+
+						// and we will need primary chain in filter later when overwriting data-doubling
+						$this->getRegisteredChain($this->entity->getPrimary(), true);
+					}
+				}
+
+				// when compare with column, put it in the chains too
+				foreach ($condition->getAtomicValues() as $value)
+				{
+					if ($value instanceof Column)
+					{
+						$valueDefinition = $value->getDefinition();
+
+						if (isset($this->filter_chains[$valueDefinition]))
+						{
+							$chain = $this->filter_chains[$valueDefinition];
+						}
+						else
+						{
+							$chain = QueryChain::getChainByDefinition($this->entity, $valueDefinition);
+						}
+
+						$this->registerChain($section, $chain, $valueDefinition);
+					}
+
+					// set connection to correct escaping in expressions
+					if ($value instanceof Main\DB\SqlExpression)
+					{
+						$value->setConnection($this->entity->getConnection());
+					}
+				}
 			}
 		}
 	}
@@ -778,6 +1325,54 @@ class Query
 		}
 	}
 
+	protected function divideFilterHandler()
+	{
+		$logic = $this->filterHandler->logic();
+
+		if ($logic == 'or')
+		{
+			// if has aggr then move all to having
+			if ($this->checkFilterHandlerAggregation($this->filterHandler))
+			{
+				$this->havingHandler = $this->filterHandler;
+				$this->having_chains = $this->filter_chains;
+			}
+			else
+			{
+				$this->whereHandler = $this->filterHandler;
+				$this->where_chains = $this->filter_chains;
+			}
+		}
+		elseif ($logic == 'and')
+		{
+			// we can separate root filters
+			foreach ($this->filterHandler->getConditions() as $condition)
+			{
+				$tmpFilter = static::filter()->addCondition($condition);
+
+				if ($this->checkFilterHandlerAggregation($tmpFilter))
+				{
+					$this->havingHandler->addCondition($tmpFilter);
+					$this->setFilterHandlerChains($tmpFilter, 'having');
+				}
+				else
+				{
+					$this->whereHandler->addCondition($condition);
+					$this->setFilterHandlerChains($tmpFilter, 'where');
+				}
+			}
+		}
+
+		// collect "build_from" fields from having
+		foreach ($this->having_chains as $chain)
+		{
+			if ($chain->getLastElement()->getValue() instanceof ExpressionField)
+			{
+				$this->collectExprChains($chain, array('hidden', 'having_expr'));
+			}
+		}
+	}
+
 	protected function checkFilterAggregation($filter)
 	{
 		foreach ($filter as $filter_def => $filter_match)
@@ -790,7 +1385,8 @@ class Query
 			$is_having = false;
 			if (!is_numeric($filter_def))
 			{
-				$csw_result = \CSQLWhere::makeOperation($filter_def);
+				$sqlWhere = new \CSQLWhere();
+				$csw_result = $sqlWhere->makeOperation($filter_def);
 				list($definition, ) = array_values($csw_result);
 
 				$chain = $this->filter_chains[$definition];
@@ -810,6 +1406,90 @@ class Query
 		}
 
 		return false;
+	}
+
+	protected function checkFilterHandlerAggregation(Filter $filter)
+	{
+		foreach ($filter->getConditions() as $condition)
+		{
+			$is_having = false;
+
+			if ($condition instanceof Filter)
+			{
+				// subfilter
+				$is_having = $this->checkFilterHandlerAggregation($condition);
+			}
+			else
+			{
+				// check if it is not a boolean/exists condition
+				if ($condition->getDefinition() !== null)
+				{
+					// regular condition
+					$chain = $this->filter_chains[$condition->getDefinition()];
+					$last = $chain->getLastElement();
+
+					$is_having = $last->getValue() instanceof ExpressionField && $last->getValue()->isAggregated();
+
+					// check if value is a field and has aggregation
+					if (!$is_having && $condition->getValue() instanceof Column)
+					{
+						$chain = $this->filter_chains[$condition->getValue()->getDefinition()];
+						$last = $chain->getLastElement();
+
+						$is_having = $last->getValue() instanceof ExpressionField && $last->getValue()->isAggregated();
+
+						// actually if it has happened, we need to add group by the first column
+					}
+				}
+			}
+
+			if ($is_having)
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	protected function rewriteDataDoubling(Filter $filter, $section)
+	{
+		foreach ($filter->getConditions() as $condition)
+		{
+			if ($condition instanceof Filter)
+			{
+				//subfilter
+				$this->rewriteDataDoubling($condition, $section);
+			}
+			elseif ($condition->getDefinition() !== null)
+			{
+				// regular condition
+				$chain = $this->filter_chains[$condition->getDefinition()];
+
+				if ($chain->forcesDataDoublingOff() || ($this->data_doubling_off && $chain->hasBackReference()))
+				{
+					$primaryName = $this->entity->getPrimary();
+					$uniquePostfix = '_TMP'.rand();
+
+					// build subquery
+					$dataClass = $this->entity->getDataClass();
+
+					$subQuery = $dataClass::query()
+						->addSelect($primaryName)
+						->where(clone $condition)
+						->setTableAliasPostfix(strtolower($uniquePostfix));
+
+					// change condition
+					$condition->setColumn($primaryName);
+					$condition->setOperator('in');
+					$condition->setValue($subQuery);
+
+					// register primary's chain
+					$idChain = $this->getRegisteredChain($primaryName);
+					$this->registerChain($section, $idChain);
+				}
+			}
+		}
 	}
 
 	protected function addToGroupChain($definition)
@@ -836,7 +1516,7 @@ class Query
 
 	protected function buildJoinMap($chains = null)
 	{
-		$connection = $this->init_entity->getConnection();
+		$connection = $this->entity->getConnection();
 		$helper = $connection->getSqlHelper();
 
 		$aliasLength = $helper->getAliasLength();
@@ -873,12 +1553,12 @@ class Query
 			$map_key = '';
 
 			/**
-			 * elemenets after init entity
+			 * elements after init entity
 			 * @var $elements QueryChainElement[]
 			 * */
 			$elements = array_slice($chain->getAllElements(), 1);
 
-			$currentDedinition = array();
+			$currentDefinition = array();
 
 			foreach ($elements as $element)
 			{
@@ -920,12 +1600,12 @@ class Query
 				// mapping
 				if (empty($map_key))
 				{
-					$map_key = join('.', $currentDedinition);
+					$map_key = join('.', $currentDefinition);
 				}
 
 				$map_key .= '/' . $ref_field->getName() . '/' . $dst_entity->getName();
 
-				$currentDedinition[] = $element->getDefinitionFragment();
+				$currentDefinition[] = $element->getDefinitionFragment();
 
 				if (isset($this->join_registry[$map_key]))
 				{
@@ -957,8 +1637,8 @@ class Query
 
 						$isBackReference = false;
 
-						$definition_this = join('.', array_slice($currentDedinition, 0, -1));
-						$definition_ref = join('.', $currentDedinition);
+						$definition_this = join('.', array_slice($currentDefinition, 0, -1));
+						$definition_ref = join('.', $currentDefinition);
 					}
 					elseif (is_array($element->getValue()))
 					{
@@ -980,8 +1660,8 @@ class Query
 
 						$isBackReference = true;
 
-						$definition_this = join('.', $currentDedinition);
-						$definition_ref = join('.', array_slice($currentDedinition, 0, -1));
+						$definition_this = join('.', $currentDefinition);
+						$definition_ref = join('.', array_slice($currentDefinition, 0, -1));
 					}
 					else
 					{
@@ -989,14 +1669,28 @@ class Query
 					}
 
 					// replace this. and ref. to real definition
-					$csw_reference = $this->prepareJoinReference(
-						$reference,
-						$alias_this.$this->table_alias_postfix,
-						$alias_ref.$this->table_alias_postfix,
-						$definition_this,
-						$definition_ref,
-						$isBackReference
-					);
+					if ($reference instanceof Filter)
+					{
+						$csw_reference = $this->prepareJoinFilterReference(
+							$reference,
+							$alias_this.$this->table_alias_postfix,
+							$alias_ref.$this->table_alias_postfix,
+							$definition_this,
+							$definition_ref,
+							$isBackReference
+						);
+					}
+					else
+					{
+						$csw_reference = $this->prepareJoinReference(
+							$reference,
+							$alias_this.$this->table_alias_postfix,
+							$alias_ref.$this->table_alias_postfix,
+							$definition_this,
+							$definition_ref,
+							$isBackReference
+						);
+					}
 
 					// double check after recursive call in prepareJoinReference
 					if (!isset($this->join_registry[$map_key]))
@@ -1044,7 +1738,7 @@ class Query
 		$sql = array();
 		$csw = new \CSQLWhere;
 
-		$connection = $this->init_entity->getConnection();
+		$connection = $this->entity->getConnection();
 		$helper = $connection->getSqlHelper();
 
 		foreach ($this->join_map as $join)
@@ -1053,12 +1747,21 @@ class Query
 			$csw_fields = $this->getJoinCswFields($join['reference']);
 			$csw->setFields($csw_fields);
 
-			// sql
+			if ($join['reference'] instanceof Filter)
+			{
+				$joinConditionSql = $join['reference']->getSql($this->global_chains);
+			}
+			else
+			{
+				$joinConditionSql = trim($csw->getQuery($join['reference']));
+			}
+
+			// final sql
 			$sql[] = sprintf('%s JOIN %s %s ON %s',
 				$join['type'],
 				$this->quoteTableSource($join['table']),
 				$helper->quote($join['alias']),
-				trim($csw->getQuery($join['reference']))
+				$joinConditionSql
 			);
 		}
 
@@ -1067,14 +1770,29 @@ class Query
 
 	protected function buildWhere()
 	{
-		$csw = new \CSQLWhere;
+		$sql = array();
 
-		$csw_fields = $this->getFilterCswFields($this->where);
-		$csw->setFields($csw_fields);
+		// old array filter
+		if (!empty($this->where))
+		{
+			$csw = new \CSQLWhere;
 
-		$sql = trim($csw->getQuery($this->where));
+			$csw_fields = $this->getFilterCswFields($this->where);
+			$csw->setFields($csw_fields);
 
-		return $sql;
+			$sql[] = trim($csw->getQuery($this->where));
+		}
+
+		// new QueryFilter
+		if ($this->whereHandler && $this->whereHandler->hasConditions())
+		{
+			// rewrite data doubling
+			$this->rewriteDataDoubling($this->whereHandler, 'where');
+
+			$sql[] = $this->whereHandler->getSql($this->where_chains);
+		}
+
+		return join(' AND ', array_filter($sql));
 	}
 
 	protected function buildGroup()
@@ -1141,7 +1859,23 @@ class Query
 
 		foreach ($this->group_chains as $chain)
 		{
-			$sql[] = $chain->getSqlDefinition();
+			$connection = $this->entity->getConnection();
+			$sqlDefinition = $chain->getSqlDefinition();
+			$valueField = $chain->getLastElement()->getValue();
+
+			if ($valueField instanceof ExpressionField)
+			{
+				$valueField = $valueField->getValueField();
+			}
+
+			if (($connection instanceof Main\DB\OracleConnection || $connection instanceof Main\DB\MssqlConnection)
+				&& $valueField instanceof TextField)
+			{
+				// softTextCast
+				$sqlDefinition = $connection->getSqlHelper()->softCastTextToChar($sqlDefinition);
+			}
+
+			$sql[] = $sqlDefinition;
 		}
 
 		return join(', ', $sql);
@@ -1149,14 +1883,29 @@ class Query
 
 	protected function buildHaving()
 	{
-		$csw = new \CSQLWhere;
+		$sql = array();
 
-		$csw_fields = $this->getFilterCswFields($this->having);
-		$csw->setFields($csw_fields);
+		// old array filter
+		if (!empty($this->having))
+		{
+			$csw = new \CSQLWhere;
 
-		$sql = trim($csw->getQuery($this->having));
+			$csw_fields = $this->getFilterCswFields($this->having);
+			$csw->setFields($csw_fields);
 
-		return $sql;
+			$sql[] = trim($csw->getQuery($this->having));
+		}
+
+		// new QueryFilter
+		if ($this->havingHandler && $this->havingHandler->hasConditions())
+		{
+			// rewrite data doubling
+			$this->rewriteDataDoubling($this->havingHandler, 'having');
+
+			$sql[] = $this->havingHandler->getSql($this->having_chains);
+		}
+
+		return join(' AND ', array_filter($sql));
 	}
 
 	protected function buildOrder()
@@ -1169,7 +1918,34 @@ class Query
 				? $this->order[$chain->getDefinition()]
 				: $this->order[$chain->getAlias()];
 
-			$sql[] = $chain->getSqlDefinition() . ' ' . $sort;
+			$connection = $this->entity->getConnection();
+
+			// define value field
+			$valueField = $chain->getLastElement()->getValue();
+			if ($valueField instanceof ExpressionField)
+			{
+				$valueField = $valueField->getValueField();
+			}
+
+			// get final sql definition
+			if (isset($this->select_chains[$chain->getAlias()]))
+			{
+				// optimization for fields that are in select already
+				$sqlDefinition = $connection->getSqlHelper()->quote($chain->getAlias());
+			}
+			else
+			{
+				$sqlDefinition = $chain->getSqlDefinition();
+			}
+
+			if (($connection instanceof Main\DB\OracleConnection || $connection instanceof Main\DB\MssqlConnection)
+				&& $valueField instanceof TextField)
+			{
+				// softTextCast
+				$sqlDefinition = $connection->getSqlHelper()->softCastTextToChar($sqlDefinition);
+			}
+
+			$sql[] = $sqlDefinition. ' ' . $sort;
 		}
 
 		return join(', ', $sql);
@@ -1177,7 +1953,7 @@ class Query
 
 	protected function buildQuery()
 	{
-		$connection = $this->init_entity->getConnection();
+		$connection = $this->entity->getConnection();
 		$helper = $connection->getSqlHelper();
 
 		if ($this->query_build_parts === null)
@@ -1189,7 +1965,13 @@ class Query
 			}
 
 			$this->setFilterChains($this->filter);
-			$this->divideFilter($this->filter);
+			$this->divideFilter();
+
+			if ($this->filterHandler)
+			{
+				$this->setFilterHandlerChains($this->filterHandler);
+				$this->divideFilterHandler();
+			}
 
 			foreach ($this->group as $value)
 			{
@@ -1210,7 +1992,7 @@ class Query
 			$sqlHaving = $this->buildHaving();
 			$sqlOrder = $this->buildOrder();
 
-			$sqlFrom = $this->quoteTableSource($this->init_entity->getDBTableName());
+			$sqlFrom = $this->quoteTableSource($this->entity->getDBTableName());
 
 			$sqlFrom .= ' '.$helper->quote($this->getInitAlias());
 			$sqlFrom .= ' '.$sqlJoin;
@@ -1242,6 +2024,39 @@ class Query
 			$query = $helper->getTopSql($query, $this->limit, $this->offset);
 		}
 
+		// union
+		if (!empty($this->unionHandler))
+		{
+			$query = "({$query})";
+
+			foreach ($this->unionHandler->getQueries() as $union)
+			{
+				$query .= " ".$union->getSql();
+			}
+
+			// union sort
+			if ($this->unionHandler->getOrder())
+			{
+				$sqlUnionOrder = array();
+				foreach ($this->unionHandler->getOrder() as $definition => $sort)
+				{
+					$sqlDefinition = $connection->getSqlHelper()->quote(
+						$this->global_chains[$definition]->getAlias()
+					);
+
+					$sqlUnionOrder[] = $sqlDefinition . ' ' . $sort;
+				}
+
+				$query .= ' ORDER BY ' . join(', ', $sqlUnionOrder);
+			}
+
+			// union limit
+			if ($this->unionHandler->getLimit())
+			{
+				$query = $helper->getTopSql($query, $this->unionHandler->getLimit(), $this->unionHandler->getOffset());
+			}
+		}
+
 		return $query;
 	}
 
@@ -1258,17 +2073,36 @@ class Query
 
 			if (!is_numeric($filter_def))
 			{
-				$csw_result = \CSQLWhere::makeOperation($filter_def);
-				list($definition, ) = array_values($csw_result);
+				$sqlWhere = new \CSQLWhere();
+				$csw_result = $sqlWhere->makeOperation($filter_def);
+				list($definition, $operation) = array_values($csw_result);
 
 				$chain = $this->filter_chains[$definition];
 				$last = $chain->getLastElement();
 
 				// need to create an alternative of CSQLWhere in D7.Entity
 				$field_type = $last->getValue()->getDataType();
+				$callback = null;
 
 				// rewrite type & value for CSQLWhere
-				if ($field_type == 'integer')
+				if (in_array($operation, array('SE', 'SN'), true)
+					&& in_array($filter_match, array(null, true, false), true)
+				)
+				{
+					$field_type = 'callback';
+
+					if ($filter_match === null)
+					{
+						$callback = array($this, 'nullEqualityCallback');
+					}
+					else
+					{
+						// just boolean expression, without operator
+						// e.g. WHERE EXISTS(...)
+						$callback = array($this, 'booleanStrongEqualityCallback');
+					}
+				}
+				elseif ($field_type == 'integer')
 				{
 					$field_type = 'int';
 				}
@@ -1301,17 +2135,15 @@ class Query
 
 				$sqlDefinition = $chain->getSqlDefinition();
 
-				$callback = null;
-
 				// data-doubling-off mode
 				/** @see disableDataDoubling */
 				if ($chain->forcesDataDoublingOff() || ($this->data_doubling_off && $chain->hasBackReference()))
 				{
-					$primaryName = $this->init_entity->getPrimary();
+					$primaryName = $this->entity->getPrimary();
 					$uniquePostfix = '_TMP'.rand();
 
 					// build subquery
-					$subQuery = new Query($this->init_entity);
+					$subQuery = new Query($this->entity);
 					$subQuery->addSelect($primaryName);
 					$subQuery->addFilter($filter_def, $filter_match);
 					$subQuery->setTableAliasPostfix(strtolower($uniquePostfix));
@@ -1326,6 +2158,12 @@ class Query
 					// change sql definition
 					$idChain = $this->getRegisteredChain($primaryName);
 					$sqlDefinition = $idChain->getSqlDefinition();
+				}
+
+				// set entity connection to the sql expressions
+				if ($filter_match instanceof Main\DB\SqlExpression)
+				{
+					$filter_match->setConnection($this->entity->getConnection());
 				}
 
 				//$is_having = $last->getValue() instanceof ExpressionField && $last->getValue()->isAggregated();
@@ -1374,8 +2212,7 @@ class Query
 					'CALLBACK' => $callback
 				);
 			}
-
-			if (is_array($filter_match))
+			elseif (is_array($filter_match))
 			{
 				$fields = array_merge($fields, $this->getFilterCswFields($filter_match));
 			}
@@ -1384,7 +2221,7 @@ class Query
 		return $fields;
 	}
 
-	protected function prepareJoinReference($reference, $alias_this, $alias_ref, $baseDefinition, $refDefenition, $isBackReference)
+	protected function prepareJoinReference($reference, $alias_this, $alias_ref, $baseDefinition, $refDefinition, $isBackReference)
 	{
 		$new = array();
 
@@ -1399,12 +2236,13 @@ class Query
 			if (is_numeric($k))
 			{
 				// subfilter, recursive call
-				$new[$k] = $this->prepareJoinReference($v, $alias_this, $alias_ref, $baseDefinition, $refDefenition, $isBackReference);
+				$new[$k] = $this->prepareJoinReference($v, $alias_this, $alias_ref, $baseDefinition, $refDefinition, $isBackReference);
 			}
 			else
 			{
 				// key
-				$csw_result = \CSQLWhere::makeOperation($k);
+				$sqlWhere = new \CSQLWhere();
+				$csw_result = $sqlWhere->makeOperation($k);
 				list($field, $operation) = array_values($csw_result);
 
 				if (strpos($field, 'this.') === 0)
@@ -1417,7 +2255,7 @@ class Query
 
 					if (!$isBackReference)
 					{
-						// make sure these fields will be joined bebore the main join
+						// make sure these fields will be joined before the main join
 						$this->buildJoinMap(array($chain));
 					}
 					else
@@ -1429,7 +2267,24 @@ class Query
 					if ($chain->getLastElement()->getValue() instanceof ExpressionField)
 					{
 						$this->collectExprChains($chain);
-						$this->buildJoinMap($chain->getLastElement()->getValue()->getBuildFromChains());
+						$buildFrom = $chain->getLastElement()->getValue()->getBuildFromChains();
+
+						foreach ($buildFrom as $bf)
+						{
+							// set base chain
+							$baseChain = clone $chain;
+
+							// remove the last one - expression itself
+							$baseChain->removeLastElement();
+
+							// remove parent entity for this child
+							$bf->removeFirstElement();
+
+							// set new parents
+							$bf->prepend($baseChain);
+						}
+
+						$this->buildJoinMap($buildFrom);
 					}
 
 					$k = \CSQLWhere::getOperationByCode($operation).$chain->getSqlDefinition();
@@ -1437,13 +2292,13 @@ class Query
 				elseif (strpos($field, 'ref.') === 0)
 				{
 					$definition = str_replace(\CSQLWhere::getOperationByCode($operation).'ref.', '', $k);
-					$absDefinition = strlen($refDefenition) ? $refDefenition . '.' . $definition : $definition;
+					$absDefinition = strlen($refDefinition) ? $refDefinition . '.' . $definition : $definition;
 
 					$chain = $this->getRegisteredChain($absDefinition, true);
 
 					if ($isBackReference)
 					{
-						// make sure these fields will be joined bebore the main join
+						// make sure these fields will be joined before the main join
 						$this->buildJoinMap(array($chain));
 					}
 					else
@@ -1462,7 +2317,7 @@ class Query
 				}
 				else
 				{
-					throw new Main\SystemException(sprintf('Unknown reference key `%s`', $k));
+					throw new Main\SystemException(sprintf('Unknown reference key `%s`, it should start with "this." or "ref."', $k));
 				}
 
 				// value
@@ -1473,7 +2328,8 @@ class Query
 				}
 				elseif ($v instanceof Main\DB\SqlExpression)
 				{
-					// it's ok, nothing to do
+					// set entity connection
+					$v->setConnection($this->entity->getConnection());
 				}
 				elseif (!is_object($v))
 				{
@@ -1486,7 +2342,7 @@ class Query
 
 						if (!$isBackReference)
 						{
-							// make sure these fields will be joined bebore the main join
+							// make sure these fields will be joined before the main join
 							$this->buildJoinMap(array($chain));
 						}
 						else
@@ -1498,7 +2354,24 @@ class Query
 						if ($chain->getLastElement()->getValue() instanceof ExpressionField)
 						{
 							$this->collectExprChains($chain);
-							$this->buildJoinMap($chain->getLastElement()->getValue()->getBuildFromChains());
+							$buildFrom = $chain->getLastElement()->getValue()->getBuildFromChains();
+
+							foreach ($buildFrom as $bf)
+							{
+								// set base chain
+								$baseChain = clone $chain;
+
+								// remove the last one - expression itself
+								$baseChain->removeLastElement();
+
+								// remove parent entity for this child
+								$bf->removeFirstElement();
+
+								// set new parents
+								$bf->prepend($baseChain);
+							}
+
+							$this->buildJoinMap($buildFrom);
 						}
 
 						$field_def = $chain->getSqlDefinition();
@@ -1506,13 +2379,13 @@ class Query
 					elseif (strpos($v, 'ref.') === 0)
 					{
 						$definition = str_replace('ref.', '', $v);
-						$absDefinition = strlen($refDefenition) ? $refDefenition . '.' . $definition : $definition;
+						$absDefinition = strlen($refDefinition) ? $refDefinition . '.' . $definition : $definition;
 
 						$chain = $this->getRegisteredChain($absDefinition, true);
 
 						if ($isBackReference)
 						{
-							// make sure these fields will be joined bebore the main join
+							// make sure these fields will be joined before the main join
 							$this->buildJoinMap(array($chain));
 						}
 						else
@@ -1540,7 +2413,7 @@ class Query
 				}
 				else
 				{
-					throw new Main\SystemException(sprintf('Unknown reference value `%s`', $v));
+					throw new Main\SystemException(sprintf('Unknown reference value `%s`, it should start with "this." or "ref."', $v));
 				}
 
 				$new[$k] = $v;
@@ -1548,6 +2421,186 @@ class Query
 		}
 
 		return $new;
+	}
+
+	protected function prepareJoinFilterReference(Filter $reference, $alias_this, $alias_ref, $baseDefinition, $refDefinition, $isBackReference)
+	{
+		// do not make an impact on original reference object
+		$reference = clone $reference;
+
+		foreach ($reference->getConditions() as $condition)
+		{
+			if ($condition instanceof Filter)
+			{
+				// subfilter, recursive call
+				$this->prepareJoinFilterReference($condition, $alias_this, $alias_ref, $baseDefinition, $refDefinition, $isBackReference);
+			}
+			else
+			{
+				// regular condition
+				$field = $condition->getDefinition();
+
+				if (strpos($field, 'this.') === 0)
+				{
+					// parse the chain
+					$definition = str_replace('this.', '', $field);
+					$absDefinition = strlen($baseDefinition) ? $baseDefinition . '.' . $definition : $definition;
+
+					$chain = $this->getRegisteredChain($absDefinition, true);
+
+					if (!$isBackReference)
+					{
+						// make sure these fields will be joined before the main join
+						$this->buildJoinMap(array($chain));
+					}
+					else
+					{
+						$chain->getLastElement()->setParameter('talias', $alias_this);
+					}
+
+					// recursively collect all "build_from" fields
+					if ($chain->getLastElement()->getValue() instanceof ExpressionField)
+					{
+						$this->collectExprChains($chain);
+						$buildFrom = $chain->getLastElement()->getValue()->getBuildFromChains();
+
+						foreach ($buildFrom as $bf)
+						{
+							// set base chain
+							$baseChain = clone $chain;
+
+							// remove the last one - expression itself
+							$baseChain->removeLastElement();
+
+							// remove parent entity for this child
+							$bf->removeFirstElement();
+
+							// set new parents
+							$bf->prepend($baseChain);
+						}
+
+						$this->buildJoinMap($buildFrom);
+					}
+
+					$condition->setColumn($absDefinition);
+				}
+				elseif (strpos($field, 'ref.') === 0)
+				{
+					$definition = str_replace('ref.', '', $field);
+					$absDefinition = strlen($refDefinition) ? $refDefinition . '.' . $definition : $definition;
+
+					$chain = $this->getRegisteredChain($absDefinition, true);
+
+					if ($isBackReference)
+					{
+						// make sure these fields will be joined before the main join
+						$this->buildJoinMap(array($chain));
+					}
+					else
+					{
+						$chain->getLastElement()->setParameter('talias', $alias_ref);
+					}
+
+					// recursively collect all "build_from" fields
+					if ($chain->getLastElement()->getValue() instanceof ExpressionField)
+					{
+						$this->collectExprChains($chain);
+						$this->buildJoinMap($chain->getLastElement()->getValue()->getBuildFromChains());
+					}
+
+					$condition->setColumn($absDefinition);
+				}
+				else
+				{
+					throw new Main\SystemException(sprintf('Unknown reference key `%s`, it should start with "this." or "ref."', $field));
+				}
+
+				// value
+				$v = $condition->getValue();
+
+				if ($v instanceof Main\DB\SqlExpression)
+				{
+					// set entity connection
+					$v->setConnection($this->entity->getConnection());
+				}
+				elseif ($v instanceof Column)
+				{
+					if (strpos($v->getDefinition(), 'this.') === 0)
+					{
+						$definition = str_replace('this.', '', $v->getDefinition());
+						$absDefinition = strlen($baseDefinition) ? $baseDefinition . '.' . $definition : $definition;
+
+						$chain = $this->getRegisteredChain($absDefinition, true);
+
+						if (!$isBackReference)
+						{
+							// make sure these fields will be joined before the main join
+							$this->buildJoinMap(array($chain));
+						}
+						else
+						{
+							$chain->getLastElement()->setParameter('talias', $alias_this);
+						}
+
+						// recursively collect all "build_from" fields
+						if ($chain->getLastElement()->getValue() instanceof ExpressionField)
+						{
+							$this->collectExprChains($chain);
+							$buildFrom = $chain->getLastElement()->getValue()->getBuildFromChains();
+
+							foreach ($buildFrom as $bf)
+							{
+								// set base chain
+								$baseChain = clone $chain;
+
+								// remove the last one - expression itself
+								$baseChain->removeLastElement();
+
+								// remove parent entity for this child
+								$bf->removeFirstElement();
+
+								// set new parents
+								$bf->prepend($baseChain);
+							}
+
+							$this->buildJoinMap($buildFrom);
+						}
+
+						$v->setDefinition($absDefinition);
+					}
+					elseif (strpos($v->getDefinition(), 'ref.') === 0)
+					{
+						$definition = str_replace('ref.', '', $v->getDefinition());
+						$absDefinition = strlen($refDefinition) ? $refDefinition . '.' . $definition : $definition;
+
+						$chain = $this->getRegisteredChain($absDefinition, true);
+
+						if ($isBackReference)
+						{
+							// make sure these fields will be joined before the main join
+							$this->buildJoinMap(array($chain));
+						}
+						else
+						{
+							$chain->getLastElement()->setParameter('talias', $alias_ref);
+						}
+
+						$this->buildJoinMap(array($chain));
+
+						// recursively collect all "build_from" fields
+						if ($chain->getLastElement()->getValue() instanceof ExpressionField)
+						{
+							$this->collectExprChains($chain);
+							$this->buildJoinMap($chain->getLastElement()->getValue()->getBuildFromChains());
+						}
+
+						$v->setDefinition($absDefinition);
+					}
+				}
+			}
+		}
+
+		return $reference;
 	}
 
 	protected function getJoinCswFields($reference)
@@ -1568,7 +2621,8 @@ class Query
 			else
 			{
 				// key
-				$csw_result = \CSQLWhere::makeOperation($k);
+				$sqlWhere = new \CSQLWhere();
+				$csw_result = $sqlWhere->makeOperation($k);
 				list($field, ) = array_values($csw_result);
 
 				$fields[$field] = array(
@@ -1659,6 +2713,16 @@ class Query
 		}
 	}
 
+	protected function getUnionHandler()
+	{
+		if ($this->unionHandler === null)
+		{
+			$this->unionHandler = new Query\Union($this->entity->getConnection());
+		}
+
+		return $this->unionHandler;
+	}
+
 	public function registerChain($section, QueryChain $chain, $opt_key = null)
 	{
 		$alias = $chain->getAlias();
@@ -1696,13 +2760,24 @@ class Query
 
 		if ($force_create)
 		{
-			$chain = QueryChain::getChainByDefinition($this->init_entity, $key);
+			$chain = QueryChain::getChainByDefinition($this->entity, $key);
 			$this->registerChain('global', $chain);
 
 			return $chain;
 		}
 
 		return false;
+	}
+
+	public function booleanStrongEqualityCallback($field, $operation, $value)
+	{
+		$value = ($operation == 'SE') ? $value : !$value;
+		return ($value ? '' : 'NOT ') . $field;
+	}
+
+	public function nullEqualityCallback($field, $operation, $value)
+	{
+		return $field.' IS '.($operation == 'SE' ? '' : 'NOT ') . 'NULL';
 	}
 
 	public function dataDoublingCallback($field, $operation, $value)
@@ -1713,11 +2788,15 @@ class Query
 	protected function query($query)
 	{
 		// check nosql configuration
-		$connection = $this->init_entity->getConnection();
+		$connection = $this->entity->getConnection();
 		$configuration = $connection->getConfiguration();
+
+		/** @var Main\DB\Result $result */
+		$result = null;
 
 		if (isset($configuration['handlersocket']['read']))
 		{
+			// optimize through nosql
 			$nosqlConnectionName = $configuration['handlersocket']['read'];
 
 			$nosqlConnection = Main\Application::getInstance()->getConnectionPool()->getConnection($nosqlConnectionName);
@@ -1726,48 +2805,52 @@ class Query
 			if ($isNosqlCapable)
 			{
 				$nosqlResult = NosqlPrimarySelector::relayQuery($nosqlConnection, $this);
-
-				return new Main\DB\ArrayResult($nosqlResult);
+				$result = new Main\DB\ArrayResult($nosqlResult);
 			}
 		}
 
-		$cnt = null;
-		if ($this->count_total)
+		if ($result === null)
 		{
-			$buildParts = $this->query_build_parts;
+			// regular SQL query
+			$cnt = null;
 
-			//remove order
-			unset($buildParts['ORDER BY']);
-
-			//remove select
-			$buildParts['SELECT'] = "1";
-
-			foreach ($buildParts as $k => &$v)
+			if ($this->countTotal)
 			{
-				$v = $k . ' ' . $v;
+				$buildParts = $this->query_build_parts;
+
+				//remove order
+				unset($buildParts['ORDER BY']);
+
+				//remove select
+				$buildParts['SELECT'] = "1 cntholder";
+
+				foreach ($buildParts as $k => &$v)
+				{
+					$v = $k . ' ' . $v;
+				}
+
+				$cntQuery = join("\n", $buildParts);
+
+				// select count
+				$cntQuery = 'SELECT COUNT(cntholder) AS TMP_ROWS_CNT FROM ('.$cntQuery.') xxx';
+				$cnt = $connection->queryScalar($cntQuery);
 			}
 
-			$cntQuery = join("\n", $buildParts);
+			$result = $connection->query($query);
+			$result->setReplacedAliases($this->replaced_aliases);
 
-			// select count
-			$cntQuery = 'SELECT COUNT(1) AS TMP_ROWS_CNT FROM ('.$cntQuery.') xxx';
-			$cnt = $connection->queryScalar($cntQuery);
-		}
+			if($this->countTotal)
+			{
+				$result->setCount($cnt);
+			}
 
-		$result = $connection->query($query);
-		$result->setReplacedAliases($this->replaced_aliases);
-
-		if($this->count_total)
-		{
-			$result->setCount($cnt);
+			static::$last_query = $query;
 		}
 
 		if ($this->isFetchModificationRequired())
 		{
 			$result->addFetchDataModifier(array($this, 'fetchDataModificationCallback'));
 		}
-
-		static::$last_query = $query;
 
 		return $result;
 	}
@@ -1809,7 +2892,7 @@ class Query
 
 	protected function replaceSelectAliases($query)
 	{
-		$connection = $this->init_entity->getConnection();
+		$connection = $this->entity->getConnection();
 		$helper = $connection->getSqlHelper();
 
 		$length = (int) $helper->getAliasLength();
@@ -1846,7 +2929,7 @@ class Query
 		// don't quote subqueries
 		if (!preg_match('/\s*\(\s*SELECT.*\)\s*/is', $source))
 		{
-			$source =  $this->init_entity->getConnection()->getSqlHelper()->quote($source);
+			$source =  $this->entity->getConnection()->getSqlHelper()->quote($source);
 		}
 
 		return $source;
@@ -1854,7 +2937,7 @@ class Query
 
 	public function __clone()
 	{
-		$this->init_entity = clone $this->init_entity;
+		$this->entity = clone $this->entity;
 
 		foreach ($this->select as $k => $v)
 		{
@@ -1956,7 +3039,36 @@ class Query
 
 	public function getEntity()
 	{
-		return $this->init_entity;
+		return $this->entity;
+	}
+
+	/**
+	 * Builds SQL filter conditions for WHERE.
+	 * Useful for external calls: building SQL for mass UPDATEs or DELETEs
+	 *
+	 * @param Base $entity
+	 * @param array|Filter $filter the same format as for setFilter/where
+	 *
+	 * @return string
+	 */
+	public static function buildFilterSql(Base $entity, $filter)
+	{
+		$query = new static($entity);
+
+		if ($filter instanceof Filter)
+		{
+			// new object filter
+			$query->where($filter);
+		}
+		else
+		{
+			// old array filter
+			$query->setFilter($filter);
+		}
+
+		$query->setCustomBaseTableAlias($entity->getDBTableName())->buildQuery();
+
+		return $query->query_build_parts['WHERE'];
 	}
 
 	/**
@@ -1965,7 +3077,12 @@ class Query
 	 */
 	public function getInitAlias($withPostfix = true)
 	{
-		$init_alias = strtolower($this->init_entity->getCode());
+		if ($this->custom_base_table_alias !== null)
+		{
+			return $this->custom_base_table_alias;
+		}
+
+		$init_alias = strtolower($this->entity->getCode());
 
 		// add postfix
 		if ($withPostfix)
@@ -1974,7 +3091,7 @@ class Query
 		}
 
 		// check length
-		$connection = $this->init_entity->getConnection();
+		$connection = $this->entity->getConnection();
 		$aliasLength = $connection->getSqlHelper()->getAliasLength();
 
 		if (strlen($init_alias) > $aliasLength)
@@ -1994,6 +3111,28 @@ class Query
 	public function getReplacedAliases()
 	{
 		return $this->replaced_aliases;
+	}
+
+	/*
+	 * Sets cache TTL in seconds.
+	 * @param int $ttl
+	 * @return $this
+	 */
+	public function setCacheTtl($ttl)
+	{
+		$this->cacheTtl = (int)$ttl;
+		return $this;
+	}
+
+	/**
+	 * Enables or disables caching of queries with joins.
+	 * @param bool $mode
+	 * @return $this
+	 */
+	public function cacheJoins($mode)
+	{
+		$this->cacheJoins = (bool)$mode;
+		return $this;
 	}
 
 	public function dump()

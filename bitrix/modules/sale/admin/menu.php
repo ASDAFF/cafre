@@ -1,4 +1,5 @@
 <?
+
 /** @global CUser $USER
  * @global CMain $APPLICATION
  * @global CAdminMenu $adminMenu */
@@ -42,7 +43,7 @@ if ($APPLICATION->GetGroupRight("sale")!="D")
 {
 
 	/* Converter Begin */
-	if (Bitrix\Main\Config\Option::get("main", "~sale_converted_15", 'N') != 'Y')
+	if (Bitrix\Main\Config\Option::get("main", "~sale_converted_15", 'Y') == 'N')
 	{
 
 		$aMenu[] = array(
@@ -111,9 +112,28 @@ if ($APPLICATION->GetGroupRight("sale")!="D")
 							"sale_order_shipment_edit.php"
 						)
 					),
+					array(
+						"text" => GetMessage("SALE_MENU_DELIVERY_REQUESTS"),
+						"title" => GetMessage("SALE_MENU_DELIVERY_REQUESTS"),
+						"url" => "sale_delivery_request_list.php?lang=".LANGUAGE_ID,
+						"page_icon" => "sale_page_icon",
+						"more_url" => array(
+							"sale_delivery_request.php",
+							"sale_delivery_request_list.php",
+							"sale_delivery_request_view.php"
+						)
+					),
+					array(
+						"text" => GetMessage("SALE_ORDERS_ARCHIVE"),
+						"title" => GetMessage("SALE_ORDERS_ARCHIVE"),
+						"url" => "sale_order_archive.php?lang=".LANGUAGE_ID,
+						"more_url" => array(
+							"sale_order_archive_view.php",
+							"sale_archive.php?lang=".LANGUAGE_ID
+						)
+					)
 				)
 			);
-
 	}
 
 	/* Orders End*/
@@ -127,9 +147,62 @@ if ($APPLICATION->GetGroupRight("sale")!="D")
 		"url" => "sale_personalization.php?lang=".LANGUAGE_ID
 	);
 
+	$aMenu[] = array(
+		"parent_menu" => "global_menu_marketing",
+		"sort" => 1100,
+		"text" => GetMessage("SALE_MENU_MARKETING_MARKETPLACE_ADD"),
+		"title" => GetMessage("SALE_MENU_MARKETING_MARKETPLACE_ADD"),
+		"icon" => "sale_menu_icon_marketplace",
+		"url" => "update_system_market.php?category=89&lang=".LANGUAGE_ID
+	);
+
 	/* Catalog Begin*/
 	// included in catalog/general/admin.php
 	/* Catalog End*/
+
+	/* CASHBOX Begin*/
+	if ($APPLICATION->GetGroupRight("sale") == "W")
+	{
+		$arMenu = array(
+			"parent_menu" => "global_menu_store",
+			"sort" => 300,
+			"text" => GetMessage("SALE_CASHBOX"),
+			"title" => GetMessage("SALE_CASHBOX"),
+			"icon" => "crm-cashbox-icon",
+			"url" => "sale_cashbox.php?lang=".LANGUAGE_ID,
+			"page_icon" => "sale_page_icon_crm",
+			"items_id" => "menu_sale_cashbox",
+			"items" => Array(),
+		);
+
+		$arMenu["items"][] = array(
+			"text" => GetMessage("SALE_CASHBOX_LIST"),
+			"title" => GetMessage("SALE_CASHBOX_LIST"),
+			"url" => "sale_cashbox_list.php?lang=".LANGUAGE_ID,
+			"more_url" => array(
+				"sale_cashbox_edit.php"
+			),
+		);
+
+		$arMenu["items"][] = array(
+			"text" => GetMessage("SALE_CASHBOX_CHECK"),
+			"title" => GetMessage("SALE_CASHBOX_CHECK"),
+			"url" => "sale_cashbox_check.php?lang=".LANGUAGE_ID,
+			"more_url" => array(
+				"sale_cashbox_check_edit.php"
+			),
+		);
+
+		$arMenu["items"][] = array(
+			"text" => GetMessage("SALE_CASHBOX_ZREPORT"),
+			"title" => GetMessage("SALE_CASHBOX_ZREPORT"),
+			"url" => "sale_cashbox_zreport.php?lang=".LANGUAGE_ID,
+			"more_url" => array(),
+		);
+
+		$aMenu[] = $arMenu;
+	}
+	/* CASHBOX End*/
 
 	/* CRM Begin*/
 	if ($APPLICATION->GetGroupRight("sale") == "W")
@@ -235,6 +308,12 @@ if ($APPLICATION->GetGroupRight("sale") == "W" || $discountView || $bViewAll)
 		if ($useSaleDiscountOnly)
 		{
 			$arMenu["items"][] = array(
+				"text" => GetMessage("SALE_MENU_DISCOUNT_PRESETS_NEW"),
+				"title" => GetMessage("SALE_MENU_DISCOUNT_PRESETS_NEW"),
+				"url" => "sale_discount_preset_list.php?lang=".LANGUAGE_ID,
+				"more_url" => array("sale_discount_preset_detail.php"),
+			);
+			$arMenu["items"][] = array(
 				"text" => GetMessage("SALE_MENU_DISCOUNT"),
 				"title" => GetMessage("SALE_MENU_DISCOUNT_TITLE"),
 				"url" => "sale_discount.php?lang=".LANGUAGE_ID,
@@ -270,6 +349,18 @@ if ($APPLICATION->GetGroupRight("sale") == "W" || $discountView || $bViewAll)
 			);
 		}
 	}
+
+	if ($USER->CanDoOperation('install_updates'))
+	{
+		$arMenu["items"][] = array(
+			"text" => GetMessage("SALE_MENU_MARKETING_MARKETPLACE_ADD"),
+			"title" => GetMessage("SALE_MENU_MARKETING_MARKETPLACE_ADD"),
+			"items_id" => "menu_sale_marketplace",
+			"url" => "update_system_market.php?category=111&lang=".LANGUAGE_ID,
+			"more_url" => array("update_system_market.php?category=111")
+		);
+	}
+
 	$aMenu[] = $arMenu;
 }
 	/* Discounts End*/
@@ -398,7 +489,7 @@ if ($APPLICATION->GetGroupRight("sale") == "W" ||
 
 	if ($APPLICATION->GetGroupRight("sale") == "W")
 	{
-		if (Bitrix\Main\Config\Option::get("main", "~sale_converted_15", 'N') == 'Y')
+		if (Bitrix\Main\Config\Option::get("main", "~sale_converted_15", 'Y') != 'N')
 		{
 			if (CModule::IncludeModule("sale"))
 			{
@@ -442,7 +533,17 @@ if ($APPLICATION->GetGroupRight("sale") == "W" ||
 				"text" => GetMessage("SALE_PAY_SYS"),
 				"title" => GetMessage("SALE_PAY_SYS_DESCR"),
 				"url" => "sale_pay_system.php?lang=".LANGUAGE_ID,
-				"more_url" => array("sale_pay_system_edit.php"),
+				"items_id" => "menu_sale_pay_system",
+				"more_url" => array("sale_pay_system_edit.php", "sale_yandexinvoice_settings.php"),
+				"items" => array(
+					array(
+						"text" => GetMessage("SALE_PAY_SYS_RETURN"),
+						"title" => GetMessage("SALE_PAY_SYS_RETURN_DESCR"),
+						"url" => "sale_ps_handler_refund.php?lang=".LANGUAGE_ID,
+						"page_icon" => "sale_page_icon",
+						"more_url" => array("sale_ps_handler_refund_edit.php"),
+					),
+				),
 			);
 		
 	}
@@ -494,13 +595,22 @@ if ($APPLICATION->GetGroupRight("sale") == "W" ||
 			"more_url" => array("sale_status_edit.php"),
 		);
 
-		if (Bitrix\Main\Config\Option::get("main", "~sale_converted_15", 'N') == 'Y')
+		if (Bitrix\Main\Config\Option::get("main", "~sale_converted_15", 'Y') != 'N')
 		{
 			$arMenu["items"][] = array(
 				"text" => GetMessage("SALE_BUSINESS_VALUE"),
-				"title" => 'SALE_BUSINESS_VALUE title',//GetMessage("SALE_STATUS_DESCR"),
+				"title" => GetMessage("SALE_BUSINESS_VALUE_DESCR"),
 				"url" => "sale_business_value.php?lang=".LANGUAGE_ID,
 				"more_url" => array("sale_business_value.php"),
+				"items_id" => "menu_sale_bizval",
+				"items"=>array(
+					array(
+						"text" => GetMessage("SALE_PERSON_TYPE"),
+						"title" => GetMessage("SALE_PERSON_TYPE_DESCR"),
+						"url" => "sale_business_value_ptypes.php?lang=".LANGUAGE_ID,
+						"more_url" => array("sale_business_value_ptypes.php"),
+					),
+				),
 			);
 		}
 		
@@ -523,7 +633,13 @@ if ($APPLICATION->GetGroupRight("sale") == "W" ||
 				),
 			),
 		);
-
+		
+		$arMenu["items"][] = array(
+			"text" => GetMessage("SALE_ARCHIVE"),
+			"title" => GetMessage("SALE_ARHIVE_DESCR"),
+			"url" => "sale_archive.php?lang=".LANGUAGE_ID
+		);
+		
 		/* LOCATIONS BEGIN */
 		// this file can be loaded directly, without module include, so ...
 		require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/sale/include.php");
@@ -632,6 +748,13 @@ if ($APPLICATION->GetGroupRight("sale") == "W" ||
 			"title" => GetMessage("MAIN_MENU_1C_INTEGRATION_TITLE"),
 			"url" => "1c_admin.php?lang=".LANGUAGE_ID,
 			"more_url" => array("1c_admin.php"),
+			"items" => array(
+				array(
+					"text" => GetMessage("MAIN_MENU_1C_INTEGRATION_LOG"),
+					"title" => GetMessage("MAIN_MENU_1C_INTEGRATION_LOG_TITLE"),
+					"url" => "sale_exchange_log.php?lang=".LANGUAGE_ID,
+				)
+			),
 		);
 		$arMenu["items"][] = array(
 			"text" => GetMessage("MAIN_MENU_REPORT_EDIT"),
@@ -650,14 +773,28 @@ if ($APPLICATION->GetGroupRight("sale") == "W" ||
 					array(
 						"text" => GetMessage("SALE_YANDEX_MARKET"),
 						"title" => GetMessage("SALE_YANDEX_MARKET_DESCR"),
-						"url" => "sale_ymarket.php?lang=".LANGUAGE_ID,
-						"more_url" => array("sale_ymarket.php"),
+						"items_id" => "menu_sale_trading_platforms_ymarket",
+						"items"  => array(
+							array(
+								"url" => "sale_ymarket.php?lang=".LANGUAGE_ID,
+								"more_url" => array("sale_ymarket.php"),
+								"text" => GetMessage('SALE_MENU_YM_SETTINGS'),
+								"title" => GetMessage('SALE_MENU_YM_SETTINGS_TITLE'),
+							),
+							array(
+								"url" => "/bitrix/admin/event_log.php?lang=".LANGUAGE_ID."&set_filter=Y&find_type=audit_type_id&find_audit_type[]=YMARKET_STATUS_CHANGE&find_audit_type[]=YMARKET_INCOMING_ORDER_STATUS&find_audit_type[]=YMARKET_USER_CREATE&find_audit_type[]=YMARKET_ORDER_CREATE&find_audit_type[]=YMARKET_REQUEST_ERROR&find_audit_type[]=YMARKET_INCOMING_REQUEST&find_audit_type[]=YMARKET_INCOMING_REQUEST_RESULT&find_audit_type[]=YMARKET_LOCATION_MAPPING&find_audit_type[]=YMARKET_ORDER_STATUS_CHANGE&find_audit_type[]=YMARKET_ORDER_CREATE_ERROR&mod=&mod=sale&target=ymarket",
+								"more_url" => Array("event_log.php?find_type=audit_type_id&mod=sale&target=ymarket"),
+								"text" => GetMessage('SALE_MENU_YM_LOG'),
+								"title" => GetMessage('SALE_MENU_YM_LOG_TITLE'),
+							)
+						)
 					),
 					array(
-						"text" => "Ebay",
-						"title" => "Ebay",
+						"text" => "eBay",
+						"title" => "eBay",
 						"items_id" => "menu_sale_trading_platforms_ebay",
-						"more_url" => array("sale_ebay_actions.php"),
+						"url" => "sale_ebay.php?lang=".LANGUAGE_ID,
+						"more_url" => array("sale_ebay_actions.php", "sale_ebay.php"),
 						"items"  => array(
 							array(
 								"text" => GetMessage("SALE_MENU_EBAY_WIZARD"),
@@ -668,8 +805,8 @@ if ($APPLICATION->GetGroupRight("sale") == "W" ||
 							array(
 								"text" => GetMessage("SALE_MENU_EBAY_SETT"),
 								"title" => GetMessage("SALE_MENU_EBAY_SETT_DESCR"),
-								"url" => "sale_ebay.php?lang=".LANGUAGE_ID,
-								"more_url" => array("sale_ebay.php"),
+								"url" => "sale_ebay_general.php?lang=".LANGUAGE_ID,
+								"more_url" => array("sale_ebay_general.php"),
 							),
 							array(
 								"text" => GetMessage("SALE_MENU_EBAY_POLICY"),
@@ -684,7 +821,33 @@ if ($APPLICATION->GetGroupRight("sale") == "W" ||
 								"more_url" => array("sale_ebay_exchange.php"),
 							)
 						)
-					)
+					),
+					array(
+						"text" => GetMessage("SALE_MENU_VK"),
+						"title" => GetMessage("SALE_MENU_VK_DESC"),
+						"items_id" => "menu_sale_trading_platforms_vk",
+						"more_url" => array("sale_vk_exchange.php"),
+						"items" => array(
+							array(
+								"text" => GetMessage("SALE_MENU_VK_EXPORT"),
+								"title" => GetMessage("SALE_MENU_VK_EXPORT_DESC"),
+								"url" => "sale_vk_export_list.php?lang=" . LANGUAGE_ID,
+								"more_url" => array("sale_vk_export_list.php", "sale_vk_export_edit.php"),
+							),
+							array(
+								"text" => GetMessage("SALE_MENU_VK_MANUAL"),
+								"title" => GetMessage("SALE_MENU_VK_MANUAL_DESC"),
+								"url" => "sale_vk_manual.php?lang=" . LANGUAGE_ID,
+								"more_url" => array("sale_vk_manual.php"),
+							),
+						),
+					),
+					array(
+						"text" => GetMessage("SALE_MENU_TRADING_PLATFORMS_MARKETPLACE_ADD"),
+						"title" => GetMessage("SALE_MENU_TRADING_PLATFORMS_MARKETPLACE_ADD"),
+						"items_id" => "menu_sale_trading_platforms_marketplace",
+						"url" => "update_system_market.php?category=141&lang=".LANGUAGE_ID
+					),
 				)
 			);
 		}
@@ -741,6 +904,20 @@ if ($APPLICATION->GetGroupRight("sale") != "D")
 		);
 	}
 	/* Affiliates End*/
+}
+
+if ($APPLICATION->GetGroupRight("sale") != "D" && $USER->CanDoOperation('install_updates'))
+{
+	$aMenu[] = array(
+		"parent_menu" => "global_menu_store",
+		"sort" => 900,
+		"text" => GetMessage("SALE_MENU_MARKETPLACE_READY_SHOPS"),
+		"title" => GetMessage("SALE_MENU_MARKETPLACE_READY_SHOPS"),
+		"url" => "update_system_market.php?category=14&lang=".LANGUAGE_ID,
+		"more_url" => array("update_system_market.php?category=14"),
+		"icon" => "sale_menu_icon_marketplace",
+		"page_icon" => ""
+	);
 }
 
 return (!empty($aMenu) ? $aMenu : false);

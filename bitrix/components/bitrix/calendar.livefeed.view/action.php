@@ -35,9 +35,16 @@ if (!empty($event_feed_action) && check_bitrix_sessid())
 
 		if ($status && $eventId)
 		{
-			CCalendarEvent::SetMeetingStatus($userId, $eventId, $status);
+			CCalendarEvent::SetMeetingStatusEx(array(
+				'attendeeId' => $userId,
+				'eventId' => $eventId,
+				'parentId' => intVal($_REQUEST['parent_id']),
+				'status' => $status,
+				'reccurentMode' => in_array($_REQUEST['reccurent_mode'], array('this', 'next', 'all')) ? $_REQUEST['reccurent_mode'] : false,
+				'currentDateFrom' => CCalendar::Date(CCalendar::Timestamp($_REQUEST['current_date_from']), false)
+			));
 
-			$Events = CCalendarEvent::GetList(
+			$events = CCalendarEvent::GetList(
 				array(
 					'arFilter' => array(
 						"ID" => $eventId,
@@ -50,7 +57,7 @@ if (!empty($event_feed_action) && check_bitrix_sessid())
 				)
 			);
 
-			if ($Events && is_array($Events[0]) && $Events[0]['IS_MEETING'])
+			if ($events && is_array($events[0]) && $events[0]['IS_MEETING'])
 			{
 				$ajaxParams = $_REQUEST['ajax_params'];
 
@@ -61,7 +68,7 @@ if (!empty($event_feed_action) && check_bitrix_sessid())
 						'DECLINED_ATTENDEES_COUNT' => 0
 					);
 
-					foreach ($Events[0]['~ATTENDEES'] as $i => $att)
+					foreach ($events[0]['~ATTENDEES'] as $i => $att)
 					{
 						if ($att['STATUS'] == "Y")
 							$result['ACCEPTED_ATTENDEES_COUNT']++;
@@ -83,7 +90,7 @@ if (!empty($event_feed_action) && check_bitrix_sessid())
 						'DECLIINED_PARAMS' => array("prefix" => "n")
 					);
 
-					foreach ($Events[0]['~ATTENDEES'] as $i => $att)
+					foreach ($events[0]['~ATTENDEES'] as $i => $att)
 					{
 						if ($att['STATUS'] != "Q")
 						{

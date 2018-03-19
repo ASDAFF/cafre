@@ -48,6 +48,9 @@ Class wiki extends CModule
 		RegisterModuleDependences('search', 'BeforeIndex', 'wiki', 'CRatingsComponentsWiki', 'BeforeIndex');
 		RegisterModuleDependences('socialnetwork', 'BeforeIndexSocNet', 'wiki', 'CWikiSocNet', 'BeforeIndexSocNet');
 		RegisterModuleDependences("im", "OnGetNotifySchema", "wiki", "CWikiNotifySchema", "OnGetNotifySchema");
+
+		$eventManager = \Bitrix\Main\EventManager::getInstance();
+		$eventManager->registerEventHandler('socialnetwork', 'onLogIndexGetContent', 'wiki', '\Bitrix\Wiki\Integration\Socialnetwork\Log', 'onIndexGetContent');
 		return true;
 	}
 
@@ -60,6 +63,9 @@ Class wiki extends CModule
 		UnRegisterModuleDependences('search', 'BeforeIndex', 'wiki', 'CRatingsComponentsWiki', 'BeforeIndex');
 		UnRegisterModuleDependences('socialnetwork', 'BeforeIndexSocNet', 'wiki', 'CWikiSocNet', 'BeforeIndexSocNet');
 		UnRegisterModuleDependences("im", "OnGetNotifySchema", "wiki", "CWikiNotifySchema", "OnGetNotifySchema");
+
+		$eventManager = \Bitrix\Main\EventManager::getInstance();
+		$eventManager->unRegisterEventHandler('socialnetwork', 'onLogIndexGetContent', 'wiki', '\Bitrix\Wiki\Integration\Socialnetwork\Log', 'onIndexGetContent');
 		return true;
 	}
 

@@ -63,4 +63,7 @@ $MESS["MAIN_ADMIN_ADD_COPY"] = "ƒобавить копию";
 $MESS["MAIN_ADMIN_MENU_DELETE"] = "”далить";
 $MESS["MAIN_ADMIN_LIST_ACTIVATE"] = "активировать";
 $MESS["MAIN_ADMIN_LIST_DEACTIVATE"] = "деактивировать";
+$MESS["main_mess_admin_lang"] = "язык";
+$MESS["main_mess_admin_lang1"] = "язык";
+$MESS["main_mess_admin_lang2"] = "язык:";
 ?>

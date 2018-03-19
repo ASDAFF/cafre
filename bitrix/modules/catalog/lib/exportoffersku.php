@@ -26,7 +26,7 @@ class ExportOfferSKU extends ExportOffer
 		$arPropertyMap = array();
 		$arSelectedPropTypes = array('S','N','L','E','G');
 		$this->arSelectOfferProps = array();
-		$arOffers = \CCatalogSKU::GetInfoByProductIBlock($this->iBlockId);
+		$arOffers = \CCatalogSku::GetInfoByProductIBlock($this->iBlockId);
 
 		if (empty($arOffers['IBLOCK_ID']))
 			return array();
@@ -101,7 +101,7 @@ class ExportOfferSKU extends ExportOffer
 			YANDEX_SKU_EXPORT_MIN_PRICE,
 			YANDEX_SKU_EXPORT_PROP,
 		);
-		
+
 		$arCondSelectProp = array(
 			'ZERO',
 			'NONZERO',
@@ -142,7 +142,7 @@ class ExportOfferSKU extends ExportOffer
 
 		return $arSKUExport;
 	}
-	
+
 	protected function getOfferTemplateUrl()
 	{
 		$strOfferTemplateURL = '';
@@ -324,7 +324,7 @@ class ExportOfferSKU extends ExportOffer
 			}
 		}
 
-		if(empty($arItem['OFFERS']) && $this->catalogType == \CCatalogSKU::TYPE_FULL)
+		if(empty($arItem['OFFERS']) && $this->catalogType == \CCatalogSku::TYPE_FULL)
 		{
 			$arItem["QUANTITY"] = $this->getQuantity($arItem["ID"]);
 			$arItem["PRICES"] = $this->getPrices($arItem["ID"], $this->arIblock['LID']);
@@ -334,4 +334,4 @@ class ExportOfferSKU extends ExportOffer
 
 		return $arItem;
 	}
-} 
+}

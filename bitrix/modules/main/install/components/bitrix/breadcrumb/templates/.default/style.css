@@ -19,6 +19,7 @@
 .bx-breadcrumb .bx-breadcrumb-item span {
 	font-family: "Open Sans", Arial, "Helvetica Neue", Helvetica, sans-serif;
 	font-size: 13px;
+	white-space: normal;
 }
 .bx-breadcrumb .bx-breadcrumb-item a {border-bottom: none;}
 .bx-breadcrumb .bx-breadcrumb-item a:hover {}

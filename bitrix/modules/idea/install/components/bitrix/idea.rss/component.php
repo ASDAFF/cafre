@@ -35,6 +35,8 @@ $arTemplateParams = array(
 	"IMAGE_MAX_HEIGHT" => $arParams["IMAGE_MAX_HEIGHT"],
 	"USER" => $arParams["USER"],
 	"INDEX" => $arParams["INDEX"],
+	"BLOG_POST" => $arParams["PATH_TO_POST"],
+	"ALLOW_POST_CODE" => $arParams["ALLOW_POST_CODE"],
 );
 
 $APPLICATION->RestartBuffer();

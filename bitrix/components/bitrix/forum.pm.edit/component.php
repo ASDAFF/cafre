@@ -35,9 +35,9 @@ if(!function_exists("GetUserName"))
 		if (($forum_user["SHOW_NAME"]=="Y") && (strlen(trim($ar_res["NAME"]))>0 || strlen(trim($ar_res["LAST_NAME"]))>0))
 		{
 			$nameTemplate = trim(empty($nameTemplate)) ? CSite::GetNameFormat() : $nameTemplate;
-			return trim(CUser::FormatName($nameTemplate, array(	"NAME"			=> htmlspecialcharsEx($ar_res["NAME"]),
-																"LAST_NAME"		=> htmlspecialcharsEx($ar_res["LAST_NAME"]),
-																"SECOND_NAME"	=> htmlspecialcharsEx($ar_res["SECOND_NAME"]))));
+			return trim(CUser::FormatName($nameTemplate, array(	"NAME"			=> htmlspecialcharsbx($ar_res["NAME"]),
+																"LAST_NAME"		=> htmlspecialcharsbx($ar_res["LAST_NAME"]),
+																"SECOND_NAME"	=> htmlspecialcharsbx($ar_res["SECOND_NAME"]))));
 		}
 		else
 			return $f_LOGIN;
@@ -180,7 +180,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST" && !empty($action))
 			}
 		}
 		if (empty($USER_INFO)):
-			$arError[] = array("id" => "bad_user_info","text" => str_replace("##", htmlspecialcharsEx($_REQUEST["USER_ID"]), GetMessage("PM_USER_NOT_FOUND")));
+			$arError[] = array("id" => "bad_user_info","text" => str_replace("##", htmlspecialcharsbx($_REQUEST["USER_ID"]), GetMessage("PM_USER_NOT_FOUND")));
 		else:
 			$arrVars = array(
 				"AUTHOR_ID" => $USER->GetID(),
@@ -323,15 +323,15 @@ if (!$bVarsFromForm && ($mode == "edit" || $mode=="reply"))
 		$arResult["POST_VALUES"]["~POST_MESSAGE"] = "[QUOTE]".$arResult["POST_VALUES"]["~POST_MESSAGE"]."[/QUOTE]";
 		$arResult["POST_VALUES"]["POST_MESSAGE"] = "[QUOTE]".$arResult["POST_VALUES"]["POST_MESSAGE"]."[/QUOTE]";
 		$arResult["POST_VALUES"]["USER_ID"] = $arResult["POST_VALUES"]["AUTHOR_ID"];
-		$arResult["POST_VALUES"]["USER_LOGIN"] = htmlspecialcharsEx(GetUserName($arResult["POST_VALUES"]["USER_ID"], $arParams["NAME_TEMPLATE"]));
+		$arResult["POST_VALUES"]["USER_LOGIN"] = htmlspecialcharsbx(GetUserName($arResult["POST_VALUES"]["USER_ID"], $arParams["NAME_TEMPLATE"]));
 	}
 }
 elseif ($bVarsFromForm)
 {
-	$arResult["POST_VALUES"]["POST_SUBJ"] = htmlspecialcharsEx($_REQUEST["POST_SUBJ"]);
+	$arResult["POST_VALUES"]["POST_SUBJ"] = htmlspecialcharsbx($_REQUEST["POST_SUBJ"]);
 	$arResult["POST_VALUES"]["~POST_MESSAGE"] = $_REQUEST["POST_MESSAGE"];
-	$arResult["POST_VALUES"]["POST_MESSAGE"] = htmlspecialcharsEx($_REQUEST["POST_MESSAGE"]);
-	$arResult["POST_VALUES"]["USER_ID"] = htmlspecialcharsEx($_REQUEST["USER_ID"]);
+	$arResult["POST_VALUES"]["POST_MESSAGE"] = htmlspecialcharsbx($_REQUEST["POST_MESSAGE"]);
+	$arResult["POST_VALUES"]["USER_ID"] = htmlspecialcharsbx($_REQUEST["USER_ID"]);
 	$arResult["POST_VALUES"]["USE_SMILES"] = ($_POST["USE_SMILES"] != "Y" ? "N" : "Y");
 }
 elseif ($arParams["UID"] > 0) 

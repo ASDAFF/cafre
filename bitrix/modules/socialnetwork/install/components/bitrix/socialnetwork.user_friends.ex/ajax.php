@@ -18,11 +18,13 @@ header('Content-Type: application/x-javascript; charset='.LANG_CHARSET);
 
 $rsSite = CSite::GetByID($site_id);
 if ($arSite = $rsSite->Fetch())
+{
 	define("LANGUAGE_ID", $arSite["LANGUAGE_ID"]);
+}
 else
+{
 	define("LANGUAGE_ID", "en");
-
-__IncludeLang(dirname(__FILE__)."/lang/".LANGUAGE_ID."/ajax.php");
+}
 
 if(CModule::IncludeModule("compression"))
 	CCompress::Disable2048Spaces();

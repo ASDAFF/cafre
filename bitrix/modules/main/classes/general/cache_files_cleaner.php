@@ -176,6 +176,7 @@ class _CFileTree
 	var $_in_path = '/';
 	var $_path = '';
 	var $_dir = false;
+
 	function __construct($in_path="/")
 	{
 		$this->_in_path = preg_replace("#[\\\\\\/]+#", "/", $in_path);
@@ -187,7 +188,7 @@ class _CFileTree
 
 		if(!$this->FileExists($this->_path) || is_file($this->_path))
 		{
-			$last = $this->ExtractFileFromPath($this->_path);
+			$last = self::ExtractFileFromPath($this->_path);
 			$this->_dir = $this->ReadDir($this->_path);
 			if(is_array($this->_dir))
 			{
@@ -258,7 +259,7 @@ class _CFileTree
 		}
 	}
 
-	function ExtractFileFromPath(&$path)
+	public static function ExtractFileFromPath(&$path)
 	{
 		$arPath = explode("/", $path);
 		$last = array_pop($arPath);
@@ -268,7 +269,7 @@ class _CFileTree
 
 	function GoUp()
 	{
-		$last_dir = $this->ExtractFileFromPath($this->_path);
+		$last_dir = self::ExtractFileFromPath($this->_path);
 		//We are not going to go up any more
 		if(strlen($this->_path."/") < strlen($this->_in_path))
 			return false;

@@ -13,7 +13,7 @@ foreach($arResult as $arItem):
 	<?endif?>
 
 	<?if ($arItem["IS_PARENT"]):?>
-			<li<?if($arItem["CHILD_SELECTED"] !== true):?> class="close"<?endif?>>
+			<li<?if($arItem["CHILD_SELECTED"] !== true):?> class="menu-close"<?endif?>>
 				<div class="folder" onClick="OpenMenuNode(this)"></div>
 				<div class="item-text"><a href="<?=$arItem["LINK"]?>"><?=$arItem["TEXT"]?></a></div>
 				<ul>

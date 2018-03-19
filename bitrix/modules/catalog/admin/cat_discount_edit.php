@@ -272,7 +272,7 @@ $arDefaultValues = array(
 );
 $arDefCoupons = array(
 	'COUPON_ADD' => 'N',
-	'COUPON_TYPE' => Catalog\DiscountCouponTable::TYPE_ONE_ROW,
+	'COUPON_TYPE' => Catalog\DiscountCouponTable::TYPE_ONE_ORDER,
 	'COUPON_COUNT' => '',
 );
 
@@ -467,7 +467,7 @@ $tabControl->BeginEpilogContent();
 <? echo bitrix_sessid_post(); ?><?
 if (!empty($returnUrl))
 {
-	?><input type="hidden" name="return_url" value="<? echo htmlspecialcharsbx($returnUrl); ?>"><?
+	?><input type="hidden" name="return_url" value="<?=htmlspecialcharsbx($returnUrl); ?>"><?
 }
 if ($boolCopy)
 {
@@ -519,7 +519,7 @@ $tabControl->BeginNextFormTab();
 			<select name="VALUE_TYPE" id="ob_value_type"><?
 				foreach (CCatalogDiscount::GetDiscountTypes(true) as $key => $value)
 				{
-					?><option value="<? echo htmlspecialcharsbx($key); ?>"<?if ($arDiscount['VALUE_TYPE'] == $key) echo " selected";?>><? echo htmlspecialcharsex($value); ?></option><?
+					?><option value="<?=htmlspecialcharsbx($key); ?>"<?if ($arDiscount['VALUE_TYPE'] == $key) echo " selected";?>><?=htmlspecialcharsbx($value); ?></option><?
 				}
 			?></select>
 		</td>
@@ -597,14 +597,14 @@ $tabControl->BeginNextFormTab();
 			<select name="GROUP_IDS[]" multiple size="8">
 			<?
 			$groupIterator = Main\GroupTable::getList(array(
-				'select' => array('ID', 'NAME'),
+				'select' => array('ID', 'NAME', 'C_SORT'),
 				'order' => array('C_SORT' => 'ASC', 'ID' => 'ASC')
 			));
 			while ($group = $groupIterator->fetch())
 			{
 				$group['ID'] = (int)$group['ID'];
 				$selected = (in_array($group['ID'], $arDiscountGroupList) ? ' selected' : '');
-				?><option value="<? echo $group['ID']; ?>"<? echo $selected; ?>>[<? echo $group['ID']; ?>] <? echo htmlspecialcharsex($group['NAME']); ?></option><?
+				?><option value="<? echo $group['ID']; ?>"<? echo $selected; ?>>[<? echo $group['ID']; ?>] <?=htmlspecialcharsbx($group['NAME']); ?></option><?
 			}
 			unset($selected, $group, $groupIterator);
 			?>
@@ -645,7 +645,7 @@ $tabControl->BeginNextFormTab();
 					$priceType['LANG_NAME'] = (string)$priceType['LANG_NAME'];
 					$priceName = $priceType['NAME'].($priceType['LANG_NAME'] != '' ? ' ('.$priceType['LANG_NAME'].')' : '');
 					$selected = (in_array($priceType['ID'], $arDiscountCatList) ? ' selected' : '');
-					?><option value="<? echo $priceType['ID']; ?>"<? echo $selected; ?>>[<? echo $priceType['ID']; ?>] <? echo htmlspecialcharsEx($priceName); ?></option><?
+					?><option value="<? echo $priceType['ID']; ?>"<? echo $selected; ?>>[<? echo $priceType['ID']; ?>] <?=htmlspecialcharsbx($priceName); ?></option><?
 				}
 				unset($selected, $priceName, $priceType, $priceTypeIterator);
 			?></select>
@@ -696,10 +696,10 @@ $tabControl->BeginNextFormTab();
 		<tr id="tr_COUPON_TYPE" class="adm-detail-required-field" style="display: <? echo ('Y' == $arCoupons['COUPON_ADD'] ? 'table-row' : 'none'); ?>;">
 			<td width="40%"><? echo GetMessage('BT_CAT_DISCOUNT_EDIT_FIELDS_COUPON_TYPE'); ?>:</td>
 			<td width="60%">
-				<select name="COUPON_TYPE"><?
+				<select name="COUPON_TYPE" size="3"><?
 				foreach ($arCouponTypeList as $strType => $strName)
 				{
-					?><option value="<? echo htmlspecialcharsbx($strType); ?>" <? echo ($strType == $arCoupons['COUPON_TYPE'] ? 'selected' : ''); ?>><? echo htmlspecialcharsex($strName); ?></option><?
+					?><option value="<?=htmlspecialcharsbx($strType); ?>" <? echo ($strType == $arCoupons['COUPON_TYPE'] ? 'selected' : ''); ?>><?=htmlspecialcharsbx($strName); ?></option><?
 				}
 				?></select>
 			</td>

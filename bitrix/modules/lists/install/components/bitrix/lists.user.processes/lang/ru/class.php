@@ -22,3 +22,4 @@ $MESS["CC_BLL_UNKNOWN_ERROR"] = "Неизвестная ошибка.";
 $MESS["CC_BLL_ACCESS_DENIED"] = "Нет прав для просмотра и редактирования списка.";
 $MESS["CC_BLL_DELETE_ERROR"] = "Ошибка удаления.";
 $MESS["BPATL_NAME"] = "Название";
+$MESS["CC_BLL_BIZPROC_MODULE_NOT_INSTALLED"] = "Модуль Бизнес-процессы не установлен.";

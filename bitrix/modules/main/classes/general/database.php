@@ -308,7 +308,7 @@ abstract class CAllDatabase
 		return "CAST(".$expr." AS CHAR".($len > 0? "(".$len.")":"").")";
 	}
 
-	function DateFormatToPHP($format)
+	public static function DateFormatToPHP($format)
 	{
 		static $cache = array();
 		if (!isset($cache[$format]))
@@ -318,7 +318,7 @@ abstract class CAllDatabase
 		return $cache[$format];
 	}
 
-	function FormatDate($strDate, $format="DD.MM.YYYY HH:MI:SS", $new_format="DD.MM.YYYY HH:MI:SS")
+	public static function FormatDate($strDate, $format="DD.MM.YYYY HH:MI:SS", $new_format="DD.MM.YYYY HH:MI:SS")
 	{
 		if (empty($strDate))
 			return false;
@@ -366,9 +366,11 @@ abstract class CAllDatabase
 	/**
 	 * @param string $strSql
 	 * @param bool $bIgnoreErrors
+	 * @param string $error_position
+	 * @param array $arOptions
 	 * @return CDBResult
 	 */
-	abstract function Query($strSql, $bIgnoreErrors=false);
+	abstract function Query($strSql, $bIgnoreErrors=false, $error_position="", $arOptions=array());
 
 	//query with CLOB
 	function QueryBind($strSql, $arBinds, $bIgnoreErrors=false)
@@ -585,6 +587,13 @@ abstract class CAllDatabase
 			$this->arQueryDebug[$index]->addTime($exec_time);
 		}
 	}
+
+	abstract public function GetIndexName($tableName, $arColumns, $bStrict = false);
+
+	public function IndexExists($tableName, $arColumns, $bStrict = false)
+	{
+		return $this->GetIndexName($tableName, $arColumns, $bStrict) !== "";
+	}
 }
 
 abstract class CAllDBResult
@@ -623,7 +632,7 @@ abstract class CAllDBResult
 	var $resultObject = null;
 
 	/** @param CDBResult $res */
-	function CAllDBResult($res = null)
+	public function __construct($res = null)
 	{
 		$obj = is_object($res);
 		if($obj && is_subclass_of($res, "CAllDBResult"))
@@ -645,7 +654,6 @@ abstract class CAllDBResult
 			$this->SIZEN = $res->SIZEN;
 			$this->bFromArray = $res->bFromArray;
 			$this->bFromLimited = $res->bFromLimited;
-			$this->sSessInitAdd = $res->sSessInitAdd;
 			$this->nPageWindow = $res->nPageWindow;
 			$this->bDescPageNumbering = $res->bDescPageNumbering;
 			$this->SqlTraceIndex = $res->SqlTraceIndex;
@@ -669,6 +677,12 @@ abstract class CAllDBResult
 		{
 			$this->result = $res;
 		}
+	}
+
+	/** @deprecated */
+	public function CAllDBResult($res = null)
+	{
+		self::__construct($res);
 	}
 
 	public function __sleep()
@@ -705,22 +719,22 @@ abstract class CAllDBResult
 	/**
 	 * @return array
 	 */
-	abstract function Fetch();
+	abstract public function Fetch();
 
 	/**
 	 * @return array
 	 */
 	abstract protected function FetchInternal();
 
-	abstract function SelectedRowsCount();
+	abstract public function SelectedRowsCount();
 
-	abstract function AffectedRowsCount();
+	abstract public function AffectedRowsCount();
 
-	abstract function FieldsCount();
+	abstract public function FieldsCount();
 
-	abstract function FieldName($iCol);
+	abstract public function FieldName($iCol);
 
-	function NavContinue()
+	public function NavContinue()
 	{
 		if (count($this->arResultAdd) > 0)
 		{
@@ -731,7 +745,7 @@ abstract class CAllDBResult
 			return false;
 	}
 
-	function IsNavPrint()
+	public function IsNavPrint()
 	{
 		if ($this->NavRecordCount == 0 || ($this->NavPageCount == 1 && $this->NavShowAll == false))
 			return false;
@@ -739,12 +753,12 @@ abstract class CAllDBResult
 		return true;
 	}
 
-	function NavPrint($title, $show_allways=false, $StyleText="text", $template_path=false)
+	public function NavPrint($title, $show_allways=false, $StyleText="text", $template_path=false)
 	{
 		echo $this->GetNavPrint($title, $show_allways, $StyleText, $template_path);
 	}
 
-	function GetNavPrint($title, $show_allways=false, $StyleText="text", $template_path=false, $arDeleteParam=false)
+	public function GetNavPrint($title, $show_allways=false, $StyleText="text", $template_path=false, $arDeleteParam=false)
 	{
 		$res = '';
 		$add_anchor = $this->add_anchor;
@@ -946,17 +960,17 @@ abstract class CAllDBResult
 		return $res;
 	}
 
-	function ExtractFields($strPrefix="str_", $bDoEncode=true)
+	public function ExtractFields($strPrefix="str_", $bDoEncode=true)
 	{
 		return $this->NavNext(true, $strPrefix, $bDoEncode);
 	}
 
-	function ExtractEditFields($strPrefix="str_")
+	public function ExtractEditFields($strPrefix="str_")
 	{
 		return $this->NavNext(true, $strPrefix, true, false);
 	}
 
-	function GetNext($bTextHtmlAuto=true, $use_tilda=true)
+	public function GetNext($bTextHtmlAuto=true, $use_tilda=true)
 	{
 		if($arRes = $this->Fetch())
 		{
@@ -999,13 +1013,13 @@ abstract class CAllDBResult
 		return $arRes;
 	}
 
-	function NavStringForCache($nPageSize=0, $bShowAll=true, $iNumPage=false)
+	public static function NavStringForCache($nPageSize=0, $bShowAll=true, $iNumPage=false)
 	{
 		$NavParams = CDBResult::GetNavParams($nPageSize, $bShowAll, $iNumPage);
 		return "|".($NavParams["SHOW_ALL"]?"":$NavParams["PAGEN"])."|".$NavParams["SHOW_ALL"]."|";
 	}
 
-	function GetNavParams($nPageSize=0, $bShowAll=true, $iNumPage=false)
+	public static function GetNavParams($nPageSize=0, $bShowAll=true, $iNumPage=false)
 	{
 		/** @global CMain $APPLICATION */
 		global $NavNum, $APPLICATION;
@@ -1014,13 +1028,19 @@ abstract class CAllDBResult
 
 		if(is_array($nPageSize))
 		{
-			//$iNumPage
-			//$nPageSize
-			//$bDescPageNumbering
-			//$bShowAll
-			//$NavShowAll
-			//$sNavID
-			extract($nPageSize);
+			$params = $nPageSize;
+			if(isset($params["iNumPage"]))
+				$iNumPage = $params["iNumPage"];
+			if(isset($params["nPageSize"]))
+				$nPageSize = $params["nPageSize"];
+			if(isset($params["bDescPageNumbering"]))
+				$bDescPageNumbering = $params["bDescPageNumbering"];
+			if(isset($params["bShowAll"]))
+				$bShowAll = $params["bShowAll"];
+			if(isset($params["NavShowAll"]))
+				$NavShowAll = $params["NavShowAll"];
+			if(isset($params["sNavID"]))
+				$sNavID = $params["sNavID"];
 		}
 
 		$nPageSize = intval($nPageSize);
@@ -1030,10 +1050,7 @@ abstract class CAllDBResult
 		$SHOWALL_NAME = "SHOWALL_".($NavNum+1);
 
 		global ${$PAGEN_NAME}, ${$SHOWALL_NAME};
-		$md5Path = md5(
-			(isset($sNavID)? $sNavID: $APPLICATION->GetCurPage())
-			.(is_object($this) && isset($this->sSessInitAdd)? $this->sSessInitAdd: "")
-		);
+		$md5Path = md5((isset($sNavID)? $sNavID: $APPLICATION->GetCurPage()));
 
 		if($iNumPage === false)
 			$PAGEN = ${$PAGEN_NAME};
@@ -1080,7 +1097,7 @@ abstract class CAllDBResult
 		return $res;
 	}
 
-	function InitNavStartVars($nPageSize=0, $bShowAll=true, $iNumPage=false)
+	public function InitNavStartVars($nPageSize=0, $bShowAll=true, $iNumPage=false)
 	{
 		if(is_array($nPageSize) && isset($nPageSize["bShowAll"]))
 			$this->bShowAll = $nPageSize["bShowAll"];
@@ -1089,7 +1106,7 @@ abstract class CAllDBResult
 
 		$this->bNavStart = true;
 
-		$arParams = $this->GetNavParams($nPageSize, $bShowAll, $iNumPage);
+		$arParams = self::GetNavParams($nPageSize, $bShowAll, $iNumPage);
 
 		$this->PAGEN = $arParams["PAGEN"];
 		$this->SIZEN = $arParams["SIZEN"];
@@ -1112,7 +1129,7 @@ abstract class CAllDBResult
 		$this->add_anchor = $add_anchor;
 	}
 
-	function NavStart($nPageSize=0, $bShowAll=true, $iNumPage=false)
+	public function NavStart($nPageSize=0, $bShowAll=true, $iNumPage=false)
 	{
 		if($this->bFromLimited)
 			return;
@@ -1161,9 +1178,9 @@ abstract class CAllDBResult
 		}
 	}
 
-	abstract function DBNavStart();
+	abstract public function DBNavStart();
 
-	function InitFromArray($arr)
+	public function InitFromArray($arr)
 	{
 		if(is_array($arr))
 			reset($arr);
@@ -1172,7 +1189,7 @@ abstract class CAllDBResult
 		$this->bFromArray = true;
 	}
 
-	function NavNext($bSetGlobalVars=true, $strPrefix="str_", $bDoEncode=true, $bSkipEntities=true)
+	public function NavNext($bSetGlobalVars=true, $strPrefix="str_", $bDoEncode=true, $bSkipEntities=true)
 	{
 		$arr = $this->Fetch();
 		if($arr && $bSetGlobalVars)
@@ -1198,12 +1215,12 @@ abstract class CAllDBResult
 		return $arr;
 	}
 
-	function GetPageNavString($navigationTitle, $templateName = "", $showAlways=false, $parentComponent=null)
+	public function GetPageNavString($navigationTitle, $templateName = "", $showAlways=false, $parentComponent=null)
 	{
 		return $this->GetPageNavStringEx($dummy, $navigationTitle, $templateName, $showAlways, $parentComponent);
 	}
 
-	function GetPageNavStringEx(&$navComponentObject, $navigationTitle, $templateName = "", $showAlways=false, $parentComponent=null, $componentParams = array())
+	public function GetPageNavStringEx(&$navComponentObject, $navigationTitle, $templateName = "", $showAlways=false, $parentComponent=null, $componentParams = array())
 	{
 		/** @global CMain $APPLICATION */
 		global $APPLICATION;
@@ -1235,7 +1252,7 @@ abstract class CAllDBResult
 		return $result;
 	}
 
-	function SetUserFields($arUserFields)
+	public function SetUserFields($arUserFields)
 	{
 		if (is_array($arUserFields))
 		{

@@ -13,13 +13,13 @@ $MESS["EC_TH_F"] = "Thursday";
 $MESS["EC_FR_F"] = "Friday";
 $MESS["EC_SA_F"] = "Saturday";
 $MESS["EC_SU_F"] = "Sunday";
-$MESS["EC_MO"] = "Mo";
-$MESS["EC_TU"] = "Tu";
-$MESS["EC_WE"] = "We";
-$MESS["EC_TH"] = "Th";
-$MESS["EC_FR"] = "Fr";
-$MESS["EC_SA"] = "Sa";
-$MESS["EC_SU"] = "Su";
+$MESS["EC_MO"] = "Mon";
+$MESS["EC_TU"] = "Tue";
+$MESS["EC_WE"] = "Wed";
+$MESS["EC_TH"] = "Thu";
+$MESS["EC_FR"] = "Fri";
+$MESS["EC_SA"] = "Sat";
+$MESS["EC_SU"] = "Sun";
 $MESS["EC_JAN"] = "January";
 $MESS["EC_FEB"] = "February";
 $MESS["EC_MAR"] = "March";
@@ -62,7 +62,8 @@ $MESS["EC_PERIOD_COUNT"] = "Periodicity";
 $MESS["EC_EVENT_LENGTH"] = "Duration";
 $MESS["EC_PERIOD_ADDITIONAL"] = "More";
 $MESS["EC_REMIND_SETTINGS"] = "Reminder Parameters";
-$MESS["EC_EVENT_REMINDER"] = "Reminder for event [B]#DATE_FROM# - #EVENT_NAME#[/B]";
+$MESS["EC_EVENT_REMINDER_PUSH"] = "This is to remind you that you have an event #EVENT_NAME# on #DATE_FROM#";
+$MESS["EC_EVENT_REMINDER"] = "Reminder for event [B]#EVENT_NAME#[/B], [B]#DATE_FROM#[/B]";
 $MESS["EC_EVENT_REMINDER_IN_GROUP"] = "set in calendar \"#CALENDAR_NAME#\" of \"#GROUP_NAME#\"";
 $MESS["EC_EVENT_REMINDER_IN_USER"] = "set in calendar \"#CALENDAR_NAME#\" of [B]#USER_NAME#[/B]";
 $MESS["EC_EVENT_REMINDER_IN_PERSONAL"] = "set in your calendar  \"#CALENDAR_NAME#\"";
@@ -96,6 +97,9 @@ $MESS["EC_T_REPEAT"] = "Repeat";
 $MESS["EC_T_REPEAT_CHECK_LABEL"] = "Repeat event";
 $MESS["EC_T_REPEAT_NONE"] = "Never";
 $MESS["EC_T_REPEAT_DAILY"] = "Daily";
+$MESS["EC_T_REPEAT_WORK_DAILY"] = "Every work day";
+$MESS["EC_T_REPEAT_TU_TH"] = "Tue,Thu";
+$MESS["EC_T_REPEAT_MO_WE_FR"] = "Mon,Wed,Fri";
 $MESS["EC_T_REPEAT_WEEKLY"] = "Weekly";
 $MESS["EC_T_REPEAT_MONTHLY"] = "Monthly";
 $MESS["EC_T_REPEAT_YEARLY"] = "Yearly";
@@ -103,7 +107,7 @@ $MESS["EC_T_DIALOG_STOP_REPEAT"] = "repeat until";
 $MESS["EC_T_CREATE_DEF"] = "[Create Default]";
 $MESS["EC_T_DELETE_EVENT"] = "Delete Event";
 $MESS["EC_T_SAVE"] = "Save";
-$MESS["EC_T_CLOSE"] = "Cancel";
+$MESS["EC_T_CLOSE"] = "Close";
 $MESS["EC_T_NEW_EVENT"] = "New Event";
 $MESS["EC_T_ADD"] = "Add";
 $MESS["EC_T_VIEW_EVENT"] = "View Event";
@@ -164,8 +168,8 @@ $MESS["EC_ATT_Q"] = "Still considering";
 $MESS["EC_OPEN_MEETING"] = "This meeting is public";
 $MESS["EC_OPEN_MEETING_TITLE"] = "Attendance doesn't require approval";
 $MESS["EC_NOTIFY_STATUS"] = "Notify when attendees confirm or decline invitation";
-$MESS["EC_REINVITE"] = "Ask users to reconfirm attendance";
-$MESS["EC_DECLINE_INFO"] = "You have refused to attend this meeting";
+$MESS["EC_REINVITE"] = "Invite again";
+$MESS["EC_DECLINE_INFO"] = "You have declined invitation to attend this meeting";
 $MESS["EC_ACCEPTED_STATUS"] = "You will be attending this meeting.";
 $MESS["EC_STATUS_COMMENT"] = "your comment";
 $MESS["EC_STATUS_COMMENT_TITLE"] = "Add a short comment to shed more light on the reasons of your decision.";
@@ -232,6 +236,7 @@ $MESS["EC_RRULE_EVERY_YEAR"] = "yearly, on the #DAY# day of the #MONTH# month";
 $MESS["EC_RRULE_EVERY_YEAR_1"] = "every #YEAR# years, on the #DAY# of the #MONTH# month";
 $MESS["EC_RRULE_UNTIL"] = "till #UNTIL_DATE#";
 $MESS["EC_RRULE_FROM"] = "from #FROM_DATE#";
+$MESS["EC_RRULE_COUNT"] = "#COUNT# time(s)";
 $MESS["EC_JS_EVERY_M"] = "every";
 $MESS["EC_JS_EVERY_F"] = "every";
 $MESS["EC_JS_EVERY_M_"] = "Every";
@@ -304,19 +309,27 @@ $MESS["EC_DEL_OWNER_CONFIRM"] = "You cannot create an event without your attenda
 $MESS["EC_CANT_DEL_GUEST_TITLE"] = "Removing the event creator from the meeting will remove all the other participants.";
 $MESS["EC_GUEST_STATUS_Q"] = "Opinion unknown";
 $MESS["EC_GUEST_STATUS_Y"] = "Attendance confirmed";
-$MESS["EC_GUEST_STATUS_N"] = "Attendance refused";
+$MESS["EC_GUEST_STATUS_N"] = "User declined invitation";
 $MESS["EC_USER_PROFILE"] = "User Profile";
 $MESS["EC_ALL_GUESTS"] = "All Members";
 $MESS["EC_ALL_GUESTS_TITLE"] = "Show All Guests";
-$MESS["EC_DEL_ENCOUNTER"] = "Refuse Attendance";
+$MESS["EC_DEL_ENCOUNTER"] = "Decline invitation";
 $MESS["EC_EDEV_CONFIRMED"] = "Confirmed";
-$MESS["EC_ACCEPT_MEETING"] = "Attend meeting";
-$MESS["EC_ACCEPT_MEETING_2"] = "Reconsider and attend meeting";
+$MESS["EC_ACCEPT_MEETING"] = "I'll attend";
+$MESS["EC_ACCEPT_MAYBE_MEETING"] = "Maybe";
+$MESS["EC_ACCEPT_MAYBE_MEETING_2"] = "Maybe";
+$MESS["EC_ACCEPT_MEETING_2"] = "I changed my mind, I'll attend";
 $MESS["EC_EDEV_CONF_Y_TITLE"] = "Confirm Attendance";
-$MESS["EC_EDEV_CONF_N"] = "Refuse";
-$MESS["EC_EDEV_CONF_N_TITLE"] = "Refuse Attendance (and delete the event from your calendar)";
+$MESS["EC_EDEV_CONF_N"] = "Decline";
+$MESS["EC_EDEV_CONF_N_TITLE"] = "Decline invitation and delete the event from your calendar";
 $MESS["EC_NOT_CONFIRMED"] = "Attendance not confirmed";
 $MESS["EC_T_DIALOG_NEVER"] = "unlimited";
+$MESS["EC_ENDS_ON_LABEL"] = "Ends";
+$MESS["EC_ENDS_ON_NEVER"] = "Never";
+$MESS["EC_ENDS_ON_COUNT"] = "After #COUNT# occurrences";
+$MESS["EC_ENDS_ON_COUNT_PLACEHOLDER"] = "10";
+$MESS["EC_ENDS_ON_UNTIL"] = "On #UNTIL_DATE#";
+$MESS["EC_ENDS_ON_UNTIL_PLACEHOLDER"] = "date";
 $MESS["EC_ACCESSIBILITY_B"] = "Occupied";
 $MESS["EC_ACCESSIBILITY_Q"] = "Undecided";
 $MESS["EC_ACCESSIBILITY_F"] = "Free";
@@ -329,15 +342,21 @@ $MESS["EC_USER_BUSY"] = "User #USER# is busy or away during the specified time p
 $MESS["EC_USERS_NOT_AVAILABLE"] = "Not all invited users are available during the specified time period";
 $MESS["EC_MESS_INVITE"] = "A user #OWNER_NAME# invites you to attend \"[B]#TITLE#[/B]\", which will be at #ACTIVE_FROM#";
 $MESS["EC_MESS_INVITE_SITE"] = "I would like to invite you to a meeting \"[B]#TITLE#[/B]\" at [B]#ACTIVE_FROM#[/B]";
+$MESS["EC_MESS_REC_INVITE"] = "User #OWNER_NAME# invites you to the recurring event \"#TITLE#\" #ACTIVE_FROM#, #RRULE#";
+$MESS["EC_MESS_REC_INVITE_SITE"] = "Let me invite you to the recurring event \"[B]#TITLE#[/B]\" [B]#ACTIVE_FROM#, #RRULE#[/B]";
 $MESS["EC_MESS_INVITE_CHANGED"] = "A user #OWNER_NAME# has changed the meeting \"[B]#TITLE#[/B]\" to take place at #ACTIVE_FROM# in which you are participating";
 $MESS["EC_MESS_INVITE_CHANGED_SITE"] = "A meeting \"[B]#TITLE#[/B]\" which you will be attending at [B]#ACTIVE_FROM#[/B] has been changed.";
 $MESS["EC_MESS_INVITE_CANCEL"] = "A user #OWNER_NAME# has canceled the meeting \"[B]#TITLE#[/B]\" to take place at #ACTIVE_FROM# in which you wished to participate";
 $MESS["EC_MESS_INVITE_CANCEL_SITE"] = "A meeting \"[B]#TITLE#[/B]\" which was going to take place at [B]#ACTIVE_FROM#[/B] has been canceled.";
+$MESS["EC_MESS_REC_ALL_CANCEL"] = "User #OWNER_NAME# canceled all instances of recurring event \"[B]#TITLE#[/B]\" of [B]#ACTIVE_FROM#[/B] in which you were going to participate";
+$MESS["EC_MESS_REC_ALL_CANCEL_SITE"] = "All instances of recurring event \"[B]#TITLE#[/B]\" of [B]#ACTIVE_FROM#[/B] in which you were going to participate was canceled";
+$MESS["EC_MESS_REC_THIS_CANCEL"] = "An instance of event \"[B]#TITLE#[/B]\" ([B]#ACTIVE_FROM#[/B]) in which you were going to participate was canceled by #OWNER_NAME#";
+$MESS["EC_MESS_REC_THIS_CANCEL_SITE"] = "An instance of event \"[B]#TITLE#[/B]\" ([B]#ACTIVE_FROM#[/B]) in which you were going to participate was canceled";
 $MESS["EC_MESS_MEETING_TEXT"] = "Invitation Text: \"#MEETING_TEXT#\"";
 $MESS["EC_MESS_INVITE_DETAILS"] = "You can view the details in your calendar: [url=#LINK#]event details[/url]";
 $MESS["EC_MESS_INVITE_DETAILS_SITE"] = "You can view the meeting details in [url=#LINK#]your calendar[/url].";
 $MESS["EC_MESS_INVITE_CONF_Y"] = "[url=#LINK#]Confirm Attendance[/url]";
-$MESS["EC_MESS_INVITE_CONF_N"] = "[url=#LINK#]Refuse Attendance[/url]";
+$MESS["EC_MESS_INVITE_CONF_N"] = "[url=#LINK#]Decline invitation[/url]";
 $MESS["EC_MESS_INVITE_CONF_Y_SITE"] = "Confirm";
 $MESS["EC_MESS_INVITE_CONF_N_SITE"] = "Decline";
 $MESS["EC_MESS_VIEW_OWN_CALENDAR"] = "You can view other events in your [url=#LINK#]personal calendar[/url]";
@@ -345,10 +364,10 @@ $MESS["EC_MESS_VIEW_OWN_CALENDAR_OUT"] = "You can view other events and meetings
 $MESS["EC_MESS_INVITE_TITLE"] = "Invitation for \"#TITLE#\" from #OWNER_NAME#";
 $MESS["EC_MESS_INVITE_CHANGED_TITLE"] = "Changes in the event: \"#TITLE#\"";
 $MESS["EC_MESS_INVITE_CANCEL_TITLE"] = "An event \"#TITLE#\" has been canceled";
-$MESS["EC_MESS_INVITE_ACCEPTED"] = "#GUEST_NAME# is going to attend your event \"[B]#TITLE#[/B]\" to be held on #ACTIVE_FROM#";
-$MESS["EC_MESS_INVITE_ACCEPTED_SITE"] = "I'm going to attend the meeting \"[B]#TITLE#[/B]\" which will take place at [B]#ACTIVE_FROM#[/B]";
-$MESS["EC_MESS_INVITE_DECLINED"] = "#GUEST_NAME# is not going to attend your event \"[B]#TITLE#[/B]\" to be held on #ACTIVE_FROM#";
-$MESS["EC_MESS_INVITE_DECLINED_SITE"] = "Unfortunately I won't be able to attend the meeting \"[B]#TITLE#[/B]\" which will take place at [B]#ACTIVE_FROM#[/B]";
+$MESS["EC_MESS_INVITE_ACCEPTED"] = "User #GUEST_NAME# will participate in your event \"#TITLE#\"";
+$MESS["EC_MESS_INVITE_ACCEPTED_SITE"] = "I'll participate in your event \"[B]#TITLE#[/B]\"";
+$MESS["EC_MESS_INVITE_DECLINED"] = "User #GUEST_NAME# will not participate in your event \"#TITLE#\"";
+$MESS["EC_MESS_INVITE_DECLINED_SITE"] = "I won't participate in \"[B]#TITLE#[/B]\"";
 $MESS["EC_MESS_INVITE_ACC_COMMENT"] = "Comment: \"#COMMENT#\"";
 $MESS["EC_IS_MEETING"] = "Meeting";
 $MESS["EC_HOST_IS_ABSENT"] = "The creator is absent";
@@ -405,6 +424,9 @@ $MESS["EC_MR_RESERVE_ERR_BUSY"] = "The selected meeting room cannot be reserved 
 $MESS["EC_MR_RESERVE_ERR"] = "An error occurred trying to reserve a meeting room.";
 $MESS["EC_BUT_SET"] = "Settings";
 $MESS["EC_ADV_MEETING_CAL"] = "Invitation Calendar";
+$MESS["EC_CRM_SECTION"] = "CRM Calendar";
+$MESS["EC_OPTION_SHOW_TASKS"] = "Show tasks";
+$MESS["EC_OPTION_SHOW_COMPLETED_TASKS"] = "Show completed tasks";
 $MESS["EC_FIRST_IN_LIST"] = "First in List";
 $MESS["EC_BLINK_SET"] = "Highlight unconfirmed events";
 $MESS["EC_ACC_EX"] = "Add to Absence Chart";
@@ -415,7 +437,6 @@ $MESS["EC_DEF_MEETING_NAME"] = "Meeting";
 $MESS["EC_NO_GUESTS_ERR"] = "No guest has been selected.";
 $MESS["EC_NO_FROM_TO_ERR"] = "The event start and end times are missing.";
 $MESS["EC_JS_DEL_MEETING_CONFIRM"] = "You are about to delete the event containing other participants. Are you sure you want to delete the event?";
-$MESS["EC_JS_DEL_MEETING_GUEST_CONFIRM"] = "Deleting the event will automatically cancel your participation. Are you sure you want to delete the event?";
 $MESS["EC_MR_EXPIRE_ERR_BUSY"] = "The selected video meeting room cannot be reserved for the past time.";
 $MESS["EC_MR_MAX_USERS_ERR_BUSY"] = "A video meeting room cannot contain more than #max_users# users.";
 $MESS["EC_BAN_CONNECT_OUTL"] = "Connect to Outlook";
@@ -432,6 +453,7 @@ $MESS["EC_ADD_CALDAV_LINK"] = "Address";
 $MESS["EC_ADD_CALDAV_USER_NAME"] = "User Name";
 $MESS["EC_ADD_CALDAV_PASS"] = "Password";
 $MESS["EC_ADD_CALDAV_NAME"] = "Name";
+$MESS["EC_ADD_CALDAV_SECTIONS"] = "Available calendars";
 $MESS["EC_CALDAV_EDIT"] = "change";
 $MESS["EC_CALDAV_DEL"] = "delete";
 $MESS["EC_CALDAV_COLLAPSE"] = "hide";
@@ -445,56 +467,54 @@ $MESS["EC_CALDAV_SYNC_ERROR"] = "The last synchronization was not successful.";
 $MESS["EC_CALDAV_NOTICE"] = "The external calendars are synchronized automatically.<br/> Once you save changes, the calendar page will be reloaded.";
 $MESS["EC_CALDAV_NOTICE_GOOGLE"] = "To connect <b>Google</b> calendars, use the link in the format <span class=\"bxec-link\">https://www.google.com/calendar/dav/YOUREMAIL@DOMAIN.COM/user</span> in the address field, and your login and password. <br/> Please refer to <a href=\"http://www.google.com/support/calendar/bin/answer.py?answer=99358&&hl=en#ical\">Google help section</a> for more information.";
 $MESS["EC_ALL_CALENDARS"] = "All Calendars";
-$MESS["EC_MOBILE_HELP_TITLE"] = "Mobile Device Connectivity";
-$MESS["EC_MOBILE_HELP_HEADER"] = "Connect Using CalDav";
+$MESS["EC_MOBILE_SYNC_TITLE_MACOSX"] = "Mac OSX Synchronization Parameters";
+$MESS["EC_MOBILE_SYNC_TITLE_IPHONE"] = "Apple iPhone/iPad Synchronization Parameters";
+$MESS["EC_MOBILE_SYNC_TITLE_ANDROID"] = "Android Synchronization Parameters";
 $MESS["EC_MOBILE_MAC_OS"] = "iCal for MacOS";
 $MESS["EC_MOBILE_APPLE"] = "Apple devices: iPhone, iPad";
 $MESS["EC_MOBILE_SUNBIRD"] = "Mozilla Thunderbird / Sunbird, Android applications";
 $MESS["EC_CALENDAR_TO_EXCH"] = "Synchronize Calendar With Microsoft Exchange";
-$MESS["EC_MOBILE_HELP_IPHONE_ALL_HELP"] = "<p>To set up your Apple device to support CalDAV:</p>
+$MESS["EC_MOBILE_HELP_IPHONE"] = "<p>To set up your Apple device to support CalDAV:</p>
 <ol>
 <li>Click <b>Settings</b> and select <b>Mail, Contacts, Calendars>Accounts</b>.</li>
 <li>Click <b>Add Account</b>.</li>
 <li>Select <b>Other</b> &gt; <b>Add CalDAV Account</b>.</li>
 <li>Specify this website address as server (<span class=\"bxec-link\">#CALENDAR_LINK#</span>). Use your login and password.</li>
-<li>Use Basic Authorization.</li>
+<li>If two-step authentication is enabled on your portal, use the password assigned on the \"Application passwords\" screen in your profile.</li>
 #POINT_SET_PORT#
 </ol><p>Your calendars will appear in the \"Calendar\" application.</p>";
-$MESS["EC_MOBILE_HELP_MAC_1"] = "<p>Configuring iCal to use your calendars:</p>
+$MESS["EC_MOBILE_HELP_MAC"] = "<p>Configuring iCal to use your calendars:</p>
 <ol>
 <li>Select \"iCal\" > \"Preferences\" in the menu. Choose \"Accounts\" tab.</li>
 <li>Select the \"+\" sign to create a new acount.</li>
 <li>Select CalDAV as the account type.</li>
 <li>Set the account type to manual.</li>
 <li>In the account settings, specify this site's URL (<span class=\"bxec-link\">#CALENDAR_LINK#</span>) as the server address, and enter your user name and password.</li>
+<li>If two-step authentication is enabled on your portal, use the password assigned on the \"Application passwords\" screen in your profile.</li>
 		#POINT_SET_PORT#
 </ol>
 <p>Now you can see your calendars online in iCal.</p>";
-$MESS["EC_MOBILE_HELP_IPHONE_ONE_HELP"] = "<p>To add the selected calendar to your Apple device:</p>
+$MESS["EC_MOBILE_HELP_ANDROID"] = "<p>Follow these steps to sync your calendars on your mobile device.
 <ol>
-<li>Click <b>Settings</b> and select <b>Mail, Contacts, Calendars>Accounts</b>.</li>
-<li>Click <b>Add Account</b>.</li>
-<li>Select <b>Other</b> &gt; <b>Add CalDAV Account</b>.</li>
-<li>Specify this website address as server (<span class=\"bxec-link\">#CALENDAR_LINK#</span>). Use your login and password.</li>
-<li>Use Basic Authorization.</li>
-#POINT_SET_PORT#
-</ol>";
-$MESS["EC_MOBILE_HELP_SUNBIRD_ALL_HELP"] = "<p>Unfortunately, Mozilla Thunderbird and most Android applications are unable to connect all the calendars at once.</p>";
-$MESS["EC_MOBILE_HELP_SUNBIRD_ONE_HELP"] = "<p>To configure Mozilla Thunderbird for use with CalDAV:</p>
-<ol>
-<li>Run Thunderbird. Make sure you have the Lightning (Mozilla Calendar Project) add-on installed.</li>
-<li>Select <b>File &gt; Create &gt; Calendar</b> (or <b>File &gt; Calendar</b>).</li>
-<li>Select <b>On the Network</b> and click <b>Next</b>.</li>
-<li>Select <b>CalDAV</b> format.</li>
-<li>In the <b>Location</b> field, enter <span class=\"bxec-link\">#CALENDAR_LINK#</span> and click <b>Next</b>.</li>
-<li>Name your calendar and select any desirable color for it.</li>
-<li>Enter your user name and password in the pop-up window.</li>
-</ol>";
-$MESS["EC_SET_PORT"] = "<li>To specify the port number, save the account and open it for editing again.</li>";
+<li>Install Bitrix24 app from GooglePlay.</li>
+<li>Open the Settings > Account > Bitrix24 menu.
+If you still don't have a Bitrix24 account, add a new account selecting Bitrix24 from the list.
+<ul>
+	<li>Enter your Bitrix24 address in this format: <i>company.bitrix24.ru</i></li>
+	<li>Enter your login (e-mail).</li>
+	<li>Enter your password.</li>
+</ul>
+<li>If two-step authentication is enabled on your portal, use the password assigned on the \"Application passwords\" screen in your profile.</li>
+</li>
+<li>Tap on the account and check the calendar (and contacts if so required) to sync them to your mobile device.</li>
+
+<li>Tap \"Synchronize\".</li>
+</ol>
+That's it! Your Bitrix24 calendar is now available on your mobile. All the events will become synchronized automatically.
+</p>";
 $MESS["EC_EVENT_NOT_FOUND"] = "Error! The item was not found.";
 $MESS["EC_EVENT_ERROR_DEL"] = "Error deleting the item.";
 $MESS["DEL_CON_CALENDARS"] = "Delete Calendars";
-$MESS["EC_CLOSE_BANNER_NOTIFY"] = "You can restore the infobar by resetting the user preferences in the personal calendar.";
 $MESS["EC_CALDAV_URL_ERROR"] = "The CalDAV connection parameters are incorrect";
 $MESS["EC_BAN_EXCH_SYNC"] = "Synchronize";
 $MESS["EC_BAN_EXCH_SYNC_TITLE"] = "Although Exchange synchronization occurs automatically, you can do it manually.";
@@ -534,13 +554,13 @@ $MESS["EC_MANAGE_CALENDAR_TYPES_TITLE"] = "Edit calendar types in module setting
 $MESS["EC_WORK_TIME"] = "Worktime settings";
 $MESS["EC_WEEK_START"] = "First day of the week";
 $MESS["EC_CLEAR_PERS_SETTINGS"] = "Reset personal settings";
-$MESS["EC_SHOW_BANNER"] = "Show external connection bar";
 $MESS["EC_ADD_GUESTS_DEF"] = "Select from structure";
 $MESS["EC_ADD_GUESTS_EMAIL"] = "Invite using e-mail";
 $MESS["EC_ADD_ATTENDEES"] = "Add attendees";
 $MESS["EC_USER_EMAIL"] = "User e-mail";
 $MESS["EC_OPTION_SHOW_DECLINED"] = "Show events you have declined";
-$MESS["EC_OPTION_SHOW_MUTED"] = "Show past events in gray";
+$MESS["EC_DENY_BUSY_INVITATION"] = "Don't send invitation if the time is already allocated";
+$MESS["EC_SHOW_WEEK_NUMBERS"] = "Show week number";
 $MESS["EC_EDIT_MEETING_NOTE"] = "These changes are relevant to your participation only; they will not affect the meeting parameters or preferences of other persons.";
 $MESS["EC_IT_IS_YOU"] = "it's you";
 $MESS["EC_PAST_MEETING_NOTICE"] = "An attended event cannot be created in the past.";
@@ -594,7 +614,73 @@ $MESS["EC_ATTENDEE_7"] = "#NUM# attendees";
 $MESS["EC_ATTENDEE_8"] = "#NUM# attendees";
 $MESS["EC_ATTENDEE_9"] = "#NUM# attendees";
 $MESS["EC_ATTENDEE_0"] = "#NUM# attendees";
-$MESS["EC_DD_DENY_REPEATED"] = "Cannot drag'n'drop recurring events.";
 $MESS["EC_DD_DENY_TASK"] = "Cannot drag'n'drop the task.";
 $MESS["EC_DD_DENY_EVENT"] = "Cannot drag'n'drop this event.";
+$MESS["EC_EVENT_TZ_BUT_OPEN"] = "Specify time zone";
+$MESS["EC_EVENT_TZ_BUT_CLOSE"] = "Hide time zone";
+$MESS["EC_EVENT_TYPE"] = "Event type";
+$MESS["EC_EVENT_ASK_TZ"] = "Select your time zone:";
+$MESS["EC_EVENT_ASK_TZ_CHANGE"] = "Your time zone may have changed:";
+$MESS["EC_EVENT_TZ_DIFFERENT"] = "Different time zones of event start and end times";
+$MESS["EC_EVENT_TZ_DEF_HINT"] = "Select your time zone. Your preference will be saved.";
+$MESS["EC_EVENT_TZ_HINT"] = "If the event is going to take place in a different time zone, select one in the list. Different time zones for event start and end times are possible.";
+$MESS["EC_TIMEZONE"] = "Your time zone";
+$MESS["EC_RESERVE_PERIOD_WARN"] = "Recurring events cannot book a meeting room.";
+$MESS["EC_CAL_OPEN_LINK"] = "Open calendar";
+$MESS["EC_CAL_ACCESS_SETTINGS"] = "Access permissions";
+$MESS["EC_CAL_ACCESS_SETTINGS_WARN"] = "Contact your administrator to configure access permissions";
+$MESS["EC_CAL_GOOGLE_HIDE"] = "Disable and hide";
+$MESS["EC_CAL_GOOGLE_HIDE_CONFIRM"] = "Are you sure you want to disable synchronization for this calendar and hide it?";
+$MESS["EC_CAL_SYNC_OK"] = "Synchronized";
+$MESS["EC_CAL_LAST_SYNC_DATE"] = "Last synchronized on";
+$MESS["EC_CAL_REMOVE_GOOGLE_SYNC_CONFIRM"] = "Are you sure you want to disable Google calendar synchronization and delete these calendars?";
+$MESS["EC_CAL_SYNC_CONNECT"] = "Connect";
+$MESS["EC_CAL_SYNC_DISCONNECT"] = "disconnect";
+$MESS["EC_CAL_SYNC_MAC"] = "Mac OSX";
+$MESS["EC_CAL_SYNC_IPHONE"] = "iPhone";
+$MESS["EC_CAL_SYNC_ANDROID"] = "Android";
+$MESS["EC_CAL_SYNC_OUTLOOK"] = "MS Outlook";
+$MESS["EC_CAL_SYNC_OFFICE_365"] = "Office 365";
+$MESS["EC_CAL_SYNC_GOOGLE"] = "Google Calendar";
+$MESS["EC_CAL_SYNC_EXCHANGE"] = "MS Exchange";
+$MESS["EC_CAL_CONNECT_MORE"] = "connect #COUNT# more";
+$MESS["EC_CAL_SYNC_TITLE"] = "Synchronization";
+$MESS["EC_CAL_SHOW_LESS"] = "hide synchronization";
+$MESS["EC_CAL_DISCONNECT_OUTLOOK"] = "<p>Open Microsoft Outlook and delete the calendars you no longer need.</p>";
+$MESS["EC_CAL_DISCONNECT_IPHONE"] = "<p>Delete your Bitrix24 account from your iPhone to disable calendar synchronization.</p>";
+$MESS["EC_CAL_DISCONNECT_MAC"] = "<p>Delete your Bitrix24 account in iCal on your Mac to disable calendar synchronization.</p>";
+$MESS["EC_CAL_DISCONNECT_ANDROID"] = "<p>Delete your Bitrix24 account in the device Settings to disable calendar synchronization.</p>";
+$MESS["EC_CAL_CONNECT_EXCHANGE"] = "<p>Microsoft Exchange Server is connected but your calendar was not synchronized. Please contact your Bitrix24 administrator for assistance.</p>";
+$MESS["EC_CAL_DISCONNECT_EXCHANGE"] = "<p>Please contact your Bitrix24 administrator for assistance.</p>";
+$MESS["EC_COMPANY_CALENDAR"] = "Company calendar";
+$MESS["EC_MESS_STATUS_NOTIFY_Y_SITE"] = "You agreed to participate in event \"[B]#TITLE#[/B]\" to be held on [B]#ACTIVE_FROM#[/B]";
+$MESS["EC_MESS_STATUS_NOTIFY_N_SITE"] = "You declined invitation to participate in event \"[B]#TITLE#[/B]\" to be held on [B]#ACTIVE_FROM#[/B]
+";
+$MESS["EC_MESS_STATUS_NOTIFY_Y"] = "You agreed to participate in event \"#TITLE#\" to be held on #ACTIVE_FROM#";
+$MESS["EC_MESS_STATUS_NOTIFY_N"] = "You declined invitation to participate in event \"#TITLE#\" to be held on #ACTIVE_FROM#";
+$MESS["EC_DEL_REC_EVENT"] = "Delete recurring event";
+$MESS["EC_EDIT_REC_EVENT"] = "Edit recurring event";
+$MESS["EC_REC_EV_ONLY_THIS_EVENT"] = "Only this event";
+$MESS["EC_REC_EV_NEXT"] = "This and all subsequent events";
+$MESS["EC_REC_EV_ALL"] = "All event instances";
+$MESS["EC_DECLINE_MEETING_CONFIRM"] = "Are sure you want to decline this event?";
+$MESS["EC_DECLINE_REC_EVENT"] = "Do you want to decline invitation to participate in recurring event?";
+$MESS["EC_D_REC_EV_ONLY_THIS_EVENT"] = "Only this event";
+$MESS["EC_D_REC_EV_NEXT"] = "This and all subsequent events";
+$MESS["EC_D_REC_EV_ALL"] = "All events";
+$MESS["EC_BUSY_ALERT"] = "One or more participants are not available during hours specified and cannot be invited.";
+$MESS["EC_REMIND_VIEW_0"] = "When event starts";
+$MESS["EC_REMIND_VIEW_5"] = "In 5 minutes";
+$MESS["EC_REMIND_VIEW_10"] = "In 10 minutes";
+$MESS["EC_REMIND_VIEW_15"] = "In 15 minutes";
+$MESS["EC_REMIND_VIEW_30"] = "In 30 minutes";
+$MESS["EC_REMIND_VIEW_60"] = "In 1 hour";
+$MESS["EC_REMIND_VIEW_120"] = "In 2 hours";
+$MESS["EC_REMIND_VIEW_1440"] = "Day before";
+$MESS["EC_REMIND_VIEW_2880"] = "Two days before";
+$MESS["EC_REMIND_VIEW_MIN_COUNT"] = "In #COUNT# minite(s)";
+$MESS["EC_REMIND_VIEW_HOUR_COUNT"] = "In #COUNT# hour(s)";
+$MESS["EC_REMIND_VIEW_DAY_COUNT"] = "#COUNT# day(s) before";
+$MESS["EC_SET_PORT"] = "<li>To specify the port number, save the account and open it for editing again.</li>";
+$MESS["EC_JS_DEL_MEETING_GUEST_CONFIRM"] = "Deleting the event will automatically cancel your participation. Are you sure you want to delete the event?";
 ?>

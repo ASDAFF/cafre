@@ -10,9 +10,15 @@ class CTestAttempt extends CAllTestAttempt
 		if (strlen($arInsert[0]) <= 0 || strlen($arInsert[0])<= 0)		// BUG ?
 			return false;
 
+		if (!isset($arFields["DATE_START"]))
+		{
+			$arInsert[0] = "DATE_START, ".$arInsert[0];
+			$arInsert[1] = $DB->CurrentTimeFunction().", ".$arInsert[1];
+		}
+
 		$strSql =
-			"INSERT INTO b_learn_attempt(DATE_START, ".$arInsert[0].") ".
-			"VALUES(".$DB->CurrentTimeFunction().", ".$arInsert[1].")";
+			"INSERT INTO b_learn_attempt(".$arInsert[0].") ".
+			"VALUES(".$arInsert[1].")";
 
 		if($DB->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__))
 			return $DB->LastID();

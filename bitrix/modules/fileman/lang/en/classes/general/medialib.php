@@ -106,4 +106,6 @@ $MESS["ML_CHANGE_TYPE_ERROR"] = "Error changing type.";
 $MESS["ML_CHANGE_TYPE_CHILD_CONF"] = "The collection contains nested collections. Are you sure you want to change the content type for this and all the nested collections?";
 $MESS["ML_CHECK_TYPE_EXT_CONF"] = "Attention! The file extension does not match anything specified for the currently selected content type. Are you sure you want to save the element?";
 $MESS["ML_FILESIZE_ERROR"] = "Maximum file size exceeded (#FILESIZE# MB)";
+$MESS["ML_AUTOSAVE_DEFAULT_COL"] = "Autosaved images";
+$MESS["ML_AUTOSAVE_DEFAULT_COL_DEF"] = "Images saved when editing the site pages or other documents.";
 ?>

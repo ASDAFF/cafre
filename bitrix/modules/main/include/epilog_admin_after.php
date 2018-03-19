@@ -35,6 +35,11 @@ else
 	echo $r;
 }
 
+if (!defined('BX_WITH_ON_AFTER_EPILOG'))
+{
+	define('BX_WITH_ON_AFTER_EPILOG', true);
+}
+
 $arAllEvents = GetModuleEvents("main", "OnAfterEpilog", true);
 
 define("START_EXEC_EVENTS_1", microtime());

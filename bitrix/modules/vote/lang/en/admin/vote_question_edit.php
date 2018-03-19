@@ -34,8 +34,8 @@ $MESS["VOTE_CONF"] = "Modify poll properties";
 $MESS["VOTE_GOT_ERROR"] = "Error saving the question";
 $MESS["VOTE_DIAGRAM_TYPE"] = "Diagram type";
 $MESS["VOTE_NOT_FOUND"] = "Incorrect poll ID";
-$MESS["VOTE_LIST"] = "List";
 $MESS["VOTE_DELETE"] = "Delete";
 $MESS["VOTE_CREATE"] = "Create";
 $MESS["VOTE_REQUIRED"] = "Required question";
+$MESS["VOTE_QUESTIONS"] = "Questions";
 ?>

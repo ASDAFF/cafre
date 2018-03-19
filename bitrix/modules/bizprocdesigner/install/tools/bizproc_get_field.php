@@ -39,6 +39,31 @@ else
 	global $APPLICATION;
 	$APPLICATION->ShowAjaxHead();
 
+	//Fix array sorting after js sorting %)
+	if (
+		isset($type['OptionsSort']) && is_array($type['OptionsSort'])
+		&& isset($type['Options']) && is_array($type['Options'])
+		&& count($type['OptionsSort']) === count($type['Options'])
+	)
+	{
+		$sortedOptions = array();
+		$sortSuccess = true;
+		foreach ($type['OptionsSort'] as $optionKey)
+		{
+			if (!isset($type['Options'][$optionKey]))
+			{
+				$sortSuccess = false;
+				break;
+			}
+			$sortedOptions[$optionKey] = $type['Options'][$optionKey];
+		}
+		if ($sortSuccess)
+		{
+			$type['Options'] = $sortedOptions;
+		}
+		unset($sortSuccess, $sortedOptions);
+	}
+
 	/** @var CBPDocumentService $documentService*/
 	echo $documentService->GetFieldInputControl(
 		$_REQUEST['DocumentType'],

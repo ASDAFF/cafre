@@ -7,6 +7,7 @@
 		this.dragNodeList =  document.body.querySelectorAll('.' + params.dragItemClassName);
 		this.dragStartCallback = params.dragStart || null;
 		this.dragCallback = params.drag || null;
+		this.dragOverCallback = params.dragOver || null;
 		this.dragEnterCallback = params.dragEnter || null;
 		this.dragLeaveCallback = params.dragLeave || null;
 		this.dragDropCallback = params.dragDrop || null;
@@ -132,7 +133,19 @@
 			var _this = this;
 			for(var i = catcherList.length-1; i>=0; i--)
 			{
-				BX.bind(catcherList[i], 'dragover', BX.proxy(this.ondragOver, this));
+				BX.bind(catcherList[i], 'dragover', function(event)
+				{
+					if(_this.isAutoScroll){
+						event = event || window.event;
+						_this.dragEventX = event.clientX;
+						_this.dragEventY = event.clientY;
+					}
+
+					BX.PreventDefault(event);
+					event.dataTransfer.dropEffect = 'move';
+
+					_this.ondragOver(event, this);
+				});
 				BX.bind(catcherList[i], 'dragenter',function(event)
 				{
 					event = event || window.event;
@@ -212,7 +225,7 @@
 			var params =
 			{
 				dragElement : this.activeDragElement,
-				sortableElement : this.sortable.node ? this.sortable.node : null,
+				sortableElement : (this.sortable && this.sortable.node) ? this.sortable.node : null,
 				event : event
 			};
 
@@ -262,9 +275,14 @@
 		sortableMove : function()
 		{
 			var elementFromPoint = document.elementFromPoint(this.dragEventX, this.dragEventY);
+			if(elementFromPoint === null)
+			{
+				return;
+			}
+
 			var target = this.sortable.node; /*element over which draggable elem*/
 
-			while(elementFromPoint != document.body)
+			while(elementFromPoint !== null &&elementFromPoint != document.body)
 			{
 				for(var i = this.sortable.list.length-1; i>=0; i--)
 				{
@@ -381,7 +399,7 @@
 						ev.clientFFY = this.dragEventY;
 
 					}
-					this.dragCallback(this.activeDragElement, this.sortable.node, ev);
+					this.dragCallback(this.activeDragElement, this.sortable ? this.sortable.node : null, ev);
 
 				}, this),0)
 
@@ -464,16 +482,10 @@
 			}
 
 		},
-		ondragOver : function(event)
+		ondragOver : function(event, eventObj)
 		{
-			if(this.isAutoScroll){
-				event = event || window.event;
-				this.dragEventX = event.clientX;
-				this.dragEventY = event.clientY;
-			}
-
-			BX.PreventDefault(event);
-			event.dataTransfer.dropEffect = 'move';
+			if(typeof(this.dragOverCallback) == 'function')
+				this.dragOverCallback(eventObj, this.activeDragElement, event);
 		},
 		ondragEnter : function(event, eventObj)
 		{
@@ -498,7 +510,7 @@
 
 			this.isSortableActive = false;
 
-			if(this.sortable.gagClass)
+			if(this.sortable && this.sortable.gagClass)
 				BX.removeClass(this.sortable.node, this.sortable.gagClass);
 
 			BX.unbind(document, 'dragover', BX.proxy(this._ondrag, this));
@@ -506,7 +518,7 @@
 
 			if(typeof(this.dragEndCallback) == 'function')
 			{
-				this.dragEndCallback(eventObj, this.sortable.node, event);
+				this.dragEndCallback(eventObj, this.sortable ? this.sortable.node : null, event);
 			}
 
 			if(this.dragActiveClass)

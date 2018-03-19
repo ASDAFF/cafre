@@ -3,7 +3,7 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/forum/classes/general/us
 
 class CForumUser extends CAllForumUser
 {
-	function GetList($arOrder = Array("ID"=>"ASC"), $arFilter = Array(), $arAddParams = array())
+	public static function GetList($arOrder = Array("ID"=>"ASC"), $arFilter = Array(), $arAddParams = array())
 	{
 		global $DB;
 		$arSqlSearch = array();
@@ -246,7 +246,7 @@ class CForumUser extends CAllForumUser
 		return $db_res;
 	}
 
-	function GetListEx($arOrder = Array("ID"=>"ASC"), $arFilter = Array())
+	public static function GetListEx($arOrder = Array("ID"=>"ASC"), $arFilter = Array())
 	{
 		global $DB;
 		$arSqlSearch = array();
@@ -500,7 +500,7 @@ class CForumUser extends CAllForumUser
 		return $db_res;
 	}
 
-	function SearchUser($template, $arAddParams = array())
+	public static function SearchUser($template, $arAddParams = array())
 	{
 		global $DB;
 		$template = $DB->ForSql(str_replace("*", "%", $template));
@@ -595,7 +595,7 @@ class CForumUser extends CAllForumUser
 	* @param string $sNameTemplate Bitrix name template (ex: #LAST_NAME# #NAME#). Uses site name template if empty @see CSite::GetNameTemplates
 	* @return string (ex: U.LAST_NAME, U.NAME)
 	*/
-	function GetNameFieldsForQuery($sNameTemplate, $userTablePrefix = "U.")
+	public static function GetNameFieldsForQuery($sNameTemplate, $userTablePrefix = "U.")
 	{
 		global $DB;
 		$sNameTemplate = (empty($sNameTemplate) ? CSite::GetDefaultNameFormat() : $sNameTemplate);
@@ -639,7 +639,7 @@ class CForumUser extends CAllForumUser
 		return (!empty($res) ? $res : "''");
 	}
 
-	function GetFormattedNameFieldsForSelect($arParams = array(), $bReturnAll = true)
+	public static function GetFormattedNameFieldsForSelect($arParams = array(), $bReturnAll = true)
 	{
 		$arParams = (is_array($arParams) ? $arParams : array($arParams));
 		$arParams["sNameTemplate"] = trim($arParams["sNameTemplate"]);
@@ -685,7 +685,7 @@ class CForumSubscribe extends CAllForumSubscribe
 class CForumRank extends CAllForumRank
 {
 	// Tekuwie statusy posetitelej srazu ne pereschityvayutsya. Tol'ko postepenno v processe raboty.
-	function Add($arFields)
+	public static function Add($arFields)
 	{
 		global $DB;
 
@@ -708,7 +708,7 @@ class CForumRank extends CAllForumRank
 
 class CForumStat extends CALLForumStat 
 {
-	function GetListEx($arOrder = Array("ID"=>"ASC"), $arFilter = Array(), $arAddParams = array())
+	public static function GetListEx($arOrder = Array("ID"=>"ASC"), $arFilter = Array(), $arAddParams = array())
 	{
 		global $DB;
 		$arSqlSearch = array();
@@ -848,4 +848,3 @@ class CForumStat extends CALLForumStat
 		return $db_res;
 	}
 }
-?>

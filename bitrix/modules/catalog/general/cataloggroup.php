@@ -1,11 +1,15 @@
 <?
+use Bitrix\Main\Application,
+	Bitrix\Main,
+	Bitrix\Catalog;
+
 IncludeModuleLangFile(__FILE__);
 
 class CAllCatalogGroup
 {
 	protected static $arBaseGroupCache = array();
 
-	function CheckFields($ACTION, &$arFields, $ID = 0)
+	public static function CheckFields($ACTION, &$arFields, $ID = 0)
 	{
 		global $APPLICATION;
 		global $USER;
@@ -139,7 +143,7 @@ class CAllCatalogGroup
 		return $boolResult;
 	}
 
-	function GetGroupsPerms($arUserGroups = array(), $arCatalogGroupsFilter = array())
+	public static function GetGroupsPerms($arUserGroups = array(), $arCatalogGroupsFilter = array())
 	{
 		global $USER;
 
@@ -147,181 +151,175 @@ class CAllCatalogGroup
 			$arUserGroups = array($arUserGroups);
 
 		if (empty($arUserGroups))
-		{
 			$arUserGroups = (CCatalog::IsUserExists() ? $USER->GetUserGroupArray() : array(2));
-		}
-
-		$arUserGroupsFilter = array();
-		foreach ($arUserGroups as &$intUserGroupID)
-		{
-			$intUserGroupID = intval($intUserGroupID);
-			if (0 < $intUserGroupID)
-				$arUserGroupsFilter[] = $intUserGroupID;
-		}
-		if (isset($intUserGroupID))
-			unset($intUserGroupID);
+		Main\Type\Collection::normalizeArrayValuesByInt($arUserGroups);
 
 		if (!is_array($arCatalogGroupsFilter))
 			$arCatalogGroupsFilter = array($arCatalogGroupsFilter);
+		Main\Type\Collection::normalizeArrayValuesByInt($arCatalogGroupsFilter);
+		if (!empty($arCatalogGroupsFilter))
+			$arCatalogGroupsFilter = array_fill_keys($arCatalogGroupsFilter, true);
 
-		$arResult = array();
-		$arResult["view"] = array();
-		$arResult["buy"] = array();
+		$result = array(
+			'view' => array(),
+			'buy' => array()
+		);
 
-		if (empty($arUserGroupsFilter))
-			return $arResult;
+		if (empty($arUserGroups))
+			return $result;
 
-		$arData = array();
-
-		if (defined("CATALOG_SKIP_CACHE") && CATALOG_SKIP_CACHE)
+		if (defined('CATALOG_SKIP_CACHE') && CATALOG_SKIP_CACHE)
 		{
-			$dbPriceGroups = CCatalogGroup::GetGroupsList(array("GROUP_ID" => $arUserGroupsFilter));
-			while ($arPriceGroup = $dbPriceGroups->Fetch())
+			$priceTypeIterator = CCatalogGroup::GetGroupsList(array('@GROUP_ID' => $arUserGroups));
+			while ($priceType = $priceTypeIterator->Fetch())
 			{
-				$arPriceGroup["CATALOG_GROUP_ID"] = intval($arPriceGroup["CATALOG_GROUP_ID"]);
-
-				$key = (($arPriceGroup["BUY"] == "Y") ? "buy" : "view");
-				if ($key == "view")
-					if (!empty($arCatalogGroupsFilter))
-						if (!in_array($arPriceGroup["CATALOG_GROUP_ID"], $arCatalogGroupsFilter))
-							continue;
-
-				if (!in_array($arPriceGroup["CATALOG_GROUP_ID"], $arResult[$key]))
-					$arResult[$key][] = $arPriceGroup["CATALOG_GROUP_ID"];
+				$priceTypeId = (int)$priceType['CATALOG_GROUP_ID'];;
+				$key = ($priceType['BUY'] == 'Y' ? 'buy' : 'view');
+				if ($key == 'view' && !empty($arCatalogGroupsFilter) && !isset($arCatalogGroupsFilter[$priceTypeId]))
+					continue;
+				$result[$key][$priceTypeId] = $priceTypeId;
+				unset($key, $priceTypeId);
 			}
+			unset($priceType, $priceTypeIterator);
+			if (!empty($result['view']))
+				$result['view'] = array_values($result['view']);
+			if (!empty($result['buy']))
+				$result['buy'] = array_values($result['buy']);
 
-			return $arResult;
+			return $result;
 		}
 
-		$cacheTime = CATALOG_CACHE_DEFAULT_TIME;
-		if (defined("CATALOG_CACHE_TIME"))
-			$cacheTime = intval(CATALOG_CACHE_TIME);
-
-		global $CACHE_MANAGER;
-		if ($CACHE_MANAGER->Read($cacheTime, "catalog_group_perms"))
+		$data = array();
+		$cacheTime = (int)(defined('CATALOG_CACHE_TIME') ? CATALOG_CACHE_TIME : CATALOG_CACHE_DEFAULT_TIME);
+		$managedCache = Application::getInstance()->getManagedCache();
+		if ($managedCache->read($cacheTime, 'catalog_group_perms'))
 		{
-			$arData = $CACHE_MANAGER->Get("catalog_group_perms");
+			$data = $managedCache->get('catalog_group_perms');
 		}
 		else
 		{
-			$dbPriceGroups = CCatalogGroup::GetGroupsList(array());
-			while ($arPriceGroup = $dbPriceGroups->Fetch())
+			$priceTypeIterator = CCatalogGroup::GetGroupsList();
+			while ($priceType = $priceTypeIterator->Fetch())
 			{
-				$arPriceGroup["GROUP_ID"] = intval($arPriceGroup["GROUP_ID"]);
-				$arPriceGroup["CATALOG_GROUP_ID"] = intval($arPriceGroup["CATALOG_GROUP_ID"]);
+				$priceTypeId = (int)$priceType['CATALOG_GROUP_ID'];
+				$groupId = (int)($priceType['GROUP_ID']);
+				$key = ($priceType['BUY'] == 'Y' ? 'buy' : 'view');
 
-				$key = (($arPriceGroup["BUY"] == "Y") ? "buy" : "view");
-
-				$arData[$arPriceGroup["GROUP_ID"]][$key][] = intval($arPriceGroup["CATALOG_GROUP_ID"]);
+				if (!isset($data[$groupId]))
+					$data[$groupId] = array(
+						'view' => array(),
+						'buy' => array()
+					);
+				$data[$groupId][$key][$priceTypeId] = $priceTypeId;
+				unset($key, $groupId, $priceTypeId);
 			}
-			$CACHE_MANAGER->Set("catalog_group_perms", $arData);
+			unset($priceType, $priceTypeIterator);
+			if (!empty($data))
+			{
+				foreach ($data as &$groupData)
+				{
+					if (!empty($groupData['view']))
+						$groupData['view'] = array_values($groupData['view']);
+					if (!empty($groupData['buy']))
+						$groupData['buy'] = array_values($groupData['buy']);
+				}
+				unset($groupData);
+			}
+			$managedCache->set('catalog_group_perms', $data);
 		}
 
-		for ($i = 0, $cnt = count($arUserGroupsFilter); $i < $cnt; $i++)
+		foreach ($arUserGroups as &$groupId)
 		{
-			if (array_key_exists($arUserGroupsFilter[$i], $arData))
+			if (!isset($data[$groupId]))
+				continue;
+			if (!empty($data[$groupId]['view']))
 			{
-				if (array_key_exists("view", $arData[$arUserGroupsFilter[$i]]))
-					$arResult["view"] = array_merge($arResult["view"], $arData[$arUserGroupsFilter[$i]]["view"]);
-				if (array_key_exists("buy", $arData[$arUserGroupsFilter[$i]]))
-					$arResult["buy"] = array_merge($arResult["buy"], $arData[$arUserGroupsFilter[$i]]["buy"]);
+				$priceTypeList = $data[$groupId]['view'];
+				foreach ($priceTypeList as &$priceTypeId)
+				{
+					if (!empty($arCatalogGroupsFilter) && !isset($arCatalogGroupsFilter[$priceTypeId]))
+						continue;
+					$result['view'][$priceTypeId] = $priceTypeId;
+				}
+				unset($priceTypeId, $priceTypeList);
+			}
+			if (!empty($data[$groupId]['buy']))
+			{
+				$priceTypeList = $data[$groupId]['buy'];
+				foreach ($priceTypeList as &$priceTypeId)
+					$result['buy'][$priceTypeId] = $priceTypeId;
+				unset($priceTypeId, $priceTypeList);
 			}
 		}
+		unset($groupId);
 
-		$arResult["view"] = array_unique($arResult["view"]);
-		$arResult["buy"] = array_unique($arResult["buy"]);
+		if (!empty($result['view']))
+			$result['view'] = array_values($result['view']);
+		if (!empty($result['buy']))
+			$result['buy'] = array_values($result['buy']);
 
-		if (!empty($arCatalogGroupsFilter))
-		{
-			$arTmp = array();
-			foreach ($arResult["view"] as $i => $arView)
-			//for ($i = 0, $cnt = count($arResult["view"]); $i < $cnt; $i++)
-			{
-				if (in_array($arResult["view"][$i], $arCatalogGroupsFilter))
-					$arTmp[] = $arResult["view"][$i];
-			}
-			$arResult["view"] = $arTmp;
-		}
-
-		return $arResult;
+		return $result;
 	}
 
-	function GetListArray()
+	public static function GetListArray()
 	{
-		$arResult = array();
+		$result = array();
 
-		if (defined("CATALOG_SKIP_CACHE") && CATALOG_SKIP_CACHE)
+		if (defined('CATALOG_SKIP_CACHE') && CATALOG_SKIP_CACHE)
 		{
-			$dbRes = CCatalogGroup::GetListEx(
-				array("SORT" => "ASC"),
-				array(),
-				false,
-				false,
-				array("ID", "NAME", "BASE", "SORT", "NAME_LANG")
-			);
-			while ($arRes = $dbRes->Fetch())
-				$arResult[$arRes["ID"]] = $arRes;
+			$groupIterator = Catalog\GroupTable::getList(array(
+				'select' => array('ID', 'NAME', 'BASE', 'SORT', 'XML_ID', 'NAME_LANG' =>'CURRENT_LANG.NAME'),
+				'order' => array('SORT' => 'ASC', 'ID' => 'ASC')
+			));
+			while ($group = $groupIterator->fetch())
+				$result[$group['ID']] = $group;
+			unset($group, $groupIterator);
 		}
 		else
 		{
-			$cacheTime = CATALOG_CACHE_DEFAULT_TIME;
-			if (defined("CATALOG_CACHE_TIME"))
-				$cacheTime = intval(CATALOG_CACHE_TIME);
 
-			global $CACHE_MANAGER;
-			if ($CACHE_MANAGER->Read($cacheTime, "catalog_group_".LANGUAGE_ID, "catalog_group"))
+			$cacheTime = (int)(defined('CATALOG_CACHE_TIME') ? CATALOG_CACHE_TIME : CATALOG_CACHE_DEFAULT_TIME);
+			$managedCache = Application::getInstance()->getManagedCache();
+			if ($managedCache->read($cacheTime, 'catalog_group_'.LANGUAGE_ID, 'catalog_group'))
 			{
-				$arResult = $CACHE_MANAGER->Get("catalog_group_".LANGUAGE_ID);
+				$result = $managedCache->get('catalog_group_'.LANGUAGE_ID);
 			}
 			else
 			{
-				$dbRes = CCatalogGroup::GetListEx(
-					array("SORT" => "ASC"),
-					array(),
-					false,
-					false,
-					array("ID", "NAME", "BASE", "SORT", "NAME_LANG")
-				);
-				while ($arRes = $dbRes->Fetch())
-					$arResult[$arRes["ID"]] = $arRes;
-
-				$CACHE_MANAGER->Set("catalog_group_".LANGUAGE_ID, $arResult);
+				$groupIterator = Catalog\GroupTable::getList(array(
+					'select' => array('ID', 'NAME', 'BASE', 'SORT', 'XML_ID', 'NAME_LANG' =>'CURRENT_LANG.NAME'),
+					'order' => array('SORT' => 'ASC', 'ID' => 'ASC')
+				));
+				while ($group = $groupIterator->fetch())
+					$result[$group['ID']] = $group;
+				unset($group, $groupIterator);
+				$managedCache->set('catalog_group_'.LANGUAGE_ID, $result);
 			}
+			unset($managedCache, $cacheTime);
 		}
 
-		return $arResult;
+		return $result;
 	}
 
-	function GetBaseGroup()
+	public static function GetBaseGroup()
 	{
 		if (empty(self::$arBaseGroupCache) && is_array(self::$arBaseGroupCache))
 		{
-			$rsGroups = CCatalogGroup::GetListEx(
-				array(),
-				array('BASE' => 'Y'),
-				false,
-				false,
-				array('ID', 'NAME', 'NAME_LANG', 'XML_ID')
-			);
-			if ($arGroup = $rsGroups->Fetch())
+			self::$arBaseGroupCache = false;
+			$group = Catalog\GroupTable::getList(array(
+				'select' => array('ID', 'NAME', 'BASE', 'SORT', 'XML_ID', 'NAME_LANG' =>'CURRENT_LANG.NAME'),
+				'filter' => array('=BASE' => 'Y')
+			))->fetch();
+			if (!empty($group))
 			{
-				$arGroup['ID'] = intval($arGroup['ID']);
-				$arGroup['NAME_LANG'] = strval($arGroup['NAME_LANG']);
-				$arGroup['XML_ID'] = strval($arGroup['XML_ID']);
+				$group['ID'] = (int)$group['ID'];
+				$group['NAME_LANG'] = (string)$group['NAME_LANG'];
+				$group['XML_ID'] = (string)$group['XML_ID'];
 
-				self::$arBaseGroupCache = $arGroup;
+				self::$arBaseGroupCache = $group;
 			}
-			else
-			{
-				self::$arBaseGroupCache = false;
-			}
-			if (defined('CATALOG_GLOBAL_VARS') && 'Y' == CATALOG_GLOBAL_VARS)
-			{
-				global $CATALOG_BASE_GROUP;
-				$CATALOG_BASE_GROUP = self::$arBaseGroupCache;
-			}
+			unset($group);
 		}
 		return self::$arBaseGroupCache;
 	}
 }
-?>

@@ -26,6 +26,7 @@ foreach($arStatuses as $arStatus)
 		"INDEX"			=> $arResult["PATH_TO_INDEX"],
 		"RSS_CNT" => 10,
 		"CUSTOM_TITLE" => GetMessage("RSS_TITLE", array("#IDEA_CATEGORY#" => $arCategoryList[ToUpper($arResult["VARIABLES"]["category"])]["NAME"], "#IDEA_STATUS#" => $arStatusesByCode[ToUpper($arResult["VARIABLES"]["status_code"])]["VALUE"])),
+		"ALLOW_POST_CODE" => $arParams["ALLOW_POST_CODE"],
 	),
 	$component
 );
