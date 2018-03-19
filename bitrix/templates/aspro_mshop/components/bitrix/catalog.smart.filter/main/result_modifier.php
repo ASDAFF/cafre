@@ -84,10 +84,12 @@ if(!empty($brends) && count($brends)>0) {?>
 	<span class="select_brand">Выберите бренд</span>
 	<div class="list_brands"> 
 	<?
-	$ar_result=CIBlockSection::GetList(Array("SORT"=>"ASC"), Array("IBLOCK_ID"=>"26", "ID"=>$brends, 'DEPTH_LEVEL'=>2),false, Array("UF_IMG_BRAND", "NAME", 'CODE', 'ID'));
+	$ar_result=CIBlockSection::GetList(Array("SORT"=>"ASC"), Array("IBLOCK_ID"=>"26", "ID"=>$brends, 'DEPTH_LEVEL'=>2),false, Array("UF_IMG_BRAND", "UF_URL_SVG", "NAME", 'CODE', 'ID'));
 	while($res2=$ar_result->GetNext()) {?>
 		<a href="<?=$APPLICATION->GetCurPage().$res2['CODE'].'/'?>" >
-		<?if($res2["UF_IMG_BRAND"]){?>
+		<?if($res2["UF_URL_SVG"]){?>
+		<img width="100" src="<?=$res2["UF_URL_SVG"];?>"/>
+		<?}elseif($res2["UF_IMG_BRAND"]){?>
 			<?$file = CFile::ResizeImageGet($res2["UF_IMG_BRAND"], array('width'=>266, 'height'=>160), BX_RESIZE_IMAGE_PROPORTIONAL, true);?>
 			<img width="100" src="<?=$file["src"];?>"/>
 		<?}else {?>

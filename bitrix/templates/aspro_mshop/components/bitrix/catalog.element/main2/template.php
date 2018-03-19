@@ -19,7 +19,6 @@ if (!empty($arResult['SKU_PROPS'])){
 $strMainID = $this->GetEditAreaId($arResult['ID']);
 
 $strObName = 'ob'.preg_replace("/[^a-zA-Z0-9_]/", "x", $strMainID);
-
 $arItemIDs=CMShop::GetItemsIDs($arResult, "Y");
 $totalCount = CMShop::GetTotalCount($arResult);
 $arQuantityData = CMShop::GetQuantityArray($totalCount, $arItemIDs["ALL_ITEM_IDS"], "Y");
