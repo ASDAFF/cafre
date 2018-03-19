@@ -1,0 +1,86 @@
+/* Some common styles for the transition effect */
+.te-container{
+	width: 329px;
+	margin: 0px auto 40px auto;
+}
+.te-controls{
+	height: 40px;
+	position: relative;
+}
+.te-container select, a.te-next{
+	display: inline-block;
+	border: 1px solid #999;
+	padding: 5px 20px 5px 5px;
+	font-size: 15px;
+	color: #444;
+	line-height: 18px;
+	background: white;
+	cursor: pointer;
+	background: -moz-linear-gradient(top, #ffffff 0%, #f6f6f6 47%, #ededed 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ffffff), color-stop(47%,#f6f6f6), color-stop(100%,#ededed));
+	background: -o-linear-gradient(top, #ffffff 0%,#f6f6f6 47%,#ededed 100%);
+	background: -ms-linear-gradient(top, #ffffff 0%,#f6f6f6 47%,#ededed 100%);
+	background: linear-gradient(top, #ffffff 0%,#f6f6f6 47%,#ededed 100%);
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	text-overflow: ellipsis;
+	-webkit-box-shadow: 1px 1px 1px rgba(255,255,255,0.8);
+	-moz-box-shadow: 1px 1px 1px rgba(255,255,255,0.8);
+	box-shadow: 1px 1px 1px rgba(255,255,255,0.8);
+	text-shadow: 1px 1px 1px rgba(255,255,255,0.8);
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	font-family: Constantia, Palatino, "Palatino Linotype", "Palatino LT STD", Georgia, serif;
+	float: left;
+}
+.te-container select:hover, a.te-next:hover{
+	color: #000;
+}
+.te-container select:active{
+	background: #e5e5e5;
+	background: -moz-linear-gradient(top, #e5e5e5 0%, #ffffff 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#e5e5e5), color-stop(100%,#ffffff));
+	background: url(/bitrix/components/coderoid/css3animations/include/images/arrow.png) no-repeat 95% 50%, -webkit-linear-gradient(top, #e5e5e5 0%,#ffffff 100%);
+	background: -o-linear-gradient(top, #e5e5e5 0%,#ffffff 100%);
+	background: -ms-linear-gradient(top, #e5e5e5 0%,#ffffff 100%);
+	background: linear-gradient(top, #e5e5e5 0%,#ffffff 100%);
+}
+ a.te-next{
+	float: right;
+	margin-top: 5px;
+	padding: 5px 10px;
+	font-weight: bold;
+	background: -moz-linear-gradient(top, #ffffff 0%, #f6f6f6 47%, #ededed 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ffffff), color-stop(47%,#f6f6f6), color-stop(100%,#ededed));
+	background: -webkit-linear-gradient(top, #ffffff 0%,#f6f6f6 47%,#ededed 100%);
+	background: -o-linear-gradient(top, #ffffff 0%,#f6f6f6 47%,#ededed 100%);
+	background: -ms-linear-gradient(top, #ffffff 0%,#f6f6f6 47%,#ededed 100%);
+	background: linear-gradient(top, #ffffff 0%,#f6f6f6 47%,#ededed 100%);
+}
+a.te-next:active{
+	background: #e5e5e5;
+	background: -moz-linear-gradient(top, #e5e5e5 0%, #ffffff 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#e5e5e5), color-stop(100%,#ffffff));
+	background: -webkit-linear-gradient(top, #e5e5e5 0%,#ffffff 100%);
+	background: -o-linear-gradient(top, #e5e5e5 0%,#ffffff 100%);
+	background: -ms-linear-gradient(top, #e5e5e5 0%,#ffffff 100%);
+	background: linear-gradient(top, #e5e5e5 0%,#ffffff 100%);
+}
+.te-container select:focus{
+	outline: none;
+}
+.te-shadow{
+	position: absolute;
+	top: 30px;
+	left: 50%;
+	width: 373px;
+	height: 470px;
+	margin-left: -186px;
+	background: transparent url(/bitrix/components/coderoid/css3animations/include/images/shadow.png) no-repeat center bottom;
+}
+.te-wrapper{
+	position: relative;
+	width: 329px;
+	height: 425px;
+}

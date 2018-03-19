@@ -1,0 +1,60 @@
+<?
+$aMenuLinks = Array(
+	Array(
+		"Услуги", 
+		"#SITE_DIR#services/", 
+		Array(), 
+		Array(), 
+		"" 
+	),
+	Array(
+		"О компании", 
+		"#SITE_DIR#company/", 
+		Array(), 
+		Array(), 
+		"" 
+	),
+	Array(
+		"Контакты", 
+		"#SITE_DIR#contacts/", 
+		Array(), 
+		Array(), 
+		"" 
+	),
+	Array(
+		"Условия оплаты", 
+		"#SITE_DIR#help/payment/", 
+		Array(), 
+		Array(), 
+		"" 
+	),
+	Array(
+		"Условия доставки", 
+		"#SITE_DIR#help/delivery/", 
+		Array(), 
+		Array(), 
+		"" 
+	),
+	Array(
+		"Гарантия на товар", 
+		"#SITE_DIR#help/warranty/", 
+		Array(), 
+		Array(), 
+		"" 
+	),
+	Array(
+		"Магазины", 
+		"#SITE_DIR#contacts/stores/", 
+		Array(), 
+		Array(), 
+		"" 
+	),
+	Array(
+		"Вопрос-ответ", 
+		"#SITE_DIR#info/faq/", 
+		Array(), 
+		Array(), 
+		"" 
+	)
+);
+?>

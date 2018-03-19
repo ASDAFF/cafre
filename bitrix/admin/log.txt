@@ -1,0 +1,75 @@
+29.11.2017 12:19:37 GetAllCategories
+20.601
+-------------------------
+29.11.2017 12:19:58 GetAllProductsCategories
+4.028
+-------------------------
+29.11.2017 12:22:54 GetAllProducts
+13.737
+-------------------------
+01.12.2017 11:53:11 GetAllCategories
+18.227
+-------------------------
+01.12.2017 11:53:30 GetAllProductsCategories
+4.004
+-------------------------
+01.12.2017 12:43:49 GetAllProducts
+20.55
+-------------------------
+01.12.2017 12:44:09 GetNewOffers
+6.948
+-------------------------
+02.12.2017 16:15:11 GetAllCategories
+24.314
+-------------------------
+02.12.2017 16:15:36 GetAllProducts
+15.599
+-------------------------
+02.12.2017 16:15:51 GetAllProductsCategories
+3.765
+-------------------------
+02.12.2017 16:15:55 GetNewOffers
+8.756
+-------------------------
+04.12.2017 10:48:07 GetAllCategories
+21.014
+-------------------------
+04.12.2017 10:48:28 GetAllProductsCategories
+4.481
+-------------------------
+0 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated
+1 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated

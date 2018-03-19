@@ -1,0 +1,6 @@
+<?
+class CYenisitemodel3D
+{
+
+}
+?>

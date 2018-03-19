@@ -1,0 +1,50 @@
+<?
+$MESS["PHONE"] = "Телефон";
+$MESS["SOCIAL"] = "Социальные сети";
+$MESS["DESCRIPTION"] = "Описание магазина";
+$MESS["ITEMS"] = "Товары";
+$MESS["LOGO"] = "Логотип";
+$MESS["REGISTER_INCLUDE_AREA"] = "Текст о регистрации";
+$MESS["AUTH_INCLUDE_AREA"] = "Текст об авторизации";
+$MESS["FRONT_IMG"] = "Изображение компании";
+$MESS["EMPTY_CART"] = "пуста";
+$MESS["ONE_CLICK_BUY"] = "Покупка в 1 клик";
+$MESS["QUICK_ORDER"] = "Быстрый заказ";
+
+$MESS["CATALOG_VIEW_MORE"] = "... Показать все";
+$MESS["CATALOG_VIEW_LESS"] = "... Свернуть";
+$MESS["JS_REQUIRED"] = 'Заполните это поле!';
+$MESS["JS_FORMAT"] = 'Неверный формат!';
+$MESS["JS_FILE_EXT"] = 'Недопустимое расширение файла!';
+$MESS["JS_PASSWORD_COPY"] = 'Пароли не совпадают!';
+$MESS["JS_PASSWORD_LENGTH"] = 'Минимум 6 символов!';
+$MESS["JS_ERROR"] = 'Неверно заполнено поле!';
+$MESS["JS_FILE_SIZE"] = 'Максимальный размер 5мб!';
+$MESS["JS_FILE_BUTTON_NAME"] = 'Выберите файл';
+$MESS["JS_FILE_DEFAULT"] = 'Файл не найден';
+$MESS["JS_DATE"] = 'Некорректная дата!';
+$MESS["FANCY_CLOSE"] = 'Закрыть';
+$MESS["FANCY_NEXT"] = 'Следующий';
+$MESS["FANCY_PREV"] = 'Предыдущий';
+$MESS["TOP_AUTH_REGISTER"] = 'Регистрация';
+$MESS["CALLBACK"] = 'Заказать звонок';
+$MESS["UNTIL_AKC"] = 'До конца акции';
+$MESS["TITLE_QUANTITY_BLOCK"] = 'Остаток';
+$MESS["TITLE_QUANTITY"] = 'штук';
+
+$MESS["COUNTDOWN_SEC"] = 'сек.';
+$MESS["COUNTDOWN_MIN"] = 'мин.';
+$MESS["COUNTDOWN_HOUR"] = 'час.';
+$MESS["COUNTDOWN_DAY0"] = 'дней';
+$MESS["COUNTDOWN_DAY1"] = 'день';
+$MESS["COUNTDOWN_DAY2"] = 'дня';
+$MESS["COUNTDOWN_WEAK0"] = 'Недель';
+$MESS["COUNTDOWN_WEAK1"] = 'Неделя';
+$MESS["COUNTDOWN_WEAK2"] = 'Недели';
+$MESS["COUNTDOWN_MONTH0"] = 'Месяцев';
+$MESS["COUNTDOWN_MONTH1"] = 'Месяц';
+$MESS["COUNTDOWN_MONTH2"] = 'Месяца';
+$MESS["COUNTDOWN_YEAR0"] = 'Лет';
+$MESS["COUNTDOWN_YEAR1"] = 'Год';
+$MESS["COUNTDOWN_YEAR2"] = 'Года';
+?>

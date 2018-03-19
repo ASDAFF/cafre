@@ -1,0 +1,32 @@
+<?
+$MESS["PLAYER_PARAM"] = "Настройки плеера";
+$MESS["BUTTON_PARAM"] = "Настройки кнопки";
+$MESS["BUT_OR_PLAY"] = "Кнопка или плеер? ";
+$MESS["BUTTON"] = "Кнопка";
+$MESS["PLAYER"] = "Плеер";
+$MESS["FULLSCREEN"] = "На весь экран";
+$MESS["ZOOM"] = "ZOOM";
+$MESS["ANAGLYPH"] = "Анаглиф";
+$MESS["AUTOPLAY"] = "Autoplay";
+$MESS["SIZE"] = "Выберите размер";
+$MESS["SMALL"] = "512х384";
+$MESS["MIDDLE"] = "640х480";
+$MESS["BIG"] = "800х600";
+$MESS["HEIGHT"] = "Высота";
+$MESS["WIDTH"] = "Ширина";
+$MESS["DESIGN"] = "Дизайн кнопки";
+$MESS["GREEN"] = "Зеленый";
+$MESS["ORANGE"] = "Оранжевый";
+$MESS["GRAY"] = "Серый";
+$MESS["BLUE"] = "Синий";
+$MESS["BUTTON_TEXT"] = "Текст на кнопке";
+$MESS["BORDER"] = "Толщина рамки";
+$MESS["BORDER_COLOR"] = "Цвет рамки";
+$MESS["BACKGROUND_COLOR"] = "Цвет фона";
+$MESS["SHADOW_COLOR"] = "Цвет тени";
+$MESS["OPACITY_BORDER"] = "Непрозрачность рамки (от 0 до 1)";
+$MESS["OPACITY_BACKGROUND"] = "Непрозрачность фона (от 0 до 1)";
+$MESS["OPACITY_SHADOW"] = "Непрозрачность тени (от 0 до 1)";
+$MESS["ID"] = "ID товара";
+$MESS["OTHER"] = "Другое";
+?>

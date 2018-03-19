@@ -1,0 +1,139 @@
+<?
+global $MESS;
+$strPath2Lang = str_replace("\\", "/", __FILE__);
+$strPath2Lang = substr($strPath2Lang, 0, strlen($strPath2Lang)-strlen("/install/index.php"));
+include(GetLangFileName($strPath2Lang."/lang/", "/install/index.php"));
+
+class aspro_mshop extends CModule {
+	var $MODULE_ID = "aspro.mshop";
+	var $MODULE_VERSION;
+	var $MODULE_VERSION_DATE;
+	var $MODULE_NAME;
+	var $MODULE_DESCRIPTION;
+	var $MODULE_CSS;
+	var $MODULE_GROUP_RIGHTS = "Y";
+
+	function aspro_mshop(){
+		$arModuleVersion = array();
+
+		$path = str_replace("\\", "/", __FILE__);
+		$path = substr($path, 0, strlen($path) - strlen("/index.php"));
+		include($path."/version.php");
+
+		$this->MODULE_VERSION = $arModuleVersion["VERSION"];
+		$this->MODULE_VERSION_DATE = $arModuleVersion["VERSION_DATE"];
+		$this->MODULE_NAME = GetMessage("SCOM_INSTALL_NAME_MSHOP"); 
+		$this->MODULE_DESCRIPTION = GetMessage("SCOM_INSTALL_DESCRIPTION_MSHOP");
+		$this->PARTNER_NAME = GetMessage("SPER_PARTNER");
+		$this->PARTNER_URI = GetMessage("PARTNER_URI");
+	}
+	
+	function checkValid(){
+		return true;
+	}
+
+	function InstallDB($install_wizard = true){
+		global $DB, $DBType, $APPLICATION;
+
+		if(preg_match ( '/.bitrixlabs.ru/' , $_SERVER["HTTP_HOST"])){
+			RegisterModuleDependences("main", "OnBeforeProlog", "aspro.mshop", "CMShop", "correctInstall");
+		}
+
+		RegisterModule("aspro.mshop"); 
+		RegisterModuleDependences("main", "OnBeforeProlog", "aspro.mshop", "CMShop", "ShowPanel");
+		return true;
+	}
+
+	function UnInstallDB($arParams = array()){
+		global $DB, $DBType, $APPLICATION;
+		
+		UnRegisterModule("aspro.mshop");
+		
+		return true;
+	}
+
+	function InstallEvents(){
+		RegisterModuleDependences("main", "OnBeforeUserRegister", "aspro.mshop", "CMShop", "OnBeforeUserUpdateHandler");
+		RegisterModuleDependences("main", "OnBeforeUserAdd", "aspro.mshop", "CMShop", "OnBeforeUserUpdateHandler");
+		RegisterModuleDependences("main", "OnBeforeUserUpdate", "aspro.mshop", "CMShop","OnBeforeUserUpdateHandler");
+		RegisterModuleDependences("sale", "OnSaleComponentOrderOneStepPersonType", "aspro.mshop", "CMShop", "OnSaleComponentOrderOneStepPersonTypeHandler");
+		
+		return true;
+	}
+
+	function UnInstallEvents(){
+		UnRegisterModuleDependences("main", "OnBeforeUserRegister", "aspro.mshop", "CMShop", "OnBeforeUserUpdateHandler");
+		UnRegisterModuleDependences("main", "OnBeforeUserAdd", "aspro.mshop", "CMShop", "OnBeforeUserUpdateHandler");
+		UnRegisterModuleDependences("main", "OnBeforeUserUpdate", "aspro.mshop", "CMShop","OnBeforeUserUpdateHandler");
+		UnRegisterModuleDependences("main", "OnBeforeProlog", "aspro.mshop", "CMShop", "ShowPanel");
+		UnRegisterModuleDependences("sale", "OnSaleComponentOrderOneStepPersonType", "aspro.mshop", "CMShop", "OnSaleComponentOrderOneStepPersonTypeHandler");
+		return true;
+	}
+	
+	function removeDirectory($dir){
+		if($objs = glob($dir."/*")){
+			foreach($objs as $obj){
+				if(is_dir($obj)){
+					CMShop::removeDirectory($obj);
+				}
+				else{
+					if(!unlink($obj)){
+						if(chmod($obj, 0777)){
+							unlink($obj);
+						}
+					}
+				}
+			}
+		}
+		if(!rmdir($dir)){
+			if(chmod($dir, 0777)){
+				rmdir($dir);
+			}
+		}
+	}
+
+	function InstallFiles(){
+		CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/aspro.mshop/install/components", $_SERVER["DOCUMENT_ROOT"]."/bitrix/components", true, true);
+		CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/aspro.mshop/install/js", $_SERVER["DOCUMENT_ROOT"]."/bitrix/js", true, true);
+		CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/aspro.mshop/install/wizards", $_SERVER["DOCUMENT_ROOT"]."/bitrix/wizards", true, true);
+		CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/aspro.mshop/install/images", $_SERVER["DOCUMENT_ROOT"]."/bitrix/images", true, true);
+
+		if(preg_match('/.bitrixlabs.ru/', $_SERVER["HTTP_HOST"])){
+			@set_time_limit(0);
+			require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/fileman/include.php");
+			CFileMan::DeleteEx(array("s1", "/bitrix/modules/aspro.mshop/install/wizards"));
+		}
+
+		return true;
+	}
+
+	function InstallPublic(){
+	}
+
+	function UnInstallFiles(){
+		DeleteDirFilesEx("/bitrix/wizards/aspro/mshop/");
+
+		return true;
+	}
+
+	function DoInstall(){
+		global $APPLICATION, $step;
+
+		$this->InstallFiles();
+		$this->InstallDB(false);
+		$this->InstallEvents();
+		$this->InstallPublic();
+
+		$APPLICATION->IncludeAdminFile(GetMessage("SCOM_INSTALL_TITLE"), $_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/aspro.mshop/install/step.php");
+	}
+
+	function DoUninstall(){
+		global $APPLICATION, $step;
+
+		$this->UnInstallDB();
+		$this->UnInstallFiles();
+		$this->UnInstallEvents();
+		$APPLICATION->IncludeAdminFile(GetMessage("SCOM_UNINSTALL_TITLE"), $_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/aspro.mshop/install/unstep.php");
+	}
+}
+?>

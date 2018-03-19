@@ -1,0 +1,1 @@
+<img alt="companypic.png" src="#SITE_DIR#include/d634e35004ae7f5ca27752156a7f8042.png" title="companypic.png">

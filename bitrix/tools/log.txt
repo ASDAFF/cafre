@@ -1,0 +1,68 @@
+13.11.2017 00:10:20 GetAllProductOffers
+0 prices updated
+0 quantities updated
+1510506622.054
+-------------------------
+13.11.2017 18:10:19 GetAllProductOffers
+0 prices updated
+0 quantities updated
+1510571421.249
+-------------------------
+14.11.2017 12:10:15 GetAllProductOffers
+0 prices updated
+0 quantities updated
+1510636220.289
+-------------------------
+28.11.2017 15:10:07 GetNewOffers
+8.292
+-------------------------
+04.12.2017 12:38:48 GetAllProducts
+22.361
+-------------------------
+04.12.2017 12:39:10 GetNewOffers
+7.042
+-------------------------
+0 prices updated
+1 quantities updated
+0 prices updated
+1 quantities updated
+0 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated
+0 prices updated
+0 quantities updated
+0 prices updated
+2 quantities updated
+0 prices updated
+0 quantities updated
