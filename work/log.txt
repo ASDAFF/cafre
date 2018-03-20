@@ -8651,3 +8651,53 @@ Array
         )
 
 )
+
+Array
+(
+    [NAME] => Dee Dee
+    [EMAIL] => dee@mail.ru
+    [PHONE] => 8(999) 999-9999
+    [LOCATION] => Московская область, Москва
+    [ADDRESS] => 
+    [add] => false
+    [FULLADRES] => Московская область, Москва, 
+)
+ 756res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre756</UID><Date xmlns="MC">2018-03-19T13:49:10</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">Dee Dee</Name><Phone xmlns="MC">8(999) 999-9999</Phone><Address xmlns="MC">РњРѕСЃРєРѕРІСЃРєР°СЏ РѕР±Р»Р°СЃС‚СЊ, РњРѕСЃРєРІР°, </Address><eMail xmlns="MC">dee@mail.ru</eMail><Gds xmlns="MC"><ID>00000018718</ID><Qty>1</Qty><Cost>53</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)
+
+Array
+(
+    [NAME] => dee
+    [EMAIL] => user_152145839958@cafre.ru
+    [PHONE] => 8(999) 999-9999
+    [LOCATION] => Московская область, Москва
+    [ADDRESS] => 
+    [add] => false
+    [FULLADRES] => Московская область, Москва, 
+)
+ 759res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre759</UID><Date xmlns="MC">2018-03-19T14:19:59</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">dee</Name><Phone xmlns="MC">8(999) 999-9999</Phone><Address xmlns="MC">РњРѕСЃРєРѕРІСЃРєР°СЏ РѕР±Р»Р°СЃС‚СЊ, РњРѕСЃРєРІР°, </Address><eMail xmlns="MC">user_152145839958@cafre.ru</eMail><Gds xmlns="MC"><ID>00000015862</ID><Qty>1</Qty><Cost>410</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)

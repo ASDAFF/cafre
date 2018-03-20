@@ -1,13 +1,16 @@
 <?
+set_time_limit(0);
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");?>
 <link href="0.css" type="text/css"  rel="stylesheet" />
+<meta http-equiv="Content-Type" Content="text/html; charset=utf-8">
 <?
 if(isset($_GET['commit'])&&isset($_GET['filename'])) {
 	exec('git show '.$_GET['commit'], $all);
 	$start=0;
 	foreach ($all as $k => $v) {
 		if(strpos($v, 'iff --git ')===1) {
-			$filename=substr(str_replace('diff --git ', '', $v), 0, strpos(str_replace('diff --git ', '', $v), ' '));
+			$filename=substr(str_replace('diff --git ', '', $v), 0, strpos(str_replace('diff --git ', '', $v), ' '));			
+			$_GET['filename']='a'.substr($_GET['filename'], 1);
 			if($filename==$_GET['filename']) $start=1;
 			elseif($start==1) break;
 		}
@@ -35,7 +38,7 @@ else {?>
 		$all=array();
 		$files=array();
 		echo "<p data-name='".$value['date']." ".$value['name']."' data-ud='".$value['id']."'>".$value['date']."&nbsp;<a href='#' class='files_commit'>".$value['name']."</a></p>";
-		echo "<form><p class='files_in_commit'><br><button class='send_file' type='submit'>ќтправить</button></p></form>";
+		echo "<form><p class='files_in_commit'><br><button class='send_file' type='submit'>Этправить</button></p></form>";
 		
 		if($key==100) break;	
 	}

@@ -1,226 +1,162 @@
-2018-Mar-19 10:01:57 Наличие необходимых модулей php (check_php_modules): Ok
+2018-Mar-19 12:40:17 Наличие необходимых модулей php (check_php_modules): Ok
 Все необходимые модули установлены
-2018-Mar-19 10:01:57 Обязательные параметры PHP (check_php_settings): Ok
+2018-Mar-19 12:40:17 Обязательные параметры PHP (check_php_settings): Ok
 Настройки правильные
-2018-Mar-19 10:01:57 Модули веб-сервера (check_security): Ok
+2018-Mar-19 12:40:17 Модули веб-сервера (check_security): Ok
 Конфликтов не выявлено
-2018-Mar-19 10:01:57 Значения переменных сервера (check_server_vars): Ok
+2018-Mar-19 12:40:17 Значения переменных сервера (check_server_vars): Ok
 Корректные
-2018-Mar-19 10:01:58 Сохранение сессии (check_session): Ok
+2018-Mar-19 12:40:17 Сохранение сессии (check_session): Ok
 50% done
-2018-Mar-19 10:01:58 Сохранение сессии (check_session): Ok
+2018-Mar-19 12:40:17 Сохранение сессии (check_session): Ok
 Успешно
-2018-Mar-19 10:01:58 Параметры настройки UTF (mbstring и константа BX_UTF) (check_mbstring): Ok
+2018-Mar-19 12:40:18 Параметры настройки UTF (mbstring и константа BX_UTF) (check_mbstring): Ok
 Правильные. Сайт работает в однобайтовой кодировке
-2018-Mar-19 10:01:58 Служебные скрипты в корне сайта (check_install_scripts): Ok
+2018-Mar-19 12:40:18 Служебные скрипты в корне сайта (check_install_scripts): Ok
 Отсутствуют
-2018-Mar-19 10:01:58 Работа с сокетами (check_socket): Ok
+2018-Mar-19 12:40:18 Работа с сокетами (check_socket): Ok
 Connection to ssl://test.cafre.ru:443	Success
 
 Успешно
-2018-Mar-19 10:01:58 Выполнение агентов на cron (check_bx_crontab): Warning
+2018-Mar-19 12:40:18 Выполнение агентов на cron (check_bx_crontab): Warning
 Замечание. Агенты выполняются на хитах, рекомендуется перевести выполнение агентов на cron
-2018-Mar-19 10:01:58 Параметры подключения к базе данных (check_dbconn_settings): Ok
+2018-Mar-19 12:40:18 Параметры подключения к базе данных (check_dbconn_settings): Ok
 Успешно
-2018-Mar-19 10:01:59 Лишний вывод в файлах конфигурации (check_dbconn): Ok
+2018-Mar-19 12:40:18 Лишний вывод в файлах конфигурации (check_dbconn): Ok
 Connection to ssl://test.cafre.ru:443	Success
 
 Успешно
-2018-Mar-19 10:01:59 Сохранение сессии без UserAgent (check_session_ua): Ok
+2018-Mar-19 12:40:18 Сохранение сессии без UserAgent (check_session_ua): Ok
 50% done
 Connection to ssl://test.cafre.ru:443	Success
 
-2018-Mar-19 10:01:59 Сохранение сессии без UserAgent (check_session_ua): Ok
+2018-Mar-19 12:40:18 Сохранение сессии без UserAgent (check_session_ua): Ok
 Connection to ssl://test.cafre.ru:443	Success
 
 Успешно
-2018-Mar-19 10:01:59 Настройки сайтов (check_sites): Ok
+2018-Mar-19 12:40:18 Настройки сайтов (check_sites): Ok
 Правильные
-2018-Mar-19 10:01:59 Передача объектов по ссылке (check_clone): Ok
+2018-Mar-19 12:40:18 Передача объектов по ссылке (check_clone): Ok
 Успешно
-2018-Mar-19 10:01:59 Размер стека и pcre.recursion_limit (check_pcre_recursion): Warning
+2018-Mar-19 12:40:18 Размер стека и pcre.recursion_limit (check_pcre_recursion): Warning
 Connection to ssl://test.cafre.ru:443	Success
 
 Замечание. Возможны проблемы в работе с длинными строками из-за системных ограничений
-2018-Mar-19 10:01:59 Загрузка файла (check_upload): Ok
+2018-Mar-19 12:40:18 Загрузка файла (check_upload): Ok
 Connection to ssl://test.cafre.ru:443	Success
 
 Успешно
-2018-Mar-19 10:01:59 Загрузка файла больше 4Мб (check_upload_big): Ok
+2018-Mar-19 12:40:18 Загрузка файла больше 4Мб (check_upload_big): Ok
 Connection to ssl://test.cafre.ru:443	Success
 
 Успешно
-2018-Mar-19 10:01:59 Загрузка файла через php://input (check_upload_raw): Ok
+2018-Mar-19 12:40:19 Загрузка файла через php://input (check_upload_raw): Ok
 Connection to ssl://test.cafre.ru:443	Success
 
 Успешно
-2018-Mar-19 10:02:00 Передача POST запроса с большим числом параметров (check_post): Ok
+2018-Mar-19 12:40:19 Передача POST запроса с большим числом параметров (check_post): Ok
 Connection to ssl://test.cafre.ru:443	Success
 
 Успешно
-2018-Mar-19 10:02:00 Отправка почты (check_mail): Ok
+2018-Mar-19 12:40:19 Отправка почты (check_mail): Ok
 Успешно
-2018-Mar-19 10:02:00 Отправка почтового сообщения больше 64Кб (check_mail_big): Ok
+2018-Mar-19 12:40:19 Отправка почтового сообщения больше 64Кб (check_mail_big): Ok
 Успешно
-2018-Mar-19 10:02:00 Проверка на наличие неотправленных сообщений (check_mail_b_event): Ok
+2018-Mar-19 12:40:19 Проверка на наличие неотправленных сообщений (check_mail_b_event): Ok
 Успешно
-2018-Mar-19 10:02:00 Внутреннее перенаправление (функция LocalRedirect) (check_localredirect): Ok
+2018-Mar-19 12:40:19 Внутреннее перенаправление (функция LocalRedirect) (check_localredirect): Ok
 50% done
 Connection to ssl://test.cafre.ru:443	Success
 
-2018-Mar-19 10:02:00 Внутреннее перенаправление (функция LocalRedirect) (check_localredirect): Ok
+2018-Mar-19 12:40:19 Внутреннее перенаправление (функция LocalRedirect) (check_localredirect): Ok
 Connection to ssl://test.cafre.ru:443	Success
 
 Успешно
-2018-Mar-19 10:02:01 Фактическое ограничение памяти (check_memory_limit): Ok
+2018-Mar-19 12:40:19 Фактическое ограничение памяти (check_memory_limit): Ok
 20% done
 Connection to ssl://test.cafre.ru:443	Success
 
-2018-Mar-19 10:02:01 Фактическое ограничение памяти (check_memory_limit): Ok
+2018-Mar-19 12:40:19 Фактическое ограничение памяти (check_memory_limit): Ok
 40% done
 Connection to ssl://test.cafre.ru:443	Success
 
-2018-Mar-19 10:02:01 Фактическое ограничение памяти (check_memory_limit): Ok
+2018-Mar-19 12:40:19 Фактическое ограничение памяти (check_memory_limit): Ok
 60% done
 Connection to ssl://test.cafre.ru:443	Success
 
-2018-Mar-19 10:02:01 Фактическое ограничение памяти (check_memory_limit): Ok
+2018-Mar-19 12:40:19 Фактическое ограничение памяти (check_memory_limit): Ok
 80% done
 Connection to ssl://test.cafre.ru:443	Success
 
-2018-Mar-19 10:02:01 Фактическое ограничение памяти (check_memory_limit): Warning
+2018-Mar-19 12:40:20 Фактическое ограничение памяти (check_memory_limit): Ok
 Connection to ssl://test.cafre.ru:443	Success
 
-Замечание. Не менее 256 М Значение memory_limit было увеличено с 128M до 512M на момент тестирования через ini_set.
-2018-Mar-19 10:02:02 Работа с файлами кеша (check_cache): Ok
+Не менее 256 М
+2018-Mar-19 12:40:20 Работа с файлами кеша (check_cache): Ok
 Успешно
-2018-Mar-19 10:02:02 Доступ к серверу обновлений (check_update): Ok
+2018-Mar-19 12:40:20 Доступ к серверу обновлений (check_update): Ok
 Успешно
-2018-Mar-19 10:02:02 HTTP авторизация (check_http_auth): Ok
-Connection to ssl://test.cafre.ru:443	Success
-
-Успешно
-2018-Mar-19 10:02:02 Создание и запуск файла (check_exec): Ok
+2018-Mar-19 12:40:20 HTTP авторизация (check_http_auth): Ok
 Connection to ssl://test.cafre.ru:443	Success
 
 Успешно
-2018-Mar-19 10:02:02 Функция getimagesize для swf (check_getimagesize): Ok
+2018-Mar-19 12:40:20 Создание и запуск файла (check_exec): Ok
+Connection to ssl://test.cafre.ru:443	Success
+
 Успешно
-2018-Mar-19 10:02:02 Версия MySQL-сервера (check_mysql_bug_version): Ok
+2018-Mar-19 12:40:20 Функция getimagesize для swf (check_getimagesize): Ok
 Успешно
-2018-Mar-19 10:02:03 Время на БД и веб-сервере (check_mysql_time): Ok
+2018-Mar-19 12:40:20 Версия MySQL-сервера (check_mysql_bug_version): Ok
 Успешно
-2018-Mar-19 10:02:03 Режим работы MySQL (check_mysql_mode): Ok
+2018-Mar-19 12:40:22 Время на БД и веб-сервере (check_mysql_time): Ok
 Успешно
-2018-Mar-19 10:02:03 Кодировка соединения (check_mysql_connection_charset): Ok
+2018-Mar-19 12:40:22 Режим работы MySQL (check_mysql_mode): Ok
+Успешно
+2018-Mar-19 12:40:22 Кодировка соединения (check_mysql_connection_charset): Ok
 character_set_connection=cp1251, collation_connection=cp1251_general_ci, character_set_results=cp1251
 Успешно
-2018-Mar-19 10:02:03 Кодировка базы данных (check_mysql_db_charset): Ok
+2018-Mar-19 12:40:22 Кодировка базы данных (check_mysql_db_charset): Ok
 CHARSET=cp1251, COLLATION=cp1251_general_ci
 Успешно
-2018-Mar-19 10:02:05 Кодировки таблиц в БД (check_mysql_table_charset): Ok
+2018-Mar-19 12:40:22 Кодировки таблиц в БД (check_mysql_table_charset): Ok
 Успешно
-2018-Mar-19 10:02:06 Структура базы данных (check_mysql_table_structure): Ok
+2018-Mar-19 12:40:22 Структура базы данных (check_mysql_table_structure): Ok
 0% done
-2018-Mar-19 10:02:12 Структура базы данных (check_mysql_table_structure): Ok
+2018-Mar-19 12:40:23 Структура базы данных (check_mysql_table_structure): Ok
 1% done
-2018-Mar-19 10:02:12 Структура базы данных (check_mysql_table_structure): Ok
+2018-Mar-19 12:40:23 Структура базы данных (check_mysql_table_structure): Ok
 3% done
-2018-Mar-19 10:02:12 Структура базы данных (check_mysql_table_structure): Ok
+2018-Mar-19 12:40:23 Структура базы данных (check_mysql_table_structure): Ok
 5% done
-2018-Mar-19 10:02:13 Структура базы данных (check_mysql_table_structure): Ok
+2018-Mar-19 12:40:23 Структура базы данных (check_mysql_table_structure): Ok
 7% done
-2018-Mar-19 10:02:13 Структура базы данных (check_mysql_table_structure): Ok
+2018-Mar-19 12:40:23 Структура базы данных (check_mysql_table_structure): Ok
 9% done
-2018-Mar-19 10:02:14 Структура базы данных (check_mysql_table_structure): Ok
+2018-Mar-19 12:40:24 Структура базы данных (check_mysql_table_structure): Ok
 11% done
-2018-Mar-19 10:02:14 Структура базы данных (check_mysql_table_structure): Ok
+2018-Mar-19 12:40:24 Структура базы данных (check_mysql_table_structure): Ok
 13% done
-2018-Mar-19 10:02:14 Структура базы данных (check_mysql_table_structure): Ok
+2018-Mar-19 12:40:24 Структура базы данных (check_mysql_table_structure): Ok
 15% done
-2018-Mar-19 10:02:14 Структура базы данных (check_mysql_table_structure): Ok
+2018-Mar-19 12:40:24 Структура базы данных (check_mysql_table_structure): Ok
 17% done
-2018-Mar-19 10:02:19 Структура базы данных (check_mysql_table_structure): Ok
+2018-Mar-19 12:40:24 Структура базы данных (check_mysql_table_structure): Ok
 19% done
-2018-Mar-19 10:02:20 Структура базы данных (check_mysql_table_structure): Ok
+2018-Mar-19 12:40:25 Структура базы данных (check_mysql_table_structure): Ok
 21% done
-2018-Mar-19 10:02:20 Структура базы данных (check_mysql_table_structure): Ok
+2018-Mar-19 12:40:25 Структура базы данных (check_mysql_table_structure): Ok
 23% done
-2018-Mar-19 10:02:21 Структура базы данных (check_mysql_table_structure): Ok
+2018-Mar-19 12:40:25 Структура базы данных (check_mysql_table_structure): Ok
 25% done
-2018-Mar-19 10:02:21 Структура базы данных (check_mysql_table_structure): Ok
+2018-Mar-19 12:40:25 Структура базы данных (check_mysql_table_structure): Ok
 27% done
-2018-Mar-19 10:02:21 Структура базы данных (check_mysql_table_structure): Ok
+2018-Mar-19 12:40:25 Структура базы данных (check_mysql_table_structure): Ok
 29% done
-2018-Mar-19 10:02:21 Структура базы данных (check_mysql_table_structure): Ok
+2018-Mar-19 12:40:25 Структура базы данных (check_mysql_table_structure): Ok
 31% done
-2018-Mar-19 10:02:29 Структура базы данных (check_mysql_table_structure): Ok
+2018-Mar-19 12:40:26 Структура базы данных (check_mysql_table_structure): Ok
 33% done
-2018-Mar-19 10:02:32 Структура базы данных (check_mysql_table_structure): Ok
+2018-Mar-19 12:40:26 Структура базы данных (check_mysql_table_structure): Ok
 35% done
-2018-Mar-19 10:02:34 Структура базы данных (check_mysql_table_structure): Ok
+2018-Mar-19 12:40:26 Структура базы данных (check_mysql_table_structure): Ok
 37% done
-2018-Mar-19 10:02:58 Структура базы данных (check_mysql_table_structure): Ok
-39% done
-2018-Mar-19 10:02:58 Структура базы данных (check_mysql_table_structure): Ok
-41% done
-2018-Mar-19 10:02:58 Структура базы данных (check_mysql_table_structure): Ok
-43% done
-2018-Mar-19 10:03:07 Структура базы данных (check_mysql_table_structure): Ok
-45% done
-2018-Mar-19 10:03:08 Структура базы данных (check_mysql_table_structure): Ok
-47% done
-2018-Mar-19 10:03:08 Структура базы данных (check_mysql_table_structure): Ok
-49% done
-2018-Mar-19 10:03:08 Структура базы данных (check_mysql_table_structure): Ok
-50% done
-2018-Mar-19 10:03:24 Структура базы данных (check_mysql_table_structure): Ok
-52% done
-2018-Mar-19 10:03:25 Структура базы данных (check_mysql_table_structure): Ok
-54% done
-2018-Mar-19 10:03:27 Структура базы данных (check_mysql_table_structure): Ok
-56% done
-2018-Mar-19 10:03:27 Структура базы данных (check_mysql_table_structure): Ok
-58% done
-2018-Mar-19 10:03:30 Структура базы данных (check_mysql_table_structure): Ok
-60% done
-2018-Mar-19 10:03:30 Структура базы данных (check_mysql_table_structure): Ok
-62% done
-2018-Mar-19 10:03:30 Структура базы данных (check_mysql_table_structure): Ok
-64% done
-2018-Mar-19 10:03:30 Структура базы данных (check_mysql_table_structure): Ok
-66% done
-2018-Mar-19 10:03:30 Структура базы данных (check_mysql_table_structure): Ok
-68% done
-2018-Mar-19 10:03:35 Структура базы данных (check_mysql_table_structure): Ok
-70% done
-2018-Mar-19 10:03:35 Структура базы данных (check_mysql_table_structure): Ok
-72% done
-2018-Mar-19 10:03:35 Структура базы данных (check_mysql_table_structure): Ok
-74% done
-2018-Mar-19 10:03:35 Структура базы данных (check_mysql_table_structure): Ok
-76% done
-2018-Mar-19 10:03:36 Структура базы данных (check_mysql_table_structure): Ok
-78% done
-2018-Mar-19 10:03:40 Структура базы данных (check_mysql_table_structure): Ok
-80% done
-2018-Mar-19 10:03:42 Структура базы данных (check_mysql_table_structure): Ok
-82% done
-2018-Mar-19 10:03:44 Структура базы данных (check_mysql_table_structure): Ok
-84% done
-2018-Mar-19 10:03:44 Структура базы данных (check_mysql_table_structure): Ok
-86% done
-2018-Mar-19 10:03:44 Структура базы данных (check_mysql_table_structure): Ok
-88% done
-2018-Mar-19 10:03:44 Структура базы данных (check_mysql_table_structure): Ok
-90% done
-2018-Mar-19 10:03:48 Структура базы данных (check_mysql_table_structure): Ok
-92% done
-2018-Mar-19 10:03:50 Структура базы данных (check_mysql_table_structure): Ok
-94% done
-2018-Mar-19 10:03:51 Структура базы данных (check_mysql_table_structure): Ok
-96% done
-2018-Mar-19 10:03:57 Структура базы данных (check_mysql_table_structure): Ok
-98% done
-2018-Mar-19 10:03:59 Структура базы данных (check_mysql_table_structure): Ok
-Успешно

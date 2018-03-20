@@ -1,5 +1,6 @@
 <?
 header('Content-Type: text/html; charset= utf-8');
+set_time_limit(0);
 if(isset($_REQUEST['getcommit'])&&$_REQUEST['getcommit']=='true') {
 	$all=array();
 	$files=array();
@@ -9,7 +10,8 @@ if(isset($_REQUEST['getcommit'])&&$_REQUEST['getcommit']=='true') {
 	foreach ($all as $k => $v) {
 		if(strpos($v, 'iff --git ')===1) {
 			$date=array();
-			$filename=substr(str_replace('diff --git ', '', $v), 0, strpos(str_replace('diff --git ', '', $v), ' '));
+			//$filename=substr(str_replace('diff --git ', '', $v), 0, strpos(str_replace('diff --git ', '', $v), ' '));
+			$filename=trim(substr($v, strrpos($v, ' ')));
 			foreach ($newtmp as $stroka) { 	
 				if(!strpos($stroka, substr($filename, 1))===false) {
 					$stroka=substr($stroka, strpos($stroka, '(')+1);
@@ -17,7 +19,7 @@ if(isset($_REQUEST['getcommit'])&&$_REQUEST['getcommit']=='true') {
 					break;
 				}
 			}	
-			$files[]= "<input type='checkbox' name='".$filename."' value='Y'>&nbsp;&nbsp;&nbsp;<a class='more_commit_file' title='Смотреть изменения' href='?commit=".$_REQUEST['commit']."&filename=".$filename."'>".$filename.(strpos($all[$k+1], 'eleted file mode')===false?'':' (удален файл)').(!empty($date)?' (<span class="i" '.($date[0]==date("d.m.Y")?'style="color:red"':'').'>выгружен '.$date[0].' '.$date[1].'</span>)':'')."</a>";
+			$files[]= "<input type='checkbox' name='".$filename."' value='Y'>&nbsp;&nbsp;&nbsp;<a class='more_commit_file' title='Смотреть изменения' href='?commit=".$_REQUEST['commit']."&filename=".$filename."'>+".$filename.(strpos($all[$k+1], 'eleted file mode')===false?'':' (удален файл)').(!empty($date)?' (<span class="i" '.($date[0]==date("d.m.Y")?'style="color:red"':'').'>выгружен '.$date[0].' '.$date[1].'</span>)':'---')."</a>";
 		}
 	}
 	echo implode(',<br>', $files)."<br>";
