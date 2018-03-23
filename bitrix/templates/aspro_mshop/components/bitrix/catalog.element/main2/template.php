@@ -1483,6 +1483,38 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 </div>
 
 <script type="text/javascript">
+	var category='',
+		$elems = $('.breadcrumbs > a');
+		
+	$elems.each(function(i, elem) {
+		if(i >= 2) {
+			category += $(elem).attr('title') + "/";	
+		}
+	});
+    category=category.substr(0, category.length-1);
+    var id=$('.button_block').attr('data-idoffer');
+    var brand=$('.brand_picture img').attr("title");
+    var textbrand=brand;
+	//console.log(category);
+    dataLayer.push({
+      'ecommerce': {
+        'currencyCode': 'RUB',
+        'detail': {
+          'actionField': {'list': 'Detail'},
+          'products': [{
+            'name': $('h1').text(),
+            'id': id,
+            'price': $('.button_block').attr('data-pricetov'),
+            'brand': textbrand?textbrand.toUpperCase():'N',
+            'category': category
+          }]
+        }
+      },
+      'event': 'gtm-ee-event',
+      'gtm-ee-event-category': 'Enhanced Ecommerce',
+      'gtm-ee-event-action': 'Product Details',
+      'gtm-ee-event-non-interaction': true,
+    });
 	$(document).on('click', ".item-stock .store_view", function(){
 		scroll_block($('.tabs_section'));
 	});

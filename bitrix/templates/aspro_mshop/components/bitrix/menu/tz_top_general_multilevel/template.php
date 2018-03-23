@@ -4,6 +4,7 @@ $this->setFrameMode(true);
 $numSubLevel = -1;
 $prevLevel = 0;
 $subSubArray = array();
+$subSubArray2 = array();
 $brend=false;
 $brend_list=array();
 ?>
@@ -63,14 +64,46 @@ $brend_list=array();
 							<?}?>
 						</div>
 						<div class="menu__drop-add">
-							<div class="menu__cell">
+							<ul data-lvl="<?=$k2?>" data-name="">
+						<?foreach($subSubArray2 as $k2=>$arr_li2) {
+							//print_r($arr_li2[key($arr_li2)]["SVIZ_BR"]);
+							//if($arr_li2[key($arr_li2)]["SVIZ_BR"] == FALSE)continue;
+							?>
+							
+									<?foreach($arr_li2 as $li2) {
+	/*									$arFilter = Array('IBLOCK_ID'=>26, "DEPTH_LEVEL"=>3, 'NAME'=>$li2["TEXT"]);
+ $db_list = CIBlockSection::GetList(Array(), $arFilter, false, array("UF_BRAND_ID"));
+  if($ar_result = $db_list->GetNext())
+  {
+	   if(strripos($ar_result["SECTION_PAGE_URL"], "vse_brendy"))continue;
+	   print_r(unserialize($ar_result["~UF_BRAND_ID"]));
+	   ?>
+	   <li>
+										<a href="<?=$li2["LINK"].$newvalb[2]?>" class="<?($li2["SELECTED"] ? ' current' : '')?>"><?=$newvalb[0]?></a>
+		</li>
+	   <?
+  }
+										if($li2["SVIZ_BR"] == NULL) continue;
+										
+										foreach(unserialize($li2["SVIZ_BR"]) as $newvalb){?>
+										
+										<?
+										
+										}*/
+										
+									
+									}?>
+								
+							<?echo $arr_li2;}?>
+						</ul>
+							<!--<div class="menu__cell">
 								<span>Найти нужный бренд вы сможете в выбранной категории</span>	
 							</div>
 							<div class="menu__cell">
 								<div class="menu__ads">
 									<img src="https://cafre.ru/upload/iblock/143/143932bc8469910d1890222c2a78f483.jpg">
 								</div>
-							</div>
+							</div>-->
 						</div>						
 					<?}
 					$subSubArray=array(); 
@@ -124,6 +157,16 @@ $brend_list=array();
 			endif;?>
 			<?if($arItem["DEPTH_LEVEL"]==3&&!$brend):
 				$subSubArray[$numSubLevel][]='<li><a href="'.$arItem["LINK"].'" class="'.($arItem["SELECTED"] ? ' current' : '').'">'.$arItem["TEXT"].'</a></li>';
+			endif;?>
+			<?if($arItem["DEPTH_LEVEL"]==3&&!$brend):
+			
+			if($arItem["SVIZ_BR"] == FALSE) continue;
+			//$b_a = unserialize($arItem["SVIZ_BR"]);
+			foreach(unserialize($arItem["SVIZ_BR"]) as $newvalb){
+				$subSubArray2[]='<li><a href="'.$arItem["LINK"].$newvalb[2].'" class="'.($arItem["SELECTED"] ? ' current' : '').'">'.$newvalb[0].'</a></li>';
+			}
+			//$subSubArray2[$numSubLevel][]=$arItem;
+			//echo $b_a[key($b_a)][2];
 			endif;?>
 			
 			<?if(is_integer($key)) $prevLevel = $arItem["DEPTH_LEVEL"];?>			

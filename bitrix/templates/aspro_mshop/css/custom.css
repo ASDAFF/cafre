@@ -1947,6 +1947,14 @@ margin: 0 0 10px;
 	padding: 10px 0;
 }
 
+.left_block .internal_sections_list ul.sections_list_wrapp {
+	margin-bottom: 20px;
+}
+
+.internal_sections_list h4 {
+	margin-bottom: 5px;	
+}
+
 @media (max-width: 1200px) {
 	.brand__description {
 		margin-left: 5%;

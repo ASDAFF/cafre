@@ -81,6 +81,14 @@ usort($arBasketIDs, 'CMShop::cmpByID');
 						<div class="cart_wrapper" <?if ($count>3) { echo 'style="overflow-y:scroll;height:280px;"';};?>>
 							<table class="cart_shell" width="100%" border="0">
 								<tbody>
+								<tr class="catalog_item">
+												<td class="thumb-cell">
+												<a href="#"><img src="/bitrix/templates/aspro_mshop/images/podarok.jpg" alt="Подарок" title="Подарок" width="45" height="50"/></a>
+												</td>
+												<td class="item-title">
+													<a href="#" class="clearfix"><span>Ваш подарок уже в корзине</span></a>
+												</td>
+								</tr>
 									<?
 									if($arParams["CACHE_TYPE"] != "N"){
 										$cache = new CPHPCache();

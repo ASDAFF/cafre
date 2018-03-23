@@ -832,6 +832,7 @@ if (empty($arRunErrors))
 					'IBLOCK_SECTION_ID' => $section['IBLOCK_SECTION_ID'],
 					'NAME' => $section['NAME']
 				);
+				
 				if ($intMaxSectionID < $section['ID'])
 					$intMaxSectionID = $section['ID'];
 			}
@@ -895,7 +896,7 @@ if (empty($arRunErrors))
 			"CATALOG_AVAILABLE"
 		);
 
-		$filter = array("IBLOCK_ID" => $IBLOCK_ID);
+		$filter = array("IBLOCK_ID" => $IBLOCK_ID, "!IBLOCK_SECTION_ID" => array(4488, 4830, 4860, 4917, 4918, 4919, 5033, 5102, 5104, 5205, 5206, 5218, 5224, 5355, 5361, 5395, 5403, 5411, 5466, 6112, 6224), ">IBLOCK_SECTION_ID" => 0);
 		if (!$bAllSections && !empty($arSectionIDs))
 		{
 			$filter["INCLUDE_SUBSECTIONS"] = "Y";
@@ -1050,7 +1051,8 @@ if (empty($arRunErrors))
 						$strFile = $usedProtocol.$ar_iblock['SERVER_NAME'].CHTTP::urnEncode($ar_file["SRC"], 'utf-8');
 					else
 						$strFile = $ar_file["SRC"];
-					$strTmpOff.="<g:image_link>".$strFile."</g:image_link>\n";
+						$newarFile = explode(",", $strFile);
+					$strTmpOff.="<g:image_link>".$newarFile[0]."</g:image_link>\n";
 				}
 			}
 			$y = 0;
@@ -1062,7 +1064,7 @@ if (empty($arRunErrors))
 					if (is_array($XML_DATA) && ($XML_DATA['TYPE'] == 'vendor.model' || $XML_DATA['TYPE'] == 'artist.title'))
 						continue;
 
-					$strTmpOff .= "<title>".mb_substr(yandex_text2xml($arAcc["~NAME"], true),0,140)."</title>\n";
+					$strTmpOff .= "<title>".mb_substr(yandex_text2xml($arAcc["~NAME"], true),0,110)."</title>\n";
 					break;
 				case 'description':
 			if($arAcc["~DETAIL_TEXT"] != "NULL" && $arAcc["~DETAIL_TEXT"] != NULL){
@@ -1181,7 +1183,7 @@ if (empty($arRunErrors))
 		if ($arCatalog['CATALOG_TYPE'] == CCatalogSKU::TYPE_FULL)
 			$arSelect[] = "CATALOG_AVAILABLE";
 
-		$arFilter = array("IBLOCK_ID" => $IBLOCK_ID);
+		$arFilter = array("IBLOCK_ID" => $IBLOCK_ID, "!IBLOCK_SECTION_ID" => array(4488, 4830, 4860, 4917, 4918, 4919, 5033, 5102, 5104, 5205, 5206, 5218, 5224, 5355, 5361, 5395, 5403, 5411, 5466, 6112, 6224), ">IBLOCK_SECTION_ID" => 0);
 		if (!$bAllSections && !empty($arSectionIDs))
 		{
 			$arFilter["INCLUDE_SUBSECTIONS"] = "Y";
@@ -1213,6 +1215,7 @@ if (empty($arRunErrors))
 		$rsItems = CIBlockElement::GetList(array('ID' => 'ASC'), $arFilter, false, false, $arSelect);
 		while ($obItem = $rsItems->GetNextElement())
 		{
+			if(empty($obItem))continue;
 			$cnt++;
 			$arCross = array();
 			$arItem = $obItem->GetFields();
@@ -1474,7 +1477,9 @@ if (empty($arRunErrors))
 					}
 					if (!empty($strFile) || !empty($arItem['YANDEX_PICT']))
 					{
-						$strOfferYandex .= "<g:image_link>".(!empty($strFile) ? $strFile : $arItem['YANDEX_PICT'])."</g:image_link>\n";
+						$exp1 = explode(",", $strFile);
+						$exp2 = explode(",", $arItem['YANDEX_PICT']);
+						$strOfferYandex .= "<g:image_link>".(!empty($strFile) ? $exp1[0] : $exp2[0])."</g:image_link>\n";
 					}
 
 					$y = 0;
@@ -1486,13 +1491,13 @@ if (empty($arRunErrors))
 							if (is_array($XML_DATA) && ($XML_DATA['TYPE'] == 'vendor.model' || $XML_DATA['TYPE'] == 'artist.title'))
 								continue;
 
-							$strOfferYandex .= "<title>".mb_substr(yandex_text2xml($arOfferItem["~NAME"], true),0,140)."</title>\n";
+							$strOfferYandex .= "<title>".mb_substr(yandex_text2xml($arOfferItem["~NAME"], true),0,110)."</title>\n";
 							break;
 						case 'description':
 							$strOfferYandex .= "<description>";
 							if (strlen($arOfferItem['~PREVIEW_TEXT']) <= 0)
 							{
-								$strOfferYandex .= mb_substr($arItem['YANDEX_DESCR'],0,2000);
+								$strOfferYandex .= strip_tags(mb_substr($arItem['YANDEX_DESCR'],0,2000));
 							}
 							else
 							{
@@ -1704,11 +1709,13 @@ if (empty($arRunErrors))
 										$strParamValue = yandex_get_value2($arOfferItem, 'PARAM_'.$key, $prop_id, $arProperties, $arUserTypeFormat, $usedProtocol);
 									}
 									if ('' != $strParamValue){
-										
-										$strOfferYandex .= "<g:image_link>".$strParamValue."</g:image_link>\n";
+										$exp3 = explode(",", $strParamValue);
+										$strOfferYandex .= "<g:image_link>".$exp3[0]."</g:image_link>\n";
 										
 										}elseif($i == 1){
-										$strOfferYandex .= "<g:image_link>".(!empty($strFile) ? $strFile : $arItem['YANDEX_PICT'])."</g:image_link>\n";
+											$exp4 = explode(",", $strFile);
+											$exp5 = explode(",", $arItem['YANDEX_PICT']);
+										$strOfferYandex .= "<g:image_link>".(!empty($strFile) ? $exp4[0] : $exp5[0])."</g:image_link>\n";
 										}
 										
 									
@@ -1726,11 +1733,13 @@ if (empty($arRunErrors))
 										$strParamValue = yandex_get_value2($arOfferItem, 'PARAM_'.$key, $prop_id, $arProperties, $arUserTypeFormat, $usedProtocol);
 									}
 									if ('' != $strParamValue){
-										
-										$strOfferYandex .= "<g:image_link>".$strParamValue."</g:image_link>\n";
+										$exp6 = explode(",", $strParamValue);
+										$strOfferYandex .= "<g:image_link>".$exp6[0]."</g:image_link>\n";
 										
 									}elseif($i == 1){
-									$strOfferYandex .= "<g:image_link>".(!empty($strFile) ? $strFile : $arItem['YANDEX_PICT'])."</g:image_link>\n";
+									$exp7 = explode(",", $strFile);
+									$exp8 = explode(",", $arItem['YANDEX_PICT']);
+									$strOfferYandex .= "<g:image_link>".(!empty($strFile) ? $exp7 : $exp8)."</g:image_link>\n";
 									}
 								}
 						
@@ -1752,20 +1761,20 @@ if (empty($arRunErrors))
 							if (is_array($XML_DATA) && ($XML_DATA['TYPE'] == 'vendor.model' || $XML_DATA['TYPE'] == 'artist.title'))
 								continue;
 
-							$strOfferYandex .= "<title>".mb_substr(yandex_text2xml($arOfferItem["~NAME"], true),0,140)."</title>\n";
+							$strOfferYandex .= "<title>".mb_substr(yandex_text2xml($arOfferItem["~NAME"], true),0,110)."</title>\n";
 							break;
 						case 'description':
 							$strOfferYandex .= "<description>";
 							if (strlen($arOfferItem['~PREVIEW_TEXT']) <= 0 || strlen($arOfferItem['~DETAIL_TEXT']) <= 0)
 							{
-								$strOfferYandex .= mb_substr($arItem['YANDEX_DESCR'],0,2000);
+								$strOfferYandex .= strip_tags(mb_substr($arItem['YANDEX_DESCR'],0,2000));
 								
 							}
 							else
 							{
 								$strOfferYandex .= yandex_text2xml(TruncateText(
 									($arOfferItem["PREVIEW_TEXT_TYPE"]=="html"?
-										strip_tags(preg_replace_callback("'&[^;]*;'", "yandex_replace_special", mb_substr($arOfferItem["~PREVIEW_TEXT"],0,2000))) : preg_replace_callback("'&[^;]*;'", "yandex_replace_special", mb_substr($arOfferItem["~PREVIEW_TEXT"],0,2000))),
+										strip_tags(preg_replace_callback("'&[^;]*;'", "yandex_replace_special", mb_substr($arOfferItem["~PREVIEW_TEXT"],0,2000))) : preg_replace_callback("'&[^;]*;'", "yandex_replace_special", strip_tags(mb_substr($arOfferItem["~PREVIEW_TEXT"],0,2000)))),
 										255),
 									true);
 							}
@@ -1944,7 +1953,8 @@ if (empty($arRunErrors))
 
 				if (!empty($arItem['YANDEX_PICT']))
 				{
-					$strOfferYandex .= "<g:image_link>".$arItem['YANDEX_PICT']."</g:image_link>\n";
+					$exp9 = explode(",", $arItem['YANDEX_PICT']);
+					$strOfferYandex .= "<g:image_link>".$exp9."</g:image_link>\n";
 				}
 
 				$y = 0;
@@ -1957,7 +1967,7 @@ if (empty($arRunErrors))
 						if (is_array($XML_DATA) && ($XML_DATA['TYPE'] == 'vendor.model' || $XML_DATA['TYPE'] == 'artist.title'))
 							continue;
 
-						$strValue = "<title>".mb_substr(yandex_text2xml($arItem["~NAME"], true),140)."</title>\n";
+						$strValue = "<title>".mb_substr(yandex_text2xml($arItem["~NAME"], true),110)."</title>\n";
 						break;
 					case 'description':
 					if($arItem["~DETAIL_TEXT"] != "NULL" && $arItem["~DETAIL_TEXT"] != NULL){

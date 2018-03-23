@@ -657,7 +657,7 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 										</div>
 									<?endif;?>
 									<?//print_r($imgbig2);?>
-									<div data-nametov="<?=$arOffer["NAME"]?>" data-urltov="https://cafre.ru<?=$arOffer["DETAIL_PAGE_URL"]?>" data-imgtov="https://cafre.ru<?=$imgbig2["src"];?>" data-pricetov="<?=$arOffer["PRICES"]["BASE"]["DISCOUNT_VALUE"]?>" class="button_block <?=(($arAddToBasketData["ACTION"] == "ORDER" /*&& !$arOffer["CAN_BUY"]*/) || !$arOffer["CAN_BUY"] || !$arAddToBasketData["OPTIONS"]["USE_PRODUCT_QUANTITY_DETAIL"] || ($arAddToBasketData["ACTION"] == "SUBSCRIBE" && $arResult["CATALOG_SUBSCRIBE"] == "Y")  ? "wide" : "");?>" 
+									<div data-nametov="<?=$arOffer["NAME"]?>" data-urltov="https://cafre.ru<?=$arOffer["DETAIL_PAGE_URL"]?>" data-imgtov="https://cafre.ru<?=$imgbig2["src"];?>" data-pricetov="<?=$arOffer["PRICES"]["BASE"]["DISCOUNT_VALUE"]?>" data-idoffer="<?=$arResult["ID"]?>" class="button_block  <?=(($arAddToBasketData["ACTION"] == "ORDER" /*&& !$arOffer["CAN_BUY"]*/) || !$arOffer["CAN_BUY"] || !$arAddToBasketData["OPTIONS"]["USE_PRODUCT_QUANTITY_DETAIL"] || ($arAddToBasketData["ACTION"] == "SUBSCRIBE" && $arResult["CATALOG_SUBSCRIBE"] == "Y")  ? "wide" : "");?>" 
                                     <?=($arAddToBasketData["ACTION"] != "ORDER" && $arOffer["CAN_BUY"])?"onclick=\"yaCounter37955450.reachGoal('cart'); ga('send', 'event', 'cart', 'submit'); return true;\"":"";?>>
 										<!--noindex-->
 											<?=$arAddToBasketData["HTML"]?>
@@ -1479,6 +1479,39 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 </div>
 
 <script type="text/javascript">
+var category='',
+		$elems = $('.breadcrumbs > a');
+		
+	$elems.each(function(i, elem) {
+		if(i >= 2) {
+			category += $(elem).attr('title') + "/";	
+		}
+	});
+    category=category.substr(0, category.length-1);
+    var id=$('.button_block').attr('data-idoffer');
+    var brand=$('.brand_picture img').attr("title");
+    var textbrand=brand;
+	//console.log(id);
+    dataLayer.push({
+      'ecommerce': {
+        'currencyCode': 'RUB',
+        'detail': {
+          'actionField': {'list': 'Detail'},
+          'products': [{
+            'name': $('h1').text(),
+            'id': id,
+            'price': $('.button_block').attr('data-pricetov'),
+            'brand': textbrand?textbrand.toUpperCase():'N',
+            'category': category
+          }]
+        }
+      },
+      'event': 'gtm-ee-event',
+      'gtm-ee-event-category': 'Enhanced Ecommerce',
+      'gtm-ee-event-action': 'Product Details',
+      'gtm-ee-event-non-interaction': true,
+    });
+	
 	$(document).on('click', ".item-stock .store_view", function(){
 		scroll_block($('.tabs_section'));
 	});
