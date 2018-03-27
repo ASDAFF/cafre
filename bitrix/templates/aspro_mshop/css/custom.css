@@ -528,7 +528,6 @@ h4, .fourlevel {
 
 .catalog_block .item_wrap {
 	padding-bottom: 20px;
-	height: 100% !important;
 }
 
 .catalog_block .hover_block {
@@ -2672,7 +2671,6 @@ width: 530px !important;
 			text-transform: uppercase;
 			position: relative;
 			z-index: 999;
-			text-align: center;
 		}
 
 		.bbrands__alph {
@@ -2775,4 +2773,9 @@ width: 530px !important;
 		
 		#header > .wrapper_inner {
 			z-index: 9999;
+		}
+		
+		.bbrands span {
+			display: inline-block;
+			vertical-align: bottom;
 		}
