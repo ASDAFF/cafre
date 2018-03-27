@@ -26,9 +26,8 @@ if($_REQUEST['label']=='auth_basket') {
 			//echo 'yes';//$arUser['PASSWORD'];
 			echo json_encode(array(
         'result' => 'yes',
-        'name' => $arUser["LAST_NAME"],
-		'phone' => $arUser["PERSONAL_PHONE"],
-		'all_pops' => $arUser
+        'name' => iconv('WINDOWS-1251','utf-8', $arUser["LAST_NAME"]),
+		'phone' => $arUser["PERSONAL_PHONE"]
 			)); 
             global $USER;
             $USER->Authorize($arUser['ID']);

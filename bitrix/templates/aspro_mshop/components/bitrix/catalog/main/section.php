@@ -800,6 +800,7 @@ $(".number_list a:not(.current)").on("click", function() {
 	$(this).addClass("current").siblings().removeClass("current");
 });
 </script>
+
 <div  style="display:none;">
 <span itemtype="https://schema.org/Product" itemscope="">
 	<meta content="<?$APPLICATION->ShowTitle()?>" itemprop="name">
@@ -937,3 +938,4 @@ else {
 }
 
 ?>
+

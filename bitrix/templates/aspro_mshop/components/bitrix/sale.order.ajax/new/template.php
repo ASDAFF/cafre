@@ -57,6 +57,7 @@ elseif(!$_REQUEST["ORDER_ID"]){
 $APPLICATION->SetAdditionalCSS($templateFolder."/style.css");
 
 CJSCore::Init(array('fx', 'popup', 'window', 'ajax'));
+if(!$_GET["ORDER_ID"]){
 ?>
 <label class="block_coup">
 			<span class="title_coup">” мен€ есть промокод:</span>
@@ -65,6 +66,9 @@ CJSCore::Init(array('fx', 'popup', 'window', 'ajax'));
 			<br />
 			<span class="name_coup"></span>
 			</label>
+<?
+}
+?>
 <a name="order_form"></a>
 <div class="order">
 
@@ -524,7 +528,6 @@ function InitOrderJS(){
 	<script>
 	$('[name=coupon]').on('keyup', function(e) {
 	var coup = e.target.value;
-	var orderForm = BX('ORDER_FORM');
 	$.ajax({
 				url: "/ajax/validate_order_coup.php", 
 					type: "post",
@@ -539,13 +542,39 @@ function InitOrderJS(){
 					}else{
 						$('[name=coupon]').css("border-color","red");
 					}
-					console.log(d);
 				}
 				
 	});	
 	
 	
 });
+$('[data-but="minus"], [data-but="plus"]').on("click",function(e){
+		e.preventDefault();
+		if($(this).text() == "-"){
+				var but = 0;
+		}
+		if($(this).text() == "+"){
+			var but = 1;
+		}
+		
+		var id_tov = $(this).siblings(".idtov").val();
+		$.ajax({
+					url: "/ajax/actbasquant.php", 
+					type: "post",
+					dataType: "json",
+					data: { 
+						"but": but,
+						"id_tov": id_tov
+					
+					},
+					success: function(data){					
+						if(data.result){
+							location.reload();
+						}
+					}
+				});
+	});
+
 	/********»з за данных, которые не добавл€лись, пришлось отправл€ть запрос чтобы получить данные пользовател€ через ajax********/
 var MY_LOGIN = $(document).find('[code=EMAIL]').val();
 if(MY_LOGIN != ''){
@@ -558,11 +587,9 @@ if(MY_LOGIN != ''){
 					},
 				success: function(e) {			
 					if(e.result=='yes') { 
-						$(document).find('[code=EMAIL]').val(MY_LOGIN);
+						$(document).find('[code=EMAIL]').val(e.mail);
 						$(document).find('[code=NAME]').val(e.name);
 						$(document).find('[code=PHONE]').val(e.phone);
-						$("form[name=order_auth_form]").closest('.order__cell').prev().html('<h3>¬ы успешно авторизованы</h3>').next().remove();	
-						
 					}
 				}
 	});	

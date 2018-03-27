@@ -8,22 +8,8 @@ $aMenuLinks = Array(
 		"" 
 	),
 	Array(
-		"Условия оплаты", 
-		"/help/payment/", 
-		Array(), 
-		Array(), 
-		"" 
-	),
-	Array(
-		"Условия доставки", 
-		"/help/delivery/", 
-		Array(), 
-		Array(), 
-		"" 
-	),
-	Array(
-		"Возврат товара", 
-		"/company/return/", 
+		"Оплата, доставка и возврат товара", 
+		"/help/info_order/", 
 		Array(), 
 		Array(), 
 		"" 
@@ -35,6 +21,5 @@ $aMenuLinks = Array(
 		Array(), 
 		"" 
 	)
-	
 );
 ?>

@@ -8701,3 +8701,128 @@ Array
         )
 
 )
+
+Array
+(
+    [NAME] => Dee
+    [EMAIL] => dee@mail.ru
+    [PHONE] => 891245124
+    [LOCATION] => Московская область, Москва
+    [ADDRESS] => 
+    [add] => false
+    [FULLADRES] => Московская область, Москва, 
+)
+ 819res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre819</UID><Date xmlns="MC">2018-03-27T06:27:17</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">Dee</Name><Phone xmlns="MC">891245124</Phone><Address xmlns="MC">РњРѕСЃРєРѕРІСЃРєР°СЏ РѕР±Р»Р°СЃС‚СЊ, РњРѕСЃРєРІР°, </Address><eMail xmlns="MC">dee@mail.ru</eMail><Gds xmlns="MC"><ID>00000018074</ID><Qty>1</Qty><Cost>1205</Cost></Gds><Gds xmlns="MC"><ID>00000015862</ID><Qty>1</Qty><Cost>410</Cost></Gds><Gds xmlns="MC"><ID>00000015863</ID><Qty>1</Qty><Cost>375</Cost></Gds><Gds xmlns="MC"><ID>00000010015</ID><Qty>1</Qty><Cost>1650</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)
+
+Array
+(
+    [NAME] => Dee
+    [EMAIL] => dee@mail.ru
+    [PHONE] => 891245124
+    [LOCATION] => Московская область, Москва
+    [ADDRESS] => 
+    [add] => false
+    [FULLADRES] => Московская область, Москва, 
+)
+ 820res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre820</UID><Date xmlns="MC">2018-03-27T06:28:51</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">Dee</Name><Phone xmlns="MC">891245124</Phone><Address xmlns="MC">РњРѕСЃРєРѕРІСЃРєР°СЏ РѕР±Р»Р°СЃС‚СЊ, РњРѕСЃРєРІР°, </Address><eMail xmlns="MC">dee@mail.ru</eMail><Gds xmlns="MC"><ID>00000018081</ID><Qty>1</Qty><Cost>1205</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)
+
+Array
+(
+    [NAME] => TESTT
+    [EMAIL] => forgest@gmail.ru
+    [PHONE] => 79999999999
+    [LOCATION] => Московская область, Москва
+    [ADDRESS] => 
+    [add] => false
+    [FULLADRES] => Московская область, Москва, 
+)
+ 821res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre821</UID><Date xmlns="MC">2018-03-27T06:30:39</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">TESTT</Name><Phone xmlns="MC">79999999999</Phone><Address xmlns="MC">РњРѕСЃРєРѕРІСЃРєР°СЏ РѕР±Р»Р°СЃС‚СЊ, РњРѕСЃРєРІР°, </Address><eMail xmlns="MC">forgest@gmail.ru</eMail><Gds xmlns="MC"><ID>00000010015</ID><Qty>1</Qty><Cost>1650</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)
+
+Array
+(
+    [NAME] => TESTT
+    [EMAIL] => forgest@gmail.ru
+    [PHONE] => 79999999999
+    [LOCATION] => Московская область, Москва
+    [ADDRESS] => 
+    [add] => false
+    [FULLADRES] => Московская область, Москва, 
+)
+ 822res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre822</UID><Date xmlns="MC">2018-03-27T06:31:22</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">TESTT</Name><Phone xmlns="MC">79999999999</Phone><Address xmlns="MC">РњРѕСЃРєРѕРІСЃРєР°СЏ РѕР±Р»Р°СЃС‚СЊ, РњРѕСЃРєРІР°, </Address><eMail xmlns="MC">forgest@gmail.ru</eMail><Gds xmlns="MC"><ID>00000010015</ID><Qty>1</Qty><Cost>1650</Cost></Gds><Gds xmlns="MC"><ID>00000010085</ID><Qty>1</Qty><Cost>1950</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)
+
+Array
+(
+    [NAME] => TESTT
+    [EMAIL] => forgest@gmail.ru
+    [PHONE] => 79999999999
+    [LOCATION] => Московская область, Москва
+    [ADDRESS] => 
+    [add] => false
+    [FULLADRES] => Московская область, Москва, 
+)
+ 823res=stdClass Object
+(
+    [TransferExternalOrderResult] => stdClass Object
+        (
+            [ExportedData] => stdClass Object
+                (
+                    [string] => <Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">cafre823</UID><Date xmlns="MC">2018-03-27T06:33:08</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">TESTT</Name><Phone xmlns="MC">79999999999</Phone><Address xmlns="MC">РњРѕСЃРєРѕРІСЃРєР°СЏ РѕР±Р»Р°СЃС‚СЊ, РњРѕСЃРєРІР°, </Address><eMail xmlns="MC">forgest@gmail.ru</eMail><Gds xmlns="MC"><ID>00000010007</ID><Qty>1</Qty><Cost>400</Cost></Gds></Zakaz>
+                )
+
+            [IsSuccessfully] => 1
+            [LastException] => 
+        )
+
+)

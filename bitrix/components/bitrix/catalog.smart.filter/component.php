@@ -883,7 +883,7 @@ if (
 	$APPLICATION->AddHeadString('<meta property="ya:interaction" content="XML_FORM" />');
 	$APPLICATION->AddHeadString('<meta property="ya:interaction:url" content="'.CHTTP::urn2uri($exportUrl).'" />');
 }
-
+//mail('iitovci@gmail.com', 'test', print_r($arResult, true));
 if ($arParams["XML_EXPORT"] === "Y" && $_REQUEST["mode"] === "xml")
 {
 	$this->setFrameMode(false);

@@ -2,7 +2,7 @@
 	$arSections = array();
 	$step2=0;
 	foreach( $arResult["SECTIONS"] as $arItem ):
-	if($arItem["ELEMENT_CNT"]==0) continue;
+	//if($arItem["ELEMENT_CNT"]==0) continue;
 		if( $arItem["DEPTH_LEVEL"] == 1 ):
 			$arSections[$arItem["ID"]] = $arItem;
 		elseif( $arItem["DEPTH_LEVEL"] == 2 ):

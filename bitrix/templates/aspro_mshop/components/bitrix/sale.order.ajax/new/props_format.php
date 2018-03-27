@@ -61,6 +61,7 @@ if (!function_exists("PrintPropsForm"))
 					<?
 					foreach ($arSource as $arProperties)
 					{
+						//print_r($arProperties);
 						?>
 						<div data-property-id-row="<?=intval(intval($arProperties["ID"]))?>" class="prop_block <?if(intval(intval($arProperties["ID"])) == 6){?>kek<?}?><?if(intval(intval($arProperties["ID"])) == 45){?>kek<?}?>" >
 
@@ -106,7 +107,7 @@ if (!function_exists("PrintPropsForm"))
 
 							<div class="bx_block r3x1">
 							<?//print_r($arProperties["VALUE"]);?>
-								<input type="<?=($arProperties["CODE"] == 'EMAIL' ? 'email' : 'text')?>" class="<?=($arProperties["REQUIED_FORMATED"]== "Y" ? 'required' : '')?> <?=($arProperties["CODE"] == 'PHONE' ? 'phone' : '')?>" code="<?=$arProperties["CODE"]?>" maxlength="250" size="<?=$arProperties["SIZE1"]?>" value="<?=$arProperties["VALUE"]?>" name="<?=$arProperties["FIELD_NAME"]?>" id="<?=$arProperties["FIELD_NAME"]?>" />
+								<input type="<?=($arProperties["CODE"] == 'EMAIL' ? 'email' : 'text')?>" class="<?=($arProperties["REQUIED_FORMATED"]== "Y" ? 'required' : '')?>" code="<?=$arProperties["CODE"]?>" maxlength="250" size="<?=$arProperties["SIZE1"]?>" value="<?=$arProperties["VALUE"]?>" name="<?=$arProperties["FIELD_NAME"]?>" id="<?=$arProperties["FIELD_NAME"]?>" />
 
 								<?
 								if (strlen(trim($arProperties["DESCRIPTION"])) > 0):

@@ -51,6 +51,7 @@ $(function() {
           "$img": img,
 
 });
+
 		/*$.ajax({
 					url: "/ajax/btn_onbasket.php", 
 					type: "post",
@@ -76,7 +77,7 @@ $(function() {
   ));
   return matches ? decodeURIComponent(matches[1]) : undefined;
 }
-	$('[data-but="minus"], [data-but="plus"]').on("click",function(e){
+	/*$('[data-but="minus"], [data-but="plus"]').on("click",function(e){
 		e.preventDefault();
 		if($(this).text() == "-"){
 				var but = 0;
@@ -102,7 +103,7 @@ $(function() {
 						}
 					}
 				});
-	});
+	});*/
     $('.menu_item_l1.catalog > a').on('click', function(e) {
         e.preventDefault();
         $('.menu_catalog_l1 .cat_menu').slideToggle();

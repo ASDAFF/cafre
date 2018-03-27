@@ -8,7 +8,7 @@
 		?>
 		<div id="<?=$this->GetEditAreaId($arItem['ID']);?>" class="item">
 			<?if($arItem["PROPERTIES"]["LINK"]["VALUE"]){?>
-				<a class="name" href="<?=$arItem["PROPERTIES"]["LINK"]["VALUE"]?>">
+				<a class="name" href="<?=$arItem["PROPERTIES"]["LINK"]["VALUE"]?>" target="_blank">
 			<?}?>
 			<?if($arItem["PREVIEW_PICTURE"]["SRC"]){?>
 				<!--<div class="img"><img src="<?//=$arItem["PREVIEW_PICTURE"]["SRC"]?>" alt="<?//=$name;?>" title="<?//=$name;?>"/></div>-->

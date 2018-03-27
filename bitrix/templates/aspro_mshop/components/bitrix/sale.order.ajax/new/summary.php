@@ -408,8 +408,9 @@ $len = count($arResult["GRID"]["ROWS"]);
 									<a data-but="minus" class="minus">-</a>
 									<?=$arItem[$arColumn["id"]]?>
 									<a data-but="plus" class="plus">+</a>
-									<input type="hidden" class="idtov" value="<?=$arItem["ID"]?>"/>
+									<input type="hidden" class="idtov" value="<?=$k?>"/>
 									</div>
+									
 								<?}?>
 							</td>
 						<?else: // some property value

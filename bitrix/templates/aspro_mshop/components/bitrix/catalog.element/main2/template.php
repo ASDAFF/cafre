@@ -42,6 +42,7 @@ if($arResult["OFFERS"]){
 $arOfferProps = implode(';', $arParams['OFFERS_CART_PROPERTIES']);
 ?>
 <div dtaa-rel="<?=$arResult['DETAIL_PAGE_URL']?>" class="item_main_info <?=(!$showCustomOffer ? "noffer" : "");?>" id="<?=$arItemIDs["strMainID"];?>" itemscope="" itemtype="https://schema.org/Product">
+<span class="detail_elem" style="display:none;"><?=$arResult["NAME"]?></span>
 <meta itemprop="name" content="<?=$arResult["NAME"]?>"/>
 	<div class="img_wrapper">
 		<div class="stickers">

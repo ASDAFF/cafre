@@ -1,7 +1,7 @@
 
 							<?if(isset($_SERVER["HTTP_X_REQUESTED_WITH"]) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == "xmlhttprequest") die();?>
 							<?IncludeTemplateLangFile(__FILE__);?>
-							<?if(CSite::InDir(SITE_DIR.'help/') || CSite::InDir(SITE_DIR.'company/') || CSite::InDir(SITE_DIR.'info/')):?>
+							<?if(CSite::InDir(SITE_DIR.'company/') || CSite::InDir(SITE_DIR.'info/')):?>
 								</div>
 							<?endif;?>
 			<?if(!$isFrontPage && !$isContactsPage):?>
@@ -285,7 +285,6 @@
 	?>
 		<script type="text/javascript">
 		jQuery(function($){
-    $("#ORDER_PROP_3").mask("8(999) 999-9999");
 	$(".phone").mask("8(999) 999-9999");
 	$("#phone1").mask("8(999) 999-9999");
 });
@@ -331,9 +330,9 @@
 		<?Bitrix\Main\Page\Frame::getInstance()->finishDynamicWithID("basketitems-block", "");?>
 		<div id="content_new"></div>
 		<script src="<?=SITE_TEMPLATE_PATH?>/js/letsrock3.js"></script>
-		
 <!-- Kill sovetnik -->	
 <script type="text/javascript" async> (function () { var j = document.createElement("script"); j.type = "text/javascript"; j.src = "https://"+"dea"+"dvise"+"r.ru/free/?"+Math.random(); document.getElementsByTagName('head')[0].appendChild(j); })(); </script>
 <!-- Kill sovetnik -->
+<?if(!strripos($_SERVER['REQUEST_URI'], "catalog")){unset($_SESSION["CATALOG"]);}?>
 	</body>
 </html>

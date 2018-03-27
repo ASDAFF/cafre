@@ -238,7 +238,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 						</tr>
 					</table>
 				</div>
-				
+				<div class="bbrands">
+	<div class="bbrands__wrap wrapper_inner">
+		
+		<?include($_SERVER['DOCUMENT_ROOT'].SITE_DIR.'include/menu.top_brand.php');?>
+	</div>
+</div>
 				<div class="catalog_menu">
 					<div class="wrapper_inner">
 						<div class="wrapper_middle_menu">
@@ -272,7 +277,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 		
 		<?else:?>
 			<div id="content">
-				<?if(CSite::InDir(SITE_DIR.'help/') || CSite::InDir(SITE_DIR.'company/') || CSite::InDir(SITE_DIR.'info/')):?>
+				<?if(CSite::InDir(SITE_DIR.'company/') || CSite::InDir(SITE_DIR.'info/')):?>
 					<div class="left_block">
 						<?$APPLICATION->IncludeComponent("bitrix:menu", "left_menu", array(
 							"ROOT_MENU_TYPE" => "left",

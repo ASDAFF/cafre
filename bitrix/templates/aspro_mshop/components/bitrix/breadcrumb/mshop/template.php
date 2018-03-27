@@ -1,19 +1,84 @@
 <?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) die();
 $strReturn = '';
+?>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<?
 if($arResult){
+		session_start();
+
+/*		$cook = iconv('UTF-8', 'WINDOWS-1251', $_COOKIE["Catalog_new"]);
+	$cook_elem = iconv('UTF-8', 'WINDOWS-1251', $_COOKIE["detail_elem"]);
+	$exp1 = explode("-", $cook);
+
+	foreach($exp1 as $val){
+			$exp2 = explode("#", $val);
+			$new_ar[]=array("TITLE"=>$exp2[0], "LINK"=>$exp2[1]);		
+	}
+	//print_r($new_ar);
+	//print_r($cook_elem);
+	if($cook_elem){
+	$cook_elem_new = array("TITLE"=>$cook_elem, "LINK" => "");
+		array_push($new_ar, $cook_elem_new);
+		}*/
     CModule::IncludeModule("iblock");
     global $MShopSectionID;
-    $cnt = count($arResult);
+	   $ex = explode('/',$_SERVER['REQUEST_URI']);
+	 $array_b = array_values($ex);
+$last = count($array_b)-2;
+//echo $array_b[$last];
+	$arElm = CIBlockElement::GetList(array(), array('CODE' => $array_b[$last], 'IBLOCK_ID' => 26), false, false, array('ID', 'NAME'))->Fetch();
+if ($arElm){
+    $id_elem = (int) $arElm['ID'];
+	$name_elem = array("TITLE"=>$arElm["NAME"], "LINK"=>"");
+	}
+
+
+if($id_elem){
+	if(!array_search($name_elem, $_SESSION["CATALOG"])){
+	array_push($_SESSION["CATALOG"], $name_elem);
+	}
+}elseif(strripos($_SERVER['REQUEST_URI'], "catalog")){
+	$_SESSION["CATALOG"] = $arResult;
+}
+/*if($cook && $cook_elem){
+    $cnt = count($new_ar);
+	}else{}*/
+//$_REQUEST[""]
+	//
+if($_SESSION["CATALOG"]){
+		 $cnt = count($_SESSION["CATALOG"]);
+}else{
+	 $cnt = count($arResult);
+}
+	
     $lastindex = $cnt - 1;
     //$bShowCatalogSubsections = COption::GetOptionString("aspro.mshop", "SHOW_BREADCRUMBS_CATALOG_SUBSECTIONS", "Y", SITE_ID) == "Y";
-    
+   ?>
+   <div class="bbb" style="display:none;">
+   <?
+   print_r($_SESSION["CATALOG"]);
+   ?>
+   </div>
+   <?
+
+	
     for($index = 0; $index < $cnt; ++$index){
         $arSubSections = array();
-        $arItem = $arResult[$index];
-        $title = htmlspecialcharsex($arItem["TITLE"]);
+		/*if($cook && $cook_elem){
+        $arItem = $new_ar[$index];
+		}else{}*/
+		if($_SESSION["CATALOG"]){
+		$arItem = $_SESSION["CATALOG"][$index];
+		}else{
+			$arItem = $arResult[$index];
+		}
+		
+		$title = htmlspecialcharsex($arItem["TITLE"]);
         $bLast = $index == $lastindex;
         if($MShopSectionID && $bShowCatalogSubsections){
-            $arSubSections = CMShop::getChainNeighbors($MShopSectionID, $arItem['LINK']);
+
+				 $arSubSections = CMShop::getChainNeighbors($MShopSectionID, $arItem['LINK']);
+			
         }
         if($index){
             $strReturn .= '<span class="separator">-</span>';
@@ -23,7 +88,7 @@ if($arResult){
           if($arItem["LINK"] <> "" && $index<(count($arResult)-1)){
             if($arSubSections){
                 $strReturn .= '<span class="drop">';
-                    $strReturn .= '<a class="number" href="'.$arItem["LINK"].'">'.($arSubSections ? '<span>'.$title.'</span><b class="space"></b><span class="separator'.($bLast ? ' cat_last' : '').'"></span>' : '<span itemprop="item">'.$title.'</span>').'</a>';
+                    $strReturn .= '<a class="number" href="'.$arItem["LINK"].'">'.($arSubSections ? '<span data-url="'.$arItem["LINK"].'">'.$title.'</span><b class="space"></b><span class="separator'.($bLast ? ' cat_last' : '').'"></span>' : '<span itemprop="item" data-url="'.$arItem["LINK"].'">'.$title.'</span>').'</a>';
                     $strReturn .= '<div class="dropdown_wrapp"><div class="dropdown">';
                         foreach($arSubSections as $arSubSection){
                             $strReturn .= '<a href="'.$arSubSection["LINK"].'">'.$arSubSection["NAME"].'</a>';
@@ -32,15 +97,17 @@ if($arResult){
                 $strReturn .= '</span>';
             }
             else{
-                $strReturn .= '<a href="'.$arItem["LINK"].'" title="'.$title.'"><span>'.$title.'</span></a><div itemprop="itemListElement" itemscope
+                $strReturn .= '<a href="'.$arItem["LINK"].'" title="'.$title.'"><span data-url="'.$arItem["LINK"].'">'.$title.'</span></a><div itemprop="itemListElement" itemscope
 itemtype="http://schema.org/ListItem" style="display:none;"><a href="'.$arItem["LINK"].'" title="'.$title.'" itemprop="item"><span itemprop="name">'.$title.'</span></a></div>';
             }
         }
         else{
-            $strReturn .= '<span>'.$title.'</span>
+
+            $strReturn .= '<span class="last-elem detail" data-url="'.$arItem["LINK"].'">'.$title.'</span>
 			<div itemprop="itemListElement" itemscope
 itemtype="http://schema.org/ListItem" style="display:none;"><a href="'.$arItem["LINK"].'" title="'.$title.'" itemprop="item"><span itemprop="name">'.$title.'</span></a></div>
 			';
+			
         }
     }
     

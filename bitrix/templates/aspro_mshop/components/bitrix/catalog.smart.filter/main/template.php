@@ -674,6 +674,10 @@ if($arResult["ITEMS"]){?>
 	</div>
 	<?$arSite = CSite::GetByID( SITE_ID )->Fetch();?>
 	<script>
+	<?
+	$arResult['JS_FILTER_PARAMS']['SEF_DEL_FILTER_URL']=str_replace('f-clear/', '', $arResult['JS_FILTER_PARAMS']['SEF_DEL_FILTER_URL']);
+	$arResult['JS_FILTER_PARAMS']['SEF_SET_FILTER_URL']=str_replace('f-clear/', '', $arResult['JS_FILTER_PARAMS']['SEF_SET_FILTER_URL']);
+	?>
 		var smartFilter = new JCSmartFilter('<?echo CUtil::JSEscape($arResult["FORM_ACTION"])?>', '<?=$arParams["VIEW_MODE"];?>', <?=CUtil::PhpToJSObject($arResult["JS_FILTER_PARAMS"])?>);
 		<?if(!$isFilter){?>
 			$('.bx_filter_vertical').remove();

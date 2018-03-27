@@ -18370,3 +18370,7 @@
 20.03.2018 01:44 /bitrix/templates/aspro_mshop/css/custom.css (16.03.2018 12:06:15     fix about zakaz)
 20.03.2018 01:44 /catalog/.top_catalog.menu_ext.php (16.03.2018 12:06:15     fix about zakaz)
 20.03.2018 01:50 /ajax/basket_fly.php (02.03.2018 13:28:40     git && baskets)
+23.03.2018 01:59 /bitrix/templates/aspro_mshop/components/bitrix/sale.basket.basket.small/top/template.php (23.03.2018 13:58:05     basket order css)
+23.03.2018 02:00 /bitrix/templates/aspro_mshop/css/custom.css (23.03.2018 13:58:05     basket order css)
+23.03.2018 02:04 /bitrix/templates/aspro_mshop/components/bitrix/sale.order.ajax/new/template.php (16.03.2018 12:06:15     fix about zakaz)
+27.03.2018 07:11 /ajax/validate_order_coup.php (16.03.2018 12:06:15     fix about zakaz)

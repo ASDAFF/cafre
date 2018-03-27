@@ -8,14 +8,12 @@
 		"MENU_CACHE_USE_GROUPS" => "Y",
 		"MENU_CACHE_GET_VARS" => array(
 		),
-		"MAX_LEVEL" => "2",
+		"MAX_LEVEL" => "4",
 		"CHILD_MENU_TYPE" => "left",
 		"USE_EXT" => "N",
 		"DELAY" => "N",
 		"ALLOW_MULTI_SELECT" => "N",
-        /*"IBLOCK_CATALOG_TYPE" => "aspro_mshop_catalog",
-        "IBLOCK_CATALOG_ID" => "13",*/		
-        "IBLOCK_CATALOG_TYPE" => "new_cat",
+		"IBLOCK_CATALOG_TYPE" => "new_cat",
 		"IBLOCK_CATALOG_ID" => "26",
 		"IBLOCK_CATALOG_DIR" => SITE_DIR."catalog/",
 		"COMPONENT_TEMPLATE" => "top_general_multilevel",
