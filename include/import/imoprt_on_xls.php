@@ -5,36 +5,38 @@
 
  
 CModule::IncludeModule("iblock");
-/* $rsParentSection = CIBlockSection::GetByID(6501);
+ $rsParentSection = CIBlockSection::GetByID(5338);
 if ($arParentSection = $rsParentSection->GetNext())
-{}
-   //$arFilter = array('IBLOCK_ID' => $arParentSection['IBLOCK_ID'],'>LEFT_MARGIN' => $arParentSection['LEFT_MARGIN'],'<RIGHT_MARGIN' => $arParentSection['RIGHT_MARGIN'],'>DEPTH_LEVEL' => $arParentSection['DEPTH_LEVEL']); 
+{
+   $arFilter = array('IBLOCK_ID' => $arParentSection['IBLOCK_ID'],'>LEFT_MARGIN' => $arParentSection['LEFT_MARGIN'],'<RIGHT_MARGIN' => $arParentSection['RIGHT_MARGIN'],'>DEPTH_LEVEL' => $arParentSection['DEPTH_LEVEL']); 
    // ???????? ???????
-   //$rsSect = CIBlockSection::GetList(array('left_margin' => 'asc'),$arFilter);*/
-   $arSelect = Array("ID", "NAME", "PROPERTY_CATALOG_BREND", "PROPERTY_BRAND", "PROPERTY_CODE1C");
-$arFilter = Array("IBLOCK_ID"=>26, "PROPERTY_CATALOG_BREND" => FALSE);
-$res = CIBlockElement::GetList(Array(), $arFilter, false, Array(), $arSelect);
+   $rsSect = CIBlockSection::GetList(array('left_margin' => 'asc'),$arFilter);
+   //$arSelect = Array("ID", "NAME", "PROPERTY_CATALOG_BREND", "PROPERTY_BRAND", "PROPERTY_CODE1C");
+//$arFilter = Array("IBLOCK_ID"=>26, "PROPERTY_CATALOG_BREND" => FALSE);
+//$res = CIBlockElement::GetList(Array(), $arFilter, false, Array(), $arSelect);
    $i = 0;
      $mass = array();
 function shortName($fullName) {
     $res = explode(' ', $fullName);
     return $res[0] . " " . mb_substr($res[1], 0, 1) . '. ' . mb_substr($res[2], 0, 1) . '.';
 }
-// while ($arSect = $rsSect->GetNext())
-  while($ob = $res->GetNextElement())
+while ($arSect = $rsSect->GetNext())
+  //while($ob = $res->GetNextElement())
    {
-	   $arSect = $ob->GetFields();
+	   if($arSect["DEPTH_LEVEL"] != 2)continue;
+	   //$arSect = $ob->GetFields();
 	   $section_id = $arSect["ID"];
 	   $name_sec = iconv("Windows-1251", "UTF-8", $arSect["NAME"]);
+$mass[] = array("ID" => $section_id, "name"=>$name_sec);
 	   // echo "ID: ".$arSect["ID"]."</br>";
 		// echo "ID_1C: ".$arSect["PROPERTY_CODE1C_VALUE"]."</br>";
 	  // echo "Название: ".$arSect["NAME"]."</br>";
-	   $res2 = CIBlockElement::GetByID($arSect["PROPERTY_BRAND_VALUE"]);
-   if($ar_res = $res2->GetNext()) {
-	   $mass[] = array("ID" => $section_id,"ID_1C"=>$arSect["PROPERTY_CODE1C_VALUE"],"name"=>$name_sec, "brand"=>iconv("Windows-1251", "UTF-8", $ar_res["NAME"]));
-   }else{
-	   $mass[] = array("ID" => $section_id,"ID_1C"=>$arSect["PROPERTY_CODE1C_VALUE"],"name"=>$name_sec, "brand"=>"NO");
-   }
+	   //$res2 = CIBlockElement::GetByID($arSect["PROPERTY_BRAND_VALUE"]);
+   //if($ar_res = $res2->GetNext()) {
+	//   $mass[] = array("ID" => $section_id,"ID_1C"=>$arSect["PROPERTY_CODE1C_VALUE"],"name"=>$name_sec, "brand"=>iconv("Windows-1251", "UTF-8", $ar_res["NAME"]));
+   //}else{
+	//   $mass[] = array("ID" => $section_id,"ID_1C"=>$arSect["PROPERTY_CODE1C_VALUE"],"name"=>$name_sec, "brand"=>"NO");
+  // }
 /*	   $level = $arSect["DEPTH_LEVEL"];
 	   if($level != 2){
 	   $SVIAZ_SECTION_ID = $arSect["IBLOCK_SECTION_ID"];
@@ -50,6 +52,7 @@ if($level == "2"){
 }*/
 	
 	$i++;
+   }
    }
    echo "<pre>";
 //print_r($mass);
@@ -75,7 +78,7 @@ $columnPosition = 0; // Начальная координата x
 $startLine = 2; // Начальная координата y
 
 // Вставляем заголовок в "A2" 
-$sheet->setCellValueByColumnAndRow($columnPosition, $startLine, 'No Brand');
+$sheet->setCellValueByColumnAndRow($columnPosition, $startLine, 'Section Brand');
 
 // Выравниваем по центру
 $sheet->getStyleByColumnAndRow($columnPosition, $startLine)->getAlignment()->setHorizontal(
@@ -88,7 +91,7 @@ $document->getActiveSheet()->mergeCellsByColumnAndRow($columnPosition, $startLin
 $startLine++;
 
 // Массив с названиями столбцов
-$columns = ['Number', 'ID', 'ID_1C', 'Name', 'Brand'];
+$columns = ['Number', 'ID', 'Name'];
 
 // Указатель на первый столбец
 $currentColumn = $columnPosition;
@@ -131,4 +134,4 @@ foreach ($mass as $key=>$catItem) {
 }
 
 $objWriter = \PHPExcel_IOFactory::createWriter($document, 'Excel5');
-$objWriter->save("NoBrandList.xls");
+$objWriter->save("SectionBrandList.xls");
