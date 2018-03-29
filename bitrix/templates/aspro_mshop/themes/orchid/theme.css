@@ -293,7 +293,7 @@ a.wish_item.added i {
   -webkit-text-shadow: 0 1px 0px rgba(255,255,255,0.5);
 }
 .module-order-history .status.delivered {
-  color: #fff;
+  /*color: #fff;*/
 }
 .jobs_wrapp .item a:not(.opened):hover .icon i,
 .staff_wrapp .section .section_title:not(.opened):hover .icon i {

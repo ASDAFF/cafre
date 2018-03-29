@@ -17,11 +17,15 @@ $brend_list=array();
 	<ul class="menu_level">
 		<?
 		$brn = 0;
-		foreach($arResult as $key => $arItem):?> 
-			<?if($arItem["DEPTH_LEVEL"]==1):?>
+		foreach($arResult as $key => $arItem):
+	
+		?> 
+			<?if($arItem["DEPTH_LEVEL"]==1):
+			
+			?>
 				<?if($prevLevel>1){
 					if($brend) {
-						ksort($brend_list);
+						/*ksort($brend_list);
 						$brend=false;
 						sort($en_alphabet);
 						sort($ru_alphabet);?>
@@ -50,7 +54,7 @@ $brend_list=array();
 								</div>
 							</div>
 						</div><?
-						$brend_list=array();
+						$brend_list=array();*/
 					} else {?>
 						</ul>
 					</div>
@@ -68,11 +72,10 @@ $brend_list=array();
 						<?foreach($subSubArray2 as $k2=> $arr_li2) {
 							//menu__drop-add
 							//print_r($arr_li2[key($arr_li2)]["SVIZ_BR"]);
-							if(!$arr_li2[key($arr_li2)]["SVIZ_BR"])continue;
 							?>
 							<ul data-lvl="<?=$k2?>" data-name="">
 									<?foreach($arr_li2 as $li2) {
-										if(!$li2["SVIZ_BR"]) continue;
+										if(!unserialize($li2["SVIZ_BR"])) continue;
 										//echo $li2["LINK"];
 										?>
 										
@@ -109,8 +112,10 @@ $brend_list=array();
 				<?} elseif($prevLevel>0) {?>
 					</li>
 				<?}?>
+				<?if($arItem["LINK"] != "/catalog/vse_brendy/"){?>
 				<li class="menu__item <?=($arItem["SELECTED"] ? ' current' : '')?><?=($arItem["PARAMS"]["ACTIVE"]=="Y" ? ' active' : '')?>">
                 <a class="<?=($arItem["SELECTED"] ? ' current' : '')?>" href="<?=$arItem["LINK"]?>"><?=$arItem["TEXT"]?></a>
+				<?}?>
 				<?if($arItem["IS_PARENT"]):?>
 					<div class="menu__drop">
 					<?if(strpos($arItem["LINK"], 'vse_bren')===false) {?>
@@ -137,6 +142,7 @@ $brend_list=array();
 				</li>
 			<?endif;?>
 			<?if($arItem["DEPTH_LEVEL"]==2&&$brend):
+			/*
 			$brn++;
 				if(preg_match('[^A-Za-z]', substr($arItem["TEXT"], 0, 1))) {
 					if(!in_array(substr($arItem["TEXT"], 0, 1), $ru_alphabet)) $ru_alphabet[]=substr($arItem["TEXT"], 0, 1);
@@ -149,15 +155,19 @@ $brend_list=array();
 				$brend_list[$arItem["TEXT"]]='<li class="brnd"><a href="'.$arItem["LINK"].'"><img src="'.$file['src'].'" alt=""><span><b>'.$arItem["TEXT"].'</b></span></a></li>';
 				}else{
 					$brend_list[$arItem["TEXT"]]='<li class="brnd"><a href="'.$arItem["LINK"].'"><img src="'.$file['src'].'" alt=""><span>'.$arItem["TEXT"].'</span></a></li>';
-				}
+				}*/
 			endif;?>
 			<?if($arItem["DEPTH_LEVEL"]==3&&!$brend):
+			if(unserialize($arItem["SVIZ_BR"]) == FALSE){
+				$subSubArray[$numSubLevel][]='<li><a href="'.$arItem["LINK"].'" class="'.($arItem["SELECTED"] ? ' current' : '').'">'.$arItem["TEXT"].'</a></li>';
+			}else{
 			$numSubLevel3++;
 				$subSubArray[$numSubLevel][]='<li data-lvl="'.$numSubLevel3.'"><a href="'.$arItem["LINK"].'" class="'.($arItem["SELECTED"] ? ' current' : '').'">'.$arItem["TEXT"].'</a></li>';
+			}
 			endif;?>
 			<?if($arItem["DEPTH_LEVEL"]==3&&!$brend):
 			
-			if($arItem["SVIZ_BR"] == FALSE) continue;
+			if(unserialize($arItem["SVIZ_BR"]) == FALSE) continue;
 			//$b_a = unserialize($arItem["SVIZ_BR"]);
 			/*foreach(unserialize($arItem["SVIZ_BR"]) as $newvalb){
 				$subSubArray2[$numSubLevel][]='<li><a href="'.$arItem["LINK"].$newvalb[2].'" class="'.($arItem["SELECTED"] ? ' current' : '').'">'.$newvalb[0].'</a></li>';
@@ -173,7 +183,7 @@ $brend_list=array();
 		<?if($prevLevel>1){?>
 					<?if($brend) {
 						//ksort($brend_list);
-						$brend=false;
+						/*$brend=false;
 						sort($en_alphabet);
 						sort($ru_alphabet);?>
 						<div class="menu__brands brnds">
@@ -200,7 +210,7 @@ $brend_list=array();
 								</div>
 							</div>
 						</div><?
-						$brend_list=array();
+						$brend_list=array();*/
 					} else {?>
 						</ul>
 					</div>
@@ -229,7 +239,9 @@ $brend_list=array();
 					</div>
 					</li>
 				<?} elseif($prevLevel>0) {?>
+				<?if($arItem["LINK"] != "/catalog/vse_brendy/"){?>
 					</li>
+				<?}?>
 				<?}?>
 	</ul>	
 	

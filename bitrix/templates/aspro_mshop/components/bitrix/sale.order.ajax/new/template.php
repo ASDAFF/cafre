@@ -525,7 +525,46 @@ function InitOrderJS(){
 						</div>
 						</a>
 					</div>
+<?
+global $USER;
+if ($USER->IsAuthorized()){
+?>
+<span class="clientType" style="display:none;">user</span>
+<?}else{?>
+<span class="clientType" style="display:none;">guest</span>
+<?}?>
 	<script>
+/********E-comerce basket********/	
+	var item = [], $elems = $('.tov_order'), item_id=[];
+	$elems.each(function(i, elem) {
+		//console.log(elem);
+	/*	item.push({
+      'name': $(elem).attr("data-nametov"),
+      'id': $(elem).attr("data-idtov"),
+      'price': $(elem).attr("data-price"),
+      'brand': $(elem).attr("data-brand"),
+      'category': 'cart'
+    })*/
+	item_id.push($(elem).attr("data-idtov"));
+	});
+	//item_id=item_id.substr(0, item_id.length-1);
+	//console.log(item_id);
+   dataLayer.push({
+	"pageType": "cart",
+    "clientType": $(".clientType").text(),
+    "prodIds": item_id,
+    "totalValue": $(".total_bas").text(),
+    });
+	/* 'ecommerce': {
+        'currencyCode': 'RUB',
+         'impressions': item
+      },
+      'event': 'gtm-ee-event',
+      'gtm-ee-event-category': 'Enhanced Ecommerce',
+      'gtm-ee-event-action': 'Basket',
+      'gtm-ee-event-non-interaction': true,*/
+	  
+/********Проверка купонов********/	
 	$('[name=coupon]').on('keyup', function(e) {
 	var coup = e.target.value;
 	$.ajax({
@@ -548,6 +587,7 @@ function InitOrderJS(){
 	
 	
 });
+/********Добавление и удаление количества товаров********/
 $('[data-but="minus"], [data-but="plus"]').on("click",function(e){
 		e.preventDefault();
 		if($(this).text() == "-"){

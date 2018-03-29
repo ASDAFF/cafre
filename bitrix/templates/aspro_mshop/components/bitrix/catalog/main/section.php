@@ -228,15 +228,14 @@ $MShopSectionID = $arSection["ID"];
 	</div>
 	<div class="right_block clearfix catalog" id="right_block_ajax">
 	<?
-	if($brends && strpos($APPLICATION->GetCurPage(), '/catalog/vse_brendy/')===false && empty($MSHOP_SMART_FILTER))  {
-		$APPLICATION->ShowViewContent('filter_dop');
-		
+	if($brends && strpos($APPLICATION->GetCurPage(), '/catalog/vse_brendy/')===false && (empty($MSHOP_SMART_FILTER) || (count($MSHOP_SMART_FILTER)==1 && isset($MSHOP_SMART_FILTER['FACET_OPTIONS']))))  {
+		$APPLICATION->ShowViewContent('filter_dop');		
 	}
 	
 	if(empty(${$arParams['FILTER_NAME']}) || $arSection["IBLOCK_SECTION_ID"]==5338) {
 			//$res = CIBlockSection::GetByID($arResult["VARIABLES"]["SECTION_ID"]);
 			//$ar_res = $res->GetNext();
-			$ar_result=CIBlockSection::GetList(Array("SORT"=>"ASC"), Array("IBLOCK_ID"=>"26", "ID"=>$arSection["ID"]),false, Array("UF_IMG_BRAND", "UF_TOP_TEXT"));
+			$ar_result=CIBlockSection::GetList(Array("SORT"=>"ASC"), Array("IBLOCK_ID"=>"26", "ID"=>$arSection["ID"]),false, Array("UF_IMG_BRAND", "UF_TOP_TEXT", "UF_TEXT_BRAND_TOP"));
 	?>	
 	<?if($res2=$ar_result->GetNext()):?>
 	<?if($res2["UF_IMG_BRAND"]){?>
@@ -246,9 +245,32 @@ $MShopSectionID = $arSection["ID"];
 		<div class="text_brand_sec"><p><?echo $res2["~UF_TOP_TEXT"];?></p></div>
 		</div>
 	<?}?>
+		
 	<?endif;
+	}else{
+		
+	$ar_result=CIBlockSection::GetList(Array("SORT"=>"ASC"), Array("IBLOCK_ID"=>"26", "ID"=>$arSection["ID"]),false, Array("UF_IMG_BRAND", "UF_TEXT_BRAND_TOP"));
+	?>	
+	<?if($res2=$ar_result->GetNext()):?>
+	<?$exp_mas = explode("~", $res2["~UF_TEXT_BRAND_TOP"]);
+	foreach($exp_mas as $v){
+		$exp_text[] = explode("#", $v);
 	}
+	$text_brand = '';
+	foreach($exp_text as $v2){
+		//$result_raz = array_diff($v2, $exp_url);
+		if(strpos($APPLICATION->GetCurPage(), $v2[1])){
+		$text_brand.= $v2[2];
+		}
+	}	
 	?>
+	<?if($text_brand){?>
+	<?$file = CFile::ResizeImageGet($res2["UF_IMG_BRAND"], array('width'=>266, 'height'=>160), BX_RESIZE_IMAGE_PROPORTIONAL, true);?>
+		<div class="top_brand_block" style="min-height: 70px;margin-top:0;">
+		<div class="img_brand_sec"><img src="<?=$file["src"];?>"/></div>
+		<div class="text_brand_sec"><p><?echo $text_brand;?></p></div>
+		</div>
+	<?}endif;}?>
 		<?$isAjax="N";?>
 		<?if(isset($_SERVER["HTTP_X_REQUESTED_WITH"]) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == "xmlhttprequest"  && isset($_GET["ajax_get"]) && $_GET["ajax_get"] == "Y" || (isset($_GET["ajax_basket"]) && $_GET["ajax_basket"]=="Y")){
 			$isAjax="Y";
@@ -616,6 +638,32 @@ if($arParams["SHOW_TOP_ELEMENTS"]!="N"){
 		</div>
 	<?}?>
 <?endif;?>
+<?$ar_result_br=CIBlockSection::GetList(Array("SORT"=>"ASC"), Array("IBLOCK_ID"=>"26", "ID"=>$arSection["ID"]),false, Array("UF_TEXT_BRAND_BOTTOM"));
+	?>	
+	<?if($res3=$ar_result_br->GetNext()):?>
+	<?$exp_mas2 = explode("~", $res3["~UF_TEXT_BRAND_BOTTOM"]);
+	foreach($exp_mas2 as $v2){
+		$exp_text2[] = explode("#", $v2);
+	}
+	$text_brand2 = '';
+	foreach($exp_text2 as $v3){
+		//$result_raz = array_diff($v2, $exp_url);
+		if(strpos($APPLICATION->GetCurPage(), $v3[1])){
+		$text_brand2.= $v3[2];
+		}
+	}	
+	?>
+	<?if($text_brand2){?>
+		<div class="bottom_brand_block">
+		<div class="brand__content">
+			<span class="brand__content-title">Содержание</span>
+		</div>
+		<div class="brand__description">
+			<?=htmlspecialcharsBack($text_brand2);?>
+		</div>
+		<p class="text_brand_sec_bot"></p>
+		</div>
+	<?}endif;?>
 <div class="baner_bot_sec">
 			<?
 			$arSelect = Array("ID", "NAME", "PREVIEW_PICTURE");

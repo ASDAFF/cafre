@@ -187,7 +187,30 @@ $len = count($arResult["GRID"]["ROWS"]);
 					<td class="custom sum "></td>
 					</tr>
 					<?}?>
-					<tr>
+					<?
+					/*$masurl = explode("/",$arItem["DETAIL_PAGE_URL"]);
+					unset($masurl[0]);unset($masurl[1]);$fruit = array_pop($masurl);$fruit2 = array_pop($masurl);
+					$category="";
+					foreach($masurl as $ket => $val_sec){				
+						$rsSections = CIBlockSection::GetList(array(),array('IBLOCK_ID' => 26, '=CODE' => $val_sec));
+if ($arSection = $rsSections->Fetch())
+{
+	if(!next($masurl)){
+$category.= $arSection['NAME'];
+}else{
+	$category.= $arSection['NAME'].'/';
+}
+}					}
+ date-category="<?=$category?>"
+*/
+					/*$mxResult = CCatalogSku::GetProductInfo($arItem["PRODUCT_ID"]);
+					$db_props = CIBlockElement::GetProperty(26, $mxResult["ID"], array("sort" => "asc"), Array("CODE"=>"CATALOG_BREND"));
+if($ar_props = $db_props->Fetch()){
+$res = CIBlockSection::GetByID($ar_props["VALUE"]);
+if($ar_res = $res->GetNext())
+  $name_brand = $ar_res['NAME'];
+	}*/?>
+					<tr class="tov_order" data-idtov="<?=$arItem["PRODUCT_ID"]?>" data-nametov="<?=$arItem["NAME"];?>" data-price="<?=$arItem["PRICE"];?>" data-brand="<?=$name_brand;?>">
 <?
 					if ($bShowNameWithPicture):
 					?>
@@ -522,10 +545,12 @@ $len = count($arResult["GRID"]["ROWS"]);
 						<tr class="sum_new_bas">
 							<td class="custom_t1 fwb" colspan="<?=$colspan?>" class="itog"><?=GetMessage("SOA_TEMPL_SUM_IT")?></td>
 							<td class="custom_t2 fwb" class="price"><?=$arResult["ORDER_TOTAL_PRICE_FORMATED"]?></td>
+							
 						</tr>
 					<?
 					endif;
 					?>
+					<span class="total_bas" style="display:none;"><?=$arResult["ORDER_PRICE"];?></span>
 				</tbody>
 			</table>
 			<div style="clear:both;"></div>

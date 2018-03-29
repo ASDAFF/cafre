@@ -66,8 +66,8 @@
 			<?endif;?>
 		<?endforeach;?>
 		<div class="clearfix"></div>
-		<div class="catalog_btn">
-			<a class="button transparent big" href="<?=($arParams["CATALOG"] ? $arParams["CATALOG"] : SITE_DIR."catalog/")?>"><?=GetMessage('TO_CATALOG')?></a>
-		</div>
+		<!--<div class="catalog_btn">
+			<a class="button transparent big" href="<?//=($arParams["CATALOG"] ? $arParams["CATALOG"] : SITE_DIR."catalog/")?>"><?//=GetMessage('TO_CATALOG')?></a>
+		</div>-->
 	</div>
 <?}?>
