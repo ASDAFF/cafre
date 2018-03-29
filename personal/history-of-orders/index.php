@@ -26,6 +26,7 @@
 	"bitrix:sale.personal.order", 
 	"orders", 
 	array(
+	"ORDER_DEFAULT_SORT" => "ID",
 		"PROP_1" => array(
 		),
 		"PROP_3" => "",

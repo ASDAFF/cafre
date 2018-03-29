@@ -18410,3 +18410,7 @@
 27.03.2018 02:12 /bitrix/templates/aspro_mshop/components/bitrix/sale.order.ajax/new/summary.php (27.03.2018 11:39:44     order catalog bugs)
 27.03.2018 02:12 /bitrix/templates/aspro_mshop/components/bitrix/sale.order.ajax/new/template.php (27.03.2018 11:39:44     order catalog bugs)
 27.03.2018 02:14 /bitrix/templates/aspro_mshop/components/bitrix/news.list/mshop/template.php (27.03.2018 11:39:44     order catalog bugs)
+29.03.2018 07:51 /bitrix/templates/aspro_mshop/components/bitrix/catalog/main/section.php (29.03.2018 07:37:14     fix)
+29.03.2018 09:01 /bitrix/templates/aspro_mshop/components/aspro/com.banners.mshop/mshop/template.php (29.03.2018 07:37:14     fix)
+29.03.2018 09:04 /bitrix/templates/aspro_mshop/css/custom.css (29.03.2018 07:37:14     fix)
+29.03.2018 09:04 /bitrix/templates/aspro_mshop/js/custom.js (29.03.2018 07:37:14     fix)

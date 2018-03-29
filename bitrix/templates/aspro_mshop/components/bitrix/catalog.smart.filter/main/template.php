@@ -11,16 +11,17 @@ if($arResult["ITEMS"]){?>
 				$isFilter=false;
 				//prices
 				foreach($arResult["ITEMS"] as $key=>$arItem)
-				{					
+				{						
+				if($arItem["PRICE"])continue;
 					$key = $arItem["ENCODED_ID"];
 					
 					if(isset($arItem["PRICE"])):
 						if ($arItem["VALUES"]["MAX"]["VALUE"] - $arItem["VALUES"]["MIN"]["VALUE"] <= 0)
 							continue;
 						?>
-						<div class="bx_filter_parameters_box active">
+						<!--<div class="bx_filter_parameters_box active">
 							<span class="bx_filter_container_modef"></span>
-							<div class="bx_filter_parameters_box_title" ><?=GetMessage("PRICE")//$arItem["NAME"]?></div>
+							<div class="bx_filter_parameters_box_title"><?//=GetMessage("PRICE")//$arItem["NAME"]?></div>
 							<div class="bx_filter_block">
 								<div class="bx_filter_parameters_box_container">
 									<div class="wrapp_all_inputs wrap_md">
@@ -30,9 +31,9 @@ if($arResult["ITEMS"]){?>
 													<input
 														class="min-price"
 														type="text"
-														name="<?echo $arItem["VALUES"]["MIN"]["CONTROL_NAME"]?>"
-														id="<?echo $arItem["VALUES"]["MIN"]["CONTROL_ID"]?>"
-														value="<?echo $arItem["VALUES"]["MIN"]["HTML_VALUE"]?>"
+														name="<?//echo $arItem["VALUES"]["MIN"]["CONTROL_NAME"]?>"
+														id="<?//echo $arItem["VALUES"]["MIN"]["CONTROL_ID"]?>"
+														value="<?//echo $arItem["VALUES"]["MIN"]["HTML_VALUE"]?>"
 														size="5"
 														onkeyup="smartFilter.keyup(this)"
 													/>
@@ -43,9 +44,9 @@ if($arResult["ITEMS"]){?>
 													<input
 														class="max-price"
 														type="text"
-														name="<?echo $arItem["VALUES"]["MAX"]["CONTROL_NAME"]?>"
-														id="<?echo $arItem["VALUES"]["MAX"]["CONTROL_ID"]?>"
-														value="<?echo $arItem["VALUES"]["MAX"]["HTML_VALUE"]?>"
+														name="<?//echo $arItem["VALUES"]["MAX"]["CONTROL_NAME"]?>"
+														id="<?//echo $arItem["VALUES"]["MAX"]["CONTROL_ID"]?>"
+														value="<?//echo $arItem["VALUES"]["MAX"]["HTML_VALUE"]?>"
 														size="5"
 														onkeyup="smartFilter.keyup(this)"
 													/>
@@ -56,7 +57,7 @@ if($arResult["ITEMS"]){?>
 										</div>
 										<div class="wrapp_slider iblock">
 											<div class="bx_ui_slider_track" id="drag_track_<?=$key?>">
-												<?
+												<?/*
 												$isConvert=false;
 												if($arParams["CONVERT_CURRENCY"]=="Y"){
 													$isConvert=true;
@@ -73,20 +74,20 @@ if($arResult["ITEMS"]){?>
 													$price3 =SaleFormatCurrency($price3, $arParams["CURRENCY_ID"], true);
 													$price4 =SaleFormatCurrency($price4, $arParams["CURRENCY_ID"], true);
 													$price5 =SaleFormatCurrency($price5, $arParams["CURRENCY_ID"], true);
-												}
+												}*/
 												?>
-												<div class="bx_ui_slider_part first p1"><span><?=$price1?></span></div>
-												<div class="bx_ui_slider_part p2"><span><?=$price2?></span></div>
-												<div class="bx_ui_slider_part p3"><span><?=$price3?></span></div>
-												<div class="bx_ui_slider_part p4"><span><?=$price4?></span></div>
-												<div class="bx_ui_slider_part last p5"><span><?=$price5?></span></div>
+												<div class="bx_ui_slider_part first p1"><span><?//=$price1?></span></div>
+												<div class="bx_ui_slider_part p2"><span><?//=$price2?></span></div>
+												<div class="bx_ui_slider_part p3"><span><?//=$price3?></span></div>
+												<div class="bx_ui_slider_part p4"><span><?//=$price4?></span></div>
+												<div class="bx_ui_slider_part last p5"><span><?//=$price5?></span></div>
 
-												<div class="bx_ui_slider_pricebar_VD" style="left: 0;right: 0;" id="colorUnavailableActive_<?=$key?>"></div>
-												<div class="bx_ui_slider_pricebar_VN" style="left: 0;right: 0;" id="colorAvailableInactive_<?=$key?>"></div>
-												<div class="bx_ui_slider_pricebar_V"  style="left: 0;right: 0;" id="colorAvailableActive_<?=$key?>"></div>
-												<div class="bx_ui_slider_range" id="drag_tracker_<?=$key?>"  style="left: 0%; right: 0%;">
-													<a class="bx_ui_slider_handle left"  style="left:0;" href="javascript:void(0)" id="left_slider_<?=$key?>"></a>
-													<a class="bx_ui_slider_handle right" style="right:0;" href="javascript:void(0)" id="right_slider_<?=$key?>"></a>
+												<div class="bx_ui_slider_pricebar_VD" style="left: 0;right: 0;" id="colorUnavailableActive_<?//=$key?>"></div>
+												<div class="bx_ui_slider_pricebar_VN" style="left: 0;right: 0;" id="colorAvailableInactive_<?//=$key?>"></div>
+												<div class="bx_ui_slider_pricebar_V"  style="left: 0;right: 0;" id="colorAvailableActive_<?//=$key?>"></div>
+												<div class="bx_ui_slider_range" id="drag_tracker_<?//=$key?>"  style="left: 0%; right: 0%;">
+													<a class="bx_ui_slider_handle left"  style="left:0;" href="javascript:void(0)" id="left_slider_<?//=$key?>"></a>
+													<a class="bx_ui_slider_handle right" style="right:0;" href="javascript:void(0)" id="right_slider_<?//=$key?>"></a>
 												</div>
 											</div>
 											<div style="opacity: 0;height: 1px;"></div>
@@ -94,7 +95,7 @@ if($arResult["ITEMS"]){?>
 									</div>
 								</div>
 							</div>
-						</div>
+						</div>-->
 						<?
 						$isFilter=true;
 						$precision = 2;
@@ -174,7 +175,7 @@ if($arResult["ITEMS"]){?>
 					<div class="bx_filter_parameters_box <?=$class;?>" data-expanded="<?=($arItem["DISPLAY_EXPANDED"] ? $arItem["DISPLAY_EXPANDED"] : "N");?>" data-prop_code=<?=strtolower($arItem["CODE"]);?> property_id="<?=$arItem["ID"]?>">
 						<span class="bx_filter_container_modef"></span>
 						<?if($arItem["CODE"]!="IN_STOCK"){?>
-							<div class="bx_filter_parameters_box_title" >
+							<div class="bx_filter_parameters_box_title">
 								<span>
 									<?=( $arItem["CODE"] == "MINIMUM_PRICE" ? GetMessage("PRICE") : $arItem["NAME"] );?>
 									<div class="char_name">
@@ -195,10 +196,12 @@ if($arResult["ITEMS"]){?>
 						<?}?>
 						<?$style="";
 						if($arItem["CODE"]=="IN_STOCK"){
-							$style="style='display:block;'";
+							$style="style='display:none;'";
 						}elseif($arItem["DISPLAY_EXPANDED"]!= "Y"){
 							$style="style='display:none;'";
-						}?>
+						}
+						$arr_elem[] = $arItem;
+						?>
 						<div class="bx_filter_block" <?=$style;?>>
 							<div class="bx_filter_parameters_box_container <?=($arItem["DISPLAY_TYPE"]=="G" ? "pict_block" : "");?>">
 							<?
