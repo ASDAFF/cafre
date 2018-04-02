@@ -587,33 +587,7 @@ if ($USER->IsAuthorized()){
 	
 	
 });
-/********ƒобавление и удаление количества товаров********/
-$('[data-but="minus"], [data-but="plus"]').on("click",function(e){
-		e.preventDefault();
-		if($(this).text() == "-"){
-				var but = 0;
-		}
-		if($(this).text() == "+"){
-			var but = 1;
-		}
-		
-		var id_tov = $(this).siblings(".idtov").val();
-		$.ajax({
-					url: "/ajax/actbasquant.php", 
-					type: "post",
-					dataType: "json",
-					data: { 
-						"but": but,
-						"id_tov": id_tov
-					
-					},
-					success: function(data){					
-						if(data.result){
-							location.reload();
-						}
-					}
-				});
-	});
+
 
 	/********»з за данных, которые не добавл€лись, пришлось отправл€ть запрос чтобы получить данные пользовател€ через ajax********/
 var MY_LOGIN = $(document).find('[code=EMAIL]').val();

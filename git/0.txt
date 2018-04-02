@@ -18414,3 +18414,4 @@
 29.03.2018 09:01 /bitrix/templates/aspro_mshop/components/aspro/com.banners.mshop/mshop/template.php (29.03.2018 07:37:14     fix)
 29.03.2018 09:04 /bitrix/templates/aspro_mshop/css/custom.css (29.03.2018 07:37:14     fix)
 29.03.2018 09:04 /bitrix/templates/aspro_mshop/js/custom.js (29.03.2018 07:37:14     fix)
+29.03.2018 09:13 /bitrix/templates/aspro_mshop/components/bitrix/catalog.smart.filter/main/template.php (29.03.2018 09:12:13     not price from filter)

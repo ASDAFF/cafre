@@ -11,6 +11,9 @@
 ?>
 
 <div class="module-cart">
+		<div class="deliverybanner">
+			<img src="/bitrix/templates/aspro_mshop/images/banners/cafre_Mail_800х50.jpg" alt="Бесплатная доставка от 2000 руб."/>
+		</div>
 	<div class="goods" style="overflow-x: hidden !important;">
 		<table class="colored" height="100%" width="100%">
 			<thead>
@@ -372,6 +375,9 @@
 		</td></tr></table>
 		<div class="clearboth"></div></div>-->
 		<div class="module-cart">
+		<div class="deliverybanner">
+			<img src="/bitrix/templates/aspro_mshop/images/banners/cafre_Mail_800х50.jpg" alt="Бесплатная доставка от 2000 руб."/>
+		</div>
 		<div class="goods" style="overflow-x: hidden !important;">
 		<table class="colored" height="100%" width="100%">
 			<thead>

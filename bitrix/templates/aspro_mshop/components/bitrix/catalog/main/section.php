@@ -3,6 +3,20 @@
 <?$arParams["ADD_SECTIONS_CHAIN"] = (isset($arParams["ADD_SECTIONS_CHAIN"]) ? $arParams["ADD_SECTIONS_CHAIN"] : "Y");
 CModule::IncludeModule("iblock");
 
+if($arResult['VARIABLES']['SECTION_CODE_PATH']!='' && $arResult["VARIABLES"]["SECTION_ID"] == 0) {
+	$res = CIBlockElement::GetList(Array(), array("IBLOCK_ID"=>$arParams['IBLOCK_ID'], "CODE"=>$arResult['VARIABLES']['SECTION_CODE_PATH']), false, false, array("ID")); 
+	$kol=intval($res->SelectedRowsCount());
+}
+else $kol=0;
+if($kol>0) {
+	include($_SERVER["DOCUMENT_ROOT"]."/".$this->GetFolder()."/element.php");
+	
+}
+
+else {
+	//start section
+
+
 global ${$arParams['FILTER_NAME']};	
 $brends=true;
 // get current section ID
@@ -224,7 +238,9 @@ $MShopSectionID = $arSection["ID"];
 		if($TEMPLATE_OPTIONS["TYPE_VIEW_FILTER"]["CURRENT_VALUE"]=="VERTICAL"&& $section['IBLOCK_SECTION_ID']!=5338){?>
 			<?include_once("filter.php")?>
 		<?}?>
-		
+		<div class="deliverybanner">
+			<img src="https://test.cafre.ru/bitrix/templates/aspro_mshop/images/banners/cafre_Mail_257х631.jpg" alt="Бесплатная доставка от 2000 руб."/>
+		</div>
 	</div>
 	<div class="right_block clearfix catalog" id="right_block_ajax">
 	<?
@@ -984,6 +1000,6 @@ else {
 		$APPLICATION->SetPageProperty("title", $page_seo_params["title"].$filter_h1." - Купить по низким ценам в интернет-магазине Cafre".(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));
 	}
 }
-
+// end section 
+				}
 ?>
-

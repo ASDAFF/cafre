@@ -23,23 +23,44 @@ if($arResult){
     CModule::IncludeModule("iblock");
     global $MShopSectionID;
 	   $ex = explode('/',$_SERVER['REQUEST_URI']);
-	 $array_b = array_values($ex);
-$last = count($array_b)-2;
-//echo $array_b[$last];
+	   $array_b = array_values($ex);
+		$last = count($array_b)-2;
+if(strripos($_SERVER['REQUEST_URI'], "vse_brendy")){
+$arFilter = array('IBLOCK_ID' => 26, '=CODE' => $array_b[$last]);
+$rsSections = CIBlockSection::GetList(array(), $arFilter);
+if($arSection = $rsSections->Fetch())
+{
+	$ar_brands = array("TITLE"=>$arSection['NAME'], "LINK"=>"/catalog/vse_brendy/".$arSection["CODE"]."/");
+}
+	   }
+	 
+$arFilter2 = array('IBLOCK_ID' => 26, '=CODE' => $array_b[$last]);
+$rsSections2 = CIBlockSection::GetList(array(), $arFilter2);
+if($arSection2 = $rsSections2->Fetch())
+{
+	$filt_br = array("TITLE"=>$arSection2['NAME'], "LINK"=>"");
+}
 	$arElm = CIBlockElement::GetList(array(), array('CODE' => $array_b[$last], 'IBLOCK_ID' => 26), false, false, array('ID', 'NAME'))->Fetch();
 if ($arElm){
     $id_elem = (int) $arElm['ID'];
 	$name_elem = array("TITLE"=>$arElm["NAME"], "LINK"=>"");
 	}
-
-
 if($id_elem){
 	if(!array_search($name_elem, $_SESSION["CATALOG"])){
 	array_push($_SESSION["CATALOG"], $name_elem);
 	}
 }elseif(strripos($_SERVER['REQUEST_URI'], "catalog")){
 	$_SESSION["CATALOG"] = $arResult;
+	foreach($_SESSION["CATALOG"] as $e){
+		$new_mas_title[] = $e["TITLE"];
+	}
+if(strripos($_SERVER['REQUEST_URI'], "vse_brendy") && !array_search($ar_brands, $_SESSION["CATALOG"])){
+	array_push($_SESSION["CATALOG"], $ar_brands);
+}elseif(!array_search($filt_br["TITLE"], $new_mas_title)){
+	array_push($_SESSION["CATALOG"], $filt_br);
 }
+}
+
 /*if($cook && $cook_elem){
     $cnt = count($new_ar);
 	}else{}*/

@@ -427,11 +427,29 @@ if($ar_res = $res->GetNext())
 								<?if($arColumn["id"]=="SUM"){?>
 									<div class="cost prices"><div class="price"><?=$arItem[$arColumn["id"]]?></div></div>
 								<?}else{?>
-									<div class="block_q">
+									<!--<div class="block_q">
 									<a data-but="minus" class="minus">-</a>
-									<?=$arItem[$arColumn["id"]]?>
+									<?//=$arItem[$arColumn["id"]]?>
 									<a data-but="plus" class="plus">+</a>
 									<input type="hidden" class="idtov" value="<?=$k?>"/>
+									</div>-->
+									<div class="counter_block basket">
+										<span onclick="setQuantity('<?=$arItem["ID"]?>', '<?=$arItem["MEASURE_RATIO"]?>', 'down')" data-but="minus" class="minus">-</span>				
+										<input
+											type="text"
+											class="text" 
+											id="QUANTITY_INPUT_<?=$arItem["ID"]?>"
+											name="QUANTITY_INPUT_<?=$arItem["ID"]?>"
+											size="2"
+											data-id="<?=$arItem["ID"];?>" 
+											maxlength="18"
+											min="0"
+											step="<?=$ratio?>"
+											value="<?=preg_replace("/[^0-9]/", '', $arItem["QUANTITY"]);?>"
+											onchange="updateQuantity('QUANTITY_INPUT_<?=$arItem["ID"]?>', '<?=$arItem["ID"]?>', '<?=$ratio?>')"
+										>	
+										<span onclick="setQuantity('<?=$arItem["ID"]?>', '<?=$arItem["MEASURE_RATIO"]?>', 'up')" data-but="plus" class="plus">+</span>
+										<input type="hidden" class="idtov" value="<?=$k?>"/>
 									</div>
 									
 								<?}?>

@@ -77,7 +77,8 @@ $(function() {
   ));
   return matches ? decodeURIComponent(matches[1]) : undefined;
 }
-	/*$('[data-but="minus"], [data-but="plus"]').on("click",function(e){
+	/********Добавление и удаление количества товаров********/
+$('[data-but="minus"], [data-but="plus"]').on("click",function(e){
 		e.preventDefault();
 		if($(this).text() == "-"){
 				var but = 0;
@@ -98,12 +99,11 @@ $(function() {
 					},
 					success: function(data){					
 						if(data.result){
-							console.log(data.result);
 							location.reload();
 						}
 					}
 				});
-	});*/
+	});
     $('.menu_item_l1.catalog > a').on('click', function(e) {
         e.preventDefault();
         $('.menu_catalog_l1 .cat_menu').slideToggle();

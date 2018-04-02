@@ -684,9 +684,12 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 						<span class="big_btn slide_offer button type_block"><i></i><span><?=GetMessage("BUY_BTN");?></span></span>
 					<?endif;?>
 				</div>
-				<?if(strlen($arResult["PREVIEW_TEXT"]) != false && strlen($arResult["PREVIEW_TEXT"]) != "NULL"):?>
+				<?if(strlen($arResult["PREVIEW_TEXT"]) != false && strip_tags(trim($arResult["PREVIEW_TEXT"])) != "NULL"):?>
 					<div class="preview_text" itemprop="description"><?=$arResult["PREVIEW_TEXT"]?></div>
 				<?endif;?>
+			</div>
+			<div class="deliverybanner">
+				<img src="https://test.cafre.ru/bitrix/templates/aspro_mshop/images/banners/cafre_Mail_800х50.jpg" alt="Бесплатная доставка от 2000 руб."/>
 			</div>
 			<?if(is_array($arResult["STOCK"]) && $arResult["STOCK"]):?>
 				<?foreach($arResult["STOCK"] as $key => $arStockItem):?>
@@ -1210,9 +1213,9 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 		<?endif;?>
 		<?if($arResult["DETAIL_TEXT"] || $arResult["PREVIEW_TEXT"] || count($arResult["STOCK"]) || count($arResult["SERVICES"]) || ((count($arResult["PROPERTIES"]["INSTRUCTIONS"]["VALUE"]) && is_array($arResult["PROPERTIES"]["INSTRUCTIONS"]["VALUE"])) || count($arResult["SECTION_FULL"]["UF_FILES"])) || ($showProps && $arParams["PROPERTIES_DISPLAY_LOCATION"] != "TAB")):?>
 			<li class="<?=(!($iTab++) ? ' current' : '')?>">
-				<?if(strlen($arResult["PREVIEW_TEXT"]) != false && strlen($arResult["PREVIEW_TEXT"]) != "NULL"):?>
+				<?if(strlen($arResult["PREVIEW_TEXT"]) != false && strip_tags(trim($arResult["PREVIEW_TEXT"])) != "NULL"):?>
 					<div class="detail_text"><?=$arResult["PREVIEW_TEXT"];?></div>
-				<?elseif(strlen($arResult["DETAIL_TEXT"]) != false && strlen($arResult["DETAIL_TEXT"]) != "NULL"):?>
+				<?elseif(strlen($arResult["DETAIL_TEXT"]) != false && strip_tags(trim($arResult["DETAIL_TEXT"])) != "NULL"):?>
 <div class="detail_text"><?=$arResult["DETAIL_TEXT"];?></div>
 				<?endif;?>
 				<?if($arResult["SERVICES"] && $showProps){?>

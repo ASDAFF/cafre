@@ -202,6 +202,8 @@ $(function() {
 					}
 				]
 			});*/
+		} else {
+			$('.list_brands > a').css('opacity', 1);
 		}
 	}
 	

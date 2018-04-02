@@ -75,9 +75,9 @@ function sendOrder2WSDL($order_id, $arFields, $arOrder, $isnew){
 			endwhile;
 		endwhile;
 		$eol='';
-		$strOrdersXML='<Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">'.$eol;
+		$strOrdersXML='';
 			$strOrdersXML.='<SID xmlns="MC">26</SID>'.$eol;
-			$strOrdersXML.='<UID xmlns="MC">cafre'.$arOrder['ORDER']['ID'].'</UID>'.$eol;
+			$strOrdersXML.='<UID xmlns="MC">'.$arOrder['ORDER']['ID'].'</UID>'.$eol;
 			$strOrdersXML.='<Date xmlns="MC">'.$arOrder['ORDER']['DATE'].'</Date>'.$eol;
 			$strOrdersXML.='<PrCode xmlns="MC" />';
 			if($arOrder['ORDER']['COMMENTS']!=''):
@@ -97,17 +97,32 @@ function sendOrder2WSDL($order_id, $arFields, $arOrder, $isnew){
 				$strOrdersXML.='</Gds>'.$eol;
 			endforeach;
 			//$strOrdersXML.='<utm_medium xmlns="MC" /><utm_source xmlns="MC" /><utm_campaign xmlns="MC" /><dType xmlns="MC" /><bIndex xmlns="MC" /><bRegion xmlns="MC" /><bRaion xmlns="MC" /><bCity xmlns="MC" /><bNpunkt xmlns="MC" /><bStreet xmlns="MC" /><bHouse xmlns="MC" /><bCase xmlns="MC" /><bApartment xmlns="MC" /><tHouse xmlns="MC" /><tCase xmlns="MC" /><tApartment xmlns="MC" />';
-		$strOrdersXML.='</Zakaz>';
-		$s=iconv("windows-1251", "utf-8", $strOrdersXML);
-		$obTest=wsdl('TransferExternalOrder', array('sourceData'=>$s)); //array('sourceData'=>$s)
+		//$strOrdersXML.='</Zakaz>';
+		//$s=iconv("windows-1251", "utf-8", $strOrdersXML);
+		$s['SID']=26;
+		$s['UID']=$arOrder['ORDER']['ID'];
+		$s['Date']=$arOrder['ORDER']['DATE'];
+		$s['PrCode']='';
+		$s['Comm']=iconv("windows-1251", "utf-8", $arOrder['ORDER']['COMMENTS']);
+		$s['Name']=iconv("windows-1251", "utf-8", $arOrder['PROPS']['NAME']);
+		$s['Phone']=iconv("windows-1251", "utf-8", $arOrder['PROPS']['PHONE']);
+		$s['Address']=iconv("windows-1251", "utf-8", $arOrder['PROPS']['FULLADRES']);
+		$s['eMail']=iconv("windows-1251", "utf-8", $arOrder['PROPS']['EMAIL']);
+		$s['Gds']=array();
+		foreach($arOrder['PRODUCTS'] as $arProduct):
+			array_push($s['Gds'], array('ID'=>$arProduct['CODE1C'], 'Qty'=>$arProduct['QUANTITY'], 'Cost'=>$arProduct['PRICE'] ));
+		endforeach;
+		
+		$obTest=wsdl('NewZakaz', array('Zakaz'=>$s)); //array('sourceData'=>$s)
 		$result=print_r($obTest, true);
 		//$qF=print_r($arFields, true);
 		//$qO=print_r($arOrder, true);
 		//$qN=print_r($isnew, true);
 		//file_put_contents($_SERVER["DOCUMENT_ROOT"].'/work/zakaz.xml', $qF.$qO.'is_new='.$qN."\n--\n", FILE_APPEND);
-		file_put_contents($_SERVER["DOCUMENT_ROOT"].'/work/zakaz.xml', $s."\n", FILE_APPEND); //, FILE_APPEND
+		//file_put_contents($_SERVER["DOCUMENT_ROOT"].'/work/zakaz.xml', $s."\n", FILE_APPEND); //, FILE_APPEND
+		file_put_contents($_SERVER["DOCUMENT_ROOT"].'/work/zakaz.xml', print_r($s, true), FILE_APPEND);
 		file_put_contents($_SERVER["DOCUMENT_ROOT"].'/work/zakaz.xml', 'res='.$result, FILE_APPEND);
-		file_put_contents($_SERVER["DOCUMENT_ROOT"].'/work/log.txt', "\n".$checkProps.' '.$arOrder['ORDER']['ID'].'res='.$result, FILE_APPEND);
+		//file_put_contents($_SERVER["DOCUMENT_ROOT"].'/work/log.txt', "\n".$checkProps.' '.$arOrder['ORDER']['ID'].'res='.$result, FILE_APPEND);
 	else:
 		file_put_contents($_SERVER["DOCUMENT_ROOT"].'/work/zakaz.xml', 'double:'.$arOrder['ID']."\n--\n", FILE_APPEND);
 	endif;
@@ -141,7 +156,8 @@ function get_product($code1c) {
 function wsdl($name, $arParams=array()) {
 	//$server = '37.18.74.47:8002/WebServices/Granite.Gateway.ExportService.asmx';
 	//$server = '37.18.74.47:8002/WebServices/Granite.Gateway.Export.Service.svc';
-	$server = 'estel.m-cosmetica.ru/webservices/Granite.Gateway.Export.Service.svc';
+	//$server = 'estel.m-cosmetica.ru/webservices/Granite.Gateway.Export.Service.svc';
+	$server = '185.147.81.84:11203/Trade/ws/MC.1cws';
 	$wsdl_status = 0;
 	$port = 80;
 	$timeout = 10;
@@ -156,14 +172,15 @@ function wsdl($name, $arParams=array()) {
 	if(true) {
 		//$client = new SoapClient('http://37.18.74.47:8002/WebServices/Granite.Gateway.ExportService.asmx?WSDL');
 		//$client = new SoapClient('http://37.18.74.47:8002/WebServices/Granite.Gateway.Export.Service.svc?WSDL', array('cache_wsdl' => WSDL_CACHE_NONE));
-		$client = new SoapClient('http://estel.m-cosmetica.ru/webservices/Granite.Gateway.Export.Service.svc?WSDL', array('cache_wsdl' => WSDL_CACHE_NONE));
+		//$client = new SoapClient('http://estel.m-cosmetica.ru/webservices/Granite.Gateway.Export.Service.svc?WSDL', array('cache_wsdl' => WSDL_CACHE_NONE));
+		$client = new SoapClient('http://185.147.81.84:11203/Trade/ws/MC.1cws?wsdl', array('cache_wsdl' => WSDL_CACHE_NONE));
 		if(sizeof($arParams>0))
 			return  $client->$name($arParams);
 		else
 			return  $client->$name();
 	}
-	  else 
-		  return false;
+	else 
+		return false;
 }
 
 function GetAllProductOffers(){

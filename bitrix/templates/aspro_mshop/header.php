@@ -98,6 +98,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 	<div class="wrapper <?=($TEMPLATE_OPTIONS["HEAD"]["CURRENT_MENU_COLOR"] != "none" ? "has_menu" : "");?> h_color_<?=$TEMPLATE_OPTIONS["HEAD"]["CURRENT_HEAD_COLOR"];?> m_color_<?=$TEMPLATE_OPTIONS["HEAD"]["CURRENT_MENU_COLOR"];?> <?=($isFrontPage ? "front_page" : "");?> basket_<?=strToLower($TEMPLATE_OPTIONS["BASKET"]["CURRENT_VALUE"]);?> head_<?=strToLower($TEMPLATE_OPTIONS["HEAD"]["CURRENT_VALUE"]);?> banner_<?=strToLower($TEMPLATE_OPTIONS["BANNER_WIDTH"]["CURRENT_VALUE"]);?>">
 		<div class="header_wrap <?=strtolower($TEMPLATE_OPTIONS["HEAD_COLOR"]["CURRENT_VALUE"])?>">
+			<div class="deliverybanner deliverybanner__header">
+				<img src="/bitrix/templates/aspro_mshop/images/banners/cafre_Mail_1920х50.jpg" alt="Бесплатная доставка от 2000 руб."/>
+			</div>
 			<div class="top-h-row">
 				<div class="wrapper_inner">
 					<div class="content_menu">

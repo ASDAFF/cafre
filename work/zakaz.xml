@@ -6098,3 +6098,117 @@ res=stdClass Object
         )
 
 )
+<Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">893</UID><Date xmlns="MC">2018-04-02T11:35:15</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">Dee Dee</Name><Phone xmlns="MC">8(999) 999-9999</Phone><Address xmlns="MC">Московская область, Москва, </Address><eMail xmlns="MC">dee@mail.ru</eMail><Gds xmlns="MC"><ID>00000010483</ID><Qty>1</Qty><Cost>1619</Cost></Gds></Zakaz>
+<Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">894</UID><Date xmlns="MC">2018-04-02T11:35:39</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">Dee Dee</Name><Phone xmlns="MC">8(999) 999-9999</Phone><Address xmlns="MC">Московская область, Москва, </Address><eMail xmlns="MC">dee@mail.ru</eMail><Gds xmlns="MC"><ID>00000010483</ID><Qty>1</Qty><Cost>1619</Cost></Gds></Zakaz>
+<Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">895</UID><Date xmlns="MC">2018-04-02T11:44:47</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">Dee Dee</Name><Phone xmlns="MC">8(999) 999-9999</Phone><Address xmlns="MC">Московская область, Москва, </Address><eMail xmlns="MC">dee@mail.ru</eMail><Gds xmlns="MC"><ID>00000022726</ID><Qty>1</Qty><Cost>150</Cost></Gds></Zakaz>
+<Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">896</UID><Date xmlns="MC">2018-04-02T11:45:29</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">Dee Dee</Name><Phone xmlns="MC">8(999) 999-9999</Phone><Address xmlns="MC">Московская область, Москва, </Address><eMail xmlns="MC">dee@mail.ru</eMail><Gds xmlns="MC"><ID>00000022726</ID><Qty>1</Qty><Cost>150</Cost></Gds></Zakaz>
+<Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">897</UID><Date xmlns="MC">2018-04-02T11:47:37</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">Dee Dee</Name><Phone xmlns="MC">8(999) 999-9999</Phone><Address xmlns="MC">Московская область, Москва, </Address><eMail xmlns="MC">dee@mail.ru</eMail><Gds xmlns="MC"><ID>00000022726</ID><Qty>1</Qty><Cost>150</Cost></Gds></Zakaz>
+<Zakaz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><SID xmlns="MC">26</SID><UID xmlns="MC">898</UID><Date xmlns="MC">2018-04-02T11:49:38</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">Dee Dee</Name><Phone xmlns="MC">8(999) 999-9999</Phone><Address xmlns="MC">Московская область, Москва, </Address><eMail xmlns="MC">dee@mail.ru</eMail><Gds xmlns="MC"><ID>00000003177</ID><Qty>1</Qty><Cost>310</Cost></Gds></Zakaz>
+<SID xmlns="MC">26</SID><UID xmlns="MC">899</UID><Date xmlns="MC">2018-04-02T11:50:45</Date><PrCode xmlns="MC" /><Comm xmlns="MC" /><Name xmlns="MC">Dee Dee</Name><Phone xmlns="MC">8(999) 999-9999</Phone><Address xmlns="MC">Московская область, Москва, </Address><eMail xmlns="MC">dee@mail.ru</eMail><Gds xmlns="MC"><ID>00000003177</ID><Qty>1</Qty><Cost>310</Cost></Gds>
+res=stdClass Object
+(
+    [return] => 
+)
+double:900
+--
+Array
+(
+    [SID] => 26
+    [UID] => 901
+    [Date] => 2018-04-02T13:34:51
+    [PrCode] => 
+    [Comm] => 
+    [Name] => Dee
+    [Phone] => 79999999999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [0] => Array
+        (
+            [Gds] => Array
+                (
+                    [ID] => 00000010450
+                    [Qty] => 1
+                    [Cost] => 845
+                )
+
+        )
+
+    [1] => Array
+        (
+            [Gds] => Array
+                (
+                    [ID] => 00000015861
+                    [Qty] => 1
+                    [Cost] => 500
+                )
+
+        )
+
+)
+res=stdClass Object
+(
+    [return] => 
+)
+Array
+(
+    [SID] => 26
+    [UID] => 904
+    [Date] => 2018-04-02T14:07:33
+    [PrCode] => 
+    [Comm] => 
+    [Name] => Dee Dee
+    [Phone] => 8(999) 999-9999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000018232
+                    [Qty] => 1
+                    [Cost] => 305
+                )
+
+        )
+
+)
+res=stdClass Object
+(
+    [return] => 1
+)
+double:904
+--
+Array
+(
+    [SID] => 26
+    [UID] => 905
+    [Date] => 2018-04-02T14:09:26
+    [PrCode] => 
+    [Comm] => 
+    [Name] => Dee
+    [Phone] => 899999999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000018232
+                    [Qty] => 2
+                    [Cost] => 305
+                )
+
+            [1] => Array
+                (
+                    [ID] => 00000011476
+                    [Qty] => 1
+                    [Cost] => 429
+                )
+
+        )
+
+)
+res=stdClass Object
+(
+    [return] => 1
+)

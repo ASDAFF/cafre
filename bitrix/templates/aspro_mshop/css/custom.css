@@ -239,7 +239,11 @@ body #header ul.menu li .child .child_wrapp:not(.child_wrapp-brands) {
 	position: relative;
 	display: inline-block;
 	vertical-align: top;
-	margin: 0 5px;
+	/*margin: 0 5px;*/
+}
+
+.bbrands__alph-list > li a {
+	color: black;
 }
 
 .bbrands__alph-list > li::before {
@@ -248,7 +252,7 @@ body #header ul.menu li .child .child_wrapp:not(.child_wrapp-brands) {
 
 .bbrands__alph-list > li:hover > a {
 	color: white;
-	background: #eb5470;
+	background: black;
 }
 
 .bbrands__alph-list > li:hover > div {
@@ -265,11 +269,12 @@ body #header ul.menu li .child .child_wrapp:not(.child_wrapp-brands) {
 	line-height: 20px;
 	text-align: center;
 	text-decoration: none;
+	padding: 0 5px;
 }
 
 .bbrands__alph-list > li > a:hover {
 	color: white;
-	background: #eb5470;
+	background: black;
 }
 
 .bbrands__alph-list > li > a.bbrands__alph-all {
@@ -294,10 +299,6 @@ body #header ul.menu li .child .child_wrapp:not(.child_wrapp-brands) {
 
 .bbrands a {
 	text-decoration: none;
-}
-
-.bbrands a:hover {
-	color: #eb5470;
 }
 
 .bbrands__alph-all {
@@ -337,7 +338,7 @@ body #header ul.menu li .child .child_wrapp:not(.child_wrapp-brands) {
 
 .bbrands__drop ul > li a:hover,
 a.bbrands__alph-all:hover {
-	color: black;
+	color: #4A90E2;
 }
 
 #header > .wrapper_inner {
@@ -2248,16 +2249,15 @@ margin: 0 0 10px;
 	visibility: hidden;
 }
 
-/*
-.top_brand_block a:nth-child(5n) {
-	margin-right: 0;
+.top_brand_block .list_brands a {
+	opacity: 0;
+	transition: all .5s;
 }
 
-.top_brand_block .list_brands {
-	display: flex;
-	flex-wrap: wrap;
+.top_brand_block .list_brands.flcktyslider a {
+	opacity: 1;
 }
-*/
+
 .top_brand_block img {
 	position: absolute;
 	left: 50%;
@@ -3042,4 +3042,47 @@ width: 530px !important;
 
 .menu__item-lvl_3 ul.active {
 	display: block;
+}
+
+.deliverybanner {
+	margin: 5px 0 0;
+	overflow: hidden;
+}
+
+.deliverybanner img {
+	max-width: 100%;
+	transform: translate3d(0,0,0);
+}
+
+.deliverybanner__header {
+	margin: 0 0 -5px;
+}
+
+.coup_inp {
+	max-width: 100%;
+	margin: 10px 0;
+}
+
+.block_coup {
+	margin-bottom: 30px;
+	display: block;
+}
+
+@media (max-width: 1000px) {
+	.deliverybanner__header img {
+		max-width: 120%;
+		position: relative;
+		left: 50%;
+		transform: translateX(-50%);
+	}
+}
+
+@media (max-width: 500px) {
+	.deliverybanner__header {
+		margin-top: -1px;
+	}
+	
+	.deliverybanner__header img {
+		max-width: 170%;
+	}
 }

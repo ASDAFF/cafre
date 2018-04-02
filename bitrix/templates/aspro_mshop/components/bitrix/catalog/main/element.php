@@ -8,7 +8,7 @@ $arParams["ADD_ELEMENT_CHAIN"] = (isset($arParams["ADD_ELEMENT_CHAIN"]) ? $arPar
 
 CModule::IncludeModule("iblock");
 
-
+if($arResult["VARIABLES"]["ELEMENT_CODE"]=='') $arResult["VARIABLES"]["ELEMENT_CODE"]=$arResult['VARIABLES']['SECTION_CODE_PATH'];
 
 
 
