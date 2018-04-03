@@ -1,1 +1,1 @@
-<a rel="nofollow" href="mailto:info@lakosa.ru">info@lakosa.ru</a>
+<a rel="nofollow" href="mailto:info@cafre.ru">info@cafre.ru</a>

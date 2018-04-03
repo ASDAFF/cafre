@@ -7,7 +7,7 @@
 $frame = $this->createFrame()->begin();
 	if($arResult['ITEMS']){
 		$class_block="s_".randString();?>
-		<div class="viewed_slider common_product wrapper_block <?=$class_block;?>">
+		<div class="viewed_slider slides_index common_product wrapper_block <?=$class_block;?>">
 			<div class="top_block">
 				<?//$title_block=($arParams["TITLE_BLOCK"] ? $arParams["TITLE_BLOCK"] : GetMessage('VIEWED_TITLE'));?>
 				<div class="title_block">Персональные рекомендации</div>
@@ -218,6 +218,8 @@ $frame = $this->createFrame()->begin();
 					</ul>
 				</div>
 			</div>
+			<ul class="recomlist">
+			</ul>
 		</div>
 		<script type="text/javascript">
 			$(document).ready(function(){

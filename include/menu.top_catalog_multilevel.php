@@ -1,8 +1,8 @@
 <?$APPLICATION->IncludeComponent("bitrix:menu", "tz_top_general_multilevel", array(//top_catalog_multilevel
     "ROOT_MENU_TYPE" => "top_catalog",
-    "MENU_CACHE_TYPE" => "Y",
-    "MENU_CACHE_TIME" => "3600",
-    "MENU_CACHE_USE_GROUPS" => "Y",
+    "MENU_CACHE_TYPE" => "A",
+    "MENU_CACHE_TIME" => "360000",
+    "MENU_CACHE_USE_GROUPS" => "N",
     "MENU_CACHE_GET_VARS" => array(),
     "MAX_LEVEL" => "3",
     "CHILD_MENU_TYPE" => "left",

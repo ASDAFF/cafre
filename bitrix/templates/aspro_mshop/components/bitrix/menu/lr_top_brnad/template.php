@@ -103,19 +103,36 @@ $brend_list=array();
 
 
 	$(function() {
+		function scrollMenu(menu) {
+			var flag = $(menu).hasClass('scroll');
+			
+			if (flag) return;
+			
+			var children = $(menu).children().length;
+			
+			if (children > 5) {
+				$(menu).addClass('scroll').jScrollPane();
+			} else {
+				return
+			}
+		}
+		
 		$('.menu__item').hover(function() {
 			$(this).find('.active').removeClass('active');
 			$(this).find('.menu__item-lvl_1 li[data-lvl]').first().addClass('active');
 			$(this).find('.menu__item-lvl_2 ul').first().addClass('active');
-
-			$(this).find('.menu__item-lvl ul').jScrollPane();
+			
+			scrollMenu($(this).find('.menu__item-lvl_1 > ul'));
+			scrollMenu($(this).find('.menu__item-lvl_2 ul').first());
+			//$(this).find('.menu__item-lvl_1 > ul').jScrollPane();
 		});
 
 		$('.menu__item-lvl li[data-lvl] > a').hover(function() {
 			var drop = $(this).closest('.menu__drop'),
 				lvl = $(this).parent().data('lvl'),
 				item = $(this).closest('.menu__item-lvl').attr('class'),
-				itemLvl = Number(item[item.length-1]);
+				itemLvl = Number(item[item.length-1]),
+				menu = $(drop).find('.menu__item-lvl_'+(itemLvl+1)+' ul[data-lvl="'+lvl+'"]');
 
 			if (itemLvl === 1) {
 				$(drop).find('.active').removeClass('active');
@@ -127,9 +144,9 @@ $brend_list=array();
 			}
 			
 			$(this).parent().addClass('active');
-			$(drop).find('.menu__item-lvl_'+(itemLvl+1)+' ul[data-lvl="'+lvl+'"]').addClass('active');
-
-			$(drop).find('.menu__item-lvl_'+(itemLvl+1)+' ul[data-lvl="'+lvl+'"]').jScrollPane();
+			$(menu).addClass('active');
+			
+			scrollMenu(menu);
 		});
 
 		function brands () {

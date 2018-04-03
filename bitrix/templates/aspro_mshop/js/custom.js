@@ -46,83 +46,6 @@ $(function() {
 		
 	});
 	
-    $('.brands').closest('.child_wrapp').addClass('child_wrapp-brands')
-
-    var brands = $('.brands__all > div').children(),  
-        alphabet = $('.brands__alphabet'),
-        letters = [],
-        link = '<span class="brands__link"></span>';
-		
-
-    $(brands).each(function(i, brand) {
-        var letter = $(brand).text()[0];
-        if (letters.indexOf(letter) < 0) letters.push(letter);
-    });
-
-    letters = letters.sort();
-
-    $(letters).each(function(i, l) {
-		if (l.search(/[À-ÿ¨¸]/) === -1) {
-			$(alphabet).find('.brands__lang_eng').append($(link).text(l))
-		} else {
-			$(alphabet).find('.brands__lang_rus').append($(link).text(l))
-		}
-    })
-
-    $('.brands__link, .brands__all-link').on('click', function(e) {
-        e.preventDefault();
-		$('.brands .current').removeClass('current');
-		$(this).addClass('current');
-
-        var letter = $(this).text(),
-            brands = $('.brands__all > div').children();
-			
-		if ($(this).hasClass('brands__all-link')) {
-			$(brands).show();
-			return;
-		}
-        
-        $(brands).hide();
-        
-        $(brands).each(function(i, brand) {
-            var l = $(brand).text()[0];
-
-            if (l === letter) {
-                $(brand).show();
-            }
-        });
-    });
-	
-	$('.brands__all > div a').hover(function() {
-		var src = $(this).data('img'),
-			img = '<img src="'+src+'"/>';
-			
-		$('.brands__pic').empty().append(img);
-	}, function() {
-		$('.brands__pic').empty();
-	});
-	
-	$('.brands__all-link').trigger('click');
-
-    var brandBlock = $('.bottom_brand_block').get(0);
-
-    if (brandBlock) {
-        var levels = $(brandBlock).find('h2,h3,h4');
-        
-        $(levels).each(function(i, l) {
-            $(l).attr('id', 't'+i);
-            $('.brand__content').append('<span class="brand__span brand__span_'+l.tagName.toLowerCase()+'">'+$(l).text()+'</span>');
-        });
-    }
-
-    $('.brand__span').on('click', function() {
-        var index = +($(this).index())-1;
-        var span = $('#t'+index);
-
-        $('html, body').animate({
-            scrollTop: $(span).offset().top
-        }, 1000);
-    });
 
     $('.flex-direction-nav a').removeAttr('href');
 	
@@ -138,7 +61,7 @@ $(function() {
 
 	$('.mobile-nav__item-lvl2 > .menu_item').on('click', function(e) {
 		var brands = Number($(this).closest('.mobile-nav__item').find('.menu_title.active a').get(0).href.indexOf('vse_brendy')) > 0;
-		console.log(brands);
+
 		if ($(this).next().hasClass('child_wrapp') && !brands) {
 			e.preventDefault();
 			$('.mobile-nav__item-lvl2 .child_wrapp').hide();

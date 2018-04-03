@@ -1,4 +1,6 @@
 $(function() {
+	var slides = $(".slides_index .slides").html();
+	$('.recomlist').append(slides);
 	
     function close() {
         $('#header .basket_fly').css('right', -$("#basket_line .basket_fly").outerWidth()-5);
