@@ -41,7 +41,9 @@ $(function() {
 		$('.brand__content').append('<a href="'+'#content'+i+'"class="brand__span brand__span_'+h+'">'+$(title).text()+'</a>');
 	});
 	
-	$('.brand__span').on('click', function() {
+	$('.brand__span').on('click', function(e) {
+		e.preventDefault();
+		
 		var id = $(this).data('content');
 
 		$('html, body').animate({
