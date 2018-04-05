@@ -80,10 +80,10 @@ global $TEMPLATE_OPTIONS;
 <div class="catalog_detail">
     <?
         $tmp="main";
-        global $USER;
+        /*global $USER;
         if($USER->IsAdmin()) {
                 $tmp="main2";
-                 } 
+                 } */
     ?>
 	<?$ElementID = $APPLICATION->IncludeComponent(
 		"bitrix:catalog.element",
