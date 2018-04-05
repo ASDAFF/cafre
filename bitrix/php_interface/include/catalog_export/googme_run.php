@@ -1,4 +1,4 @@
-<? 
+Ôªø<? 
 ini_set('max_execution_time', '0');
 @ignore_user_abort(true);
 //<title>Google_me</title>
@@ -261,20 +261,22 @@ function yandex_get_value($arOffer, $param, $PROPERTY, &$arProperties, &$arUserT
 				foreach ($value as $key => $val)
 				{
 					$strProperty .= $strProperty ? "\n" : "";
-					if(yandex_text2xml($arProperties[$PROPERTY]['NAME'], true) != '‘ÓÚÓ„‡ÎÂÂˇ')
-					$strProperty .= '<param name="'.yandex_text2xml($description[$key], true).'">'.yandex_text2xml($val, true).'</param>';
+					$namep = '–§–æ—Ç–æ–≥–∞–ª–µ—Ä–µ—è';
+					if(yandex_text2xml($arProperties[$PROPERTY]['NAME'], true) != iconv("UTF-8", "WINDOWS-1251", $namep))
+					$strProperty .= '<param name="'.iconv("WINDOWS-1251", "UTF-8", yandex_text2xml($description[$key], true)).'">'.iconv("WINDOWS-1251", "UTF-8", yandex_text2xml($val, true)).'</param>';
 				}
 			}
 			else
 			{
-				if(yandex_text2xml($arProperties[$PROPERTY]['NAME'], true) != '‘ÓÚÓ„‡ÎÂÂˇ')
-				$strProperty .= '<param name="'.yandex_text2xml($arProperties[$PROPERTY]['NAME'], true).'">'.yandex_text2xml($value, true).'</param>';
+				$namep = '–§–æ—Ç–æ–≥–∞–ª–µ—Ä–µ—è';
+				if(yandex_text2xml($arProperties[$PROPERTY]['NAME'], true) != iconv("UTF-8", "WINDOWS-1251", $namep))
+				$strProperty .= '<param name="'.iconv("WINDOWS-1251", "UTF-8", yandex_text2xml($arProperties[$PROPERTY]['NAME'], true)).'">'.iconv("WINDOWS-1251", "UTF-8", yandex_text2xml($value, true)).'</param>';
 			}
 		}
 		else
 		{
-			$param_h = yandex_text2xml($param, true);
-			$strProperty .= '<'.$param_h.'>'.yandex_text2xml($value, true).'</'.$param_h.'>';
+			$param_h = iconv("WINDOWS-1251", "UTF-8", yandex_text2xml($param, true));
+			$strProperty .= '<'.$param_h.'>'.iconv("WINDOWS-1251", "UTF-8", yandex_text2xml($value, true)).'</'.$param_h.'>';
 		}
 	}
 
@@ -483,7 +485,7 @@ function yandex_get_value2($arOffer, $param, $PROPERTY, &$arProperties, &$arUser
 			}
 			else
 			{
-			if(yandex_text2xml($arProperties[$PROPERTY]['NAME'], true) == '‘ÓÚÓ„‡ÎÂÂˇ')
+			if(yandex_text2xml($arProperties[$PROPERTY]['NAME'], true) == '???????????')
 				$strProperty .= ''.yandex_text2xml($value, true).'';
 			}
 		}
@@ -769,7 +771,7 @@ if (empty($arRunErrors))
 	else
 	{
 
-		if (!@fwrite($fp, '<?if (!isset($_GET["referer1"]) || strlen($_GET["referer1"])<=0) $_GET["referer1"] = "yandext";?>'))
+		/*if (!@fwrite($fp, '<?if (!isset($_GET["referer1"]) || strlen($_GET["referer1"])<=0) $_GET["referer1"] = "yandext";?>'))
 		{
 			$arRunErrors[] = str_replace('#FILE#', $_SERVER["DOCUMENT_ROOT"].$SETUP_FILE_NAME, GetMessage('YANDEX_ERR_SETUP_FILE_WRITE'));
 			@fclose($fp);
@@ -779,21 +781,20 @@ if (empty($arRunErrors))
 			fwrite($fp, '<? $strReferer1 = htmlspecialchars($_GET["referer1"]); ?>');
 			fwrite($fp, '<?if (!isset($_GET["referer2"]) || strlen($_GET["referer2"]) <= 0) $_GET["referer2"] = "";?>');
 			fwrite($fp, '<? $strReferer2 = htmlspecialchars($_GET["referer2"]); ?>');
-		}
+		}*/
 	}
 }
 
 if (empty($arRunErrors))
 {
-	fwrite($fp, '<? header("Content-Type: text/xml; charset=windows-1251");?>');
-	fwrite($fp, '<? echo "<"."?xml version=\"1.0\" encoding=\"windows-1251\"?".">"?>');
-	fwrite($fp, '<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">'."\n");
+	fwrite($fp, '<?xml version="1.0" encoding="UTF-8"?>');
+	fwrite($fp, '<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">');
 	fwrite($fp, '<channel>'."\n");
 
 	fwrite($fp, '<title>Cafre.ru'."</title>\n");
 
 	fwrite($fp, '<link>'.$usedProtocol.htmlspecialcharsbx($ar_iblock['SERVER_NAME'])."</link>\n");
-	fwrite($fp, '<description>”ÌË‚ÂÒ‡Î¸Ì˚È ËÌÚÂÌÂÚ-Ï‡„‡ÁËÌ'."</description>\n");
+	fwrite($fp, '<description>–£–Ω–∏–≤–µ—Ä—Å–∞–ª—å–Ω—ã–π –∏–Ω—Ç–µ—Ä–Ω–µ—Ç-–º–∞–≥–∞–∑–∏–Ω'."</description>\n");
 
 	fwrite($fp, $strTmp);
 	unset($strTmp);
@@ -913,6 +914,15 @@ if (empty($arRunErrors))
 		{
 			$cnt++;
 			$arAcc = $obElement->GetFields();
+$arSelect3 = Array("ID", "PROPERTY_CML2_LINK");
+$arFilter3 = Array("IBLOCK_ID"=>27, "PROPERTY_CML2_LINK"=>$arAcc['ID']);
+$res3 = CIBlockElement::GetList(Array(), $arFilter3, false, Array(), $arSelect3);
+if($ob3 = $res3->GetNextElement())
+{
+ $arFields3 = $ob3->GetFields();
+ $quant = CCatalogProduct::GetByID($arFields3["ID"]);
+  if($quant["QUANTITY"] == 0)continue;
+}
 			if (is_array($XML_DATA['XML_DATA']))
 			{
 				$arAcc["PROPERTIES"] = $obElement->GetProperties();
@@ -932,8 +942,8 @@ if (empty($arRunErrors))
 					'CATALOG_GROUP_ID' => $XML_DATA['PRICE'],
 					'CAN_BUY' => 'Y',
 					'GROUP_GROUP_ID' => array(2),
-					'+<=QUANTITY_FROM' => 1,
-					'+>=QUANTITY_TO' => 1,
+					'>=QUANTITY_FROM' => 1,
+					'>=QUANTITY_TO' => 1,
 					)
 				);
 				if ($arPrice = $rsPrices->Fetch())
@@ -1064,25 +1074,29 @@ if (empty($arRunErrors))
 					if (is_array($XML_DATA) && ($XML_DATA['TYPE'] == 'vendor.model' || $XML_DATA['TYPE'] == 'artist.title'))
 						continue;
 
-					$strTmpOff .= "<title>".mb_substr(yandex_text2xml($arAcc["~NAME"], true),0,110)."</title>\n";
+					$strTmpOff .= "<title>".iconv("WINDOWS-1251", "UTF-8", substr(yandex_text2xml(str_replace('  ',' ', $arAcc["~NAME"]), true),0,140))."</title>\n";
 					break;
 				case 'description':
 			if($arAcc["~DETAIL_TEXT"] != "NULL" && $arAcc["~DETAIL_TEXT"] != NULL){
+				if(preg_match('/[–∞-—è–ê-–Ø]+/',strip_tags($arAcc["~DETAIL_TEXT"]))){
 					$strTmpOff .=
 						"<description>".
-						yandex_text2xml(TruncateText(
+					trim(iconv("WINDOWS-1251", "UTF-8", yandex_text2xml(TruncateText(
 							($arAcc["DETAIL_TEXT_TYPE"]=="html"?
-							strip_tags(preg_replace_callback("'&[^;]*;'", "yandex_replace_special", mb_substr($arAcc["~DETAIL_TEXT"], 0, 2000))) : preg_replace_callback("'&[^;]*;'", "yandex_replace_special", mb_substr($arAcc["~DETAIL_TEXT"], 0, 2000))),
-							255), true).
+							str_replace('  ',' ', preg_replace_callback("/([^\pL\pN\pP\pS\pZ])|([\xC2\xA0])/u", "yandex_replace_special", mb_substr(strip_tags($arAcc["~DETAIL_TEXT"]), 0, 2000))) : str_replace('  ',' ', preg_replace_callback("'&[^;]*;'", "yandex_replace_special", mb_substr(strip_tags($arAcc["~DETAIL_TEXT"]), 0, 2000)))),
+							255), true))).
 						"</description>\n";
+				}
 					}else{
+						if(preg_match('/[–∞-—è–ê-–Ø]+/',strip_tags($arAcc["~PREVIEW_TEXT"]))){
 						$strTmpOff .=
 						"<description>".
-						yandex_text2xml(TruncateText(
-							($arAcc["PREVIEW_TEXT_TYPE"]=="html"?
-							strip_tags(preg_replace_callback("'&[^;]*;'", "yandex_replace_special", mb_substr($arAcc["~PREVIEW_TEXT"], 0, 2000))) : preg_replace_callback("'&[^;]*;'", "yandex_replace_special", mb_substr($arAcc["~PREVIEW_TEXT"], 0, 2000))),
-							255), true).
+							trim(iconv("WINDOWS-1251", "UTF-8", yandex_text2xml(TruncateText(
+							($arAcc["DETAIL_TEXT_TYPE"]=="html"?
+							str_replace('  ',' ', preg_replace_callback("/([^\pL\pN\pP\pS\pZ])|([\xC2\xA0])/u", "yandex_replace_special", mb_substr(strip_tags($arAcc["~PREVIEW_TEXT"]), 0, 2000))) : str_replace('  ',' ', preg_replace_callback("'&[^;]*;'", "yandex_replace_special", mb_substr(strip_tags($arAcc["~PREVIEW_TEXT"]), 0, 2000)))),
+							255), true))).
 						"</description>\n";
+						}
 					}
 					break;
 				case 'param':
@@ -1219,6 +1233,15 @@ if (empty($arRunErrors))
 			$cnt++;
 			$arCross = array();
 			$arItem = $obItem->GetFields();
+			$arSelect3 = Array("ID", "PROPERTY_CML2_LINK");
+$arFilter3 = Array("IBLOCK_ID"=>27, "PROPERTY_CML2_LINK"=>$arItem['ID']);
+$res3 = CIBlockElement::GetList(Array(), $arFilter3, false, Array(), $arSelect3);
+if($ob3 = $res3->GetNextElement())
+{
+ $arFields3 = $ob3->GetFields();
+ $quant = CCatalogProduct::GetByID($arFields3["ID"]);
+  if($quant["QUANTITY"] == 0)continue;
+}
 			$arItem['PROPERTIES'] = $obItem->GetProperties();
 			if (!empty($arItem['PROPERTIES']))
 			{
@@ -1317,8 +1340,8 @@ if (empty($arRunErrors))
 							'CATALOG_GROUP_ID' => $XML_DATA['PRICE'],
 							'CAN_BUY' => 'Y',
 							'GROUP_GROUP_ID' => array(2),
-							'+<=QUANTITY_FROM' => 1,
-							'+>=QUANTITY_TO' => 1,
+							'>=QUANTITY_FROM' => 1,
+							'>=QUANTITY_TO' => 1,
 							)
 						);
 						if ($arPrice = $rsPrices->Fetch())
@@ -1491,21 +1514,25 @@ if (empty($arRunErrors))
 							if (is_array($XML_DATA) && ($XML_DATA['TYPE'] == 'vendor.model' || $XML_DATA['TYPE'] == 'artist.title'))
 								continue;
 
-							$strOfferYandex .= "<title>".mb_substr(yandex_text2xml($arOfferItem["~NAME"], true),0,110)."</title>\n";
+							$strOfferYandex .= "<title>".iconv("WINDOWS-1251", "UTF-8", substr(yandex_text2xml(str_replace('  ',' ', $arOfferItem["~NAME"]), true),0,140))."</title>\n";
 							break;
 						case 'description':
 							$strOfferYandex .= "<description>";
 							if (strlen($arOfferItem['~PREVIEW_TEXT']) <= 0)
 							{
-								$strOfferYandex .= strip_tags(mb_substr($arItem['YANDEX_DESCR'],0,2000));
+								if(preg_match('/[–∞-—è–ê-–Ø]+/',strip_tags($arItem['YANDEX_DESCR']))){
+								$strOfferYandex .= trim(iconv("WINDOWS-1251", "UTF-8", mb_substr(strip_tags($arItem['YANDEX_DESCR']),0,2000)));
+								}
 							}
 							else
 							{
-								$strOfferYandex .= yandex_text2xml(TruncateText(
+								if(preg_match('/[–∞-—è–ê-–Ø]+/',strip_tags($arOfferItem["~PREVIEW_TEXT"]))){
+								$strOfferYandex .= trim(iconv("WINDOWS-1251", "UTF-8", yandex_text2xml(TruncateText(
 									($arOfferItem["PREVIEW_TEXT_TYPE"]=="html"?
-										strip_tags(preg_replace_callback("'&[^;]*;'", "yandex_replace_special", mb_substr($arOfferItem["~PREVIEW_TEXT"],0,2000))) : mb_substr($arOfferItem["~PREVIEW_TEXT"],0,2000)),
+										str_replace('  ',' ', preg_replace_callback("/([^\pL\pN\pP\pS\pZ])|([\xC2\xA0])/", "yandex_replace_special", mb_substr(strip_tags($arOfferItem["~PREVIEW_TEXT"]),0,2000))) : str_replace('  ',' ', mb_substr(strip_tags($arOfferItem["~PREVIEW_TEXT"]),0,2000))),
 										255),
-									true);
+									true)));
+								}
 							}
 							$strOfferYandex .= "</description>\n";
 							break;
@@ -1598,8 +1625,8 @@ if (empty($arRunErrors))
 							'CATALOG_GROUP_ID' => $XML_DATA['PRICE'],
 							'CAN_BUY' => 'Y',
 							'GROUP_GROUP_ID' => array(2),
-							'+<=QUANTITY_FROM' => 1,
-							'+>=QUANTITY_TO' => 1,
+							'>=QUANTITY_FROM' => 1,
+							'>=QUANTITY_TO' => 1,
 							)
 						);
 						if ($arPrice = $rsPrices->Fetch())
@@ -1761,22 +1788,26 @@ if (empty($arRunErrors))
 							if (is_array($XML_DATA) && ($XML_DATA['TYPE'] == 'vendor.model' || $XML_DATA['TYPE'] == 'artist.title'))
 								continue;
 
-							$strOfferYandex .= "<title>".mb_substr(yandex_text2xml($arOfferItem["~NAME"], true),0,110)."</title>\n";
+							$strOfferYandex .= "<title>".iconv("WINDOWS-1251", "UTF-8", substr(yandex_text2xml(str_replace('  ',' ', $arOfferItem["~NAME"]), true),0,140))."</title>\n";
 							break;
 						case 'description':
 							$strOfferYandex .= "<description>";
 							if (strlen($arOfferItem['~PREVIEW_TEXT']) <= 0 || strlen($arOfferItem['~DETAIL_TEXT']) <= 0)
 							{
-								$strOfferYandex .= strip_tags(mb_substr($arItem['YANDEX_DESCR'],0,2000));
+								if(preg_match('/[–∞-—è–ê-–Ø]+/',strip_tags($arItem['YANDEX_DESCR']))){
+								$strOfferYandex .= trim(iconv("WINDOWS-1251", "UTF-8", mb_substr(strip_tags($arItem['YANDEX_DESCR']),0,2000)));
+								}
 								
 							}
 							else
 							{
-								$strOfferYandex .= yandex_text2xml(TruncateText(
+								if(preg_match('/[–∞-—è–ê-–Ø]+/',strip_tags($arOfferItem["~PREVIEW_TEXT"]))){
+								$strOfferYandex .= trim(iconv("WINDOWS-1251", "UTF-8", yandex_text2xml(TruncateText(
 									($arOfferItem["PREVIEW_TEXT_TYPE"]=="html"?
-										strip_tags(preg_replace_callback("'&[^;]*;'", "yandex_replace_special", mb_substr($arOfferItem["~PREVIEW_TEXT"],0,2000))) : preg_replace_callback("'&[^;]*;'", "yandex_replace_special", strip_tags(mb_substr($arOfferItem["~PREVIEW_TEXT"],0,2000)))),
+										str_replace('  ',' ', preg_replace_callback("/([^\pL\pN\pP\pS\pZ])|([\xC2\xA0])/", "yandex_replace_special", mb_substr(strip_tags($arOfferItem["~PREVIEW_TEXT"]),0,2000))) : str_replace('  ',' ', preg_replace_callback("/([^\pL\pN\pP\pS\pZ])|([\xC2\xA0])/", "yandex_replace_special", strip_tags(mb_substr($arOfferItem["~PREVIEW_TEXT"],0,2000))))),
 										255),
-									true);
+									true)));
+								}
 							}
 							$strOfferYandex .= "</description>\n";
 							break;
@@ -1859,8 +1890,8 @@ if (empty($arRunErrors))
 						'CATALOG_GROUP_ID' => $XML_DATA['PRICE'],
 						'CAN_BUY' => 'Y',
 						'GROUP_GROUP_ID' => array(2),
-						'+<=QUANTITY_FROM' => 1,
-						'+>=QUANTITY_TO' => 1,
+						'>=QUANTITY_FROM' => 1,
+						'>=QUANTITY_TO' => 1,
 						)
 					);
 					if ($arPrice = $rsPrices->Fetch())
@@ -1967,25 +1998,29 @@ if (empty($arRunErrors))
 						if (is_array($XML_DATA) && ($XML_DATA['TYPE'] == 'vendor.model' || $XML_DATA['TYPE'] == 'artist.title'))
 							continue;
 
-						$strValue = "<title>".mb_substr(yandex_text2xml($arItem["~NAME"], true),110)."</title>\n";
+						$strValue = "<title>".iconv("WINDOWS-1251", "UTF-8", substr(yandex_text2xml(str_replace('  ',' ', $arItem["~NAME"]), true),140))."</title>\n";
 						break;
 					case 'description':
 					if($arItem["~DETAIL_TEXT"] != "NULL" && $arItem["~DETAIL_TEXT"] != NULL){
+						if(preg_match('/[–∞-—è–ê-–Ø]+/',strip_tags($arItem["~DETAIL_TEXT"]))){
 						$strValue =
 							"<description>".
-							yandex_text2xml(TruncateText(
+							trim(iconv("WINDOWS-1251", "UTF-8", yandex_text2xml(TruncateText(
 								($arItem["PREVIEW_TEXT_TYPE"]=="html"?
-								strip_tags(preg_replace_callback("'&[^;]*;'", "yandex_replace_special", mb_substr($arItem["~DETAIL_TEXT"],0,2000))) : preg_replace_callback("'&[^;]*;'", "yandex_replace_special", mb_substr($arItem["~DETAIL_TEXT"],0,2000))),
-								255), true).
+								str_replace('  ',' ', preg_replace_callback("/([^\pL\pN\pP\pS\pZ])|([\xC2\xA0])/u", "yandex_replace_special", mb_substr(strip_tags($arItem["~DETAIL_TEXT"]),0,2000))) : str_replace('  ',' ', preg_replace_callback("/([^\pL\pN\pP\pS\pZ])|([\xC2\xA0])/u", "yandex_replace_special", mb_substr(strip_tags($arItem["~DETAIL_TEXT"]),0,2000)))),
+								255), true))).
 							"</description>\n";
+						}
 						}else{
+							if(preg_match('/[–∞-—è–ê-–Ø]+/',strip_tags($arItem["~PREVIEW_TEXT"]))){
 							$strValue =
 							"<description>".
-							yandex_text2xml(TruncateText(
+								trim(iconv("WINDOWS-1251", "UTF-8", yandex_text2xml(TruncateText(
 								($arItem["PREVIEW_TEXT_TYPE"]=="html"?
-								strip_tags(preg_replace_callback("'&[^;]*;'", "yandex_replace_special", mb_substr($arItem["~PREVIEW_TEXT"],0,2000))) : preg_replace_callback("'&[^;]*;'", "yandex_replace_special", mb_substr($arItem["~PREVIEW_TEXT"],0,2000))),
-								255), true).
+								str_replace('  ',' ', preg_replace_callback("/([^\pL\pN\pP\pS\pZ])|([\xC2\xA0])/u", "yandex_replace_special", mb_substr(strip_tags($arItem["~PREVIEW_TEXT"]),0,2000))) : str_replace('  ',' ', preg_replace_callback("/([^\pL\pN\pP\pS\pZ])|([\xC2\xA0])/u", "yandex_replace_special", mb_substr(strip_tags($arItem["~PREVIEW_TEXT"]),0,2000)))),
+								255), true))).
 							"</description>\n";
+							}
 						}
 						break;
 					case 'param':

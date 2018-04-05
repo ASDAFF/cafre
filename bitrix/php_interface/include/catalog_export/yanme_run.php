@@ -962,6 +962,15 @@ if (empty($arRunErrors))
 		{
 			$cnt++;
 			$arAcc = $obElement->GetFields();
+			$arSelect3 = Array("ID", "PROPERTY_CML2_LINK");
+$arFilter3 = Array("IBLOCK_ID"=>27, "PROPERTY_CML2_LINK"=>$arAcc['ID']);
+$res3 = CIBlockElement::GetList(Array(), $arFilter3, false, Array(), $arSelect3);
+if($ob3 = $res3->GetNextElement())
+{
+ $arFields3 = $ob3->GetFields();
+ $quant = CCatalogProduct::GetByID($arFields3["ID"]);
+  if($quant["QUANTITY"] == 0)continue;
+}
 			if (is_array($XML_DATA['XML_DATA']))
 			{
 				$arAcc["PROPERTIES"] = $obElement->GetProperties();
@@ -1258,6 +1267,15 @@ if (empty($arRunErrors))
 			$cnt++;
 			$arCross = array();
 			$arItem = $obItem->GetFields();
+			$arSelect3 = Array("ID", "PROPERTY_CML2_LINK");
+$arFilter3 = Array("IBLOCK_ID"=>27, "PROPERTY_CML2_LINK"=>$arItem['ID']);
+$res3 = CIBlockElement::GetList(Array(), $arFilter3, false, Array(), $arSelect3);
+if($ob3 = $res3->GetNextElement())
+{
+ $arFields3 = $ob3->GetFields();
+ $quant = CCatalogProduct::GetByID($arFields3["ID"]);
+  if($quant["QUANTITY"] == 0)continue;
+}
 			$arItem['PROPERTIES'] = $obItem->GetProperties();
 			if (!empty($arItem['PROPERTIES']))
 			{
