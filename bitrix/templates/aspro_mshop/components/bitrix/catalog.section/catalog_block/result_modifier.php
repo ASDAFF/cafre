@@ -6,6 +6,7 @@ if (!defined('B_PROLOG_INCLUDED') || B_PROLOG_INCLUDED!==true) die();
 /** @var CBitrixComponentTemplate $this */
 /** @var array $arParams */
 /** @var array $arResult */
+
 $arDefaultParams = array(
 	'TYPE_SKU' => 'Y',
 	'ADD_PICT_PROP' => '-',
@@ -44,6 +45,7 @@ if ('TYPE_1' == $arParams['TYPE_SKU'] && $arParams['DISPLAY_TYPE'] !='table' ){
 
 
 if (!empty($arResult['ITEMS'])){
+	
 	/*$arEmptyPreview = false;
 	$strEmptyPreview = SITE_TEMPLATE_PATH.'/images/no_photo_medium.png';
 	if (file_exists($_SERVER['DOCUMENT_ROOT'].$strEmptyPreview))
@@ -98,6 +100,8 @@ if (!empty($arResult['ITEMS'])){
 		}
 	}
 	$arNewItemsList = array();
+	$new_sa = array();
+	
 	foreach ($arResult['ITEMS'] as $key => $arItem)
 	{
 		//$arItem["CATALOG_QUANTITY"] = 9999;

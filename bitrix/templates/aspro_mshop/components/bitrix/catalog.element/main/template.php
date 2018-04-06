@@ -309,20 +309,27 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 	</div>
 	<div class="right_info">
 		<div class="info_item">
-			<?if((!$arResult["OFFERS"] && $arParams["DISPLAY_WISH_BUTTONS"] != "N" && $arResult["CAN_BUY"]) || ($arParams["DISPLAY_COMPARE"] == "Y") || strlen($arResult["DISPLAY_PROPERTIES"]["CML2_ARTICLE"]["VALUE"]) || $arResult["BRAND_ITEM"]){?>
+			<?if((!$arResult["OFFERS"] && $arParams["DISPLAY_WISH_BUTTONS"] != "N" && $arResult["CAN_BUY"]) || ($arParams["DISPLAY_COMPARE"] == "Y") || strlen($arResult["DISPLAY_PROPERTIES"]["CML2_ARTICLE"]["VALUE"]) || $arResult["PROPERTIES"]["CATALOG_BREND"]["VALUE"]){?>
 				<div class="top_info">
 					<div class="wrap_md">
-						<?if($arResult["BRAND_ITEM"]){?>
+						<?if($arResult["PROPERTIES"]["CATALOG_BREND"]["VALUE"]){?>
+						<?  $arFilter2 = Array('IBLOCK_ID'=>26, "ID"=>$arResult["PROPERTIES"]["CATALOG_BREND"]["VALUE"]);
+  $db_list2 = CIBlockSection::GetList(Array(), $arFilter2, false, array("UF_IMG_BRAND"));
+  if($ar_result2 = $db_list2->GetNext())
+  {
+	  $all_b[$ar_result2["ID"]]=array($ar_result2["NAME"], CFile::GetPath($ar_result2["UF_IMG_BRAND"]), $ar_result2["CODE"]);
+						?>
 							<div class="brand iblock">
-								<?if(!$arResult["BRAND_ITEM"]["IMAGE"]):?>
+								<?if(!CFile::GetPath($ar_result2["UF_IMG_BRAND"])):?>
 									<b class="block_title"><?=GetMessage("BRAND");?>:</b>
-									<a href="<?=$arResult["BRAND_ITEM"]["DETAIL_PAGE_URL"]?>"><?=$arResult["BRAND_ITEM"]["NAME"]?></a>
+									<a href="/catalog/vse_brendy/<?=$ar_result2["CODE"]?>/"><?=$ar_result2["NAME"]?></a>
 								<?else:?>
-									<a class="brand_picture" href="<?=$arResult["BRAND_ITEM"]["DETAIL_PAGE_URL"]?>">
-										<img border="0" src="<?=$arResult["BRAND_ITEM"]["IMAGE"]["src"]?>" alt="<?=$arResult["BRAND_ITEM"]["NAME"]?>" title="<?=$arResult["BRAND_ITEM"]["NAME"]?>" />
+									<a class="brand_picture" href="/catalog/vse_brendy/<?=$ar_result2["CODE"]?>/">
+										<img border="0" src="<?=CFile::GetPath($ar_result2["UF_IMG_BRAND"])?>" alt="<?=$ar_result2["NAME"]?>" title="<?=$ar_result2["NAME"]?>" />
 									</a>
 								<?endif;?>
 							</div>
+							<?}?>
 						<?}?>
 						<?if(((!$arResult["OFFERS"] && $arParams["DISPLAY_WISH_BUTTONS"] != "N") || ($arParams["DISPLAY_COMPARE"] == "Y")) || (strlen($arResult["DISPLAY_PROPERTIES"]["CML2_ARTICLE"]["VALUE"]) || ($arResult['SHOW_OFFERS_PROPS'] && $showCustomOffer))):?>
 							<div>

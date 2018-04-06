@@ -891,7 +891,7 @@ h4, .fourlevel {
 }
 
 #header .basket_fly.fly {
-	top: 25%;
+	top: 15%;
 	transition: all .4s .1s, top .4s;
 }
 
@@ -3090,6 +3090,12 @@ div.title-search-result {
 	width: 48%;
 	margin-right: 2%;
 	margin-bottom: 50px;
+}
+
+@media (max-width: 1400px) {
+	#header .basket_fly.fly {
+		top: 9%;
+	}
 }
 
 @media (max-width: 1000px) {

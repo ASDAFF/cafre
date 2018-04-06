@@ -40,9 +40,9 @@ $bs = new CIBlockSection;
 $res2 = $bs->Update($ar_result["ID"], $arFields3);
   }
   
-    echo "<pre>";
-	  print_r($uf);
-	  echo "</pre>";
+  //  echo "<pre>";
+	 // print_r($uf);
+	 // echo "</pre>";
 //$result = array_unique($new_mas);
 	/*	$brand_list = '';
 	  foreach($new_mas as $key=>$val){

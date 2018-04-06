@@ -18462,3 +18462,7 @@
 05.04.2018 06:57 /bitrix/templates/aspro_mshop/js/custom.js (05.04.2018 06:56:54     fix href)
 05.04.2018 06:57 /bitrix/templates/aspro_mshop/js/custom.js (05.04.2018 06:56:54     fix href)
 05.04.2018 07:44 /bitrix/templates/aspro_mshop/components/bitrix/catalog/main/section.php (02.04.2018 14:32:58     card gtm)
+05.04.2018 10:19 /bitrix/templates/aspro_mshop/components/bitrix/catalog.element/main/template.php (05.04.2018 10:18:47     card)
+05.04.2018 10:19 /bitrix/templates/aspro_mshop/components/bitrix/catalog.element/main2/template.php (05.04.2018 10:18:47     card)
+05.04.2018 10:19 /bitrix/templates/aspro_mshop/components/bitrix/catalog/main/element.php (05.04.2018 10:18:47     card)
+05.04.2018 10:19 /catalog/index.php (05.04.2018 10:18:47     card)

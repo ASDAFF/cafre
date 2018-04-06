@@ -15,8 +15,8 @@ try {
 		$arSelect2 = Array("ID", "NAME", "XML_ID", "PROPERTY_SUM_PROD", "PROPERTY_CODE1C");
 		//$num = intval($value2[1]); // если число влезает в PHP_INT_SIZE байт 
 //$num = ltrim($value2[1], '0'); // если числа не будут отрицательными 
-//$num = preg_replace('!^(-?)0*!', '\\1', $value2[0]); // для всех ситуаций
-$arFilter2 = Array("IBLOCK_ID"=>26, "PROPERTY_CODE1C" => $value2[0], "!PROPERTY_SUM_PROD" => NULL); //,"XML_ID"=>$value2[0]
+$num = preg_replace('!^(-?)0*!', '\\1', $value2[0]); // для всех ситуаций
+$arFilter2 = Array("IBLOCK_ID"=>26, "PROPERTY_CODE1C" => $num, "PROPERTY_SUM_PROD" => FALSE); //,"XML_ID"=>$value2[0], 
 $res = CIBlockElement::GetList(Array(), $arFilter2, false, Array(), $arSelect2);
 if($ar_fields = $res->GetNext())
 	{
@@ -24,6 +24,7 @@ echo '<pre>';
 print_r($ar_fields);
 print_r($value2[1]);
 echo '</pre>';
+//CIBlockElement::SetPropertyValuesEx($ar_fields["ID"], false, array("SUM_PROD" => $value2[1]));
 	}
 	}
 }

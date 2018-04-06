@@ -56,7 +56,7 @@ $res2 = $el->Update($arFields2["ID"], $arLoadProductArray);
 
  include($_SERVER["DOCUMENT_ROOT"]."/include/import/class.php"); //Класс для открытия файа csv
 
-$fileurl = $_SERVER["DOCUMENT_ROOT"].'/include/import/new_sviaz_raz.csv'; //Сам файл csv
+$fileurl = $_SERVER["DOCUMENT_ROOT"].'/include/import/on_tov_raz.csv'; //Сам файл csv
 try {
 	
 
@@ -68,14 +68,14 @@ try {
     $f = fopen($filename, 'w');
     fwrite($f, $str_value);
     fclose($f);
-}
+}*/
 
     $csv = new CSV($fileurl); //Открываем наш csv
     $get_csv = $csv->getCSV();
  $result = array();
  $result2 = array();
     foreach ($get_csv as $value2) {//получаем csv по столбцам, все уже настроенно, выбор идет по коду 1с
-	$arex = explode('/',$value2[3]);
+	/*$arex = explode('/',$value2[3]);
 	if($arex[9] != NULL){
 	$code=$arex[9];
 	}elseif($arex[8] != NULL){
@@ -85,18 +85,21 @@ try {
 	}
 	echo '<pre>';
 	echo $code;
-	echo '</pre>';
+	echo '</pre>';*/
 	//if($value2[3] == "SECTION_ID" || $value2[3] == "#Н/Д"){continue;} //исключал товары у которых нет id разделов
-	$arf=array('ACTIVE'=>'Y','IBLOCK_ID'=>26, 'CODE'=>$code);
-	$res = CIBlockElement::GetList(Array("SORT"=>"ASC"), $arf, false, false, array('ID','IBLOCK_ID','ACTIVE', 'PROPERTY_CODE1C', 'CODE', 'IBLOCK_SECTION_ID'));
+	$arf=array('IBLOCK_ID'=>26, 'ID'=>$value2[0]);
+	$res = CIBlockElement::GetList(Array("SORT"=>"ASC"), $arf, false, false, array('ID','IBLOCK_ID', 'PROPERTY_CODE1C', 'IBLOCK_SECTION_ID'));
 
 	if($ob2 = $res->GetNextElement()){
 		
 	$arFields2 = $ob2->GetFields(); 
+	echo '<pre>';
+	print_r($arFields2);
+	echo '</pre>';
 	//$pos = strpos($arFields2["PROPERTY_CODE1C_VALUE"], $value2[0]);
 
 	
-	$db_old_groups = CIBlockElement::GetElementGroups($arFields2["ID"], true);
+	/*$db_old_groups = CIBlockElement::GetElementGroups($arFields2["ID"], true);
 	while($ar_group = $db_old_groups->Fetch())
     $result[$arFields2["ID"]][] = $ar_group["ID"];
 $result[$arFields2["ID"]][] = $value2[1];
@@ -105,11 +108,11 @@ $result[$arFields2["ID"]][] = $value2[1];
 	echo '</pre>';
 		//echo $value2[3];
 		//записываем в массив , данные об id товара и его связь со столбцом id разделов, в csv они уже такие как на сайте
-		//$result[$arFields2["ID"]][] = $ar_new_groups;
+		//$result[$arFields2["ID"]][] = $ar_new_groups;*/
 		
 	}
 	}
-	$arf=array('ACTIVE'=>'Y','IBLOCK_ID'=>26, 'CODE'=>"smyvaemyy_ukhod_rektifay_pro_fayber_pro_fiber_l_oreal_professionnel_200_ml");
+	/*$arf=array('ACTIVE'=>'Y','IBLOCK_ID'=>26, 'CODE'=>"smyvaemyy_ukhod_rektifay_pro_fayber_pro_fiber_l_oreal_professionnel_200_ml");
 	$res = CIBlockElement::GetList(Array("SORT"=>"ASC"), $arf, false, false, array('ID','IBLOCK_ID','ACTIVE', 'PROPERTY_CODE1C', 'CODE', 'IBLOCK_SECTION_ID'));
 
 	if($ob2 = $res->GetNextElement()){
@@ -131,11 +134,11 @@ $result[$arFields2["ID"]][] = 6526;
 		
 	}
 	
-	foreach($result as $key => $val){
+	/*foreach($result as $key => $val){
 		print_r($val);
 //CIBlockElement::SetElementSection($key, $val);
 	}
-	/*$array1[]=$value2[1];
+	$array1[]=$value2[1];
 	$arf=array('ACTIVE'=>'Y','IBLOCK_ID'=>26);
 	$res = CIBlockElement::GetList(Array("SORT"=>"ASC"), $arf, false, false, array('ID', 'NAME','IBLOCK_ID','ACTIVE', 'PROPERTY_CODE1C', 'XML_ID'));
 
