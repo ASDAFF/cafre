@@ -18473,3 +18473,4 @@
 06.04.2018 01:13 /bitrix/templates/aspro_mshop/css/custom.css (06.04.2018 13:12:59     card fix)
 06.04.2018 01:16 /catalog/index.php (06.04.2018 06:49:22     fizes and tasks)
 06.04.2018 01:38 /catalog/index.php (06.04.2018 13:38:17     availible)
+06.04.2018 01:47 /bitrix/templates/aspro_mshop/components/bitrix/catalog.section/catalog_block/template.php (06.04.2018 13:47:18     availible)

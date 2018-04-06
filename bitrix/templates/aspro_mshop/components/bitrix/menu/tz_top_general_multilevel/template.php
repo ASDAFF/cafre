@@ -68,7 +68,7 @@ $brend_list=array();
 								</ul>
 							<?}?>
 						</div>
-						<div class="menu__item-lvl menu__item-lvl_3">
+						<?/*<div class="menu__item-lvl menu__item-lvl_3">
 						<?foreach($subSubArray2 as $k2=> $arr_li2) {
 							//menu__drop-add
 							//print_r($arr_li2[key($arr_li2)]["SVIZ_BR"]);
@@ -97,7 +97,7 @@ $brend_list=array();
 							<?}?>
 						
 							
-						</div>	
+						</div>	*/?>
 						<div class="menu__drop-add">
 						<!--<div class="menu__cell">
 								<span>Найти нужный бренд вы сможете в выбранной категории</span>	
