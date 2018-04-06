@@ -380,7 +380,7 @@ $catalog_section_name=$arResult['NAME'];?>
 												<div data-nametov="<?=$arOffer["NAME"]?>" data-urltov="https://cafre.ru<?=$arOffer["DETAIL_PAGE_URL"]?>" data-imgtov="https://cafre.ru<?=$img["src"];?>" data-pricetov="<?=$arOffer["PRICES"]["BASE"]["DISCOUNT_VALUE"]?>" data-idoffer="<?=$arItem["ID"]?>" class="button_block <?=(($arAddToBasketData["ACTION"] == "ORDER" /*&& !$arOffer["CAN_BUY"]*/) || !$arOffer["CAN_BUY"] || !$arAddToBasketData["OPTIONS"]["USE_PRODUCT_QUANTITY_LIST"] || $arAddToBasketData["ACTION"] == "SUBSCRIBE" ? "wide" : "");?>" 
                                                 <?=($arAddToBasketData["ACTION"] != "ORDER" && $arOffer["CAN_BUY"])?"onclick=\"yaCounter37955450.reachGoal('cart'); ga('send', 'event', 'cart', 'submit'); return true;\"":"";?>>
 													<!--noindex-->
-														<?=$arAddToBasketData["HTML"]?>
+														<?if($arItem['CATALOG_AVAILABLE']!='N') echo $arAddToBasketData["HTML"]?>
 													<!--/noindex-->
 												</div>
 											</div>
