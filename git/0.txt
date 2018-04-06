@@ -18466,3 +18466,4 @@
 05.04.2018 10:19 /bitrix/templates/aspro_mshop/components/bitrix/catalog.element/main2/template.php (05.04.2018 10:18:47     card)
 05.04.2018 10:19 /bitrix/templates/aspro_mshop/components/bitrix/catalog/main/element.php (05.04.2018 10:18:47     card)
 05.04.2018 10:19 /catalog/index.php (05.04.2018 10:18:47     card)
+06.04.2018 06:57 /bitrix/templates/aspro_mshop/css/custom.css (06.04.2018 06:49:22     fizes and tasks)

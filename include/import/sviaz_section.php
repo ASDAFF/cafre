@@ -61,7 +61,7 @@ try {
 	
 
 //Функция записи в файл, делал чтобы посмотреть что выводит, так как вылазила ошибка 504, потому что очень много товаров, а по 1 не нужно выводить, так как связь работает
-	function object2file($value, $filename)
+/*	function object2file($value, $filename)
 {
     $str_value = serialize($value);
     
@@ -75,6 +75,7 @@ try {
  $result = array();
  $result2 = array();
     foreach ($get_csv as $value2) {//получаем csv по столбцам, все уже настроенно, выбор идет по коду 1с
+	if($value2[3] == FALSE)continue;
 	/*$arex = explode('/',$value2[3]);
 	if($arex[9] != NULL){
 	$code=$arex[9];
@@ -88,14 +89,20 @@ try {
 	echo '</pre>';*/
 	//if($value2[3] == "SECTION_ID" || $value2[3] == "#Н/Д"){continue;} //исключал товары у которых нет id разделов
 	$arf=array('IBLOCK_ID'=>26, 'ID'=>$value2[0]);
-	$res = CIBlockElement::GetList(Array("SORT"=>"ASC"), $arf, false, false, array('ID','IBLOCK_ID', 'PROPERTY_CODE1C', 'IBLOCK_SECTION_ID'));
+	$res = CIBlockElement::GetList(Array("SORT"=>"ASC"), $arf, false, false, array('ID','IBLOCK_ID', 'NAME','PROPERTY_CODE1C', 'IBLOCK_SECTION_ID'));
 
 	if($ob2 = $res->GetNextElement()){
 		
 	$arFields2 = $ob2->GetFields(); 
 	echo '<pre>';
 	print_r($arFields2);
+	echo 'Raz:'.$value2[3];
 	echo '</pre>';
+	/*$el = new CIBlockElement;
+	$arLoadProductArray = Array(
+	"IBLOCK_SECTION" => $value2[3]
+	);
+	//$res3 = $el->Update($arFields2["ID"], $arLoadProductArray);*/
 	//$pos = strpos($arFields2["PROPERTY_CODE1C_VALUE"], $value2[0]);
 
 	

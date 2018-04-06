@@ -1086,6 +1086,20 @@ if($ob3 = $res3->GetNextElement())
 							str_replace('  ',' ', preg_replace_callback("/([^\pL\pN\pP\pS\pZ])|([\xC2\xA0])/u", "yandex_replace_special", mb_substr(strip_tags($arAcc["~DETAIL_TEXT"]), 0, 2000))) : str_replace('  ',' ', preg_replace_callback("'&[^;]*;'", "yandex_replace_special", mb_substr(strip_tags($arAcc["~DETAIL_TEXT"]), 0, 2000)))),
 							255), true))).
 						"</description>\n";
+$masurl = explode("/",$arAcc["DETAIL_PAGE_URL"]);
+unset($masurl[0]);unset($masurl[1]);$fruit = array_pop($masurl);$fruit2 = array_pop($masurl);
+$category="";
+foreach($masurl as $ket => $val_sec){				
+						$rsSections = CIBlockSection::GetList(array(),array('IBLOCK_ID' => 26, '=CODE' => $val_sec));
+if ($arSection = $rsSections->Fetch())
+{
+	if(!next($masurl)){
+$category.= iconv("WINDOWS-1251", "UTF-8", $arSection['NAME']);
+}else{
+	$category.= iconv("WINDOWS-1251", "UTF-8", $arSection['NAME']).' > ';
+}
+}					}
+						$strTmpOff .= "<g:product_type>".$category."</g:product_type>\n";
 				}
 					}else{
 						if(preg_match('/[а-яА-Я]+/',strip_tags($arAcc["~PREVIEW_TEXT"]))){
@@ -1096,6 +1110,20 @@ if($ob3 = $res3->GetNextElement())
 							str_replace('  ',' ', preg_replace_callback("/([^\pL\pN\pP\pS\pZ])|([\xC2\xA0])/u", "yandex_replace_special", mb_substr(strip_tags($arAcc["~PREVIEW_TEXT"]), 0, 2000))) : str_replace('  ',' ', preg_replace_callback("'&[^;]*;'", "yandex_replace_special", mb_substr(strip_tags($arAcc["~PREVIEW_TEXT"]), 0, 2000)))),
 							255), true))).
 						"</description>\n";
+						$masurl = explode("/",$arAcc["DETAIL_PAGE_URL"]);
+unset($masurl[0]);unset($masurl[1]);$fruit = array_pop($masurl);$fruit2 = array_pop($masurl);
+$category="";
+foreach($masurl as $ket => $val_sec){				
+						$rsSections = CIBlockSection::GetList(array(),array('IBLOCK_ID' => 26, '=CODE' => $val_sec));
+if ($arSection = $rsSections->Fetch())
+{
+	if(!next($masurl)){
+$category.= iconv("WINDOWS-1251", "UTF-8", $arSection['NAME']);
+}else{
+	$category.= iconv("WINDOWS-1251", "UTF-8", $arSection['NAME']).' > ';
+}
+}					}
+						$strTmpOff .= "<g:product_type>".$category."</g:product_type>\n";
 						}
 					}
 					break;
@@ -1535,6 +1563,20 @@ if($ob3 = $res3->GetNextElement())
 								}
 							}
 							$strOfferYandex .= "</description>\n";
+							$masurl = explode("/",$arOfferItem["DETAIL_PAGE_URL"]);
+unset($masurl[0]);unset($masurl[1]);$fruit = array_pop($masurl);$fruit2 = array_pop($masurl);
+$category="";
+foreach($masurl as $ket => $val_sec){				
+						$rsSections = CIBlockSection::GetList(array(),array('IBLOCK_ID' => 26, '=CODE' => $val_sec));
+if ($arSection = $rsSections->Fetch())
+{
+	if(!next($masurl)){
+$category.= iconv("WINDOWS-1251", "UTF-8", $arSection['NAME']);
+}else{
+	$category.= iconv("WINDOWS-1251", "UTF-8", $arSection['NAME']).' > ';
+}
+}					}
+						$strOfferYandex .= "<g:product_type>".$category."</g:product_type>\n";
 							break;
 						case 'param':
 							if (is_array($XML_DATA) && is_array($XML_DATA['XML_DATA']) && is_array($XML_DATA['XML_DATA']['PARAMS']))
@@ -1810,6 +1852,20 @@ if($ob3 = $res3->GetNextElement())
 								}
 							}
 							$strOfferYandex .= "</description>\n";
+							$masurl = explode("/",$arOfferItem["DETAIL_PAGE_URL"]);
+unset($masurl[0]);unset($masurl[1]);$fruit = array_pop($masurl);$fruit2 = array_pop($masurl);
+$category="";
+foreach($masurl as $ket => $val_sec){				
+						$rsSections = CIBlockSection::GetList(array(),array('IBLOCK_ID' => 26, '=CODE' => $val_sec));
+if ($arSection = $rsSections->Fetch())
+{
+	if(!next($masurl)){
+$category.= iconv("WINDOWS-1251", "UTF-8", $arSection['NAME']);
+}else{
+	$category.= iconv("WINDOWS-1251", "UTF-8", $arSection['NAME']).' > ';
+}
+}					}
+						$strOfferYandex .= "<g:product_type>".$category."</g:product_type>\n";
 							break;
 						case 'param':
 							if (is_array($XML_DATA) && is_array($XML_DATA['XML_DATA']) && is_array($XML_DATA['XML_DATA']['PARAMS']))
@@ -2010,6 +2066,20 @@ if($ob3 = $res3->GetNextElement())
 								str_replace('  ',' ', preg_replace_callback("/([^\pL\pN\pP\pS\pZ])|([\xC2\xA0])/u", "yandex_replace_special", mb_substr(strip_tags($arItem["~DETAIL_TEXT"]),0,2000))) : str_replace('  ',' ', preg_replace_callback("/([^\pL\pN\pP\pS\pZ])|([\xC2\xA0])/u", "yandex_replace_special", mb_substr(strip_tags($arItem["~DETAIL_TEXT"]),0,2000)))),
 								255), true))).
 							"</description>\n";
+							$masurl = explode("/",$arItem["DETAIL_PAGE_URL"]);
+unset($masurl[0]);unset($masurl[1]);$fruit = array_pop($masurl);$fruit2 = array_pop($masurl);
+$category="";
+foreach($masurl as $ket => $val_sec){				
+						$rsSections = CIBlockSection::GetList(array(),array('IBLOCK_ID' => 26, '=CODE' => $val_sec));
+if ($arSection = $rsSections->Fetch())
+{
+	if(!next($masurl)){
+$category.= iconv("WINDOWS-1251", "UTF-8", $arSection['NAME']);
+}else{
+	$category.= iconv("WINDOWS-1251", "UTF-8", $arSection['NAME']).' > ';
+}
+}					}
+						$strValue .= "<g:product_type>".$category."</g:product_type>\n";
 						}
 						}else{
 							if(preg_match('/[а-яА-Я]+/',strip_tags($arItem["~PREVIEW_TEXT"]))){
@@ -2020,6 +2090,20 @@ if($ob3 = $res3->GetNextElement())
 								str_replace('  ',' ', preg_replace_callback("/([^\pL\pN\pP\pS\pZ])|([\xC2\xA0])/u", "yandex_replace_special", mb_substr(strip_tags($arItem["~PREVIEW_TEXT"]),0,2000))) : str_replace('  ',' ', preg_replace_callback("/([^\pL\pN\pP\pS\pZ])|([\xC2\xA0])/u", "yandex_replace_special", mb_substr(strip_tags($arItem["~PREVIEW_TEXT"]),0,2000)))),
 								255), true))).
 							"</description>\n";
+							$masurl = explode("/",$arItem["DETAIL_PAGE_URL"]);
+unset($masurl[0]);unset($masurl[1]);$fruit = array_pop($masurl);$fruit2 = array_pop($masurl);
+$category="";
+foreach($masurl as $ket => $val_sec){				
+						$rsSections = CIBlockSection::GetList(array(),array('IBLOCK_ID' => 26, '=CODE' => $val_sec));
+if ($arSection = $rsSections->Fetch())
+{
+	if(!next($masurl)){
+$category.= iconv("WINDOWS-1251", "UTF-8", $arSection['NAME']);
+}else{
+	$category.= iconv("WINDOWS-1251", "UTF-8", $arSection['NAME']).' > ';
+}
+}					}
+						$strValue .= "<g:product_type>".$category."</g:product_type>\n";
 							}
 						}
 						break;

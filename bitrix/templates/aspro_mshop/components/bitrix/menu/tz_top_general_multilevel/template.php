@@ -80,7 +80,11 @@ $brend_list=array();
 										?>
 										
 										<?
-										foreach(unserialize($li2["SVIZ_BR"]) as $newvalb){?>
+										foreach(unserialize($li2["SVIZ_BR"]) as $newvalb){
+											$arFilter3 = Array('IBLOCK_ID'=>26, "ACTIVE"=>"Y", 'NAME'=>$newvalb[0]);
+										 $db_list3 = CIBlockSection::GetList(Array(), $arFilter3, false, array("UF_BRAND_ID"));
+										  if(!($ar_result3 = $db_list3->GetNext()))continue;
+											?>
 										<li>
 										<a href="<?echo $li2["LINK"].$newvalb[2].'/';?>" class="<?($li2["SELECTED"] ? ' current' : '')?>"><?=$newvalb[0]?></a>
 										</li>
@@ -137,7 +141,16 @@ $brend_list=array();
 				<?endif;?>
 			<?endif;?>
 			<?if($arItem["DEPTH_LEVEL"]==2&&!$brend):?>
+			
 				<li <?if($arItem["IS_PARENT"]) {$numSubLevel++; ?>data-lvl="<?=$numSubLevel?>"<?}?>>
+				<?/*	$rsSections = CIBlockSection::GetList(array(),array('IBLOCK_ID' => 26, 'NAME' => $arItem["TEXT"]));
+if ($arSection = $rsSections->Fetch())
+{?>
+<?				$arSelect = Array("ID", "NAME", "IBLOCK_SECTION_ID", "PROPERTY_CATALOG_BREND");
+	$arFilter2 = Array("IBLOCK_ID"=>26, "ACTIVE"=>"Y","IBLOCK_SECTION_ID"=>$arSection["ID"]);
+	$res = CIBlockElement::GetList(Array(), $arFilter2, Array("PROPERTY_CATALOG_BREND"), Array(), $arSelect);
+if($ob = $res->GetNextElement())?>
+<?}*/?>
 					<a class="<?=($arItem["SELECTED"] ? ' current' : '')?>" href="<?=$arItem["LINK"]?>"><?=$arItem["TEXT"]?></a>
 				</li>
 			<?endif;?>
