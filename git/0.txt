@@ -18467,3 +18467,6 @@
 05.04.2018 10:19 /bitrix/templates/aspro_mshop/components/bitrix/catalog/main/element.php (05.04.2018 10:18:47     card)
 05.04.2018 10:19 /catalog/index.php (05.04.2018 10:18:47     card)
 06.04.2018 06:57 /bitrix/templates/aspro_mshop/css/custom.css (06.04.2018 06:49:22     fizes and tasks)
+06.04.2018 01:05 /bitrix/templates/aspro_mshop/components/bitrix/menu/tz_top_general_multilevel/template.php (06.04.2018 12:04:13     script for cron menu in brend)
+06.04.2018 01:06 /bitrix/templates/aspro_mshop/components/bitrix/catalog.element/main/template.php (06.04.2018 06:49:22     fizes and tasks)
+06.04.2018 01:09 /urlrewrite.php (06.04.2018 06:49:22     fizes and tasks)

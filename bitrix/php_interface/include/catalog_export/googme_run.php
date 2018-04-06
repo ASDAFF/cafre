@@ -1043,6 +1043,13 @@ if($ob3 = $res3->GetNextElement())
 			$strTmpOff .= "<g:id>".$arAcc["ID"]."</g:id>\n";
 
 			$strTmpOff.= "<g:price>".$minPrice." ".$minPriceCurrency."</g:price>\n";
+	$mxResult = CCatalogSku::GetProductInfo($arAcc["ID"]);
+					$db_props2 = CIBlockElement::GetProperty(26, $mxResult["ID"], array(), Array("CODE"=>"CATALOG_BREND"));
+if($ar_props2 = $db_props2->Fetch()){
+$res2 = CIBlockSection::GetByID($ar_props2["VALUE"]);
+if($ar_res2 = $res2->GetNext())
+	$strTmpOff .= "<g:brand>".iconv("WINDOWS-1251", "UTF-8", $ar_res2["NAME"])."</g:brand>\n";
+}
 			$strOfferYandex.= "<g:condition>new</g:condition>\n";
 			$strOfferYandex.= "<g:availability>in stock</g:availability>\n";
 			if ($minPrice < $fullPrice)
@@ -1505,6 +1512,13 @@ if($ob3 = $res3->GetNextElement())
 					$strOfferYandex .= "<g:id>".$arOfferItem["ID"]."</g:id>\n";
 
 					$strOfferYandex .= "<g:price>".$minPrice." ".$minPriceCurrency."</g:price>\n";
+						$mxResult = CCatalogSku::GetProductInfo($arOfferItem["ID"]);
+					$db_props2 = CIBlockElement::GetProperty(26, $mxResult["ID"], array(), Array("CODE"=>"CATALOG_BREND"));
+if($ar_props2 = $db_props2->Fetch()){
+$res2 = CIBlockSection::GetByID($ar_props2["VALUE"]);
+if($ar_res2 = $res2->GetNext())
+	$strOfferYandex .= "<g:brand>".iconv("WINDOWS-1251", "UTF-8", $ar_res2["NAME"])."</g:brand>\n";
+}
 					$strOfferYandex.= "<g:condition>new</g:condition>\n";
 					$strOfferYandex.= "<g:availability>in stock</g:availability>\n";
 					if ($minPrice < $fullPrice)
@@ -1744,6 +1758,13 @@ $category.= iconv("WINDOWS-1251", "UTF-8", $arSection['NAME']);
 					$strOfferYandex .= "<g:id>".$arOfferItem["ID"]."</g:id>\n";
 
 					$strOfferYandex .= "<g:price>".$minPrice." ".$minPriceCurrency."</g:price>\n";
+					$mxResult = CCatalogSku::GetProductInfo($arOfferItem["ID"]);
+					$db_props2 = CIBlockElement::GetProperty(26, $mxResult["ID"], array(), Array("CODE"=>"CATALOG_BREND"));
+if($ar_props2 = $db_props2->Fetch()){
+$res2 = CIBlockSection::GetByID($ar_props2["VALUE"]);
+if($ar_res2 = $res2->GetNext())
+	$strOfferYandex .= "<g:brand>".iconv("WINDOWS-1251", "UTF-8", $ar_res2["NAME"])."</g:brand>\n";
+}
 					$strOfferYandex.= "<g:condition>new</g:condition>\n";
 					$strOfferYandex.= "<g:availability>in stock</g:availability>\n";
 					if ($minPrice < $fullPrice)
@@ -2032,6 +2053,13 @@ $category.= iconv("WINDOWS-1251", "UTF-8", $arSection['NAME']);
 				$strOfferYandex .= "<g:id>".$arItem["ID"]."</g:id>\n";
 
 				$strOfferYandex.= "<g:price>".$minPrice." ".$minPriceCurrency."</g:price>\n";
+				$mxResult = CCatalogSku::GetProductInfo($arItem["ID"]);
+					$db_props2 = CIBlockElement::GetProperty(26, $mxResult["ID"], array(), Array("CODE"=>"CATALOG_BREND"));
+if($ar_props2 = $db_props2->Fetch()){
+$res2 = CIBlockSection::GetByID($ar_props2["VALUE"]);
+if($ar_res2 = $res2->GetNext())
+	$strOfferYandex .= "<g:brand>".iconv("WINDOWS-1251", "UTF-8", $ar_res2["NAME"])."</g:brand>\n";
+}
 				$strOfferYandex.= "<g:condition>new</g:condition>\n";
 				$strOfferYandex.= "<g:availability>in stock</g:availability>\n";
 				if ($minPrice < $fullPrice)
