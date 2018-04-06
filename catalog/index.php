@@ -6,7 +6,7 @@ $APPLICATION->IncludeComponent(
 	array(
 		"IBLOCK_TYPE" => "new_cat",
 		"IBLOCK_ID" => "26",
-		"HIDE_NOT_AVAILABLE" => "Y",
+		"HIDE_NOT_AVAILABLE" => "L",
 		"BASKET_URL" => "/basket/",
 		"ACTION_VARIABLE" => "action",
 		"PRODUCT_ID_VARIABLE" => "id",
