@@ -24,7 +24,7 @@ global $TEMPLATE_OPTIONS, $MShopSectionID;
 $arPageParams = $arSection = $section = array();
 
 if($arResult["VARIABLES"]["SECTION_ID"] > 0){
-	$db_list = CIBlockSection::GetList(array(), array('GLOBAL_ACTIVE' => 'Y', "ID" => $arResult["VARIABLES"]["SECTION_ID"], "IBLOCK_ID" => $arParams["IBLOCK_ID"]), true, array("CODE", "ID", "IBLOCK_ID", "NAME", "DESCRIPTION","IBLOCK_SECTION_ID", "UF_RUSNAME","UF_SECTION_DESCR", $arParams["LIST_BROWSER_TITLE"], $arParams["LIST_META_KEYWORDS"], $arParams["LIST_META_DESCRIPTION"], "IBLOCK_SECTION_ID", "UF_RATINGVALUE", "UF_RATINGCOUNT"));
+	$db_list = CIBlockSection::GetList(array(), array('GLOBAL_ACTIVE' => 'Y', "ID" => $arResult["VARIABLES"]["SECTION_ID"], "IBLOCK_ID" => $arParams["IBLOCK_ID"]), true, array("CODE", "ID", "IBLOCK_ID", "NAME", "DESCRIPTION","IBLOCK_SECTION_ID", "UF_RUSNAME","UF_SECTION_DESCR", $arParams["LIST_BROWSER_TITLE"], $arParams["LIST_META_KEYWORDS"], $arParams["LIST_META_DESCRIPTION"], "IBLOCK_SECTION_ID", "UF_RATINGVALUE", "UF_RATINGCOUNT", "UF_SEO_TITLE", "UF_SEO_DESC", "UF_SEO_H"));
 	$section = $db_list->GetNext();
 	/*if($section['IBLOCK_SECTION_ID']==5538&&strpos($APPLICATION->GetCurPage(), 'vse_brendy/')===false) {
 		$brends=false;
@@ -264,11 +264,12 @@ $MShopSectionID = $arSection["ID"];
 		
 	<?endif;
 	}else{
-		
-	$ar_result=CIBlockSection::GetList(Array("SORT"=>"ASC"), Array("IBLOCK_ID"=>"26", "ID"=>$arSection["ID"]),false, Array("UF_IMG_BRAND", "UF_TEXT_BRAND_TOP"));
+		$exp_mas = explode("/", $APPLICATION->GetCurPage());
+		$fruit30 = array_pop($exp_mas);
+	$ar_result=CIBlockElement::GetList(Array("SORT"=>"ASC"), Array("IBLOCK_ID"=>30, "PROPERTY_RAZ_D"=>$arSection["ID"], "XML_ID"=>array_pop($exp_mas)),false, Array("XML_ID", "NAME"));
 	?>	
 	<?if($res2=$ar_result->GetNext()):?>
-	<?$exp_mas = explode("~", $res2["~UF_TEXT_BRAND_TOP"]);
+	<?/*$exp_mas = explode("~", $res2["~UF_TEXT_BRAND_TOP"]);
 	foreach($exp_mas as $v){
 		$exp_text[] = explode("#", $v);
 	}
@@ -278,13 +279,14 @@ $MShopSectionID = $arSection["ID"];
 		if(strpos($APPLICATION->GetCurPage(), $v2[1])){
 		$text_brand.= $v2[2];
 		}
-	}	
+	}*/	
+	//print_r($res2);
 	?>
-	<?if($text_brand){?>
-	<?$file = CFile::ResizeImageGet($res2["UF_IMG_BRAND"], array('width'=>266, 'height'=>160), BX_RESIZE_IMAGE_PROPORTIONAL, true);?>
+	<?if($res2["PREVIEW_TEXT"]){?>
+	<?$file = CFile::ResizeImageGet($res2["PREVIEW_PICTURE"], array('width'=>266, 'height'=>160), BX_RESIZE_IMAGE_PROPORTIONAL, true);?>
 		<div class="top_brand_block" style="min-height: 70px;margin-top:0;">
 		<div class="img_brand_sec"><img src="<?=$file["src"];?>"/></div>
-		<div class="text_brand_sec"><p><?echo $text_brand;?></p></div>
+		<div class="text_brand_sec"><p><?echo $res2["PREVIEW_TEXT"];?></p></div>
 		</div>
 	<?}endif;}?>
 		<?$isAjax="N";?>
@@ -654,10 +656,12 @@ if($arParams["SHOW_TOP_ELEMENTS"]!="N"){
 		</div>
 	<?}?>
 <?endif;?>
-<?$ar_result_br=CIBlockSection::GetList(Array("SORT"=>"ASC"), Array("IBLOCK_ID"=>"26", "ID"=>$arSection["ID"]),false, Array("UF_TEXT_BRAND_BOTTOM"));
+<?$exp_mas2 = explode("/", $APPLICATION->GetCurPage());
+		$fruit30 = array_pop($exp_mas2);
+	$ar_result_br=CIBlockElement::GetList(Array("SORT"=>"ASC"), Array("IBLOCK_ID"=>30, "PROPERTY_RAZ_D"=>$arSection["ID"], "XML_ID"=>array_pop($exp_mas2)),false, Array("XML_ID", "NAME"));
 	?>	
 	<?if($res3=$ar_result_br->GetNext()):?>
-	<?$exp_mas2 = explode("~", $res3["~UF_TEXT_BRAND_BOTTOM"]);
+	<?/*$exp_mas2 = explode("~", $res3["~UF_TEXT_BRAND_BOTTOM"]);
 	foreach($exp_mas2 as $v2){
 		$exp_text2[] = explode("#", $v2);
 	}
@@ -667,15 +671,15 @@ if($arParams["SHOW_TOP_ELEMENTS"]!="N"){
 		if(strpos($APPLICATION->GetCurPage(), $v3[1])){
 		$text_brand2.= $v3[2];
 		}
-	}	
+	}	*/
 	?>
-	<?if($text_brand2){?>
+	<?if($res3["DETAIL_TEXT"]){?>
 		<div class="bottom_brand_block">
 		<div class="brand__content">
 			<span class="brand__content-title">Содержание</span>
 		</div>
 		<div class="brand__description">
-			<?=htmlspecialcharsBack($text_brand2);?>
+			<?=htmlspecialcharsBack($res3["DETAIL_TEXT"]);?>
 		</div>
 		<p class="text_brand_sec_bot"></p>
 		</div>
@@ -938,6 +942,7 @@ while($ar_fields2 = $db_price_min2->GetNext())
 </span>
 </div>
 <?
+
 global $MSHOP_SMART_FILTER, $filter_h1, $catalog_section_name, $catalog_seo, $brend_in_catalog;
 //if(!$brends) $filter_h1=' '.$brend_in_catalog.' '.$filter_h1;
 if($brend_in_catalog) $filter_h1=' '.$brend_in_catalog.$filter_h1;
@@ -952,7 +957,9 @@ if($brend_in_catalog) $filter_h1=' '.$brend_in_catalog.$filter_h1;
 		}
         if (isset($page_num)||!empty($MSHOP_SMART_FILTER)) 
         {
-            $page_seo_params["title"] = $APPLICATION->GetTitle();
+
+				 $page_seo_params["title"] = $APPLICATION->GetTitle();
+			
             if (empty($MSHOP_SMART_FILTER))
             {
 				if ($page_num!='1') {
@@ -970,7 +977,13 @@ if($brend_in_catalog) $filter_h1=' '.$brend_in_catalog.$filter_h1;
 if($arSection["IBLOCK_SECTION_ID"]==5338&&$arResult["VARIABLES"]["SECTION_ID"]==0&&$arResult["VARIABLES"]["SECTION_CODE"]=='') {
 	$page_seo_params["title"] = $arSection['NAME'].($arSection['RUSNAME']!=''?' ('.$arSection['RUSNAME'].')':'');
 }		
-else $page_seo_params["title"] = $APPLICATION->GetTitle().($arSection['RUSNAME']!=''?' ('.$arSection['RUSNAME'].')':'');
+else{
+if($section["UF_SEO_TITLE"]){
+	$page_seo_params["title"] = $section["UF_SEO_TITLE"].($arSection['RUSNAME']!=''?' ('.$arSection['RUSNAME'].')':'');
+}else{
+	$page_seo_params["title"] = $APPLICATION->GetTitle().($arSection['RUSNAME']!=''?' ('.$arSection['RUSNAME'].')':'');
+}
+}
 if( !(strpos($arResult['VARIABLES']['SECTION_CODE_PATH'], 'vse_brendy/')===false) && substr_count($arResult['VARIABLES']['SECTION_CODE_PATH'], '/')==1 ) {
 	$this->SetViewTarget('h1');echo $page_seo_params["title"].$filter_h1;$this->EndViewTarget();
 	$APPLICATION->SetPageProperty("title", "Каталог товаров бренда ".$page_seo_params["title"].$filter_h1."".(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));
@@ -993,13 +1006,26 @@ elseif(!(strpos($arResult['VARIABLES']['SECTION_CODE_PATH'], 'vse_brendy/')===fa
 	$APPLICATION->SetPageProperty("description", "".$page_seo_params["title"].", огромный ассортимент. Гарантия качества от производителя и лучшие цены на рынке - в наличии!".(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));   
 }
 else {
-	$this->SetViewTarget('h1');echo $page_seo_params["title"].$filter_h1;$this->EndViewTarget();
+	if($section["UF_SEO_H"]){
+	$this->SetViewTarget('h1');echo $section["UF_SEO_H"].$filter_h1;$this->EndViewTarget();
+	}else{
+	$this->SetViewTarget('h1');echo $section["NAME"].$filter_h1;$this->EndViewTarget();	
+	}
 	$APPLICATION->SetPageProperty("keywords", $page_seo_params["title"].$filter_h1.", купить ".$page_seo_params["title"].$filter_h1.(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));
-	$APPLICATION->SetPageProperty("description", "".$page_seo_params["title"].$filter_h1.", огромный ассортимент. Гарантия качества от производителя и лучшие цены на рынке - в наличии!".(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));   
+	if($section["UF_SEO_DESC"]){
+	$APPLICATION->SetPageProperty("description", "".$section["UF_SEO_DESC"].$filter_h1.(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));   
+	}else{
+		$APPLICATION->SetPageProperty("description", "".$page_seo_params["title"].$filter_h1.", огромный ассортимент. Гарантия качества от производителя и лучшие цены на рынке - в наличии!".(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));   
+	}
 	if(substr_count($arResult['VARIABLES']['SECTION_CODE_PATH'], '/')>0) {
+		if($section["UF_SEO_TITLE"]){
+		$APPLICATION->SetPageProperty("title", $page_seo_params["title"].$filter_h1.(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));
+		}else{
 		$APPLICATION->SetPageProperty("title", $page_seo_params["title"].$filter_h1." - Купить по низким ценам в интернет-магазине Cafre".(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));
+		}
 	}
 }
 // end section 
+
 				}
 ?>

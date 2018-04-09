@@ -146,5 +146,8 @@ $(function() {
 		}
 	}
 	
+	$('.deliverybanner__close').on('click', function(e) {
+		$(this).parent().hide();
+	});
 
 })

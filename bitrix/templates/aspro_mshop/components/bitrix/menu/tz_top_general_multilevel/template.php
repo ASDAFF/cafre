@@ -68,13 +68,14 @@ $brend_list=array();
 								</ul>
 							<?}?>
 						</div>
-						<?/*<div class="menu__item-lvl menu__item-lvl_3">
+						<div class="menu__item-lvl menu__item-lvl_3">
 						<?foreach($subSubArray2 as $k2=> $arr_li2) {
 							//menu__drop-add
 							//print_r($arr_li2[key($arr_li2)]["SVIZ_BR"]);
 							?>
 							<ul data-lvl="<?=$k2?>" data-name="">
 									<?foreach($arr_li2 as $li2) {
+										
 										if(!unserialize($li2["SVIZ_BR"])) continue;
 										//echo $li2["LINK"];
 										?>
@@ -97,7 +98,7 @@ $brend_list=array();
 							<?}?>
 						
 							
-						</div>	*/?>
+						</div>
 						<div class="menu__drop-add">
 						<!--<div class="menu__cell">
 								<span>Найти нужный бренд вы сможете в выбранной категории</span>	
@@ -110,6 +111,7 @@ $brend_list=array();
 						</div>							
 					<?}
 					$subSubArray=array(); 
+					$subSubArray2=array(); 
 				}?>
 					</div>
 					</li>

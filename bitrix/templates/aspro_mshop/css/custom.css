@@ -1,4 +1,4 @@
-/*! Flickity v2.1.0
+	/*! Flickity v2.1.0
 https://flickity.metafizzy.co
 ---------------------------------------------- */
 
@@ -2020,7 +2020,7 @@ margin: 0 0 10px;
 	padding-left: 20px;
 }
 
-.brand__span::before {
+.brand__span_h2::before {
 	position: absolute;
 	left: 0;
 	top: 0;
@@ -2057,6 +2057,10 @@ margin: 0 0 10px;
 	content: '';
 	background: black;
 	border-radius: 50%;
+}
+
+.brand__content a {
+	color: black;
 }
 
 .brands {
@@ -3052,6 +3056,7 @@ width: 530px !important;
 }
 
 .deliverybanner {
+	position: relative;
 	margin: 5px 0 0;
 	overflow: hidden;
 }
@@ -3059,6 +3064,18 @@ width: 530px !important;
 .deliverybanner img {
 	max-width: 100%;
 	transform: translate3d(0,0,0);
+}
+
+.deliverybanner__close {
+	position: absolute;
+	right: 10px;
+	top: 10px;
+	width: 14px;
+	height: 14px;
+	background: url('../images/close-button.svg') no-repeat center;
+	background-size: contain;
+	border: none;
+	cursor: pointer;
 }
 
 .deliverybanner__header {
@@ -3150,3 +3167,48 @@ div.title-search-result {
 		max-width: 170%;
 	}
 }
+
+.breadcrumb {
+	margin: 20px 0;
+}
+
+.breadcrumb ul {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.breadcrumb ul li::before {
+	display: none;
+}
+
+.breadcrumb ul > li {
+	display: inline-block;
+	vertical-align: top;
+}
+
+.breadcrumb ul > li::after {
+	display: inline-block;
+	margin: 0 8px;
+	content: '-';
+}
+
+.breadcrumb ul > li:last-child::after {
+	display: none;
+}
+
+.breadcrumb ul > li:last-child a {
+	pointer-events: none;
+}
+
+.breadcrumb a {
+	font-size: 15px;
+	color: #b6b5b5;
+	text-decoration: none;
+	transition: color ease-out 0.07s;
+}
+
+.breadcrumb a:hover {
+	color: #EB5470;
+}
+		

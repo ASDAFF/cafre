@@ -318,14 +318,15 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
   if($ar_result2 = $db_list2->GetNext())
   {
 	  $all_b[$ar_result2["ID"]]=array($ar_result2["NAME"], CFile::GetPath($ar_result2["UF_IMG_BRAND"]), $ar_result2["CODE"]);
+	  $file_b = CFile::ResizeImageGet($ar_result2["UF_IMG_BRAND"], array( "width" => 59, "height" => 59 ), BX_RESIZE_IMAGE_PROPORTIONAL,true);
 						?>
 							<div class="brand iblock">
-								<?if(!CFile::GetPath($ar_result2["UF_IMG_BRAND"])):?>
+								<?if(!$file_b["src"]):?>
 									<b class="block_title"><?=GetMessage("BRAND");?>:</b>
 									<a href="/catalog/vse_brendy/<?=$ar_result2["CODE"]?>/"><?=$ar_result2["NAME"]?></a>
 								<?else:?>
 									<a class="brand_picture" href="/catalog/vse_brendy/<?=$ar_result2["CODE"]?>/">
-										<img border="0" src="<?=CFile::GetPath($ar_result2["UF_IMG_BRAND"])?>" alt="<?=$ar_result2["NAME"]?>" title="<?=$ar_result2["NAME"]?>" />
+										<img border="0" src="<?=$file_b["src"]?>" alt="<?=$ar_result2["NAME"]?>" title="<?=$ar_result2["NAME"]?>" />
 									</a>
 								<?endif;?>
 							</div>
@@ -1491,18 +1492,17 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 
 <script type="text/javascript">
 var category='',
-		$elems = $('.breadcrumbs > a');
+		$elems = $('.bred_list li:not(:last-child) a > span');
 		
 	$elems.each(function(i, elem) {
 		if(i >= 2) {
-			category += $(elem).attr('title') + "/";	
+			category += $(elem).text() + "/";
 		}
 	});
     category=category.substr(0, category.length-1);
     var id=$('.button_block').attr('data-idoffer');
     var brand=$('.brand_picture img').attr("title");
     var textbrand=brand;
-	//console.log(id);
     dataLayer.push({
       'ecommerce': {
         'currencyCode': 'RUB',

@@ -100,6 +100,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 		<div class="header_wrap <?=strtolower($TEMPLATE_OPTIONS["HEAD_COLOR"]["CURRENT_VALUE"])?>">
 			<div class="deliverybanner deliverybanner__header">
 				<img src="/bitrix/templates/aspro_mshop/images/banners/cafre_Mail_1920х50.jpg" alt="Бесплатная доставка от 2000 руб."/>
+				<button class="deliverybanner__close"></button>
 			</div>
 			<div class="top-h-row">
 				<div class="wrapper_inner">

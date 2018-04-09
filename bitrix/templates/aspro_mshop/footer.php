@@ -148,7 +148,7 @@
 									<div class="cafre" itemscope="" itemtype="http://schema.org/Organization">
 										<p itemprop="name">ООО «Кафре»</p>
 										<p itemprop="address" itemscope="" itemtype="http://schema.org/PostalAddress">ОГРН: 1177325008530<br>
-										Фактический адрес: <span itemprop="postalCode">123317</span>, <span itemprop="addressLocality">Москва</span>, <span itemprop="streetAddress">Пресненская наб.</span>, <span itemprop="postOfficeBoxNumber">2</span><br>
+										Фактический адрес: <span itemprop="postalCode">123317</span>, <span itemprop="addressLocality">Москва</span>, <span itemprop="streetAddress">Пресненская наб. , 2</span><br>
 										Юридический адрес: 432011, Ульяновская область, г. Ульяновск, ул. Радищева, д. 39, офис 95</p>
 										<span itemprop="telephone">8(800) 333-61-07</span>
 									</div>

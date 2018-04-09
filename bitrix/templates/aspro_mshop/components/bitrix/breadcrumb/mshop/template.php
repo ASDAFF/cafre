@@ -30,7 +30,11 @@ $arFilter = array('IBLOCK_ID' => 26, '=CODE' => $array_b[$last]);
 $rsSections = CIBlockSection::GetList(array(), $arFilter);
 if($arSection = $rsSections->Fetch())
 {
+	if($arSection["CODE"] != "vse_brendy"){
 	$ar_brands = array("TITLE"=>$arSection['NAME'], "LINK"=>"/catalog/vse_brendy/".$arSection["CODE"]."/");
+	}else{
+		$ar_brands = array("TITLE"=>$arSection['NAME'], "LINK"=>"/catalog/".$arSection["CODE"]."/");
+	}
 }
 	   }
 	 
@@ -54,8 +58,12 @@ if($id_elem){
 	foreach($_SESSION["CATALOG"] as $e){
 		$new_mas_title[] = $e["TITLE"];
 	}
+
 if(strripos($_SERVER['REQUEST_URI'], "vse_brendy") && !array_search($ar_brands, $_SESSION["CATALOG"])){
+	$alll_brands = array("TITLE"=>"Все бренды", "LINK"=>"/catalog/vse_brendy/");
+	array_push($_SESSION["CATALOG"], $alll_brands);
 	array_push($_SESSION["CATALOG"], $ar_brands);
+	//print_r($_SESSION["CATALOG"]);
 }elseif(!array_search($filt_br["TITLE"], $new_mas_title)){
 	array_push($_SESSION["CATALOG"], $filt_br);
 }
@@ -96,11 +104,16 @@ $cont = 0;
 			
         }
         if($index){
-            $strReturn .= '<span class="separator">-</span>';
+           // $strReturn .= '<span class="separator">-</span>';
         }
   
         //if($arItem["LINK"] <> "" && $arItem['LINK'] != GetPagePath() && $arItem['LINK']."index.php" != GetPagePath() || $arSubSections && $index<(count($arResult)-1)){
-          if($arItem["LINK"] <> "" && $index<(count($arResult)-1)){
+			if($_SESSION["CATALOG"]){
+				$arResult_it = $_SESSION["CATALOG"];
+			}else{
+				$arResult_it = $arResult;
+			}
+          if($arItem["LINK"] <> "" && $index<(count($arResult_it)-1)){
             if($arSubSections){
                 $strReturn .= '<span class="drop">';
                     $strReturn .= '<a class="number" href="'.$arItem["LINK"].'">'.($arSubSections ? '<span data-url="'.$arItem["LINK"].'">'.$title.'</span><b class="space"></b><span class="separator'.($bLast ? ' cat_last' : '').'"></span>' : '<span data-url="'.$arItem["LINK"].'">'.$title.'</span>').'</a>';
@@ -112,21 +125,18 @@ $cont = 0;
                 $strReturn .= '</span>';
             }
             else{
-                $strReturn .= '<a href="'.$arItem["LINK"].'" title="'.$title.'"><span data-url="'.$arItem["LINK"].'">'.$title.'</span></a><div itemprop="itemListElement" itemscope=""
-itemtype="http://schema.org/ListItem" style="display:none;"><a href="'.$arItem["LINK"].'" title="'.$title.'" itemprop="item"><span itemprop="name">'.$title.'</span><meta itemprop="position" content="'.$cont.'" /></a></div>';
+                $strReturn .= '<li itemprop="itemListElement" itemscope="" itemtype="http://schema.org/ListItem"><a href="'.$arItem["LINK"].'" title="'.$title.'"><span data-url="'.$arItem["LINK"].'" itemprop="name">'.$title.'</span><meta itemprop="position" content="'.$cont.'" /></a></li>';
             }
         }
         else{
 
-            $strReturn .= '<span class="last-elem detail" data-url="'.$arItem["LINK"].'">'.$title.'</span>
-			<div itemprop="itemListElement" itemscope=""
-itemtype="http://schema.org/ListItem" style="display:none;"><a href="'.$arItem["LINK"].'" title="'.$title.'" itemprop="item"><span itemprop="name">'.$title.'</span><meta itemprop="position" content="'.$cont.'" /></a></div>
+            $strReturn .= '<li itemprop="itemListElement" itemscope="" itemtype="http://schema.org/ListItem"><a href="'.$arItem["LINK"].'" title="'.$title.'"><span class="last-elem detail" data-url="'.$arItem["LINK"].'" itemprop="name">'.$title.'</span><meta itemprop="position" content="'.$cont.'" /></a></li>
 			';
 			
         }
     }
     
-    return '<div itemprop="breadcrumb"><div class="breadcrumbs" itemscope="" itemtype="http://schema.org/BreadcrumbList">'.$strReturn.'</div></div>';
+    return '<div itemprop="breadcrumb" class="breadcrumb"><ul itemscope="" itemtype="http://schema.org/BreadcrumbList" class="bred_list">'.$strReturn.'</ul></div>';
 }
 else{
     return $strReturn;
