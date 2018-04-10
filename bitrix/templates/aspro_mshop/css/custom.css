@@ -3211,4 +3211,26 @@ div.title-search-result {
 .breadcrumb a:hover {
 	color: #EB5470;
 }
-		
+.new_all_brand li{
+	display: inline-block;
+    width: 260px;
+    height: 150px;
+    text-align: center;
+}
+.new_all_brand li img{		
+    width: 80%;
+	    margin-bottom: 20px;
+}
+.new_all_brand li::before{
+	display: none;
+}
+.new_all_brand li a:hover p{
+	color:#fff;
+	background-color:#000;
+}
+@media (max-width: 600px) {
+	.new_all_brand li{
+    padding-top: 60px;
+    padding-bottom: 70px;
+	}
+}

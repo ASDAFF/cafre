@@ -96,10 +96,10 @@ $frame = $this->createFrame()->begin();
 												<?$arWaterMark = Array(
 													array(
 														"name" => "watermark",
-														"position" => "bottomright", // ĞŸĞ¾Ğ»Ğ¾Ğ¶ĞµĞ½Ğ¸Ğµ
+														"position" => "bottomright", // Ïîëîæåíèå
 														"type" => "image",
 														"size" => "100",
-														"file" => $_SERVER["DOCUMENT_ROOT"]."/upload/watermark_cafre.png", // ĞŸÑƒÑ‚ÑŒ Ğº ĞºĞ°Ñ€Ñ‚Ğ¸Ğ½ĞºĞµ
+														"file" => $_SERVER["DOCUMENT_ROOT"]."/upload/watermark_cafre.png", // Ïóòü ê êàğòèíêå
 														"fill" => "exact",
 														"alpha_level" => "50",
 													)
@@ -210,11 +210,13 @@ $frame = $this->createFrame()->begin();
 							//$arAddToBasketData = CMShop::GetAddToBasketArray($arOffer, $totalCount, $arParams["DEFAULT_COUNT"], $arParams["BASKET_URL"], false, $arItemIDs["ALL_ITEM_IDS"], 'big_btn read_more');
 							$val['IS_OFFER'] = 'Y';
 							$val['IBLOCK_ID'] = $arResult['IBLOCK_ID'];
+							if($val['CATALOG_QUANTITY']==0)  $totalCount=1;							
 							$arAddToBasketData = CMShop::GetAddToBasketArray($val, $totalCount, $arParams["DEFAULT_COUNT"], $arParams["BASKET_URL"], false, $arItemIDs["ALL_ITEM_IDS"], 'small bt');
 							$arAddToBasketData["HTML"] = str_replace('data-item', 'data-props="'.$arOfferProps.'" data-item', $arAddToBasketData["HTML"]);
+							if($val['CATALOG_QUANTITY']==0)  $arAddToBasketData["HTML"] = str_replace('Â êîğçèíó', 'Ïîä çàêàç', str_replace('to-cart', 'to-cart transparent', $arAddToBasketData["HTML"]));							
 				?>
 				
-			
+			<?if($minPrice["VALUE"]>0) {?>
 				<div class="buys_wrapp o_<?=$val["ID"];?>">
 								<div class="counter_wrapp">
 									<?if(($arAddToBasketData["OPTIONS"]["USE_PRODUCT_QUANTITY_DETAIL"] && $arAddToBasketData["ACTION"] == "ADD") && $val["CAN_BUY"]):?>
@@ -232,7 +234,7 @@ $frame = $this->createFrame()->begin();
 									</div>
 								</div>
 							</div>
-				
+			<?}?>
 				<?endforeach;?>
 											</div>
 										</div>

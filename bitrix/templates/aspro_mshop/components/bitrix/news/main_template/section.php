@@ -110,6 +110,10 @@
 		"SHOW_BACK_LINK" => $arParams["SHOW_BACK_LINK"],
 	),
 	$component
-);?>
+);
+
+	if($arResult["VARIABLES"]["YEAR"])  {
+		$APPLICATION->SetTitle("Статьи (".$arResult["VARIABLES"]["YEAR"].")");
+	}?>
 
 <?if ($arParams["SHOW_FAQ_BLOCK"]=="Y"):?></div><?endif;?>

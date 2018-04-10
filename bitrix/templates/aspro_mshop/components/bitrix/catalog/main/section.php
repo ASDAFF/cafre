@@ -3,6 +3,9 @@
 <?$arParams["ADD_SECTIONS_CHAIN"] = (isset($arParams["ADD_SECTIONS_CHAIN"]) ? $arParams["ADD_SECTIONS_CHAIN"] : "Y");
 CModule::IncludeModule("iblock");
 
+
+
+
 if($arResult['VARIABLES']['SECTION_CODE_PATH']!='' && $arResult["VARIABLES"]["SECTION_ID"] == 0) {
 	$res = CIBlockElement::GetList(Array(), array("IBLOCK_ID"=>$arParams['IBLOCK_ID'], "CODE"=>$arResult['VARIABLES']['SECTION_CODE_PATH']), false, false, array("ID")); 
 	$kol=intval($res->SelectedRowsCount());
@@ -134,6 +137,33 @@ if($section){
 }
 else CHTTP::SetStatus("404 Not Found");
 $MShopSectionID = $arSection["ID"];
+if($arResult["VARIABLES"]["SECTION_ID"]==5338){
+	?>
+	<div class="new_all_brand">
+	<ul>
+	<?
+   //$arFilter = array('IBLOCK_ID' => $arParentSection['IBLOCK_ID'],'SECTION_ID' => 5338 , "ACTIVE"=>"Y");
+   $rsSect = CIBlockSection::GetList(Array("NAME" => "asc"), Array("IBLOCK_ID"=>26, "SECTION_ID" => 5338),false, Array("UF_IMG_BRAND", "UF_TOP_TEXT", "UF_TEXT_BRAND_TOP")); //CIBlockSection::GetList(array('NAME' => 'asc'),$arFilter, false, Array("UF_IMG_BRAND"));
+  
+   while ($arSect = $rsSect->GetNext())
+   {
+	   $file333 = CFile::ResizeImageGet($arSect["UF_IMG_BRAND"], array('width'=>260, 'height'=>150), BX_RESIZE_IMAGE_PROPORTIONAL, true);
+    ?>
+	<li>
+	<a href="<?=$arSect["SECTION_PAGE_URL"];?>">
+	<?if($file333["src"]):?>
+	<img src="<?=$file333["src"];?>" alt="<?=$arSect["NAME"];?>"/>
+	<?endif;?>
+	<p><?echo $arSect["NAME"];?></p>
+	</a>
+	</li>
+	<?
+	}
+	?>
+	</ul>
+	</div>
+	<?
+	}else{
 ?>
 	<div class="left_block catalog <?=strtolower($TEMPLATE_OPTIONS["TYPE_VIEW_FILTER"]["CURRENT_VALUE"])?>">
 		<?
@@ -452,11 +482,6 @@ $MShopSectionID = $arSection["ID"];
 							$sort = "CATALOG_QUANTITY";
 						}
 						?>
-					</div>
-					<div class="sort_display">	
-						<?foreach($arDisplays as $displayType):?>
-							<a rel="nofollow" href="<?=$APPLICATION->GetCurPageParam('display='.$displayType, 	array('display'))?>" class="sort_btn <?=$displayType?> <?=($display == $displayType ? 'current' : '')?>"><i title="<?=GetMessage("SECT_DISPLAY_".strtoupper($displayType))?>"></i></a>
-						<?endforeach;?>
 					</div>
 				<!--/noindex-->
 			</div>
@@ -860,10 +885,6 @@ if($arFields["PREVIEW_PICTURE"]){
 	}
 });*/
 
-$(".sort_display a:not(.current)").on("click", function() {
-	$(this).addClass("current").siblings().removeClass("current");
-});
-
 $(".number_list a:not(.current)").on("click", function() {
 	$(this).addClass("current").siblings().removeClass("current");
 });
@@ -942,7 +963,7 @@ while($ar_fields2 = $db_price_min2->GetNext())
 </span>
 </div>
 <?
-
+}
 global $MSHOP_SMART_FILTER, $filter_h1, $catalog_section_name, $catalog_seo, $brend_in_catalog;
 //if(!$brends) $filter_h1=' '.$brend_in_catalog.' '.$filter_h1;
 if($brend_in_catalog) $filter_h1=' '.$brend_in_catalog.$filter_h1;
@@ -1027,5 +1048,6 @@ else {
 }
 // end section 
 
-				}
+				
+}
 ?>

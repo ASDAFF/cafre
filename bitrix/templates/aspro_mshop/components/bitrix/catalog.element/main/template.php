@@ -318,7 +318,7 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
   if($ar_result2 = $db_list2->GetNext())
   {
 	  $all_b[$ar_result2["ID"]]=array($ar_result2["NAME"], CFile::GetPath($ar_result2["UF_IMG_BRAND"]), $ar_result2["CODE"]);
-	  $file_b = CFile::ResizeImageGet($ar_result2["UF_IMG_BRAND"], array( "width" => 59, "height" => 59 ), BX_RESIZE_IMAGE_PROPORTIONAL,true);
+	  $file_b = CFile::ResizeImageGet($ar_result2["UF_IMG_BRAND"], array( "width" => 150, "height" => 40 ), BX_RESIZE_IMAGE_PROPORTIONAL,true);
 						?>
 							<div class="brand iblock">
 								<?if(!$file_b["src"]):?>
@@ -601,9 +601,6 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 				<div class="buy_block iblock">
 					<?if($arResult["OFFERS"] && $showCustomOffer){?>
 						<div class="sku_props">					
-							<?if($arResult['PRODUCT']['AVAILABLE']=='N'):?>						
-								<span>Временно нет в наличии</span>
-							<?endif;?>
 							<?if (!empty($arResult['OFFERS_PROP'])){?>
 								<div class="bx_catalog_item_scu wrapper_sku" id="<? echo $arItemIDs["ALL_ITEM_IDS"]['PROP_DIV']; ?>">
 									<?foreach ($arSkuTemplate as $code => $strTemplate){
@@ -658,6 +655,7 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 							$arOffer['IBLOCK_ID'] = $arResult['IBLOCK_ID'];
 							$arAddToBasketData = CMShop::GetAddToBasketArray($arOffer, $totalCount, $arParams["DEFAULT_COUNT"], $arParams["BASKET_URL"], false, $arItemIDs["ALL_ITEM_IDS"], 'big_btn');
 							$arAddToBasketData["HTML"] = str_replace('data-item', 'data-props="'.$arOfferProps.'" data-item', $arAddToBasketData["HTML"]);
+							if($arOffer['CATALOG_QUANTITY']==0)  $arAddToBasketData["HTML"] = str_replace('В корзину', 'Под заказ', str_replace('to-cart', 'to-cart transparent', $arAddToBasketData["HTML"]));							
 							?>
 							<div class="buys_wrapp o_<?=$arOffer["ID"];?>">
 								<div class="counter_wrapp">
@@ -675,7 +673,9 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 										</div>							
 									<?endif;?>									
 								</div>
-								<?if($arAddToBasketData["ACTION"] !== "NOTHING"):?>
+								<?
+								if($arAddToBasketData["ACTION"] !== "NOTHING" && $arOffer['CATALOG_QUANTITY']>0  ):
+								?>
 									<?if($arAddToBasketData["ACTION"] == "ADD" && $arOffer["CAN_BUY"]):?>
 										<div class="wrapp_one_click">
 											<span class="transparent big_btn type_block button one_click" data-item="<?=$arOffer["ID"]?>" data-iblockID="<?=$arOffer["IBLOCK_ID"]?>" data-quantity="<?=($totalCount >= $arParams["DEFAULT_COUNT"] ? $arParams["DEFAULT_COUNT"] : $totalCount)?>" data-props="<?=$arOfferProps?>" onclick="gtag('event', 'click', {'event_category': 'zakazcard'});oneClickBuy('<?=$arOffer["ID"]?>', '<?=$arParams["IBLOCK_ID"]?>', this)">

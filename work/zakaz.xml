@@ -6218,3 +6218,61 @@ double:885
 --
 double:886
 --
+Array
+(
+    [SID] => 26
+    [UID] => 1015
+    [Date] => 2018-04-10T07:12:05
+    [PrCode] => 
+    [Comm] => test
+    [Name] => Dee Dee
+    [Phone] => 8(999) 999-9999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000018808
+                    [Qty] => 1
+                    [Cost] => 197
+                )
+
+        )
+
+)
+res=stdClass Object
+(
+    [return] => 1
+)
+double:1015
+--
+Array
+(
+    [SID] => 26
+    [UID] => 1016
+    [Date] => 2018-04-10T07:12:18
+    [PrCode] => 
+    [Comm] => 
+    [Name] => Dee Dee
+    [Phone] => 8(999) 999-9999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000018808
+                    [Qty] => 1
+                    [Cost] => 197
+                )
+
+        )
+
+)
+res=stdClass Object
+(
+    [return] => 1
+)
+double:1016
+--

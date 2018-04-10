@@ -22,6 +22,7 @@ if($arResult){
 		}*/
     CModule::IncludeModule("iblock");
     global $MShopSectionID;
+if(strripos($_SERVER['REQUEST_URI'], "catalog")){
 	   $ex = explode('/',$_SERVER['REQUEST_URI']);
 	   $array_b = array_values($ex);
 		$last = count($array_b)-2;
@@ -61,14 +62,16 @@ if($id_elem){
 
 if(strripos($_SERVER['REQUEST_URI'], "vse_brendy") && !array_search($ar_brands, $_SESSION["CATALOG"])){
 	$alll_brands = array("TITLE"=>"Все бренды", "LINK"=>"/catalog/vse_brendy/");
+	if(!array_search($alll_brands, $_SESSION["CATALOG"]) && $_SERVER['REQUEST_URI'] != "/catalog/vse_brendy/"){
 	array_push($_SESSION["CATALOG"], $alll_brands);
+	}
 	array_push($_SESSION["CATALOG"], $ar_brands);
 	//print_r($_SESSION["CATALOG"]);
 }elseif(!array_search($filt_br["TITLE"], $new_mas_title)){
 	array_push($_SESSION["CATALOG"], $filt_br);
 }
 }
-
+}
 /*if($cook && $cook_elem){
     $cnt = count($new_ar);
 	}else{}*/

@@ -141,3 +141,12 @@ table[data-bx-no-border="Y"] td { border: 0px; border-bottom: 1px dotted #c3c3c3
 .props_list tr td:first-child > .txt:before { top: 9px; width: 3px; height: 3px; }
 .tizer_bold_text { font-weight: 600; font-size: 18px; }
 .tizer_text { font-size: 16px; }
+.small.bt.to-cart.transparent.button {
+	padding: 6px 11px;
+}
+[data-code="VIEWED"] .descript {
+	height: auto;
+}
+.not_availible_in_order {
+	    color: #eb5370;
+}

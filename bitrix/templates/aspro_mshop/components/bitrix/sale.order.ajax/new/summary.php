@@ -263,11 +263,11 @@ if($ar_res = $res->GetNext())
 							$width = 50 - ($imgCount * 20);
 						?>
 							<td class="item name-cell <?=$class_td;?>" style1="width:<?=$width?>%">
-
+								<?$ar_res = CCatalogProduct::GetByID($arItem['PRODUCT_ID']);?>
 								<?if (strlen($arItem["DETAIL_PAGE_URL"]) > 0):?><a href="<?=$arItem["DETAIL_PAGE_URL"] ?>"><?endif;?>
 									<?=$arItem["NAME"]?>
 								<?if (strlen($arItem["DETAIL_PAGE_URL"]) > 0):?></a><?endif;?>
-
+								<?if ($ar_res['QUANTITY']== 0):?><br><span class="not_availible_in_order">Под заказ</span><?endif;?>
 								<div class="bx_ordercart_itemart">
 									<?
 									if ($bPropsColumn):

@@ -84,7 +84,7 @@ if(!empty($brends) && count($brends)>0) {?>
 	<span class="select_brand">Выберите бренд</span>
 	<div class="list_brands"> 
 	<?
-	$ar_result=CIBlockSection::GetList(Array("SORT"=>"ASC"), Array("IBLOCK_ID"=>"26", "ID"=>$brends, 'DEPTH_LEVEL'=>2),false, Array("UF_IMG_BRAND", "UF_URL_SVG", "NAME", 'CODE', 'ID'));
+	$ar_result=CIBlockSection::GetList(Array("SORT"=>"ASC"), Array("IBLOCK_ID"=>"26", "ID"=>$brends, 'DEPTH_LEVEL'=>2, 'ACTIVE'=>'Y'),false, Array("UF_IMG_BRAND", "UF_URL_SVG", "NAME", 'CODE', 'ID'));
 	while($res2=$ar_result->GetNext()) {?>
 		<a href="<?=$APPLICATION->GetCurPage().$res2['CODE'].'/'?>" >
 		<?if($res2["UF_URL_SVG"]){?>

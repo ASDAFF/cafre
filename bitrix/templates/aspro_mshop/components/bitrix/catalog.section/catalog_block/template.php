@@ -35,7 +35,7 @@ $catalog_section_name=$arResult['NAME'];?>
 			$arItemIDs=CMShop::GetItemsIDs($arItem);
 
 			$totalCount = CMShop::GetTotalCount($arItem);
-			if($totalCount==0) $totalCount=10;
+			if($totalCount==0) $totalCount=1;
 			$arQuantityData = CMShop::GetQuantityArray($totalCount, $arItemIDs["ALL_ITEM_IDS"]);
 
 			$item_id = $arItem["ID"];
@@ -111,10 +111,10 @@ $catalog_section_name=$arResult['NAME'];?>
 								<?$arWaterMark = Array(
             array(
                 "name" => "watermark",
-                "position" => "bottomright", // РџРѕР»РѕР¶РµРЅРёРµ
+                "position" => "bottomright", // Положение
                 "type" => "image",
                 "size" => "100",
-                "file" => $_SERVER["DOCUMENT_ROOT"]."/upload/watermark_cafre.png", // РџСѓС‚СЊ Рє РєР°СЂС‚РёРЅРєРµ
+                "file" => $_SERVER["DOCUMENT_ROOT"]."/upload/watermark_cafre.png", // Путь к картинке
                 "fill" => "exact",
                 "alpha_level" => "50",
             )
@@ -358,7 +358,7 @@ $catalog_section_name=$arResult['NAME'];?>
 											<!--/noindex-->
 										</div>
 									</div>
-								<?elseif($arItem["OFFERS"]):?>
+								<?elseif($arItem["OFFERS"] && $minPrice["DISCOUNT_VALUE"]>0):?>
 									<?foreach($arItem["OFFERS"] as $arOffer):?>
 										<?
 							$totalCount = CMShop::GetTotalCount($arOffer);
@@ -367,6 +367,7 @@ $catalog_section_name=$arResult['NAME'];?>
 							$arOffer['IBLOCK_ID'] = $arResult['IBLOCK_ID'];
 							$arAddToBasketData = CMShop::GetAddToBasketArray($arOffer, $totalCount, $arParams["DEFAULT_COUNT"], $arParams["BASKET_URL"], false, $arItemIDs["ALL_ITEM_IDS"], 'small bt');
 							$arAddToBasketData["HTML"] = str_replace('data-item', 'data-props="'.$arOfferProps.'" data-item', $arAddToBasketData["HTML"]);
+							if($arOffer['CATALOG_QUANTITY']==0)  $arAddToBasketData["HTML"] = str_replace('В корзину', 'Под заказ', str_replace('to-cart', 'to-cart transparent', $arAddToBasketData["HTML"]));							
 										?>
 										<?if($arAddToBasketData["ACTION"] != "NOTHING"):?>
 											<div class="counter_wrapp o_<?=$arOffer["ID"];?> <?=($arItem["OFFERS"] && $arParams["TYPE_SKU"] == "TYPE_1" ? 'woffers' : '')?>">
