@@ -143,7 +143,7 @@ if($arResult["VARIABLES"]["SECTION_ID"]==5338){
 	<ul>
 	<?
    //$arFilter = array('IBLOCK_ID' => $arParentSection['IBLOCK_ID'],'SECTION_ID' => 5338 , "ACTIVE"=>"Y");
-   $rsSect = CIBlockSection::GetList(Array("NAME" => "asc"), Array("IBLOCK_ID"=>26, "SECTION_ID" => 5338),false, Array("UF_IMG_BRAND", "UF_TOP_TEXT", "UF_TEXT_BRAND_TOP")); //CIBlockSection::GetList(array('NAME' => 'asc'),$arFilter, false, Array("UF_IMG_BRAND"));
+   $rsSect = CIBlockSection::GetList(Array("NAME" => "asc"), Array("IBLOCK_ID"=>26, "SECTION_ID" => 5338, "ACTIVE"=>"Y"),false, Array("UF_IMG_BRAND", "UF_TOP_TEXT", "UF_TEXT_BRAND_TOP")); //CIBlockSection::GetList(array('NAME' => 'asc'),$arFilter, false, Array("UF_IMG_BRAND"));
   
    while ($arSect = $rsSect->GetNext())
    {
@@ -151,9 +151,9 @@ if($arResult["VARIABLES"]["SECTION_ID"]==5338){
     ?>
 	<li>
 	<a href="<?=$arSect["SECTION_PAGE_URL"];?>">
-	<?if($file333["src"]):?>
+	<?/*if($file333["src"]):?>
 	<img src="<?=$file333["src"];?>" alt="<?=$arSect["NAME"];?>"/>
-	<?endif;?>
+	<?endif;*/?>
 	<p><?echo $arSect["NAME"];?></p>
 	</a>
 	</li>
@@ -848,8 +848,8 @@ if($arFields["PREVIEW_PICTURE"]){
 	"IBLOCK_TYPE" => $arParams["IBLOCK_TYPE"],
 	"IBLOCK_ID" => $arParams["IBLOCK_ID"],
 	"DEPTH" => "2",
-	"CACHE_TYPE" => $arParams["CACHE_TYPE"],
-	"CACHE_TIME" => $arParams["CACHE_TIME"],
+	"CACHE_TYPE" =>$arParams["CACHE_TYPE"],
+	"CACHE_TIME" => '120',//$arParams["CACHE_TIME"],
 	"CACHE_GROUPS" => $arParams["CACHE_GROUPS"],
 	"SHOW_PRODUCTS_".$arParams["IBLOCK_ID"] => "Y",
 	"ADDITIONAL_PICT_PROP_".$arParams["IBLOCK_ID"] => $arParams['ADD_PICT_PROP'],

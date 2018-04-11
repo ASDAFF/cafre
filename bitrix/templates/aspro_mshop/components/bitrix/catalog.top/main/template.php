@@ -177,10 +177,11 @@ $arNotify = unserialize($notifyOption);
 							//$arAddToBasketData = CMShop::GetAddToBasketArray($arOffer, $totalCount, $arParams["DEFAULT_COUNT"], $arParams["BASKET_URL"], false, $arItemIDs["ALL_ITEM_IDS"], 'big_btn read_more');
 							$val['IS_OFFER'] = 'Y';
 							$val['IBLOCK_ID'] = $arResult['IBLOCK_ID'];
-							$arAddToBasketData = CMShop::GetAddToBasketArray($val, $totalCount, $arParams["DEFAULT_COUNT"], $arParams["BASKET_URL"], false, $arItemIDs["ALL_ITEM_IDS"], 'small bt');
+							$arAddToBasketData = CMShop::GetAddToBasketArray($val, $val['CATALOG_QUANTITY']==0?1:$totalCount, $arParams["DEFAULT_COUNT"], $arParams["BASKET_URL"], false, $arItemIDs["ALL_ITEM_IDS"], 'small bt');
 							$arAddToBasketData["HTML"] = str_replace('data-item', 'data-props="'.$arOfferProps.'" data-item', $arAddToBasketData["HTML"]);
+							if($val['CATALOG_QUANTITY']==0)  $arAddToBasketData["HTML"] = str_replace('В корзину', 'Под заказ', str_replace('to-cart', 'to-cart transparent', $arAddToBasketData["HTML"]));							
 				?>
-				
+				<?if($minPrice["VALUE"]>0) {?>
 			
 				<div class="buys_wrapp o_<?=$val["ID"];?>">
 								<div class="counter_wrapp">
@@ -199,7 +200,7 @@ $arNotify = unserialize($notifyOption);
 									</div>
 								</div>
 							</div>
-				
+				<?}?>
 				<?endforeach;?>
 				
 				<?//print_r($arItem);?>

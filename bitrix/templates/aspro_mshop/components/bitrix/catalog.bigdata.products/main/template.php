@@ -102,10 +102,10 @@ if($arResult['ITEMS']){?>
 							<?$arWaterMark = Array(
             array(
                 "name" => "watermark",
-                "position" => "bottomright", // РџРѕР»РѕР¶РµРЅРёРµ
+                "position" => "bottomright", // Положение
                 "type" => "image",
                 "size" => "100",
-                "file" => $_SERVER["DOCUMENT_ROOT"]."/upload/watermark_cafre.png", // РџСѓС‚СЊ Рє РєР°СЂС‚РёРЅРєРµ
+                "file" => $_SERVER["DOCUMENT_ROOT"]."/upload/watermark_cafre.png", // Путь к картинке
                 "fill" => "exact",
                 "alpha_level" => "50",
             )
@@ -210,19 +210,22 @@ if($arResult['ITEMS']){?>
 									<div class="descript">
 				<p><?if(($ar_res['PREVIEW_TEXT'] !== "NULL")&&($ar_res['PREVIEW_TEXT'] != NULL)):?><?echo substr(strip_tags($ar_res['PREVIEW_TEXT']), 0, 100).'...';?><?elseif(($ar_res['DETAIL_TEXT'] !== "NULL")&&($ar_res['DETAIL_TEXT'] != NULL)):?><?echo substr(strip_tags($ar_res["DETAIL_TEXT"]), 0, 100).'...';?><?endif;?></p></div>
 				<?endif;?>
+				<?if($minPrice['VALUE']>0) {?>
 				<div class="buttons_block2 clearfix">
 				<?foreach($arItem["OFFERS"] as $val):
 				$totalCount = CMShop::GetTotalCount($val);
 							//$arAddToBasketData = CMShop::GetAddToBasketArray($arOffer, $totalCount, $arParams["DEFAULT_COUNT"], $arParams["BASKET_URL"], false, $arItemIDs["ALL_ITEM_IDS"], 'big_btn read_more');
 							$val['IS_OFFER'] = 'Y';
 							$val['IBLOCK_ID'] = $arResult['IBLOCK_ID'];
-							$arAddToBasketData = CMShop::GetAddToBasketArray($val, $totalCount, $arParams["DEFAULT_COUNT"], $arParams["BASKET_URL"], false, $arItemIDs["ALL_ITEM_IDS"], 'small bt');
+							$arAddToBasketData = CMShop::GetAddToBasketArray($val, $val['CATALOG_QUANTITY']==0?1:$totalCount, $arParams["DEFAULT_COUNT"], $arParams["BASKET_URL"], false, $arItemIDs["ALL_ITEM_IDS"], 'small bt');
 							$arAddToBasketData["HTML"] = str_replace('data-item', 'data-props="'.$arOfferProps.'" data-item', $arAddToBasketData["HTML"]);
+							
+							if($val['CATALOG_QUANTITY']==0)  $arAddToBasketData["HTML"] = str_replace('В корзину', 'Под заказ', str_replace('to-cart', 'to-cart transparent', $arAddToBasketData["HTML"]));							
 				?>
 				
 			
 				<div class="buys_wrapp o_<?=$val["ID"];?>">
-								<div class="counter_wrapp">
+								<div class="counter_wrapp"><??>
 									<?if(($arAddToBasketData["OPTIONS"]["USE_PRODUCT_QUANTITY_DETAIL"] && $arAddToBasketData["ACTION"] == "ADD") && $val["CAN_BUY"]):?>
 										<div class="counter_block" data-item="<?=$val["ID"];?>">
 											<span class="minus">-</span>
@@ -240,12 +243,8 @@ if($arResult['ITEMS']){?>
 							</div>
 				
 				<?endforeach;?>
-				
-				<?//print_r($arItem);?>
-				
-				
-					
 				</div>
+			<?}?>
 					</div>
 				</li>
 			<?}?>

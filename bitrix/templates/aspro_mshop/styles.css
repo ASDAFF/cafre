@@ -145,7 +145,7 @@ table[data-bx-no-border="Y"] td { border: 0px; border-bottom: 1px dotted #c3c3c3
 	padding: 6px 11px;
 }
 [data-code="VIEWED"] .descript {
-	height: auto;
+	/*height: auto;*/
 }
 .not_availible_in_order {
 	    color: #eb5370;

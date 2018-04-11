@@ -2020,7 +2020,8 @@ margin: 0 0 10px;
 	padding-left: 20px;
 }
 
-.brand__span_h2::before {
+.brand__span_h2::before,
+.brand__span_h3::before {
 	position: absolute;
 	left: 0;
 	top: 0;
@@ -3228,9 +3229,39 @@ div.title-search-result {
 	color:#fff;
 	background-color:#000;
 }
+
+.catalog_item .cost .price {
+	float: none;
+}
+
+.catalog_item .cost.prices {
+	height: 70px;
+}
+
+.tab_slider_wrapp .tab.VIEWED_wrapp {
+	padding-bottom: 20px !important;
+}
+
+.tab_slider_wrapp .wr li.catalog_item {
+	margin-left: 16px;
+}
+
+.tab_slider_wrapp .wr li.catalog_item:first-child {
+	margin-left: 0;
+}
+
+.viewed_slider .catalog_item:hover {
+	border: 0px solid transparent;
+    box-shadow: 0px 0px 20px rgba(0,0,0,0.10);
+    -moz-box-shadow: 0px 0px 20px rgba(0,0,0,0.10);
+    -o-box-shadow: 0px 0px 20px rgba(0,0,0,0.10);
+    -webkit-box-shadow: 0px 0px 20px rgba(0,0,0,0.10);
+    height: auto !important;
+}
+
 @media (max-width: 600px) {
 	.new_all_brand li{
-    padding-top: 60px;
-    padding-bottom: 70px;
+    padding-top: 20px;
+	height: auto !important;
 	}
 }
