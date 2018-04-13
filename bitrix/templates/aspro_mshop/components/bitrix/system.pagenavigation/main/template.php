@@ -27,9 +27,9 @@
 		</div>
 	<?}?>
 	<div class="module-pagination">
-		<ul class="flex-direction-nav">
-			<li class="flex-nav-prev <?if($bPrevDisabled){echo " disabled";}?>"><a href="<?=$arResult["sUrlPath"]?>?<?=$strNavQueryString?>PAGEN_<?=$arResult["NavNum"]?>=<?=($arResult["NavPageNomer"]-1)?>" class="flex-prev"></a></li>
-			<li class="flex-nav-next <?if($bNextDisabled){echo " disabled";}?>"><a href="<?=$arResult["sUrlPath"]?>?<?=$strNavQueryString?>PAGEN_<?=$arResult["NavNum"]?>=<?=($arResult["NavPageNomer"]+1)?>" class="flex-next"></a></li>
+		<ul class="flex-direction-nav" style="display:none;">
+			<li class="flex-nav-prev <?if($bPrevDisabled){echo " disabled";}?>"><a href="<?=$arResult["sUrlPath"];?>?<?=$strNavQueryString;?>PAGEN_<?=$arResult["NavNum"];?>=<?=($arResult["NavPageNomer"]-1)?>" class="flex-prev"></a></li>
+			<li class="flex-nav-next <?if($bNextDisabled){echo " disabled";}?>"><a href="<?=$arResult["sUrlPath"];?>?<?=$strNavQueryString;?>PAGEN_<?=$arResult["NavNum"];?>=<?=($arResult["NavPageNomer"]+1)?>" class="flex-next"></a></li>
 		</ul>
 		<span class="nums">
 			<?if($arResult["nStartPage"] > 1):?>

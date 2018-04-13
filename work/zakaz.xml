@@ -6276,3 +6276,107 @@ res=stdClass Object
 )
 double:1016
 --
+Array
+(
+    [SID] => 26
+    [UID] => 1046
+    [Date] => 2018-04-12T10:28:11
+    [PrCode] => 
+    [Comm] => 
+    [Name] => Dee
+    [Phone] => 79999999999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000024368
+                    [Qty] => 1
+                    [Cost] => 2219
+                )
+
+            [1] => Array
+                (
+                    [ID] => 00000009784
+                    [Qty] => 1
+                    [Cost] => 6039
+                )
+
+            [2] => Array
+                (
+                    [ID] => 00000009781
+                    [Qty] => 1
+                    [Cost] => 2670
+                )
+
+            [3] => Array
+                (
+                    [ID] => 00000015861
+                    [Qty] => 2
+                    [Cost] => 500
+                )
+
+            [4] => Array
+                (
+                    [ID] => 30427
+                    [Qty] => 1
+                    [Cost] => 2915
+                )
+
+            [5] => Array
+                (
+                    [ID] => 30383
+                    [Qty] => 1
+                    [Cost] => 1250
+                )
+
+            [6] => Array
+                (
+                    [ID] => 00000024096
+                    [Qty] => 1
+                    [Cost] => 269
+                )
+
+            [7] => Array
+                (
+                    [ID] => 00000024097
+                    [Qty] => 1
+                    [Cost] => 269
+                )
+
+            [8] => Array
+                (
+                    [ID] => 00000026779
+                    [Qty] => 1
+                    [Cost] => 2834
+                )
+
+            [9] => Array
+                (
+                    [ID] => 00000024615
+                    [Qty] => 3
+                    [Cost] => 750
+                )
+
+            [10] => Array
+                (
+                    [ID] => 00000001975
+                    [Qty] => 3
+                    [Cost] => 381
+                )
+
+            [11] => Array
+                (
+                    [ID] => 00000018085
+                    [Qty] => 1
+                    [Cost] => 1160
+                )
+
+        )
+
+)
+res=stdClass Object
+(
+    [return] => 1
+)

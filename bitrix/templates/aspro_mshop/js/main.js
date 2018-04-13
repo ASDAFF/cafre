@@ -1592,7 +1592,7 @@ $(document).ready(function(){
 		var url=$(this).closest('.right_block').find('.module-pagination .flex-direction-nav .flex-next').attr('href'),
 			th=$(this);
 		th.addClass('loading');
-
+console.log(url);
 		$.ajax({
 			url: url,
 			data: {"ajax_get": "Y"},

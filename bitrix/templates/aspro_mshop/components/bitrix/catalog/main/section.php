@@ -539,10 +539,14 @@ if($arFields["PREVIEW_PICTURE"]){
 						"SECTION_ID" => $arResult["VARIABLES"]["SECTION_ID"],
 						"SECTION_CODE" => $arResult["VARIABLES"]["SECTION_CODE"],
 						"BASKET_ITEMS" => $arBasketItems,
-						"ELEMENT_SORT_FIELD" => $sort,
+						//"ELEMENT_SORT_FIELD" => $sort,
 						"AJAX_REQUEST" => $isAjax,
 						// "AJAX_REQUEST_FILTER" => $isAjaxFilter,
-						"ELEMENT_SORT_ORDER" => $sort_order,
+						//"ELEMENT_SORT_ORDER" => $sort_order,
+						"ELEMENT_SORT_FIELD" => $arParams["ELEMENT_SORT_FIELD"],
+						"ELEMENT_SORT_ORDER" => $arParams["ELEMENT_SORT_ORDER"],
+						"ELEMENT_SORT_FIELD2" => $arParams["ELEMENT_SORT_FIELD2"],
+						"ELEMENT_SORT_ORDER2" => $arParams["ELEMENT_SORT_ORDER2"],
 						"FILTER_NAME" => $arParams["FILTER_NAME"],
 						"INCLUDE_SUBSECTIONS" => $arParams["INCLUDE_SUBSECTIONS"],
 						"PAGE_ELEMENT_COUNT" => $show,
@@ -996,14 +1000,14 @@ if($brend_in_catalog) $filter_h1=' '.$brend_in_catalog.$filter_h1;
 			}
         }
 if($arSection["IBLOCK_SECTION_ID"]==5338&&$arResult["VARIABLES"]["SECTION_ID"]==0&&$arResult["VARIABLES"]["SECTION_CODE"]=='') {
-	$page_seo_params["title"] = $arSection['NAME'].($arSection['RUSNAME']!=''?' ('.$arSection['RUSNAME'].')':'');
+
+		$page_seo_params["title"] = $arSection['NAME'].($arSection['RUSNAME']!=''?' ('.$arSection['RUSNAME'].')':'');
+	
 }		
 else{
-if($section["UF_SEO_TITLE"]){
-	$page_seo_params["title"] = $section["UF_SEO_TITLE"].($arSection['RUSNAME']!=''?' ('.$arSection['RUSNAME'].')':'');
-}else{
+
 	$page_seo_params["title"] = $APPLICATION->GetTitle().($arSection['RUSNAME']!=''?' ('.$arSection['RUSNAME'].')':'');
-}
+
 }
 if( !(strpos($arResult['VARIABLES']['SECTION_CODE_PATH'], 'vse_brendy/')===false) && substr_count($arResult['VARIABLES']['SECTION_CODE_PATH'], '/')==1 ) {
 	$this->SetViewTarget('h1');echo $page_seo_params["title"].$filter_h1;$this->EndViewTarget();
@@ -1040,7 +1044,13 @@ else {
 	}
 	if(substr_count($arResult['VARIABLES']['SECTION_CODE_PATH'], '/')>0) {
 		if($section["UF_SEO_TITLE"]){
-		$APPLICATION->SetPageProperty("title", $page_seo_params["title"].$filter_h1.(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));
+		$APPLICATION->SetPageProperty("title", $section["UF_SEO_TITLE"].$filter_h1.(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));
+		}else{
+		$APPLICATION->SetPageProperty("title", $page_seo_params["title"].$filter_h1." - Купить по низким ценам в интернет-магазине Cafre".(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));
+		}
+	}else{
+		if($section["UF_SEO_TITLE"]){
+		$APPLICATION->SetPageProperty("title", $section["UF_SEO_TITLE"].$filter_h1.(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));
 		}else{
 		$APPLICATION->SetPageProperty("title", $page_seo_params["title"].$filter_h1." - Купить по низким ценам в интернет-магазине Cafre".(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));
 		}

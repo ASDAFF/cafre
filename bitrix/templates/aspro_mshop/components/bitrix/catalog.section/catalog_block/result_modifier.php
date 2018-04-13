@@ -104,6 +104,14 @@ if (!empty($arResult['ITEMS'])){
 	
 	foreach ($arResult['ITEMS'] as $key => $arItem)
 	{
+		/*echo '<pre>';
+		echo 'Количество:';
+		print_r($arItem["OFFERS"][0]["CATALOG_QUANTITY"]);
+		echo '<br>';
+		echo 'Сумма продаж:';
+		print_r($arItem["PROPERTIES"]["SUM_PROD"]["VALUE"]);
+		//
+		echo '</pre>';*/
 		//$arItem["CATALOG_QUANTITY"] = 9999;
 		$arItem['CHECK_QUANTITY'] = false;
 		if (!isset($arItem['CATALOG_MEASURE_RATIO']))

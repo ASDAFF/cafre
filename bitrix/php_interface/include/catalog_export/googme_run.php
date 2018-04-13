@@ -262,14 +262,16 @@ function yandex_get_value($arOffer, $param, $PROPERTY, &$arProperties, &$arUserT
 				{
 					$strProperty .= $strProperty ? "\n" : "";
 					$namep = 'Фотогалерея';
-					if(yandex_text2xml($arProperties[$PROPERTY]['NAME'], true) != iconv("UTF-8", "WINDOWS-1251", $namep))
+					$namep2 = 'Название первой фотографии';
+					if(yandex_text2xml($arProperties[$PROPERTY]['NAME'], true) != iconv("UTF-8", "WINDOWS-1251", $namep) && yandex_text2xml($arProperties[$PROPERTY]['NAME'], true) != iconv("UTF-8", "WINDOWS-1251", $namep2))
 					$strProperty .= '<param name="'.iconv("WINDOWS-1251", "UTF-8", yandex_text2xml($description[$key], true)).'">'.iconv("WINDOWS-1251", "UTF-8", yandex_text2xml($val, true)).'</param>';
 				}
 			}
 			else
 			{
 				$namep = 'Фотогалерея';
-				if(yandex_text2xml($arProperties[$PROPERTY]['NAME'], true) != iconv("UTF-8", "WINDOWS-1251", $namep))
+				$namep2 = 'Название первой фотографии';
+				if(yandex_text2xml($arProperties[$PROPERTY]['NAME'], true) != iconv("UTF-8", "WINDOWS-1251", $namep) && yandex_text2xml($arProperties[$PROPERTY]['NAME'], true) != iconv("UTF-8", "WINDOWS-1251", $namep2))
 				$strProperty .= '<param name="'.iconv("WINDOWS-1251", "UTF-8", yandex_text2xml($arProperties[$PROPERTY]['NAME'], true)).'">'.iconv("WINDOWS-1251", "UTF-8", yandex_text2xml($value, true)).'</param>';
 			}
 		}
@@ -485,7 +487,7 @@ function yandex_get_value2($arOffer, $param, $PROPERTY, &$arProperties, &$arUser
 			}
 			else
 			{
-			if(yandex_text2xml($arProperties[$PROPERTY]['NAME'], true) == '???????????')
+			if(yandex_text2xml($arProperties[$PROPERTY]['NAME'], true) == iconv("UTF-8", "WINDOWS-1251", "Фотогалерея") && yandex_text2xml($arProperties[$PROPERTY]['NAME'], true) == iconv("UTF-8", "WINDOWS-1251", "Название первой фотографии"))
 				$strProperty .= ''.yandex_text2xml($value, true).'';
 			}
 		}
@@ -1796,7 +1798,11 @@ if($ar_res2 = $res2->GetNext())
 									$strParamValue = '';
 									if ($prop_id)
 									{
-										$strParamValue = yandex_get_value2($arOfferItem, 'PARAM_'.$key, $prop_id, $arProperties, $arUserTypeFormat, $usedProtocol);
+										if(yandex_get_value2($arOfferItem, 'PARAM_'.$key, 246, $arProperties, $arUserTypeFormat, $usedProtocol)){
+										$strParamValue = yandex_get_value2($arOfferItem, 'PARAM_'.$key, 246, $arProperties, $arUserTypeFormat, $usedProtocol);
+										}elseif(yandex_get_value2($arOfferItem, 'PARAM_'.$key, 242, $arProperties, $arUserTypeFormat, $usedProtocol)){
+											$strParamValue = yandex_get_value2($arOfferItem, 'PARAM_'.$key, 242, $arProperties, $arUserTypeFormat, $usedProtocol);
+										}
 									}
 									if ('' != $strParamValue){
 										$exp3 = explode(",", $strParamValue);
@@ -1820,7 +1826,11 @@ if($ar_res2 = $res2->GetNext())
 									$strParamValue = '';
 									if ($prop_id)
 									{
-										$strParamValue = yandex_get_value2($arOfferItem, 'PARAM_'.$key, $prop_id, $arProperties, $arUserTypeFormat, $usedProtocol);
+										if(yandex_get_value2($arOfferItem, 'PARAM_'.$key, 246, $arProperties, $arUserTypeFormat, $usedProtocol)){
+										$strParamValue = yandex_get_value2($arOfferItem, 'PARAM_'.$key, 246, $arProperties, $arUserTypeFormat, $usedProtocol);
+										}elseif(yandex_get_value2($arOfferItem, 'PARAM_'.$key, 242, $arProperties, $arUserTypeFormat, $usedProtocol)){
+											$strParamValue = yandex_get_value2($arOfferItem, 'PARAM_'.$key, 242, $arProperties, $arUserTypeFormat, $usedProtocol);
+										}
 									}
 									if ('' != $strParamValue){
 										$exp6 = explode(",", $strParamValue);

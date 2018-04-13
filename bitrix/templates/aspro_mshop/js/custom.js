@@ -63,7 +63,7 @@ $(function() {
 	});
 	
 
-    $('.flex-direction-nav a').removeAttr('href');
+    //$('.flex-direction-nav a').removeAttr('href');
 	
 	$('.mobile-nav__item .menu_title').on('click', function(e) {
 		e.preventDefault();
@@ -148,6 +148,10 @@ $(function() {
 	
 	$('.deliverybanner__close').on('click', function(e) {
 		$(this).parent().hide();
+	});
+	
+	$('.bx_filter_close').on('click', function() {
+		$('.bx_filter').hide();
 	});
 
 })

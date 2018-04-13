@@ -667,6 +667,7 @@ if($arResult["ITEMS"]){?>
 								</div>
 								<input class="bx_filter_search_button button small" type="submit" id="set_filter" name="set_filter"  value="<?=GetMessage("CT_BCSF_SET_FILTER")?>" />
 								<input class="bx_filter_search_reset button small transparent" type="reset" id="del_filter" name="del_filter" value="<?=GetMessage("CT_BCSF_DEL_FILTER")?>" />
+								<span class="bx_filter_close">Закрыть</span>
 							</div>
 						</div>
 					</div>

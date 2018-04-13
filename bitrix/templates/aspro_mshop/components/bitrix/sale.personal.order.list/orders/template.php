@@ -27,7 +27,7 @@
 				<td class="count-th"><?=GetMessage("STPOL_ORDER_QUANTITY")?></td>
 				<td class="price-th"><?=GetMessage("STPOL_ORDER_SUMM")?></td>
 				<td class="pay-status-th"><?=GetMessage("STPOL_ORDER_PAY")?></td>
-				<td class="order-status-th"><?=GetMessage("SPOL_T_STATUS")?></td>
+				<!--<td class="order-status-th"><?//=GetMessage("SPOL_T_STATUS")?></td>-->
 			</tr>
 		</thead>
 		<tbody>
@@ -75,14 +75,15 @@
 					<td class="date-cell"> <?=$dateCreate?></td>
 					<td class="count-cell"><?=count( $val["BASKET_ITEMS"] )?>&nbsp;<?=GetMessage("UNIT");?></td>
 					<td class="price-cell"><?=$val["ORDER"]["FORMATED_PRICE"]?></td>
-					<td class="pay-status-cell<?=$val["ORDER"]["PAYED"] == 'Y' ? ' payed' : ' not_payed'?>">
-						<?=$val["ORDER"]["PAYED"] == 'Y' ? GetMessage("SPOL_T_PAYED") : GetMessage("SPOL_T_NOT_PAYED")?>
+					<td class="pay-status-cell payed">
+					Оплата при получении
+						<?//=$val["ORDER"]["PAYED"] == 'Y' ? GetMessage("SPOL_T_PAYED") : GetMessage("SPOL_T_NOT_PAYED")<?=$val["ORDER"]["PAYED"] == 'Y' ? ' payed' : ' not_payed'?>
 					</td>
-					<td class="order-status-cell">
-						<?if( $val["ORDER"]["CANCELED"] == "Y" ){?><span class="status canceled"><?=GetMessage("SPOL_T_CANCELED");?></span>
+					<!--<td class="order-status-cell">
+						<?/*if( $val["ORDER"]["CANCELED"] == "Y" ){?><span class="status canceled"><?=GetMessage("SPOL_T_CANCELED");?></span>
 						<?}elseif( $val["ORDER"]["STATUS_ID"] == 'F' ){?><span class="status delivered"><?=$arResult["INFO"]["STATUS"][$val["ORDER"]["STATUS_ID"]]["NAME"]?></span>
-						<?}else{?><span class="status in-process"><?=$arResult["INFO"]["STATUS"][$val["ORDER"]["STATUS_ID"]]["NAME"]?></span><?}?>
-					</td>
+						<?}else{?><span class="status in-process"><?=$arResult["INFO"]["STATUS"][$val["ORDER"]["STATUS_ID"]]["NAME"]?></span><?}*/?>
+					</td>-->
 				</tr>
 				<tr class="drop">
 					<td colspan="6" class="drop-cell wrap-all">

@@ -261,13 +261,13 @@ function yandex_get_value($arOffer, $param, $PROPERTY, &$arProperties, &$arUserT
 				foreach ($value as $key => $val)
 				{
 					$strProperty .= $strProperty ? "\n" : "";
-					if(yandex_text2xml($arProperties[$PROPERTY]['NAME'], true) != 'Фотогалерея')
+					if(yandex_text2xml($arProperties[$PROPERTY]['NAME'], true) != 'Фотогалерея' && yandex_text2xml($arProperties[$PROPERTY]['NAME'], true) != 'Название первой фотографии')
 					$strProperty .= '<param name="'.yandex_text2xml($description[$key], true).'">'.yandex_text2xml($val, true).'</param>';
 				}
 			}
 			else
 			{
-				if(yandex_text2xml($arProperties[$PROPERTY]['NAME'], true) != 'Фотогалерея')
+				if(yandex_text2xml($arProperties[$PROPERTY]['NAME'], true) != 'Фотогалерея' && yandex_text2xml($arProperties[$PROPERTY]['NAME'], true) != 'Название первой фотографии')
 				$strProperty .= '<param name="'.yandex_text2xml($arProperties[$PROPERTY]['NAME'], true).'">'.yandex_text2xml($value, true).'</param>';
 			}
 		}
@@ -483,7 +483,7 @@ function yandex_get_value2($arOffer, $param, $PROPERTY, &$arProperties, &$arUser
 			}
 			else
 			{
-			if(yandex_text2xml($arProperties[$PROPERTY]['NAME'], true) == 'Фотогалерея')
+			if(yandex_text2xml($arProperties[$PROPERTY]['NAME'], true) == 'Фотогалерея' && yandex_text2xml($arProperties[$PROPERTY]['NAME'], true) == 'Название первой фотографии')
 				$strProperty .= ''.yandex_text2xml($value, true).'';
 			}
 		}
@@ -1753,16 +1753,22 @@ if($ob3 = $res3->GetNextElement())
 					if (!empty($strFile) || !empty($arItem['YANDEX_PICT']))
 					{	
 						$i = 0;
+						$val_pic = '';
 						foreach ($XML_DATA['XML_DATA']['PARAMS'] as $key => $prop_id)
 								{
-									$i++;
+									$i++; 
 									$strParamValue = '';
 									if ($prop_id)
 									{
-										$strParamValue = yandex_get_value2($arOfferItem, 'PARAM_'.$key, $prop_id, $arProperties, $arUserTypeFormat, $usedProtocol);
+										if(yandex_get_value2($arOfferItem, 'PARAM_'.$key, 246, $arProperties, $arUserTypeFormat, $usedProtocol)){
+										$strParamValue = yandex_get_value2($arOfferItem, 'PARAM_'.$key, 246, $arProperties, $arUserTypeFormat, $usedProtocol);
+										}elseif(yandex_get_value2($arOfferItem, 'PARAM_'.$key, 242, $arProperties, $arUserTypeFormat, $usedProtocol)){
+											$strParamValue = yandex_get_value2($arOfferItem, 'PARAM_'.$key, 242, $arProperties, $arUserTypeFormat, $usedProtocol);
+										}
+										
 									}
 									if ('' != $strParamValue){
-										
+										$val_pic = $strParamValue;
 										$strOfferYandex .= "<picture>".$strParamValue."</picture>\n";
 										
 										}elseif($i == 1){
@@ -1771,27 +1777,36 @@ if($ob3 = $res3->GetNextElement())
 										
 									
 								}
-
+			if(!$val_pic){
+$strOfferYandex .= "<picture>".(!empty($strFile) ? $strFile : $arItem['YANDEX_PICT'])."</picture>\n";
+			}
 						//$strOfferYandex .= "<picture>".(!empty($strFile) ? $strFile : $arItem['YANDEX_PICT'])."</picture>\n";
 					}else{
 						$i=0;
+						$val_pic2 = '';
 							foreach ($XML_DATA['XML_DATA']['PARAMS'] as $key => $prop_id)
 								{
 									$i++;
 									$strParamValue = '';
 									if ($prop_id)
 									{
-										$strParamValue = yandex_get_value2($arOfferItem, 'PARAM_'.$key, $prop_id, $arProperties, $arUserTypeFormat, $usedProtocol);
+										if(yandex_get_value2($arOfferItem, 'PARAM_'.$key, 246, $arProperties, $arUserTypeFormat, $usedProtocol)){
+										$strParamValue = yandex_get_value2($arOfferItem, 'PARAM_'.$key, 246, $arProperties, $arUserTypeFormat, $usedProtocol);
+										}elseif(yandex_get_value2($arOfferItem, 'PARAM_'.$key, 242, $arProperties, $arUserTypeFormat, $usedProtocol)){
+											$strParamValue = yandex_get_value2($arOfferItem, 'PARAM_'.$key, 242, $arProperties, $arUserTypeFormat, $usedProtocol);
+										}
 									}
 									if ('' != $strParamValue){
-										
-										$strOfferYandex .= "<picture>".$strParamValue."</picture>\n";
+										$val_pic2 = $strParamValue;
+										$strOfferYandex .= "<picture>".$strParamValue.$prop_id."</picture>\n";
 										
 									}elseif($i == 1){
 									//$strOfferYandex .= "<picture>".(!empty($strFile) ? $strFile : $arItem['YANDEX_PICT'])."</picture>\n";
 									}
 								}
-						
+						if(!$val_pic2){
+							$strOfferYandex .= "<picture>".(!empty($strFile) ? $strFile : $arItem['YANDEX_PICT'])."</picture>\n";
+						}
 			//$strOfferYandex.="<picture1>".print_r($arOfferItem)."</picture1>\n";
 						}
 						/*if($params_title){
