@@ -354,7 +354,7 @@ if($arResult['ITEMS']){?>
 				}
 			);
 			
-		})
+		});
 	</script>
 <?}
 $frame->end();?>

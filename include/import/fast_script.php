@@ -21,14 +21,14 @@ if($ob = $res->GetNextElement())
  $quant = CCatalogProduct::GetByID($arFields["ID"]);
  if((int)$quant["QUANTITY"] <= 0){
   echo "<pre>";
-  print_r($quant["QUANTITY"]);
-		print_r($arFields1);
+  //print_r($quant["QUANTITY"]);
+	//	print_r($arFields1);
 		echo "</pre>";
 	//	CIBlockElement::SetPropertyValueCode($arFields1["ID"], "KOL_SORT_CAT", 0);
  }else{
 	 echo "<pre>";
-  print_r($quant["QUANTITY"]);
-		print_r($arFields1);
+ // print_r($quant["QUANTITY"]);
+	//	print_r($arFields1);
 		echo "</pre>";
 	// CIBlockElement::SetPropertyValueCode($arFields1["ID"], "KOL_SORT_CAT", 1);
  }
@@ -36,7 +36,6 @@ if($ob = $res->GetNextElement())
 }
 		
 	}
-	
 /*	 //CIBlockElement::SetPropertyValueCode($ar_fields["ID"], "KOL_SORT_CAT", 6058);
 $arSelect = Array("ID", "NAME", "DATE_ACTIVE_FROM", "PROPERTY_CML2_LINK", "QUANTYTY");
 $arFilter = Array("IBLOCK_ID"=>27, "PROPERTY_CML2_LINK"=>83768);

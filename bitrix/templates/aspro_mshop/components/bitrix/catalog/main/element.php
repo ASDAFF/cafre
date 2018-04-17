@@ -258,8 +258,9 @@ if($arAccessories){
 						}
 						$ElementOfferIblockID = (!empty($arSKU) ? $arSKU['IBLOCK_ID'] : 0);
 						?>
-
-						<?$APPLICATION->IncludeComponent("bitrix:catalog.bigdata.products", "main", array(
+<!--<div class="detail-bigdata" data-detailurl="<?//=$arResult["FOLDER"].$arResult["URL_TEMPLATES"]["element"];?>" data-secid="<?//=$arResult["VARIABLES"]["SECTION_ID"];?>" data-seccode="<?//=$arResult["VARIABLES"]["SECTION_CODE"];?>" data-secelemid="<?//=$arResult["VARIABLES"]["SECTION_ID"];?>" data-secelemcode="<?//=$arResult["VARIABLES"]["SECTION_CODE"];?>" data-id="<?//=$ElementID;?>" data-elementofferiblockid="<?//=$ElementOfferIblockID;?>">
+</div>-->
+							<?$APPLICATION->IncludeComponent("bitrix:catalog.bigdata.products", "main", array(
 							"LINE_ELEMENT_COUNT" => 5,
 							"TEMPLATE_THEME" => (isset($arParams['TEMPLATE_THEME']) ? $arParams['TEMPLATE_THEME'] : ''),
 							"DETAIL_URL" => $arResult["FOLDER"].$arResult["URL_TEMPLATES"]["element"],
@@ -559,7 +560,7 @@ if($arAccessories){
 //$arSKU = CCatalogSKU::GetInfoByProductIBlock($arParams['IBLOCK_ID']);
 ?>
 <div class="detail_footer">
-	<?$APPLICATION->IncludeComponent(
+<?/*$APPLICATION->IncludeComponent(
 	"bitrix:catalog.viewed.products", 
 	"main", 
 	array(
@@ -630,11 +631,11 @@ if($arAccessories){
 		"ADDITIONAL_PICT_PROP_26" => "MORE_PHOTO",
 		"OFFER_TREE_PROPS_26" => array(
 			0 => "-",
-		),*/
+		),
 		"SHOW_MEASURE" => $arParams['SHOW_MEASURE']
 	),
 	false, array("HIDE_ICONS"=>"Y")
-);?>
+);*/?>
 </div>
 <?
 $page_seo_params["title"] = $APPLICATION->GetTitle();

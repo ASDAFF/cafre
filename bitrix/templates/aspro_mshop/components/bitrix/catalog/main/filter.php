@@ -34,7 +34,7 @@
 	?>
 	<?
 	$APPLICATION->IncludeComponent(
-		"bitrix:catalog.smart.filter",
+		"lets:catalog.smart.filter",
 		($arParams["AJAX_FILTER_CATALOG"]=="Y" ? "main_ajax" : "main"),
 		Array(
 			"HIDE_NOT_AVAILABLE"=> $arParams["HIDE_NOT_AVAILABLE"],

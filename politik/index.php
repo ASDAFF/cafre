@@ -6,14 +6,13 @@ $APPLICATION->SetTitle("Политика обработки персональных данных");
 <h1 style="text-align: center;"><span style="font-weight: 700;">ПОЛИТИКА</span></h1>
 <p style="text-align: center;">
 </p>
-<h1 style="text-align: center;">
-<p>
+<p style="text-align: center;">
  <span style="font-weight: 700;">в отношении обработки персональных данных</span>
 </p>
-<p>
+<p style="text-align: center;">
  <span style="font-weight: 700;">ООО «Кафре»</span>
 </p>
- </h1>
+
 <div class="ol_list">
 <ol>
 	<li>

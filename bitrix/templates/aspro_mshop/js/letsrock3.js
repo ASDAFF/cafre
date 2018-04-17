@@ -1,4 +1,83 @@
 $(function() {
+	var view = $(document).find('.block_viewed');
+if(view){
+	var basketaction = view.attr("data-basketaction");
+	var topsecid = view.attr("data-topsecid");
+		$.ajax({
+					url: "/ajax/section_viewed.php", 
+					type: "post",
+					data: { 
+						"basketaction": basketaction,
+						"topsecid": topsecid
+					},
+					success: function(data){
+						$('.block_viewed').html(data);
+					}
+		});
+}
+var view2 = $(document).find('.detail_footer');
+if(view2){
+		$.ajax({
+					url: "/ajax/detail_view.php", 
+					type: "post",
+					data: {},
+					success: function(data){
+						$('.detail_footer').html(data);
+					}
+		});
+}
+var bigdata = $(document).find('.block_bigdata');
+if(bigdata){
+	var detailurl = bigdata.attr("data-detailurl");
+	var secid = bigdata.attr("data-secid");
+	var seccode = bigdata.attr("data-seccode");
+	var secelemid = bigdata.attr("data-secelemid");
+	var secelemcode = bigdata.attr("data-secelemcode");
+	var id = bigdata.attr("data-id");
+	var elementofferiblockid = bigdata.attr("data-elementofferiblockid");
+		$.ajax({
+					url: "/ajax/section_bigdata.php", 
+					type: "post",
+					data: { 
+						"detailurl": detailurl,
+						"secid": secid,
+						"seccode": seccode,
+						"secelemid": secelemid,
+						"secelemcode": secelemcode,
+						"id": id,
+						"elementofferiblockid": elementofferiblockid
+					},
+					success: function(data){
+						$('.block_bigdata').html(data);
+					}
+		});
+}
+var bigdata2 = $(document).find('.detail-bigdata');
+if(bigdata2){
+	var detailurl = bigdata2.attr("data-detailurl");
+	var secid = bigdata2.attr("data-secid");
+	var seccode = bigdata2.attr("data-seccode");
+	var secelemid = bigdata2.attr("data-secelemid");
+	var secelemcode = bigdata2.attr("data-secelemcode");
+	var id = bigdata2.attr("data-id");
+	var elementofferiblockid = bigdata2.attr("data-elementofferiblockid");
+		$.ajax({
+					url: "/ajax/detail_bigdata.php", 
+					type: "post",
+					data: { 
+						"detailurl": detailurl,
+						"secid": secid,
+						"seccode": seccode,
+						"secelemid": secelemid,
+						"secelemcode": secelemcode,
+						"id": id,
+						"elementofferiblockid": elementofferiblockid
+					},
+					success: function(data){
+						$('.detail-bigdata').html(data);
+					}
+		});
+}
 	var slides = $(".slides_index .slides").html();
 	$('.recomlist').append(slides);
 	

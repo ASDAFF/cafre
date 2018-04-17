@@ -87,7 +87,7 @@ $brend_list=array();
 										  if(!($ar_result3 = $db_list3->GetNext()))continue;
 											?>
 										<li>
-										<a href="<?echo $li2["LINK"].$newvalb[2].'/';?>" class="<?($li2["SELECTED"] ? ' current' : '')?>"><?=$newvalb[0]?></a>
+										<a href="<?echo $li2["LINK"].$newvalb[2].'/';?>" class="<?($li2["SELECTED"] ? ' current' : '')?>"><span><?=$newvalb[0]?></span></a>
 										</li>
 										<?
 										
@@ -153,7 +153,7 @@ if ($arSection = $rsSections->Fetch())
 	$res = CIBlockElement::GetList(Array(), $arFilter2, Array("PROPERTY_CATALOG_BREND"), Array(), $arSelect);
 if($ob = $res->GetNextElement())?>
 <?}*/?>
-					<a class="<?=($arItem["SELECTED"] ? ' current' : '')?>" href="<?=$arItem["LINK"]?>"><?=$arItem["TEXT"]?></a>
+					<a class="<?=($arItem["SELECTED"] ? ' current' : '')?>" href="<?=$arItem["LINK"]?>"><span><?=$arItem["TEXT"]?></span></a>
 				</li>
 			<?endif;?>
 			<?if($arItem["DEPTH_LEVEL"]==2&&$brend):
@@ -174,10 +174,10 @@ if($ob = $res->GetNextElement())?>
 			endif;?>
 			<?if($arItem["DEPTH_LEVEL"]==3&&!$brend):
 			if(unserialize($arItem["SVIZ_BR"]) == FALSE){
-				$subSubArray[$numSubLevel][]='<li><a href="'.$arItem["LINK"].'" class="'.($arItem["SELECTED"] ? ' current' : '').'">'.$arItem["TEXT"].'</a></li>';
+				$subSubArray[$numSubLevel][]='<li><a href="'.$arItem["LINK"].'" class="'.($arItem["SELECTED"] ? ' current' : '').'"><span>'.$arItem["TEXT"].'</span></a></li>';
 			}else{
 			$numSubLevel3++;
-				$subSubArray[$numSubLevel][]='<li data-lvl="'.$numSubLevel3.'"><a href="'.$arItem["LINK"].'" class="'.($arItem["SELECTED"] ? ' current' : '').'">'.$arItem["TEXT"].'</a></li>';
+				$subSubArray[$numSubLevel][]='<li data-lvl="'.$numSubLevel3.'"><a href="'.$arItem["LINK"].'" class="'.($arItem["SELECTED"] ? ' current' : '').'"><span>'.$arItem["TEXT"].'</span></a></li>';
 			}
 			endif;?>
 			<?if($arItem["DEPTH_LEVEL"]==3&&!$brend):

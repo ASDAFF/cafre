@@ -2664,10 +2664,9 @@ width: 530px !important;
 
 .menu__item-lvl_2 ul li.active > a {
 	color: #eb5470;
-	border-bottom: 1px dotted;
 }
 
-.menu__item-lvl_2 ul li.active > a:after {
+.menu__item-lvl_2 ul li.active > a > span:after {
 	position: absolute;
 	right: -10px;
 	bottom: 6px;
@@ -2775,6 +2774,8 @@ width: 530px !important;
 
 .menu__item-lvl ul li > a {
 	position: relative;
+	display: block;
+	max-width: 90%;
 	color: #000;
 	text-transform: uppercase;
 	text-decoration: none;
@@ -2783,21 +2784,24 @@ width: 530px !important;
 	padding-bottom: 2px;
 }
 
-.menu__item-lvl ul li > a:hover {
+.menu__item-lvl ul li > a:hover > span {
 	color: #eb5470;
 	border-bottom: 1px dotted;
 }
 
 .menu__item-lvl_1 ul li > a {
+	display: block;
 	font-weight: 600;
+	max-width: 90%;
 }
 
-.menu__item-lvl_1 ul li.active > a {
+.menu__item-lvl_1 ul li.active > a > span {
+	position: relative;
 	color: #eb5470;
 	border-bottom: 1px dotted;
 }
 
-.menu__item-lvl_1 ul li.active > a:after {
+.menu__item-lvl_1 ul li.active > a > span:after {
 	position: absolute;
 	right: -10px;
 	bottom: 6px;
@@ -3039,10 +3043,13 @@ width: 530px !important;
 
 .menu__item-lvl_2 ul li.active > a {
 	color: #eb5470;
-	border-bottom: 1px dotted;
 }
 
-.menu__item-lvl_2 ul li.active > a:after {
+.menu__item-lvl_2 ul li.active > a > span {
+	position: relative;
+}
+
+.menu__item-lvl_2 ul li.active > a > span:after {
 	position: absolute;
 	right: -10px;
 	bottom: 6px;
@@ -3238,8 +3245,8 @@ div.title-search-result {
     text-align: center;
 }
 .new_all_brand li img{		
-    width: 80%;
-	    margin-bottom: 20px;
+    max-width: 80%;
+	margin-bottom: 20px;
 }
 .new_all_brand li::before{
 	display: none;
@@ -3289,6 +3296,41 @@ div.title-search-result {
 
 .result-row a.button.transparent:hover {
 	color: white !important;
+}
+
+.new_all_brand > ul {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+}
+
+.new_all_brand > ul > li {
+	width: 12.5%;
+	height: 100px;
+	margin-bottom: 20px;
+}	
+
+.new_all_brand > ul > li img {
+	max-height: 60px;
+}
+
+@media (max-width: 1200px) {
+	.new_all_brand > ul > li {
+		width: 20%;
+	}
+}
+
+@media (max-width: 1000px) {
+	.new_all_brand > ul > li {
+		width: 25%;
+	}
+}
+
+@media (max-width: 768px) {
+	.new_all_brand > ul > li {
+		width: auto;
+		flex: 1 1 auto;
+	}
 }
 
 @media (max-width: 600px) {

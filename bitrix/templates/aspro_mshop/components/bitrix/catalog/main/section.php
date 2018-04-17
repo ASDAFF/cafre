@@ -151,9 +151,9 @@ if($arResult["VARIABLES"]["SECTION_ID"]==5338){
     ?>
 	<li>
 	<a href="<?=$arSect["SECTION_PAGE_URL"];?>">
-	<?/*if($file333["src"]):?>
+	<?if($file333["src"]):?>
 	<img src="<?=$file333["src"];?>" alt="<?=$arSect["NAME"];?>"/>
-	<?endif;*/?>
+	<?endif;?>
 	<p><?echo $arSect["NAME"];?></p>
 	</a>
 	</li>
@@ -730,7 +730,7 @@ if($arFields["PREVIEW_PICTURE"]){
 			}
 			?>
 			</div>
-<?$APPLICATION->IncludeComponent(
+<?/*$APPLICATION->IncludeComponent(
 	"bitrix:catalog.viewed.products", 
 	"mshop", 
 	array(
@@ -814,14 +814,17 @@ if($arFields["PREVIEW_PICTURE"]){
 
 	),
 	false, array("HIDE_ICONS"=>"Y")
-);?>
+);*/?>
+<div class="block_viewed" data-basketaction="<?=$basketAction;?>" data-topsecid="<?=$section["ID"];?>">
+</div>
 <?
 //$GLOBALS["CATALOG_CURRENT_ELEMENT_ID"] = $ElementID;
 
 	$arSKU = CCatalogSKU::GetInfoByProductIBlock($arParams['IBLOCK_ID']);
     $ElementOfferIblockID = (!empty($arSKU) ? $arSKU['IBLOCK_ID'] : 0);
 ?>
-
+<!--<div class="block_bigdata" data-detailurl="<?//=$arResult["FOLDER"].$arResult["URL_TEMPLATES"]["element"];?>" data-secid="<?//=$arResult["VARIABLES"]["SECTION_ID"];?>" data-seccode="<?//=$arResult["VARIABLES"]["SECTION_CODE"];?>" data-secelemid="<?//=$arResult["VARIABLES"]["SECTION_ID"];?>" data-secelemcode="<?//=$arResult["VARIABLES"]["SECTION_CODE"];?>" data-id="<?//=$ElementID;?>" data-elementofferiblockid="<?//=$ElementOfferIblockID;?>">
+</div>-->
 <?$APPLICATION->IncludeComponent("bitrix:catalog.bigdata.products", "mshop", array(
 	"LINE_ELEMENT_COUNT" => 5,
 	"TEMPLATE_THEME" => (isset($arParams['TEMPLATE_THEME']) ? $arParams['TEMPLATE_THEME'] : ''),

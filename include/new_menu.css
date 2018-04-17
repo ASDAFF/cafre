@@ -77,7 +77,7 @@
 			width: 25%;
 			max-width: 264px;
 			height: 350px;
-			padding: 26px 0 16px 40px;
+			padding: 20px 0 16px 40px;
 			box-sizing: border-box;
 			border-right: 1px solid #dcdcdc;
 		}
@@ -101,11 +101,11 @@
 			border-bottom: 1px solid transparent;
   			font-size: 12px;
   			padding-bottom: 2px;
+			padding: 5px 0;
 		}
 
 		.menu__item-lvl ul li > a:hover {
 			color: #eb5470;
-			border-bottom: 1px dotted;
 		}
 
 		.menu__item-lvl_1 ul li > a {
@@ -114,19 +114,6 @@
 
 		.menu__item-lvl_1 ul li.active > a {
 			color: #eb5470;
-			border-bottom: 1px dotted;
-		}
-
-		.menu__item-lvl_1 ul li.active > a:after {
-			position: absolute;
-			right: -10px;
-			bottom: 6px;
-			content: '';
-			width: 4px;
-			height: 4px;
-			border-top: 1px solid #eb5470;
-			border-right: 1px solid #eb5470;
-			transform: rotate(45deg);
 		}
 
 		.menu__item-lvl_2 ul {
