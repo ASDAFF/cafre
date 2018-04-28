@@ -174,11 +174,15 @@ jQuery(function($){
 		</div>
 		<?if(intVal($arParams['ELEMENT_ID'])):?>
 <script type="text/javascript">
+$("#one_click_buy_form_button").on('click',function(){
+	BX.showWait();
+});
+
 window.googole_price = window.googole_price || 0;
 window.googole_prod = window.googole_prod || [];
 
 $('#one_click_buy_form').on('action_ga', function(){
-	
+	BX.closeWait();
 var p = $('.price_on').text();
 var temp = new Array();
 temp = p.split(' ');

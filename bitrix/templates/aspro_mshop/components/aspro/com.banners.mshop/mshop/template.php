@@ -14,13 +14,14 @@
 				<div class="item s_<?=$i;?> <?=($isUrl ? "hover" : "");?> <?=($arItem["PROPERTIES"]["BANNER_SIZE"]["VALUE_XML_ID"] ? $arItem["PROPERTIES"]["BANNER_SIZE"]["VALUE_XML_ID"] : "normal");?>" id="<?=$this->GetEditAreaId($arItem['ID']);?>">
 					<?$arItem["FORMAT_NAME"]=rip_tags($arItem["~NAME"]);?>
 					<?if($isUrl){?>
-						<a href="<?=$arItem["PROPERTIES"]["URL_STRING"]["VALUE"]?>" class="opacity_block" title="<?=$arItem["FORMAT_NAME"];?>" target="<?=$arItem["PROPERTIES"]["TARGETS"]["VALUE_XML_ID"]?>"></a>
+					<!---->
+						<a href="<?=$arItem["PROPERTIES"]["URL_STRING"]["VALUE"]?>" class="opacity_block" title="<?=$arItem["FORMAT_NAME"];?>" <?=$arItem["PROPERTIES"]["TARGETS"]["VALUE_XML_ID"]?'target="'.$arItem["PROPERTIES"]["TARGETS"]["VALUE_XML_ID"].'"':'';?>></a>
 					<?}?>
 					<div class="wrap_tizer">
 						<div class="wr_block">
 							<span class="wrap_outer title">
 								<?if($isUrl){?>
-									<a class="outer_text" href="<?=$arItem["PROPERTIES"]["URL_STRING"]["VALUE"]?>" target="<?=$arItem["PROPERTIES"]["TARGETS"]["VALUE_XML_ID"]?>">
+									<a class="outer_text" href="<?=$arItem["PROPERTIES"]["URL_STRING"]["VALUE"]?>" <?=$arItem["PROPERTIES"]["TARGETS"]["VALUE_XML_ID"]?'target="'.$arItem["PROPERTIES"]["TARGETS"]["VALUE_XML_ID"].'"':'';?>>
 								<?}else{?>
 									<span class="outer_text">
 								<?}?>
@@ -38,7 +39,7 @@
 							<div class="wr_block price">
 								<span class="wrap_outer">
 									<?if($isUrl){?>
-										<a class="outer_text" href="<?=$arItem["PROPERTIES"]["URL_STRING"]["VALUE"]?>" target="<?=$arItem["PROPERTIES"]["TARGETS"]["VALUE_XML_ID"]?>">
+										<a class="outer_text" href="<?=$arItem["PROPERTIES"]["URL_STRING"]["VALUE"]?>" <?=$arItem["PROPERTIES"]["TARGETS"]["VALUE_XML_ID"]?'target="'.$arItem["PROPERTIES"]["TARGETS"]["VALUE_XML_ID"].'"':'';?>>
 									<?}else{?>
 										<span class="outer_text">
 									<?}?>
@@ -55,7 +56,7 @@
 						<?}?>
 					</div>
 					<?if($isUrl){?>
-						<a href="<?=$arItem["PROPERTIES"]["URL_STRING"]["VALUE"]?>" target="<?=$arItem["PROPERTIES"]["TARGETS"]["VALUE_XML_ID"]?>">
+						<a href="<?=$arItem["PROPERTIES"]["URL_STRING"]["VALUE"]?>" <?=$arItem["PROPERTIES"]["TARGETS"]["VALUE_XML_ID"]?'target="'.$arItem["PROPERTIES"]["TARGETS"]["VALUE_XML_ID"].'"':'';?>>
 					<?}?>
 						<img src="<?=($arItem["DETAIL_PICTURE"]["SRC"] ? $arItem["DETAIL_PICTURE"]["SRC"] : $arItem["PREVIEW_PICTURE"]["SRC"])?>" alt="<?=$arItem["FORMAT_NAME"]?>" title="<?=$arItem["FORMAT_NAME"]?>" />
 					<?if($isUrl){?>

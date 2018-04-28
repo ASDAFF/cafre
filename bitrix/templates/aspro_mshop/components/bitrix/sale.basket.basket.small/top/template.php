@@ -79,7 +79,7 @@ usort($arBasketIDs, 'CMShop::cmpByID');
 				<div class="basket_popup_wrapper">
 					<div class="basket_popup_wrapp" <?=($_SERVER["REQUEST_METHOD"] == "POST" && $_POST["ACTION"]=='del' && $_POST["ACTION"]!='top' ? "style='display: block;'" : "");?>>
 						<div class="cart_wrapper" <?if ($count>3) { echo 'style="overflow-y:scroll;height:280px;"';};?>>
-							<table class="cart_shell" width="100%" border="0">
+							<table class="cart_shell">
 								<tbody>
 								<tr class="catalog_item">
 												<td class="thumb-cell">
@@ -185,7 +185,8 @@ usort($arBasketIDs, 'CMShop::cmpByID');
 							</table>
 						</div>
 						<div class="basket_empty clearfix">
-							<table cellspacing="0" cellpadding="0" border="0" width="100%">
+						<!--cellspacing="0" cellpadding="0" border="0" width="100%"-->
+							<table class="tab2_top_bas">
 								<tr>
 									<td class="image"><div></div></td>
 									<td class="description"><div class="basket_empty_subtitle"><?=GetMessage("BASKET_EMPTY_SUBTITLE")?></div><div class="basket_empty_description"><?=GetMessage("BASKET_EMPTY_DESCRIPTION")?></div></td>

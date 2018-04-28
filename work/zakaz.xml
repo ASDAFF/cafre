@@ -6416,3 +6416,438 @@ double:1078
 --
 double:1079
 --
+Array
+(
+    [SID] => 26
+    [UID] => 1336
+    [Date] => 2018-04-25T06:30:00
+    [PrCode] => 
+    [Comm] => еуые
+    [Name] => Dee Dee
+    [Phone] => 8(999) 999-9999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000021780
+                    [Qty] => 1
+                    [Cost] => 575
+                )
+
+        )
+
+)
+res=stdClass Object
+(
+    [return] => 1
+)
+double:1336
+--
+Array
+(
+    [SID] => 26
+    [UID] => 1337
+    [Date] => 2018-04-25T06:45:43
+    [PrCode] => 
+    [Comm] => еуыеуееее
+    [Name] => Dee Dee
+    [Phone] => 8(999) 999-9999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000010118
+                    [Qty] => 1
+                    [Cost] => 385
+                )
+
+        )
+
+)
+res=stdClass Object
+(
+    [return] => 1
+)
+double:1337
+--
+Array
+(
+    [SID] => 26
+    [UID] => 1338
+    [Date] => 2018-04-25T06:46:18
+    [PrCode] => 
+    [Comm] => twqqwtq
+    [Name] => Dee Dee
+    [Phone] => 8(999) 999-9999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000010118
+                    [Qty] => 1
+                    [Cost] => 385
+                )
+
+        )
+
+)
+res=stdClass Object
+(
+    [return] => 1
+)
+double:1338
+--
+Array
+(
+    [SID] => 26
+    [UID] => 1351
+    [Date] => 2018-04-25T12:50:44
+    [PrCode] => 
+    [Comm] => 
+    [Name] => Dee Dee
+    [Phone] => 8(999) 999-9999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000024615
+                    [Qty] => 1
+                    [Cost] => 750
+                )
+
+        )
+
+)
+res=stdClass Object
+(
+    [return] => 1
+)
+double:1351
+--
+Array
+(
+    [SID] => 26
+    [UID] => 1352
+    [Date] => 2018-04-25T12:52:21
+    [PrCode] => 
+    [Comm] => 
+    [Name] => Dee Dee
+    [Phone] => 8(999) 999-9999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000024615
+                    [Qty] => 1
+                    [Cost] => 750
+                )
+
+        )
+
+)
+res=stdClass Object
+(
+    [return] => 1
+)
+double:1352
+--
+Array
+(
+    [SID] => 26
+    [UID] => 1353
+    [Date] => 2018-04-25T12:52:49
+    [PrCode] => 
+    [Comm] => 
+    [Name] => Dee Dee
+    [Phone] => 8(999) 999-9999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000024615
+                    [Qty] => 1
+                    [Cost] => 750
+                )
+
+        )
+
+)
+res=stdClass Object
+(
+    [return] => 1
+)
+double:1353
+--
+Array
+(
+    [SID] => 26
+    [UID] => 1354
+    [Date] => 2018-04-25T12:53:55
+    [PrCode] => 
+    [Comm] => 
+    [Name] => Dee Dee
+    [Phone] => 8(999) 999-9999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000024615
+                    [Qty] => 1
+                    [Cost] => 750
+                )
+
+        )
+
+)
+res=stdClass Object
+(
+    [return] => 1
+)
+double:1354
+--
+Array
+(
+    [SID] => 26
+    [UID] => 1355
+    [Date] => 2018-04-25T12:56:10
+    [PrCode] => 
+    [Comm] => 
+    [Name] => Dee Dee
+    [Phone] => 8(999) 999-9999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000024615
+                    [Qty] => 1
+                    [Cost] => 750
+                )
+
+        )
+
+)
+res=stdClass Object
+(
+    [return] => 1
+)
+double:1355
+--
+Array
+(
+    [SID] => 26
+    [UID] => 1356
+    [Date] => 2018-04-25T12:58:11
+    [PrCode] => 
+    [Comm] => 
+    [Name] => Dee Dee
+    [Phone] => 8(999) 999-9999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000024615
+                    [Qty] => 1
+                    [Cost] => 750
+                )
+
+        )
+
+)
+res=stdClass Object
+(
+    [return] => 1
+)
+double:1356
+--
+Array
+(
+    [SID] => 26
+    [UID] => 1357
+    [Date] => 2018-04-25T12:59:53
+    [PrCode] => 
+    [Comm] => 
+    [Name] => Dee Dee
+    [Phone] => 8(999) 999-9999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000024615
+                    [Qty] => 1
+                    [Cost] => 750
+                )
+
+        )
+
+)
+res=stdClass Object
+(
+    [return] => 1
+)
+double:1357
+--
+Array
+(
+    [SID] => 26
+    [UID] => 1358
+    [Date] => 2018-04-25T13:00:33
+    [PrCode] => 
+    [Comm] => 
+    [Name] => Dee Dee
+    [Phone] => 8(999) 999-9999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000024615
+                    [Qty] => 1
+                    [Cost] => 750
+                )
+
+        )
+
+)
+res=stdClass Object
+(
+    [return] => 1
+)
+double:1358
+--
+Array
+(
+    [SID] => 26
+    [UID] => 1359
+    [Date] => 2018-04-25T13:01:31
+    [PrCode] => 
+    [Comm] => 
+    [Name] => Dee Dee
+    [Phone] => 8(999) 999-9999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000024615
+                    [Qty] => 1
+                    [Cost] => 750
+                )
+
+        )
+
+)
+res=stdClass Object
+(
+    [return] => 1
+)
+double:1359
+--
+Array
+(
+    [SID] => 26
+    [UID] => 1360
+    [Date] => 2018-04-25T13:06:47
+    [PrCode] => 
+    [Comm] => 
+    [Name] => Dee Dee
+    [Phone] => 8(999) 999-9999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000024615
+                    [Qty] => 1
+                    [Cost] => 750
+                )
+
+        )
+
+)
+res=stdClass Object
+(
+    [return] => 1
+)
+double:1360
+--
+Array
+(
+    [SID] => 26
+    [UID] => 1361
+    [Date] => 2018-04-25T13:07:43
+    [PrCode] => 
+    [Comm] => 
+    [Name] => Dee Dee
+    [Phone] => 8(999) 999-9999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000024615
+                    [Qty] => 1
+                    [Cost] => 750
+                )
+
+        )
+
+)
+res=stdClass Object
+(
+    [return] => 1
+)
+double:1361
+--
+Array
+(
+    [SID] => 26
+    [UID] => 1362
+    [Date] => 2018-04-25T13:12:43
+    [PrCode] => 
+    [Comm] => 
+    [Name] => Dee Dee
+    [Phone] => 8(999) 999-9999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000024615
+                    [Qty] => 1
+                    [Cost] => 750
+                )
+
+        )
+
+)
+res=stdClass Object
+(
+    [return] => 1
+)
+double:1362
+--

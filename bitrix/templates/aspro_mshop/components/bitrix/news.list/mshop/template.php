@@ -12,7 +12,7 @@
 			<?}?>
 			<?if($arItem["PREVIEW_PICTURE"]["SRC"]){?>
 				<!--<div class="img"><img src="<?//=$arItem["PREVIEW_PICTURE"]["SRC"]?>" alt="<?//=$name;?>" title="<?//=$name;?>"/></div>-->
-				<div class="img"><img src="<?=$arItem["PREVIEW_PICTURE"]["SRC"]?>"  /></div>
+				<div class="img"><img src="<?=$arItem["PREVIEW_PICTURE"]["SRC"]?>" alt=""  /></div>
 			<?}?>
 			<div class="title">
 				<?=$name;?>

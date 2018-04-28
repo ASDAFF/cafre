@@ -1,5 +1,6 @@
-<i alt="MasterCard" title="MasterCard" class="mastercard"></i>
-<i alt="Visa" title="Visa" class="visa" class="visa"></i>
-<i alt="ίνδεκρ.Δενόγθ" title="ίνδεκρ.Δενόγθ" class="yandex_money"></i>
-<i alt="WebMoney" title="WebMoney" class="webmoney"></i>
-<i alt="Qiwi" title="Qiwi" class="qiwi"></i>
+<!--alt="Qiwi" -->
+<i title="MasterCard" class="mastercard"></i>
+<i title="Visa" class="visa"></i>
+<i title="ίνδεκρ.Δενόγθ" class="yandex_money"></i>
+<i title="WebMoney" class="webmoney"></i>
+<i title="Qiwi" class="qiwi"></i>

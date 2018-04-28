@@ -71,7 +71,11 @@ if(!$_GET["ORDER_ID"]){
 ?>
 <a name="order_form"></a>
 <div class="order">
-
+<?		if($USER->IsAuthorized())
+	{
+	?>
+<h3 class="on_authord">Вы успешно авторизованы</h3>
+	<?}?>
 <!--order-checkout-->
 <div id="order_form_div">
 <NOSCRIPT>

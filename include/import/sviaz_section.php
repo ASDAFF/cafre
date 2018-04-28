@@ -56,7 +56,7 @@ $res2 = $el->Update($arFields2["ID"], $arLoadProductArray);
 
  include($_SERVER["DOCUMENT_ROOT"]."/include/import/class.php"); //Класс для открытия файа csv
 
-$fileurl = $_SERVER["DOCUMENT_ROOT"].'/include/import/on_tov_raz.csv'; //Сам файл csv
+$fileurl = $_SERVER["DOCUMENT_ROOT"].'/include/import/crems.csv'; //Сам файл csv
 try {
 	
 
@@ -69,13 +69,14 @@ try {
     fwrite($f, $str_value);
     fclose($f);
 }*/
-
+//6716
     $csv = new CSV($fileurl); //Открываем наш csv
     $get_csv = $csv->getCSV();
  $result = array();
  $result2 = array();
+ $i = 0;
     foreach ($get_csv as $value2) {//получаем csv по столбцам, все уже настроенно, выбор идет по коду 1с
-	if($value2[3] == FALSE)continue;
+	if($value2[0] == FALSE)continue;
 	/*$arex = explode('/',$value2[3]);
 	if($arex[9] != NULL){
 	$code=$arex[9];
@@ -88,21 +89,25 @@ try {
 	echo $code;
 	echo '</pre>';*/
 	//if($value2[3] == "SECTION_ID" || $value2[3] == "#Н/Д"){continue;} //исключал товары у которых нет id разделов
-	$arf=array('IBLOCK_ID'=>26, 'ID'=>$value2[0]);
+	$arf=array('IBLOCK_ID'=>26, "!IBLOCK_SECTION_ID" =>FALSE);
 	$res = CIBlockElement::GetList(Array("SORT"=>"ASC"), $arf, false, false, array('ID','IBLOCK_ID', 'NAME','PROPERTY_CODE1C', 'IBLOCK_SECTION_ID'));
 
 	if($ob2 = $res->GetNextElement()){
 		
 	$arFields2 = $ob2->GetFields(); 
+	//var_dump($arFields2["PROPERTY_CODE1C_VALUE"]);
+	if(!strpos($value2[0], $arFields2["PROPERTY_CODE1C_VALUE"]))continue;
 	echo '<pre>';
 	print_r($arFields2);
-	echo 'Raz:'.$value2[3];
+	echo 'CODE:'.$value2[0];
+	echo 'NAME:'.$value2[1];
+	echo $i++;
 	echo '</pre>';
 	/*$el = new CIBlockElement;
 	$arLoadProductArray = Array(
-	"IBLOCK_SECTION" => $value2[3]
+	"IBLOCK_SECTION" => 6716
 	);
-	//$res3 = $el->Update($arFields2["ID"], $arLoadProductArray);*/
+	$res3 = $el->Update($arFields2["ID"], $arLoadProductArray);
 	//$pos = strpos($arFields2["PROPERTY_CODE1C_VALUE"], $value2[0]);
 
 	

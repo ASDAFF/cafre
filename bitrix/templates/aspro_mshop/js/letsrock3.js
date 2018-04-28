@@ -1,4 +1,11 @@
 $(function() {
+	/*$(".ckeck-a").on("click",function(){
+		console.log(setTimeout(location.href, 500));
+	});*/
+	
+	$(".check-filt-sv").on('click', function(){
+		console.log($(this).attr("data-checkurl"));
+	});
 	var view = $(document).find('.block_viewed');
 if(view){
 	var basketaction = view.attr("data-basketaction");

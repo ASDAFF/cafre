@@ -211,7 +211,7 @@ body #header ul.menu li .child .child_wrapp:not(.child_wrapp-brands) {
 }
 
 
-/* áðåíäû 26.03.2018 */
+/* Ã¡Ã°Ã¥Ã­Ã¤Ã» 26.03.2018 */
 
 .bbrands {
 	padding: 20px 0 0;
@@ -2314,7 +2314,7 @@ margin: 0 0 10px;
 }
 
 .top_brand_block .more-btn::before {
-	content: 'Ïîêàçàòü âñå áðåíäû';
+	content: 'ÃÃ®ÃªÃ Ã§Ã Ã²Ã¼ Ã¢Ã±Ã¥ Ã¡Ã°Ã¥Ã­Ã¤Ã»';
 }
 /*
 .top_brand_block::before {
@@ -2326,7 +2326,7 @@ margin: 0 0 10px;
 	width: 100%;
 	text-align: center;
 	padding: 10px 0;
-	content: 'Âûáåðèòå áðåíä';
+	content: 'Ã‚Ã»Ã¡Ã¥Ã°Ã¨Ã²Ã¥ Ã¡Ã°Ã¥Ã­Ã¤';
 }
 */
 
@@ -3338,4 +3338,199 @@ div.title-search-result {
     padding-top: 20px;
 	height: auto !important;
 	}
+}
+.link_filt{
+	    font-size: 15px;
+		margin-bottom: 10px !important;
+}
+.on_link_filt{
+	    color: #1d1a1a;
+}
+.no-elementlik, .bx_filter_parameters_box_container>.disabled{
+	color:#bdbdbd;
+}
+div[id^="wait_"] {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0;
+    bottom: 0;
+    border: none !important;
+    background: rgba(255, 255, 255, 0.611764705882353) !important;
+    color: transparent !important;
+}
+
+div[id^="wait_"]:before {
+display: block;
+content: url(../images/Spinner-1s-200px.gif);
+position: absolute;
+top: calc(50% - 60px);
+left: calc(50% - 60px);
+}
+.middle-h-row{
+	width:100%;
+	border:0;
+}
+.cart_shell{
+	width:100%;
+	border:0;
+}
+.tab2_top_bas{
+	width:100%;
+	border:0;
+}
+.slides_ind{
+	width:100%;
+	height:100%;
+	border:0;
+}
+.imgtop_elem{
+	border:0;
+}
+.oldp-new{
+ text-decoration:line-through;
+     font-size: 11px;
+    line-height: 15px;
+    font-weight: normal;
+}
+.br_bot{
+	border: 0;
+}
+.soc_bot{
+	border: 0;
+}
+.MsoNormal span{
+	font-family:"Arial", "sans-serif";
+}
+.MsoListParagraphCxSpFirst{
+	text-indent:-18.0pt;
+	mso-outline-level: 3;
+	mso-list:l0 level1 lfo1;
+}
+.MsoListParagraphCxSpFirst > span{
+	font-family:"Wingdings";
+	mso-fareast-font-family:Wingdings;
+	mso-bidi-font-family:Wingdings;
+}
+.MsoListParagraphCxSpFirst > span > span{
+	font-variant-numeric: normal;
+	font-stretch: normal; 
+	font-size: 7pt; 
+	line-height: normal; 
+	font-family: "Times New Roman";
+}
+.MsoListParagraphCxSpMiddle{
+	text-indent:-18.0pt;
+	mso-outline-level: 3;
+	mso-list:l0 level1 lfo1;
+}
+.MsoListParagraphCxSpMiddle > span{
+	font-family:Wingdings; 
+	mso-fareast-font-family:Wingdings;
+	mso-bidi-font-family:Wingdings;
+}
+.MsoListParagraphCxSpMiddle > span > span{
+	font-variant-numeric: normal;
+	font-stretch: normal;
+	font-size: 7pt; 
+	line-height: normal; 
+	font-family: "Times New Roman";
+}
+.MsoListParagraphCxSpLast{
+	text-indent:-18.0pt;
+	mso-outline-level: 3;
+	mso-list:l0 level1 lfo1;
+}
+.MsoListParagraphCxSpLast > span{
+	font-family:Wingdings; 
+	mso-fareast-font-family:Wingdings;
+	mso-bidi-font-family:Wingdings;
+}
+.MsoListParagraphCxSpLast > span > span{
+	font-variant-numeric: normal; 
+	font-stretch: normal; 
+	font-size: 7pt; 
+	line-height: normal; 
+	font-family: "Times New Roman";
+}
+.MsoListParagraphCxSpLast{
+	text-indent:-18.0pt;
+	mso-outline-level: 3;
+	mso-list:l0 level1 lfo1;
+}
+.offers_table{
+	width:100%;
+	border:0;
+}
+.reviews-post-table{
+	border:0;
+}
+#ORDER_FORM #order_form_content{
+	    position: relative;
+}
+#ORDER_FORM #order_form_content .order__next{
+	position: absolute !important;
+    right: 0 !important;
+    bottom: -50px !important;
+}
+#content .order{
+	padding-top: 50px !important;
+}
+.order__reg::after{
+	right: -100px !important;
+    width: 250px !important;
+}
+.on_authord{
+	position: absolute;
+    right: 0;
+    top: 140px;
+}
+.order__row{
+	    padding-top: 50px;
+		    padding-bottom: 30px;
+}
+
+.popup.enter_frame {
+	z-index: 99999;
+}
+
+.bt.in-cart.button {
+	text-decoration: none;
+	color: white;
+	font-size: 10px;
+}
+
+@media (max-width: 768px) {
+	#ORDER_FORM #order_form_content .order__next{
+		position: relative !important;
+	    right: 0 !important;
+	    bottom: 0 !important;
+	}
+	.order__row {
+	    padding-top: 0 !important; 
+	    padding-bottom: 0 !important; 
+	}
+	.on_authord{
+	    top: 260px !important;
+	}
+	
+	.bx_filter.bx_filter_vertical {
+		position: fixed;
+		left: 0;
+		top: 50%;
+		transform: translateY(-50%);
+	}
+
+	.bx_filter_bg {
+		position: absolute;
+		z-index: -1;
+		left: 50%;
+		top: 50%;
+		transform: translate(-50%,-50%);
+		width: 100vw;
+		height: 100vh;
+		content: '';
+		background: rgba(0,0,0,.15);
+	}
+
 }

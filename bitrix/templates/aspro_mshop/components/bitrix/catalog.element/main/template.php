@@ -42,7 +42,7 @@ if($arResult["OFFERS"]){
 }
 $arOfferProps = implode(';', $arParams['OFFERS_CART_PROPERTIES']);
 ?>
-<div dtaa-rel="<?=$arResult['DETAIL_PAGE_URL']?>" class="item_main_info <?=(!$showCustomOffer ? "noffer" : "");?>" id="<?=$arItemIDs["strMainID"];?>" itemscope="" itemtype="https://schema.org/Product">
+<div data-rel="<?=$arResult['DETAIL_PAGE_URL']?>" class="item_main_info <?=(!$showCustomOffer ? "noffer" : "");?>" <?=$arItemIDs["strMainID"]?'id="'.$arItemIDs["strMainID"].'"':''?> itemscope="" itemtype="https://schema.org/Product">
 <span class="detail_elem" style="display:none;"><?=$arResult["NAME"]?></span>
 <meta itemprop="name" content="<?=$arResult["NAME"]?>"/>
 	<div class="img_wrapper">
@@ -99,10 +99,10 @@ $alt = $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"];
 								<?if(!$isEmpty){?>
 								
                                     <a href="<?=$file2["src"];?>" <?=($bIsOneImage ? '' : 'rel="item_slider"')?> class="fancy" title="<?=$title;?>">
-                                <img border="0" src="<?=$file1["src"];?>" alt="Фото <?=$arResult["NAME"];//$alt;?>"  itemprop="image"/>
+                                <img class="imgtop_elem" src="<?=$file1["src"];?>" alt="Фото <?=$arResult["NAME"];//$alt;?>"  itemprop="image"/>
                                     </a>
                                 <?}else{?>
-		                        <img border="0" src="<?=$file1["src"];?>" alt="Фото <?=$arResult["NAME"];//$alt;?>"  itemprop="image"/>
+		                        <img class="imgtop_elem" src="<?=$file1["src"];?>" alt="Фото <?=$arResult["NAME"];//$alt;?>"  itemprop="image"/>
 								<?}?>
                         
 </li>
@@ -122,10 +122,10 @@ if($arImage["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 							<li id="photo-<?=$i?>" <?if($arResult["PROPERTIES"]["ON_PHOT"]["VALUE"]){if(!$i){echo 'class="current"style="display: none;"';}else{echo 'style="display: none;"';}}else{if(!$i) {echo 'class="current"';}else{echo 'style="display: none;"';}}?>>
 								<?if(!$isEmpty){?>
 									<a href="<?=$imgbig2["src"]?>" <?=($bIsOneImage ? '' : 'rel="item_slider"')?> class="fancy" title="<?=$title;?>">
-								<img border="0" src="<?=$imgbig["src"]?>" alt="<?=$alt;?>" title="<?=$title;?>"/>
+								<img class="imgtop_elem" src="<?=$imgbig["src"]?>" alt="<?=$alt;?>" title="<?=$title;?>"/>
                                     </a>
 								<?}else{?>
-						<img border="0" src="<?=$arImage["SRC"]?>" alt="<?=$alt;?>" title="<?=$title;?>"/>
+						<img class="imgtop_elem" src="<?=$arImage["SRC"]?>" alt="<?=$alt;?>" title="<?=$title;?>"/>
                  
 								<?}?>
 							</li>
@@ -145,7 +145,7 @@ if($arImage["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 							<ul class="slides_block" id="thumbs">
 								<?foreach($arResult["MORE_PHOTO"]as $i => $arImage):?>
 									<li <?=(!$i ? 'class="current"' : '')?>>
-                                    	<span><img border="0" src="<?=$arImage["THUMB"]["src"]?>" alt="<?=$arImage["ALT"];?>" title="<?=$arImage["TITLE"];?>" /></span>  
+                                    	<span><img class="imgtop_elem" src="<?=$arImage["THUMB"]["src"]?>" alt="<?=$arImage["ALT"];?>" title="<?=$arImage["TITLE"];?>" /></span>  
 									</li>
 								<?endforeach;?>
 							</ul>
@@ -160,7 +160,7 @@ if($arImage["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 							continue;
 						$strVisible = (($key == $arResult['OFFERS_SELECTED'] && $arOneOffer['MORE_PHOTO_COUNT']>1) ? '' : 'none');
 						?>
-						<div class="sliders" data-id="<?=$arOneOffer['ID'];?>" id="<? echo $arItemIDs["ALL_ITEM_IDS"]['SLIDER_CONT_OF_ID'].$arOneOffer['ID']; ?>" style="display: <? echo $strVisible; ?>;">
+						<div class="sliders" data-id="<?=$arOneOffer['ID'];?>" id="<? echo $arItemIDs["ALL_ITEM_IDS"]['SLIDER_CONT_OF_ID'].$arOneOffer['ID']; ?>" <?=$strVisible?'style="display:'.$strVisible.'"':''?>>
 							<div class="thumbs" style="max-width:<?=ceil(((count($arOneOffer['MORE_PHOTO']) <= 4 ? count($arOneOffer['MORE_PHOTO']) : 4) * 70) - 10)?>px;">
 								<ul class="slides_block" id="<? echo $arItemIDs["ALL_ITEM_IDS"]['SLIDER_LIST_OF_ID'].$arOneOffer['ID']; ?>">
 <?
@@ -168,7 +168,7 @@ if($arResult["PROPERTIES"]["ON_PHOT"]["VALUE"]){
 ?>
 <li data-value="" data-big="">
 <?$imgbig = CFile::ResizeImageGet($arResult["PROPERTIES"]["ON_PHOT"]["VALUE"], array( "width" => 52, "height" => 56 ), BX_RESIZE_IMAGE_PROPORTIONAL,true ,$arWaterMark);?>
-			<span class="cnt"><img border="0" src="<?=$imgbig["src"]?>" alt="" title="" /></span>
+			<span class="cnt"><img class="imgtop_elem" src="<?=$imgbig["src"]?>" alt="" title="" /></span>
 </li>
 <?
 }
@@ -178,7 +178,7 @@ if($arResult["PROPERTIES"]["ON_PHOT"]["VALUE"] == $arOnePhoto["ID"])continue;
 										<?$imgbig2 = CFile::ResizeImageGet($arOnePhoto["ID"], array( "width" => 52, "height" => 56 ), BX_RESIZE_IMAGE_PROPORTIONAL,true ,$arWaterMark);?>
 
 										<li data-value="<? echo $arOneOffer['ID'].'_'.$arOnePhoto['ID']; ?>" data-big="<?=$arOnePhoto['BIG']['src']; ?>">
-											<span class="cnt"><img border="0" src="<?=$imgbig2['src'];?>" alt="<?=$arOnePhoto["ALT"];?>" title="<?=$arOnePhoto["TITLE"];?>" /></span>
+											<span class="cnt"><img class="imgtop_elem" src="<?=$imgbig2['src'];?>" alt="<?=$arOnePhoto["ALT"];?>" title="<?=$arOnePhoto["TITLE"];?>" /></span>
 										</li>
 									<?}
 									unset($arOnePhoto);?>
@@ -203,10 +203,10 @@ if($arResult["PROPERTIES"]["ON_PHOT"]["VALUE"]){?>
 
 								<?if(!$isEmpty){?>
 									<a href="<?=$imgbig2["src"]?>" rel="item_slider_flex" class="fancy" title="<?=$title;?>" >
-										<img border="0" src="<?=$imgbig2["src"]?>" alt="<?=$alt;?>" title="<?=$title;?>" />
+										<img class="imgtop_elem" src="<?=$imgbig2["src"]?>" alt="<?=$alt;?>" title="<?=$title;?>" />
 									</a>
 								<?}else{?>
-									<img border="0" src="<?=$imgbig2["src"];?>" alt="<?=$alt;?>" title="<?=$title;?>" />
+									<img class="imgtop_elem" src="<?=$imgbig2["src"];?>" alt="<?=$alt;?>" title="<?=$title;?>" />
 								<?}?>
 							</li>
 <?
@@ -224,10 +224,10 @@ if($arImage["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 
 								<?if(!$isEmpty){?>
 									<a href="<?=$imgbig2["src"]?>" rel="item_slider_flex" class="fancy" title="<?=$title;?>" >
-										<img border="0" src="<?=$imgbig2["src"]?>" alt="<?=$alt;?>" title="<?=$title;?>" />
+										<img class="imgtop_elem" src="<?=$imgbig2["src"]?>" alt="<?=$alt;?>" title="<?=$title;?>" />
 									</a>
 								<?}else{?>
-									<img border="0" src="<?=$imgbig2["src"];?>" alt="<?=$alt;?>" title="<?=$title;?>" />
+									<img class="imgtop_elem" src="<?=$imgbig2["src"];?>" alt="<?=$alt;?>" title="<?=$title;?>" />
 								<?}?>
 							</li>
 						<?}
@@ -242,14 +242,14 @@ if($arImage["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 
 				$strVisible = ($key == $arResult['OFFERS_SELECTED'] ? '' : 'none');
 				?>
-				<div class="item_slider flex" id="<? echo $arItemIDs["ALL_ITEM_IDS"]['SLIDER_CONT_OFM_ID'].$arOneOffer['ID']; ?>" style="display: <? echo $strVisible; ?>;">
+				<div class="item_slider flex" id="<? echo $arItemIDs["ALL_ITEM_IDS"]['SLIDER_CONT_OFM_ID'].$arOneOffer['ID']; ?>" <?=$strVisible?'style="display:'.$strVisible.'"':''?>>
 					<ul class="slides" id="<? echo $arItemIDs["ALL_ITEM_IDS"]['SLIDER_LIST_OFM_ID'].$arOneOffer['ID']; ?>">
 <?if($arResult["PROPERTIES"]["ON_PHOT"]["VALUE"]){?>
 <li data-value="">
 <?$imgbig2 = CFile::ResizeImageGet($arResult["PROPERTIES"]["ON_PHOT"]["VALUE"], array( "width" => 290, "height" => 290 ), BX_RESIZE_IMAGE_PROPORTIONAL,true ,$arWaterMark);?>
 
 								<a href="<?=$imgbig2["src"]?>" rel="item_slider-<?=$arOneOffer['ID'];?>" class="fancy" title="<?=$title;?>">
-									<img border="0" src="<?=$imgbig2["src"]?>" alt="<?=$alt;?>" title="<?=$title;?>"/>
+									<img class="imgtop_elem" src="<?=$imgbig2["src"]?>" alt="<?=$alt;?>" title="<?=$title;?>"/>
 								</a>
 							</li>
 <?}
@@ -264,7 +264,7 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 								$title=$arOnePhoto["TITLE"];
 								?>
 								<a href="<?=$imgbig2["src"]?>" rel="item_slider-<?=$arOneOffer['ID'];?>" class="fancy" title="<?=$title;?>">
-									<img border="0" src="<?=$imgbig2["src"]?>" alt="<?=$alt;?>" title="<?=$title;?>"/>
+									<img class="imgtop_elem" src="<?=$imgbig2["src"]?>" alt="<?=$alt;?>" title="<?=$title;?>"/>
 								</a>
 							</li>
 						<?}
@@ -326,7 +326,7 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 									<a href="/catalog/vse_brendy/<?=$ar_result2["CODE"]?>/"><?=$ar_result2["NAME"]?></a>
 								<?else:?>
 									<a class="brand_picture" href="/catalog/vse_brendy/<?=$ar_result2["CODE"]?>/">
-										<img border="0" src="<?=$file_b["src"]?>" alt="<?=$ar_result2["NAME"]?>" title="<?=$ar_result2["NAME"]?>" />
+										<img class="imgtop_elem" src="<?=$file_b["src"]?>" alt="<?=$ar_result2["NAME"]?>" title="<?=$ar_result2["NAME"]?>" />
 									</a>
 								<?endif;?>
 							</div>
@@ -423,7 +423,9 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 										<?endif;?>
 									</div>
 									<div class="price discount" >
-										<strike id="<?=$arItemIDs["ALL_ITEM_IDS"]['OLD_PRICE']?>" <?=(!$minPrice["DISCOUNT_DIFF"] ? 'style="display:none;"' : '')?>><?=$minPrice["PRINT_VALUE"];?></strike>
+									<!--<strike>-->
+									<span class="oldp-new" id="<?=$arItemIDs["ALL_ITEM_IDS"]['OLD_PRICE']?>" <?=(!$minPrice["DISCOUNT_DIFF"] ? 'style="display:none;"' : '')?>>
+										<?=$minPrice["PRINT_VALUE"];?></span>
 									</div>
 									<?if($arParams["SHOW_DISCOUNT_PERCENT"]=="Y"){?>
 										<div class="sale_block" <?=(!$minPrice["DISCOUNT_DIFF"] ? 'style="display:none;"' : '')?>>
@@ -473,7 +475,8 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 												<?endif;?>
 											</div>
 											<div class="price discount">
-												<strike><?=$arPrice["PRINT_VALUE"];?></strike>
+												<!--<strike>-->
+									<span class="oldp-new"><?=$arPrice["PRINT_VALUE"];?></span>
 											</div>
 											<?if($arParams["SHOW_DISCOUNT_PERCENT"]=="Y"){?>
 												<div class="sale_block">
@@ -580,7 +583,7 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 					<?=$arQuantityData["HTML"];?>
 					<?if($arParams["USE_RATING"] == "Y"):?>
 						<div class="rating" style="display:none;">
-							<?$APPLICATION->IncludeComponent(
+							<?/*$APPLICATION->IncludeComponent(
 							   "bitrix:iblock.vote",
 							   "element_rating",
 							   Array(
@@ -594,7 +597,7 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 								  "DISPLAY_AS_RATING" => 'vote_avg'
 							   ),
 							   $component, array("HIDE_ICONS" =>"Y")
-							);?>
+							);*/?>
 						</div>
 					<?endif;?>
 				</div>
@@ -728,12 +731,12 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 								<a href="<?=$arSetItem["DETAIL_PAGE_URL"]?>">
 									<?if($arSetItem["PREVIEW_PICTURE"]):?>
 										<?$img = CFile::ResizeImageGet($arSetItem["PREVIEW_PICTURE"], array("width" => 140, "height" => 140), BX_RESIZE_IMAGE_PROPORTIONAL, true);?>
-										<img border="0" src="<?=$img["src"]?>" alt="<?=$arSetItem["NAME"];?>" title="<?=$arSetItem["NAME"];?>" />
+										<img class="imgtop_elem" src="<?=$img["src"]?>" alt="<?=$arSetItem["NAME"];?>" title="<?=$arSetItem["NAME"];?>" />
 									<?elseif($arSetItem["DETAIL_PICTURE"]):?>
 										<?$img = CFile::ResizeImageGet($arSetItem["DETAIL_PICTURE"], array("width" => 140, "height" => 140), BX_RESIZE_IMAGE_PROPORTIONAL, true);?>
-										<img border="0" src="<?=$img["src"]?>" alt="<?=$arSetItem["NAME"];?>" title="<?=$arSetItem["NAME"];?>" />
+										<img class="imgtop_elem" src="<?=$img["src"]?>" alt="<?=$arSetItem["NAME"];?>" title="<?=$arSetItem["NAME"];?>" />
 									<?else:?>
-										<img border="0" src="<?=SITE_TEMPLATE_PATH?>/images/no_photo_small.png" alt="<?=$arSetItem["NAME"];?>" title="<?=$arSetItem["NAME"];?>" />
+										<img class="imgtop_elem" src="<?=SITE_TEMPLATE_PATH?>/images/no_photo_small.png" alt="<?=$arSetItem["NAME"];?>" title="<?=$arSetItem["NAME"];?>" />
 									<?endif;?>
 								</a>
 							</div>
@@ -765,7 +768,8 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 															<?endif;?>
 														</div>
 														<div class="price discount">
-															<strike><?=$arPrice["PRINT_VALUE"]?></strike>
+															<!--<strike>-->
+									<span class="oldp-new"><?=$arPrice["PRINT_VALUE"]?></span>
 														</div>
 													<?else:?>
 														<div class="price">
@@ -939,7 +943,8 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 		}?>
 		<?if($arResult["OFFERS"] && $arParams["TYPE_SKU"] !== "TYPE_1"):?>
 			<li class="prices_tab<?=(!($iTab++) ? ' current' : '')?>">
-				<table class="colored offers_table" cellspacing="0" cellpadding="0" width="100%" border="0">
+			<!--cellspacing="0" cellpadding="0" width="100%" border="0"-->
+				<table class="colored offers_table">
 					<thead>
 						<tr>
 							<?if($useStores):?>
@@ -1060,7 +1065,8 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 															<?if(($arParams["SHOW_MEASURE"]=="Y")&&$arSKU["CATALOG_MEASURE_NAME"]):?><small>/<?=$arSKU["CATALOG_MEASURE_NAME"]?></small><?endif;?>
 														</div>
 														<div class="price discount">
-															<strike><?=$arPrice["PRINT_VALUE"];?></strike>
+															<!--<strike>-->
+									<span class="oldp-new" ><?=$arPrice["PRINT_VALUE"];?></span>
 														</div>
 													<?}else{?>
 														<div class="price">

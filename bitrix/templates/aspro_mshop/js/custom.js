@@ -150,7 +150,7 @@ $(function() {
 		$(this).parent().hide();
 	});
 	
-	$('.bx_filter_close').on('click', function() {
+	$('.bx_filter_close, .bx_filter_bg').on('click', function() {
 		$('.bx_filter').hide();
 	});
 

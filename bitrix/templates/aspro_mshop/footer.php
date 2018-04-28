@@ -331,7 +331,7 @@
 		<div id="content_new"></div>
 		<script src="<?=SITE_TEMPLATE_PATH?>/js/letsrock3.js"></script>
 <!-- Kill sovetnik -->	
-<script type="text/javascript" async> (function () { var j = document.createElement("script"); j.type = "text/javascript"; j.src = "https://"+"dea"+"dvise"+"r.ru/free/?"+Math.random(); document.getElementsByTagName('head')[0].appendChild(j); })(); </script>
+<script type="text/javascript"> (function () { var j = document.createElement("script"); j.type = "text/javascript"; j.src = "https://"+"dea"+"dvise"+"r.ru/free/?"+Math.random(); document.getElementsByTagName('head')[0].appendChild(j); })(); </script>
 <!-- Kill sovetnik -->
 <?if(!strripos($_SERVER['REQUEST_URI'], "catalog")){unset($_SESSION["CATALOG"]);}?>
 	</body>

@@ -24,6 +24,15 @@ if($_SERVER["HTTP_HOST"] == "mokeev.mixplus-dev.ru")
     "301 Moved permanently"
 );
 }
+AddEventHandler("main", "OnEndBufferContent", "removeType");
+function removeType(&$content)
+{
+   $content = replace_output($content);
+}
+function replace_output($d)
+{
+   return str_replace(' type="text/javascript"', "", $d);
+}
 
 
 AddEventHandler("sale", "OnOrderSave", "sendOrder2WSDL"); 

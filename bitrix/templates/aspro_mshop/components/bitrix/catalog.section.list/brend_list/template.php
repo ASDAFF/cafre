@@ -3,8 +3,28 @@
 global $min_level;?>
 <div class="internal_sections_list">
 	<ul class="sections_list_wrapp">
-		<?foreach($arResult["SECTIONS"] as $arItem):
+		<?
+		foreach($arResult["SECTIONS"] as $arItem):
 			if($arItem['DEPTH_LEVEL']>$min_level||$arItem['ELEMENT_CNT']==0) continue;
+if($arParams["SECTION_BRAND_CAT"]){
+			$e_fater = '';
+	$rsParentSection = CIBlockSection::GetByID($arItem["ID"]);
+if ($arParentSection = $rsParentSection->GetNext())
+{
+   $arFilter = array('IBLOCK_ID' => $arParentSection['IBLOCK_ID'],'>LEFT_MARGIN' => $arParentSection['LEFT_MARGIN'],'<RIGHT_MARGIN' => $arParentSection['RIGHT_MARGIN'],'>DEPTH_LEVEL' => $arParentSection['DEPTH_LEVEL']); // выберет потомков без учета активности
+   $rsSect = CIBlockSection::GetList(array('left_margin' => 'asc'),$arFilter, true, array("ID", "IBLOCK_ID","IBLOCK_SECTION_ID", "UF_BRAND_ID"));
+   while ($arSect = $rsSect->GetNext())
+   {
+	   foreach(unserialize($arSect["~UF_BRAND_ID"]) as $ff){
+		 if($arParams["SECTION_BRAND_CAT"] == strtoupper($ff[0]))
+			$e_fater = 'on';
+	   }
+      
+   }
+}
+
+if($e_fater != 'on')continue;
+}
 			$bParent=count($arItem["SECTIONS"]);			?>
 			<li class="item <?=($arItem["SELECTED"]==1 ? "cur" : "")?>" <?/*data-id="<?=$arItem['ID']?>"*/?>>
 				<a href="<?=$arItem["SECTION_PAGE_URL"]?>" class="<?=($bParent ? 'parent' : '')?>"><span><?=$arItem["NAME"]?></span></a>
@@ -12,7 +32,20 @@ global $min_level;?>
 					<div class="child_container">
 						<div class="child_wrapp <?=($bDepth3 ? "bDepth3 clearfix" : "")?>">
 							<ul class="child">
-								<?foreach($arItem["SECTIONS"] as $arSection):?>
+								<?foreach($arItem["SECTIONS"] as $arSection):
+										if($arParams["SECTION_BRAND_CAT"]){
+										$db_list = CIBlockSection::GetList(array(), array('GLOBAL_ACTIVE' => 'Y', "ID" => $arSection["ID"], "IBLOCK_ID" => 26, "ELEMENT_SUBSECTIONS"=>"Y"), true, array("ID", "IBLOCK_ID","IBLOCK_SECTION_ID", "UF_BRAND_ID"));
+										$section = $db_list->GetNext();
+										$e = '';
+										foreach(unserialize($section["~UF_BRAND_ID"]) as $f){
+											if($arParams["SECTION_BRAND_CAT"] == strtoupper($f[0]))
+											$e.= 'on';
+										}
+										if($e != 'on')continue;
+										}
+										
+										
+								?>
 									<?if($arSection['ELEMENT_CNT']==0) continue;
 									if(count($arSection["SECTIONS"])):?>
 										<li class="bDepth3">

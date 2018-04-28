@@ -54,7 +54,7 @@ $catalog_section_name=$arResult['NAME'];?>
 			$arItem['CAN_BUY']='Y';
 			?>
 			<div class="catalog_item_wrapp">
-				<div class="catalog_item item_wrap <?=(($_GET['q'])) ? 's' : ''?>" id="<?=$arItemIDs["strMainID"];?>">
+				<div class="catalog_item item_wrap <?=(($_GET['q'])) ? 's' : ''?>" <?=$arItemIDs["strMainID"]?'id="'.$arItemIDs["strMainID"].'"':''?>>
 					<div>
 						<div class="image_wrapper_block">
 							<?/*$frame = $this->createFrame()->begin('');
@@ -96,7 +96,7 @@ $catalog_section_name=$arResult['NAME'];?>
 									</div>
 								<?endif;?>
 							<?//$frame->end();?>
-							<a href="<?=$arItem["DETAIL_PAGE_URL"]?>" class="thumb" id="<? echo $arItemIDs["ALL_ITEM_IDS"]['PICT']; ?>">
+							<a href="<?=$arItem["DETAIL_PAGE_URL"]?>" class="thumb" id="<?=$arItem["ID"].$arItemIDs["ALL_ITEM_IDS"]['PICT']; ?>">
 								<div class="stickers">
 									<?if (is_array($arItem["PROPERTIES"]["HIT"]["VALUE_XML_ID"])):?>
 										<?foreach($arItem["PROPERTIES"]["HIT"]["VALUE_XML_ID"] as $key=>$class){?>
@@ -123,15 +123,15 @@ $catalog_section_name=$arResult['NAME'];?>
 								<?//print_r($arWaterMark);?>
 								<?$img = CFile::ResizeImageGet($arItem["PREVIEW_PICTURE"]["ID"], array( "width" => 170, "height" => 170 ), BX_RESIZE_IMAGE_PROPORTIONAL,true, $arWaterMark);
 								?>
-									<img border="0" src="<?=$img["src"]?>" alt="<?=$a_alt;?>" title="<?=$a_title;?>" />
+									<img class="imgtop_elem" src="<?=$img["src"]?>" alt="<?=$a_alt;?>" title="<?=$a_title;?>" />
 								<?elseif( !empty($arItem["DETAIL_PICTURE"])):?>
 									<?$img = CFile::ResizeImageGet($arItem["DETAIL_PICTURE"], array( "width" => 170, "height" => 170 ), BX_RESIZE_IMAGE_PROPORTIONAL,true, $arWaterMark );?>
-									<img border="0" src="<?=$img["src"]?>" alt="<?=$a_alt;?>" title="<?=$a_title;?>" />
+									<img class="imgtop_elem" src="<?=$img["src"]?>" alt="<?=$a_alt;?>" title="<?=$a_title;?>" />
 								<?elseif(!empty($arItem["PROPERTIES"]["MORE_PHOTO"]["VALUE"])):?>
 								<?$img = CFile::ResizeImageGet($arItem["PROPERTIES"]["MORE_PHOTO"]["VALUE"][0], array( "width" => 170, "height" => 170 ), BX_RESIZE_IMAGE_PROPORTIONAL,true, $arWaterMark );?>
-									<img border="0" src="<?=$img["src"]?>" alt="<?=$a_alt;?>" title="<?=$a_title;?>" />
+									<img class="imgtop_elem" src="<?=$img["src"]?>" alt="<?=$a_alt;?>" title="<?=$a_title;?>" />
 								<?else:?>
-									<img border="0" src="<?=SITE_TEMPLATE_PATH?>/images/no_photo_medium.png" alt="<?=$a_alt;?>" title="<?=$a_title;?>" />
+									<img class="imgtop_elem" src="<?=SITE_TEMPLATE_PATH?>/images/no_photo_medium.png" alt="<?=$a_alt;?>" title="<?=$a_title;?>" />
 								<?endif;?>
 								
 							</a>
@@ -168,7 +168,7 @@ $catalog_section_name=$arResult['NAME'];?>
 											$prefix = GetMessage("CATALOG_FROM");
 										}
 										if($arParams["SHOW_OLD_PRICE"]=="Y"){?>
-											<div class="price" id="<? echo $arItemIDs["ALL_ITEM_IDS"]['PRICE']; ?>">
+											<div class="price" id="<?=$arItem["ID"].$arItemIDs["ALL_ITEM_IDS"]['PRICE']; ?>">
 												<?if(strlen($minPrice["PRINT_DISCOUNT_VALUE"])):?>
 													<?=$prefix;?> <?=$minPrice["PRINT_DISCOUNT_VALUE"];?>
 													<?if (($arParams["SHOW_MEASURE"]=="Y") && $strMeasure){?>
@@ -176,8 +176,9 @@ $catalog_section_name=$arResult['NAME'];?>
 													<?}?>
 												<?endif;?>
 											</div>
-											<div class="price discount" id="<? echo $arItemIDs["ALL_ITEM_IDS"]['PRICE_OLD']; ?>">
-												<strike <?=(!$minPrice["DISCOUNT_DIFF"] ? 'style="display:none;"' : '')?>><?=$minPrice["PRINT_VALUE"];?></strike>
+											<div class="price discount" id="<?=$arItem["ID"].$arItemIDs["ALL_ITEM_IDS"]['PRICE_OLD']; ?>">
+											<!--</strike>-->
+												<span class="oldp-new" <?=(!$minPrice["DISCOUNT_DIFF"] ? 'style="display:none;"' : '')?>><?=$minPrice["PRINT_VALUE"];?></span>
 											</div>
 											<?if($arParams["SHOW_DISCOUNT_PERCENT"]=="Y"){?>
 												<div class="sale_block" <?=(!$minPrice["DISCOUNT_DIFF"] ? 'style="display:none;"' : '')?>>
@@ -221,7 +222,8 @@ $catalog_section_name=$arResult['NAME'];?>
 														<?endif;?>
 													</div>
 													<div class="price discount">
-														<strike><?=$arPrice["PRINT_VALUE"];?></strike>
+													<!--</strike>-->
+														<span class="oldp-new"><?=$arPrice["PRINT_VALUE"];?></span>
 													</div>
 													<?if($arParams["SHOW_DISCOUNT_PERCENT"]=="Y"){?>
 														<div class="sale_block">

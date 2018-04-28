@@ -5,7 +5,8 @@ $templateData = array(
 	'TEMPLATE_CLASS' => 'bx_'.$arParams['TEMPLATE_THEME']
 );
 $injectId = 'bigdata_recommeded_products_'.rand();?>
-<script type="application/javascript">
+<!-- type="application/javascript"-->
+<script>
 	BX.cookie_prefix = '<?=CUtil::JSEscape(COption::GetOptionString("main", "cookie_name", "BITRIX_SM"))?>';
 	BX.cookie_domain = '<?=$APPLICATION->GetCookieDomain()?>';
 	BX.current_server_time = '<?=time()?>';
@@ -25,7 +26,8 @@ $injectId = 'bigdata_recommeded_products_'.rand();?>
 	$signedTemplate = $signer->sign($arResult['RCM_TEMPLATE'], 'bx.bd.products.recommendation');?>
 
 	<div id="<?=$injectId?>" class="bigdata_recommended_products_container"></div>
-	<script type="application/javascript">
+	<!-- type="application/javascript"-->
+	<script>
 		BX.ready(function(){
 			bx_rcm_get_from_cloud(
 				'<?=CUtil::JSEscape($injectId)?>',

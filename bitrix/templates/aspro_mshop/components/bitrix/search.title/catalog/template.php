@@ -15,7 +15,7 @@ if($arParams["SHOW_INPUT"] !== "N"):?>
 	<div id="<?echo $CONTAINER_ID?>" class="stitle_form">
 		<form action="<?echo $arResult["FORM_ACTION"]?>">
 			<div class="form-control bg">
-				<input id="<?echo $INPUT_ID?>" type="text" name="q" value="" class="small_block" size="40" class="text" maxlength="50" autocomplete="off" placeholder="<?=GetMessage("SEARCH_PLACEHOLDER");?>" /><input name="s" type="submit" value="<?=GetMessage("CT_BST_SEARCH_BUTTON");?>" class="button icon" />
+				<input id="<?echo $INPUT_ID?>" type="text" name="q" value="" class="small_block text" size="40" maxlength="50" autocomplete="off" placeholder="<?=GetMessage("SEARCH_PLACEHOLDER");?>" /><input name="s" type="submit" value="<?=GetMessage("CT_BST_SEARCH_BUTTON");?>" class="button icon" />
 			</div>
 		</form>
 	</div>

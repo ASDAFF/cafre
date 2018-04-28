@@ -61,13 +61,15 @@ window.reviewsCtrlEnterHandler<?=CUtil::JSEscape($arParams["form_index"]);?> = f
 				<div class="reviews-reply-field-user">
 					<div class="reviews-reply-field reviews-reply-field-author"><label for="REVIEW_AUTHOR<?=$arParams["form_index"]?>"><?=GetMessage("OPINIONS_NAME")?><?
 							?><span class="reviews-required-field">*</span></label>
-						<span><input name="REVIEW_AUTHOR" id="REVIEW_AUTHOR<?=$arParams["form_index"]?>" size="30" type="text" value="<?=$arResult["REVIEW_AUTHOR"]?>" tabindex="<?=$tabIndex++;?>" /></span></div>
+							<?$tabIndex++;?>
+						<span><input name="REVIEW_AUTHOR" id="REVIEW_AUTHOR<?=$arParams["form_index"]?>" size="30" type="text" value="<?=$arResult["REVIEW_AUTHOR"]?>" <?=$tabIndex?'tabindex="'.$tabIndex.'"':''?>/></span></div>
 					<?
 					if ($arResult["FORUM"]["ASK_GUEST_EMAIL"]=="Y"):
 						?>
 						<div class="reviews-reply-field-user-sep">&nbsp;</div>
 						<div class="reviews-reply-field reviews-reply-field-email"><label for="REVIEW_EMAIL<?=$arParams["form_index"]?>"><?=GetMessage("OPINIONS_EMAIL")?></label>
-							<span><input type="text" name="REVIEW_EMAIL" id="REVIEW_EMAIL<?=$arParams["form_index"]?>" size="30" value="<?=$arResult["REVIEW_EMAIL"]?>" tabindex="<?=$tabIndex++;?>" /></span></div>
+						<?$tabIndex++;?>
+							<span><input type="text" name="REVIEW_EMAIL" id="REVIEW_EMAIL<?=$arParams["form_index"]?>" size="30" value="<?=$arResult["REVIEW_EMAIL"]?>" <?=$tabIndex?'tabindex="'.$tabIndex.'"':''?> /></span></div>
 					<?
 					endif;
 					?>
@@ -133,7 +135,8 @@ window.reviewsCtrlEnterHandler<?=CUtil::JSEscape($arParams["form_index"]);?> = f
 				<input type="hidden" name="captcha_code" value="<?=$arResult["CAPTCHA_CODE"]?>"/>
 				<div class="reviews-reply-field-captcha-label">
 					<label for="captcha_word"><?=GetMessage("F_CAPTCHA_PROMT")?><span class="reviews-required-field">*</span></label>
-					<input type="text" size="30" name="captcha_word" tabindex="<?=$tabIndex++;?>" autocomplete="off" />
+					<?$tabIndex++;?>
+					<input type="text" size="30" name="captcha_word" <?=$tabIndex?'tabindex="'.$tabIndex.'"':''?> autocomplete="off" />
 				</div>
 				<div class="reviews-reply-field-captcha-image">
 					<img src="/bitrix/tools/captcha.php?captcha_code=<?=$arResult["CAPTCHA_CODE"]?>" alt="<?=GetMessage("F_CAPTCHA_TITLE")?>" />
@@ -202,9 +205,10 @@ window.reviewsCtrlEnterHandler<?=CUtil::JSEscape($arParams["form_index"]);?> = f
 			if ($arResult["FORUM"]["ALLOW_SMILES"] == "Y"):
 				?>
 				<div class="reviews-reply-field-setting">
+				<?$tabIndex++;?>
 					<input type="checkbox" name="REVIEW_USE_SMILES" id="REVIEW_USE_SMILES<?=$arParams["form_index"]?>" <?
 					?>value="Y" <?=($arResult["REVIEW_USE_SMILES"]=="Y") ? "checked=\"checked\"" : "";?> <?
-					?>tabindex="<?=$tabIndex++;?>" /><?
+					?><?=$tabIndex?'tabindex="'.$tabIndex.'"':''?> /><?
 					?><label for="REVIEW_USE_SMILES<?=$arParams["form_index"]?>"><span class="bx_filter_input_checkbox"><?=GetMessage("F_WANT_ALLOW_SMILES")?></span></label></div>
 			<?
 			endif;
@@ -212,8 +216,9 @@ window.reviewsCtrlEnterHandler<?=CUtil::JSEscape($arParams["form_index"]);?> = f
 			if ($arResult["SHOW_SUBSCRIBE"] == "Y"):
 				?>
 				<div class="reviews-reply-field-setting">
+				<?$tabIndex++;?>
 					<input type="checkbox" name="TOPIC_SUBSCRIBE" id="TOPIC_SUBSCRIBE<?=$arParams["form_index"]?>" value="Y" <?
-					?><?=($arResult["TOPIC_SUBSCRIBE"] == "Y")? "checked disabled " : "";?> tabindex="<?=$tabIndex++;?>" /><?
+					?><?=($arResult["TOPIC_SUBSCRIBE"] == "Y")? "checked disabled " : "";?> <?=$tabIndex?'tabindex="'.$tabIndex.'"':''?> /><?
 					?><label for="TOPIC_SUBSCRIBE<?=$arParams["form_index"]?>"><span class="bx_filter_input_checkbox"><?=GetMessage("F_WANT_SUBSCRIBE_TOPIC")?></span></label></div>
 			<?
 			endif;
@@ -223,9 +228,11 @@ window.reviewsCtrlEnterHandler<?=CUtil::JSEscape($arParams["form_index"]);?> = f
 
 		?>
 		<div class="reviews-reply-buttons">
-			<input name="send_button" type="submit" class="button" value="<?=GetMessage("OPINIONS_SEND")?>" tabindex="<?=$tabIndex++;?>" <?
+		<?$tabIndex++;?>
+			<input name="send_button" type="submit" class="button" value="<?=GetMessage("OPINIONS_SEND")?>" <?=$tabIndex?'tabindex="'.$tabIndex.'"':''?> <?
 			?>onclick="this.form.preview_comment.value = 'N';" />
-			<input name="view_button" type="submit" class="button transparent" value="<?=GetMessage("OPINIONS_PREVIEW")?>" tabindex="<?=$tabIndex++;?>" <?
+			<?$tabIndex++;?>
+			<input name="view_button" type="submit" class="button transparent" value="<?=GetMessage("OPINIONS_PREVIEW")?>" <?=$tabIndex?'tabindex="'.$tabIndex.'"':''?> <?
 			?>onclick="this.form.preview_comment.value = 'VIEW';" />
 		</div>
 

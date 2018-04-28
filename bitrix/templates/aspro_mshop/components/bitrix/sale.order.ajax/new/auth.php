@@ -60,6 +60,11 @@
 </div>-->
 <script type="text/javascript">
 /********принимал новую отправку с ajax********/
+/*$('.vbig_btn').on('click', function(e){
+	e.preventDefault();
+	$(".order").prepend('<h3 class="on_authord">Вы успешно авторизованы</h3>');
+});
+*/
 	$(document).ready(function(){
 		
 		$("form[name=order_auth_form]").validate({
@@ -82,7 +87,10 @@
 						$(document).find('[code=EMAIL]').val($("form[name=order_auth_form]").find('[name="MY_LOGIN"]').val());
 						$(document).find('[code=NAME]').val(e.name);
 						$(document).find('[code=PHONE]').val(e.phone);
-						$("form[name=order_auth_form]").closest('.order__cell').prev().html('<h3>Вы успешно авторизованы</h3>').next().remove();						
+						$("form[name=order_auth_form]").closest('.order__cell').prev().html('').next().remove();
+						$(".order").prepend('<h3 class="on_authord">Вы успешно авторизованы</h3>');
+						$('.order__row').css("display", "none");
+						$('.module-enter').removeClass('no-have-user').addClass('have-user').html('<a href="/personal/" class="reg" rel="nofollow"><span>Личный кабинет</span></a><a href="<?=SITE_DIR?>?logout=yes" class="exit_link" rel="nofollow"><span>Выход</span></a>');
 					}
 					else {
 						$("form[name=order_auth_form]").after('<p id="error">Логин или пароль указаны неверно</p>');

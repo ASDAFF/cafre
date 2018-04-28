@@ -11,10 +11,10 @@
 				<li id="<?=$this->GetEditAreaId($arItem['ID']);?>">
 				<?if($arItem["PROPERTIES"]["URL_BRAND"]["VALUE"]):?>
 					<a href="<?=$arItem["PROPERTIES"]["URL_BRAND"]["VALUE"]?>">
-						<img border="0" src="<?=$arItem["PREVIEW_PICTURE"]["SRC"]?>" alt="<?=$arItem["NAME"]?>" title="<?=$arItem["NAME"]?>" />
+						<img class="br_bot" src="<?=$arItem["PREVIEW_PICTURE"]["SRC"]?>" alt="<?=$arItem["NAME"]?>" title="<?=$arItem["NAME"]?>" />
 					</a>
 				<?else:?>
-				<img border="0" src="<?=$arItem["PREVIEW_PICTURE"]["SRC"]?>" alt="<?=$arItem["NAME"]?>" title="<?=$arItem["NAME"]?>" />
+				<img class="br_bot" src="<?=$arItem["PREVIEW_PICTURE"]["SRC"]?>" alt="<?=$arItem["NAME"]?>" title="<?=$arItem["NAME"]?>" />
 				<?endif;?>
 				</li>
 			<?}?>

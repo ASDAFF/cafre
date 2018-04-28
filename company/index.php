@@ -1,18 +1,9 @@
 <?
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/header.php");
 $APPLICATION->SetTitle("О компании");
-?><h2>
-CAFRE COSMETICS </h2>
-<p>
-</p>
-<h6>
-<p>
-</p>
-</h6>
+?><h2>CAFRE COSMETICS </h2>
 <h5>
-<p>
 	<b>Интернет-магазин профессиональной косметики c быстрой доставкой без предоплаты</b>
-</p>
  </h5>
 <p>
  <b>Качество </b>

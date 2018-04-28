@@ -12,9 +12,8 @@
 	$arSite = CSite::GetByID(SITE_ID)->Fetch();
 	$htmlClass = ($_REQUEST && isset($_REQUEST['print']) ? 'print' : false);
 ?>
-
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" <?=($htmlClass ? 'class="'.$htmlClass.'"' : '')?> lang="ru" itemscope itemtype="https://schema.org/WebPage" />
+<html xmlns="http://www.w3.org/1999/xhtml" <?=($htmlClass ? 'class="'.$htmlClass.'"' : '')?> lang="ru" itemscope itemtype="https://schema.org/WebPage">
 <head>
 	<title itemprop="name"><?$APPLICATION->ShowTitle()?></title>
 	<?$APPLICATION->ShowMeta("viewport");?>
@@ -30,8 +29,8 @@
 	
 	<!--[if gte IE 9]><style type="text/css">.basket_button, .button30, .icon {filter: none;}</style><![endif]-->
 	<link href='<?=CMain::IsHTTPS() ? 'https' : 'http'?>://fonts.googleapis.com/css?family=Ubuntu:400,500,700,400italic&subset=latin,cyrillic' rel='stylesheet' type='text/css'>
-	
-	<script charset="UTF-8" src="//cdn.sendpulse.com/js/push/38cfeac2ca38e29c6d3701441d6ff14a_1.js" async></script>
+	<!--charset="UTF-8"-->
+	<script src="//cdn.sendpulse.com/js/push/38cfeac2ca38e29c6d3701441d6ff14a_1.js" async></script>
 
 	<link rel="stylesheet" href="<?=SITE_TEMPLATE_PATH?>/js/photo3d-html-files/v3/css/style.css" type="text/css" media="all">
 	<link rel="stylesheet" href="<?=SITE_TEMPLATE_PATH?>/css/lets_bas.css" type="text/css">
@@ -47,7 +46,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','GTM-KZXSS9');</script>
 <!-- End Google Tag Manager -->
-<!Ч Global site tag (gtag.js) - Google Analytics Ч>
+<!--Global site tag (gtag.js) - Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=UA-77132925-2"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -71,8 +70,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     })();
   carrotquest.connect('13181-68385f12e483ac8405da2f239e');
 </script>
-<!-- CarrotQuest END -->
-<script charset="UTF-8" src="//cdn.sendpulse.com/9dae6d62c816560a842268bde2cd317d/js/push/ec14c57e30305057d4ce91fda0aacb93_1.js" async></script>
+<!-- CarrotQuest END charset="UTF-8"-->
+<script src="//cdn.sendpulse.com/9dae6d62c816560a842268bde2cd317d/js/push/ec14c57e30305057d4ce91fda0aacb93_1.js" async></script>
 <script type="text/javascript">(window.Image ? (new Image()) : document.createElement('img')).src = 'https://vk.com/rtrg?p=VK-RTRG-226610-9YY7s';</script>
 </head>
 <body id="main">
@@ -161,7 +160,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 			<header id="header">
 				<div class="wrapper_inner">    
-					<table class="middle-h-row" cellspacing="0" cellpadding="0" border="0" width="100%">
+					<!--cellspacing="0" cellpadding="0" border="0"-->
+					<table class="middle-h-row">
 						<tr>
 							<td class="mobile-table-cell">
 								<div class="mobile-nav">
@@ -189,7 +189,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 									<div class="phones">
 										<p>ѕрофессиональна€ консультаци€ специалиста-технолога</p>
 										<span class="phone_wrap">
-											<img src="<?=SITE_TEMPLATE_PATH?>/images/online.png"/>
+											<img src="<?=SITE_TEMPLATE_PATH?>/images/online.png" alt="" />
 											<!--<span class="icons"></span>-->
 											<span class="phone_text">
 												<?$APPLICATION->IncludeFile(SITE_DIR."include/phone.php", Array(), Array("MODE" => "html", "NAME" => GetMessage("PHONE")));?>

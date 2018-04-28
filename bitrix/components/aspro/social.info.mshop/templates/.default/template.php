@@ -2,31 +2,32 @@
 <?$this->setFrameMode(true);?>
 <?if( !empty( $arParams["VK"] ) ){?>
 	<a href="<?=$arParams["VK"]?>" target="_blank" >
-		<img border="0" src="/bitrix/components/aspro/social.info.mshop/images/vk.png" alt="<?=GetMessage("VKONTAKTE")?>" title="<?=GetMessage("VKONTAKTE")?>" />
+	<!-- class="soc_bot"-->
+		<img class="soc_bot" src="/bitrix/components/aspro/social.info.mshop/images/vk.png" alt="<?=GetMessage("VKONTAKTE")?>" title="<?=GetMessage("VKONTAKTE")?>" />
 	</a>
 <?}?>
 <?if( !empty( $arParams["ODN"] ) ){?>
 	<a href="<?=$arParams["ODN"]?>" target="_blank" >
-		<img border="0" src="/bitrix/components/aspro/social.info.mshop/images/odn.png" alt="<?=GetMessage("ODN")?>" title="<?=GetMessage("ODN")?>" />
+		<img class="soc_bot" src="/bitrix/components/aspro/social.info.mshop/images/odn.png" alt="<?=GetMessage("ODN")?>" title="<?=GetMessage("ODN")?>" />
 	</a>
 <?}?>
 <?if( !empty( $arParams["FACE"] ) ){?>
 	<a href="<?=$arParams["FACE"]?>" target="_blank">
-		<img border="0" src="/bitrix/components/aspro/social.info.mshop/images/facebook.png" alt="<?=GetMessage("FACEBOOK")?>" title="<?=GetMessage("FACEBOOK")?>" />
+		<img class="soc_bot" src="/bitrix/components/aspro/social.info.mshop/images/facebook.png" alt="<?=GetMessage("FACEBOOK")?>" title="<?=GetMessage("FACEBOOK")?>" />
 	</a>
 <?}?>
 <?if( !empty( $arParams["TWIT"] ) ){?>
 	<a href="<?=$arParams["TWIT"]?>" target="_blank">
-		<img border="0" src="/bitrix/components/aspro/social.info.mshop/images/twitter.png" alt="<?=GetMessage("TWITTER")?>" title="<?=GetMessage("TWITTER")?>" /> 
+		<img class="soc_bot" src="/bitrix/components/aspro/social.info.mshop/images/twitter.png" alt="<?=GetMessage("TWITTER")?>" title="<?=GetMessage("TWITTER")?>" /> 
 	</a>
 <?}?>
 <?if( !empty( $arParams["INST"] ) ){?>
 	<a href="<?=$arParams["INST"]?>" target="_blank" >
-		<img border="0" src="/bitrix/components/aspro/social.info.mshop/images/inst.png" alt="<?=GetMessage("INST")?>" title="<?=GetMessage("INST")?>" />
+		<img class="soc_bot" src="/bitrix/components/aspro/social.info.mshop/images/inst.png" alt="<?=GetMessage("INST")?>" title="<?=GetMessage("INST")?>" />
 	</a>
 <?}?>
 <?if( !empty( $arParams["MAIL"] ) ){?>
 	<a href="<?=$arParams["MAIL"]?>" target="_blank" >
-		<img border="0" src="/bitrix/components/aspro/social.info.mshop/images/mail.png" alt="<?=GetMessage("MAIL")?>" title="<?=GetMessage("MAIL")?>" />
+		<img class="soc_bot" src="/bitrix/components/aspro/social.info.mshop/images/mail.png" alt="<?=GetMessage("MAIL")?>" title="<?=GetMessage("MAIL")?>" />
 	</a>
 <?}?>

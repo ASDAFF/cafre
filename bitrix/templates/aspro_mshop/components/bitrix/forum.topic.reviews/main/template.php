@@ -37,7 +37,8 @@ endif;
 $iCount = 0;
 foreach ($arResult["MESSAGES"] as $res):
 	$iCount++;
-	?><table cellspacing="0" border="0" class="reviews-post-table <?=($iCount == 1 ? "reviews-post-first " : "")?><?
+	//cellspacing="0" border="0"
+	?><table class="reviews-post-table <?=($iCount == 1 ? "reviews-post-first " : "")?><?
 		?><?=($iCount == count($arResult["MESSAGES"]) ? "reviews-post-last " : "")?><?
 		?><?=($iCount%2 == 1 ? "reviews-post-odd " : "reviews-post-even ")?><?
 		?><?=(($res["APPROVED"] == 'Y') ? "" : "reviews-post-hidden")

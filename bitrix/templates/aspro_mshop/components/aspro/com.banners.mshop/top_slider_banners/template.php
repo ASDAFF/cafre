@@ -31,7 +31,8 @@
 									}
 								}
 								?>
-								<table cellspacing="0" cellpadding="0" border="0" width="100%" height="100%" <?if($arItem["PREVIEW_PICTURE"]):?>style="background: url(<?=$arItem["PREVIEW_PICTURE"]["SRC"]?>) <?=$position;?> no-repeat"<?endif;?>>
+								<!--cellspacing="0" cellpadding="0" border="0" width="100%" height="100%"-->
+								<table class="slides_ind" <?if($arItem["PREVIEW_PICTURE"]):?>style="background: url(<?=$arItem["PREVIEW_PICTURE"]["SRC"]?>) <?=$position;?> no-repeat"<?endif;?>>
 									<tbody><tr>
 										<?if($arItem["PROPERTIES"]["TEXT_POSITION"]["VALUE_XML_ID"] != "image"):?>
 											<?ob_start();?>

@@ -105,7 +105,7 @@ $brend_list=array();
 							</div>-->
 							<div class="menu__cell">
 								<div class="menu__ads">
-									<img src="https://cafre.ru/upload/iblock/143/143932bc8469910d1890222c2a78f483.jpg">
+									<img src="https://cafre.ru/upload/iblock/143/143932bc8469910d1890222c2a78f483.jpg" alt="">
 								</div>
 							</div>	
 						</div>							
@@ -245,7 +245,7 @@ if($ob = $res->GetNextElement())?>
 							</div>-->
 							<div class="menu__cell">
 								<div class="menu__ads">
-									<img src="https://cafre.ru/upload/iblock/143/143932bc8469910d1890222c2a78f483.jpg">
+									<img src="https://cafre.ru/upload/iblock/143/143932bc8469910d1890222c2a78f483.jpg" alt="">
 								</div>
 							</div>
 						</div>						

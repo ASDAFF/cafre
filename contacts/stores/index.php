@@ -8,28 +8,28 @@ $APPLICATION->SetTitle("Магазины");
 	<li class="shops__item">
 		<div class="shops__photos">
 			<img src="/upload/iblock/b4a/b4a6d5a3f14dad4466db4157f9c91934.jpg" alt="">
-			<img src="/upload/iblock/32a/32a0d684d2b448c3faf0a1c271f791a4.jpg"/>
+			<img src="/upload/iblock/32a/32a0d684d2b448c3faf0a1c271f791a4.jpg" alt=""/>
 		</div>
 		<p>ТЦ Гудзон (Каширское шоссе 14)</p>
 	</li>
 	<li class="shops__item">
 		<div class="shops__photos">
 			<img src="/upload/iblock/676/67667d2b13fac5a70a2e97ad7cf9cc07.jpg" alt="">
-			<img src="/upload/iblock/3c9/3c9ce8489ad6bc031085b17e4f7b56d8.jpg"/>
+			<img src="/upload/iblock/3c9/3c9ce8489ad6bc031085b17e4f7b56d8.jpg" alt=""/>
 		</div>
 		<p>ТЦ Авеню (проспект Вернадского 86А)</p>
 	</li>
 	<li class="shops__item">
 		<div class="shops__photos">
 			<img src="/upload/iblock/1cf/1cfec9cef48d107516e3a2f0490bcf86.jpg" alt="">
-			<img src="/upload/iblock/ede/ede94d168b82720af390e85e9aefc785.jpg"/>
+			<img src="/upload/iblock/ede/ede94d168b82720af390e85e9aefc785.jpg" alt=""/>
 		</div>
 		<p>ТЦ Афимолл (Пресненская набережная 2)</p>
 	</li>
 	<li class="shops__item">
 		<div class="shops__photos">
 			<img src="/upload/iblock/a25/a25cfa9d27e7afa9b23b926c687069a8.jpg" alt="">
-			<img src="/upload/iblock/d52/d5248ec4a9014ceb4e3b9599d5169093.jpg"/>
+			<img src="/upload/iblock/d52/d5248ec4a9014ceb4e3b9599d5169093.jpg" alt=""/>
 		</div>
 		<p>ТЦ Рио (Большая Черемушкинская 1)</p>
 	</li>

@@ -6,6 +6,7 @@ CModule::includeModule('catalog');
 
 
 
+
 $arSelect2 = Array("ID", "NAME", "XML_ID", "PREWIEV_TEXT", "DETAIL_TEXT");
 $arFilter2 = Array("IBLOCK_ID"=>26); //,"XML_ID"=>$value2[0]
 $res1 = CIBlockElement::GetList(Array(), $arFilter2, false, Array(), $arSelect2);

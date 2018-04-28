@@ -17,8 +17,8 @@
 			</div>
 		<form action="<?=$arResult["FORM_ACTION"];?>" class="sform box-sizing">
 			<?foreach($arResult["RUBRICS"] as $itemID => $itemValue):?>
-				<label for="sf_RUB_ID_<?=$itemValue["ID"]?>" class="hidden">
-					<input type="checkbox" name="sf_RUB_ID[]" id="sf_RUB_ID_<?=$itemValue["ID"]?>" value="<?=$itemValue["ID"]?>"<?if($itemValue["CHECKED"]) echo " checked"?> /> <?=$itemValue["NAME"]?>
+				<label for="sf_RUB_IDF_<?=$itemValue["ID"]?>" class="hidden">
+					<input type="checkbox" name="sf_RUB_ID[]" id="sf_RUB_IDF_<?=$itemValue["ID"]?>" value="<?=$itemValue["ID"]?>"<?if($itemValue["CHECKED"]) echo " checked"?> /> <?=$itemValue["NAME"]?>
 				</label>
 			<?endforeach;?>
 

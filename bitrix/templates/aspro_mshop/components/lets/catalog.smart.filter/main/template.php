@@ -10,6 +10,9 @@ if($arResult["ITEMS"]){?>
 				<?endforeach;
 				$isFilter=false;
 				//prices
+				
+				
+				
 				foreach($arResult["ITEMS"] as $key=>$arItem)
 				{						
 				if($arItem["PRICE"])continue;
@@ -131,6 +134,41 @@ if($arResult["ITEMS"]){?>
 					<?endif;
 				}
 				//not prices
+				
+				
+				$ex_ur = explode('f-', $APPLICATION->GetCurPage());
+				$ex_ur2 = explode('/', $ex_ur[1]);
+				
+					$mas_ur = array();
+					foreach($ex_ur2 as $l){
+						$count_b = 0;
+						foreach($arResult["ITEMS"] as $key_u=>$arItem_ur){
+							if($arItem_ur["PRICE"])continue;
+							if($key_u==250)continue;
+							switch ($arItem_ur["DISPLAY_TYPE"]){
+								case "A":break;
+								case "B":break;
+								case "G":break;
+								case "H":break;
+								case "P":break;
+								case "R":break;
+								case "K":break;
+								case "U":break;
+								default://CHECKBOXES
+								if($arItem_ur["ID"]!=244){
+							
+							$count_b++;
+							
+							//echo $key_u."<br>";
+						//	echo mb_strtolower(str_replace(" ", "_", $arItem_ur["CODE"])).'<br>';
+					 if((strpos($l, mb_strtolower(str_replace(" ", "_", $arItem_ur["CODE"])))==0) && !(strpos($l, mb_strtolower(str_replace(" ", "_", $arItem_ur["CODE"])))===false)){	
+						$mas_ur[$count_b] = $l;
+					
+					}
+					}
+								}
+						}		
+					}
 				$ir=0;
 				foreach($arResult["ITEMS"] as $key=>$arItem)
 				{
@@ -629,36 +667,74 @@ if($arResult["ITEMS"]){?>
 										$isSize=false;
 									}?>
 									<?
+									if($arItem["ID"]!=244){
 									$ir++;
 									foreach($arItem["VALUES"] as $val => $ar):?>
 									<?
-									$block_key = $ir;
-									$ex_ur = explode('/', $APPLICATION->GetCurPage());
+									/*
+									$ex_ur = explode('f-', $APPLICATION->GetCurPage());
 									unset($ex_ur[0]);
 									$last = count($ex_ur)-1;
-									if(!strpos($APPLICATION->GetCurPage(), "f")){
+									if(!strpos($APPLICATION->GetCurPage(), "f-")){
 										$ful_url = $APPLICATION->GetCurPage().'f-';
 									}else{
-										if(!array_search('f-'.mb_strtolower(str_replace(" ", "_", $arItem["CODE"])).'-is-'.$ar["URL_ID"], $ex_ur) && !strpos($APPLICATION->GetCurPage(), mb_strtolower(str_replace(" ", "_", $arItem["CODE"])))){
+										if(!array_search('f-'.mb_strtolower(str_replace(" ", "_", $arItem["CODE"])).'-is-'.$ar["URL_ID"], $ex_ur) && !strpos($APPLICATION->GetCurPage(), mb_strtolower(str_replace(" ", "_", $arItem["CODE"]))) && $block_key!=1){
 											$ful_url = $APPLICATION->GetCurPage();
-										}else{
+										}elseif($block_key==1 && !strpos($APPLICATION->GetCurPage(), mb_strtolower(str_replace(" ", "_", $arItem["CODE"])))){
 											$ful_url = '';
+											$ur_dop = '';
 											foreach($ex_ur as $k => $vs){
-												if($vs == $ex_ur[$last])continue;
-												if($k == end($ex_ur)){
+												if($vs != $ex_ur[$last]){
+												if(!next($ex_ur)){
 												$ful_url.=$vs.'/f-';
 												}else{
 												$ful_url.='/'.$vs;
 												}
+												}else{
+										
+													$ur_dop.=str_replace("f-", "", $vs).'/';
+													
+												}
+											}
+											
+										}else{
+											$ful_url = '';
+										
+											foreach($ex_ur as $k => $vs){
+												if($vs == $ex_ur[$last])continue;
+												
+												if(!next($ex_ur)){
+												$ful_url.=$vs.'/';
+												}else{
+												$ful_url.='/'.$vs;
+												}
+												
 											}
 										}
+									}*/
+									if($mas_ur){
+										$copy_mas_ur = $mas_ur;
+										$copy_mas_ur[$ir] = mb_strtolower(str_replace(" ", "_", $arItem["CODE"])).'-is-'.$ar["URL_ID"];
+										ksort($copy_mas_ur);
+										$ful_url = $ex_ur[0].'f-'.implode('/',$copy_mas_ur).'/';
+									}else{
+										$ful_url = $APPLICATION->GetCurPage().'f-'.mb_strtolower(str_replace(" ", "_", $arItem["CODE"])).'-is-'.$ar["URL_ID"].'/';
 									}
-									echo $block_key;
+									if ($ar["ELEMENT_COUNT"] != 0):
 									?>
-									<a href="<?=$ful_url.mb_strtolower(str_replace(" ", "_", $arItem["CODE"]))?>-is-<?=$ar["URL_ID"]?>/"><span class="bx_filter_input_checkbox"><span class="bx_filter_param_text" title="<?=$ar["VALUE"];?>"><?=$ar["VALUE"];?><?
+									<a class="<? echo $ar["CHECKED"]? 'on_link_filt': '' ?>" href="<?=$ful_url?>"><span class="bx_filter_input_checkbox"><span class="bx_filter_param_text link_filt" title="<?=$ar["VALUE"];?>"><?=$ar["VALUE"];?><?
 												if ($arParams["DISPLAY_ELEMENT_COUNT"] !== "N" && isset($ar["ELEMENT_COUNT"]) && !$isSize):
 													?> (<span data-role="count_<?=$ar["CONTROL_ID"]?>"><? echo $ar["ELEMENT_COUNT"]; ?></span>)<?
 												endif;?></span></span></a>
+									<?else:?>
+									<a class="no-elementlik <? echo $ar["CHECKED"]? 'on_link_filt': '' ?>"><span class="bx_filter_input_checkbox"><span class="bx_filter_param_text link_filt" title="<?=$ar["VALUE"];?>"><?=$ar["VALUE"];?><?
+												if ($arParams["DISPLAY_ELEMENT_COUNT"] !== "N" && isset($ar["ELEMENT_COUNT"]) && !$isSize):
+													?> (<span data-role="count_<?=$ar["CONTROL_ID"]?>"><? echo $ar["ELEMENT_COUNT"]; ?></span>)<?
+												endif;?></span></span></a>
+									<?endif;?>
+									<?endforeach;?>
+									<?}else{?>
+										<?foreach($arItem["VALUES"] as $val => $ar):?>
 										<input
 											type="checkbox"
 											value="<? echo $ar["HTML_VALUE"] ?>"
@@ -668,7 +744,7 @@ if($arResult["ITEMS"]){?>
 											<? echo $ar["CHECKED"]? 'checked="checked"': '' ?>
 											onclick="smartFilter.click(this)"
 										/>
-										<label data-role="label_<?=$ar["CONTROL_ID"]?>" class="bx_filter_param_label <?=($isSize ? "nab sku" : "");?> <?=($i==$count ? "last" : "");?> <? echo $ar["DISABLED"] ? 'disabled': '' ?>" for="<? echo $ar["CONTROL_ID"] ?>">
+										<label data-checkurl="<?=mb_strtolower(str_replace(" ", "_", $arItem["CODE"])).'-is-'.$ar["URL_ID"]?>" data-role="label_<?=$ar["CONTROL_ID"]?>" class="bx_filter_param_label check-filt-sv <?=($isSize ? "nab sku" : "");?> <?=($i==$count ? "last" : "");?> <? echo $ar["DISABLED"] ? 'disabled': '' ?>" for="<? echo $ar["CONTROL_ID"] ?>">
 											<span class="bx_filter_input_checkbox">
 												
 												<span class="bx_filter_param_text" title="<?=$ar["VALUE"];?>"><?=$ar["VALUE"];?><?
@@ -678,7 +754,9 @@ if($arResult["ITEMS"]){?>
 											</span>
 										</label>
 										<?$i++;?>
+										
 									<?endforeach;?>
+									<?}?>
 							<?}?>
 							</div>
 							<div class="clb"></div>
