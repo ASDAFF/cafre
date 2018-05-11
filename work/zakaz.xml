@@ -6851,3 +6851,32 @@ res=stdClass Object
 )
 double:1362
 --
+Array
+(
+    [SID] => 26
+    [UID] => 1558
+    [Date] => 2018-05-04T09:33:48
+    [PrCode] => 
+    [Comm] => 
+    [Name] => Тест
+    [Phone] => 8(999) 999-9999
+    [Address] => Московская область, Москва, 
+    [eMail] => user_152541562813@cafre.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000010015
+                    [Qty] => 1
+                    [Cost] => 2019
+                )
+
+        )
+
+)
+res=stdClass Object
+(
+    [return] => 1
+)
+double:1558
+--

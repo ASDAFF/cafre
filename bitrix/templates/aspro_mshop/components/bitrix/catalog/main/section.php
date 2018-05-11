@@ -666,7 +666,7 @@ if($arFields["PREVIEW_PICTURE"]){
 				);?>
 			
 			<?if($isAjax=="N"){?>
-				<?if($posSectionDescr=="BOTTOM"){?>
+				<?/*if($posSectionDescr=="BOTTOM"){?>
 					<?if ($arSection["DESCRIPTION"]):?>
 						<div class="group_description_block bottom">
 							<div><?=$arSection["DESCRIPTION"]?></div>
@@ -676,7 +676,7 @@ if($arFields["PREVIEW_PICTURE"]){
 							<div><?=$arSection["UF_SECTION_DESCR"]?></div>
 						</div>
 					<?endif;?>
-				<?}?>
+				<?}*/?>
 				<div class="clear"></div>
 				</div>
 			<?}?>
@@ -708,6 +708,19 @@ if($arParams["SHOW_TOP_ELEMENTS"]!="N"){
 			//$res = CIBlockSection::GetByID($arResult["VARIABLES"]["SECTION_ID"]);
 			//$ar_res = $res->GetNext();
 			//описания у брендов перетсали выводиться
+			if($arSection["DESCRIPTION"]){
+				?>
+				<div class="bottom_brand_block">
+		<div class="brand__content">
+			<span class="brand__content-title">Содержание</span>
+		</div>
+		<div class="brand__description">
+			<?=htmlspecialcharsBack($arSection["DESCRIPTION"]);?>
+		</div>
+		<p class="text_brand_sec_bot"></p>
+		</div>
+				<?
+			}else{
 			$ar_result=CIBlockSection::GetList(Array("SORT"=>"ASC"), Array("IBLOCK_ID"=>"26", "ID"=>$arResult["VARIABLES"]["SECTION_ID"]>0?$arResult["VARIABLES"]["SECTION_ID"]:$arSection["ID"]),false, Array("UF_BOTTOM_TEXT"));
 	?>
 	<?if($res2=$ar_result->GetNext()):?>
@@ -721,8 +734,8 @@ if($arParams["SHOW_TOP_ELEMENTS"]!="N"){
 		</div>
 		<p class="text_brand_sec_bot"></p>
 		</div>
-	<?}?>
-<?endif;?>
+			<?}?>
+<?endif;}?>
 <?$exp_mas2 = explode("/", $APPLICATION->GetCurPage());
 		$fruit30 = array_pop($exp_mas2);
 	$ar_result_br=CIBlockElement::GetList(Array("SORT"=>"ASC"), Array("IBLOCK_ID"=>30, "PROPERTY_RAZ_D"=>$arSection["ID"], "XML_ID"=>array_pop($exp_mas2)),false, Array("XML_ID", "NAME"));
@@ -1126,7 +1139,7 @@ $APPLICATION->SetPageProperty("description", " Огромный ассортимент ".$section["
 		}
 	}
 	if(substr_count($arResult['VARIABLES']['SECTION_CODE_PATH'], '/')>0) {
-		print_r($filter_h1);
+		//print_r($filter_h1);
 		if($section["UF_FILT_H"] && $filter_h1){
 			$APPLICATION->SetPageProperty("title", $section["UF_FILT_H"].$filter_h1.(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));
 		}

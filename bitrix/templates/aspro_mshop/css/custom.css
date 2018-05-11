@@ -565,6 +565,7 @@ display: inline;
 }
 .catalog_item_wrapp{
 	display:inline-block;
+	height: 520px;
 }
 .callback_btn {border-bottom: 1px dotted;}
 .callback_btn:hover{border-bottom: none;}
@@ -3498,6 +3499,23 @@ left: calc(50% - 60px);
 	text-decoration: none;
 	color: white;
 	font-size: 10px;
+}
+
+.counter_block::before {
+	position: absolute;
+	bottom: 0;
+	left: 10px;
+	content: 'Недостаточно товара';
+	color: #EB5470;
+	font-size: 14px;
+	opacity: 0;
+	visibility: hidden;
+	transition: all .3s;
+}
+
+.counter_block.maxcount::before {
+	opacity: 1;
+	visibility: visible;
 }
 
 @media (max-width: 768px) {

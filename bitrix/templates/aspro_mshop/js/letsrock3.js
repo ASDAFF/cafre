@@ -168,6 +168,7 @@ if(bigdata2){
 	/********Добавление и удаление количества товаров********/
 $('[data-but="minus"], [data-but="plus"]').on("click",function(e){
 		e.preventDefault();
+		
 		if($(this).text() == "-"){
 				var but = 0;
 		}

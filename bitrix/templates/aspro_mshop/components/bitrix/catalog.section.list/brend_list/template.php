@@ -49,15 +49,30 @@ if($e_fater != 'on')continue;
 									<?if($arSection['ELEMENT_CNT']==0) continue;
 									if(count($arSection["SECTIONS"])):?>
 										<li class="bDepth3">
+										<?if($arParams["SECTION_BRAND_CAT"]):?>
+											<a class="menu_title <?=($arSection["SELECTED"] ? "cur" : "")?>" href="<?=$arSection["SECTION_PAGE_URL"].strtolower($arParams["SECTION_BRAND_CAT"]).'/'?>"><?=$arSection["NAME"]?></a>
+										<?else:?>
 											<a class="menu_title <?=($arSection["SELECTED"] ? "cur" : "")?>" href="<?=$arSection["SECTION_PAGE_URL"]?>"><?=$arSection["NAME"]?></a>
+										<?endif;?>
 											<?foreach($arSection["SECTIONS"] as $arSubItem):
 											if($arSubItem['ELEMENT_CNT']==0) continue;
 											?>
-												<a class="menu_item <?=($arSubItem["SELECTED"] ? "cur" : "")?>" data-id="<?=$arSubItem['ID']?>" href="<?=$arSubItem["SECTION_PAGE_URL"]?>"><?=$arSubItem["NAME"]?></a>
+										<?if($arParams["SECTION_BRAND_CAT"]):?>
+										<a class="menu_item <?=($arSubItem["SELECTED"] ? "cur" : "")?>" data-id="<?=$arSubItem['ID']?>" href="<?=$arSubItem["SECTION_PAGE_URL"].strtolower($arParams["SECTION_BRAND_CAT"]).'/'?>"><?=$arSubItem["NAME"]?></a>
+										<?else:?>
+										<a class="menu_item <?=($arSubItem["SELECTED"] ? "cur" : "")?>" data-id="<?=$arSubItem['ID']?>" href="<?=$arSubItem["SECTION_PAGE_URL"]?>"><?=$arSubItem["NAME"]?></a>
+										<?endif;?>
+												
 											<?endforeach;?>
 										</li>
 									<?else:?>
-										<li class="menu_item <?=($arSection["SELECTED"] ? "cur" : "")?>" data-id="<?=$arSection['ID']?>"><a href="<?=$arSection["SECTION_PAGE_URL"]?>"><?=$arSection["NAME"]?></a></li>
+										<li class="menu_item <?=($arSection["SELECTED"] ? "cur" : "")?>" data-id="<?=$arSection['ID']?>">
+										<?if($arParams["SECTION_BRAND_CAT"]):?>
+										<a href="<?=$arSection["SECTION_PAGE_URL"].strtolower($arParams["SECTION_BRAND_CAT"]).'/'?>"><?=$arSection["NAME"]?></a>
+										<?else:?>
+										<a href="<?=$arSection["SECTION_PAGE_URL"]?>"><?=$arSection["NAME"]?></a>
+										<?endif;?>
+										</li>
 									<?endif;?>
 								<?endforeach;?>
 							</ul>

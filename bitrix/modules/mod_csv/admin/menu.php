@@ -50,6 +50,12 @@ if($APPLICATION->GetGroupRight("mod_csv")!="D")
 				"more_url" => array("subscr_edit.php"),
 				"title" => "Удаление элементов"
 			),
+			array(
+				"text" => "Обновление фото фидом м-косметики",
+				"url" => "import_xml_phot.php?lang=".LANGUAGE_ID,
+				"more_url" => array("subscr_edit.php"),
+				"title" => "Обновление фото фидом м-косметики"
+			),
 		)
 	);
 

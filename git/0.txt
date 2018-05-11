@@ -18517,3 +18517,6 @@
 17.04.2018 02:31 /bitrix/templates/aspro_mshop/components/bitrix/catalog/main/element.php (17.04.2018 14:27:01     neww)
 17.04.2018 02:31 /bitrix/templates/aspro_mshop/components/bitrix/menu/tz_top_general_multilevel/template.php (17.04.2018 14:27:01     neww)
 17.04.2018 02:36 /bitrix/templates/aspro_mshop/components/bitrix/catalog/main/section.php (17.04.2018 14:27:01     neww)
+28.04.2018 10:36 /bitrix/templates/aspro_mshop/css/custom.css (28.04.2018 10:33:00     many fix)
+04.05.2018 09:30 /bitrix/templates/aspro_mshop/components/bitrix/sale.order.ajax/new/auth.php (28.04.2018 10:33:00     many fix)
+04.05.2018 09:37 /bitrix/templates/aspro_mshop/components/aspro/oneclickbuy.mshop/shop/template.php (28.04.2018 10:33:00     many fix)

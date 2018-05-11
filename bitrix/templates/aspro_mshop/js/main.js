@@ -1160,6 +1160,7 @@ $(document).ready(function(){
 	});
 
 	$(".counter_block:not(.basket) .plus").live("click", function(){
+		
 		if(!$(this).parents('.basket_wrapp').length){
 			if($(this).parent().data("offers")!="Y"){
 				var isDetailSKU2 = $(this).parents('.counter_block_wr').length;
@@ -1183,11 +1184,17 @@ $(document).ready(function(){
 				if(parseFloat($(this).data('max'))>0){
 					if(input.val() < $(this).data('max')){
 						if(curValue>$(this).data('max')){
+							console.log(1);
 							input.val($(this).data('max'));
 						}else{
 							input.val(curValue);
 						}
 						input.change();
+					} else {
+						$(this).closest('.counter_block').addClass('maxcount');
+						setTimeout(function() {
+							$('.maxcount').removeClass('maxcount');
+						}, 2500);
 					}
 				}else{
 					input.val(curValue);
@@ -1198,6 +1205,7 @@ $(document).ready(function(){
 	});
 
 	$(".counter_block:not(.basket) .minus").live("click", function(){
+		$(this).closest('.counter_block').removeClass('maxcount');
 		if(!$(this).parents('.basket_wrapp').length){
 			if($(this).parent().data("offers")!="Y"){
 				var isDetailSKU2 = $(this).parents('.counter_block_wr').length;
@@ -1261,6 +1269,10 @@ $(document).ready(function(){
 				if(val>parseFloat($(this).parents(".counter_block").find(".plus").data('max'))){
 					val=parseFloat($(this).parents(".counter_block").find(".plus").data('max'));
 					val -= (val % ratio);
+					$(this).closest('.counter_block').addClass('maxcount');
+					setTimeout(function() {
+						$('.maxcount').removeClass('maxcount');
+					}, 2500);
 				}
 			}
 			if(val<ratio){
