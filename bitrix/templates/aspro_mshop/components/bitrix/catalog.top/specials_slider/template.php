@@ -110,7 +110,7 @@
 													<?if($percent && $percent<100){?>
 														<div class="value">-<?=$percent;?>%</div>
 													<?}?>
-													<div class="text"><?=GetMessage("CATALOG_ECONOMY");?> <?=$minPrice["PRINT_DISCOUNT_DIFF"];?></div>
+													<?/*<div class="text"><?=GetMessage("CATALOG_ECONOMY");?> <?=$minPrice["PRINT_DISCOUNT_DIFF"];?></div>*/?>
 													<div class="clearfix"></div>
 												</div>
 											<?}else{?>

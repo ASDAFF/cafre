@@ -11,9 +11,10 @@
 	
 	$arSite = CSite::GetByID(SITE_ID)->Fetch();
 	$htmlClass = ($_REQUEST && isset($_REQUEST['print']) ? 'print' : false);
-?>
+//xmlns="http://www.w3.org/1999/xhtml"
+	?>
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" <?=($htmlClass ? 'class="'.$htmlClass.'"' : '')?> lang="ru" itemscope itemtype="https://schema.org/WebPage">
+<html <?=($htmlClass ? 'class="'.$htmlClass.'"' : '')?> lang="ru" itemscope itemtype="https://schema.org/WebPage">
 <head>
 	<title itemprop="name"><?$APPLICATION->ShowTitle()?></title>
 	<?$APPLICATION->ShowMeta("viewport");?>

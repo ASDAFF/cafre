@@ -1,8 +1,9 @@
 <?php
+$_SERVER["DOCUMENT_ROOT"] = '/var/www/www-root/data/www/test.cafre.ru';
 require($_SERVER["DOCUMENT_ROOT"].'/bitrix/modules/main/include/prolog_before.php');
 CModule::IncludeModule("iblock");
 CModule::IncludeModule("catalog");
-/*
+
 //----Page----//
   $dom4 = new domDocument("1.0", "utf-8"); // Создаём XML-документ версии 1.0 с кодировкой utf-8
   $root4 = $dom4->createElement("urlset"); // Создаём корневой элемент
@@ -93,96 +94,32 @@ $d5 = new DateTime($arFields_tov["DATE_ACTIVE_FROM"]);
 }
 $dom5->save("sitemap_tov.xml");
 //----EndTov----//
-*/
+
 $dom_filt = new domDocument("1.0", "utf-8");
   $root_filt = $dom_filt->createElement("urlset");
   $root_filt->setAttribute("xmlns", "http://www.sitemaps.org/schemas/sitemap/0.9");
   $dom_filt->appendChild($root_filt);
 $arr_filt_sec = array();
-$arFilter2 = array('IBLOCK_ID' => 26, "ACTIVE"=>"Y"); 
+	
+	$arFilter2 = array('IBLOCK_ID' => 26, "ACTIVE"=>"Y"); 
    $rsSect2 = CIBlockSection::GetList(array('left_margin' => 'asc'),$arFilter2);
+   $GLOBAL = '';
+   $num_sec = 1;
    while ($arSect2 = $rsSect2->GetNext())
    {
-/*$arSelect_tov2 = Array("ID","IBLOCK_ID", "IBLOCK_SECTION_ID", "PROPERTY_TYPE_COLOR", "PROPERTY_NUMBER_BASE", "PROPERTY_OTTENOC", "PROPERTY_COLOR", "PROPERTY_TYPE_VOLOS", "PROPERTY_SVIST_TOV", "PROPERTY_UHOD", "PROPERTY_OBIEM", "PROPERTY_CATALOG_BREND", "PROPERTY_HIT");
-$arFilter_tov2 = Array("IBLOCK_ID"=>$arSect2["IBLOCK_ID"], "IBLOCK_SECTION_ID"=>$arSect2["ID"],"ACTIVE_DATE"=>"Y", "ACTIVE"=>"Y");
-$res_tov2 = CIBlockElement::GetList(Array(), $arFilter_tov2, false, Array(), $arSelect_tov2);
-while($ob_tov2 = $res_tov2->GetNextElement())
-{
-	$arFields_tov2 = $ob_tov2->GetFields();
-	if($arFields_tov2["PROPERTY_TYPE_COLOR_ENUM_ID"] == false &&$arFields_tov2["PROPERTY_NUMBER_BASE_ENUM_ID"] == false &&$arFields_tov2["PROPERTY_OTTENOC_ENUM_ID"] == false &&$arFields_tov2["PROPERTY_COLOR_ENUM_ID"] == false &&$arFields_tov2["PROPERTY_TYPE_VOLOS_ENUM_ID"] == false &&$arFields_tov2["PROPERTY_SVIST_TOV_ENUM_ID"] == false &&$arFields_tov2["PROPERTY_UHOD_ENUM_ID"] == false &&$arFields_tov2["PROPERTY_OBIEM_ENUM_ID"] == false &&$arFields_tov2["PROPERTY_HIT_ENUM_ID"] == false) continue;
+	if( !(strpos($arSect2['SECTION_PAGE_URL'], '/vse_brendy/')===false)) continue;
 	
-	if($arFields_tov2["PROPERTY_TYPE_COLOR_ENUM_ID"]){
-$db_enum_list = CIBlockProperty::GetPropertyEnum("TYPE_COLOR", Array(), Array("IBLOCK_ID"=>26, "ID"=>$arFields_tov2["PROPERTY_TYPE_COLOR_ENUM_ID"]));
-if($ar_enum_list = $db_enum_list->GetNext())
-{
-	$arr_filt_sec[$arSect2["SECTION_PAGE_URL"]][] = array("TYPE_COLOR"=>$ar_enum_list["XML_ID"]);
-}
-}elseif($arFields_tov2["PROPERTY_NUMBER_BASE_ENUM_ID"]){
-	$db_enum_list = CIBlockProperty::GetPropertyEnum("NUMBER_BASE", Array(), Array("IBLOCK_ID"=>26, "ID"=>$arFields_tov2["PROPERTY_NUMBER_BASE_ENUM_ID"]));
-if($ar_enum_list = $db_enum_list->GetNext())
-{
-	$arr_filt_sec[$arSect2["SECTION_PAGE_URL"]][] = array("NUMBER_BASE"=>$ar_enum_list["XML_ID"]);
-}
-
-}elseif($arFields_tov2["PROPERTY_OTTENOC_ENUM_ID"]){
-	$db_enum_list = CIBlockProperty::GetPropertyEnum("OTTENOC", Array(), Array("IBLOCK_ID"=>26, "ID"=>$arFields_tov2["PROPERTY_OTTENOC_ENUM_ID"]));
-if($ar_enum_list = $db_enum_list->GetNext())
-{
-	$arr_filt_sec[$arSect2["SECTION_PAGE_URL"]][] = array("OTTENOC"=>$ar_enum_list["XML_ID"]);
-}
-
-}elseif($arFields_tov2["PROPERTY_COLOR_ENUM_ID"]){
-	$db_enum_list = CIBlockProperty::GetPropertyEnum("COLOR", Array(), Array("IBLOCK_ID"=>26, "ID"=>$arFields_tov2["PROPERTY_COLOR_ENUM_ID"]));
-if($ar_enum_list = $db_enum_list->GetNext())
-{
-	$arr_filt_sec[$arSect2["SECTION_PAGE_URL"]][] = array("COLOR"=>$ar_enum_list["XML_ID"]);
-}
-
-}elseif($arFields_tov2["PROPERTY_TYPE_VOLOS_ENUM_ID"]){
-	$db_enum_list = CIBlockProperty::GetPropertyEnum("TYPE_VOLOS", Array(), Array("IBLOCK_ID"=>26, "ID"=>$arFields_tov2["PROPERTY_TYPE_VOLOS_ENUM_ID"]));
-if($ar_enum_list = $db_enum_list->GetNext())
-{
-	$arr_filt_sec[$arSect2["SECTION_PAGE_URL"]][] = array("TYPE_VOLOS"=>$ar_enum_list["XML_ID"]);
-}
-
-}elseif($arFields_tov2["PROPERTY_SVIST_TOV_ENUM_ID"]){
-	$db_enum_list = CIBlockProperty::GetPropertyEnum("SVIST_TOV", Array(), Array("IBLOCK_ID"=>26, "ID"=>$arFields_tov2["PROPERTY_SVIST_TOV_ENUM_ID"]));
-if($ar_enum_list = $db_enum_list->GetNext())
-{
-	$arr_filt_sec[$arSect2["SECTION_PAGE_URL"]][] = array("SVIST_TOV"=>$ar_enum_list["XML_ID"]);
-}
-
-}elseif($arFields_tov2["PROPERTY_UHOD_ENUM_ID"]){
-	$db_enum_list = CIBlockProperty::GetPropertyEnum("UHOD", Array(), Array("IBLOCK_ID"=>26, "ID"=>$arFields_tov2["PROPERTY_UHOD_ENUM_ID"]));
-if($ar_enum_list = $db_enum_list->GetNext())
-{
-	$arr_filt_sec[$arSect2["SECTION_PAGE_URL"]][] = array("UHOD"=>$ar_enum_list["XML_ID"]);
-}
-
-}elseif($arFields_tov2["PROPERTY_OBIEM_ENUM_ID"]){
-	$db_enum_list = CIBlockProperty::GetPropertyEnum("OBIEM", Array(), Array("IBLOCK_ID"=>26, "ID"=>$arFields_tov2["PROPERTY_OBIEM_ENUM_ID"]));
-if($ar_enum_list = $db_enum_list->GetNext())
-{
-	$arr_filt_sec[$arSect2["SECTION_PAGE_URL"]][] = array("OBIEM"=>$ar_enum_list["XML_ID"]);
-}
-
-}elseif($arFields_tov2["PROPERTY_HIT_ENUM_ID"]){
-	$db_enum_list = CIBlockProperty::GetPropertyEnum("HIT", Array(), Array("IBLOCK_ID"=>26, "ID"=>$arFields_tov2["PROPERTY_HIT_ENUM_ID"]));
-if($ar_enum_list = $db_enum_list->GetNext())
-{
-	$arr_filt_sec[$arSect2["SECTION_PAGE_URL"]][] = array("HIT"=>$ar_enum_list["XML_ID"]);
-}
-
-}
-
-}*/
-$APPLICATION->IncludeComponent(
+	$dom_filt_n = new domDocument("1.0", "utf-8");
+  $root_filt_n = $dom_filt_n->createElement("urlset");
+  $root_filt_n->setAttribute("xmlns", "http://www.sitemaps.org/schemas/sitemap/0.9");
+  $dom_filt_n->appendChild($root_filt_n);
+	$APPLICATION->IncludeComponent(
 		"lets:catalog.smart.filter",
 		"main_ajax_sitemap",
 		Array(
 			"HIDE_NOT_AVAILABLE"=> "L",
 			"IBLOCK_TYPE" => "new_cat",
-			"IBLOCK_ID" => $arSect2["IBLOCK_ID"],
+			"IBLOCK_ID" => 26,
 			"SECTION_ID" => $arSect2['ID'],
 			"FILTER_NAME" => "MSHOP_SMART_FILTER",
 			"PRICE_CODE" => array(
@@ -195,33 +132,42 @@ $APPLICATION->IncludeComponent(
 			"CACHE_NOTES" => "",
 			"CACHE_GROUPS" => "N",
 			"SAVE_IN_SESSION" => "N",
-			"XML_EXPORT" => "Y",
+			//"XML_EXPORT" => "Y",
 			"SECTION_TITLE" => "NAME",
 			"SECTION_DESCRIPTION" => "DESCRIPTION",
-			"SHOW_HINTS" => "Y",
+			//"SHOW_HINTS" => "Y",
 			'CONVERT_CURRENCY' => "Y",
 			'CURRENCY_ID' => "RUB",
-			"INSTANT_RELOAD" => "Y",
+			//"INSTANT_RELOAD" => "Y",
 			"VIEW_MODE" => "vertical",
-			"SEF_MODE" => "Y",
+			//"SEF_MODE" => "Y",
 			"SEF_RULE" => "/catalog/#SECTION_CODE_PATH#/f-#SMART_FILTER_PATH#/",
 			"SMART_FILTER_PATH" => "",
 			"SECTION_DETAIL_PAGE"=>$arSect2["SECTION_PAGE_URL"],
 			"ROOT" => $root_filt,
 			"DOOM" => $dom_filt,
+			"ROOT_VARS"=>$root_filt_n,
+			"DOOM_VARS"=>$dom_filt_n,
 		),
 		$component);
+		//print_r($GLOBAL);
+		if($GLOBAL == $arSect2['ID']){
+   $dom_filt_n->save("sitemap_filt_raz_".$arSect2['CODE']."_vars.xml");
+   $arr_filtr[] = "sitemap_filt_raz_".$arSect2['CODE']."_vars.xml";
+		}
    }
-   $dom_filt->save($_SERVER["DOCUMENT_ROOT"]."/sitemap_filt_raz.xml");
+ 
+   $dom_filt->save("sitemap_filt_raz.xml");
 
  //----FaterSiteMap----// 
 $arr_site = array("sitemap_page.xml", "sitemap_news.xml", "sitemap_sec.xml", "sitemap_tov.xml", "sitemap_filt_raz.xml");  
+$result_site = array_merge($arr_site, $arr_filtr);
 
    $dom2 = new domDocument("1.0", "utf-8");
   $root2 = $dom2->createElement("sitemapindex");
   $root2->setAttribute("xmlns", "http://www.sitemaps.org/schemas/sitemap/0.9");
   $dom2->appendChild($root2);
-  foreach($arr_site as $sitemap){
+  foreach($result_site as $sitemap){
     $user2 = $dom2->createElement("sitemap"); // Создаём узел "user"
     $login2 = $dom2->createElement("loc", 'https://cafre.ru/'.$sitemap);
 $d2 = new DateTime(date());
@@ -232,5 +178,6 @@ $d2 = new DateTime(date());
  }
   $dom2->save("sitemap.xml");
   //----EndFaterSiteMap----// 
+ 
   
 ?>

@@ -46,11 +46,13 @@ usort($arBasketIDs, 'CMShop::cmpByID');
 		<div class="wraps_icon_block delay <?=($delayCount ? '' : 'ndelay' );?>">
 			<a href="<?=$arParams["PATH_TO_BASKET"];?>#tab_DelDelCanBuy" class="link" <?=($delayCount ? '' : 'style="display: none;"' );?> title="<?=GetMessage("BASKET_DELAY_LIST");?>"></a>
 			<div class="count">
-				<span>
-					<div class="items">
-						<div class="text"><?=$delayCount;?></div>
+				<div class="items">
+					<div class="text">
+						<span>
+								<?=$delayCount;?>
+						</span>
 					</div>
-				</span>
+				</div>
 			</div>
 		</div>
 		<div class="basket_block f-left">
@@ -58,11 +60,11 @@ usort($arBasketIDs, 'CMShop::cmpByID');
 			<div class="wraps_icon_block basket">
 				<a href="<?=$arParams["PATH_TO_BASKET"]?>" class="link" title="<?=GetMessage("BASKET_LIST");?>"></a>
 				<div class="count">
-					<span>
-						<div class="items">
-							<a href="<?=$arParams["PATH_TO_BASKET"]?>"><?=$count;?></a>
-						</div>
-					</span>
+					<div class="items">
+						<span>
+								<a href="<?=$arParams["PATH_TO_BASKET"]?>"><?=$count;?></a>
+						</span>
+					</div>
 				</div>
 			</div>
 			<div class="text f-left">

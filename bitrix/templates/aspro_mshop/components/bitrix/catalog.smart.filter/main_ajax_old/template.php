@@ -2,7 +2,6 @@
 $this->setFrameMode(true);
 if($arResult["ITEMS"]){?>
 	<div class="bx_filter bx_filter_vertical">
-		<div class="bx_filter_bg"></div>
 		<div class="bx_filter_section">
 			<form name="<?echo $arResult["FILTER_NAME"]."_form"?>" action="<?echo $arResult["FORM_ACTION"]?>" method="get" class="smartfilter" id="smartfilter">
 				<input type="hidden" name="del_url" id="del_url" value="<?echo $arResult["SEF_DEL_FILTER_URL"]?>" />
@@ -13,7 +12,6 @@ if($arResult["ITEMS"]){?>
 				//prices
 				foreach($arResult["ITEMS"] as $key=>$arItem)
 				{
-					if($arItem["PRICE"])continue;
 					$key = $arItem["ENCODED_ID"];
 					if(isset($arItem["PRICE"])):
 						if ($arItem["VALUES"]["MAX"]["VALUE"] - $arItem["VALUES"]["MIN"]["VALUE"] <= 0)
@@ -130,60 +128,9 @@ if($arResult["ITEMS"]){?>
 						</script>
 					<?endif;
 				}
-				$ex_ur = explode('f-', $APPLICATION->GetCurPage());
-				$ex_ur2 = explode('/', $ex_ur[1]);
-				
-					$mas_ur = array();
-					foreach($ex_ur2 as $l){
-						$count_b = 0;
-						foreach($arResult["ITEMS"] as $key_u=>$arItem_ur){
-							if($arItem_ur["PRICE"])continue;
-							if($key_u==250)continue;
-							if(empty($arItem_ur['VALUES'])) continue;
-							switch ($arItem_ur["DISPLAY_TYPE"]){
-								case "A":break;
-								case "B":break;
-								case "G":break;
-								case "H":break;
-								case "P":break;
-								case "R":break;
-								case "K":break;
-								case "U":break;
-								default://CHECKBOXES
-								
-							
-							$count_b++;
-							
-							//echo $key_u."<br>";
-						//	echo mb_strtolower(str_replace(" ", "_", $arItem_ur["CODE"])).'<br>';
-					 if((strpos($l, mb_strtolower(str_replace(" ", "_", $arItem_ur["CODE"])))==0) && !(strpos($l, mb_strtolower(str_replace(" ", "_", $arItem_ur["CODE"])))===false)){	
-						$mas_ur[$count_b] = $l;
-					
-					}
-					
-								}
-						}		
-					}
-				$ir=0;
 				//not prices
 				foreach($arResult["ITEMS"] as $key=>$arItem)
 				{
-					if($key==250) {
-						foreach($arItem["VALUES"] as $val => $ar):
-						
-						if($ar["CHECKED"]) { ?>
-										<input
-											type="hidden"
-											value="<? echo $ar["HTML_VALUE"] ?>"
-											name="<? echo $ar["CONTROL_NAME"] ?>"
-											id="<? echo $ar["CONTROL_ID"] ?>"
-											<? echo $ar["CHECKED"]? 'checked="checked"': '' ?>
-										/>
-						<?break;
-						}?>
-						<?endforeach;
-						continue;
-					}
 					if(
 						empty($arItem["VALUES"])
 						|| isset($arItem["PRICE"])
@@ -666,77 +613,8 @@ if($arResult["ITEMS"]){?>
 									}else{
 										$isSize=false;
 									}?>
-									<?
-									$ir++;
-									foreach($arItem["VALUES"] as $val => $ar):?>
-									
-									<?
-																		
-									if($mas_ur){
-									
-										//if(!array_search($ex_ur[0].'f-'.implode('/',$copy_mas_ur).'/', $mas_ur)){
-											if(!array_search(mb_strtolower(str_replace(" ", "_", $arItem["CODE"])).'-is-'.$ar["URL_ID"], $mas_ur)){
-												$copy_mas_ur = $mas_ur;
-												$copy_mas_ur[$ir] = mb_strtolower(str_replace(" ", "_", $arItem["CODE"])).'-is-'.$ar["URL_ID"];
-												ksort($copy_mas_ur);
-												$ful_url = $ex_ur[0].'f-'.implode('/',$copy_mas_ur).'/';
-												/*if(!strpos($APPLICATION->GetCurPage(), mb_strtolower(str_replace(" ", "_", $arItem["CODE"])))){
-													
-												}else{
-													$ful_url =  $ex_ur[0].'f-'.mb_strtolower(str_replace(" ", "_", $arItem["CODE"])).'-is-'.$ar["URL_ID"].'/';
-												}*/
-											}
-										//}
-									}else{
-										$ful_url = $APPLICATION->GetCurPage().'f-'.mb_strtolower(str_replace(" ", "_", $arItem["CODE"])).'-is-'.$ar["URL_ID"].'/';
-									}
-									
-									if($arItem["ID"]!=244){
-									/*
-									$ex_ur = explode('f-', $APPLICATION->GetCurPage());
-									unset($ex_ur[0]);
-									$last = count($ex_ur)-1;
-									if(!strpos($APPLICATION->GetCurPage(), "f-")){
-										$ful_url = $APPLICATION->GetCurPage().'f-';
-									}else{
-										if(!array_search('f-'.mb_strtolower(str_replace(" ", "_", $arItem["CODE"])).'-is-'.$ar["URL_ID"], $ex_ur) && !strpos($APPLICATION->GetCurPage(), mb_strtolower(str_replace(" ", "_", $arItem["CODE"]))) && $block_key!=1){
-											$ful_url = $APPLICATION->GetCurPage();
-										}elseif($block_key==1 && !strpos($APPLICATION->GetCurPage(), mb_strtolower(str_replace(" ", "_", $arItem["CODE"])))){
-											$ful_url = '';
-											$ur_dop = '';
-											foreach($ex_ur as $k => $vs){
-												if($vs != $ex_ur[$last]){
-												if(!next($ex_ur)){
-												$ful_url.=$vs.'/f-';
-												}else{
-												$ful_url.='/'.$vs;
-												}
-												}else{
-										
-													$ur_dop.=str_replace("f-", "", $vs).'/';
-													
-												}
-											}
-											
-										}else{
-											$ful_url = '';
-										
-											foreach($ex_ur as $k => $vs){
-												if($vs == $ex_ur[$last])continue;
-												
-												if(!next($ex_ur)){
-												$ful_url.=$vs.'/';
-												}else{
-												$ful_url.='/'.$vs;
-												}
-												
-											}
-										}
-									}*/
-									
-									if ($ar["ELEMENT_COUNT"] != 0 || ($arParams["DISPLAY_ELEMENT_COUNT"] !== "N" && isset($ar["ELEMENT_COUNT"]) && !$isSize)):
-									?>
-									<input
+									<?foreach($arItem["VALUES"] as $val => $ar):?>
+										<input
 											type="checkbox"
 											value="<? echo $ar["HTML_VALUE"] ?>"
 											name="<? echo $ar["CONTROL_NAME"] ?>"
@@ -745,58 +623,7 @@ if($arResult["ITEMS"]){?>
 											<? echo $ar["CHECKED"]? 'checked="checked"': '' ?>
 											onclick="smartFilter.click(this)"
 										/>
-										<label style="display:none;" class="bx_filter_param_label <?=($isSize ? "nab sku" : "");?> <?=($i==$count ? "last" : "");?> <? echo $ar["DISABLED"] ? 'disabled': '' ?>" for="<? echo $ar["CONTROL_ID"] ?>">
-											<!--<span class="bx_filter_input_checkbox">
-												
-												<span class="bx_filter_param_text" title="<?//=$ar["VALUE"];?>"><?=$ar["VALUE"];?><?
-												//if ($arParams["DISPLAY_ELEMENT_COUNT"] !== "N" && isset($ar["ELEMENT_COUNT"]) && !$isSize):
-													?> (<span data-role="count_<?//=$ar["CONTROL_ID"]?>"><?// echo $ar["ELEMENT_COUNT"]; ?></span>)<?
-												//endif;?></span>
-											</span>-->
-										</label>
-										
-									<a data-oldur="<?echo $ex_ur[0].'f-'.mb_strtolower(str_replace(" ", "_", $arItem["CODE"])).'-is-'.$ar["URL_ID"].'/';?>" data-role="label_<?=$ar["CONTROL_ID"]?>" class="link_filt link_filt_a <? echo $ar["CHECKED"]? 'on_link_filt': '' ?> bx_filter_param_label <?=($isSize ? "nab sku" : "");?> <?=($i==$count ? "last" : "");?> <? echo $ar["DISABLED"] ? 'disabled': '' ?>" href="<?=!$ar["CHECKED"]?$ful_url:'';?>"><span class="bx_filter_input_checkbox"><span class="bx_filter_param_text link_filt" title="<?=$ar["VALUE"];?>"><?=$ar["VALUE"];?><?
-												if ($arParams["DISPLAY_ELEMENT_COUNT"] !== "N" && isset($ar["ELEMENT_COUNT"]) && !$isSize):
-													?> (<span data-role="count_<?=$ar["CONTROL_ID"]?>"><? echo $ar["ELEMENT_COUNT"]; ?></span>)<?
-												endif;?></span></span></a>
-												<?$i++;?>
-									<?else:?>
-									<input
-											type="checkbox"
-											value="<? echo $ar["HTML_VALUE"] ?>"
-											name="<? echo $ar["CONTROL_NAME"] ?>"
-											id="<? echo $ar["CONTROL_ID"] ?>"
-											<? echo $ar["DISABLED"] ? 'disabled class="disabled"': '' ?>
-											<? echo $ar["CHECKED"]? 'checked="checked"': '' ?>
-											onclick="smartFilter.click(this)"
-										/>
-										<label style="display:none;" class="bx_filter_param_label <?=($isSize ? "nab sku" : "");?> <?=($i==$count ? "last" : "");?> <? echo $ar["DISABLED"] ? 'disabled': '' ?>" for="<? echo $ar["CONTROL_ID"] ?>">
-												<!--<span class="bx_filter_input_checkbox">
-												
-												<span class="bx_filter_param_text" title="<?//=$ar["VALUE"];?>"><?=$ar["VALUE"];?><?
-												//if ($arParams["DISPLAY_ELEMENT_COUNT"] !== "N" && isset($ar["ELEMENT_COUNT"]) && !$isSize):
-													?> (<span data-role="count_<?//=$ar["CONTROL_ID"]?>"><?// echo $ar["ELEMENT_COUNT"]; ?></span>)<?
-												//endif;?></span>
-											</span>-->
-										</label>
-									<a data-oldur="<?echo $ex_ur[0].'f-'.mb_strtolower(str_replace(" ", "_", $arItem["CODE"])).'-is-'.$ar["URL_ID"].'/';?>"  data-role="label_<?=$ar["CONTROL_ID"]?>" class="no-elementlik link_filt link_filt_a <? echo $ar["CHECKED"]? 'on_link_filt': '' ?> <? echo $ar["CHECKED"]? 'on_link_filt': '' ?> bx_filter_param_label <?=($isSize ? "nab sku" : "");?> <?=($i==$count ? "last" : "");?> <? echo $ar["DISABLED"] ? 'disabled': '' ?>"><span class="bx_filter_input_checkbox"><span class="bx_filter_param_text link_filt" title="<?=$ar["VALUE"];?>"><?=$ar["VALUE"];?><?
-												if ($arParams["DISPLAY_ELEMENT_COUNT"] !== "N" && isset($ar["ELEMENT_COUNT"]) && !$isSize):
-													?> (<span data-role="count_<?=$ar["CONTROL_ID"]?>"><? echo $ar["ELEMENT_COUNT"]; ?></span>)<?
-												endif;?></span></span></a>
-												<?$i++;?>
-									<?endif;?>
-									
-									<?}else{?>
-									<input
-											type="checkbox"
-											value="<? echo $ar["HTML_VALUE"] ?>"
-											name="<? echo $ar["CONTROL_NAME"] ?>"
-											id="<? echo $ar["CONTROL_ID"] ?>"
-											<? echo $ar["DISABLED"] ? 'disabled class="disabled"': '' ?>
-											<? echo $ar["CHECKED"]? 'checked="checked"': '' ?>
-											onclick="smartFilter.click(this)"
-										/>
-										<label data-role="label_<?=$ar["CONTROL_ID"]?>" class="select-aj-f bx_filter_param_label ckeck-a <?=($isSize ? "nab sku" : "");?> <?=($i==$count ? "last" : "");?> <? echo $ar["DISABLED"] ? 'disabled': '' ?>" for="<? echo $ar["CONTROL_ID"] ?>">
+										<label data-role="label_<?=$ar["CONTROL_ID"]?>" class="bx_filter_param_label <?=($isSize ? "nab sku" : "");?> <?=($i==$count ? "last" : "");?> <? echo $ar["DISABLED"] ? 'disabled': '' ?>" for="<? echo $ar["CONTROL_ID"] ?>">
 											<span class="bx_filter_input_checkbox">
 												
 												<span class="bx_filter_param_text" title="<?=$ar["VALUE"];?>"><?=$ar["VALUE"];?><?
@@ -806,8 +633,6 @@ if($arResult["ITEMS"]){?>
 											</span>
 										</label>
 										<?$i++;?>
-									
-									<?}?>
 									<?endforeach;?>
 							<?}?>
 							</div>
@@ -820,17 +645,16 @@ if($arResult["ITEMS"]){?>
 					<div class="bx_filter_button_box active">
 						<div class="bx_filter_block">
 							<div class="bx_filter_parameters_box_container">
-								<div class="bx_filter_popup_result right" id="modef_mobile" <?if(!isset($arResult["ELEMENT_COUNT"])) echo 'style="display:none;"';?>>
+								<div class="bx_filter_popup_result right" id="modef_mobile" <?if(!isset($arResult["ELEMENT_COUNT"])) echo 'style="display:none"';?> style="display: inline-block;">
 									<?echo GetMessage("CT_BCSF_FILTER_COUNT", array("#ELEMENT_COUNT#" => '<span id="modef_num_mobile">'.intval($arResult["ELEMENT_COUNT"]).'</span>'));?>
 									<a href="<?echo $arResult["FILTER_URL"]?>" class="button white_bg"><?echo GetMessage("CT_BCSF_FILTER_SHOW")?></a>
 								</div>
-								<div class="bx_filter_popup_result right" id="modef" <?if(!isset($arResult["ELEMENT_COUNT"])) echo 'style="display:none;"';?>>
+								<div class="bx_filter_popup_result right" id="modef" <?if(!isset($arResult["ELEMENT_COUNT"])) echo 'style="display:none"';?> style="display: inline-block;">
 									<?echo GetMessage("CT_BCSF_FILTER_COUNT", array("#ELEMENT_COUNT#" => '<span id="modef_num">'.intval($arResult["ELEMENT_COUNT"]).'</span>'));?>
 									<a href="<?echo $arResult["FILTER_URL"]?>" class="button white_bg"><?echo GetMessage("CT_BCSF_FILTER_SHOW")?></a>
 								</div>
 								<input class="bx_filter_search_button button small" type="submit" id="set_filter" name="set_filter" data-href="" value="<?=GetMessage("CT_BCSF_SET_FILTER")?>" />
 								<input class="bx_filter_search_reset button small transparent" type="reset" id="del_filter" name="del_filter" data-href="" value="<?=GetMessage("CT_BCSF_DEL_FILTER")?>" />
-								<span class="bx_filter_close">Закрыть</span>
 							</div>
 						</div>
 					</div>

@@ -7,29 +7,33 @@ $APPLICATION->SetTitle("Магазины");
 <ul class="shops">
 	<li class="shops__item">
 		<div class="shops__photos">
-			<img src="/upload/iblock/b4a/b4a6d5a3f14dad4466db4157f9c91934.jpg" alt="">
-			<img src="/upload/iblock/32a/32a0d684d2b448c3faf0a1c271f791a4.jpg" alt=""/>
+		<img src="/upload/кафре-авеню/кафре-афимол/гудзон/photo_2018-05-16_17-43-46.jpg" alt="">
+			<img src="/upload/кафре-авеню/кафре-афимол/гудзон/photo_2018-05-16_17-44-01.jpg" alt="">
+			<img src="/upload/кафре-авеню/кафре-афимол/гудзон/photo_2018-05-16_17-44-07.jpg"/>
 		</div>
 		<p>ТЦ Гудзон (Каширское шоссе 14)</p>
 	</li>
 	<li class="shops__item">
 		<div class="shops__photos">
-			<img src="/upload/iblock/676/67667d2b13fac5a70a2e97ad7cf9cc07.jpg" alt="">
-			<img src="/upload/iblock/3c9/3c9ce8489ad6bc031085b17e4f7b56d8.jpg" alt=""/>
+			<img src="/upload/кафре-авеню/photo_2018-05-16_17-33-55.jpg" alt="">
+			<img src="/upload/кафре-авеню/photo_2018-05-16_17-42-58.jpg"/>
+			<img src="/upload/кафре-авеню/photo_2018-05-16_17-43-02.jpg"/>
 		</div>
 		<p>ТЦ Авеню (проспект Вернадского 86А)</p>
 	</li>
 	<li class="shops__item">
 		<div class="shops__photos">
-			<img src="/upload/iblock/1cf/1cfec9cef48d107516e3a2f0490bcf86.jpg" alt="">
-			<img src="/upload/iblock/ede/ede94d168b82720af390e85e9aefc785.jpg" alt=""/>
+			<img src="/upload/кафре-авеню/кафре-афимол/photo_2018-05-16_17-43-12.jpg" alt="">
+			<img src="/upload/кафре-авеню/кафре-афимол/photo_2018-05-16_17-43-31.jpg" alt="">
+			<img src="/upload/кафре-авеню/кафре-афимол/photo_2018-05-16_17-43-37.jpg"/>
 		</div>
 		<p>ТЦ Афимолл (Пресненская набережная 2)</p>
 	</li>
 	<li class="shops__item">
 		<div class="shops__photos">
-			<img src="/upload/iblock/a25/a25cfa9d27e7afa9b23b926c687069a8.jpg" alt="">
-			<img src="/upload/iblock/d52/d5248ec4a9014ceb4e3b9599d5169093.jpg" alt=""/>
+		<img src="/upload/кафре-авеню/кафре-афимол/гудзон/рио/photo_2018-05-16_17-44-16.jpg" alt="">
+			<img src="/upload/кафре-авеню/кафре-афимол/гудзон/рио/photo_2018-05-16_17-44-26.jpg" alt="">
+			<img src="/upload/кафре-авеню/кафре-афимол/гудзон/рио/photo_2018-05-16_17-44-30.jpg"/>
 		</div>
 		<p>ТЦ Рио (Большая Черемушкинская 1)</p>
 	</li>

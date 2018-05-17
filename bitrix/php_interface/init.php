@@ -1,4 +1,59 @@
 <?
+class CIBlockPropertyType
+{
+   function GetUserTypeDescription6()
+   {
+      return array(
+         "PROPERTY_TYPE" => "S",//базовый тип
+         "USER_TYPE" => "SRazdel",//свое название
+         "DESCRIPTION" => "Привязка к бренду",//в админке в настройках инфоблока выбирать по этому названию
+         "GetPropertyFieldHtml" =>array("CIBlockPropertyType","GetPropertyFieldHtml6"),//функция вывода в админке
+         "ConvertToDB" =>array("CIBlockPropertyType", "ConvertToDB") //функция сохарения в базу данных
+      );
+   }
+
+   function GetPropertyFieldHtml6($arProperty, $value, $strHTMLControlName)
+   {
+      	$res=CIblockSection::GetList(array('LEFT_RIGHT'=>'asc'), array('IBLOCK_ID'=>26, 'DEPTH_LEVEL'=>2, 'SECTION_ID'=>5338) );
+
+      	$html = '<select style="max-width: 40%;" name="'.$strHTMLControlName["VALUE"].'" ><option value="">(не установлено)</option>';
+      
+      	while ($arItem = $res->GetNext()) {
+         	$html .= '<option value="'.$arItem['ID'].'"';
+         	if($value["VALUE"] == $arItem['ID'])
+	            $html .= ' selected';
+         	$html .= '>'.$arItem['NAME'].'</option>';
+      	}
+      	$html .= '</select>';
+      	return  $html;
+   }
+   function ConvertToDB($arProperty, $value) {
+      if(!$value['VALUE']) return false;      
+      return $value;
+   }
+}
+AddEventHandler("iblock", "OnIBlockPropertyBuildList", array("CIBlockPropertyType", "GetUserTypeDescription6"));
+
+
+function provEach($stroka, $str, $num1, $root, $doom) {
+	foreach($str as $num2 => $podchpu) {
+		if($num2<$num1) continue;
+		if(strpos($stroka, $podchpu)===false) {
+			$user_n1 = $doom->createElement("url");
+		$login_n1 = $doom->createElement("loc", 'https://cafre.ru'.$stroka.$podchpu);
+		$d_n1 = new DateTime(date());
+		$password_n1 = $doom->createElement("lastmod", $d_n1->format('Y-m-d\TH:i:s').'+03:00'); 
+		$user_n1->appendChild($login_n1); 
+		$user_n1->appendChild($password_n1);
+		$root->appendChild($user_n1);
+			//echo $stroka.$podchpu;
+			provEach($stroka.$podchpu, $str, $num2, $root, $doom);
+		}
+	}
+}
+		
+		
+		
 AddEventHandler("main", "OnEpilog", "ShowError404");
  function ShowError404() {
     if (CHTTP::GetLastStatus()=='404 Not Found') {

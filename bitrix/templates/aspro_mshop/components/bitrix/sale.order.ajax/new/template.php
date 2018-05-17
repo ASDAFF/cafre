@@ -272,6 +272,9 @@ function InitOrderJS(){
 	{
 	?>
 	<div class="order__row">
+	<?
+			include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/auth.php");
+	?>
 <div class="order__cell">
 							<div class="order__block order__reg">
 								<div class="order__message order__message_reg">
@@ -300,9 +303,7 @@ function InitOrderJS(){
 
 </div>
 	
-			<?
-			include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/auth.php");
-	?>
+			
 </div>
 <?}?>
 			<?if($_POST["is_ajax_post"] != "Y")

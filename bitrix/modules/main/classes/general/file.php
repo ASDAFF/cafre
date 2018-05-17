@@ -2227,7 +2227,13 @@ function ImgShw(ID, width, height, alt)
 					$bHasAlpha = true;
 					break;
 				case IMAGETYPE_PNG:
-					$sourceImage = imagecreatefrompng($io->GetPhysicalName($sourceFile));
+				$output = `php -r "imagecreatefrompng('$fname');" 2>&1`;
+if (!empty($output)){
+    //return false; // handle error
+} else {
+    $sourceImage = imagecreatefrompng($io->GetPhysicalName($sourceFile));
+}
+					
 					$bHasAlpha = true;
 					break;
 				case IMAGETYPE_BMP:

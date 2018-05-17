@@ -33,7 +33,7 @@ if($this->StartResultCache(false, 'v7'.($arParams["CACHE_GROUPS"]? $USER->GetGro
 
 	if(!empty($arResult["ITEMS"]))
 	{
-		if ($this->facet->isValid())
+		/*if ($this->facet->isValid())
 		{
 			$this->facet->setPrices($arResult["PRICES"]);
 			$this->facet->setSectionId($this->SECTION_ID);
@@ -106,8 +106,8 @@ if($this->StartResultCache(false, 'v7'.($arParams["CACHE_GROUPS"]? $USER->GetGro
 				}
 			}
 			CTimeZone::Enable();
-		}
-		else
+		}*/
+		if(true)
 		{
 			$arElementFilter = array(
 				"IBLOCK_ID" => $this->IBLOCK_ID,
