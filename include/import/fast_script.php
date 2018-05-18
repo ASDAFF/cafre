@@ -1,12 +1,41 @@
 <? require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");
- require_once $_SERVER["DOCUMENT_ROOT"].'/include/import/phpexcel/Classes/PHPExcel.php'; // Ю??????? PHPExcel
- require_once $_SERVER["DOCUMENT_ROOT"].'/include/import/phpexcel/Classes/PHPExcel/Writer/Excel5.php'; // Ю??????? PHPExcel
+ //require_once $_SERVER["DOCUMENT_ROOT"].'/include/import/phpexcel/Classes/PHPExcel.php'; // Ю??????? PHPExcel
+// require_once $_SERVER["DOCUMENT_ROOT"].'/include/import/phpexcel/Classes/PHPExcel/Writer/Excel5.php'; // Ю??????? PHPExcel
 CModule::IncludeModule('iblock'); 
 CModule::includeModule('catalog');
 
+	/*
+		$arSelect = Array("ID", "NAME", "PROPERTY_ATT_BONUS", "PROPERTY_ATT_USER");
+		$arFilter = Array("IBLOCK_ID"=>32, "ACTIVE"=>"Y", "PROPERTY_ATT_USER_VALUE"=>333);
+		$res = CIBlockElement::GetList(Array(), $arFilter, false, Array(), $arSelect);
+		//$arrp = array();
+		if($ob = $res->GetNextElement())
+		{
+			$arFields = $ob->GetFields();
+			if($arFields["PROPERTY_ATT_USER_VALUE"]==333){
+				CIBlockElement::SetPropertyValuesEx($arFields["ID"], false, array("ATT_BONUS" => 2222));
+			}else{
+$PROP = array();
+$PROP[263] = ''; 
+$PROP[264] = 22222;  // свойству с кодом 12 присваиваем значение "Белый"
+$arLoadProductArray = Array(  
+   'IBLOCK_ID' => 32,
+   'PROPERTY_VALUES' => $PROP,  
+   'NAME' => "P",  
+   'ACTIVE' => 'Y'
+);
+$PRODUCT_ID = $el->Add($arLoadProductArray);
+			}
+		} */ 
+		/*
+		if($arFields["PROPERTY_ATT_USER_VALUE"]== 128){
+			CIBlockElement::SetPropertyValuesEx($arFields["ID"], false, array("ATT_BONUS" => 2222));
+			}else{
+				$el = new CIBlockElement;
 
-
-
+				break;
+			}*/
+/*	
 $arSelect2 = Array("ID", "NAME", "XML_ID", "PREWIEV_TEXT", "DETAIL_TEXT");
 $arFilter2 = Array("IBLOCK_ID"=>26); //,"XML_ID"=>$value2[0]
 $res1 = CIBlockElement::GetList(Array(), $arFilter2, false, Array(), $arSelect2);
@@ -37,7 +66,7 @@ if($ob = $res->GetNextElement())
 }
 		
 	}
-/*	 //CIBlockElement::SetPropertyValueCode($ar_fields["ID"], "KOL_SORT_CAT", 6058);
+ //CIBlockElement::SetPropertyValueCode($ar_fields["ID"], "KOL_SORT_CAT", 6058);
 $arSelect = Array("ID", "NAME", "DATE_ACTIVE_FROM", "PROPERTY_CML2_LINK", "QUANTYTY");
 $arFilter = Array("IBLOCK_ID"=>27, "PROPERTY_CML2_LINK"=>83768);
 $res = CIBlockElement::GetList(Array(), $arFilter, false, Array("nPageSize"=>50), $arSelect);

@@ -1708,10 +1708,6 @@ div.item-title {
 }
 .img_brand_sec{
 	position: relative;
-	display: table-cell;
-	vertical-align: middle;
-	width: 20%;
-	min-width: 100px;
 	text-align: center;
 }
 .img_brand_sec img {
@@ -1722,14 +1718,7 @@ div.item-title {
 	max-width: 144px;
 	max-height: 80px;
 }
-.text_brand_sec{
 
-	display: table-cell;
-	vertical-align: middle;
-	width: 80%;
-	padding-left: 40px;
-	/*margin-left: 40px;*/
-}
 .text_brand_sec p {
 	margin: 0;
 	font-size: 14px;
@@ -2283,8 +2272,13 @@ margin: 0 0 10px;
 }
 
 .img_brand_sec {
-	width: 140px;
-	height: 100px;
+	float: left;
+	width: 180px;
+	height: 80px;
+	border: 1px solid rgba(0,0,0,.3);
+	border-radius: 8px;
+	background: white;
+	margin: 0 20px 0 0;
 }
 
 .top_brand_block.more {
@@ -3499,7 +3493,7 @@ left: calc(50% - 60px);
 	position: absolute;
 	bottom: 0;
 	left: 10px;
-	content: 'Недостаточно товара';
+	content: '?????? ???';
 	color: #EB5470;
 	font-size: 14px;
 	opacity: 0;
@@ -3514,6 +3508,11 @@ left: calc(50% - 60px);
 
 form[name=order_auth_form] {
 	box-sizing: border-box;
+}
+
+.text_brand_sec p b {
+	color: #EB5470;
+	font-weight: bold;
 }
 
 @media (max-width: 768px) {
@@ -3594,4 +3593,3 @@ display:none;
 	margin-bottom: 14px;
 }
 	
-}

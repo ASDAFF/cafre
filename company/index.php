@@ -1,5 +1,6 @@
 <?
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/header.php");
+$APPLICATION->SetPageProperty("description", "Универсальный интернет-магазин");
 $APPLICATION->SetTitle("О компании");
 ?><h2>CAFRE COSMETICS </h2>
 <h5>

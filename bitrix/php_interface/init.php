@@ -1,4 +1,59 @@
 <?
+use Bitrix\Main,
+      Bitrix\Main\Loader,
+      Bitrix\Sale,
+      Bitrix\Sale\Order;
+
+if (!Loader::IncludeModule('sale')) die();
+/* строго в начале файла */
+
+
+Main\EventManager::getInstance()->addEventHandler(
+    'sale',
+    'OnSaleOrderSaved',
+    'myFunction'
+);
+
+function myFunction(Main\Event $event) {
+		
+    if($event->getParameter("IS_NEW")) { 
+      //это не новый заказ
+    }
+    else {
+      $order = $event->getParameter("ENTITY");
+      $old=(array)$event->getParameter("VALUES");
+      if($order->getField('STATUS_ID')=='F' &&  $old['STATUS_ID'] && $old['STATUS_ID']!='F') {
+        /*start bonus*/
+        CModule::IncludeModule('sale');
+        CModule::IncludeModule('iblock');
+        $bonus=0;
+        $id=$order->getId();
+        $db_props = CSaleOrderPropsValue::GetOrderProps($id);
+        while ($arProps = $db_props->Fetch()) {
+          if($arProps['ORDER_PROPS_ID']==7) {//создать свойство в заказ, к-е будет хранить кол-во бонусов которыми часть или весь заказ были оплачены
+            $bonus=$arProps['VALUE'];
+            break;
+          }
+        }
+        $arOrder = CSaleOrder::GetByID($id);
+        $allprice=$arOrder['PRICE']-$bonus*1.0;
+        $amount=0;
+        
+        //проверить что сумма на которую можно начислить, больше 1000        
+			if($allprice >= 1000){
+          $percent=100;//процент начисления бонусов
+          $amount = round($allprice*$percent/100, 2);
+		  print_r($order);
+		 
+          //CSaleUserAccount::UpdateAccount($arOrder['USER_ID'],  $amount, 'RUB', 'BONUS', $id);
+          //создать инфоблок для хранения бонусов по пользователям, если нет у пользователя бонусы, то создать элемент, иначе - приплюсовать
+             }  
+        /*end bonus*/
+      }
+    }
+}
+
+
 class CIBlockPropertyType
 {
    function GetUserTypeDescription6()

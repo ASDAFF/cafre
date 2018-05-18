@@ -1,6 +1,6 @@
 <?
 $sSectionName = "Главная";
-$arDirProperties = Array(
+$arDirProperties = array(
    "description" => "Универсальный интернет-магазин",
    "keywords" => "интернет-магазин, заказать, купить"
 );
