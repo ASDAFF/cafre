@@ -9,7 +9,7 @@
 									<div class="pinkgirl">
 										<img src="<?=SITE_TEMPLATE_PATH?>/pinkgirl/pinkgirl2.png" alt="">
 									</div>
-									<p>»ли введи свой логин и пароль (если уже есть)</p>
+									<p>¬веди свой логин и пароль (если уже есть)</p>
 								</div>
 								<label class="order__lbl">
 									<span>E-Mail</span>

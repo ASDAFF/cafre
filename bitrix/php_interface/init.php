@@ -14,10 +14,26 @@ Main\EventManager::getInstance()->addEventHandler(
     'myFunction'
 );
 
+
 function myFunction(Main\Event $event) {
 		
     if($event->getParameter("IS_NEW")) { 
-      //это не новый заказ
+	$order = $event->getParameter("ENTITY");
+     CModule::IncludeModule('sale');
+      CModule::IncludeModule('iblock');
+	  $bonus=0;
+        $db_props = CSaleOrderPropsValue::GetOrderProps($order->getId());
+        while ($arProps = $db_props->Fetch()) {
+          if($arProps['ORDER_PROPS_ID']==46) {
+            $bonus=$arProps['VALUE'];
+            break;
+          }
+        }
+		if((int)$bonus > 0){
+		$price_new =  $order->getPrice()-(int)$bonus;
+		$order->setField('PRICE', (int)$price_new);
+		$order->save();
+		}
     }
     else {
       $order = $event->getParameter("ENTITY");
@@ -30,21 +46,51 @@ function myFunction(Main\Event $event) {
         $id=$order->getId();
         $db_props = CSaleOrderPropsValue::GetOrderProps($id);
         while ($arProps = $db_props->Fetch()) {
-          if($arProps['ORDER_PROPS_ID']==7) {//создать свойство в заказ, к-е будет хранить кол-во бонусов которыми часть или весь заказ были оплачены
+          if($arProps['ORDER_PROPS_ID']==46) {//создать свойство в заказ, к-е будет хранить кол-во бонусов которыми часть или весь заказ были оплачены
             $bonus=$arProps['VALUE'];
             break;
           }
         }
         $arOrder = CSaleOrder::GetByID($id);
+		if($bonus){
         $allprice=$arOrder['PRICE']-$bonus*1.0;
+		}else{
+		$allprice=$arOrder['PRICE'];
+		}
         $amount=0;
         
         //проверить что сумма на которую можно начислить, больше 1000        
 			if($allprice >= 1000){
-          $percent=100;//процент начисления бонусов
+          $percent=1;//процент начисления бонусов
           $amount = round($allprice*$percent/100, 2);
-		  print_r($order);
-		 
+		 $arSelect = Array("ID", "NAME", "PROPERTY_ATT_BONUS", "PROPERTY_ATT_USER");
+		$arFilter = Array("IBLOCK_ID"=>32, "ACTIVE"=>"Y", "PROPERTY_ATT_USER_VALUE"=>$order->getUserId());
+		$res = CIBlockElement::GetList(Array(), $arFilter, false, Array(), $arSelect);
+		//$arrp = array();
+		if($ob = $res->GetNextElement())
+		{
+			$arFields = $ob->GetFields();
+			if($arFields["PROPERTY_ATT_USER_VALUE"]==$order->getUserId()){
+				$new_price=$amount+$arFields["PROPERTY_ATT_BONUS_VALUE"];
+				CIBlockElement::SetPropertyValuesEx($arFields["ID"], false, array("ATT_BONUS" => (int)$new_price));
+				$stat = 'true';
+			}
+		}
+		if(!$stat){
+		$rsUser = CUser::GetByID($order->getUserId());
+			$arUser = $rsUser->Fetch();
+			$el = new CIBlockElement;
+			$PROP = array();
+			$PROP[263] = $order->getUserId(); 
+			$PROP[264] = (int)$amount;
+			$arLoadProductArray = Array(  
+			   'IBLOCK_ID' => 32,
+			   'PROPERTY_VALUES' => $PROP,  
+			   'NAME' => $arUser["EMAIL"],  
+			   'ACTIVE' => 'Y'
+			);
+			$PRODUCT_ID = $el->Add($arLoadProductArray);
+		}
           //CSaleUserAccount::UpdateAccount($arOrder['USER_ID'],  $amount, 'RUB', 'BONUS', $id);
           //создать инфоблок для хранения бонусов по пользователям, если нет у пользователя бонусы, то создать элемент, иначе - приплюсовать
              }  

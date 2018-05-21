@@ -1,10 +1,26 @@
 <? require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");
  //require_once $_SERVER["DOCUMENT_ROOT"].'/include/import/phpexcel/Classes/PHPExcel.php'; // Ю??????? PHPExcel
 // require_once $_SERVER["DOCUMENT_ROOT"].'/include/import/phpexcel/Classes/PHPExcel/Writer/Excel5.php'; // Ю??????? PHPExcel
-CModule::IncludeModule('iblock'); 
+/*CModule::IncludeModule('iblock'); 
 CModule::includeModule('catalog');
 
-	/*
+$rsUser = CUser::GetByID(128);
+$arUser = $rsUser->Fetch();
+echo "<pre>"; print_r($arUser); echo "</pre>"*/
+CModule::IncludeModule('sale');
+      CModule::IncludeModule('iblock');
+	  $bonus=0;
+        //$id=$order->getId();
+        $db_props = CSaleOrderPropsValue::GetOrderProps(1829);
+        while ($arProps = $db_props->Fetch()) {
+          if($arProps['ORDER_PROPS_ID']==46) {
+            $bonus=$arProps['VALUE'];
+            break;
+          }
+        }
+		print_r($bonus);
+
+/*1	
 		$arSelect = Array("ID", "NAME", "PROPERTY_ATT_BONUS", "PROPERTY_ATT_USER");
 		$arFilter = Array("IBLOCK_ID"=>32, "ACTIVE"=>"Y", "PROPERTY_ATT_USER_VALUE"=>333);
 		$res = CIBlockElement::GetList(Array(), $arFilter, false, Array(), $arSelect);
@@ -26,7 +42,7 @@ $arLoadProductArray = Array(
 );
 $PRODUCT_ID = $el->Add($arLoadProductArray);
 			}
-		} */ 
+		}*/
 		/*
 		if($arFields["PROPERTY_ATT_USER_VALUE"]== 128){
 			CIBlockElement::SetPropertyValuesEx($arFields["ID"], false, array("ATT_BONUS" => 2222));

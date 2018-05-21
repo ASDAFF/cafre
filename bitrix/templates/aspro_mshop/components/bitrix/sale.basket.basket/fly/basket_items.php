@@ -274,7 +274,31 @@
 			<?$totalCols = 3 + ($arParams["AJAX_MODE_CUSTOM"] != "Y" ? 1 : 0) + ($arParams["SHOW_FULL_ORDER_BUTTON"] == "Y" && !$arError["ERROR"] ? 1 : 0)?>
 			<tfoot>				
 				<tr data-id="total_row">
+				
 					<td colspan="<?=($totalCols - 1)?>" class="row_titles">
+					<?if($USER->isAuthorized()){?>
+					<div class="fly-bonus">
+						<p>
+							<h5>
+							Бонусных баллов: 
+							<?
+								$arSelect = Array("ID", "NAME", "PROPERTY_ATT_BONUS", "PROPERTY_ATT_USER");
+								$arFilter = Array("IBLOCK_ID"=>32, "ACTIVE"=>"Y", "PROPERTY_ATT_USER_VALUE"=>$GLOBALS['USER']->GetID());
+								$res = CIBlockElement::GetList(Array(), $arFilter, false, Array(), $arSelect);
+								//$arrp = array();
+								if($ob = $res->GetNextElement())
+								{
+									$arFields = $ob->GetFields();
+									if($arFields["PROPERTY_ATT_USER_VALUE"] == $GLOBALS['USER']->GetID()){
+										echo '<span>'.($arFields["PROPERTY_ATT_BONUS_VALUE"]?$arFields["PROPERTY_ATT_BONUS_VALUE"]:'0').'</span>';
+									}else{
+										echo '<span>0</span>';
+									}
+								}?>
+							</h5>
+						</p>
+					</div>
+					<?}?>
 						<?if($arError["ERROR"]){?>
 							<div class="icon_error_block"><?=$arError["TEXT"];?></div>
 						<?}?>

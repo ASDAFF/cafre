@@ -4,6 +4,27 @@
 	if(!$USER->isAuthorized()){LocalRedirect(SITE_DIR.'auth');} else {
 ?>
 	<div class="left_block">
+	<div>
+	<p>
+	<h5>
+	Бонусных баллов: 
+								<?
+								$arSelect = Array("ID", "NAME", "PROPERTY_ATT_BONUS", "PROPERTY_ATT_USER");
+								$arFilter = Array("IBLOCK_ID"=>32, "ACTIVE"=>"Y", "PROPERTY_ATT_USER_VALUE"=>$GLOBALS['USER']->GetID());
+								$res = CIBlockElement::GetList(Array(), $arFilter, false, Array(), $arSelect);
+								//$arrp = array();
+								if($ob = $res->GetNextElement())
+								{
+									$arFields = $ob->GetFields();
+									if($arFields["PROPERTY_ATT_USER_VALUE"] == $GLOBALS['USER']->GetID()){
+										echo ($arFields["PROPERTY_ATT_BONUS_VALUE"]?$arFields["PROPERTY_ATT_BONUS_VALUE"]:'0');
+									}else{
+										echo '0';
+									}
+								}?>
+	</h5>
+	</p>
+	</div>
 		<?$APPLICATION->IncludeComponent("bitrix:menu", "left_menu", array(
 			"ROOT_MENU_TYPE" => "left",
 			"MENU_CACHE_TYPE" => "A",
@@ -18,7 +39,8 @@
 			"ALLOW_MULTI_SELECT" => "N"
 			),
 			false
-		);?>	
+		);?>
+	
 	</div>
 	<div class="right_block">
 		<?$APPLICATION->IncludeComponent("bitrix:main.profile", "profile", array(

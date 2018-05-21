@@ -3530,7 +3530,7 @@ form[name=order_auth_form] {
 	    padding-bottom: 0 !important; 
 	}
 	.on_authord{
-	    top: 260px !important;
+	    top: 360px !important;
 	}
 	
 	.bx_filter.bx_filter_vertical {
@@ -3592,4 +3592,36 @@ display:none;
 .bottom_brand_block ul > li {
 	margin-bottom: 14px;
 }
-	
+.fly-bonus{
+	position: absolute;
+    top: 5%;
+}	
+.block_ball {
+    margin-bottom: 30px;
+    display: block;
+	width: 47%;
+}
+.title_ball {
+    font-size: 18px;
+}
+input[type="number"]{
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -o-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    background: #f7f7f7;
+    border: 1px solid #E5E5E5;
+    border-radius: 2px;
+    box-shadow: none;
+    color: #383838;
+    height: auto;
+    font-size: 12px;
+    padding: 8px 13px 7px;
+    width: 100%;
+}
+@media (max-width: 768px) {
+.block_ball {
+	width: 100%;
+	margin-bottom: 80px;
+}
+}

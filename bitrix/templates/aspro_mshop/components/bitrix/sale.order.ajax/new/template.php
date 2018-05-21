@@ -65,13 +65,37 @@ if(!$_GET["ORDER_ID"]){
 			<input type="text" name="coupon" class="coup_inp"/>
 			<br />
 			<span class="name_coup"></span>
-			</label>
+</label>
+
+<label class="block_ball">
+			<!--<span class="title_ball">Баллов в наличии:-->
+								<?
+								$numb = 0;
+								$arSelect = Array("ID", "NAME", "PROPERTY_ATT_BONUS", "PROPERTY_ATT_USER");
+								$arFilter = Array("IBLOCK_ID"=>32, "ACTIVE"=>"Y", "PROPERTY_ATT_USER_VALUE"=>$GLOBALS['USER']->GetID());
+								$res = CIBlockElement::GetList(Array(), $arFilter, false, Array(), $arSelect);
+								//$arrp = array();
+								if($ob = $res->GetNextElement())
+								{
+									$arFields = $ob->GetFields();
+									if($arFields["PROPERTY_ATT_USER_VALUE"] == $GLOBALS['USER']->GetID()){
+										//echo ($arFields["PROPERTY_ATT_BONUS_VALUE"]?$arFields["PROPERTY_ATT_BONUS_VALUE"]:'0');
+										$numb = ($arFields["PROPERTY_ATT_BONUS_VALUE"]?$arFields["PROPERTY_ATT_BONUS_VALUE"]:0);
+									}else{
+										//echo '0';
+									}
+								}?>
+			<span class="title_ball">Применить баллы:</span>
+			<br/>
+			<input type="number" min="0" max="<?=$numb;?>" name="balls" id="balls" class="ball_inp" placeholder="Баллов в наличии: <?=$numb;?>"  onkeyup="isright(this);"/>
+</label>
+
 <?
 }
 ?>
 <a name="order_form"></a>
 <div class="order">
-<?		if($USER->IsAuthorized())
+<?		if($USER->IsAuthorized() && !$_GET["ORDER_ID"])
 	{
 	?>
 <h3 class="on_authord">Вы успешно авторизованы</h3>
@@ -281,7 +305,7 @@ function InitOrderJS(){
 									<div class="pinkgirl">
 										<img src="<?=SITE_TEMPLATE_PATH?>/pinkgirl/pinkgirl1.png" alt="">
 									</div>
-									<p>Заполни эту простую форму, чтобы оформить заказ</p>
+									<p>Или заполни эту простую форму, чтобы оформить заказ</p>
 								</div>
 								<label class="order__lbl">
 									<span>Имя</span>
@@ -539,6 +563,13 @@ if ($USER->IsAuthorized()){
 <span class="clientType" style="display:none;">guest</span>
 <?}?>
 	<script>
+	function isright(obj)
+ {
+ var value= +obj.value.replace(/\D/g,'')||0;
+ var min = +obj.getAttribute('min');
+ var max = +obj.getAttribute('max');
+ obj.value = Math.min(max, Math.max(min, value));
+ }
 /********E-comerce basket********/	
 	var item = [], $elems = $('.tov_order'), item_id=[];
 	$elems.each(function(i, elem) {
@@ -616,7 +647,7 @@ if(MY_LOGIN != ''){
 
 	/********поменял скрипты и исправил маску********/
 	$("#ORDER_PROP_1").val($("#ORDER_PROP_1").val());
-	var a,b,c, name1=$("#name1"), mail1=$("#mail1"), $phone1=$("#phone1"), text1=$("#text1");
+	var a,b,c, name1=$("#name1"), mail1=$("#mail1"), $phone1=$("#phone1"), text1=$("#text1"), $balls=$("#balls");
 var $textareaOf = $("#text1"), $textareaIn = $("#ORDER_PROP_7");
 
 $textareaOf.on('keyup', function(e) {
@@ -624,6 +655,9 @@ $textareaOf.on('keyup', function(e) {
 });
 $phone1.on('keyup', function(e) {
     $("#ORDER_PROP_3").val(e.target.value);
+});
+$balls.on('keyup', function(e) {
+    $("#ORDER_PROP_46").val(e.target.value);
 });
 
 function epl3(){
