@@ -745,4 +745,4 @@ rmdir($_SERVER['DOCUMENT_ROOT'].substr($row['copy_file'], 0, strripos($row['copy
 if(!empty($del_id)) $dbRes = $DB->Query('delete from time_file where id in ('.implode(', ', $del_id).')' );
   return "reCopy();";
 }
-?>
+?><? require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/mcart.extramail/classes/general/include_part.php");?>
