@@ -88,6 +88,7 @@
 						$(document).find('[code=NAME]').val(e.name);
 						$(document).find('[code=PHONE]').val(e.phone);
 						$("form[name=order_auth_form]").closest('.order__cell').prev().html('').next().remove();
+						$("form[name=order_auth_form]").remove();
 						$(".order").append('<h3 class="on_authord">Вы успешно авторизованы</h3>');
 						$('.order__row').css("display", "none");
 						$('.module-enter').removeClass('no-have-user').addClass('have-user').html('<a href="/personal/" class="reg" rel="nofollow"><span>Личный кабинет</span></a><a href="<?=SITE_DIR?>?logout=yes" class="exit_link" rel="nofollow"><span>Выход</span></a>');

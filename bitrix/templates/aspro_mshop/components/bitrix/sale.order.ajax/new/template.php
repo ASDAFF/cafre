@@ -162,6 +162,7 @@ function InitOrderJS(){
 			var BXFormPosting = false;
 			function submitForm(val)
 			{
+				
 				if (BXFormPosting === true)
 					return true;
 				if($(document).find("form[name=order_auth_form]").length>0) {
@@ -753,7 +754,7 @@ jQuery(function($){
 			
 </script>
 <div class="order__next order__next_fin">
-						<a href="javascript:;" id="ORDER_CONFIRM_BUTTON" onclick="$('.clickd').click();" class="checkout button big_btn"><span><?=GetMessage("SOA_TEMPL_BUTTON")?></span>
+						<a href=""  onclick="submitForm('Y'); return false;" class="checkout button big_btn"><span><?=GetMessage("SOA_TEMPL_BUTTON")?></span>
 						<div class="order__message order__message_next">
 							<div class="pinkgirl">
 								<img src="<?=SITE_TEMPLATE_PATH?>/pinkgirl/pinkgirl5.png" alt="">
