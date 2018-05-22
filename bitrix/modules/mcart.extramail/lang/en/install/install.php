@@ -3,8 +3,8 @@
 	$MESS['MCART_MODULE_DESCRIPTION'] = "This module is an extension to the standard mail system.";
 	$MESS['MCART_PARTNER_NAME'] = "MC Art";
 	$MESS['MCART_PARTNER_URI'] = "http://www.mcart.ru";
-	$MESS['MCART_NEED_RIGHT_VER'] = "Äëÿ óñòàíîâêè äàííîãî ðåøåíèÿ íåîáõîäèìà âåðñèÿ ãëàâíîãî ìîäóëÿ #NEED# èëè âûøå.";
-	$MESS['MCART_NEED_MODULES'] = "Äëÿ óñòàíîâêè äàííîãî ðåøåíèÿ íåîáõîäèìî íàëè÷èå ìîäóëÿ #MODULE#.";
+	$MESS['MCART_NEED_RIGHT_VER'] = "Ð”Ð»Ñ ÑƒÑÑ‚Ð°Ð½Ð¾Ð²ÐºÐ¸ Ð´Ð°Ð½Ð½Ð¾Ð³Ð¾ Ñ€ÐµÑˆÐµÐ½Ð¸Ñ Ð½ÐµÐ¾Ð±Ñ…Ð¾Ð´Ð¸Ð¼Ð° Ð²ÐµÑ€ÑÐ¸Ñ Ð³Ð»Ð°Ð²Ð½Ð¾Ð³Ð¾ Ð¼Ð¾Ð´ÑƒÐ»Ñ #NEED# Ð¸Ð»Ð¸ Ð²Ñ‹ÑˆÐµ.";
+	$MESS['MCART_NEED_MODULES'] = "Ð”Ð»Ñ ÑƒÑÑ‚Ð°Ð½Ð¾Ð²ÐºÐ¸ Ð´Ð°Ð½Ð½Ð¾Ð³Ð¾ Ñ€ÐµÑˆÐµÐ½Ð¸Ñ Ð½ÐµÐ¾Ð±Ñ…Ð¾Ð´Ð¸Ð¼Ð¾ Ð½Ð°Ð»Ð¸Ñ‡Ð¸Ðµ Ð¼Ð¾Ð´ÑƒÐ»Ñ #MODULE#.";
 	$MESS['MCART_ERROR_INSTALL'] = 'Function "custom_mail" is already in use.';
 
 ?>

@@ -5,20 +5,20 @@
  * @author LiuXin <http://www.80x86.cn/blog/>
  */
 
-$PHPMAILER_LANG['authenticate']         = 'SMTP 错误：身份验证失败。';
-$PHPMAILER_LANG['connect_host']         = 'SMTP 错误: 不能连接SMTP主机。';
-$PHPMAILER_LANG['data_not_accepted']    = 'SMTP 错误: 数据不可接受。';
+$PHPMAILER_LANG['authenticate']         = 'SMTP й”™иЇЇпјљиє«д»ЅйЄЊиЇЃе¤±иґҐгЂ‚';
+$PHPMAILER_LANG['connect_host']         = 'SMTP й”™иЇЇ: дёЌиѓЅиїћжЋҐSMTPдё»жњєгЂ‚';
+$PHPMAILER_LANG['data_not_accepted']    = 'SMTP й”™иЇЇ: ж•°жЌ®дёЌеЏЇжЋҐеЏ—гЂ‚';
 //$PHPMAILER_LANG['empty_message']        = 'Message body empty';
-$PHPMAILER_LANG['encoding']             = '未知编码：';
-$PHPMAILER_LANG['execute']              = '不能执行: ';
-$PHPMAILER_LANG['file_access']          = '不能访问文件：';
-$PHPMAILER_LANG['file_open']            = '文件错误：不能打开文件：';
-$PHPMAILER_LANG['from_failed']          = '下面的发送地址邮件发送失败了： ';
-$PHPMAILER_LANG['instantiate']          = '不能实现mail方法。';
+$PHPMAILER_LANG['encoding']             = 'жњЄзџҐзј–з Ѓпјљ';
+$PHPMAILER_LANG['execute']              = 'дёЌиѓЅж‰§иЎЊ: ';
+$PHPMAILER_LANG['file_access']          = 'дёЌиѓЅи®їй—®ж–‡д»¶пјљ';
+$PHPMAILER_LANG['file_open']            = 'ж–‡д»¶й”™иЇЇпјљдёЌиѓЅж‰“ејЂж–‡д»¶пјљ';
+$PHPMAILER_LANG['from_failed']          = 'дё‹йќўзљ„еЏ‘йЂЃењ°еќЂй‚®д»¶еЏ‘йЂЃе¤±иґҐдє†пјљ ';
+$PHPMAILER_LANG['instantiate']          = 'дёЌиѓЅе®ћзЋ°mailж–№жі•гЂ‚';
 //$PHPMAILER_LANG['invalid_address']      = 'Invalid address: ';
-$PHPMAILER_LANG['mailer_not_supported'] = ' 您所选择的发送邮件的方法并不支持。';
-$PHPMAILER_LANG['provide_address']      = '您必须提供至少一个 收信人的email地址。';
-$PHPMAILER_LANG['recipients_failed']    = 'SMTP 错误： 下面的 收件人失败了： ';
+$PHPMAILER_LANG['mailer_not_supported'] = ' ж‚Ёж‰ЂйЂ‰ж‹©зљ„еЏ‘йЂЃй‚®д»¶зљ„ж–№жі•е№¶дёЌж”ЇжЊЃгЂ‚';
+$PHPMAILER_LANG['provide_address']      = 'ж‚Ёеї…йЎ»жЏђдѕ›и‡іе°‘дёЂдёЄ ж”¶дїЎдєєзљ„emailењ°еќЂгЂ‚';
+$PHPMAILER_LANG['recipients_failed']    = 'SMTP й”™иЇЇпјљ дё‹йќўзљ„ ж”¶д»¶дєєе¤±иґҐдє†пјљ ';
 //$PHPMAILER_LANG['signing']              = 'Signing Error: ';
 //$PHPMAILER_LANG['smtp_connect_failed']  = 'SMTP Connect() failed.';
 //$PHPMAILER_LANG['smtp_error']           = 'SMTP server error: ';

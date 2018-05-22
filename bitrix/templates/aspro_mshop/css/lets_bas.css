@@ -115,7 +115,7 @@ body {
 .order__next {
 		padding-top: 15px;
 	margin-bottom: 50px;
-	text-align: right;
+	     margin-left: 28%;
 }
 
 .order__next .button.big_btn {

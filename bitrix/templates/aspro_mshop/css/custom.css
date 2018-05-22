@@ -1570,7 +1570,7 @@ display:none;
 }
 .chek_politik{
 	margin-top: 10px;
-	margin-bottom: -10px;
+	    margin-bottom: 60px;
 }
 .chek_politik .tex_check_politik{
     display: inline-block;
@@ -1595,7 +1595,7 @@ display:none;
 	text-align:left;
 	margin:0 20px;
 	border:1px solid #24284f;
-	    position: absolute;
+	   /* position: absolute;*/
 	right: 340px;
     bottom: 220px;
 }
@@ -3470,9 +3470,11 @@ left: calc(50% - 60px);
     width: 250px !important;
 }
 .on_authord{
-	position: absolute;
+	/*position: absolute;
     right: 0;
-    top: 140px;
+    top: 140px;*/
+	    margin-bottom: 100px;
+    margin-top: 40px;
 }
 .order__row{
 	    padding-top: 50px;
@@ -3530,7 +3532,10 @@ form[name=order_auth_form] {
 	    padding-bottom: 0 !important; 
 	}
 	.on_authord{
-	    top: 360px !important;
+	        margin-bottom: 20px !important;
+	}
+	.order__next{
+	 margin-left: 0 !important;
 	}
 	
 	.bx_filter.bx_filter_vertical {
@@ -3619,6 +3624,14 @@ input[type="number"]{
     padding: 8px 13px 7px;
     width: 100%;
 }
+
+.order__items::before,
+.order__log::before,
+.order__block .tizers_block::before {
+	display: none;
+}
+
+
 @media (max-width: 768px) {
 .block_ball {
 	width: 100%;

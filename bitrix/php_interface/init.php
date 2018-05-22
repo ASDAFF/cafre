@@ -5,7 +5,7 @@ use Bitrix\Main,
       Bitrix\Sale\Order;
 
 if (!Loader::IncludeModule('sale')) die();
-/* строго в начале файла */
+/* СЃС‚СЂРѕРіРѕ РІ РЅР°С‡Р°Р»Рµ С„Р°Р№Р»Р° */
 
 
 Main\EventManager::getInstance()->addEventHandler(
@@ -46,7 +46,7 @@ function myFunction(Main\Event $event) {
         $id=$order->getId();
         $db_props = CSaleOrderPropsValue::GetOrderProps($id);
         while ($arProps = $db_props->Fetch()) {
-          if($arProps['ORDER_PROPS_ID']==46) {//создать свойство в заказ, к-е будет хранить кол-во бонусов которыми часть или весь заказ были оплачены
+          if($arProps['ORDER_PROPS_ID']==46) {//СЃРѕР·РґР°С‚СЊ СЃРІРѕР№СЃС‚РІРѕ РІ Р·Р°РєР°Р·, Рє-Рµ Р±СѓРґРµС‚ С…СЂР°РЅРёС‚СЊ РєРѕР»-РІРѕ Р±РѕРЅСѓСЃРѕРІ РєРѕС‚РѕСЂС‹РјРё С‡Р°СЃС‚СЊ РёР»Рё РІРµСЃСЊ Р·Р°РєР°Р· Р±С‹Р»Рё РѕРїР»Р°С‡РµРЅС‹
             $bonus=$arProps['VALUE'];
             break;
           }
@@ -59,9 +59,9 @@ function myFunction(Main\Event $event) {
 		}
         $amount=0;
         
-        //проверить что сумма на которую можно начислить, больше 1000        
+        //РїСЂРѕРІРµСЂРёС‚СЊ С‡С‚Рѕ СЃСѓРјРјР° РЅР° РєРѕС‚РѕСЂСѓСЋ РјРѕР¶РЅРѕ РЅР°С‡РёСЃР»РёС‚СЊ, Р±РѕР»СЊС€Рµ 1000        
 			if($allprice >= 1000){
-          $percent=1;//процент начислениЯ бонусов
+          $percent=1;//РїСЂРѕС†РµРЅС‚ РЅР°С‡РёСЃР»РµРЅРёСЏ Р±РѕРЅСѓСЃРѕРІ
           $amount = round($allprice*$percent/100, 2);
 		 $arSelect = Array("ID", "NAME", "PROPERTY_ATT_BONUS", "PROPERTY_ATT_USER");
 		$arFilter = Array("IBLOCK_ID"=>32, "ACTIVE"=>"Y", "PROPERTY_ATT_USER_VALUE"=>$order->getUserId());
@@ -92,7 +92,7 @@ function myFunction(Main\Event $event) {
 			$PRODUCT_ID = $el->Add($arLoadProductArray);
 		}
           //CSaleUserAccount::UpdateAccount($arOrder['USER_ID'],  $amount, 'RUB', 'BONUS', $id);
-          //создать инфоблок длЯ хранениЯ бонусов по пользователЯм, если нет у пользователЯ бонусы, то создать элемент, иначе - приплюсовать
+          //СЃРѕР·РґР°С‚СЊ РёРЅС„РѕР±Р»РѕРє РґР»СЏ С…СЂР°РЅРµРЅРёСЏ Р±РѕРЅСѓСЃРѕРІ РїРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏРј, РµСЃР»Рё РЅРµС‚ Сѓ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ Р±РѕРЅСѓСЃС‹, С‚Рѕ СЃРѕР·РґР°С‚СЊ СЌР»РµРјРµРЅС‚, РёРЅР°С‡Рµ - РїСЂРёРїР»СЋСЃРѕРІР°С‚СЊ
              }  
         /*end bonus*/
       }
@@ -105,11 +105,11 @@ class CIBlockPropertyType
    function GetUserTypeDescription6()
    {
       return array(
-         "PROPERTY_TYPE" => "S",//базовый тип
-         "USER_TYPE" => "SRazdel",//свое название
-         "DESCRIPTION" => "ЏривЯзка к бренду",//в админке в настройках инфоблока выбирать по этому названию
-         "GetPropertyFieldHtml" =>array("CIBlockPropertyType","GetPropertyFieldHtml6"),//функциЯ вывода в админке
-         "ConvertToDB" =>array("CIBlockPropertyType", "ConvertToDB") //функциЯ сохарениЯ в базу данных
+         "PROPERTY_TYPE" => "S",//Р±Р°Р·РѕРІС‹Р№ С‚РёРї
+         "USER_TYPE" => "SRazdel",//СЃРІРѕРµ РЅР°Р·РІР°РЅРёРµ
+         "DESCRIPTION" => "РџСЂРёРІСЏР·РєР° Рє Р±СЂРµРЅРґСѓ",//РІ Р°РґРјРёРЅРєРµ РІ РЅР°СЃС‚СЂРѕР№РєР°С… РёРЅС„РѕР±Р»РѕРєР° РІС‹Р±РёСЂР°С‚СЊ РїРѕ СЌС‚РѕРјСѓ РЅР°Р·РІР°РЅРёСЋ
+         "GetPropertyFieldHtml" =>array("CIBlockPropertyType","GetPropertyFieldHtml6"),//С„СѓРЅРєС†РёСЏ РІС‹РІРѕРґР° РІ Р°РґРјРёРЅРєРµ
+         "ConvertToDB" =>array("CIBlockPropertyType", "ConvertToDB") //С„СѓРЅРєС†РёСЏ СЃРѕС…Р°СЂРµРЅРёСЏ РІ Р±Р°Р·Сѓ РґР°РЅРЅС‹С…
       );
    }
 
@@ -117,7 +117,7 @@ class CIBlockPropertyType
    {
       	$res=CIblockSection::GetList(array('LEFT_RIGHT'=>'asc'), array('IBLOCK_ID'=>26, 'DEPTH_LEVEL'=>2, 'SECTION_ID'=>5338) );
 
-      	$html = '<select style="max-width: 40%;" name="'.$strHTMLControlName["VALUE"].'" ><option value="">(не установлено)</option>';
+      	$html = '<select style="max-width: 40%;" name="'.$strHTMLControlName["VALUE"].'" ><option value="">(РЅРµ СѓСЃС‚Р°РЅРѕРІР»РµРЅРѕ)</option>';
       
       	while ($arItem = $res->GetNext()) {
          	$html .= '<option value="'.$arItem['ID'].'"';
@@ -327,7 +327,7 @@ function wsdl($name, $arParams=array()) {
 	$port = 80;
 	$timeout = 10;
 	$fp = @fsockopen ($server, $port, $errno, $errstr, $timeout);
-	if ($fp) {//сначала проверяем доступен ли сейчас сервер
+	if ($fp) {//СЃРЅР°С‡Р°Р»Р° РїСЂРѕРІРµСЂВ¤РµРј РґРѕСЃС‚СѓРїРµРЅ Р»Рё СЃРµР№С‡Р°СЃ СЃРµСЂРІРµСЂ
 		$wsdl_status = 0;
 		@fwrite ($fp, "HEAD / HTTP/1.0\r\nHost: $server:$port\r\n\r\n");
 		if (strlen(@fread($fp,1024))>0) $wsdl_status = 1;
@@ -408,7 +408,7 @@ function getAllCategories() {
 	endforeach;
 	unset($obTest);
 	echo 'time get soap='.workTime2($start_time).'<br>';
-	// по уровням
+	// РїРѕ СѓСЂРѕРІРЅВ¤Рј
 	$arCats2Levels=array();
 	for($level=1;$level<10;$level++):
 		if($level==1):
@@ -429,10 +429,10 @@ function getAllCategories() {
 			if(sizeof($arCatsParents)<1) break;
 		endif;
 	endfor;
-	//с сайта
+	//СЃ СЃР°Р№С‚Р°
 	$dbs=CIBlockSection::GetList(array('DEPTH_LEVEL'=>'ASC', 'SORT'=>'ASC'), array('IBLOCK_ID'=>26), false, array('ID', 'XML_ID', 'IBLOCK_SECTION_ID', 'NAME', 'ACTIVE', 'DEPTH_LEVEL', 'LEFT_MARGIN', 'RIGHT_MARGIN', 'DESCRIPTION', 'SORT'));
 	while($arS=$dbs->GetNext()):
-		$arId2Xml[$arS['ID']]=$arS['XML_ID']; // соответствие id и xml_id
+		$arId2Xml[$arS['ID']]=$arS['XML_ID']; // СЃРѕРѕС‚РІРµС‚СЃС‚РІРёРµ id Рё xml_id
 		$arSectionsFromSite[$arS['XML_ID']]=$arS;
 		$arLevelsFromSite[$arS['DEPTH_LEVEL']][$arS['XML_ID']]=array('parent_id'=>$arS['IBLOCK_SECTION_ID'], 'parent_xml'=>$arId2Xml[$arS['IBLOCK_SECTION_ID']]);
 		if($arS['ACTIVE']=='Y')
@@ -440,7 +440,7 @@ function getAllCategories() {
 		else
 			$arSectionsFromSiteNoAct[$arS['XML_ID']]=$arS;
 	endwhile;
-	//деактивация разделов, которых нет в выгрузке
+	//РґРµР°РєС‚РёРІР°С†РёВ¤ СЂР°Р·РґРµР»РѕРІ, РєРѕС‚РѕСЂС‹С… РЅРµС‚ РІ РІС‹РіСЂСѓР·РєРµ
 	$arOldSects=array_diff_key($arSectionsFromSiteAct, $arCats);
 	$bs = new CIBlockSection;
 	$arFieldsNoAct=array('ACTIVE'=>'N');
@@ -452,8 +452,8 @@ function getAllCategories() {
 			echo $arOldSect['ID'].' '.$bs->LAST_ERROR.'<br>';
 		endif;
 	endforeach;/**/
-	//eof деактивация разделов
-	//добавление новых по уровням
+	//eof РґРµР°РєС‚РёРІР°С†РёВ¤ СЂР°Р·РґРµР»РѕРІ
+	//РґРѕР±Р°РІР»РµРЅРёРµ РЅРѕРІС‹С… РїРѕ СѓСЂРѕРІРЅВ¤Рј
 	$arNewAddedSections=array();
 	foreach ($arLevels as $level=>$arLevel):
 		$arLevelNewSects=array_diff_key($arLevel, $arSectionsFromSite);
@@ -484,8 +484,8 @@ function getAllCategories() {
 			endforeach;
 		endif;
 	endforeach;
-	//eof добавление новых по уровням
-	//проверка старых по уровням
+	//eof РґРѕР±Р°РІР»РµРЅРёРµ РЅРѕРІС‹С… РїРѕ СѓСЂРѕРІРЅВ¤Рј
+	//РїСЂРѕРІРµСЂРєР° СЃС‚Р°СЂС‹С… РїРѕ СѓСЂРѕРІРЅВ¤Рј
 	$iold=0;
 	$arOldSects=array_intersect_key($arSectionsFromSite, $arCats);
 	echo 'oldsects='.sizeof($arOldSects).'<br>';
@@ -512,7 +512,7 @@ function getAllCategories() {
 			endif;/**/
 		endif;
 	endforeach;
-	//eof проверка старых по уровням
+	//eof РїСЂРѕРІРµСЂРєР° СЃС‚Р°СЂС‹С… РїРѕ СѓСЂРѕРІРЅВ¤Рј
 	CIBlockSection::ReSort(26);
 	file_put_contents('log.txt', round(workTime2($start_time), 3)."\n-------------------------\n", FILE_APPEND);
 	return 'getAllCategories();';
@@ -555,12 +555,12 @@ function GetAllProducts() {
 	echo sizeof($arProductsFromSiteNoActive).' noact<br>';
 	echo 'timeFromSite='.workTime2($start_time).'<br>';
 	$arNewProducts=array_diff_key($arProducts, $arProductsFromSite);
-	$arOldProducts=array_diff_key($arProductsFromSiteActive, $arProducts); // активные товары, которых нет в выгрузке
+	$arOldProducts=array_diff_key($arProductsFromSiteActive, $arProducts); // Р°РєС‚РёРІРЅС‹Рµ С‚РѕРІР°СЂС‹, РєРѕС‚РѕСЂС‹С… РЅРµС‚ РІ РІС‹РіСЂСѓР·РєРµ
 	echo 'new from 1c ='.sizeof($arNewProducts).'<br>';
 	echo 'old from site ='.sizeof($arOldProducts);
 	$ideact=0;
 	$el = new CIBlockElement;
-	//деактивация отсутствующих
+	//РґРµР°РєС‚РёРІР°С†РёВ¤ РѕС‚СЃСѓС‚СЃС‚РІСѓСЋС‰РёС…
 	$arFields=array('ACTIVE'=>'N');
 	foreach($arOldProducts as $xml_id=>$arOldProd):
 		if($arOldProd['ACTIVE']!='Y'):
@@ -573,10 +573,10 @@ function GetAllProducts() {
 			endif;/**/
 		endif;
 	endforeach;
-	//eof деактивация отсутствующих
-	echo '<br>'.$ideact.' деактивировано, время='.workTime2($start_time);
+	//eof РґРµР°РєС‚РёРІР°С†РёВ¤ РѕС‚СЃСѓС‚СЃС‚РІСѓСЋС‰РёС…
+	echo '<br>'.$ideact.' РґРµР°РєС‚РёРІРёСЂРѕРІР°РЅРѕ, РІСЂРµРјВ¤='.workTime2($start_time);
 	echo '<hr>';
-	//деактивация существующих
+	//РґРµР°РєС‚РёРІР°С†РёВ¤ СЃСѓС‰РµСЃС‚РІСѓСЋС‰РёС…
 	$arActualProduct=array_intersect_key($arProductsFromSite, $arProducts);
 	$ideact=0;
 	foreach ($arActualProduct as $xml_id=>$arProd):
@@ -592,9 +592,9 @@ function GetAllProducts() {
 			endif;/**/
 		endif;
 	endforeach;
-	echo '<br>'.$ideact.' деактивировано, время='.workTime2($start_time);
-	//eof обновление существующих
-	//добавление новых товаров
+	echo '<br>'.$ideact.' РґРµР°РєС‚РёРІРёСЂРѕРІР°РЅРѕ, РІСЂРµРјВ¤='.workTime2($start_time);
+	//eof РѕР±РЅРѕРІР»РµРЅРёРµ СЃСѓС‰РµСЃС‚РІСѓСЋС‰РёС…
+	//РґРѕР±Р°РІР»РµРЅРёРµ РЅРѕРІС‹С… С‚РѕРІР°СЂРѕРІ
 	$iadd=0;
 	foreach($arNewProducts as $code1c=>$arNewProduct):
 		$arProps=array('CODE1C'=>$code1c, 'artIk'=>$arNewProduct['articul']);
@@ -610,9 +610,9 @@ function GetAllProducts() {
 			echo "Error: ".$el->LAST_ERROR.'<br>';
 		endif;
 	endforeach;
-	echo '<br>'.$iadd.' добавлено, время='.workTime2($start_time);
+	echo '<br>'.$iadd.' РґРѕР±Р°РІР»РµРЅРѕ, РІСЂРµРјВ¤='.workTime2($start_time);
 	file_put_contents('log.txt', round(workTime2($start_time), 3)."\n-------------------------\n", FILE_APPEND);
-	//eof добавление новых товаров
+	//eof РґРѕР±Р°РІР»РµРЅРёРµ РЅРѕРІС‹С… С‚РѕРІР°СЂРѕРІ
 	return 'GetAllProducts();';
 }
 
@@ -622,8 +622,8 @@ function GetAllProductsCategories(){
 	CModule::IncludeModule("iblock");
 	$dbs=CIBlockSection::GetList(array('DEPTH_LEVEL'=>'ASC', 'SORT'=>'ASC'), array('IBLOCK_ID'=>26), false, array('ID', 'XML_ID'));
 	while($arS=$dbs->GetNext()):
-		$arSectId2Xml[$arS['ID']]=$arS['XML_ID']; // соответствие id и xml_id
-		$arSectXml2Id[$arS['XML_ID']]=$arS['ID']; // соответствие xml_id и id 
+		$arSectId2Xml[$arS['ID']]=$arS['XML_ID']; // СЃРѕРѕС‚РІРµС‚СЃС‚РІРёРµ id Рё xml_id
+		$arSectXml2Id[$arS['XML_ID']]=$arS['ID']; // СЃРѕРѕС‚РІРµС‚СЃС‚РІРёРµ xml_id Рё id 
 	endwhile;
 	$obTest=wsdl('GetAllProductsCategories');
 	$arProds2Cats=array();
@@ -689,7 +689,7 @@ function GetNewOffers() {
 	return 'GetNewOffers();';
 }
 
-// создаем обработчик событиЯ "OnBeforeIBlockElementUpdate" чтобы не удалЯть картинки длЯ товаров!
+// СЃРѕР·РґР°РµРј РѕР±СЂР°Р±РѕС‚С‡РёРє СЃРѕР±С‹С‚РёСЏ "OnBeforeIBlockElementUpdate" С‡С‚РѕР±С‹ РЅРµ СѓРґР°Р»СЏС‚СЊ РєР°СЂС‚РёРЅРєРё РґР»СЏ С‚РѕРІР°СЂРѕРІ!
 AddEventHandler("iblock", "OnBeforeIBlockElementUpdate", "Copy_file");
     function Copy_file($arFields)
     {
@@ -710,13 +710,13 @@ AddEventHandler("iblock", "OnBeforeIBlockElementUpdate", "Copy_file");
 				SELECT SUBDIR, FILE_NAME FROM b_iblock_element join b_file on DETAIL_PICTURE=b_file.ID WHERE b_iblock_element.ID="'.$ELEMENT.'"' );
 			$aRows = array();
 			while ($row = $dbRes->Fetch()) {
-				if ( !file_exists( $_SERVER['DOCUMENT_ROOT'].'/upload/'.$row['SUBDIR'].'/'.$row['FILE_NAME'] ) ) echo "‚нимание! ”айл не найден!";
+				if ( !file_exists( $_SERVER['DOCUMENT_ROOT'].'/upload/'.$row['SUBDIR'].'/'.$row['FILE_NAME'] ) ) echo "Р’РЅРёРјР°РЅРёРµ! Р¤Р°Р№Р» РЅРµ РЅР°Р№РґРµРЅ!";
 				if ( !is_dir( $_SERVER['DOCUMENT_ROOT'].'/upload/copy/'.$row['SUBDIR'] ) ) 
 				mkdir($_SERVER['DOCUMENT_ROOT'].'/upload/copy/'.$row['SUBDIR'], 0777);
 				$file = $_SERVER['DOCUMENT_ROOT'].'/upload/'.$row['SUBDIR'].'/'.$row['FILE_NAME'];
 				$copyfile = $_SERVER['DOCUMENT_ROOT'].'/upload/copy/'.$row['SUBDIR'].'/'.$row['FILE_NAME'];
 				if (!copy($file, $copyfile)) {
-					echo "не удалось скопировать $file";
+					echo "РЅРµ СѓРґР°Р»РѕСЃСЊ СЃРєРѕРїРёСЂРѕРІР°С‚СЊ $file";
 				}
 				$files[]='(NULL, "/upload/'.$row['SUBDIR'].'/'.$row['FILE_NAME'].'", "/upload/copy/'.$row['SUBDIR'].'/'.$row['FILE_NAME'].'")';
 			}

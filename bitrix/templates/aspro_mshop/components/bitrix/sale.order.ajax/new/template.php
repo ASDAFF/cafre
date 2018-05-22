@@ -61,11 +61,7 @@ CJSCore::Init(array('fx', 'popup', 'window', 'ajax'));
 ?>
 <a name="order_form"></a>
 <div class="order">
-<?		if($USER->IsAuthorized() && !$_GET["ORDER_ID"])
-	{
-	?>
-<h3 class="on_authord">Вы успешно авторизованы</h3>
-	<?}?>
+
 <!--order-checkout-->
 <div id="order_form_div">
 <NOSCRIPT>
@@ -259,6 +255,7 @@ function InitOrderJS(){
 
 			</script>
 	
+
 			<?if($_POST["is_ajax_post"] != "Y")
 			{
 				?><form action="<?=$APPLICATION->GetCurPage();?>" method="POST" name="ORDER_FORM" id="ORDER_FORM" enctype="multipart/form-data">
@@ -338,17 +335,17 @@ function InitOrderJS(){
 			
 			<?include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/related_props.php");
 		?>
-		<div class="order__next">
+		<!--<div class="order__next">
 		<a href="javascript:;" id="ORDER_CONFIRM_BUTTON" onclick="submitForm('Y'); return false;" class="checkout button big_btn"><span><?=GetMessage("SOA_TEMPL_BUTTON")?></span>
 
 						<div class="order__message order__message_next">
 							<div class="pinkgirl">
-								<img src="<?=SITE_TEMPLATE_PATH?>/pinkgirl/pinkgirl3.png" alt="">
+								<img src="<?//=SITE_TEMPLATE_PATH?>/pinkgirl/pinkgirl3.png" alt="">
 							</div>
 							<p>А теперь скорее жми на эту кнопку</p>
 						</div>
 						</a>
-					</div>
+					</div>-->
 					
 		
 		<?
@@ -367,6 +364,44 @@ function InitOrderJS(){
 					<input type="hidden" name="profile_change" id="profile_change" value="N">
 					<input type="hidden" name="is_ajax_post" id="is_ajax_post" value="Y">
 					<input type="hidden" name="json" value="Y">
+<?if(!$_GET["ORDER_ID"]){
+?>
+<label class="block_coup">
+			<span class="title_coup">У меня есть промокод:</span>
+			<br />
+			<input type="text" name="coupon" class="coup_inp"/>
+			<br />
+			<span class="name_coup"></span>
+</label>
+<?
+/*if($USER->IsAuthorized())
+	{
+	?>
+<label class="block_ball">
+			<!--<span class="title_ball">Баллов в наличии:-->
+								<?
+								$numb = 0;
+								$arSelect = Array("ID", "NAME", "PROPERTY_ATT_BONUS", "PROPERTY_ATT_USER");
+								$arFilter = Array("IBLOCK_ID"=>32, "ACTIVE"=>"Y", "PROPERTY_ATT_USER_VALUE"=>$GLOBALS['USER']->GetID());
+								$res = CIBlockElement::GetList(Array(), $arFilter, false, Array(), $arSelect);
+								//$arrp = array();
+								if($ob = $res->GetNextElement())
+								{
+									$arFields = $ob->GetFields();
+									if($arFields["PROPERTY_ATT_USER_VALUE"] == $GLOBALS['USER']->GetID()){
+										//echo ($arFields["PROPERTY_ATT_BONUS_VALUE"]?$arFields["PROPERTY_ATT_BONUS_VALUE"]:'0');
+										$numb = ($arFields["PROPERTY_ATT_BONUS_VALUE"]?$arFields["PROPERTY_ATT_BONUS_VALUE"]:0);
+									}else{
+										//echo '0';
+									}
+								}?>
+			<span class="title_ball">Применить баллы:</span>
+			<br/>
+			<input type="number" min="0" max="<?=$numb;?>" name="balls" id="balls" class="ball_inp" placeholder="Баллов в наличии: <?=$numb;?>"  onkeyup="isright(this);"/>
+</label>
+	<?}*/?>
+<?
+}?>
 
 <div class="chek_politik">
 			<input type="checkbox" checked/>
@@ -473,8 +508,8 @@ function InitOrderJS(){
 
 			</div> 
 					
-					<div class="order__next order__next_fin">
-						<a href="javascript:;" id="ORDER_CONFIRM_BUTTON" onclick="submitForm('Y'); return false;" class="checkout button big_btn"><span><?=GetMessage("SOA_TEMPL_BUTTON")?></span>
+					<div class="order__next order__next_fin" style="display:none;">
+						<a href="javascript:;" id="ORDER_CONFIRM_BUTTON" onclick="submitForm('Y'); return false;" class="checkout button big_btn clickd"><span><?=GetMessage("SOA_TEMPL_BUTTON")?></span>
 						<div class="order__message order__message_next">
 							<div class="pinkgirl">
 								<img src="<?=SITE_TEMPLATE_PATH?>/pinkgirl/pinkgirl5.png" alt="">
@@ -491,7 +526,101 @@ if ($USER->IsAuthorized()){
 <?}else{?>
 <span class="clientType" style="display:none;">guest</span>
 <?}?>
-	<script>
+	
+				</form>
+				<?
+				if($arParams["DELIVERY_NO_AJAX"] == "N")
+				{
+					?>
+					<div style="display:none;"><?$APPLICATION->IncludeComponent("bitrix:sale.ajax.delivery.calculator", "", array(), null, array('HIDE_ICONS' => 'Y')); ?></div>
+					<?
+				}
+			}
+			else
+			{
+				?>
+				<script type="text/javascript">
+					top.BX('confirmorder').value = 'Y';
+					top.BX('profile_change').value = 'N';
+				</script>
+				<?
+				die();
+			}
+		}
+	
+	?>
+
+</div>
+<script>
+	$('body').addClass('order_page');
+</script>
+<?if(CSaleLocation::isLocationProEnabled()):?>
+
+	<div style="display: none">
+		<?// we need to have all styles for sale.location.selector.steps, but RestartBuffer() cuts off document head with styles in it?>
+		<?$APPLICATION->IncludeComponent(
+			"bitrix:sale.location.selector.steps", 
+			".default", 
+			array(
+			),
+			false
+		);?>
+		<?$APPLICATION->IncludeComponent(
+			"bitrix:sale.location.selector.search", 
+			".default", 
+			array(
+			),
+			false
+		);?>
+	</div>
+
+<?endif?>
+<?
+if(!$USER->IsAuthorized() )
+	{
+	?>
+	<div class="order__row">
+	<?
+			include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/auth.php");
+	?>
+<div class="order__cell">
+							<div class="order__block order__reg">
+								<div class="order__message order__message_reg">
+									<div class="pinkgirl">
+										<img src="<?=SITE_TEMPLATE_PATH?>/pinkgirl/pinkgirl1.png" alt="">
+									</div>
+									<p>Или заполни эту простую форму, чтобы оформить заказ</p>
+								</div>
+								<label class="order__lbl">
+									<span>Имя</span>
+									<input id="name1" class="order__inp" type="text">
+								</label>
+								<label class="order__lbl">
+									<span>E-Mail</span>
+									<input id="mail1" class="order__inp required" type="text">
+								</label>
+								<label class="order__lbl">
+									<span>Телефон</span>
+									<input id="phone1" class="order__inp" type="text">
+								</label>
+								<label class="order__lbl">
+									<span>Адрес доставки</span>
+									<textarea id="text1" class="order__inp"></textarea>
+								</label>
+							</div>
+
+</div>
+	
+			
+</div>
+<?}?>
+<?if($USER->IsAuthorized() && !$_GET["ORDER_ID"])
+	{
+	?>
+<h3 class="on_authord">Вы успешно авторизованы</h3>
+<?}?>
+<?if(!$_GET["ORDER_ID"]):?>
+<script>
 	function isright(obj)
  {
  var value= +obj.value.replace(/\D/g,'')||0;
@@ -623,126 +752,16 @@ jQuery(function($){
 
 			
 </script>
-				</form>
-				<?
-				if($arParams["DELIVERY_NO_AJAX"] == "N")
-				{
-					?>
-					<div style="display:none;"><?$APPLICATION->IncludeComponent("bitrix:sale.ajax.delivery.calculator", "", array(), null, array('HIDE_ICONS' => 'Y')); ?></div>
-					<?
-				}
-			}
-			else
-			{
-				?>
-				<script type="text/javascript">
-					top.BX('confirmorder').value = 'Y';
-					top.BX('profile_change').value = 'N';
-				</script>
-				<?
-				die();
-			}
-		}
-	
-	if(!$_GET["ORDER_ID"]){
-?>
-<label class="block_coup">
-			<span class="title_coup">У меня есть промокод:</span>
-			<br />
-			<input type="text" name="coupon" class="coup_inp"/>
-			<br />
-			<span class="name_coup"></span>
-</label>
-
-<label class="block_ball">
-			<!--<span class="title_ball">Баллов в наличии:-->
-								<?
-								$numb = 0;
-								$arSelect = Array("ID", "NAME", "PROPERTY_ATT_BONUS", "PROPERTY_ATT_USER");
-								$arFilter = Array("IBLOCK_ID"=>32, "ACTIVE"=>"Y", "PROPERTY_ATT_USER_VALUE"=>$GLOBALS['USER']->GetID());
-								$res = CIBlockElement::GetList(Array(), $arFilter, false, Array(), $arSelect);
-								//$arrp = array();
-								if($ob = $res->GetNextElement())
-								{
-									$arFields = $ob->GetFields();
-									if($arFields["PROPERTY_ATT_USER_VALUE"] == $GLOBALS['USER']->GetID()){
-										//echo ($arFields["PROPERTY_ATT_BONUS_VALUE"]?$arFields["PROPERTY_ATT_BONUS_VALUE"]:'0');
-										$numb = ($arFields["PROPERTY_ATT_BONUS_VALUE"]?$arFields["PROPERTY_ATT_BONUS_VALUE"]:0);
-									}else{
-										//echo '0';
-									}
-								}?>
-			<span class="title_ball">Применить баллы:</span>
-			<br/>
-			<input type="number" min="0" max="<?=$numb;?>" name="balls" id="balls" class="ball_inp" placeholder="Баллов в наличии: <?=$numb;?>"  onkeyup="isright(this);"/>
-</label>
-
-<?
-}
-if(!$USER->IsAuthorized() )
-	{
-	?>
-	<div class="order__row">
-	<?
-			include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/auth.php");
-	?>
-<div class="order__cell">
-							<div class="order__block order__reg">
-								<div class="order__message order__message_reg">
-									<div class="pinkgirl">
-										<img src="<?=SITE_TEMPLATE_PATH?>/pinkgirl/pinkgirl1.png" alt="">
-									</div>
-									<p>Или заполни эту простую форму, чтобы оформить заказ</p>
-								</div>
-								<label class="order__lbl">
-									<span>Имя</span>
-									<input id="name1" class="order__inp" type="text">
-								</label>
-								<label class="order__lbl">
-									<span>E-Mail</span>
-									<input id="mail1" class="order__inp required" type="text">
-								</label>
-								<label class="order__lbl">
-									<span>Телефон</span>
-									<input id="phone1" class="order__inp" type="text">
-								</label>
-								<label class="order__lbl">
-									<span>Адрес доставки</span>
-									<textarea id="text1" class="order__inp"></textarea>
-								</label>
+<div class="order__next order__next_fin">
+						<a href="javascript:;" id="ORDER_CONFIRM_BUTTON" onclick="$('.clickd').click();" class="checkout button big_btn"><span><?=GetMessage("SOA_TEMPL_BUTTON")?></span>
+						<div class="order__message order__message_next">
+							<div class="pinkgirl">
+								<img src="<?=SITE_TEMPLATE_PATH?>/pinkgirl/pinkgirl5.png" alt="">
 							</div>
-
+							<p>Теперь точно пора нажимать эту кнопку</p>
+						</div>
+						</a>
 </div>
-	
-			
-</div>
-<?}?>
-</div>
-<script>
-	$('body').addClass('order_page');
-</script>
-<?if(CSaleLocation::isLocationProEnabled()):?>
-
-	<div style="display: none">
-		<?// we need to have all styles for sale.location.selector.steps, but RestartBuffer() cuts off document head with styles in it?>
-		<?$APPLICATION->IncludeComponent(
-			"bitrix:sale.location.selector.steps", 
-			".default", 
-			array(
-			),
-			false
-		);?>
-		<?$APPLICATION->IncludeComponent(
-			"bitrix:sale.location.selector.search", 
-			".default", 
-			array(
-			),
-			false
-		);?>
-	</div>
-
-<?endif?>
-<?if(!$_GET["ORDER_ID"]):?>
 <div class="order__block">
 	 <?$APPLICATION->IncludeComponent(
 	"bitrix:news.list",

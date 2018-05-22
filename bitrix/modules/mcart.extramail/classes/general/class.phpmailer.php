@@ -2142,7 +2142,7 @@ class PHPMailer
                 $result .= $this->textLine("\tboundary=\"" . $this->boundary[1] . '"');
                 break;
             default:
-                // çäåñü ìåíÿòü êîäèðîâêó
+                // Ð·Ð´ÐµÑÑŒ Ð¼ÐµÐ½ÑÑ‚ÑŒ ÐºÐ¾Ð´Ð¸Ñ€Ð¾Ð²ÐºÑƒ
                // $this->CharSet = "windows-1251";
                 // Catches case 'plain': and case '':
                 $result .= $this->textLine('Content-Type: ' . $this->ContentType . '; charset=' . $this->CharSet);

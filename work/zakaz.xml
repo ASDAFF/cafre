@@ -7761,3 +7761,229 @@ res=stdClass Object
 (
     [return] => 1
 )
+Array
+(
+    [SID] => 26
+    [UID] => 1878
+    [Date] => 2018-05-22T09:20:09
+    [PrCode] => 
+    [Comm] => 
+    [Name] => Dee
+    [Phone] => 79999999999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000010003
+                    [Qty] => 1
+                    [Cost] => 440
+                )
+
+        )
+
+)
+res=stdClass Object
+(
+    [return] => 1
+)
+double:1879
+--
+Array
+(
+    [SID] => 26
+    [UID] => 1879
+    [Date] => 2018-05-22T09:40:18
+    [PrCode] => 
+    [Comm] => 
+    [Name] => Dee
+    [Phone] => 79999999999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000010085
+                    [Qty] => 1
+                    [Cost] => 2145
+                )
+
+        )
+
+)
+res=stdClass Object
+(
+    [return] => 1
+)
+Array
+(
+    [SID] => 26
+    [UID] => 1883
+    [Date] => 2018-05-22T12:12:27
+    [PrCode] => 
+    [Comm] => 
+    [Name] => Dee
+    [Phone] => 79999999999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000019566
+                    [Qty] => 4
+                    [Cost] => 215
+                )
+
+            [1] => Array
+                (
+                    [ID] => 00000009828
+                    [Qty] => 1
+                    [Cost] => 1249
+                )
+
+            [2] => Array
+                (
+                    [ID] => 00000010003
+                    [Qty] => 1
+                    [Cost] => 440
+                )
+
+        )
+
+)
+res=stdClass Object
+(
+    [return] => 1
+)
+Array
+(
+    [SID] => 26
+    [UID] => 1884
+    [Date] => 2018-05-22T12:27:59
+    [PrCode] => 
+    [Comm] => 
+    [Name] => Dee
+    [Phone] => 79999999999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000010007
+                    [Qty] => 1
+                    [Cost] => 440
+                )
+
+            [1] => Array
+                (
+                    [ID] => 00000015862
+                    [Qty] => 1
+                    [Cost] => 451
+                )
+
+            [2] => Array
+                (
+                    [ID] => 00000010085
+                    [Qty] => 1
+                    [Cost] => 2145
+                )
+
+            [3] => Array
+                (
+                    [ID] => 00000021782
+                    [Qty] => 1
+                    [Cost] => 1044
+                )
+
+        )
+
+)
+res=stdClass Object
+(
+    [return] => 1
+)
+Array
+(
+    [SID] => 26
+    [UID] => 1885
+    [Date] => 2018-05-22T12:31:42
+    [PrCode] => 
+    [Comm] => 
+    [Name] => Dee
+    [Phone] => 79999999999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000015861
+                    [Qty] => 1
+                    [Cost] => 550
+                )
+
+        )
+
+)
+res=stdClass Object
+(
+    [return] => 1
+)
+Array
+(
+    [SID] => 26
+    [UID] => 1886
+    [Date] => 2018-05-22T12:36:25
+    [PrCode] => 
+    [Comm] => 
+    [Name] => tee
+    [Phone] => 8
+    [Address] => test
+    [eMail] => wqd@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000010085
+                    [Qty] => 1
+                    [Cost] => 2145
+                )
+
+        )
+
+)
+res=stdClass Object
+(
+    [return] => 1
+)
+Array
+(
+    [SID] => 26
+    [UID] => 1887
+    [Date] => 2018-05-22T12:56:00
+    [PrCode] => 
+    [Comm] => 
+    [Name] => test
+    [Phone] => 79999999999
+    [Address] => 11
+    [eMail] => test@sdf.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000015862
+                    [Qty] => 1
+                    [Cost] => 451
+                )
+
+        )
+
+)
+res=stdClass Object
+(
+    [return] => 1
+)

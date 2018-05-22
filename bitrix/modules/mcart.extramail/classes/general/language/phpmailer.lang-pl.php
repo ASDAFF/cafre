@@ -4,23 +4,23 @@
  * @package PHPMailer
  */
 
-$PHPMAILER_LANG['authenticate']         = 'Błąd SMTP: Nie można przeprowadzić uwierzytelnienia.';
-$PHPMAILER_LANG['connect_host']         = 'Błąd SMTP: Nie można połączyć się z wybranym hostem.';
-$PHPMAILER_LANG['data_not_accepted']    = 'Błąd SMTP: Dane nie zostały przyjęte.';
-$PHPMAILER_LANG['empty_message']        = 'Wiadomość jest pusta.';
-$PHPMAILER_LANG['encoding']             = 'Nieznany sposób kodowania znaków: ';
-$PHPMAILER_LANG['execute']              = 'Nie można uruchomić: ';
-$PHPMAILER_LANG['file_access']          = 'Brak dostępu do pliku: ';
-$PHPMAILER_LANG['file_open']            = 'Nie można otworzyć pliku: ';
-$PHPMAILER_LANG['from_failed']          = 'Następujący adres Nadawcy jest nieprawidłowy: ';
-$PHPMAILER_LANG['instantiate']          = 'Nie można wywołać funkcji mail(). Sprawdź konfigurację serwera.';
-$PHPMAILER_LANG['invalid_address']      = 'Nie można wysłać wiadomości, '.
-    'następujący adres Odbiorcy jest nieprawidłowy: ';
-$PHPMAILER_LANG['provide_address']      = 'Należy podać prawidłowy adres email Odbiorcy.';
-$PHPMAILER_LANG['mailer_not_supported'] = 'Wybrana metoda wysyłki wiadomości nie jest obsługiwana.';
-$PHPMAILER_LANG['recipients_failed']    = 'Błąd SMTP: Następujący odbiorcy są nieprawidłowi: ';
-$PHPMAILER_LANG['signing']              = 'Błąd podpisywania wiadomości: ';
-$PHPMAILER_LANG['smtp_connect_failed']  = 'SMTP Connect() zakończone niepowodzeniem.';
-$PHPMAILER_LANG['smtp_error']           = 'Błąd SMTP: ';
-$PHPMAILER_LANG['variable_set']         = 'Nie można ustawić lub zmodyfikować zmiennej: ';
-$PHPMAILER_LANG['extension_missing']    = 'Brakujące rozszerzenie: ';
+$PHPMAILER_LANG['authenticate']         = 'B??????????d SMTP: Nie mo????na przeprowadzi????? uwierzytelnienia.';
+$PHPMAILER_LANG['connect_host']         = 'B??????????d SMTP: Nie mo????na po??????????czy????? si????? z wybranym hostem.';
+$PHPMAILER_LANG['data_not_accepted']    = 'B??????????d SMTP: Dane nie zosta?????y przyj?????te.';
+$PHPMAILER_LANG['empty_message']        = 'Wiadomo?????????? jest pusta.';
+$PHPMAILER_LANG['encoding']             = 'Nieznany spos????b kodowania znak????w: ';
+$PHPMAILER_LANG['execute']              = 'Nie mo????na uruchomi?????: ';
+$PHPMAILER_LANG['file_access']          = 'Brak dost?????pu do pliku: ';
+$PHPMAILER_LANG['file_open']            = 'Nie mo????na otworzy????? pliku: ';
+$PHPMAILER_LANG['from_failed']          = 'Nast?????puj?????cy adres Nadawcy jest nieprawid?????owy: ';
+$PHPMAILER_LANG['instantiate']          = 'Nie mo????na wywo?????a????? funkcji mail(). Sprawd???? konfiguracj????? serwera.';
+$PHPMAILER_LANG['invalid_address']      = 'Nie mo????na wys?????a????? wiadomo?????ci, '.
+    'nast?????puj?????cy adres Odbiorcy jest nieprawid?????owy: ';
+$PHPMAILER_LANG['provide_address']      = 'Nale????y poda????? prawid?????owy adres email Odbiorcy.';
+$PHPMAILER_LANG['mailer_not_supported'] = 'Wybrana metoda wysy?????ki wiadomo?????ci nie jest obs?????ugiwana.';
+$PHPMAILER_LANG['recipients_failed']    = 'B??????????d SMTP: Nast?????puj?????cy odbiorcy s????? nieprawid?????owi: ';
+$PHPMAILER_LANG['signing']              = 'B??????????d podpisywania wiadomo?????ci: ';
+$PHPMAILER_LANG['smtp_connect_failed']  = 'SMTP Connect() zako?????czone niepowodzeniem.';
+$PHPMAILER_LANG['smtp_error']           = 'B??????????d SMTP: ';
+$PHPMAILER_LANG['variable_set']         = 'Nie mo????na ustawi????? lub zmodyfikowa????? zmiennej: ';
+$PHPMAILER_LANG['extension_missing']    = 'Brakuj?????ce rozszerzenie: ';
