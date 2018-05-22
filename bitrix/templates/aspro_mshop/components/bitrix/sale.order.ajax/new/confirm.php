@@ -123,18 +123,27 @@ dataLayer.push({
 			}
 		}?>
 		
-		<h3 class="bg_block"><?=GetMessage("SOA_TEMPL_ORDER_COMPLETE")?></h3>
+		<h3 class="bg_block">Спасибо, что доверили нам заботу о своей красоте!<?//=GetMessage("SOA_TEMPL_ORDER_COMPLETE")?></h3>
 		<table class="sale_order_full_table">
 			<tr>
 				<td>
-					<?= GetMessage("SOA_TEMPL_ORDER_SUC", Array("#ORDER_DATE#" => $arResult["ORDER"]["DATE_INSERT"], "#ORDER_ID#" => $arResult["ORDER"]["ACCOUNT_NUMBER"]))?>
+					<?/*= GetMessage("SOA_TEMPL_ORDER_SUC", Array("#ORDER_DATE#" => $arResult["ORDER"]["DATE_INSERT"], "#ORDER_ID#" => $arResult["ORDER"]["ACCOUNT_NUMBER"]))?>
 					<br /><br />
-					<?= GetMessage("SOA_TEMPL_ORDER_SUC1", Array("#LINK#" => $arParams["PATH_TO_PERSONAL"])) ?>
+					<?= GetMessage("SOA_TEMPL_ORDER_SUC1", Array("#LINK#" => $arParams["PATH_TO_PERSONAL"])) */?>
+					<p>В ближайшее время вам перезвонит сотрудник Call-центра для уточнения заказа и способа доставки.<br /><br />
+
+					Вы также можете задать ему все интересующие вопросы о товарах и сервисе интернет-магазина Cafre.ru<br /><br />
+
+					Режим работы Call – центра: с 09:00 до 21:00 по московскому времени ежедневно.<br /><br />
+
+					Оплата осуществляется наложенным платежом при получении товара.<br /><br />
+
+					Подробные условия в разделе <a href="/help/info_order/">«Оплата, доставка и возврат товара»</a></p>
 				</td>
 			</tr>
 		</table>
 		<?if (!empty($arResult["PAY_SYSTEM"])){?>
-			<table class="sale_order_full_table pay">
+			<table class="sale_order_full_table pay" style="display:none;">
 				<tr>
 					<td class="ps_logo">
 						<h5><?=GetMessage("SOA_TEMPL_PAY")?></h5>

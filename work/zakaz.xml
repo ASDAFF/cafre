@@ -7720,3 +7720,44 @@ res=stdClass Object
 (
     [return] => 1
 )
+Array
+(
+    [SID] => 26
+    [UID] => 1858
+    [Date] => 2018-05-21T12:40:41
+    [PrCode] => 
+    [Comm] => 
+    [Name] => Dee
+    [Phone] => 79999999999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000019566
+                    [Qty] => 1
+                    [Cost] => 214
+                )
+
+            [1] => Array
+                (
+                    [ID] => 00000015862
+                    [Qty] => 2
+                    [Cost] => 451
+                )
+
+            [2] => Array
+                (
+                    [ID] => 00000022086
+                    [Qty] => 1
+                    [Cost] => 224
+                )
+
+        )
+
+)
+res=stdClass Object
+(
+    [return] => 1
+)

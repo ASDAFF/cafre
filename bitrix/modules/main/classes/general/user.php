@@ -1288,15 +1288,18 @@ abstract class CAllUser extends CDBResult
 			foreach (GetModuleEvents("main", "OnSendUserInfo", true) as $arEvent)
 				ExecuteModuleEventEx($arEvent, array(&$arParams));
 
-			if (!$bImmediate)
+			if (!$bImmediate){
 				$event->Send($eventName, $SITE_ID, $arFields, "Y", "", array(), $res_array["LANGUAGE_ID"]);
-			else
-				$event->SendImmediate($eventName, $SITE_ID, $arFields, "Y", "", array(), $res_array["LANGUAGE_ID"]);
+			}else{
+				//$event->SendImmediate($eventName, $SITE_ID, $arFields, "Y", "", array(), $res_array["LANGUAGE_ID"]);
+				$event->Send($eventName, $SITE_ID, $arFields, "Y", "", array(), $res_array["LANGUAGE_ID"]);
+			}
 		}
 	}
 
 	public static function SendPassword($LOGIN, $EMAIL, $SITE_ID = false, $captcha_word = "", $captcha_sid = 0)
 	{
+		
 		/** @global CMain $APPLICATION */
 		global $DB, $APPLICATION;
 
@@ -1332,6 +1335,7 @@ abstract class CAllUser extends CDBResult
 
 		if($bOk)
 		{
+			
 			$f = false;
 			if($arParams["LOGIN"] <> '' || $arParams["EMAIL"] <> '')
 			{
@@ -1364,6 +1368,7 @@ abstract class CAllUser extends CDBResult
 
 				while($arUser = $res->Fetch())
 				{
+					
 					if($arParams["SITE_ID"]===false)
 					{
 						if(defined("ADMIN_SECTION") && ADMIN_SECTION===true)

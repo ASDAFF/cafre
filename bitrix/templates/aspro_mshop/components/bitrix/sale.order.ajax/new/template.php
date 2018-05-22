@@ -57,41 +57,7 @@ elseif(!$_REQUEST["ORDER_ID"]){
 $APPLICATION->SetAdditionalCSS($templateFolder."/style.css");
 
 CJSCore::Init(array('fx', 'popup', 'window', 'ajax'));
-if(!$_GET["ORDER_ID"]){
-?>
-<label class="block_coup">
-			<span class="title_coup">У меня есть промокод:</span>
-			<br />
-			<input type="text" name="coupon" class="coup_inp"/>
-			<br />
-			<span class="name_coup"></span>
-</label>
 
-<label class="block_ball">
-			<!--<span class="title_ball">Баллов в наличии:-->
-								<?
-								$numb = 0;
-								$arSelect = Array("ID", "NAME", "PROPERTY_ATT_BONUS", "PROPERTY_ATT_USER");
-								$arFilter = Array("IBLOCK_ID"=>32, "ACTIVE"=>"Y", "PROPERTY_ATT_USER_VALUE"=>$GLOBALS['USER']->GetID());
-								$res = CIBlockElement::GetList(Array(), $arFilter, false, Array(), $arSelect);
-								//$arrp = array();
-								if($ob = $res->GetNextElement())
-								{
-									$arFields = $ob->GetFields();
-									if($arFields["PROPERTY_ATT_USER_VALUE"] == $GLOBALS['USER']->GetID()){
-										//echo ($arFields["PROPERTY_ATT_BONUS_VALUE"]?$arFields["PROPERTY_ATT_BONUS_VALUE"]:'0');
-										$numb = ($arFields["PROPERTY_ATT_BONUS_VALUE"]?$arFields["PROPERTY_ATT_BONUS_VALUE"]:0);
-									}else{
-										//echo '0';
-									}
-								}?>
-			<span class="title_ball">Применить баллы:</span>
-			<br/>
-			<input type="number" min="0" max="<?=$numb;?>" name="balls" id="balls" class="ball_inp" placeholder="Баллов в наличии: <?=$numb;?>"  onkeyup="isright(this);"/>
-</label>
-
-<?
-}
 ?>
 <a name="order_form"></a>
 <div class="order">
@@ -292,44 +258,7 @@ function InitOrderJS(){
 			});
 
 			</script>
-	<?		if(!$USER->IsAuthorized() )
-	{
-	?>
-	<div class="order__row">
-	<?
-			include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/auth.php");
-	?>
-<div class="order__cell">
-							<div class="order__block order__reg">
-								<div class="order__message order__message_reg">
-									<div class="pinkgirl">
-										<img src="<?=SITE_TEMPLATE_PATH?>/pinkgirl/pinkgirl1.png" alt="">
-									</div>
-									<p>Или заполни эту простую форму, чтобы оформить заказ</p>
-								</div>
-								<label class="order__lbl">
-									<span>Имя</span>
-									<input id="name1" class="order__inp" type="text">
-								</label>
-								<label class="order__lbl">
-									<span>E-Mail</span>
-									<input id="mail1" class="order__inp required" type="text">
-								</label>
-								<label class="order__lbl">
-									<span>Телефон</span>
-									<input id="phone1" class="order__inp" type="text">
-								</label>
-								<label class="order__lbl">
-									<span>Адрес доставки</span>
-									<textarea id="text1" class="order__inp"></textarea>
-								</label>
-							</div>
-
-</div>
 	
-			
-</div>
-<?}?>
 			<?if($_POST["is_ajax_post"] != "Y")
 			{
 				?><form action="<?=$APPLICATION->GetCurPage();?>" method="POST" name="ORDER_FORM" id="ORDER_FORM" enctype="multipart/form-data">
@@ -715,8 +644,79 @@ jQuery(function($){
 			}
 		}
 	
-	?>
+	if(!$_GET["ORDER_ID"]){
+?>
+<label class="block_coup">
+			<span class="title_coup">У меня есть промокод:</span>
+			<br />
+			<input type="text" name="coupon" class="coup_inp"/>
+			<br />
+			<span class="name_coup"></span>
+</label>
 
+<label class="block_ball">
+			<!--<span class="title_ball">Баллов в наличии:-->
+								<?
+								$numb = 0;
+								$arSelect = Array("ID", "NAME", "PROPERTY_ATT_BONUS", "PROPERTY_ATT_USER");
+								$arFilter = Array("IBLOCK_ID"=>32, "ACTIVE"=>"Y", "PROPERTY_ATT_USER_VALUE"=>$GLOBALS['USER']->GetID());
+								$res = CIBlockElement::GetList(Array(), $arFilter, false, Array(), $arSelect);
+								//$arrp = array();
+								if($ob = $res->GetNextElement())
+								{
+									$arFields = $ob->GetFields();
+									if($arFields["PROPERTY_ATT_USER_VALUE"] == $GLOBALS['USER']->GetID()){
+										//echo ($arFields["PROPERTY_ATT_BONUS_VALUE"]?$arFields["PROPERTY_ATT_BONUS_VALUE"]:'0');
+										$numb = ($arFields["PROPERTY_ATT_BONUS_VALUE"]?$arFields["PROPERTY_ATT_BONUS_VALUE"]:0);
+									}else{
+										//echo '0';
+									}
+								}?>
+			<span class="title_ball">Применить баллы:</span>
+			<br/>
+			<input type="number" min="0" max="<?=$numb;?>" name="balls" id="balls" class="ball_inp" placeholder="Баллов в наличии: <?=$numb;?>"  onkeyup="isright(this);"/>
+</label>
+
+<?
+}
+if(!$USER->IsAuthorized() )
+	{
+	?>
+	<div class="order__row">
+	<?
+			include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/auth.php");
+	?>
+<div class="order__cell">
+							<div class="order__block order__reg">
+								<div class="order__message order__message_reg">
+									<div class="pinkgirl">
+										<img src="<?=SITE_TEMPLATE_PATH?>/pinkgirl/pinkgirl1.png" alt="">
+									</div>
+									<p>Или заполни эту простую форму, чтобы оформить заказ</p>
+								</div>
+								<label class="order__lbl">
+									<span>Имя</span>
+									<input id="name1" class="order__inp" type="text">
+								</label>
+								<label class="order__lbl">
+									<span>E-Mail</span>
+									<input id="mail1" class="order__inp required" type="text">
+								</label>
+								<label class="order__lbl">
+									<span>Телефон</span>
+									<input id="phone1" class="order__inp" type="text">
+								</label>
+								<label class="order__lbl">
+									<span>Адрес доставки</span>
+									<textarea id="text1" class="order__inp"></textarea>
+								</label>
+							</div>
+
+</div>
+	
+			
+</div>
+<?}?>
 </div>
 <script>
 	$('body').addClass('order_page');
