@@ -18625,3 +18625,7 @@
 22.05.2018 09:01 /bitrix/templates/aspro_mshop/js/main.js (11.05.2018 06:49:24     many fix)
 22.05.2018 09:03 /bitrix/templates/aspro_mshop/js/custom.js (28.04.2018 10:33:00     many fix)
 22.05.2018 09:03 /bitrix/templates/aspro_mshop/components/bitrix/sale.order.ajax/new/confirm.php (22.05.2018 08:50:22     fix order)
+22.05.2018 01:33 /bitrix/templates/aspro_mshop/components/bitrix/sale.order.ajax/new/auth.php (22.05.2018 13:26:02     fix order)
+22.05.2018 01:33 /bitrix/templates/aspro_mshop/components/bitrix/sale.order.ajax/new/template.php (22.05.2018 13:26:02     fix order)
+22.05.2018 01:34 /bitrix/templates/aspro_mshop/css/custom.css (22.05.2018 12:56:56     fix order)
+22.05.2018 01:34 /bitrix/templates/aspro_mshop/css/lets_bas.css (22.05.2018 12:56:56     fix order)

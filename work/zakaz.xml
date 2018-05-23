@@ -8166,3 +8166,57 @@ res=stdClass Object
 (
     [return] => 1
 )
+Array
+(
+    [SID] => 26
+    [UID] => 1891
+    [Date] => 2018-05-22T13:27:30
+    [PrCode] => 
+    [Comm] => 
+    [Name] => Dee
+    [Phone] => 79999999999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000013065
+                    [Qty] => 1
+                    [Cost] => 605
+                )
+
+        )
+
+)
+res=stdClass Object
+(
+    [return] => 1
+)
+Array
+(
+    [SID] => 26
+    [UID] => 1892
+    [Date] => 2018-05-22T13:30:58
+    [PrCode] => 
+    [Comm] => 
+    [Name] => Test
+    [Phone] => 79999999999
+    [Address] => Test
+    [eMail] => te2st@test.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000010007
+                    [Qty] => 1
+                    [Cost] => 440
+                )
+
+        )
+
+)
+res=stdClass Object
+(
+    [return] => 1
+)

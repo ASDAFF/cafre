@@ -1,7 +1,8 @@
 <?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();?>
 <?$this->setFrameMode(true);
 global  $catalog_section_name;
-$catalog_section_name=$arResult['NAME'];?>
+$catalog_section_name=$arResult['NAME'];
+?>
 
 <?if( count( $arResult["ITEMS"] ) >= 1 ){?>
 	<?if(($arParams["AJAX_REQUEST"]=="N") || !isset($arParams["AJAX_REQUEST"])){?>

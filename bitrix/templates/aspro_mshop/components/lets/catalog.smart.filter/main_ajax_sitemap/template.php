@@ -35,8 +35,10 @@ foreach($arResult['COMBO'] as $combo) {
 			if(!in_array($combo[250], array_keys($brands))) {
 				foreach($arResult['ITEMS'][250]['VALUES'] as $value) {
 					if($value['VALUE']==$combo[250]) {
-						$strbrand=$value['URL_ID'].'/';
-						$brands[$combo[250]]=$value['URL_ID'].'/';
+						$resBrand = CIBlockSection::GetByID($value['URL_ID']);
+						$resBrand = $resBrand->GetNext();						
+						$strbrand=$resBrand['CODE'].'/';
+						$brands[$combo[250]]=$resBrand['CODE'].'/';
 					}
 				}
 			}
