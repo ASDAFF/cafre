@@ -121,7 +121,7 @@ $brend_list=array();
 				<?
 				//if($arItem["LINK"] == "/catalog/vse_brendy/") continue;
 				if($arItem["LINK"] != "/catalog/vse_brendy/"){?>
-				<li class="menu__item <?=($arItem["SELECTED"] ? ' current' : '')?><?=($arItem["PARAMS"]["ACTIVE"]=="Y" ? ' active' : '')?>">
+				<li class="menu__item <?=($arItem["LINK"]=='/catalog/sale/'||$arItem["LINK"]=='/catalog/hits/'||$arItem["LINK"]=='/catalog/new/' ? ' to_right' : '')?><?=($arItem["SELECTED"] ? ' current' : '')?><?=($arItem["PARAMS"]["ACTIVE"]=="Y" ? ' active' : '')?>">
                 <a class="<?=($arItem["SELECTED"] ? ' current' : '')?>" href="<?=$arItem["LINK"]?>"><?=$arItem["TEXT"]?></a>
 				<?}else{?>
 					<li style="display:none;">

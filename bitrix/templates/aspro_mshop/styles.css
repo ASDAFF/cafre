@@ -150,3 +150,9 @@ table[data-bx-no-border="Y"] td { border: 0px; border-bottom: 1px dotted #c3c3c3
 .not_availible_in_order {
 	    color: #eb5370;
 }
+.to_right {
+	float: right;
+}
+.rec-sec {
+	clear: both;
+}

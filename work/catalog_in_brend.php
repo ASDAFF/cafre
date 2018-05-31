@@ -6,6 +6,27 @@ require($_SERVER["DOCUMENT_ROOT"].'/bitrix/modules/main/include/prolog_before.ph
 
 	if(CModule::IncludeModule('iblock')) {}
 	
+$arSelect = Array("ID", "IBLOCK_ID", "NAME");
+$arFilter2 = Array("IBLOCK_ID"=>26, "PROPERTY_MIN_PRICE"=>false);
+$res = CIBlockElement::GetList(Array('ID'=>'asc'), $arFilter2, false, false, $arSelect);		
+while($ob = $res->GetNext()) {
+	$PRICE=array();
+	$resT = CIBlockElement::GetList(Array('ID'=>'asc'), Array("IBLOCK_ID"=>27, "PROPERTY_CML2_LINK"=>$ob['ID']), false, false, $arSelect);		
+	while($tp = $resT->GetNext()) {
+		$rsPrices = CPrice::GetList(array(), array("PRODUCT_ID" => $tp['ID']));
+ 		while($arPrice = $rsPrices->Fetch()) {
+			$PRICE[]=$arPrice["PRICE"];
+		}
+	}
+	CIBlockElement::SetPropertyValuesEx(
+		$ob['ID'],
+		26,
+		array(
+			"MIN_PRICE" => min($PRICE),
+		)
+	);
+}
+	
 	function getChildrenSection($id) {
 		$childs=array();
 		$all = CIBlockSection::GetList(array('LEFT_MARGIN' => 'ASC'), array('IBLOCK_ID' => 26,  "SECTION_ID"=>$id));
@@ -19,7 +40,7 @@ require($_SERVER["DOCUMENT_ROOT"].'/bitrix/modules/main/include/prolog_before.ph
 	}
 		
 	function elementSections($id, $in_brends) {
-		$arFilter = Array("IBLOCK_ID"=>26, "ACTIVE"=>"Y","GLOBAL_ACTIVE"=>"Y", "SECTION_ID"=>$id, "INCLUDE_SUBSECTIONS"=>'Y');
+		$arFilter = Array("IBLOCK_ID"=>26, "ACTIVE"=>"Y","GLOBAL_ACTIVE"=>"Y", array("LOGIC"=>"OR","PROPERTY_CATALOG_BREND"=>$id, "SECTION_ID"=>$id), "INCLUDE_SUBSECTIONS"=>'Y');
 		$res = CIBlockElement::GetList(Array("ID"=>"DESC"), $arFilter, false, false, array('ID'));
 		$allgroup=array();
 		while($ob = $res->GetNextElement())
@@ -53,7 +74,7 @@ require($_SERVER["DOCUMENT_ROOT"].'/bitrix/modules/main/include/prolog_before.ph
 					$parent=$section_p['ID'];
 				}
 				else {
-					if(!in_array($section_p['ID'], array_keys($menu['CHILD'][$section_p['ID']]))) $menu['CHILD'][$section_p['ID']]=$section_p;
+					if(!in_array($section_p['ID'], array_keys($menu['CHILD']))) $menu['CHILD'][$section_p['ID']]=$section_p;
 					if(!in_array($section_p['ID'], array_keys($menu['CHILD'][$section_p['IBLOCK_SECTION_ID']]['ITEMS']))) $menu['CHILD'][$section_p['IBLOCK_SECTION_ID']]['ITEMS'][$section_p['ID']]=$section_p;
 				}
 			}

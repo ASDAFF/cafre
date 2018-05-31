@@ -214,33 +214,18 @@ else {
                 endif;?>
 
                 <div class="section-seo-text"><?=$path_seo_text["UF_SEO_TEXT"];?></div><br>
+				
+				
 				<div class="sort_header view_<?=$display?>">
 					<!--noindex-->
-					<div class="sort_filter" style="display:none;">
+					<div class="sort_filter" >
 						<?	
 						$arAvailableSort = array();
-						$arSorts = $arParams["SORT_BUTTONS"];
-						if(in_array("POPULARITY", $arSorts)){
-							$arAvailableSort["SHOWS"] = array("SHOWS", "desc");
-						}
-						if(in_array("NAME", $arSorts)){
-							$arAvailableSort["NAME"] = array("NAME", "asc");
-						}
-						if(in_array("PRICE", $arSorts)){ 
-							$arSortPrices = $arParams["SORT_PRICES"];
-							if($arSortPrices == "MINIMUM_PRICE" || $arSortPrices == "MAXIMUM_PRICE"){
-								$arAvailableSort["PRICE"] = array("PROPERTY_".$arSortPrices, "desc");
-							}
-							else{
-								$price = CCatalogGroup::GetList(array(), array("NAME" => $arParams["SORT_PRICES"]), false, false, array("ID", "NAME"))->GetNext();
-								$arAvailableSort["PRICE"] = array("CATALOG_PRICE_".$price["ID"], "desc"); 
-							}
-						}
-						if(in_array("QUANTITY", $arSorts)){
-							$arAvailableSort["CATALOG_AVAILABLE"] = array("QUANTITY", "desc");
-						}
-						$sort = "SHOWS";
-						if((array_key_exists("sort", $_REQUEST) && array_key_exists(ToUpper($_REQUEST["sort"]), $arAvailableSort)) || (array_key_exists("sort", $_SESSION) && array_key_exists(ToUpper($_SESSION["sort"]), $arAvailableSort)) || $arParams["ELEMENT_SORT_FIELD"]){
+						$arAvailableSort["PRICE"] = array("PROPERTY_MIN_PRICE", "desc", 'ѕо цене'); 
+						$arAvailableSort["ID"] = array("ID", "desc", 'ѕо новизне');
+						
+						if((array_key_exists("sort", $_REQUEST) && array_key_exists(ToUpper($_REQUEST["sort"]), $arAvailableSort)) || 
+							(array_key_exists("sort", $_SESSION) && array_key_exists(ToUpper($_SESSION["sort"]), $arAvailableSort)) || $arParams["ELEMENT_SORT_FIELD"]){
 							if($_REQUEST["sort"]){
 								$sort = ToUpper($_REQUEST["sort"]); 
 								$_SESSION["sort"] = ToUpper($_REQUEST["sort"]);
@@ -265,25 +250,20 @@ else {
 							else{
 								$sort_order = ToLower($arParams["ELEMENT_SORT_ORDER"]);
 							}
-						}
+						}						
 						?>
 						<?foreach($arAvailableSort as $key => $val):?>
 							<?$newSort = $sort_order == 'desc' ? 'asc' : 'desc';?>
-							<a href="<?=$APPLICATION->GetCurPageParam('sort='.$key.'&order='.$newSort, 	array('sort', 'order'))?>" class="sort_btn <?=($sort == $key ? 'current' : '')?> <?=$sort_order?> <?=$key?>" rel="nofollow">
-								<i class="icon" title="<?=GetMessage('SECT_SORT_'.$key)?>"></i><span><?=GetMessage('SECT_SORT_'.$key)?></span><i class="arr"></i>
+							<a href="<?=$APPLICATION->GetCurPageParam('sort='.$key.'&order='.$newSort, 	array('sort', 'order'))?>" class="sort_btn <?=($sort == $key ? 'current' : '')?> <?=$sort_order?>" rel="nofollow">
+								<i class="icon" ></i><span><?=$val[2]?></span><i class="arr"></i>
 							</a>
-						<?endforeach;?>
-						<?
-						if($sort == "PRICE"){
-							$sort = "catalog_PRICE_3"; //$arAvailableSort["PRICE"][0];  было это
-						}
-						if($sort == "CATALOG_AVAILABLE"){
-							$sort = "CATALOG_QUANTITY";
-						}
-						?>
+						<?endforeach;
+						if($sort=='PRICE') $sort="PROPERTY_MIN_PRICE";?>
 					</div>
 					<!--/noindex-->
 				</div>
+				
+				
 				<?if($isAjax=="Y"){
 					$APPLICATION->RestartBuffer();
 				}
@@ -291,6 +271,7 @@ else {
 				if($isAjax=="N"){?>
 					<div class="ajax_load <?=$display;?>">
 				<?}
+				global $itemcount;
 				$APPLICATION->IncludeComponent(
 					"bitrix:catalog.section",
 					$template,
@@ -302,12 +283,12 @@ else {
 						"SECTION_ID" => $arResult["VARIABLES"]["SECTION_ID"],
 						"SECTION_CODE" => $arResult["VARIABLES"]["SECTION_CODE"],
 						"BASKET_ITEMS" => $arBasketItems,
-						//"ELEMENT_SORT_FIELD" => $sort,
+						"ELEMENT_SORT_FIELD" => $sort,
 						"AJAX_REQUEST" => $isAjax,
 						// "AJAX_REQUEST_FILTER" => $isAjaxFilter,
-						//"ELEMENT_SORT_ORDER" => $sort_order,
-						"ELEMENT_SORT_FIELD" => $arParams["ELEMENT_SORT_FIELD"],
-						"ELEMENT_SORT_ORDER" => $arParams["ELEMENT_SORT_ORDER"],
+						"ELEMENT_SORT_ORDER" => $sort_order,
+						/*"ELEMENT_SORT_FIELD" => $arParams["ELEMENT_SORT_FIELD"],
+						"ELEMENT_SORT_ORDER" => $arParams["ELEMENT_SORT_ORDER"],*/
 						"ELEMENT_SORT_FIELD2" => $arParams["ELEMENT_SORT_FIELD2"],
 						"ELEMENT_SORT_ORDER2" => $arParams["ELEMENT_SORT_ORDER2"],
 						"FILTER_NAME" => $arParams["FILTER_NAME"],
@@ -390,14 +371,28 @@ else {
                         "SECTION_USER_FIELDS" => array("UF_SEO_TEXT"), //вывод пользовательского свойства раздела краткое описение
 					), $component, array("HIDE_ICONS" => $isAjax)
 				);
-				$activeElements = CIBlockSection::GetSectionElementsCount($arResult["VARIABLES"]["SECTION_ID"], Array("CNT_ACTIVE"=>"Y"));
+				//$activeElements = CIBlockSection::GetSectionElementsCount($arResult["VARIABLES"]["SECTION_ID"], Array("CNT_ACTIVE"=>"Y"));
+				
 				$res = CIBlockSection::GetByID($arResult["VARIABLES"]["SECTION_ID"]);
 				if($ar_res = $res->GetNext()){
+				if($ar_res["DEPTH_LEVEL"] == 1){
+				$fater_raz = 'none';
+				}else{
 				$fater_raz = $ar_res['IBLOCK_SECTION_ID'];
 				}
-				print_r($fater_raz);
-				if(($activeElements <= 5) && !strpos($APPLICATION->GetCurPage(),'vse_brendy')){
-				echo '<h1>¬ас может заинтересовать</h1>';
+				}
+				/*if($array_brand_sec){
+					$res2 = CIBlockSection::GetByID($fater_raz);
+				if($ar_res2 = $res2->GetNext()){
+				$fater_raz = $ar_res2['IBLOCK_SECTION_ID'];
+				}
+				}*/
+				//print_r($fater_raz);
+				if(($itemcount <= 5) && !strpos($APPLICATION->GetCurPage(),'vse_brendy') && ($fater_raz != 'none')){
+				echo '<div class="rec-sec">
+				<div class="top_block">
+								<div class="title_block">¬ас может заинтересовать</div>
+			</div>';
 				$APPLICATION->IncludeComponent(
 					"bitrix:catalog.section",
 					$template,
@@ -419,7 +414,7 @@ else {
 						"ELEMENT_SORT_ORDER2" => $arParams["ELEMENT_SORT_ORDER2"],
 						"FILTER_NAME" => $arParams["FILTER_NAME"],
 						"INCLUDE_SUBSECTIONS" => $arParams["INCLUDE_SUBSECTIONS"],
-						"PAGE_ELEMENT_COUNT" => 10,
+						"PAGE_ELEMENT_COUNT" => 8,
 						"LINE_ELEMENT_COUNT" => $arParams["LINE_ELEMENT_COUNT"],
 						"DISPLAY_TYPE" => $display,
 						"TYPE_SKU" => $TEMPLATE_OPTIONS["TYPE_SKU"]["CURRENT_VALUE"],
@@ -497,6 +492,7 @@ else {
                         "SECTION_USER_FIELDS" => array("UF_SEO_TEXT"), //вывод пользовательского свойства раздела краткое описение
 					), $component, array("HIDE_ICONS" => $isAjax)
 				);
+				echo '</div>';
 				}
 				if($isAjax=="N"){?>
 					<div class="clear"></div>

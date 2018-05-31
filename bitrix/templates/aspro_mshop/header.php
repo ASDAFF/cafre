@@ -11,7 +11,6 @@
 	
 	$arSite = CSite::GetByID(SITE_ID)->Fetch();
 	$htmlClass = ($_REQUEST && isset($_REQUEST['print']) ? 'print' : false);
-//xmlns="http://www.w3.org/1999/xhtml"
 	?>
 <!DOCTYPE html>
 <html <?=($htmlClass ? 'class="'.$htmlClass.'"' : '')?> lang="ru" itemscope itemtype="https://schema.org/WebPage">
@@ -27,6 +26,13 @@
 	<?$APPLICATION->AddHeadString('<script>BX.message('.CUtil::PhpToJSObject( $MESS, false ).')</script>', true);?>
 	<?$APPLICATION->AddHeadScript();?>
 	<?if(CModule::IncludeModule("aspro.mshop")) {CMShop::Start(SITE_ID);}?>
+	
+	<?	
+	$curPage = $APPLICATION->GetCurPage();
+    if($curPage!=$_SERVER['REQUEST_URI']) {		
+		echo '<link rel="canonical" href="https://'.$_SERVER['HTTP_HOST'].$APPLICATION->GetCurPage().'">'; 
+	}   
+	?>
 	
 	<!--[if gte IE 9]><style type="text/css">.basket_button, .button30, .icon {filter: none;}</style><![endif]-->
 	<link href='<?=CMain::IsHTTPS() ? 'https' : 'http'?>://fonts.googleapis.com/css?family=Ubuntu:400,500,700,400italic&subset=latin,cyrillic' rel='stylesheet' type='text/css'>
@@ -72,7 +78,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   carrotquest.connect('13181-68385f12e483ac8405da2f239e');
 </script>
 <!-- CarrotQuest END charset="UTF-8"-->
-<script src="//cdn.sendpulse.com/9dae6d62c816560a842268bde2cd317d/js/push/ec14c57e30305057d4ce91fda0aacb93_1.js" async></script>
+<script src="//cdn.sendpulse.com/9dae6d62c816560a842268bde2cd317d/js/push/ec14c57e30305057d4ce91fda0aacb93_1.js" ></script>
 <script type="text/javascript">(window.Image ? (new Image()) : document.createElement('img')).src = 'https://vk.com/rtrg?p=VK-RTRG-226610-9YY7s';</script>
 </head>
 <body id="main">

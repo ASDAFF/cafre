@@ -639,4 +639,25 @@ if($arAccessories){
 </div>
 <?
 $page_seo_params["title"] = $APPLICATION->GetTitle();
-$this->SetViewTarget('h1');echo $page_seo_params["title"];$this->EndViewTarget();?>
+$this->SetViewTarget('h1');echo $page_seo_params["title"];$this->EndViewTarget();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+?>

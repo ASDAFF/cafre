@@ -25,7 +25,7 @@ if (isset($page_num)||!empty($MSHOP_SMART_FILTER))  {
 		$APPLICATION->SetPageProperty("title",  str_replace_once($catalog_section_name, $catalog_section_name.$filter_h1, $page_seo_params["title"])." (Страница ".$page_num.")");  
 	}
 }
-
+$tek_h1='';
 if($arSection["IBLOCK_SECTION_ID"]==5338&&$arResult["VARIABLES"]["SECTION_ID"]==0&&$arResult["VARIABLES"]["SECTION_CODE"]=='') {
 	$page_seo_params["title"] = $arSection['NAME'].($arSection['RUSNAME']!=''?' ('.$arSection['RUSNAME'].')':'');
 }		
@@ -35,6 +35,7 @@ else{
 
 if( !(strpos($arResult['VARIABLES']['SECTION_CODE_PATH'], 'vse_brendy/')===false) && substr_count($arResult['VARIABLES']['SECTION_CODE_PATH'], '/')==1 ) {
 	$this->SetViewTarget('h1');echo $page_seo_params["title"].$filter_h1;$this->EndViewTarget();
+	$tek_h1=$page_seo_params["title"].$filter_h1;
 	$APPLICATION->SetPageProperty("title", "Каталог товаров бренда ".$page_seo_params["title"].$filter_h1."".(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));
 	$APPLICATION->SetPageProperty("keywords", $page_seo_params["title"].", купить ".$page_seo_params["title"].$filter_h1.", каталог ".$page_seo_params["title"].$filter_h1.", косметика ".$page_seo_params["title"].$filter_h1.(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));  
 	$APPLICATION->SetPageProperty("description", "Покупая косметику ".$page_seo_params["title"].$filter_h1." в интернет-магазине Cafre – вы получаете гарантию самый низкой цены и высшее качество продукции. У нас самый широкий ассортимент товаров ".$page_seo_params["title"].$filter_h1." в России.".(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));   
@@ -50,6 +51,7 @@ elseif(!(strpos($arResult['VARIABLES']['SECTION_CODE_PATH'], 'vse_brendy/')===fa
 	} 
 	$page_seo_params["title"] = ($dop_h1_1?$dop_h1_1:$dop_h1.$filter_h1).' '.$dop_h1_brend.$dop_h1_a.($dop_h1_1?' '.$dop_h1.$filter_h1:'');
 	$this->SetViewTarget('h1');echo $page_seo_params["title"];$this->EndViewTarget();
+	$tek_h1=$page_seo_params["title"];
 	$APPLICATION->SetPageProperty("title", $page_seo_params["title"]." - купить по низким ценам в интернет-магазине Cafre".(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));
 	$APPLICATION->SetPageProperty("keywords", $page_seo_params["title"].", купить ".$page_seo_params["title"].(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));
 	$APPLICATION->SetPageProperty("description", "".$page_seo_params["title"].", огромный ассортимент. Гарантия качества от производителя и лучшие цены на рынке - в наличии!".(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));   
@@ -57,11 +59,14 @@ elseif(!(strpos($arResult['VARIABLES']['SECTION_CODE_PATH'], 'vse_brendy/')===fa
 else {
 	if($section["UF_FILT_H"] && $filter_h1){
 		$this->SetViewTarget('h1');echo $section["UF_FILT_H"].$filter_h1;$this->EndViewTarget();
+		$tek_h1=$section["UF_FILT_H"].$filter_h1;
 	}
 	elseif($section["UF_SEO_H"]){
 	$this->SetViewTarget('h1');echo $section["UF_SEO_H"].$filter_h1;$this->EndViewTarget();
+	$tek_h1=$section["UF_SEO_H"].$filter_h1;
 	}else{
 	$this->SetViewTarget('h1');echo $section["NAME"].$filter_h1;$this->EndViewTarget();	
+	$tek_h1=$section["NAME"].$filter_h1;
 	}
 	$APPLICATION->SetPageProperty("keywords", $page_seo_params["title"].$filter_h1.", купить ".$page_seo_params["title"].$filter_h1.(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));
 		$exp_getfilt = explode('f-',$APPLICATION->GetCurPage());
@@ -89,10 +94,11 @@ else {
 				}
 			}
 			$exbsec_d = explode('catalog_brend-is-',$arResult["VARIABLES"]["SMART_FILTER_PATH"]);
+			$tek_h1=str_replace('  ', ' ', $tek_h1);
 			if($exbsec_d[1]){
-				$APPLICATION->SetPageProperty("description", "Огромный ассортимент товаров из раздела «".$section["NAME"]." ".iconv("UTF-8", "WINDOWS-1251", mb_strtolower(iconv("WINDOWS-1251", "UTF-8", $new_desc))).$exbsec_d[1]."» представлены у нас по самым низким ценам. Гарантии качества от производителя и подарки в каждом заказе - в наличии!".(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));
+				$APPLICATION->SetPageProperty("description", "Огромный ассортимент товаров из раздела «".iconv("UTF-8", "WINDOWS-1251", mb_strtolower(iconv("WINDOWS-1251", "UTF-8", $tek_h1)))."» представлены у нас по самым низким ценам. Гарантии качества от производителя и подарки в каждом заказе - в наличии!".(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));
 			}else{
-				$APPLICATION->SetPageProperty("description", "Огромный ассортимент товаров из раздела «".$section["NAME"]." ".iconv("UTF-8", "WINDOWS-1251", mb_strtolower(iconv("WINDOWS-1251", "UTF-8", $new_desc)))."» представлены у нас по самым низким ценам. Гарантии качества от производителя и подарки в каждом заказе - в наличии!".(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));
+				$APPLICATION->SetPageProperty("description", "Огромный ассортимент товаров из раздела «".iconv("UTF-8", "WINDOWS-1251", mb_strtolower(iconv("WINDOWS-1251", "UTF-8", $tek_h1)))."» представлены у нас по самым низким ценам. Гарантии качества от производителя и подарки в каждом заказе - в наличии!".(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));
 			}
 		}elseif($section["UF_SEO_DESC"]){
 			$APPLICATION->SetPageProperty("description", "".$section["UF_SEO_DESC"].$filter_h1.(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));   

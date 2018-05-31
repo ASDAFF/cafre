@@ -135,7 +135,7 @@ $dbBasketItems = CSaleBasket::GetList(
             ),
         false,
         false,
-        array("ID")
+        array("ID", "PRODUCT_ID")
     );
 while ($arItems = $dbBasketItems->Fetch())
 {
@@ -150,6 +150,7 @@ while ($arItems = $dbBasketItems->Fetch())
     }
 
     $arBasketItems[] = $arItems;
+	$elIds[]=$arItems['PRODUCT_ID'];
 }
 if(count($arBasketItems) > 0){
 $APPLICATION->IncludeComponent(
@@ -190,6 +191,94 @@ $APPLICATION->IncludeComponent(
 	),
 	false
 );?>
+
+<div style="width:100%;float:left"  class="catalog_block">  
+<?
+$APPLICATION->IncludeComponent("bitrix:catalog.bigdata.products", "main", array(
+							"LINE_ELEMENT_COUNT" => 5,
+							"TEMPLATE_THEME" => '',
+							//"DETAIL_URL" => $arResult["FOLDER"].$arResult["URL_TEMPLATES"]["element"],
+							"BASKET_URL" => '/basket/',
+							"ACTION_VARIABLE" => 'action',
+							"PRODUCT_ID_VARIABLE" => "id",
+		"SECTION_ID_VARIABLE" => "SECTION_ID",
+		"PRODUCT_QUANTITY_VARIABLE" => "quantity",
+		"PRODUCT_PROPS_VARIABLE" => "prop",
+		
+							"ADD_PROPERTIES_TO_BASKET" => "N",
+							
+							"SHOW_OLD_PRICE" => 'Y',
+							"SHOW_DISCOUNT_PERCENT" => 'Y',
+							
+							"PRICE_CODE" => array(
+			0 => "BASE",
+			1 => "OPT",
+			2 => "Интернет Розница",
+		),
+		
+							"SHOW_PRICE_COUNT" => '1',
+							
+							"PRICE_VAT_INCLUDE" => "Y",
+		"PRICE_VAT_SHOW_VALUE" => "N",
+		
+							"USE_PRODUCT_QUANTITY" => 'Y',
+							"SHOW_NAME" => "Y",
+							"SHOW_IMAGE" => "Y",
+							"SHOW_MEASURE" => 'Y',
+							
+							"PAGE_ELEMENT_COUNT" => 10,
+							"SHOW_FROM_SECTION" => "N",
+							"IBLOCK_TYPE" => "new_cat",
+							"IBLOCK_ID" => "26",
+							"DEPTH" => "2",
+							"CACHE_TYPE" => 'N',
+							"CACHE_TIME" => '3600',
+							"CACHE_GROUPS" => 'N',
+							"SHOW_PRODUCTS_26" => "Y",
+							"ADDITIONAL_PICT_PROP_26" => "MORE_PHOTO",
+							"LABEL_PROP_26" => "-",
+							"HIDE_NOT_AVAILABLE" => 'L',
+							"CONVERT_CURRENCY" => "Y",
+		"CURRENCY_ID" => "RUB",
+		
+							"SECTION_ID" => '',
+							"SECTION_CODE" => '',
+							"SECTION_ELEMENT_ID" => $elIds,
+							"SECTION_ELEMENT_CODE" => '',
+							"ID" => $elIds,
+							"PROPERTY_CODE_26" => array(
+			0 => "BRAND",
+			1 => "SUM_PROD",
+			2 => "k_350",
+			3 => "k_330",
+			4 => "k_345",
+			5 => "k_351",
+			6 => "k_331",
+			7 => "k_334",
+			8 => "k_333",
+			9 => "k_326",
+			10 => "k_335",
+			11 => "k_332",
+			12 => "PROP_162",
+			13 => "PROP_2065",
+			14 => "PROP_2054",
+			15 => "PROP_2017",
+			16 => "PROP_2055",
+			17 => "PROP_2069",
+			18 => "PROP_2062",
+			19 => "PROP_2061",
+			20 => "CML2_LINK",
+			21 => "MORE_PHOTO",
+			22 => "ON_PHOT",
+			23 => "",
+		),
+							"CART_PROPERTIES_26" => array(),
+							"RCM_TYPE" => 'sell_similar', 							
+							),
+							false,
+							array("HIDE_ICONS" => "Y")
+						);?></div>
+						
 <?
 }elseif($_GET["ORDER_ID"]){
 $APPLICATION->IncludeComponent(

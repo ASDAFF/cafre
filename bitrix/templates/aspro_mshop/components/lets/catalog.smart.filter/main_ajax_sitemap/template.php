@@ -3,11 +3,12 @@ $brands=array();
 $props=array();
 global $GLOBAL;
 if($arResult["ITEMS"]){
-
+$arr_one_sec = array();
+$arr_one_sec2 = array();
 	//echo $arParams['SECTION_DETAIL_PAGE'];
-echo '<pre>';
-//print_r();
-echo '</pre>';
+/*echo '<pre>';
+print_r($arResult['COMBO']);
+echo '</pre>';*/
 
 foreach($arResult['COMBO'] as $combo) {
 	$str=array();
@@ -48,8 +49,10 @@ foreach($arResult['COMBO'] as $combo) {
 		
 		
 		foreach($str as $num1 => $chpu) {
-			if(!$strbrand=='') {
-				
+			if(!$strbrand=='') {	
+			if(in_array('https://cafre.ru'.$arParams['SECTION_DETAIL_PAGE'].$strbrand.'f-'.$chpu, $arr_one_sec2))continue;
+			$arr_one_sec2[] = 'https://cafre.ru'.$arParams['SECTION_DETAIL_PAGE'].$strbrand.'f-'.$chpu;
+			//print_r('https://cafre.ru'.$arParams['SECTION_DETAIL_PAGE'].$strbrand.'f-'.$chpu);
 				$user_b1 = $arParams["DOOM_VARS"]->createElement("url");
 		$login_b1 = $arParams["DOOM_VARS"]->createElement("loc", 'https://cafre.ru'.$arParams['SECTION_DETAIL_PAGE'].$strbrand.'f-'.$chpu);
 		$d_b1 = new DateTime(date());
@@ -58,7 +61,7 @@ foreach($arResult['COMBO'] as $combo) {
 		$user_b1->appendChild($password_b1);
 		$arParams["ROOT_VARS"]->appendChild($user_b1);
 				//echo $arParams['SECTION_DETAIL_PAGE'].$strbrand.'f-'.$chpu."<br>";
-		provEach($arParams['SECTION_DETAIL_PAGE'].$strbrand.'f-'.$chpu, $str, $num1, $arParams["ROOT_VARS"], $arParams["DOOM_VARS"]);
+		provEach($arParams['SECTION_DETAIL_PAGE'].$strbrand.'f-'.$chpu, $str, $num1, $arParams["ROOT_VARS"], $arParams["DOOM_VARS"], $arr_one_sec);
 		/*$user_b2 = $arParams["DOOM_VARS"]->createElement("url");
 		$login_b2 = $arParams["DOOM_VARS"]->createElement("loc", provEach($arParams['SECTION_DETAIL_PAGE'].$strbrand.'f-'.$chpu, $str, $num1));
 		$d_b2 = new DateTime(date());
@@ -69,7 +72,7 @@ foreach($arResult['COMBO'] as $combo) {
 			}
 			
 			
-		provEach($arParams['SECTION_DETAIL_PAGE'].'f-'.$chpu, $str, $num1, $arParams["ROOT_VARS"], $arParams["DOOM_VARS"]);
+		provEach($arParams['SECTION_DETAIL_PAGE'].'f-'.$chpu, $str, $num1, $arParams["ROOT_VARS"], $arParams["DOOM_VARS"], $arr_one_sec);
 		}
 		/*
 		//echo '<pre>';
@@ -126,13 +129,16 @@ foreach($arResult['COMBO'] as $combo) {
 								</span>
 							</div>
 						<?*/}
-			
+						
 							//echo $arParams["SECTION_DETAIL_PAGE"];
 							foreach($arItem["VALUES"] as $val => $ar){
 							if($ar["ELEMENT_COUNT"] == 0 || strpos($arParams["SECTION_DETAIL_PAGE"], 'vse_brendy'))continue;
 							$user_filt = $arParams["DOOM"]->createElement("url");
+							
 							if($key==250) {
-    $login_filt = $arParams["DOOM"]->createElement("loc", 'https://cafre.ru'.$arParams["SECTION_DETAIL_PAGE"].$ar["URL_ID"].'/');
+								$resBrand2 = CIBlockSection::GetByID($ar["URL_ID"]);
+						$resBrand2 = $resBrand2->GetNext();
+    $login_filt = $arParams["DOOM"]->createElement("loc", 'https://cafre.ru'.$arParams["SECTION_DETAIL_PAGE"].$resBrand2["CODE"].'/');
 							}else{
 	$login_filt = $arParams["DOOM"]->createElement("loc", 'https://cafre.ru'.$arParams["SECTION_DETAIL_PAGE"].'f-'.mb_strtolower(str_replace(" ", "_", $arItem["CODE"])).'-is-'.$ar["URL_ID"].'/');
 							}

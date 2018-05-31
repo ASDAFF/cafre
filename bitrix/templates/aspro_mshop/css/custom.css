@@ -3638,3 +3638,6 @@ input[type="number"]{
 	margin-bottom: 80px;
 }
 }
+.top_wrapper{
+	min-height:500px;
+}

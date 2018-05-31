@@ -1,5 +1,5 @@
 <?php
-$_SERVER["DOCUMENT_ROOT"] = '/var/www/www-root/data/www/test.cafre.ru';
+$_SERVER["DOCUMENT_ROOT"] = '/var/www/www-root/data/www/cafre.ru';
 require($_SERVER["DOCUMENT_ROOT"].'/bitrix/modules/main/include/prolog_before.php');
 CModule::IncludeModule("iblock");
 CModule::IncludeModule("catalog");
@@ -19,7 +19,7 @@ CModule::IncludeModule("catalog");
 		$user4->appendChild($password4);
 		$root4->appendChild($user4);
   }
-	$dom4->save("sitemap_page.xml");
+	$dom4->save($_SERVER["DOCUMENT_ROOT"]."/sitemap_page.xml");
 //----EndPage----//
 
 //----News----//
@@ -43,7 +43,7 @@ $d3 = new DateTime($arFields_elem["DATE_ACTIVE_FROM"]);
     $user3->appendChild($password3);
     $root3->appendChild($user3); 
 }
-$dom3->save("sitemap_news.xml");
+$dom3->save($_SERVER["DOCUMENT_ROOT"]."/sitemap_news.xml");
 //----EndNews----//
 
 //----Sec----//
@@ -70,7 +70,7 @@ $d = new DateTime($arSect["DATE_CREATE"]);
     $user->appendChild($password);
     $root->appendChild($user);
   }
-  $dom->save("sitemap_sec.xml");
+  $dom->save($_SERVER["DOCUMENT_ROOT"]."/sitemap_sec.xml");
 //----EndSec----//
 
 //----Tov----//
@@ -92,7 +92,7 @@ $d5 = new DateTime($arFields_tov["DATE_ACTIVE_FROM"]);
     $user5->appendChild($password5);
     $root5->appendChild($user5); 
 }
-$dom5->save("sitemap_tov.xml");
+$dom5->save($_SERVER["DOCUMENT_ROOT"]."/sitemap_tov.xml");
 //----EndTov----//
 
 $dom_filt = new domDocument("1.0", "utf-8");
@@ -152,12 +152,12 @@ $arr_filt_sec = array();
 		$component);
 		//print_r($GLOBAL);
 		if($GLOBAL == $arSect2['ID']){
-   $dom_filt_n->save("sitemap_filt_raz_".$arSect2['CODE']."_vars.xml");
+   $dom_filt_n->save($_SERVER["DOCUMENT_ROOT"]."/sitemap_filt_raz_".$arSect2['CODE']."_vars.xml");
    $arr_filtr[] = "sitemap_filt_raz_".$arSect2['CODE']."_vars.xml";
 		}
    }
  
-   $dom_filt->save("sitemap_filt_raz.xml");
+   $dom_filt->save($_SERVER["DOCUMENT_ROOT"]."/sitemap_filt_raz.xml");
 
  //----FaterSiteMap----// 
 $arr_site = array("sitemap_page.xml", "sitemap_news.xml", "sitemap_sec.xml", "sitemap_tov.xml", "sitemap_filt_raz.xml");  
@@ -176,8 +176,8 @@ $d2 = new DateTime(date());
     $user2->appendChild($password2);
     $root2->appendChild($user2);
  }
-  $dom2->save("sitemap.xml");
+  $dom2->save($_SERVER["DOCUMENT_ROOT"]."/sitemap.xml");
   //----EndFaterSiteMap----// 
  
-  
+
 ?>

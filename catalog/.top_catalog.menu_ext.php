@@ -25,4 +25,26 @@
 			unset($aMenuLinksExt[$k]);
 	}
 	$aMenuLinks = array_merge($aMenuLinks, $aMenuLinksExt);
+	$aMenuLinks[]=Array(
+		"Хиты", 
+		"/catalog/hits/", 
+		Array(), 
+		Array(), 
+		"" 
+	);
+	$aMenuLinks[]=Array(
+		"Новинки", 
+		"/catalog/new/", 
+		Array(), 
+		Array(), 
+		"" 
+	);
+	$aMenuLinks[]=Array(
+		"Акции", 
+		"/catalog/sale/", 
+		Array(), 
+		Array(), 
+		"" 
+	);
+
 ?>

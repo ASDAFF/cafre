@@ -33,7 +33,7 @@ if($this->StartResultCache(false, 'v7'.($arParams["CACHE_GROUPS"]? $USER->GetGro
 
 	if(!empty($arResult["ITEMS"]))
 	{
-		/*if ($this->facet->isValid())
+		if ($this->facet->isValid())
 		{
 			$this->facet->setPrices($arResult["PRICES"]);
 			$this->facet->setSectionId($this->SECTION_ID);
@@ -106,7 +106,7 @@ if($this->StartResultCache(false, 'v7'.($arParams["CACHE_GROUPS"]? $USER->GetGro
 				}
 			}
 			CTimeZone::Enable();
-		}*/
+		}
 		if(true)
 		{
 			$arElementFilter = array(
@@ -283,8 +283,18 @@ elseif(isset($_REQUEST["del_filter"]))
 	$_CHECK = array();
 elseif(isset($_GET["set_filter"]))
 	$_CHECK = &$_GET;
-elseif($arParams["SMART_FILTER_PATH"])
+elseif($arParams["SMART_FILTER_PATH"]) {
 	$_CHECK = $this->convertUrlToCheck($arParams["~SMART_FILTER_PATH"]);
+	if(!(strpos($arParams["~SMART_FILTER_PATH"], 'catalog_brend-is')===false)) {
+		global ${$FILTER_NAME};
+		foreach($arResult['ITEMS'][250]['VALUES'] as $brend) {
+			if(${$FILTER_NAME}['=PROPERTY_250'][0]==$brend['URL_ID']) {
+				$_CHECK[$brend['CONTROL_ID']] = 'Y';
+				break;
+			}
+		}
+	}	
+}
 elseif($arParams["SAVE_IN_SESSION"] && isset($_SESSION[$FILTER_NAME][$this->SECTION_ID]))
 	$_CHECK = $_SESSION[$FILTER_NAME][$this->SECTION_ID];
 else

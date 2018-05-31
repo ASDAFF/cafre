@@ -8,6 +8,27 @@ $aMenuLinks = Array(
 		"" 
 	),
 	Array(
+		"Хиты", 
+		"/catalog/hits/", 
+		Array(), 
+		Array(), 
+		"" 
+	),
+	Array(
+		"Новинки", 
+		"/catalog/new/", 
+		Array(), 
+		Array(), 
+		"" 
+	),
+	Array(
+		"Акции", 
+		"/catalog/sale/", 
+		Array(), 
+		Array(), 
+		"" 
+	),
+	Array(
 		"О компании", 
 		"/company/", 
 		Array(), 

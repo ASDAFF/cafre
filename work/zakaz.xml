@@ -8220,3 +8220,98 @@ res=stdClass Object
 (
     [return] => 1
 )
+Array
+(
+    [SID] => 26
+    [UID] => 2020
+    [Date] => 2018-05-28T11:16:23
+    [PrCode] => 
+    [Comm] => 
+    [Name] => Dee
+    [Phone] => 79999999999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000024616
+                    [Qty] => 1
+                    [Cost] => 825
+                )
+
+            [1] => Array
+                (
+                    [ID] => 00000003166
+                    [Qty] => 1
+                    [Cost] => 326
+                )
+
+        )
+
+)
+res=stdClass Object
+(
+    [return] => 1
+)
+Array
+(
+    [SID] => 26
+    [UID] => 2021
+    [Date] => 2018-05-28T11:17:42
+    [PrCode] => 
+    [Comm] => 
+    [Name] => Dee
+    [Phone] => 79999999999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000015863
+                    [Qty] => 1
+                    [Cost] => 413
+                )
+
+            [1] => Array
+                (
+                    [ID] => 00000010006
+                    [Qty] => 1
+                    [Cost] => 490
+                )
+
+        )
+
+)
+res=stdClass Object
+(
+    [return] => 1
+)
+Array
+(
+    [SID] => 26
+    [UID] => 2022
+    [Date] => 2018-05-28T11:20:05
+    [PrCode] => 
+    [Comm] => 
+    [Name] => Dee
+    [Phone] => 79999999999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000003195
+                    [Qty] => 1
+                    [Cost] => 326
+                )
+
+        )
+
+)
+res=stdClass Object
+(
+    [return] => 1
+)
