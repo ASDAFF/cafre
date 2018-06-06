@@ -1,25 +1,30 @@
 <?php
 $_SERVER["DOCUMENT_ROOT"] = '/var/www/www-root/data/www/test.cafre.ru';
 require($_SERVER["DOCUMENT_ROOT"].'/bitrix/modules/main/include/prolog_before.php');
+require($_SERVER["DOCUMENT_ROOT"].'/phpQuery.php');
+file_put_contents($_SERVER['DOCUMENT_ROOT'].'/0/0.log', date('d.m.Y H:i:s'));
+function get_xml_page($url) {
+ $ch = curl_init($url);
+ curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+ $page = curl_exec($ch);
+ curl_close($ch);
+ return $page;
+}
 CModule::IncludeModule("iblock");
 CModule::IncludeModule("catalog");
-
+$urls=array();
 //----Sec----//
 global $GLOBAL;
 $arFilter = array('IBLOCK_ID' => 26, "ACTIVE"=>"Y"); 
 $rsSect = CIBlockSection::GetList(array('left_margin' => 'asc'),$arFilter);
-file_put_contents($_SERVER['DOCUMENT_ROOT'].'/0/vse_brendy.csv', '');
-while ($arSect = $rsSect->GetNext()) {	
-	$GLOBAL=''; 
-	
+while ($arSect = $rsSect->GetNext()) {
+	$GLOBAL=array();	
 	if( !(strpos($arSect['SECTION_PAGE_URL'], '/vse_brendy/')===false)) {			
 		if($arSect["DEPTH_LEVEL"] > 2) continue;
-		file_put_contents($_SERVER['DOCUMENT_ROOT'].'/0/vse_brendy.csv', 'https://cafre.ru'.$arSect["SECTION_PAGE_URL"].PHP_EOL, FILE_APPEND);	
+		$urls[]='https://cafre.ru'.$arSect["SECTION_PAGE_URL"];
 		continue;
 	}	
-    file_put_contents($_SERVER['DOCUMENT_ROOT'].'/0/'.$arSect["CODE"].'.csv', '');
-	file_put_contents($_SERVER['DOCUMENT_ROOT'].'/0/'.$arSect["CODE"].'.csv', 'https://cafre.ru'.$arSect["SECTION_PAGE_URL"].PHP_EOL, FILE_APPEND);	
-	
+	$urls[]='https://cafre.ru'.$arSect["SECTION_PAGE_URL"];	
 	$APPLICATION->IncludeComponent(
 		"lets:catalog.smart.filter",
 		"main_ajax_sitemapCSV",
@@ -52,9 +57,22 @@ while ($arSect = $rsSect->GetNext()) {
 		$component
 	);	
 	$str=$GLOBAL;
-	file_put_contents($_SERVER['DOCUMENT_ROOT'].'/0/'.$arSect["CODE"].'.csv', $str.PHP_EOL, FILE_APPEND);	
-	
+	foreach ($str as $key => $value) {
+		$urls[]=$value;
+	}	
 }
-
+file_put_contents($_SERVER['DOCUMENT_ROOT'].'/0/2.csv', '');
+file_put_contents($_SERVER['DOCUMENT_ROOT'].'/0/0.csv', '');
+foreach ($urls as $key => $value) {
+	if(strpos($value, 'schwarzkopf_professional	')) continue;
+	if($key<1690) continue;
+	file_put_contents($_SERVER['DOCUMENT_ROOT'].'/0/0.csv', $value.PHP_EOL, FILE_APPEND);
+	sleep(1);
+	$results_page = get_xml_page($value);
+    $results = phpQuery::newDocument($results_page);
+    $elements = $results->find('h1')->text();
+    file_put_contents($_SERVER['DOCUMENT_ROOT'].'/0/2.csv', $elements.PHP_EOL, FILE_APPEND);
+}
+file_put_contents($_SERVER['DOCUMENT_ROOT'].'/0/0.log', date('d.m.Y H:i:s').PHP_EOL, FILE_APPEND);
 //----EndSec----//
 ?>

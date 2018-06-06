@@ -24,18 +24,18 @@
 									<a class="outer_text" href="<?=$arItem["PROPERTIES"]["URL_STRING"]["VALUE"]?>" <?=$arItem["PROPERTIES"]["TARGETS"]["VALUE_XML_ID"]?'target="'.$arItem["PROPERTIES"]["TARGETS"]["VALUE_XML_ID"].'"':'';?>>
 								<?}else{?>
 									<span class="outer_text">
-								<?}?>
+								<?}/*?>
 									<span class="inner_text">
 										<?=strip_tags($arItem["~NAME"], "<br><br/>");?>
 									</span>
-								<?if($isUrl){?>
+								<?*/if($isUrl){?>
 									</a>
 								<?}else{?>
 									</span>
 								<?}?>
 							</span>
 						</div>
-						<?if($arItem["PREVIEW_TEXT"]){?>
+						<?/*if($arItem["PREVIEW_TEXT"]){?>
 							<div class="wr_block price">
 								<span class="wrap_outer">
 									<?if($isUrl){?>
@@ -53,7 +53,7 @@
 									<?}?>
 								</span>
 							</div>
-						<?}?>
+						<?}*/?>
 					</div>
 					<?if($isUrl){?>
 						<a href="<?=$arItem["PROPERTIES"]["URL_STRING"]["VALUE"]?>" <?=$arItem["PROPERTIES"]["TARGETS"]["VALUE_XML_ID"]?'target="'.$arItem["PROPERTIES"]["TARGETS"]["VALUE_XML_ID"].'"':'';?>>

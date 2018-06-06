@@ -6,10 +6,10 @@ foreach($arResult['ITEMS'] as $key => $arItems) {
 		if($key==250) {
 			$resBrand = CIBlockSection::GetByID($value['URL_ID']);
 			$resBrand = $resBrand->GetNext();						
-			$GLOBAL.= $arParams['TEK_URL'].$resBrand['CODE'].'/'.PHP_EOL;
+			$GLOBAL[]= $arParams['TEK_URL'].$resBrand['CODE'].'/';
 		}
 		else
-			$GLOBAL.= $arParams['TEK_URL'].'f-'.strtolower($arItems['CODE']).'-is-'.$value['URL_ID'].'/'.PHP_EOL;
+			$GLOBAL[]= $arParams['TEK_URL'].'f-'.strtolower($arItems['CODE']).'-is-'.$value['URL_ID'].'/';
 	}
 }
 ?>

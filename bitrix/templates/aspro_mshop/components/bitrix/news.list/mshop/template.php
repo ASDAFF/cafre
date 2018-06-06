@@ -10,7 +10,9 @@
 			<?if($arItem["PROPERTIES"]["LINK"]["VALUE"]){?>
 				<a class="name" href="<?=$arItem["PROPERTIES"]["LINK"]["VALUE"]?>" target="_blank">
 			<?}?>
-			<?if($arItem["PREVIEW_PICTURE"]["SRC"]){?>
+			<?if($arItem["PROPERTIES"]["SVG_IMG"]["VALUE"]){?>
+			<div class="img"><img src="<?=CFile::GetPath($arItem["PROPERTIES"]["SVG_IMG"]["VALUE"]);?>" alt=""  /></div>
+			<?}elseif($arItem["PREVIEW_PICTURE"]["SRC"]){?>
 				<!--<div class="img"><img src="<?//=$arItem["PREVIEW_PICTURE"]["SRC"]?>" alt="<?//=$name;?>" title="<?//=$name;?>"/></div>-->
 				<div class="img"><img src="<?=$arItem["PREVIEW_PICTURE"]["SRC"]?>" alt=""  /></div>
 			<?}?>
