@@ -216,6 +216,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 									</div>-->
 									
 									<div class="header-cart" id="basket_line">
+									
 										<?Bitrix\Main\Page\Frame::getInstance()->startDynamicWithID("header-cart");?>
 										<?//CSaleBasket::UpdateBasketPrices(CSaleBasket::GetBasketUserID(), SITE_ID);?>
 										
@@ -233,14 +234,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 												});
 											</script>
 										<?endif;?>
-										
+										<div class="new_bas_small">
+										<!--startsmall-->
 										<?$APPLICATION->IncludeComponent("bitrix:sale.basket.basket.small", "top", array(
 											"PATH_TO_BASKET" => SITE_DIR."basket/",
 											"PATH_TO_ORDER" => SITE_DIR."order/"
 											)
 										);?>
-											
+										<!--endsmall-->
+										</div>
 										<?Bitrix\Main\Page\Frame::getInstance()->finishDynamicWithID("header-cart", "");?>
+										
 									</div>
 								</div>
 								

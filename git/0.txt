@@ -18678,3 +18678,4 @@
 23.05.2018 02:19 /bitrix/templates/aspro_mshop/components/bitrix/catalog.section.list/top_menu/template.php (17.05.2018 14:11:32     catalog review)
 23.05.2018 02:19 /bitrix/templates/aspro_mshop/components/bitrix/sale.basket.basket.small/top/template.php (17.05.2018 14:11:32     catalog review)
 24.05.2018 06:28 /bitrix/templates/aspro_mshop/components/bitrix/breadcrumb/mshop/template.php (17.05.2018 14:11:32     catalog review)
+06.06.2018 09:48 /bitrix/templates/aspro_mshop/components/aspro/com.banners.mshop/mshop/template.php (06.06.2018 09:44:59     baners)

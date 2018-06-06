@@ -875,7 +875,7 @@ body .top_slider_wrapp .flex-direction-nav li{background:#fff;}
 .start_promo .item.hover:hover{/*opacity:0.7;*/}
 .start_promo .item br{/*line-height:24px;*/}
 .start_promo .item .opacity_block{position:absolute;display:block;width:100%;height:100%;/*transition:opacity 0.02s ease;*/ background-color:#FFF;}
-.start_promo .item:hover .opacity_block{opacity:0.1;z-index:11;}
+/*.start_promo .item:hover .opacity_block{opacity:0.1;z-index:11;}*/
 .start_promo .item.wide50{width:50%;}
 .start_promo .item.wide100{width:100%;}
 .start_promo .item span.main_wrap{display:block; max-width:195px; bottom:20px;left:20px; position:absolute;z-index:10;color:#fff;-webkit-backface-visibility:hidden;-moz-backface-visibility:hidden;    -ms-backface-visibility:hidden;backface-visibility:hidden;display:none;}
@@ -892,7 +892,7 @@ body .top_slider_wrapp .flex-direction-nav li{background:#fff;}
 .wrapper_inner .start_promo .item i span p .tizer_text{margin:3px 0px 0px;padding-top:5px;}
 
 .start_promo .item  a{color:#fff;text-decoration:none;}
-.start_promo .item  a:hover{color:#fff;text-decoration:none;}
+/*.start_promo .item  a:hover{color:#fff;text-decoration:none;}*/
 .start_promo .item i.title span{font-weight:bold;/*direction:rtl; padding:4px 10px 7px 0;line-height:28px;*/ font-size:18px;}
 .bx-ie .start_promo.t1 .item i.title{position:relative;line-height:1;color:#fff;display:inline;white-space:pre-wrap;border:0 solid #00a7df;border-width:0.25em 0;/* 0.25em is roughly equal to one space character. */}
 .bx-ie .start_promo.t1.title, .bx-ie .start_promo1 .title:after{background-color:#00a7df;}
@@ -2273,8 +2273,8 @@ ul.slider_navigation.top_big .flex-direction-nav:first-child { display: block; }
 @media (min-width:1024px){
 	.start_promo .item{border-bottom-width:6px;    padding-bottom:23%;}
 	.start_promo .item img {transition:all 0.3s ease-in-out;}
-	.start_promo .item:hover img{transform:scale(1.10);}
-	.start_promo .item:hover .opacity_block{display:none;}
+	/*.start_promo .item:hover img{transform:scale(1.10);}*/
+	/*.start_promo .item:hover .opacity_block{display:none;}*/
 }
 /*ul.menu.tz_menu_full li .child ul{
     width: 28% !important;
