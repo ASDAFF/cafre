@@ -205,16 +205,4 @@ $('[data-but="minus"], [data-but="plus"]').on("click",function(e){
 	 $('.menuBot').on('click', function(e) {
         e.preventDefault();
      });
-	 function getBas(html){
-    	txt = html.split('<!--startsmall-->');  txt = txt[1];
-    	txt = txt.split('<!--endsmall-->');  return txt[0];}
-	 $('.button_block').on('click',function(e){
-			$.ajax({
-                    url: '/ajax/small_basket_update.php',
-					type: 'post',
-                    success: function(data) {
-                        $('.new_bas_small').html(getBas(''+data+''));
-                    }
-                });
-	});
 });

@@ -1332,6 +1332,13 @@ $(document).ready(function(){
 					$('.wish_item[data-item='+item+']').removeClass("added");
 					$('.wish_item[data-item='+item+']').find(".value").show();
 					$('.wish_item[data-item='+item+']').find(".value.added").hide();
+												$.ajax({
+														url: '/ajax/small_basket_update.php',
+														type: 'post',
+														success: function(data) {
+															$('.new_bas_small').html(data);
+														}
+													});
 					if($("#basket_line .basket_fly").length && $(window).outerWidth()>768){
 						basketFly('open');
 					}

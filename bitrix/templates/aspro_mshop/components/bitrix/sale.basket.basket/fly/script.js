@@ -77,6 +77,13 @@ function delete_all_items(type, item_section, correctSpeed){
 		$('.wish_item').removeClass("added");
 		$('.wish_item').find('.value').show();
 		$('.wish_item').find('.value.added').hide();
+		$.ajax({
+														url: '/ajax/small_basket_update.php',
+														type: 'post',
+														success: function(data) {
+															$('.new_bas_small').html(data);
+														}
+													});
 	}));
 }
 
