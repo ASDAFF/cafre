@@ -154,5 +154,5 @@ table[data-bx-no-border="Y"] td { border: 0px; border-bottom: 1px dotted #c3c3c3
 	float: right;
 }
 .rec-sec {
-	clear: both;
+	/*clear: both;*/
 }

@@ -18688,3 +18688,6 @@
 06.06.2018 02:14 /bitrix/templates/aspro_mshop/components/bitrix/catalog/main/section.php (31.05.2018 03:56:39     many fix and start bigdata)
 06.06.2018 02:14 /bitrix/templates/aspro_mshop/css/custom.css (31.05.2018 03:56:39     many fix and start bigdata)
 06.06.2018 02:24 /bitrix/templates/aspro_mshop/template_styles.css (06.06.2018 13:36:26     fix)
+13.06.2018 01:15 /bitrix/catalog_export/yandex_new_utm.php (13.06.2018 13:14:29     new feed)
+13.06.2018 01:15 /bitrix/php_interface/include/catalog_export/yanme2_run.php (13.06.2018 13:14:29     new feed)
+13.06.2018 01:15 /bitrix/php_interface/include/catalog_export/yanme2_setup.php (13.06.2018 13:14:29     new feed)
