@@ -133,9 +133,8 @@
 	if(!empty($arResult["DELIVERY"]))
 	{
 		$width = ($arParams["SHOW_STORES_IMAGES"] == "Y") ? 850 : 700;
-		?>
-		<h4><?=GetMessage("SOA_TEMPL_DELIVERY")?></h4>
-		<?
+
+		
 
 		foreach ($arResult["DELIVERY"] as $delivery_id => $arDelivery)
 		{
@@ -155,32 +154,15 @@
 
 				<div class="bx_element">
 
+					
+
+					<label for="ID_DELIVERY_ID_<?=$arDelivery["ID"]?>">
 					<input type="radio"
 						id="ID_DELIVERY_ID_<?= $arDelivery["ID"] ?>"
 						name="<?=htmlspecialcharsbx($arDelivery["FIELD_NAME"])?>"
 						value="<?= $arDelivery["ID"] ?>"<?if ($arDelivery["CHECKED"]=="Y") echo " checked";?>
 						onclick="submitForm();"
-						/>
-
-					<label for="ID_DELIVERY_ID_<?=$arDelivery["ID"]?>">
-
-						<?
-						if (count($arDelivery["LOGOTIP"]) > 0):
-
-							$arFileTmp = CFile::ResizeImageGet(
-								$arDelivery["LOGOTIP"]["ID"],
-								array("width" => "95", "height" =>"55"),
-								BX_RESIZE_IMAGE_PROPORTIONAL,
-								true
-							);
-
-							$deliveryImgURL = $arFileTmp["src"];
-						else:
-							$deliveryImgURL = $templateFolder."/images/logo-default-d.gif";
-						endif;
-						?>
-
-						<div class="bx_logotype"><span style='background-image:url(<?=$deliveryImgURL?>);' <?=$clickHandler?>></span></div>
+						/>					
 
 						<div class="bx_description">
 
@@ -196,20 +178,9 @@
 										}else{
 											echo $free_delivery_text;
 										}?>
-										<?//=(strlen($arDelivery["PRICE_FORMATED"]) > 0 ? $arDelivery["PRICE_FORMATED"] : number_format($arDelivery["PRICE"], 2, ',', ' '))?>
-										</b><br />
-									<?
-									if (strlen($arDelivery["PERIOD_TEXT"])>0)
-									{
-										echo GetMessage('SALE_SADC_TRANSIT').": <b>".$arDelivery["PERIOD_TEXT"]."</b>";
-										?><br /><?
-									}
-									if ($arDelivery["PACKS_COUNT"] > 1)
-									{
-										echo '<br />';
-										echo GetMessage('SALE_SADC_PACKS').': <b>'.$arDelivery["PACKS_COUNT"].'</b>';
-									}
-									?>
+										<?echo in_array($arDelivery["ID"], array(6, 7))?'</b> (бесплатно при заказе от 3000 рублей)<b>' : '';?>
+										<?echo in_array($arDelivery["ID"], array(8, 9))?'</b> (бесплатно при заказе от 5000 рублей)<b>' : '';?>
+										</b>
 								<?else:?>
 										<?$APPLICATION->IncludeComponent('bitrix:sale.ajax.delivery.calculator', 'mshop', array(
 											"NO_AJAX" => $arParams["DELIVERY_NO_AJAX"],
@@ -225,58 +196,11 @@
 								<?endif;?>
 
 							</span>
-							<p <?=$clickHandler?>>
-								<?
-								if (strlen($arDelivery["DESCRIPTION"])>0)
-									echo $arDelivery["DESCRIPTION"]."<br />";
-
-								if (count($arDelivery["STORE"]) > 0):
-								?>
-									<span id="select_store"<?if(strlen($arResult["STORE_LIST"][$arResult["BUYER_STORE"]]["TITLE"]) <= 0) echo " style=\"display:none;\"";?>>
-										<span class="select_store"><?=GetMessage('SOA_ORDER_GIVE_TITLE');?>: </span>
-										<span class="ora-store" id="store_desc"><?=htmlspecialcharsbx($arResult["STORE_LIST"][$arResult["BUYER_STORE"]]["TITLE"])?></span>
-									</span>
-								<?
-							endif;
-							?>
-							</p>
+							
+							
 						</div>
-					</label>
-					<?if ($arDelivery['CHECKED'] == 'Y'):?>
-						<table class="delivery_extra_services">
-							<?
-							if(is_array($arDelivery['EXTRA_SERVICES']) && $arDelivery['EXTRA_SERVICES']){
-								foreach ($arDelivery['EXTRA_SERVICES'] as $extraServiceId => $extraService):?>
-									<?if(!$extraService->canUserEditValue()) continue;?>
-									<tr>
-										<td class="name">
-											<?=$extraService->getName()?>
-										</td>
-										<td class="control">
-											<?=$extraService->getEditControl('DELIVERY_EXTRA_SERVICES['.$arDelivery['ID'].']['.$extraServiceId.']')	?>
-										</td>
-										<td rowspan="2" class="price">
-											<?
-
-											if ($price = $extraService->getPrice())
-											{
-												echo GetMessage('SOA_TEMPL_SUM_PRICE').': ';
-												echo '<strong>'.SaleFormatCurrency($price, $arResult['BASE_LANG_CURRENCY']).'</strong>';
-											}
-
-											?>
-										</td>
-									</tr>
-									<tr>
-										<td colspan="2" class="description">
-											<?=$extraService->getDescription()?>
-										</td>
-									</tr>
-								<?endforeach;
-							}?>
-						</table>
-					<?endif?>
-
+					</label>					
+					
 					<div class="clear"></div>
 				</div>
 			</div>

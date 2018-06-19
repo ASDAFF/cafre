@@ -40,7 +40,7 @@
 	<script src="//cdn.sendpulse.com/js/push/38cfeac2ca38e29c6d3701441d6ff14a_1.js" async></script>
 
 	<link rel="stylesheet" href="<?=SITE_TEMPLATE_PATH?>/js/photo3d-html-files/v3/css/style.css" type="text/css" media="all">
-	<link rel="stylesheet" href="<?=SITE_TEMPLATE_PATH?>/css/lets_bas.css?v=1" type="text/css">
+	<link rel="stylesheet" href="<?=SITE_TEMPLATE_PATH?>/css/lets_bas.css?v=2" type="text/css">
 	
 
 	<script type="text/javascript" data-skip-moving="true">

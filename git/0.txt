@@ -18691,3 +18691,4 @@
 13.06.2018 01:15 /bitrix/catalog_export/yandex_new_utm.php (13.06.2018 13:14:29     new feed)
 13.06.2018 01:15 /bitrix/php_interface/include/catalog_export/yanme2_run.php (13.06.2018 13:14:29     new feed)
 13.06.2018 01:15 /bitrix/php_interface/include/catalog_export/yanme2_setup.php (13.06.2018 13:14:29     new feed)
+14.06.2018 02:14 /bitrix/templates/aspro_mshop/styles.css (14.06.2018 14:12:46     fix also in catalog css)

@@ -97,6 +97,7 @@ else {
 	}else{
 		include($_SERVER["DOCUMENT_ROOT"]."/".$this->GetFolder()."/menu.php");?>		
 		<div class="right_block clearfix catalog" id="right_block_ajax">
+		
 			<? if($brends && strpos($APPLICATION->GetCurPage(), '/catalog/vse_brendy/')===false && (empty($MSHOP_SMART_FILTER) || (count($MSHOP_SMART_FILTER)==1 && isset($MSHOP_SMART_FILTER['FACET_OPTIONS']))))  {
 				$APPLICATION->ShowViewContent('filter_dop');		
 			}
@@ -158,6 +159,7 @@ else {
 			<?}?>
 			
 			<div class="inner_wrapper">
+			<!--startsort-->
 				<?if($posSectionDescr=="TOP"){?>
 					<?if ($arSection["DESCRIPTION"]):?>
 						<div class="group_description_block top">
@@ -221,8 +223,9 @@ else {
 					<div class="sort_filter" >
 						<?	
 						$arAvailableSort = array();
-						$arAvailableSort["PRICE"] = array("PROPERTY_MIN_PRICE", "desc", 'По цене'); 
-						$arAvailableSort["ID"] = array("ID", "desc", 'По новизне');
+						$arAvailableSort["PRICE"] = array("PROPERTY_MIN_PRICE", "desc", 'по цене'); 
+						$arAvailableSort["ID"] = array("ID", "desc", 'по новизне');
+						$arAvailableSort["POPULAR"] = array("PROPERTY_ZZ_COUNT", "desc", 'по популЯрности');
 						
 						if((array_key_exists("sort", $_REQUEST) && array_key_exists(ToUpper($_REQUEST["sort"]), $arAvailableSort)) || 
 							(array_key_exists("sort", $_SESSION) && array_key_exists(ToUpper($_SESSION["sort"]), $arAvailableSort)) || $arParams["ELEMENT_SORT_FIELD"]){
@@ -253,7 +256,7 @@ else {
 						}						
 						?>
 						<?foreach($arAvailableSort as $key => $val):?>
-							<?$newSort = $sort_order == 'desc' ? 'asc' : 'desc';?>
+							<?$newSort = ($sort == 'POPULAR')?($sort_order == 'desc' ? 'asc' : 'desc'):($sort_order == 'desc' ? 'asc' : 'desc');?>
 							<a href="<?=$APPLICATION->GetCurPageParam('sort='.$key.'&order='.$newSort, 	array('sort', 'order'))?>" class="sort_btn <?=($sort == $key ? 'current' : '')?> <?=$sort_order?>" rel="nofollow">
 								<i class="icon" ></i><span><?=$val[2]?></span><i class="arr"></i>
 							</a>
@@ -509,7 +512,9 @@ else {
 				<?if($isAjax=="Y"){
 					die();
 				}?>
+				<!--endsort-->
 			</div>
+			
 		</div>
 		<?
 		$basketAction='';

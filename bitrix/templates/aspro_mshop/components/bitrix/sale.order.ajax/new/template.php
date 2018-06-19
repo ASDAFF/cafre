@@ -1,6 +1,6 @@
 <?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();?>
 <?
-if(!$USER->IsAuthorized() && $arParams["ALLOW_AUTO_REGISTER"] == "N"){
+/*if(!$USER->IsAuthorized() && $arParams["ALLOW_AUTO_REGISTER"] == "N"){
 	if(!empty($arResult["ERROR"])){
 		foreach($arResult["ERROR"] as $v) {
 			echo ShowError($v);
@@ -20,7 +20,7 @@ if(!$USER->IsAuthorized() && $arParams["ALLOW_AUTO_REGISTER"] == "N"){
 	include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/auth.php");
 	return;
 }
-elseif(!$_REQUEST["ORDER_ID"]){
+else*/if(!$_REQUEST["ORDER_ID"]){
 	// check min order price
 	$price=0;
 	foreach($arResult["BASKET_ITEMS"] as $arItem){
@@ -35,8 +35,8 @@ elseif(!$_REQUEST["ORDER_ID"]){
 	}
 }
 ?>
-<?if($USER->IsAuthorized() || $arParams["ALLOW_AUTO_REGISTER"] == "Y")
-{
+<?/*if($USER->IsAuthorized() || $arParams["ALLOW_AUTO_REGISTER"] == "Y")
+{}*/
 	if($arResult["USER_VALS"]["CONFIRM_ORDER"] == "Y" || $arResult["NEED_REDIRECT"] == "Y")
 	{
 		if(strlen($arResult["REDIRECT_URL"]) > 0)
@@ -51,7 +51,7 @@ elseif(!$_REQUEST["ORDER_ID"]){
 		}
 
 	}
-}
+
 
 //$APPLICATION->SetAdditionalCSS($templateFolder."/style_cart.css");
 $APPLICATION->SetAdditionalCSS($templateFolder."/style.css");
@@ -205,6 +205,7 @@ function InitOrderJS(){
 						<?endif?>
 						BX.ajax.submit(orderForm, ajaxResult);
 				}
+				
 				return true;
 			}
 
@@ -300,31 +301,7 @@ function InitOrderJS(){
 					<div class="l_block iblock">
 						<?include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/paysystem.php");?>
 					</div>
-					<div class="r_block iblock">
-						<?if($info = CModule::CreateModuleObject('sale')){
-							$testVersion = '15.0.0';
-							if(CheckVersion($testVersion, $info->MODULE_VERSION)){
-								include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/delivery.php");
-							}
-							else{
-								include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/delivery_new.php");
-							}
-						}
-						?>
-					</div>
 				<?}else{?>
-					<div class="l_block iblock">
-						<?if($info = CModule::CreateModuleObject('sale')){
-							$testVersion = '15.0.0';
-							if(CheckVersion($testVersion, $info->MODULE_VERSION)){
-								include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/delivery.php");
-							}
-							else{
-								include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/delivery_new.php");
-							}
-						}
-						?>
-					</div>
 					<div class="r_block iblock">
 						<?include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/paysystem.php");?>
 					</div>
@@ -353,11 +330,12 @@ function InitOrderJS(){
 			
 			if(strlen($arResult["PREPAY_ADIT_FIELDS"]) > 0)
 				echo $arResult["PREPAY_ADIT_FIELDS"];
-			?>
-
-			<?if($_POST["is_ajax_post"] != "Y")
+			include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/summary.php");?>
+			</div>
+			<?
+			if($_POST["is_ajax_post"] != "Y")
 			{
-				include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/summary.php");
+				
 				?>
 					</div>
 					
@@ -374,6 +352,15 @@ function InitOrderJS(){
 			<br />
 			<span class="name_coup"></span>
 </label>
+
+
+<div class="delivery_order">
+<span class="title_coup">Выберите способ доставки:</span>
+<?include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/delivery_new.php");			?>						
+</div>
+
+
+
 <?
 /*if($USER->IsAuthorized())
 	{

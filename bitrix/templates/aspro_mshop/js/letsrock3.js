@@ -1,4 +1,32 @@
-
+	function getSort(html){
+    	txt = html.split('<!--startsort-->');  txt = txt[1];
+    	txt = txt.split('<!--endsort-->');  return txt[0];}
+		$('.sort_btn').on('click',function(e){
+		e.preventDefault();
+		BX.showWait();
+			$.ajax({
+                    url: $(this).attr('href'),
+                    success: function(data) {
+                        $('.inner_wrapper').html(getSort(''+data+''));
+						BX.closeWait();
+						function_sort_filt('true');
+                    }
+                });
+		});
+		function function_sort_filt(i){
+		$('.sort_btn').on('click',function(e){
+		e.preventDefault();
+		BX.showWait();
+			$.ajax({
+                    url: $(this).attr('href'),
+                    success: function(data) {
+                        $('.inner_wrapper').html(getSort(''+data+''));
+						BX.closeWait();
+						function_sort_filt('true');
+                    }
+                });
+		});
+		}
 $(function() {
 	/*$(".ckeck-a").on("click",function(){
 		console.log(setTimeout(location.href, 500));

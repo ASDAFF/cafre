@@ -1,5 +1,7 @@
 <?
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/header.php");
+$APPLICATION->SetPageProperty("keywords", "статьи, статьи о красоте, причёски, макияж, полезные статьи, информация");
+$APPLICATION->SetPageProperty("description", "Предлагаем вашему вниманию серию статей на бьюти-темы");
 $APPLICATION->SetTitle("Статьи");
 ?>
 <?$APPLICATION->IncludeComponent(
@@ -31,7 +33,7 @@ $APPLICATION->SetTitle("Статьи");
 		"CACHE_FILTER" => "N",
 		"CACHE_GROUPS" => "N",
 		"SET_TITLE" => "Y",
-		"SET_STATUS_404" => "Y",
+		"SET_STATUS_404" => "N",
 		"INCLUDE_IBLOCK_INTO_CHAIN" => "N",
 		"ADD_SECTIONS_CHAIN" => "N",
 		"USE_PERMISSIONS" => "N",
@@ -96,7 +98,7 @@ $APPLICATION->SetTitle("Статьи");
 		"ADD_ELEMENT_CHAIN" => "Y",
 		"DETAIL_SET_CANONICAL_URL" => "N",
 		"PAGER_BASE_LINK_ENABLE" => "N",
-		"SHOW_404" => "Y",
+		"SHOW_404" => "N",
 		"MESSAGE_404" => "",
 		"FILTER_NAME" => "",
 		"FILTER_FIELD_CODE" => array(
@@ -117,3 +119,8 @@ $APPLICATION->SetTitle("Статьи");
 	false
 );?>
 <?require($_SERVER["DOCUMENT_ROOT"]."/bitrix/footer.php");?>
+ 
+<script>
+	
+
+</script>

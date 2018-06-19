@@ -633,3 +633,35 @@ body {
 	}
 
 }
+#content .right_block.catalog{
+	top: 0;
+}
+@media (max-width: 768px) {
+.sort_header{
+	padding-top: 0;
+}
+}
+
+.delivery_order [type=radio] {
+	display: inline-block !important;
+	    float: left;
+    margin: 0 8px 0 0;
+    height: 22px;
+}
+
+.delivery_order .bx_element {
+	    margin: 5px 15px 15px 0;
+}
+
+.delivery_order .bx_element .bx_description {
+	    float: left;
+		cursor: pointer;
+}
+.sum_delivery_order {
+}
+.sum_delivery_order td {
+	
+}
+.sum_new_bas {
+position:relative !important;
+}

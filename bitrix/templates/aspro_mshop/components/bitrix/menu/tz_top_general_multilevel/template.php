@@ -102,12 +102,12 @@ $brend_list=array();
 						<div class="menu__drop-add">
 						<!--<div class="menu__cell">
 								<span>Найти нужный бренд вы сможете в выбранной категории</span>	
-							</div>-->
+							</div>
 							<div class="menu__cell">
 								<div class="menu__ads">
 									<img src="https://cafre.ru/upload/iblock/143/143932bc8469910d1890222c2a78f483.jpg" alt="">
 								</div>
-							</div>	
+							</div>	-->
 						</div>							
 					<?}
 					$subSubArray=array(); 

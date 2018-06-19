@@ -238,17 +238,23 @@ function sendOrder2WSDL($order_id, $arFields, $arOrder, $isnew){
 				$dbp=CIBlockElement::GetList(array('ID'=>'ASC'), array('IBLOCK_ID'=>27, 'ID'=>$arP['PRODUCT_ID']), false, false, array('IBLOCK_ID', 'ID', 'XML_ID', 'PROPERTY_CML2_LINK','PROPERTY_CML2_LINK.ID', 'PROPERTY_CML2_LINK.PROPERTY_CODE1C'));
 				$arPr=$dbp->GetNext();
 				//pr($arPr);
+				$arFilter1 = Array("IBLOCK_ID"=>26, "ID"=>$arPr['PROPERTY_CML2_LINK_VALUE']);
+				$resE = CIBlockElement::GetList(Array(), $arFilter1, false, false, array('ID', 'PROPERTY_ZZ_COUNT'));
+				if($ob2 = $resE->GetNext()) {
+					CIBlockElement::SetPropertyValueCode($ob2['ID'], 'ZZ_COUNT', 1+intval($ob2['PROPERTY_ZZ_COUNT_VALUE']));
+				}
 				$arOrder['PRODUCTS'][]=array('OFFER_ID'=>$arPr['XML_ID'], 'CODE1C'=>$arPr['PROPERTY_CML2_LINK_PROPERTY_CODE1C_VALUE'], 'NAME'=>$arP['NAME'], 'QUANTITY'=>$arP['QUANTITY'], 'PRICE'=>round($arP['PRICE'], 0));
 			endwhile;
 		endwhile;
 		$eol='';
 		$strOrdersXML='';
+		$arDeliv = Sale\Delivery\Services\Manager::getById($arOrder['DELIVERY_ID']);
 			$strOrdersXML.='<SID xmlns="MC">26</SID>'.$eol;
 			$strOrdersXML.='<UID xmlns="MC">'.$arOrder['ORDER']['ID'].'</UID>'.$eol;
 			$strOrdersXML.='<Date xmlns="MC">'.$arOrder['ORDER']['DATE'].'</Date>'.$eol;
 			$strOrdersXML.='<PrCode xmlns="MC" />';
-			if($arOrder['ORDER']['COMMENTS']!=''):
-				$strOrdersXML.='<Comm xmlns="MC">'.$arOrder['ORDER']['COMMENTS'].'</Comm>'.$eol;
+			if($arOrder['ORDER']['COMMENTS']!='' || $arDeliv):
+				$strOrdersXML.='<Comm xmlns="MC">'.$arOrder['ORDER']['COMMENTS'].'Доставка: '.$arDeliv["NAME"].'</Comm>'.$eol;
 			else:
 				$strOrdersXML.='<Comm xmlns="MC" />';
 			endif;
@@ -271,6 +277,15 @@ function sendOrder2WSDL($order_id, $arFields, $arOrder, $isnew){
 		$s['Date']=$arOrder['ORDER']['DATE'];
 		$s['PrCode']='';
 		$s['Comm']=iconv("windows-1251", "utf-8", $arOrder['ORDER']['COMMENTS']);
+		
+		
+if ($arDeliv)
+{	
+$s['Comm'].=iconv("windows-1251", "utf-8", "Доставка: ".$arDeliv["NAME"]);
+}
+   
+   
+		
 		$s['Name']=iconv("windows-1251", "utf-8", $arOrder['PROPS']['NAME']);
 		$s['Phone']=iconv("windows-1251", "utf-8", $arOrder['PROPS']['PHONE']);
 		$s['Address']=iconv("windows-1251", "utf-8", $arOrder['PROPS']['FULLADRES']);
@@ -287,8 +302,10 @@ function sendOrder2WSDL($order_id, $arFields, $arOrder, $isnew){
 		//$qN=print_r($isnew, true);
 		//file_put_contents($_SERVER["DOCUMENT_ROOT"].'/work/zakaz.xml', $qF.$qO.'is_new='.$qN."\n--\n", FILE_APPEND);
 		//file_put_contents($_SERVER["DOCUMENT_ROOT"].'/work/zakaz.xml', $s."\n", FILE_APPEND); //, FILE_APPEND
+		
+		//file_put_contents($_SERVER["DOCUMENT_ROOT"].'/work/zakaz.xml', print_r($s, true), FILE_APPEND);
 		file_put_contents($_SERVER["DOCUMENT_ROOT"].'/work/zakaz.xml', print_r($s, true), FILE_APPEND);
-		file_put_contents($_SERVER["DOCUMENT_ROOT"].'/work/zakaz.xml', 'res='.$result, FILE_APPEND);
+		file_put_contents($_SERVER["DOCUMENT_ROOT"].'/work/zakaz.xml', $arOrder['DELIVERY_ID'], FILE_APPEND);
 		//file_put_contents($_SERVER["DOCUMENT_ROOT"].'/work/log.txt', "\n".$checkProps.' '.$arOrder['ORDER']['ID'].'res='.$result, FILE_APPEND);
 	else:
 		file_put_contents($_SERVER["DOCUMENT_ROOT"].'/work/zakaz.xml', 'double:'.$arOrder['ID']."\n--\n", FILE_APPEND);

@@ -152,7 +152,7 @@
 								</div>
 								<!--noindex-->
 									<a href="<?=$val["ORDER"]["URL_TO_DETAIL"]?>" class="button msmall"><span><?=GetMessage("SPOL_T_DETAIL")?></span></a>
-									<a href="<?=$val["ORDER"]["URL_TO_COPY"]?>" class="button msmall"><span><?=GetMessage("SPOL_T_COPY_ORDER_DESCR")?></span></a>
+									<a href="<?=htmlspecialchars($val["ORDER"]["URL_TO_COPY"])?>" class="button msmall"><span><?=GetMessage("SPOL_T_COPY_ORDER_DESCR")?></span></a>
 									<?if( $val["ORDER"]["CAN_CANCEL"] == "Y" ){?>
 										<a href="<?=$val["ORDER"]["URL_TO_CANCEL"]?>" class="button msmall transparent"><span><?=GetMessage("SPOL_T_DELETE_DESCR")?></span></a>
 									<?}?>
