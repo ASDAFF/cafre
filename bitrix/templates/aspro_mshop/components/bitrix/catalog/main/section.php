@@ -225,7 +225,7 @@ else {
 						$arAvailableSort = array();
 						$arAvailableSort["PRICE"] = array("PROPERTY_MIN_PRICE", "desc", 'по цене'); 
 						$arAvailableSort["ID"] = array("ID", "desc", 'по новизне');
-						$arAvailableSort["POPULAR"] = array("PROPERTY_ZZ_COUNT", "desc", 'по популярности');
+						$arAvailableSort["POPULAR"] = array("PROPERTY_ZZ_COUNT", "asc", 'по попул€рности');
 						
 						if((array_key_exists("sort", $_REQUEST) && array_key_exists(ToUpper($_REQUEST["sort"]), $arAvailableSort)) || 
 							(array_key_exists("sort", $_SESSION) && array_key_exists(ToUpper($_SESSION["sort"]), $arAvailableSort)) || $arParams["ELEMENT_SORT_FIELD"]){
@@ -253,15 +253,16 @@ else {
 							else{
 								$sort_order = ToLower($arParams["ELEMENT_SORT_ORDER"]);
 							}
-						}						
+						}
 						?>
 						<?foreach($arAvailableSort as $key => $val):?>
-							<?$newSort = ($sort == 'POPULAR')?($sort_order == 'desc' ? 'asc' : 'desc'):($sort_order == 'desc' ? 'asc' : 'desc');?>
+							<?$newSort = ($key == 'POPULAR'&&$key!=$sort)?$sort_order:($sort_order == 'desc' ? 'asc' : 'desc');?>
 							<a href="<?=$APPLICATION->GetCurPageParam('sort='.$key.'&order='.$newSort, 	array('sort', 'order'))?>" class="sort_btn <?=($sort == $key ? 'current' : '')?> <?=$sort_order?>" rel="nofollow">
 								<i class="icon" ></i><span><?=$val[2]?></span><i class="arr"></i>
 							</a>
 						<?endforeach;
-						if($sort=='PRICE') $sort="PROPERTY_MIN_PRICE";?>
+						if($sort=='PRICE') $sort="PROPERTY_MIN_PRICE";
+						if($sort=='POPULAR') $sort="PROPERTY_ZZ_COUNT";?>
 					</div>
 					<!--/noindex-->
 				</div>

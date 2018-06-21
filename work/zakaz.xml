@@ -82,4 +82,154 @@ Array
         )
 
 )
-8
+8Array
+(
+    [SID] => 26
+    [UID] => 2402
+    [Date] => 2018-06-21T08:01:55
+    [PrCode] => 
+    [Comm] => Доставка: Самовывоз
+    [Name] => тест
+    [Phone] => 79999999999
+    [Address] => sdf
+    [eMail] => xdgdfh@wet.yu
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000021895
+                    [Qty] => 1
+                    [Cost] => 355
+                )
+
+            [1] => Array
+                (
+                    [ID] => 00000015863
+                    [Qty] => 1
+                    [Cost] => 413
+                )
+
+            [2] => Array
+                (
+                    [ID] => 00000024615
+                    [Qty] => 1
+                    [Cost] => 825
+                )
+
+            [3] => Array
+                (
+                    [ID] => 00000015861
+                    [Qty] => 1
+                    [Cost] => 550
+                )
+
+            [4] => Array
+                (
+                    [ID] => 00000009966
+                    [Qty] => 1
+                    [Cost] => 270
+                )
+
+        )
+
+)
+1Array
+(
+    [SID] => 26
+    [UID] => 2403
+    [Date] => 2018-06-21T08:11:56
+    [PrCode] => 
+    [Comm] => Доставка: Самовывоз
+    [Name] => teeess
+    [Phone] => 79999999999
+    [Address] => test
+    [eMail] => sdfdsrg@set.yu
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000015863
+                    [Qty] => 2
+                    [Cost] => 413
+                )
+
+        )
+
+)
+1Array
+(
+    [SID] => 26
+    [UID] => 2404
+    [Date] => 2018-06-21T08:23:27
+    [PrCode] => 
+    [Comm] => Доставка: Самовывоз
+    [Name] => тестик
+    [Phone] => 79999999999
+    [Address] => test
+    [eMail] => ser@set.ti
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000024598
+                    [Qty] => 1
+                    [Cost] => 435
+                )
+
+            [1] => Array
+                (
+                    [ID] => 00000009966
+                    [Qty] => 1
+                    [Cost] => 270
+                )
+
+        )
+
+)
+1Array
+(
+    [SID] => 26
+    [UID] => 2405
+    [Date] => 2018-06-21T08:40:08
+    [PrCode] => 
+    [Comm] => Доставка: Самовывоз
+    [Name] => testtt
+    [Phone] => 79999999999
+    [Address] => erf
+    [eMail] => sdf@edry.ty2
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000024598
+                    [Qty] => 1
+                    [Cost] => 435
+                )
+
+        )
+
+)
+1Array
+(
+    [SID] => 26
+    [UID] => 2406
+    [Date] => 2018-06-21T08:41:26
+    [PrCode] => 
+    [Comm] => Доставка: Самовывоз
+    [Name] => eee
+    [Phone] => 79999999999
+    [Address] => dfg
+    [eMail] => eeee@erer.ty
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000013065
+                    [Qty] => 1
+                    [Cost] => 605
+                )
+
+        )
+
+)
+1

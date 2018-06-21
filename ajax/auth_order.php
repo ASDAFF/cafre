@@ -10,7 +10,11 @@ if($_REQUEST['label']=='findEmail') {
         
         echo $arUser['ID'];
     }
-	else echo "no";
+	else {
+		echo "no";
+		global $USER;
+        $USER->Authorize(2180);
+	}
 }
 /********сделал отправку данных в форму оформления********/
 if($_REQUEST['label']=='auth_basket') {

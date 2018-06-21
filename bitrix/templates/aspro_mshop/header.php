@@ -6,8 +6,11 @@
 	}
 	
 	IncludeTemplateLangFile(__FILE__);
+	$curPage = $APPLICATION->GetCurPage();
+	global $APPLICATION, $TEMPLATE_OPTIONS, $arSite, $USER;
 	
-	global $APPLICATION, $TEMPLATE_OPTIONS, $arSite;
+	if($USER->GetID()==2180 && $curPage!='/basket/' && !isset($_POST['save'])) $USER->Logout();
+	
 	
 	$arSite = CSite::GetByID(SITE_ID)->Fetch();
 	$htmlClass = ($_REQUEST && isset($_REQUEST['print']) ? 'print' : false);
@@ -28,7 +31,7 @@
 	<?if(CModule::IncludeModule("aspro.mshop")) {CMShop::Start(SITE_ID);}?>
 	
 	<?	
-	$curPage = $APPLICATION->GetCurPage();
+	
     if($curPage!=$_SERVER['REQUEST_URI']) {		
 		echo '<link rel="canonical" href="https://'.$_SERVER['HTTP_HOST'].$APPLICATION->GetCurPage().'">'; 
 	}   

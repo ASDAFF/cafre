@@ -564,7 +564,7 @@ if ($USER->IsAuthorized()){
 
 <?endif?>
 <?
-if(!$USER->IsAuthorized() )
+if(!$USER->IsAuthorized() && !($arResult["ORDER_ID"]))
 	{
 	?>
 	<div class="order__row">

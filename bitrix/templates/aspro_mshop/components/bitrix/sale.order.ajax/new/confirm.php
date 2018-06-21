@@ -16,6 +16,7 @@ while ($arProps = $db_props->Fetch())
 {
  $arr3[] = $arProps;
 }
+
 foreach ($arr3 as $vel){
 	if($vel['CODE'] == 'add'){
 
@@ -202,7 +203,30 @@ dataLayer.push({
 			}?>
 			<?
 		}
-	}else{?>
+	}else{
+		$arOrder = CSaleOrder::GetByID($arResult["ORDER_ID"]);
+		if($arOrder['USER_ID']==2180) {?>
+			<h3 class="bg_block">Спасибо, что доверили нам заботу о своей красоте!<?//=GetMessage("SOA_TEMPL_ORDER_COMPLETE")?></h3>
+		<table class="sale_order_full_table">
+			<tr>
+				<td>
+					<?/*= GetMessage("SOA_TEMPL_ORDER_SUC", Array("#ORDER_DATE#" => $arResult["ORDER"]["DATE_INSERT"], "#ORDER_ID#" => $arResult["ORDER"]["ACCOUNT_NUMBER"]))?>
+					<br /><br />
+					<?= GetMessage("SOA_TEMPL_ORDER_SUC1", Array("#LINK#" => $arParams["PATH_TO_PERSONAL"])) */?>
+					<p>В ближайшее время вам перезвонит сотрудник Call-центра для уточнения заказа и способа доставки.<br /><br />
+
+					Вы также можете задать ему все интересующие вопросы о товарах и сервисе интернет-магазина Cafre.ru<br /><br />
+
+					Режим работы Call – центра: с 09:00 до 21:00 по московскому времени ежедневно.<br /><br />
+
+					Оплата осуществляется наложенным платежом при получении товара.<br /><br />
+
+					Подробные условия в разделе <a href="/help/info_order/">«Оплата, доставка и возврат товара»</a></p>
+				</td>
+			</tr>
+		</table>
+		<?}
+		else {?>
 		<b><?=GetMessage("SOA_TEMPL_ERROR_ORDER")?></b><br /><br />
 		<table class="sale_order_full_table">
 			<tr>
@@ -213,6 +237,7 @@ dataLayer.push({
 			</tr>
 		</table>
 		<?
+		}
 	}?>
 	</div>
 </div>
