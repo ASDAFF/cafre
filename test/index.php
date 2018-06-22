@@ -32,17 +32,40 @@ $('[name=coupon]').on('keyup', function(e) {
 });
 </script>
 <?
-
+CModule::IncludeModule("iblock");
+CModule::IncludeModule("catalog");
+CModule::IncludeModule("sale");
 //$cup = CCatalogDiscountCoupon::IsExistCoupon("SL-LOG7R-8Q7L4NL");
 //$cup = CCatalogDiscountCoupon::SetCoupon("SL-LOG7R-8Q7L4NL"); 
 //print_r($cup);
+//print_r(CCatalogDiscountCoupon::GetCoupons());
 $cup = \Bitrix\Sale\DiscountCouponsManager::getData(
-"SL-A9RSB-RFMNNCE",
+"SKIDKA",
 TRUE
 );
+$prc = \Bitrix\Sale\Discount::getApplyResult(
+ true
+);
+//$disc = \Bitrix\Sale\Discount::calculate();
+
 echo "<pre>";
-var_dump($cup);
+print_r();
 echo "</pre>";
+$sum = 0;
+foreach($prc["RESULT"]["BASKET"] as $v1){
+	foreach($v1 as $v2){
+		if($prc["COUPON_LIST"][$cup["COUPON"]]["COUPON"] == $v2["COUPON_ID"]){
+			$exp_prc = explode('(', $v2["DESCR"][0]);
+			$sum += (int)$exp_prc[1];
+		
+}
+	}
+	
+}
+echo "<pre>";
+print_r($sum);
+echo "</pre>";
+
 
 global $APPLICATION;
 // устновим cookie на 2 года, действительного только для каталога /ru/

@@ -248,13 +248,27 @@ function sendOrder2WSDL($order_id, $arFields, $arOrder, $isnew){
 		endwhile;
 		$eol='';
 		$strOrdersXML='';
+		$order = Sale\Order::load($order_id);
+		$discountData = $order->getDiscount()->getApplyResult();
+		
+		if(!empty($discountData['COUPON_LIST'])) {
+			foreach($discountData['COUPON_LIST'] as $discount) {
+				if($discount['APPLY']!='Y') continue;
+				$arOrder['ORDER']['COMMENTS']='Применен купон "'.$discount['COUPON'].'" (описание скидки - '.$discountData['DISCOUNT_LIST'][$discount['ORDER_DISCOUNT_ID']]['NAME'].'   
+				'.$discountData['DISCOUNT_LIST'][$discount['ORDER_DISCOUNT_ID']]['ACTIONS_DESCR']['BASKET'].', размер скидки - '.
+				$discountData['DISCOUNT_LIST'][$discount['ORDER_DISCOUNT_ID']]['ACTIONS_DESCR_DATA']['BASKET'][0]['VALUE'].' '.
+				(($discountData['DISCOUNT_LIST'][$discount['ORDER_DISCOUNT_ID']]['ACTIONS_DESCR_DATA']['BASKET'][0]['VALUE_TYPE']=='P')?'%':'р')
+				.'). '.$arOrder['ORDER']['COMMENTS'];
+			}
+		}
+		
 		$arDeliv = Sale\Delivery\Services\Manager::getById($arOrder['DELIVERY_ID']);
 			$strOrdersXML.='<SID xmlns="MC">26</SID>'.$eol;
 			$strOrdersXML.='<UID xmlns="MC">'.$arOrder['ORDER']['ID'].'</UID>'.$eol;
 			$strOrdersXML.='<Date xmlns="MC">'.$arOrder['ORDER']['DATE'].'</Date>'.$eol;
 			$strOrdersXML.='<PrCode xmlns="MC" />';
 			if($arOrder['ORDER']['COMMENTS']!='' || $arDeliv):
-				$strOrdersXML.='<Comm xmlns="MC">'.$arOrder['ORDER']['COMMENTS'].'Доставка: '.$arDeliv["NAME"].'</Comm>'.$eol;
+				$strOrdersXML.='<Comm xmlns="MC">'.$arOrder['ORDER']['COMMENTS'].' Доставка: '.$arDeliv["NAME"].'</Comm>'.$eol;
 			else:
 				$strOrdersXML.='<Comm xmlns="MC" />';
 			endif;
@@ -277,15 +291,10 @@ function sendOrder2WSDL($order_id, $arFields, $arOrder, $isnew){
 		$s['Date']=$arOrder['ORDER']['DATE'];
 		$s['PrCode']='';
 		$s['Comm']=iconv("windows-1251", "utf-8", $arOrder['ORDER']['COMMENTS']);
-		
-		
 if ($arDeliv)
 {	
-$s['Comm'].=iconv("windows-1251", "utf-8", "Доставка: ".$arDeliv["NAME"]);
-}
-   
-   
-		
+$s['Comm'].=iconv("windows-1251", "utf-8", " Доставка: ".$arDeliv["NAME"]);
+}		
 		$s['Name']=iconv("windows-1251", "utf-8", $arOrder['PROPS']['NAME']);
 		$s['Phone']=iconv("windows-1251", "utf-8", $arOrder['PROPS']['PHONE']);
 		$s['Address']=iconv("windows-1251", "utf-8", $arOrder['PROPS']['FULLADRES']);
@@ -302,8 +311,6 @@ $s['Comm'].=iconv("windows-1251", "utf-8", "Доставка: ".$arDeliv["NAME"]);
 		//$qN=print_r($isnew, true);
 		//file_put_contents($_SERVER["DOCUMENT_ROOT"].'/work/zakaz.xml', $qF.$qO.'is_new='.$qN."\n--\n", FILE_APPEND);
 		//file_put_contents($_SERVER["DOCUMENT_ROOT"].'/work/zakaz.xml', $s."\n", FILE_APPEND); //, FILE_APPEND
-		
-		//file_put_contents($_SERVER["DOCUMENT_ROOT"].'/work/zakaz.xml', print_r($s, true), FILE_APPEND);
 		file_put_contents($_SERVER["DOCUMENT_ROOT"].'/work/zakaz.xml', print_r($s, true), FILE_APPEND);
 		file_put_contents($_SERVER["DOCUMENT_ROOT"].'/work/zakaz.xml', $arOrder['DELIVERY_ID'], FILE_APPEND);
 		//file_put_contents($_SERVER["DOCUMENT_ROOT"].'/work/log.txt', "\n".$checkProps.' '.$arOrder['ORDER']['ID'].'res='.$result, FILE_APPEND);

@@ -18705,3 +18705,8 @@
 19.06.2018 02:32 /bitrix/templates/aspro_mshop/js/main.js (08.06.2018 22:33:55     all)
 19.06.2018 02:33 /ajax/small_basket_update.php (08.06.2018 22:33:55     all)
 19.06.2018 02:33 /bitrix/templates/aspro_mshop/components/bitrix/sale.basket.basket/fly/script.js (08.06.2018 22:33:55     all)
+21.06.2018 02:09 /ajax/auth_order.php (21.06.2018 14:07:44     sort and make order)
+21.06.2018 02:09 /basket/index.php (21.06.2018 14:07:44     sort and make order)
+21.06.2018 02:09 /bitrix/templates/aspro_mshop/components/bitrix/catalog/main/section.php (21.06.2018 14:07:44     sort and make order)
+21.06.2018 02:09 /bitrix/templates/aspro_mshop/components/bitrix/sale.order.ajax/new/confirm.php (21.06.2018 14:07:44     sort and make order)
+21.06.2018 02:09 /bitrix/templates/aspro_mshop/components/bitrix/sale.order.ajax/new/template.php (21.06.2018 14:07:44     sort and make order)

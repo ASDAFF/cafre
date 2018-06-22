@@ -344,11 +344,15 @@ function InitOrderJS(){
 					<input type="hidden" name="is_ajax_post" id="is_ajax_post" value="Y">
 					<input type="hidden" name="json" value="Y">
 <?if(!$_GET["ORDER_ID"]){
+$prc_s = \Bitrix\Sale\Discount::getApplyResult(
+ true
+);
 ?>
+
 <label class="block_coup">
 			<span class="title_coup">У меня есть промокод:</span>
 			<br />
-			<input type="text" name="coupon" class="coup_inp"/>
+			<input type="text" name="coupon" class="coup_inp" value="<?=key($prc_s["COUPON_LIST"]);?>"/>
 			<br />
 			<span class="name_coup"></span>
 </label>
@@ -647,20 +651,28 @@ if(!$USER->IsAuthorized() && !($arResult["ORDER_ID"]))
       'gtm-ee-event-non-interaction': true,*/
 	  
 /********Проверка купонов********/	
+var xhr;
 	$('[name=coupon]').on('keyup', function(e) {
 	var coup = e.target.value;
-	$.ajax({
+	 if(!!xhr)
+            if(xhr!='0') xhr.abort();//прерываем запрос
+        xhr=$.ajax({
 				url: "/ajax/validate_order_coup.php", 
 					type: "post",
 					dataType: "json",
 					data: { 
 						"coup": coup
 					},
-				success: function(d) {			
+				success: function(d) {
+			xhr='0';
 					if(d.result=='yes') { 
 						$('[name=coupon]').css("border-color","green");
 						$('.name_coup').text(d.CoupName);
+						/*if(!$good)
+						$('.bx_ordercart_order_sum tbody').append('<tr class="sum_new_bas"><td class="custom_t1 fwb" colspan="6">Сумма скидки:</td><td class="custom_t2 fwb"><div class="price_coup">'+d.Sum+' руб.</div></td></tr>');*/
+						submitForm();
 					}else{
+						
 						$('[name=coupon]').css("border-color","red");
 					}
 				}

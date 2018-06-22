@@ -541,7 +541,14 @@ if($ar_res = $res->GetNext())
 							<td class="custom_t1 fwb" colspan="<?=$colspan?>" class="itog"><?=doubleval($arResult["DELIVERY_PRICE"]) > 0?'Итого с доставкой':GetMessage("SOA_TEMPL_SUM_IT")?></td>
 							<td class="custom_t2 fwb" class="price">
 								<div class="price"><?=$arResult["ORDER_TOTAL_PRICE_FORMATED"]?></div>
+								<?if (doubleval($arResult["DELIVERY_PRICE"]) > 0)
+								{
+									$pri = str_replace(' ', '', $arResult["PRICE_WITHOUT_DISCOUNT"]);
+									?>
+								<strike><?echo (int)$pri+(int)$arResult["DELIVERY_PRICE"]?> руб.</strike>
+								<?}else{?>
 								<strike><?=$arResult["PRICE_WITHOUT_DISCOUNT"]?></strike>
+								<?}?>
 							</td>
 						</tr>
 					<?else:?>
