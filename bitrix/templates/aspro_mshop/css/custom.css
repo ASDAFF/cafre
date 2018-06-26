@@ -3641,6 +3641,9 @@ input[type="number"]{
 .top_wrapper{
 	min-height:500px;
 }
+.ajax_load.block .top_wrapper {
+	overflow: hidden;
+}
 .new_tizers_block img{
 	width:68px;
 	height: 68px;

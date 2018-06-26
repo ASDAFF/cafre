@@ -182,10 +182,22 @@ if($_SERVER["HTTP_HOST"] == "mokeev.mixplus-dev.ru")
     "301 Moved permanently"
 );
 }
+
+
+
+
+
+
 AddEventHandler("main", "OnEndBufferContent", "removeType");
 function removeType(&$content)
 {
-   $content = replace_output($content);
+	global $APPLICATION;
+	if(strpos($APPLICATION->GetCurPage(), '/bitrix/')===false) {
+		$content = str_replace('?_escaped_fragment_=',	'', str_replace('_escaped_fragment_=&',	'', str_replace('&_escaped_fragment_=',	'', str_replace('_escaped_fragment_=&amp;',	'', str_replace('&amp;_escaped_fragment_=',	'', $content)))));
+		$content = str_replace('%3F_escaped_fragment_%3D',	'', str_replace('_escaped_fragment_%3D&',	'', str_replace('&_escaped_fragment_%3D',	'', $content)));
+	}
+	
+	$content = replace_output($content);
 }
 function replace_output($d)
 {
@@ -251,6 +263,7 @@ function sendOrder2WSDL($order_id, $arFields, $arOrder, $isnew){
 		$order = Sale\Order::load($order_id);
 		$discountData = $order->getDiscount()->getApplyResult();
 		
+		$s['PrCode']='';
 		if(!empty($discountData['COUPON_LIST'])) {
 			foreach($discountData['COUPON_LIST'] as $discount) {
 				if($discount['APPLY']!='Y') continue;
@@ -259,6 +272,8 @@ function sendOrder2WSDL($order_id, $arFields, $arOrder, $isnew){
 				$discountData['DISCOUNT_LIST'][$discount['ORDER_DISCOUNT_ID']]['ACTIONS_DESCR_DATA']['BASKET'][0]['VALUE'].' '.
 				(($discountData['DISCOUNT_LIST'][$discount['ORDER_DISCOUNT_ID']]['ACTIONS_DESCR_DATA']['BASKET'][0]['VALUE_TYPE']=='P')?'%':'ð')
 				.'). '.$arOrder['ORDER']['COMMENTS'];
+				
+				$s['PrCode']=$discount['COUPON'];
 			}
 		}
 		
@@ -289,7 +304,7 @@ function sendOrder2WSDL($order_id, $arFields, $arOrder, $isnew){
 		$s['SID']=26;
 		$s['UID']=$arOrder['ORDER']['ID'];
 		$s['Date']=$arOrder['ORDER']['DATE'];
-		$s['PrCode']='';
+		
 		$s['Comm']=iconv("windows-1251", "utf-8", $arOrder['ORDER']['COMMENTS']);
 if ($arDeliv)
 {	
@@ -771,4 +786,7 @@ rmdir($_SERVER['DOCUMENT_ROOT'].substr($row['copy_file'], 0, strripos($row['copy
 if(!empty($del_id)) $dbRes = $DB->Query('delete from time_file where id in ('.implode(', ', $del_id).')' );
   return "reCopy();";
 }
+
+
+
 ?>

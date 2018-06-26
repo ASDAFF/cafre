@@ -162,6 +162,7 @@ function InitOrderJS(){
 			var BXFormPosting = false;
 			function submitForm(val)
 			{
+				console.log(BXFormPosting+'bxBXFormPosting');
 				
 				if (BXFormPosting === true)
 					return true;
@@ -172,6 +173,7 @@ function InitOrderJS(){
 						type: "POST",
 						url: "/ajax/auth_order.php",
 						success: function(e) {
+							console.log(e);
 							if(e!='no') {
 								$(document).find("form[name=order_auth_form]").after('<p id="error">Авторизуйтесь, такой email уже существует</p>');								
 								$(document).find("form[name=order_auth_form] [name=MY_LOGIN]").val($(document).find('[code=EMAIL]').val());

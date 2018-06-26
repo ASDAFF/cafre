@@ -1610,8 +1610,7 @@ $(document).ready(function(){
 	$(document).on('click', '.more_text_ajax', function(){
 		var url=$(this).closest('.right_block').find('.module-pagination .flex-direction-nav .flex-next').attr('href'),
 			th=$(this);
-		th.addClass('loading');
-console.log(url);
+		th.addClass('loading');		
 		$.ajax({
 			url: url,
 			data: {"ajax_get": "Y"},

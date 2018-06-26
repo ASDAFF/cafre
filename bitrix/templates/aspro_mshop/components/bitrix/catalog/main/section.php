@@ -1,5 +1,11 @@
 <?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) die();?>
-<?$this->setFrameMode(true);?>
+<?$this->setFrameMode(true);
+
+if(count($_GET)>1 && isset($_GET['_escaped_fragment_'])) {
+	CHTTP::SetStatus("404 Not Found");	
+}
+else {
+?>
 <?$arParams["ADD_SECTIONS_CHAIN"] = (isset($arParams["ADD_SECTIONS_CHAIN"]) ? $arParams["ADD_SECTIONS_CHAIN"] : "Y");
 CModule::IncludeModule("iblock");
 
@@ -297,7 +303,7 @@ else {
 						"ELEMENT_SORT_ORDER2" => $arParams["ELEMENT_SORT_ORDER2"],
 						"FILTER_NAME" => $arParams["FILTER_NAME"],
 						"INCLUDE_SUBSECTIONS" => $arParams["INCLUDE_SUBSECTIONS"],
-						"PAGE_ELEMENT_COUNT" => $show,
+						"PAGE_ELEMENT_COUNT" =>(isset($_GET['_escaped_fragment_']) && $_GET['_escaped_fragment_']=='')?'20000000':$show,
 						"LINE_ELEMENT_COUNT" => $arParams["LINE_ELEMENT_COUNT"],
 						"DISPLAY_TYPE" => $display,
 						"TYPE_SKU" => $TEMPLATE_OPTIONS["TYPE_SKU"]["CURRENT_VALUE"],
@@ -598,4 +604,5 @@ else {
 	include($_SERVER["DOCUMENT_ROOT"]."/".$this->GetFolder()."/seo.php");					
 }
 // end section 
+}
 ?>

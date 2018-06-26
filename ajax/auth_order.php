@@ -12,8 +12,6 @@ if($_REQUEST['label']=='findEmail') {
     }
 	else {
 		echo "no";
-		global $USER;
-        $USER->Authorize(2180);
 	}
 }
 /********сделал отправку данных в форму оформления********/

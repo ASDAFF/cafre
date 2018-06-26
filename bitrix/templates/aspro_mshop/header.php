@@ -1,6 +1,14 @@
 <?
 	if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) die();
-	
+	/*
+	if(count($_GET)>0) {
+		if(CModule::IncludeModule("iblock")) {}
+		$res = CIBlockElement::GetList(Array(), array("IBLOCK_ID"=>33, "NAME"=>array_keys($_GET)), false, false, array("ID")); 
+		$kol=intval($res->SelectedRowsCount());
+		//if(count($_GET)!=$kol)
+			
+	}
+	*/
 	if($GET["debug"] == "y"){
 		error_reporting(E_ERROR | E_PARSE);
 	}
@@ -9,7 +17,31 @@
 	$curPage = $APPLICATION->GetCurPage();
 	global $APPLICATION, $TEMPLATE_OPTIONS, $arSite, $USER;
 	
-	if($USER->GetID()==2180 && $curPage!='/basket/' && !isset($_POST['save'])) $USER->Logout();
+	if($USER->GetID()==2180 && $curPage!='/basket/') {
+		$basketO =  \Bitrix\Sale\Basket::loadItemsForFUser( \Bitrix\Sale\Fuser::getId(), Bitrix\Main\Context::getCurrent()->getSite());
+		$USER->Logout();
+		$basket = \Bitrix\Sale\Basket::loadItemsForFUser(\Bitrix\Sale\Fuser::getIdByUserId(2180), 's1');		
+		$basketItems = $basketO->getBasketItems();
+		foreach ($basketItems as $item) {
+			$itemO = $basket->createItem('catalog',$item->getProductId());
+			$itemO->setFields(array(
+				'QUANTITY' => $item->getQuantity(),
+				"PRICE" => $item->getPrice(),
+				"NAME" => $item->getField('NAME'),
+				'CURRENCY' => 'RUB',
+				'LID' => 's1',
+			));			
+		}
+	}
+	if(!$USER->IsAuthorized() && $curPage=='/basket/' && isset($_POST['confirmorder']) && $_POST['confirmorder']=='Y') {
+		$basket = \Bitrix\Sale\Basket::loadItemsForFUser(\Bitrix\Sale\Fuser::getIdByUserId(2180), 's1');
+		$basketItems = $basket->getBasketItems();
+		foreach ($basketItems as $item) {
+			$item->delete();			
+		}
+		$basket->save(); 
+		$USER->Authorize(2180);
+	}
 	
 	
 	$arSite = CSite::GetByID(SITE_ID)->Fetch();
@@ -19,6 +51,23 @@
 <html <?=($htmlClass ? 'class="'.$htmlClass.'"' : '')?> lang="ru" itemscope itemtype="https://schema.org/WebPage">
 <head>
 	<title itemprop="name"><?$APPLICATION->ShowTitle()?></title>
+	<?	
+	
+	if(!(strpos($curPage, '/catalog/')===false) && $curPage!='/catalog/') {		
+		if(count($_GET)==1 && isset($_GET['_escaped_fragment_']) && $_GET['_escaped_fragment_']=='') {
+			
+		} 
+		elseif($curPage!=$_SERVER['REQUEST_URI'] ){		
+			echo '<meta name="robots" content="noindex"/>'; 
+		}
+		else {
+			echo '<meta name="fragment" content="!">';
+		}
+	}
+    elseif($curPage!=$_SERVER['REQUEST_URI']) {		
+		echo '<link rel="canonical" href="https://'.$_SERVER['HTTP_HOST'].$curPage.'">'; 
+	}   
+	?>
 	<?$APPLICATION->ShowMeta("viewport");?>
 	<?$APPLICATION->ShowMeta("HandheldFriendly");?>
 	<?$APPLICATION->ShowMeta("apple-mobile-web-app-capable", "yes");?>
@@ -30,12 +79,7 @@
 	<?$APPLICATION->AddHeadScript();?>
 	<?if(CModule::IncludeModule("aspro.mshop")) {CMShop::Start(SITE_ID);}?>
 	
-	<?	
 	
-    if($curPage!=$_SERVER['REQUEST_URI']) {		
-		echo '<link rel="canonical" href="https://'.$_SERVER['HTTP_HOST'].$APPLICATION->GetCurPage().'">'; 
-	}   
-	?>
 	
 	<!--[if gte IE 9]><style type="text/css">.basket_button, .button30, .icon {filter: none;}</style><![endif]-->
 	<link href='<?=CMain::IsHTTPS() ? 'https' : 'http'?>://fonts.googleapis.com/css?family=Ubuntu:400,500,700,400italic&subset=latin,cyrillic' rel='stylesheet' type='text/css'>
