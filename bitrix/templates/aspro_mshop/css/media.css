@@ -463,7 +463,8 @@ ul.tabs li.stretch { display: none; }
 	body .module-orders-list .drop-container th.count-th ,body .module-order-history.orderdetail .module-orders-list.goods td	{ display: none; }
 	body .module-order-history.orderdetail .module-orders-list.goods td.vname, body .module-order-history.orderdetail .module-orders-list.goods td.price, body .module-order-history.orderdetail .module-orders-list.goods td.vqnt { display: table-cell; }
 	.module-order-history .drop-cell .result-row a.button22{ margin-top: 5px; }
-	body .sort_header .sort_filter a span { display: none; }
+	/*body .sort_header .sort_filter a span { display: none; }*/
+	.ajax_load.block .top_wrapper {width:100%; }
 	.basket_sort ul.tabs li span { font-size: 14px; }
 
 	body .module-cart .summ-cell, body .module-cart .summ-th, body .module-cart .sum-th{display:none;}

@@ -1,58 +1,45 @@
 <?
 	if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) die();
-	/*
-	if(count($_GET)>0) {
-		if(CModule::IncludeModule("iblock")) {}
-		$res = CIBlockElement::GetList(Array(), array("IBLOCK_ID"=>33, "NAME"=>array_keys($_GET)), false, false, array("ID")); 
-		$kol=intval($res->SelectedRowsCount());
-		//if(count($_GET)!=$kol)
-			
-	}
-	*/
-	if($GET["debug"] == "y"){
-		error_reporting(E_ERROR | E_PARSE);
-	}
-	
 	IncludeTemplateLangFile(__FILE__);
 	$curPage = $APPLICATION->GetCurPage();
-	global $APPLICATION, $TEMPLATE_OPTIONS, $arSite, $USER;
-	
-	if($USER->GetID()==2180 && $curPage!='/basket/') {
-		$basketO =  \Bitrix\Sale\Basket::loadItemsForFUser( \Bitrix\Sale\Fuser::getId(), Bitrix\Main\Context::getCurrent()->getSite());
-		$USER->Logout();
-		$basket = \Bitrix\Sale\Basket::loadItemsForFUser(\Bitrix\Sale\Fuser::getIdByUserId(2180), 's1');		
-		$basketItems = $basketO->getBasketItems();
-		foreach ($basketItems as $item) {
-			$itemO = $basket->createItem('catalog',$item->getProductId());
-			$itemO->setFields(array(
-				'QUANTITY' => $item->getQuantity(),
-				"PRICE" => $item->getPrice(),
-				"NAME" => $item->getField('NAME'),
-				'CURRENCY' => 'RUB',
-				'LID' => 's1',
-			));			
-		}
-	}
-	if(!$USER->IsAuthorized() && $curPage=='/basket/' && isset($_POST['confirmorder']) && $_POST['confirmorder']=='Y') {
-		$basket = \Bitrix\Sale\Basket::loadItemsForFUser(\Bitrix\Sale\Fuser::getIdByUserId(2180), 's1');
-		$basketItems = $basket->getBasketItems();
-		foreach ($basketItems as $item) {
-			$item->delete();			
-		}
-		$basket->save(); 
-		$USER->Authorize(2180);
-	}
-	
-	
-	$arSite = CSite::GetByID(SITE_ID)->Fetch();
-	$htmlClass = ($_REQUEST && isset($_REQUEST['print']) ? 'print' : false);
-	?>
+	global $APPLICATION, $TEMPLATE_OPTIONS, $arSite, $USER,$site_o_template;
+	$site_o_template='/bitrix/templates/aspro_mshop';
+
+	$arSite = CSite::GetByID(SITE_ID)->Fetch();	
+?>
 <!DOCTYPE html>
-<html <?=($htmlClass ? 'class="'.$htmlClass.'"' : '')?> lang="ru" itemscope itemtype="https://schema.org/WebPage">
+<html lang="ru" itemscope itemtype="https://schema.org/WebPage" amp>
 <head>
-	<title itemprop="name"><?$APPLICATION->ShowTitle()?></title>
-	<?	
+	<link rel="canonical" href="<?=$curPage?>">
+	<meta charset="utf-8">
 	
+	
+	<script async src="https://cdn.ampproject.org/v0.js"></script>
+	<title itemprop="name"><?$APPLICATION->ShowTitle()?></title>
+	<meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
+    <script type="application/ld+json">
+      {
+        "@context": "http://schema.org",
+        "@type": "NewsArticle",
+        "headline": "Open-source framework for publishing content",
+        "datePublished": "2015-10-07T12:02:41Z",
+        "image": [
+          "logo.jpg"
+        ]
+      }
+    </script>
+    <style amp-boilerplate>body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}</style><noscript><style amp-boilerplate>body{-webkit-animation:none;-moz-animation:none;-ms-animation:none;animation:none}</style></noscript>
+	</head>
+<body>
+<h1><?=(strpos($APPLICATION->GetCurPage(), '/catalog/')===false)?$APPLICATION->ShowTitle(true):$APPLICATION->ShowViewContent('h1');?></h1>
+
+
+
+
+
+<?/*
+
+	<?
 	if(!(strpos($curPage, '/catalog/')===false) && $curPage!='/catalog/') {		
 		if(count($_GET)==1 && isset($_GET['_escaped_fragment_']) && $_GET['_escaped_fragment_']=='') {
 			
@@ -65,34 +52,17 @@
 		}
 	}
     elseif($curPage!=$_SERVER['REQUEST_URI']) {		
-		echo '<link rel="canonical" href="https://'.$_SERVER['HTTP_HOST'].$curPage.'">'; 
+		//echo '<link rel="canonical" href="https://'.$_SERVER['HTTP_HOST'].$curPage.'">'; 
 	}   
-	
-	if($curPage=='/catalog/') {?>
-		<link rel="amphtml" href="<?=$curPage?>?amp=y">
-	<?}
 	?>
-	<?$APPLICATION->ShowMeta("viewport");?>
-	<?$APPLICATION->ShowMeta("HandheldFriendly");?>
-	<?$APPLICATION->ShowMeta("apple-mobile-web-app-capable", "yes");?>
-	<?$APPLICATION->ShowMeta("apple-mobile-web-app-status-bar-style");?>
-	<?$APPLICATION->ShowMeta("SKYPE_TOOLBAR");?>
 	<?$APPLICATION->ShowHead();?>
-	
-	<?$APPLICATION->AddHeadString('<script>BX.message('.CUtil::PhpToJSObject( $MESS, false ).')</script>', true);?>
 	<?$APPLICATION->AddHeadScript();?>
 	<?if(CModule::IncludeModule("aspro.mshop")) {CMShop::Start(SITE_ID);}?>
 	
 	
-	
-	<!--[if gte IE 9]><style type="text/css">.basket_button, .button30, .icon {filter: none;}</style><![endif]-->
-	<link href='<?=CMain::IsHTTPS() ? 'https' : 'http'?>://fonts.googleapis.com/css?family=Ubuntu:400,500,700,400italic&subset=latin,cyrillic' rel='stylesheet' type='text/css'>
-	<!--charset="UTF-8"-->
-	<script src="//cdn.sendpulse.com/js/push/38cfeac2ca38e29c6d3701441d6ff14a_1.js" async></script>
+	<link rel="stylesheet" href="<?=$site_o_template?>/js/photo3d-html-files/v3/css/style.css" type="text/css" media="all">
+	<link rel="stylesheet" href="<?=$site_o_template?>/css/lets_bas.css?v=2" type="text/css">
 
-	<link rel="stylesheet" href="<?=SITE_TEMPLATE_PATH?>/js/photo3d-html-files/v3/css/style.css" type="text/css" media="all">
-	<link rel="stylesheet" href="<?=SITE_TEMPLATE_PATH?>/css/lets_bas.css?v=2" type="text/css">
-	
 
 	<script type="text/javascript" data-skip-moving="true">
 	window.dataLayer = window.dataLayer || [];
@@ -230,7 +200,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 							<td class="logo_wrapp">
 								<div class="logo">
 									<a href="/">
-										<img src="<?=SITE_TEMPLATE_PATH?>/images/cafre-logo.svg" alt="Cafre">
+										<img src="<?=$site_o_template?>/images/cafre-logo.svg" alt="Cafre">
 									</a>
 							
 									<?//CMShop::ShowLogo();?>
@@ -247,7 +217,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 									<div class="phones">
 										<p>Профессиональная консультация специалиста-технолога</p>
 										<span class="phone_wrap">
-											<img src="<?=SITE_TEMPLATE_PATH?>/images/online.png" alt="" />
+											<img src="<?=$site_o_template?>/images/online.png" alt="" />
 											<!--<span class="icons"></span>-->
 											<span class="phone_text">
 												<?$APPLICATION->IncludeFile(SITE_DIR."include/phone.php", Array(), Array("MODE" => "html", "NAME" => GetMessage("PHONE")));?>
@@ -381,4 +351,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 		
 		<?endif;?>
 		
-		<?if(isset($_SERVER["HTTP_X_REQUESTED_WITH"]) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == "xmlhttprequest") $APPLICATION->RestartBuffer();?>
+		<?if(isset($_SERVER["HTTP_X_REQUESTED_WITH"]) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == "xmlhttprequest") $APPLICATION->RestartBuffer();
+		
+		
+		*/?>

@@ -128,13 +128,24 @@
 
 <input type="hidden" name="BUYER_STORE" id="BUYER_STORE" value="<?=$arResult["BUYER_STORE"]?>" />
 <?$free_delivery_text=COption::GetOptionString("aspro.mshop", "EXPRESSION_FOR_FREE_DELIVERY", GetMessage("EXPRESSION_FOR_FREE_DELIVERY_DEFAULT"), SITE_ID);?>
+
+<div class="delivery_order-current">
+
+</div>
+
+<div class="order__message delivery_order-message">
+</div>
+
+
 <div class="bx_section">
+
+
 	<?
 	if(!empty($arResult["DELIVERY"]))
 	{
 		$width = ($arParams["SHOW_STORES_IMAGES"] == "Y") ? 850 : 700;
 
-		
+
 
 		foreach ($arResult["DELIVERY"] as $delivery_id => $arDelivery)
 		{
@@ -150,11 +161,12 @@
 				$clickHandler = "onClick = \"BX('ID_DELIVERY_ID_".$arDelivery["ID"]."').checked=true;".$extraParams."\"";
 
 			?>
+
 			<div class="bx_block w100 vertical">
 
 				<div class="bx_element">
 
-					
+
 
 					<label for="ID_DELIVERY_ID_<?=$arDelivery["ID"]?>">
 					<input type="radio"
@@ -162,7 +174,8 @@
 						name="<?=htmlspecialcharsbx($arDelivery["FIELD_NAME"])?>"
 						value="<?= $arDelivery["ID"] ?>"<?if ($arDelivery["CHECKED"]=="Y") echo " checked";?>
 						onclick="submitForm();"
-						/>					
+						data-free="<?=in_array($arDelivery["ID"], array(6, 7))?3000:(in_array($arDelivery["ID"], array(8, 9))?5000:0)?>"
+						/>
 
 						<div class="bx_description">
 
@@ -178,8 +191,8 @@
 										}else{
 											echo $free_delivery_text;
 										}?>
-										<?echo in_array($arDelivery["ID"], array(6, 7))?'</b> (бесплатно при заказе от 3000 рублей)<b>' : '';?>
-										<?echo in_array($arDelivery["ID"], array(8, 9))?'</b> (бесплатно при заказе от 5000 рублей)<b>' : '';?>
+										<?echo in_array($arDelivery["ID"], array(6, 7))?'</b> ' : '';?>
+										<?echo in_array($arDelivery["ID"], array(8, 9))?'</b> <b>' : '';?>
 										</b>
 								<?else:?>
 										<?$APPLICATION->IncludeComponent('bitrix:sale.ajax.delivery.calculator', 'mshop', array(
@@ -196,14 +209,15 @@
 								<?endif;?>
 
 							</span>
-							
-							
+
+
 						</div>
-					</label>					
-					
+					</label>
+
 					<div class="clear"></div>
 				</div>
 			</div>
+
 			<?
 		}
 	}
@@ -211,3 +225,28 @@
 <div class="clear"></div>
 </div>
 </div>
+
+<script type="text/javascript">
+
+	checkChange();
+
+	function checkChange() {
+			var current = $('.delivery_order [name="DELIVERY_ID"]:checked').parent().find('.bx_description .name').html();
+			$('.delivery_order-current').html(current);
+			$('.order__message.delivery_order-message').html('<span>—тоимость: <strong>'+$('.delivery_order [name="DELIVERY_ID"]:checked').closest('label').find('.bx_result_price b').text()+'</strong></span>');
+		if($('.delivery_order [name="DELIVERY_ID"]:checked').data('free')>0) {
+			$('.order__message.delivery_order-message').append('<span>ѕри заказе от '+$('.delivery_order [name="DELIVERY_ID"]:checked').data('free')+' рублей - <strong>бесплатно</strong></span>');
+		}
+		$('.order__message.delivery_order-message').append("<span>ƒоставка от <strong>3 рабочих дней</strong></span>");
+	}
+
+	$('.delivery_order .bx_element label').on('click', function() {
+		checkChange();
+		$('.delivery_order .bx_section').hide();		
+	});
+
+	$('.delivery_order-current').on('click', function() {
+		$('.delivery_order .bx_section').toggle();
+	})
+
+</script>

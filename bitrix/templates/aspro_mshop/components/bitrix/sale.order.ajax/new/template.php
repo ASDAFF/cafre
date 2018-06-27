@@ -121,8 +121,8 @@ function InitOrderJS(){
 	<?
 	unset($_COOKIE["checked"]);
 	echo $_SESSION["checked"];
-	
-	
+
+
 
 		if($arResult["USER_VALS"]["CONFIRM_ORDER"] == "Y" || $arResult["NEED_REDIRECT"] == "Y")
 		{
@@ -163,7 +163,7 @@ function InitOrderJS(){
 			function submitForm(val)
 			{
 				console.log(BXFormPosting+'bxBXFormPosting');
-				
+
 				if (BXFormPosting === true)
 					return true;
 				if($(document).find("form[name=order_auth_form]").length>0) {
@@ -175,12 +175,12 @@ function InitOrderJS(){
 						success: function(e) {
 							console.log(e);
 							if(e!='no') {
-								$(document).find("form[name=order_auth_form]").after('<p id="error">Авторизуйтесь, такой email уже существует</p>');								
+								$(document).find("form[name=order_auth_form]").after('<p id="error">Авторизуйтесь, такой email уже существует</p>');
 								$(document).find("form[name=order_auth_form] [name=MY_LOGIN]").val($(document).find('[code=EMAIL]').val());
 								var scrollTop = $(document).find('form[name=order_auth_form]').offset().top;
 								$('html, body').stop().animate({
 									scrollTop: scrollTop
-								}, 500); 
+								}, 500);
 							}
 							else {
 								BXFormPosting = true;
@@ -207,7 +207,7 @@ function InitOrderJS(){
 						<?endif?>
 						BX.ajax.submit(orderForm, ajaxResult);
 				}
-				
+
 				return true;
 			}
 
@@ -258,7 +258,7 @@ function InitOrderJS(){
 			});
 
 			</script>
-	
+
 
 			<?if($_POST["is_ajax_post"] != "Y")
 			{
@@ -297,7 +297,7 @@ function InitOrderJS(){
 			include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/props.php");
 	?>
 </div>
-			
+
 			<div class="wrap_md">
 				<?if ($arParams["DELIVERY_TO_PAYSYSTEM"] == "p2d"){?>
 					<div class="l_block iblock">
@@ -309,10 +309,10 @@ function InitOrderJS(){
 					</div>
 				<?}?>
 			</div>
-			
-			
-			
-			
+
+
+
+
 			<?include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/related_props.php");
 		?>
 		<!--<div class="order__next">
@@ -326,10 +326,10 @@ function InitOrderJS(){
 						</div>
 						</a>
 					</div>-->
-					
-		
+
+
 		<?
-			
+
 			if(strlen($arResult["PREPAY_ADIT_FIELDS"]) > 0)
 				echo $arResult["PREPAY_ADIT_FIELDS"];
 			include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/summary.php");?>
@@ -337,10 +337,10 @@ function InitOrderJS(){
 			<?
 			if($_POST["is_ajax_post"] != "Y")
 			{
-				
+
 				?>
 					</div>
-					
+
 					<input type="hidden" name="confirmorder" id="confirmorder" value="Y">
 					<input type="hidden" name="profile_change" id="profile_change" value="N">
 					<input type="hidden" name="is_ajax_post" id="is_ajax_post" value="Y">
@@ -351,19 +351,23 @@ $prc_s = \Bitrix\Sale\Discount::getApplyResult(
 );
 ?>
 
-<label class="block_coup">
-			<span class="title_coup">У меня есть промокод:</span>
-			<br />
-			<input type="text" name="coupon" class="coup_inp" value="<?=key($prc_s["COUPON_LIST"]);?>"/>
-			<br />
-			<span class="name_coup"></span>
-</label>
+<div class="order__delcoup">
+	<div class="delivery_order">
+	<span class="title_coup">Выберите способ доставки:</span>
+	<?include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/delivery_new.php");			?>
+	</div>
 
 
-<div class="delivery_order">
-<span class="title_coup">Выберите способ доставки:</span>
-<?include($_SERVER["DOCUMENT_ROOT"].$templateFolder."/delivery_new.php");			?>						
+	<label class="block_coup">
+				<span class="title_coup">У меня есть промокод:</span>
+				<div class="block_coup-wrap">
+					<input type="text" name="coupon" class="coup_inp" value="<?=key($prc_s["COUPON_LIST"]);?>"/>
+					<button class="button medium">применить</button>
+				</div>
+				<span class="name_coup"></span>
+	</label>
 </div>
+
 
 
 
@@ -426,9 +430,9 @@ $prc_s = \Bitrix\Sale\Discount::getApplyResult(
 	2. Общие положения<br />
 В соответствии со статьей 437 Гражданского Кодекса Российской Федерации данный документ является публичной офертой, адресованной физическим лицам, и в случае принятия изложенных ниже условий, физическое лицо обязуется принять и произвести оплату Товара и его доставки на условиях, изложенных в настоящей оферте. В соответствии с пунктом 3 статьи 438 ГК РФ, факт оформления заказа Покупателем является акцептом оферты Продавца, что является равносильным заключению Договора купли-продажи Товара на условиях, установленных в настоящей оферте и на Сайте.
 Продавец и Покупатель гарантируют, что обладают необходимой право- и дееспособностью, а также всеми правами и полномочиями, необходимыми и достаточными для заключения и исполнения Договора розничной купли-продажи Товара.
-Заказывая Товары через Интернет-магазин, Покупатель безоговорочно принимает условия настоящей оферты, а также условия, указанные на Сайте. 
+Заказывая Товары через Интернет-магазин, Покупатель безоговорочно принимает условия настоящей оферты, а также условия, указанные на Сайте.
 К отношениям между Покупателем и Продавцом применяются положения Гражданского кодекса РФ (розничной купле-продаже, Закон РФ «О защите прав потребителей», Постановление Правительства РФ от 27.09.2007 г. №612 «Об утверждении Правил продажи товаров дистанционным способом» и иные положения действующего законодательства РФ.
-Продавец оставляет за собой право вносить изменения в настоящую оферту, в связи с чем Покупатель обязуется самостоятельно контролировать наличие изменений в оферте, размещенной на Сайте. 
+Продавец оставляет за собой право вносить изменения в настоящую оферту, в связи с чем Покупатель обязуется самостоятельно контролировать наличие изменений в оферте, размещенной на Сайте.
 <br /><br />
 3. Предмет договора<br />
 Продавец обязуется передать в собственность Покупателя для личного использования косметические средства (далее по тексту договора - Товар) из ассортиментного перечня, имеющегося у Продавца, а Покупатель обязуется принять этот Товар и оплатить на условиях, предусмотренных настоящим договором.
@@ -481,7 +485,7 @@ $prc_s = \Bitrix\Sale\Discount::getApplyResult(
 •	сохранены потребительские свойства Товара;<br />
 •	товар не имеет следов эксплуатации;<br />
 •	наличие документов на Товар, подтверждающих факт покупки возвращаемого Товара (кассовый или товарный чек).<br />
-При возврате Товара надлежащего качества Покупателю возвращается стоимость Товара, за исключением стоимости доставки. Расходы Покупателя по возврату Продавцу Товара надлежащего качества Продавцом не возмещаются. Срок возврата денежных средств — 10 (десять) рабочих дней со дня передачи Продавцу возвращаемого Товара и предоставления Покупателем соответствующего письменного требования. Денежные средства возвращаются клиенту на его расчетный счет, указанный в заявлении на оплату. 
+При возврате Товара надлежащего качества Покупателю возвращается стоимость Товара, за исключением стоимости доставки. Расходы Покупателя по возврату Продавцу Товара надлежащего качества Продавцом не возмещаются. Срок возврата денежных средств — 10 (десять) рабочих дней со дня передачи Продавцу возвращаемого Товара и предоставления Покупателем соответствующего письменного требования. Денежные средства возвращаются клиенту на его расчетный счет, указанный в заявлении на оплату.
 Возврат Товара Продавцу осуществляется путем передачи Товара по адресу: 432071, г.Ульяновск, ул.Радищева, 39, офис 95.<br />
 Возврата Товара ненадлежащего качества и его приемка осуществляется в соответствии с положениями действующего законодательства РФ.<br />
 Перечень документов, представляемых Клиентом вместе с возвращаемым Товаром:<br />
@@ -491,7 +495,7 @@ $prc_s = \Bitrix\Sale\Discount::getApplyResult(
 <br /><br />
 9. Гарантийные обязательства Сторон<br />
 Гарантийный срок на Товар, устанавливается в соответствии с действующим законодательством РФ.
-<br /><br /> 
+<br /><br />
 10. Ответственность Сторон<br />
 Любая из Сторон освобождается от ответственности за полное или частичное неисполнение своих обязательств по настоящему Договору, если это неисполнение было вызвано обстоятельствами непреодолимой силы. <br />
 За неисполнение или ненадлежащее исполнение условий настоящего Договора (акцептованной Покупателем оферты Продавца) Стороны несут ответственность в соответствии с законодательством Российской Федерации.<br />
@@ -500,8 +504,8 @@ $prc_s = \Bitrix\Sale\Discount::getApplyResult(
 	</p>
 	</div>
 
-			</div> 
-					
+			</div>
+
 					<div class="order__next order__next_fin" style="display:none;">
 						<a href="javascript:;" id="ORDER_CONFIRM_BUTTON" onclick="submitForm('Y'); return false;" class="checkout button big_btn clickd"><span><?=GetMessage("SOA_TEMPL_BUTTON")?></span>
 						<div class="order__message order__message_next">
@@ -520,7 +524,7 @@ if ($USER->IsAuthorized()){
 <?}else{?>
 <span class="clientType" style="display:none;">guest</span>
 <?}?>
-	
+
 				</form>
 				<?
 				if($arParams["DELIVERY_NO_AJAX"] == "N")
@@ -541,7 +545,7 @@ if ($USER->IsAuthorized()){
 				die();
 			}
 		}
-	
+
 	?>
 
 </div>
@@ -553,15 +557,15 @@ if ($USER->IsAuthorized()){
 	<div style="display: none">
 		<?// we need to have all styles for sale.location.selector.steps, but RestartBuffer() cuts off document head with styles in it?>
 		<?$APPLICATION->IncludeComponent(
-			"bitrix:sale.location.selector.steps", 
-			".default", 
+			"bitrix:sale.location.selector.steps",
+			".default",
 			array(
 			),
 			false
 		);?>
 		<?$APPLICATION->IncludeComponent(
-			"bitrix:sale.location.selector.search", 
-			".default", 
+			"bitrix:sale.location.selector.search",
+			".default",
 			array(
 			),
 			false
@@ -604,8 +608,8 @@ if(!$USER->IsAuthorized() && !($arResult["ORDER_ID"]))
 							</div>
 
 </div>
-	
-			
+
+
 </div>
 <?}?>
 <?if($USER->IsAuthorized() && !$_GET["ORDER_ID"])
@@ -622,7 +626,7 @@ if(!$USER->IsAuthorized() && !($arResult["ORDER_ID"]))
  var max = +obj.getAttribute('max');
  obj.value = Math.min(max, Math.max(min, value));
  }
-/********E-comerce basket********/	
+/********E-comerce basket********/
 	var item = [], $elems = $('.tov_order'), item_id=[];
 	$elems.each(function(i, elem) {
 		//console.log(elem);
@@ -651,37 +655,37 @@ if(!$USER->IsAuthorized() && !($arResult["ORDER_ID"]))
       'gtm-ee-event-category': 'Enhanced Ecommerce',
       'gtm-ee-event-action': 'Basket',
       'gtm-ee-event-non-interaction': true,*/
-	  
-/********Проверка купонов********/	
+
+/********Проверка купонов********/
 var xhr;
 	$('[name=coupon]').on('keyup', function(e) {
 	var coup = e.target.value;
 	 if(!!xhr)
             if(xhr!='0') xhr.abort();//прерываем запрос
         xhr=$.ajax({
-				url: "/ajax/validate_order_coup.php", 
+				url: "/ajax/validate_order_coup.php",
 					type: "post",
 					dataType: "json",
-					data: { 
+					data: {
 						"coup": coup
 					},
 				success: function(d) {
 			xhr='0';
-					if(d.result=='yes') { 
+					if(d.result=='yes') {
 						$('[name=coupon]').css("border-color","green");
 						$('.name_coup').text(d.CoupName);
 						/*if(!$good)
 						$('.bx_ordercart_order_sum tbody').append('<tr class="sum_new_bas"><td class="custom_t1 fwb" colspan="6">Сумма скидки:</td><td class="custom_t2 fwb"><div class="price_coup">'+d.Sum+' руб.</div></td></tr>');*/
 						submitForm();
 					}else{
-						
+
 						$('[name=coupon]').css("border-color","red");
 					}
 				}
-				
-	});	
-	
-	
+
+	});
+
+
 });
 
 
@@ -689,21 +693,21 @@ var xhr;
 var MY_LOGIN = $(document).find('[code=EMAIL]').val();
 if(MY_LOGIN != ''){
    $.ajax({
-				url: "/ajax/info_order.php", 
+				url: "/ajax/info_order.php",
 					type: "post",
 					dataType: "json",
-					data: { 
+					data: {
 						"MY_LOGIN": MY_LOGIN
 					},
-				success: function(e) {			
-					if(e.result=='yes') { 
+				success: function(e) {
+					if(e.result=='yes') {
 						$(document).find('[code=EMAIL]').val(e.mail);
 						$(document).find('[code=NAME]').val(e.name);
 						$(document).find('[code=PHONE]').val(e.phone);
 					}
 				}
-	});	
-	}		
+	});
+	}
 
 	/********поменял скрипты и исправил маску********/
 	$("#ORDER_PROP_1").val($("#ORDER_PROP_1").val());
@@ -743,7 +747,7 @@ mail1.bind('input',function(e){
 });
 
 jQuery(function($){
-    
+
 	$(".agreement-drop").click(function(e){
 		e.preventDefault();
         var t = $(this).parents('.chek_politik').find('.agreement-info');
@@ -752,7 +756,7 @@ jQuery(function($){
 });
 
 
-			
+
 </script>
 <div class="order__next order__next_fin">
 						<a href=""  onclick="submitForm('Y'); return false;" class="checkout button big_btn"><span><?=GetMessage("SOA_TEMPL_BUTTON")?></span>

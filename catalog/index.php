@@ -1,6 +1,5 @@
 <?require($_SERVER["DOCUMENT_ROOT"]."/bitrix/header.php");
-$APPLICATION->SetTitle("Каталог");?><?
-$APPLICATION->IncludeComponent(
+$APPLICATION->SetTitle("Каталог");?><?$APPLICATION->IncludeComponent(
 	"bitrix:catalog", 
 	"main", 
 	array(
@@ -400,64 +399,4 @@ $APPLICATION->IncludeComponent(
 	),
 	false
 );?>
-
-<?/*$APPLICATION->IncludeComponent(
-	"bitrix:catalog.bigdata.products",
-	"main",
-	Array(
-		"ACTION_VARIABLE" => "action",
-		"ADDITIONAL_PICT_PROP_13" => "",
-		"ADDITIONAL_PICT_PROP_16" => "",
-		"ADDITIONAL_PICT_PROP_23" => "",
-		"ADD_PROPERTIES_TO_BASKET" => "Y",
-		"BASKET_URL" => "/personal/basket.php",
-		"CACHE_GROUPS" => "Y",
-		"CACHE_TIME" => "3600",
-		"CACHE_TYPE" => "A",
-		"CART_PROPERTIES_13" => array(""),
-		"CART_PROPERTIES_16" => array(""),
-		"CART_PROPERTIES_23" => array(""),
-		"COMPONENT_TEMPLATE" => "main",
-		"CONVERT_CURRENCY" => "N",
-		"DEPTH" => "",
-		"DETAIL_URL" => "",
-		"HIDE_NOT_AVAILABLE" => "N",
-		"IBLOCK_ID" => "23",
-		"IBLOCK_TYPE" => "tz_catalog",
-		"ID" => $_REQUEST["PRODUCT_ID"],
-		"LABEL_PROP_13" => "",
-		"LABEL_PROP_16" => "",
-		"LABEL_PROP_23" => "",
-		"LINE_ELEMENT_COUNT" => "3",
-		"MESS_BTN_BUY" => "Купить",
-		"MESS_BTN_DETAIL" => "Подробнее",
-		"MESS_BTN_SUBSCRIBE" => "Подписаться",
-		"PAGE_ELEMENT_COUNT" => "30",
-		"PARTIAL_PRODUCT_PROPERTIES" => "N",
-		"PRICE_CODE" => array(),
-		"PRICE_VAT_INCLUDE" => "Y",
-		"PRODUCT_ID_VARIABLE" => "id",
-		"PRODUCT_PROPS_VARIABLE" => "prop",
-		"PRODUCT_QUANTITY_VARIABLE" => "",
-		"PRODUCT_SUBSCRIPTION" => "N",
-		"PROPERTY_CODE_13" => array(""),
-		"PROPERTY_CODE_16" => array(""),
-		"PROPERTY_CODE_23" => array(""),
-		"RCM_TYPE" => "bestsell",
-		"SECTION_CODE" => "",
-		"SECTION_ELEMENT_CODE" => "",
-		"SECTION_ELEMENT_ID" => "",
-		"SECTION_ID" => "",
-		"SHOW_DISCOUNT_PERCENT" => "Y",
-		"SHOW_FROM_SECTION" => "N",
-		"SHOW_IMAGE" => "Y",
-		"SHOW_NAME" => "Y",
-		"SHOW_OLD_PRICE" => "N",
-		"SHOW_PRICE_COUNT" => "1",
-		"SHOW_PRODUCTS_13" => "N",
-		"SHOW_PRODUCTS_16" => "N",
-		"SHOW_PRODUCTS_23" => "N",
-		"TEMPLATE_THEME" => "blue",
-		"USE_PRODUCT_QUANTITY" => "N"
-	)
-);*/?><?require($_SERVER["DOCUMENT_ROOT"]."/bitrix/footer.php");?>
+<?require($_SERVER["DOCUMENT_ROOT"]."/bitrix/footer.php");?>
