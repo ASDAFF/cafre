@@ -100,13 +100,13 @@ $frame = $this->createFrame()->begin();
 										<a href="<?=$arItem["DETAIL_PAGE_URL"]?>"><span><?=$arItem["NAME"]?></span></a>
 									</div>
 									<?=$arQuantityData["HTML"];?>
-									<?if($minPrice["DISCOUNT_VALUE"]>0){?><div class="cost prices clearfix">
+									<div class="cost prices clearfix">
 										<?if($arItem["OFFERS"]):?>
 											<?$minPrice = false;
 											if (isset($arItem['MIN_PRICE']) || isset($arItem['RATIO_PRICE']))
 												$minPrice = (isset($arItem['RATIO_PRICE']) ? $arItem['RATIO_PRICE'] : $arItem['MIN_PRICE']);
 											
-											if($minPrice["VALUE"]>$minPrice["DISCOUNT_VALUE"] && $arParams["SHOW_OLD_PRICE"]=="Y"){?>
+											if($minPrice["DISCOUNT_VALUE"]>0&&$minPrice["VALUE"]>$minPrice["DISCOUNT_VALUE"] && $arParams["SHOW_OLD_PRICE"]=="Y"){?>
 												<div class="price"><?=GetMessage("CATALOG_FROM");?> <?=$minPrice["PRINT_DISCOUNT_VALUE"];?>
 												<?if (($arParams["SHOW_MEASURE"]=="Y") && $strMeasure){?>
 													/<?=$strMeasure?>
@@ -125,7 +125,7 @@ $frame = $this->createFrame()->begin();
 														<div class="clearfix"></div>
 													</div>
 												<?}?>
-											<?}else{?>
+											<?}elseif($minPrice["DISCOUNT_VALUE"]>0){?>
 												<div class="price">
 												<?=$minPrice['PRINT_DISCOUNT_VALUE'];?>
 												</div>
@@ -174,7 +174,7 @@ $frame = $this->createFrame()->begin();
 												<?endif;?>
 											<?endforeach;?>
 										<?endif;?>
-									</div><?}?>
+									</div>
 									<?$res = CIBlockElement::GetByID($arItem["ID"]);
 									if($ar_res = $res->GetNext()):
 									?>

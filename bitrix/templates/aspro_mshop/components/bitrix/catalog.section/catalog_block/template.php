@@ -144,7 +144,7 @@ $catalog_section_name=$arResult['NAME'];
 							</div>
 							<div class="descript"><p><?if(($arItem["PREVIEW_TEXT"] !== "NULL")&&($arItem["PREVIEW_TEXT"] != NULL)):?><?echo substr(strip_tags($arItem["PREVIEW_TEXT"]), 0, 100).'...';?><?elseif(($arItem["DETAIL_TEXT"] !== "NULL")&&($arItem["DETAIL_TEXT"] != NULL)):?><?echo substr(strip_tags($arItem["DETAIL_TEXT"]), 0, 100).'...';?><?endif;?></p></div>
 							<?=$arQuantityData["HTML"];?>
-							<?if($minPrice["DISCOUNT_VALUE"]>0){?><div class="cost prices clearfix">
+							<div class="cost prices clearfix">
 								<?
 								/*$frame = $this->createFrame()->begin('');
 								$frame->setBrowserStorage(true);*/
@@ -168,7 +168,7 @@ $catalog_section_name=$arResult['NAME'];
 										if('N' == $arParams['TYPE_SKU'] || $arParams['DISPLAY_TYPE'] !== 'block'){
 											$prefix = GetMessage("CATALOG_FROM");
 										}
-										if($arParams["SHOW_OLD_PRICE"]=="Y"){?>
+										if($minPrice["DISCOUNT_VALUE"]>0&&$arParams["SHOW_OLD_PRICE"]=="Y"){?>
 											<div class="price" id="<?=$arItem["ID"].$arItemIDs["ALL_ITEM_IDS"]['PRICE']; ?>">
 												<?if(strlen($minPrice["PRINT_DISCOUNT_VALUE"])):?>
 													<?=$prefix;?> <?=$minPrice["PRINT_DISCOUNT_VALUE"];?>
@@ -189,7 +189,7 @@ $catalog_section_name=$arResult['NAME'];
 													<div class="clearfix"></div>
 												</div>
 											<?}?>
-										<?}else{?>
+										<?}elseif($minPrice["DISCOUNT_VALUE"]>0){?>
 											<div class="price" id="<?=$arItemIDs["ALL_ITEM_IDS"]['PRICE']?>">
 												<?if(strlen($minPrice["PRINT_DISCOUNT_VALUE"])):?>
 													<?=$prefix;?> <?=$minPrice['PRINT_DISCOUNT_VALUE'];?>
@@ -250,7 +250,7 @@ $catalog_section_name=$arResult['NAME'];
 										<?}?>
 									<?}?>
 								<?//$frame->end();?>
-							</div><?}?>
+							</div>
 							<?
 							/*$frame = $this->createFrame()->begin('');
 							$frame->setBrowserStorage(true);*/
