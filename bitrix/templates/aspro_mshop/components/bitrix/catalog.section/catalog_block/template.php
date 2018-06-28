@@ -144,7 +144,7 @@ $catalog_section_name=$arResult['NAME'];
 							</div>
 							<div class="descript"><p><?if(($arItem["PREVIEW_TEXT"] !== "NULL")&&($arItem["PREVIEW_TEXT"] != NULL)):?><?echo substr(strip_tags($arItem["PREVIEW_TEXT"]), 0, 100).'...';?><?elseif(($arItem["DETAIL_TEXT"] !== "NULL")&&($arItem["DETAIL_TEXT"] != NULL)):?><?echo substr(strip_tags($arItem["DETAIL_TEXT"]), 0, 100).'...';?><?endif;?></p></div>
 							<?=$arQuantityData["HTML"];?>
-							<div class="cost prices clearfix">
+							<?if($minPrice["DISCOUNT_VALUE"]>0){?><div class="cost prices clearfix">
 								<?
 								/*$frame = $this->createFrame()->begin('');
 								$frame->setBrowserStorage(true);*/
@@ -250,7 +250,7 @@ $catalog_section_name=$arResult['NAME'];
 										<?}?>
 									<?}?>
 								<?//$frame->end();?>
-							</div>
+							</div><?}?>
 							<?
 							/*$frame = $this->createFrame()->begin('');
 							$frame->setBrowserStorage(true);*/

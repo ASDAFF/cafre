@@ -27,10 +27,10 @@
 		</div>
 	<?}?>
 	<div class="module-pagination">
-		<?/*<ul class="flex-direction-nav" style="display:none;">
+		<ul class="flex-direction-nav" style="display:none;">
 			<li class="flex-nav-prev <?if($bPrevDisabled){echo " disabled";}?>"><a href="<?=$arResult["sUrlPath"];?>?<?=$strNavQueryString;?>PAGEN_<?=$arResult["NavNum"];?>=<?=($arResult["NavPageNomer"]-1)?>" class="flex-prev"></a></li>
 			<li class="flex-nav-next <?if($bNextDisabled){echo " disabled";}?>"><a href="<?=$arResult["sUrlPath"];?>?<?=$strNavQueryString;?>PAGEN_<?=$arResult["NavNum"];?>=<?=($arResult["NavPageNomer"]+1)?>" class="flex-next"></a></li>
-		</ul>*/?>
+		</ul>
 		<span class="nums">
 			<?if($arResult["nStartPage"] > 1):?>
 				<a href="<?=$arResult["sUrlPath"]?>?<?=$strNavQueryString?>PAGEN_<?=$arResult["NavNum"]?>=1">1</a>

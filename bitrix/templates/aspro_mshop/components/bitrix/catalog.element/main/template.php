@@ -413,7 +413,7 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 								if('N' == $arParams['TYPE_SKU'] || $arParams['DISPLAY_TYPE'] =='table'){
 									$prefix=GetMessage("CATALOG_FROM");
 								}
-								if($arParams["SHOW_OLD_PRICE"]=="Y"){?>
+								if($arParams["SHOW_OLD_PRICE"]=="Y"&&$minPrice["DISCOUNT_VALUE"]>0){?>
 									<div class="price price_on" id="<? echo $arItemIDs["ALL_ITEM_IDS"]['PRICE']; ?>">
 										<?if(strlen($minPrice["PRINT_DISCOUNT_VALUE"])):?>
 											<?=$prefix;?> <?=$minPrice["PRINT_DISCOUNT_VALUE"];?>
@@ -435,7 +435,7 @@ if($arOnePhoto["ID"] == $arResult["PROPERTIES"]["ON_PHOT"]["VALUE"])continue;
 											<div class="clearfix"></div>
 										</div>
 									<?}?>
-								<?}else{?>
+								<?}elseif($minPrice["DISCOUNT_VALUE"]>0){?>
 									<div class="price price_on" id="<? echo $arItemIDs["ALL_ITEM_IDS"]['PRICE']; ?>">
 										<?if(strlen($minPrice["PRINT_DISCOUNT_VALUE"])):?>
 											<?=$prefix;?> <?=$minPrice['PRINT_DISCOUNT_VALUE'];?>
