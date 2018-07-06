@@ -106,7 +106,10 @@ else {
 			$APPLICATION->SetPageProperty("description", "".$page_seo_params["title"].$filter_h1.", огромный ассортимент. Гарантия качества от производителя и лучшие цены на рынке - в наличии!".(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));   
 		}
 	if(substr_count($arResult['VARIABLES']['SECTION_CODE_PATH'], '/')>0) {
-		if($section["UF_FILT_H"] && $filter_h1){
+		if($new_desc) {
+			$APPLICATION->SetPageProperty("title", "Купить ".(iconv("UTF-8", "WINDOWS-1251", mb_strtolower(iconv("WINDOWS-1251", "UTF-8", $tek_h1)))).(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));
+		}
+		elseif($section["UF_FILT_H"] && $filter_h1 ){
 			$APPLICATION->SetPageProperty("title", $section["UF_FILT_H"].$filter_h1.(isset($page_num)&&$page_num!='1'?" (Страница ".$page_num.")":''));
 		}
 		elseif($section["UF_SEO_TITLE"]){

@@ -28,27 +28,27 @@
 	<?}?>
 	<div class="module-pagination">
 		<ul class="flex-direction-nav" style="display:none;">
-			<li class="flex-nav-prev <?if($bPrevDisabled){echo " disabled";}?>"><a href="<?=$arResult["sUrlPath"];?>?<?=$strNavQueryString;?>PAGEN_<?=$arResult["NavNum"];?>=<?=($arResult["NavPageNomer"]-1)?>" class="flex-prev"></a></li>
-			<li class="flex-nav-next <?if($bNextDisabled){echo " disabled";}?>"><a href="<?=$arResult["sUrlPath"];?>?<?=$strNavQueryString;?>PAGEN_<?=$arResult["NavNum"];?>=<?=($arResult["NavPageNomer"]+1)?>" class="flex-next"></a></li>
+			<li class="flex-nav-prev <?if($bPrevDisabled){echo " disabled";}?>"><a data-href="<?=$arResult["sUrlPath"];?>?<?=$strNavQueryString;?>PAGEN_<?=$arResult["NavNum"];?>=<?=($arResult["NavPageNomer"]-1)?>" class="flex-prev"></a></li>
+			<li class="flex-nav-next <?if($bNextDisabled){echo " disabled";}?>"><a data-href="<?=$arResult["sUrlPath"];?>?<?=$strNavQueryString;?>PAGEN_<?=$arResult["NavNum"];?>=<?=($arResult["NavPageNomer"]+1)?>" class="flex-next"></a></li>
 		</ul>
 		<span class="nums">
 			<?if($arResult["nStartPage"] > 1):?>
-				<a href="<?=$arResult["sUrlPath"]?>?<?=$strNavQueryString?>PAGEN_<?=$arResult["NavNum"]?>=1">1</a>
+				<a href="#" data-href="<?=$arResult["sUrlPath"]?>?<?=$strNavQueryString?>PAGEN_<?=$arResult["NavNum"]?>=1">1</a>
 				<span class='point_sep'></span>
 			<?endif;?>
 			<?while($arResult["nStartPage"] <= $arResult["nEndPage"]):?>
 				<?if($arResult["nStartPage"] == $arResult["NavPageNomer"]):?>
 					<span class="cur"><?=$arResult["nStartPage"]?></span>
 				<?elseif($arResult["nStartPage"] == 1 && $arResult["bSavePage"] == false):?>
-					<a href="<?=$arResult["sUrlPath"]?><?=$strNavQueryStringFull?>"><?=$arResult["nStartPage"]?></a>
+					<a href="#" data-href="<?=$arResult["sUrlPath"]?><?=$strNavQueryStringFull?>"><?=$arResult["nStartPage"]?></a>
 				<?else:?>
-					<a href="<?=$arResult["sUrlPath"]?>?<?=$strNavQueryString?>PAGEN_<?=$arResult["NavNum"]?>=<?=$arResult["nStartPage"]?>"><?=$arResult["nStartPage"]?></a>
+					<a href="#" data-href="<?=$arResult["sUrlPath"]?>?<?=$strNavQueryString?>PAGEN_<?=$arResult["NavNum"]?>=<?=$arResult["nStartPage"]?>"><?=$arResult["nStartPage"]?></a>
 				<?endif;?>
 				<?$arResult["nStartPage"]++;?>
 			<?endwhile;?>
 			<?if($arResult["nEndPage"] < $arResult["NavPageCount"]):?>
 				<span class='point_sep'></span>
-				<a href="<?=$arResult["sUrlPath"]?>?<?=$strNavQueryString?>PAGEN_<?=$arResult["NavNum"]?>=<?=$arResult["NavPageCount"]?>"><?=$arResult["NavPageCount"]?></a>
+				<a href="#" data-href="<?=$arResult["sUrlPath"]?>?<?=$strNavQueryString?>PAGEN_<?=$arResult["NavNum"]?>=<?=$arResult["NavPageCount"]?>"><?=$arResult["NavPageCount"]?></a>
 			<?endif;?>
 		</span>
 	</div>
@@ -56,7 +56,7 @@
 		$(document).ready(function(){
 			$(".module-pagination span.nums a").live("click", function(e){
 				e.preventDefault();
-				var url=$(this).attr('href');	
+				var url=$(this).data('href');	
 				BX.showWait();
 				$.ajax({
 					url: url,

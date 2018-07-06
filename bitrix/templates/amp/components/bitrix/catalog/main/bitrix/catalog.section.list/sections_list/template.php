@@ -12,13 +12,19 @@
 						<?$collspan = 2;?>
 						<td class="image">
 							<?if($arItems["PICTURE"]["SRC"]):?>
-								<?$img = CFile::ResizeImageGet($arItems["PICTURE"]["ID"], array( "width" => 120, "height" => 120 ), BX_RESIZE_IMAGE_EXACT, true );?>
-								<a href="<?=$arItems["SECTION_PAGE_URL"]?>" class="thumb"><img src="<?=$img["src"]?>" alt="<?=($arItems["PICTURE"]["ALT"] ? $arItems["PICTURE"]["ALT"] : $arItems["NAME"])?>" title="<?=($arItems["PICTURE"]["TITLE"] ? $arItems["PICTURE"]["TITLE"] : $arItems["NAME"])?>" /></a>
+								<?$img = CFile::ResizeImageGet($arItems["PICTURE"]["ID"], array( "width" => 62, "height" => 62 ), BX_RESIZE_IMAGE_EXACT, true );?>
+								<a href="<?=$arItems["SECTION_PAGE_URL"]?>" class="thumb">
+								<amp-img src=<?=$img["src"]?> width=<?=$img['width']?> height=<?=$img['height']?>></amp-img>
+								</a>
 							<?elseif($arItems["~PICTURE"]):?>
-								<?$img = CFile::ResizeImageGet($arItems["~PICTURE"], array( "width" => 120, "height" => 120 ), BX_RESIZE_IMAGE_EXACT, true );?>
-								<a href="<?=$arItems["SECTION_PAGE_URL"]?>" class="thumb"><img src="<?=$img["src"]?>" alt="<?=($arItems["PICTURE"]["ALT"] ? $arItems["PICTURE"]["ALT"] : $arItems["NAME"])?>" title="<?=($arItems["PICTURE"]["TITLE"] ? $arItems["PICTURE"]["TITLE"] : $arItems["NAME"])?>" /></a>
+								<?$img = CFile::ResizeImageGet($arItems["~PICTURE"], array( "width" => 62, "height" => 62 ), BX_RESIZE_IMAGE_EXACT, true );?>								
+								<a href="<?=$arItems["SECTION_PAGE_URL"]?>" class="thumb">
+								<amp-img src=<?=$img["src"]?> width=<?=$img['width']?> height=<?=$img['height']?>></amp-img>
+								</a>
 							<?else:?>
-								<a href="<?=$arItems["SECTION_PAGE_URL"]?>" class="thumb"><img src="<?=SITE_TEMPLATE_PATH?>/images/no_photo_medium.png" alt="<?=$arItems["NAME"]?>" title="<?=$arItems["NAME"]?>" height="90" /></a>
+								<a href="<?=$arItems["SECTION_PAGE_URL"]?>" class="thumb">								
+								<amp-img src=<?=SITE_TEMPLATE_PATH?>/images/no_photo_medium.png height=90 width=90></amp-img>
+								</a>
 							<?endif;?>
 						</td>
 					<?endif;?>
@@ -45,9 +51,3 @@
 		</div>
 	<?}?>
 </div>
-<script>
-	$(".catalog_section_list").ready(function(){
-		//$('.catalog_section_list .section_item_inner .section_item_inner').equalize(); 
-		//$('.catalog_section_list .section_item_inner').equalize({children: '.section_info'}); 
-	});
-</script>

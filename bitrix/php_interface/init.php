@@ -3,6 +3,7 @@ use Bitrix\Main,
       Bitrix\Main\Loader,
       Bitrix\Sale,
       Bitrix\Sale\Order;
+  
 
 if (!Loader::IncludeModule('sale')) die();
 /* סענמדמ ג םאקאכו פאיכא */
@@ -14,6 +15,11 @@ Main\EventManager::getInstance()->addEventHandler(
     'myFunction'
 );
 
+function BasIncludeFile($path)
+{
+  if (file_exists($_SERVER['DOCUMENT_ROOT'] . $path))
+    include($_SERVER['DOCUMENT_ROOT'] . $path);
+}
 
 function myFunction(Main\Event $event) {
 		
@@ -159,11 +165,12 @@ function provEach($stroka, $str, $num1, $root, $doom, $arr_one_sec) {
 		
 AddEventHandler("main", "OnEpilog", "ShowError404");
  function ShowError404() {
-    if (CHTTP::GetLastStatus()=='404 Not Found') {
-        global $APPLICATION;
+	global $APPLICATION;
+    if (CHTTP::GetLastStatus()=='404 Not Found') {        
         $APPLICATION->RestartBuffer();
         require $_SERVER['DOCUMENT_ROOT'] . '/404.php';   
     }
+			
 }
 
 function str_replace_once($search, $replace, $text) 
@@ -198,6 +205,24 @@ function removeType(&$content)
 	}
 	
 	$content = replace_output($content);
+	
+	if(CModule::IncludeModule('iblock') && !empty($_GET) && strpos($APPLICATION->GetCurPage(), '/admin/')===false ) {
+		$res = CIBlockElement::GetList(Array(), array('IBLOCK_ID'=>33, 'ACTIVE'=>'Y'), false, Array(), array('ID','PREVIEW_TEXT'));
+		if($ob = $res->GetNext()) {
+			$mass=explode(',', $ob['PREVIEW_TEXT']);
+			if(!empty($mass)) foreach(array_keys($_GET) as $key) {
+				if(!in_array($key, $mass)) {
+					/*global $APPLICATION;
+					$APPLICATION->RestartBuffer();
+					require $_SERVER['DOCUMENT_ROOT'] . '/404.php';  
+					*/
+					
+					$content=str_replace('</title>', '</title><meta name="robots" content="noindex"/>', $content);
+					break;
+				}
+			}
+		}
+	}
 }
 function replace_output($d)
 {

@@ -606,4 +606,111 @@ Array
         )
 
 )
-1
+1Array
+(
+    [PrCode] => SKIDKA
+    [SID] => 26
+    [UID] => 2628
+    [Date] => 2018-06-29T10:32:38
+    [Comm] => Применен купон "SKIDKA" (описание скидки - SKIDKA   
+				скидка 10%, размер скидки - 10 %).  Доставка: Курьер СДЭК
+    [Name] => Dee
+    [Phone] => 79999999999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000015861
+                    [Qty] => 1
+                    [Cost] => 495
+                )
+
+            [1] => Array
+                (
+                    [ID] => 00000010003
+                    [Qty] => 1
+                    [Cost] => 396
+                )
+
+            [2] => Array
+                (
+                    [ID] => 00000009966
+                    [Qty] => 1
+                    [Cost] => 243
+                )
+
+        )
+
+)
+9Array
+(
+    [PrCode] => 
+    [SID] => 26
+    [UID] => 2629
+    [Date] => 2018-06-29T10:33:13
+    [Comm] =>  Доставка: Курьер СДЭК
+    [Name] => Dee
+    [Phone] => 79999999999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000024615
+                    [Qty] => 1
+                    [Cost] => 825
+                )
+
+        )
+
+)
+9Array
+(
+    [PrCode] => 
+    [SID] => 26
+    [UID] => 2630
+    [Date] => 2018-06-29T10:34:14
+    [Comm] =>  Доставка: Почта России
+    [Name] => TEST
+    [Phone] => 8
+    [Address] => Московская область, Москва, 
+    [eMail] => sfgdfh@rst.rt
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000018104
+                    [Qty] => 1
+                    [Cost] => 549
+                )
+
+        )
+
+)
+10Array
+(
+    [PrCode] => 
+    [SID] => 26
+    [UID] => 2631
+    [Date] => 2018-06-29T10:34:37
+    [Comm] =>  Доставка: Курьер DPD
+    [Name] => Dee
+    [Phone] => 79999999999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000009954
+                    [Qty] => 1
+                    [Cost] => 495
+                )
+
+        )
+
+)
+8

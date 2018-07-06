@@ -1608,7 +1608,7 @@ $(document).ready(function(){
 	});
 
 	$(document).on('click', '.more_text_ajax', function(){
-		var url=$(this).closest('.right_block').find('.module-pagination .flex-direction-nav .flex-next').attr('href'),
+		var url=$(this).closest('.right_block').find('.module-pagination .flex-direction-nav .flex-next').data('href'),
 			th=$(this);
 		th.addClass('loading');		
 		$.ajax({

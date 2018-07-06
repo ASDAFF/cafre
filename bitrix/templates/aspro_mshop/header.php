@@ -97,6 +97,7 @@
 	<script type="text/javascript" data-skip-moving="true">
 	window.dataLayer = window.dataLayer || [];
 </script>
+<?/*
 <!-- Google Tag Manager -->
 <script data-skip-moving="true">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -113,6 +114,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
   gtag('config', 'UA-77132925-2');
 </script>
+*/?>
 <!-- CarrotQuest BEGIN -->
 <script type="text/javascript">
     (function(){
@@ -133,10 +135,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <script type="text/javascript">(window.Image ? (new Image()) : document.createElement('img')).src = 'https://vk.com/rtrg?p=VK-RTRG-226610-9YY7s';</script>
 </head>
 <body id="main">
+<?/*
 <!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KZXSS9"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
+*/?>
 	<div id="panel"><?$APPLICATION->ShowPanel();?></div>
 	
 	<?if(!CModule::IncludeModule("aspro.mshop")){?>
