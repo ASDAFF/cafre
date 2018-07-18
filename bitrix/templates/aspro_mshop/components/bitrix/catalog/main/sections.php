@@ -1,7 +1,11 @@
 <?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();?>
 <?$this->setFrameMode(true);
 $this->SetViewTarget('h1');echo 'Каталог';$this->EndViewTarget();?>
-<?$APPLICATION->IncludeComponent(
+<?
+if($APPLICATION->GetCurPage() != '/catalog/'){
+CHTTP::SetStatus("404 Not Found");
+}
+$APPLICATION->IncludeComponent(
 	"bitrix:catalog.section.list",
 	"sections_list",
 	Array(

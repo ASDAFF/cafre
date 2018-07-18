@@ -206,6 +206,9 @@ if($bAllBasketBuy){
 
 		// create order
 			$arOrderDat['ORDER_PROP'][3]=$_POST['ONE_CLICK_BUY']['PHONE'];
+			if($_POST['UTM_GET']){
+			$arOrderDat['ORDER_PROP'][47]=$_POST['UTM_GET'];
+			}
 			//$checkFields=print_r($arOrderDat, true);
 			//file_put_contents($_SERVER["DOCUMENT_ROOT"].'/work/log.txt', "\n".$checkFields."\n", FILE_APPEND);
 		$orderID = $arResult["ORDER_ID"] = (int)CSaleOrder::DoSaveOrder($arOrderDat, $newOrder, 0, $arErrors);
@@ -290,6 +293,9 @@ else{
 	$arOrderDat['USER_ID'] = $registeredUserID;
 	// create order
 	$arOrderDat['ORDER_PROP'][3]=$_POST['ONE_CLICK_BUY']['PHONE'];
+	if($_POST['UTM_GET']){
+	$arOrderDat['ORDER_PROP'][47]=$_POST['UTM_GET'];
+	}
 	$orderID = $arResult['ORDER_ID'] = (int)CSaleOrder::DoSaveOrder($arOrderDat, $newOrder, 0, $arErrors);
 	if($orderID == false){
 		$strError = '';

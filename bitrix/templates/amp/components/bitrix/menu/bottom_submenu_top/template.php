@@ -2,9 +2,8 @@
 <? $this->setFrameMode( true ); ?>
 <div class="wrap_md submenu_top">
 	<?if (is_array($arResult) && !empty($arResult)):?>
-	<?foreach( $arResult as $arItem ){?>
-	
-		<div class="menu_item iblock"><span class="menuBot" style="font-size: 16px;font-weight: 600;line-height: 15px;color: #1d1a1a;"><?=$arItem["TEXT"]?></span></div>
+	<?foreach( $arResult as $arItem ){?>	
+		<div class="menu_item iblock"><span class="menuBot" style="font-size: 16px;font-weight: 600;line-height: 15px;color: #1d1a1a;"><?=iconv('cp-1251', 'utf-8',$arItem["TEXT"])?></span></div>
 	<?}?>
 	<?endif;?>
 </div>

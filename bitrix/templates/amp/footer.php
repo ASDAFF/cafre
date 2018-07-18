@@ -10,7 +10,7 @@
 									<div class="empty_block iblock"></div>
 									<div class="phone_block iblock">
 										<div class="copyright">
-											<?$APPLICATION->IncludeFile(SITE_DIR."include/copyright.php", Array(), Array("MODE" => "html", "NAME"  => GetMessage("COPYRIGHT")));?>
+											2010 - <?=date("Y")?> © Интернет-магазин профессиональной косметики по низким ценам<br><br>
 										</div>
 										<span class="phone_wrap">
 											<span class="icons"></span>

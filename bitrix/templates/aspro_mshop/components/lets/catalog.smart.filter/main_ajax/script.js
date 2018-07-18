@@ -275,6 +275,7 @@ $(elem).find(".link_filt_a").each(function(i3, elem3){
 	if(dd){
 			$(elem4).removeClass('on_link_filt');
 			$(elem4).attr('href', $(elem4).attr('data-oldur'));
+			window.location.reload(true);
 		}
 	});
 	

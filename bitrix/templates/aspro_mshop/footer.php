@@ -150,7 +150,7 @@
 										<p itemprop="address" itemscope="" itemtype="http://schema.org/PostalAddress">ОГРН: 1177325008530<br>
 										Фактический адрес: <span itemprop="postalCode">123317</span>, <span itemprop="addressLocality">Москва</span>, <span itemprop="streetAddress">Пресненская наб. , 2</span><br>
 										Юридический адрес: 432011, Ульяновская область, г. Ульяновск, ул. Радищева, д. 39, офис 95</p>
-										<span itemprop="telephone">8(800) 333-61-07</span>
+										<span itemprop="telephone">8(800) 775-38-78</span>
 									</div>
 								</div>
 								<div id="bx-composite-banner"></div>
@@ -273,6 +273,27 @@
 			</script>
 		<?endif;?>
 		<?
+		if($_GET["utm_medium"] || $_GET["utm_source"] || $_GET["utm_campaign"]){
+		$str_utm='';
+		$arrget = array();
+		$contutm = count($_GET);
+		$iu = 0;
+		foreach($_GET as $ket => $g){
+			if($ket != 'utm_medium' && $ket != 'utm_source' && $ket != 'utm_campaign')continue;
+			$iu++;
+			if($iu == $contutm){
+			$str_utm.=$ket.'='.$g;
+			$arrget[] = $ket;
+			}else{
+				$str_utm.=$ket.'='.$g.';';
+				$arrget[] = $ket;
+			}
+		}
+		$pos = strpos($APPLICATION->GetCurPageParam(), 'utm');
+		if($str_utm && $pos){
+		$_SESSION["UTM"] = $str_utm;
+		}
+		}
 	$APPLICATION->AddHeadScript(SITE_TEMPLATE_PATH.'/js/photo3d-html-files/v3/js/canvasloader.js');
 	$APPLICATION->AddHeadScript(SITE_TEMPLATE_PATH.'/js/photo3d-html-files/v3/js/jquery.fullscreen-0.3.5.js');
 	$APPLICATION->AddHeadScript(SITE_TEMPLATE_PATH.'/js/photo3d-html-files/v3/js/jquery.mousewheel.js');

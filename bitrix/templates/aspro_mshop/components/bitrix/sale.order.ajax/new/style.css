@@ -151,7 +151,7 @@ form[name=order_auth_form] {
 
 div#order_form_content div.bx_section div#sale_order_props div div.bx_block textarea { margin-bottom: 10px; }
 
-div#order_form_content .errortext {
+#ORDER_FORM .errortext {
 	display: inline-block;
 	margin-top: 15px;
 	padding: 10px 15px 10px 60px !important;

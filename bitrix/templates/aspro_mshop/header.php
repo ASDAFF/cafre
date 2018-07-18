@@ -68,10 +68,9 @@
 		echo '<link rel="canonical" href="https://'.$_SERVER['HTTP_HOST'].$curPage.'">'; 
 	}   
 	
-	if($curPage=='/catalog/') {?>
+	if( !(strpos($curPage, '/catalog/')===false) ) {?>
 		<link rel="amphtml" href="<?=$curPage?>?amp=y">
-	<?}
-	?>
+	<?}	?>
 	<?$APPLICATION->ShowMeta("viewport");?>
 	<?$APPLICATION->ShowMeta("HandheldFriendly");?>
 	<?$APPLICATION->ShowMeta("apple-mobile-web-app-capable", "yes");?>
@@ -82,7 +81,6 @@
 	<?$APPLICATION->AddHeadString('<script>BX.message('.CUtil::PhpToJSObject( $MESS, false ).')</script>', true);?>
 	<?$APPLICATION->AddHeadScript();?>
 	<?if(CModule::IncludeModule("aspro.mshop")) {CMShop::Start(SITE_ID);}?>
-	
 	
 	
 	<!--[if gte IE 9]><style type="text/css">.basket_button, .button30, .icon {filter: none;}</style><![endif]-->
@@ -105,6 +103,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','GTM-KZXSS9');</script>
 <!-- End Google Tag Manager -->
+*/?>
 <!--Global site tag (gtag.js) - Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=UA-77132925-2"></script>
 <script>
@@ -114,7 +113,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
   gtag('config', 'UA-77132925-2');
 </script>
-*/?>
+<??>
 <!-- CarrotQuest BEGIN -->
 <script type="text/javascript">
     (function(){
@@ -345,7 +344,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 		
 		<?else:?>
 			<div id="content">
-				<?if(CSite::InDir(SITE_DIR.'company/') || CSite::InDir(SITE_DIR.'info/')):?>
+				<?if(CSite::InDir(SITE_DIR.'company/') || CSite::InDir(SITE_DIR.'info/') && !strpos($APPLICATION->GetCurPage(), 'articles')):?>
 					<div class="left_block">
 						<?$APPLICATION->IncludeComponent("bitrix:menu", "left_menu", array(
 							"ROOT_MENU_TYPE" => "left",
@@ -362,6 +361,18 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 						);?>
 					</div>
 					
+					<div class="right_block">
+				<?elseif(strpos($APPLICATION->GetCurPage(), 'articles')):?>
+				<div class="left_block">
+				<?
+								$APPLICATION->IncludeFile(
+									"/include/sec_stat.php",
+									Array(),
+									Array("MODE" => "php")
+								);
+				?>
+					</div>
+		
 					<div class="right_block">
 				<?endif;?>
 		<?endif;?>

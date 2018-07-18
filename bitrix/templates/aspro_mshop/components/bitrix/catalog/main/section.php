@@ -104,7 +104,9 @@ else {
 		include($_SERVER["DOCUMENT_ROOT"]."/".$this->GetFolder()."/menu.php");?>		
 		<div class="right_block clearfix catalog" id="right_block_ajax">
 		
-			<? if($brends && strpos($APPLICATION->GetCurPage(), '/catalog/vse_brendy/')===false && (empty($MSHOP_SMART_FILTER) || (count($MSHOP_SMART_FILTER)==1 && isset($MSHOP_SMART_FILTER['FACET_OPTIONS']))))  {
+			<? 
+			// && (empty($MSHOP_SMART_FILTER) || (count($MSHOP_SMART_FILTER)==1 && isset($MSHOP_SMART_FILTER['FACET_OPTIONS'])))
+			if($brends && strpos($APPLICATION->GetCurPage(), '/catalog/vse_brendy/')===false)  {
 				$APPLICATION->ShowViewContent('filter_dop');		
 			}
 			if(empty(${$arParams['FILTER_NAME']}) || $arSection["IBLOCK_SECTION_ID"]==5338) {
@@ -382,7 +384,7 @@ else {
 					), $component, array("HIDE_ICONS" => $isAjax)
 				);
 				//$activeElements = CIBlockSection::GetSectionElementsCount($arResult["VARIABLES"]["SECTION_ID"], Array("CNT_ACTIVE"=>"Y"));
-				
+				//print_r($arResult["VARIABLES"]["SECTION_ID"]);
 				$res = CIBlockSection::GetByID($arResult["VARIABLES"]["SECTION_ID"]);
 				if($ar_res = $res->GetNext()){
 				if($ar_res["DEPTH_LEVEL"] == 1){
@@ -414,10 +416,10 @@ else {
 						"SECTION_ID" => $fater_raz,
 						//"SECTION_CODE" => $arResult["VARIABLES"]["SECTION_CODE"],
 						"BASKET_ITEMS" => $arBasketItems,
-						"ELEMENT_SORT_FIELD" => "rand",
+						"ELEMENT_SORT_FIELD" => $arParams["ELEMENT_SORT_FIELD"],
 						"AJAX_REQUEST" => $isAjax,
 						// "AJAX_REQUEST_FILTER" => $isAjaxFilter,
-						//"ELEMENT_SORT_ORDER" => $sort_order,
+						"ELEMENT_SORT_ORDER" => "asc",
 						//"ELEMENT_SORT_FIELD" => $arParams["ELEMENT_SORT_FIELD"],
 						"ELEMENT_SORT_ORDER" => $arParams["ELEMENT_SORT_ORDER"],
 						"ELEMENT_SORT_FIELD2" => $arParams["ELEMENT_SORT_FIELD2"],

@@ -21,15 +21,33 @@
 	<div class="left_side wide">
 <?endif;?>
 <?if($arParams["USE_FILTER"]=="Y"){
-	$arYears=CMShop::GetYearsItems($arParams["IBLOCK_ID"]);
+/*$db_enum_list = CIBlockProperty::GetPropertyEnum("STAT_TYPE", Array(), Array("IBLOCK_ID"=>9));
+while($ar_enum_list = $db_enum_list->GetNext())
+{
+  print_r($ar_enum_list);
+}*/
+	/*$arYears=CMShop::GetYearsItems($arParams["IBLOCK_ID"]);
 	arsort($arYears);
-	if($arYears){?>
+	if($arYears){}*/?>
 		<div class="filter_block border_block">
 			<ul>
-				<li class="prop <?=( $item["ACTIVE"] == "Y" ? 'active' : '' );?>">
-					<a href="<?=$arParams["SEF_FOLDER"]?>"><?=GetMessage("ALL");?></a>
+				<li class="prop <?=(($_REQUEST["filt"] == "all" || !$_REQUEST["filt"])? 'sec-filtactive' : '' );?>">
+					<a href="?filt=all"><?=GetMessage("ALL");?></a>
 				</li>
-				<?foreach( $arYears as $year ){?>
+				<?
+				$db_enum_list = CIBlockProperty::GetPropertyEnum("STAT_TYPE", Array(), Array("IBLOCK_ID"=>9));
+				$arr_filtunt = array();
+				while($ar_enum_list = $db_enum_list->GetNext())
+				{
+					$arParams_prop = array("replace_space"=>"_","replace_other"=>"_");
+					$trans_prop = Cutil::translit($ar_enum_list['VALUE'],"ru",$arParams_prop);	
+					$arr_filtunt[$trans_prop] = $ar_enum_list['ID'];
+				?>
+				<li class="prop <?=( $_REQUEST["filt"] == $trans_prop ? 'sec-filtactive' : '' );?>">
+					<a href="?filt=<?=$trans_prop;?>"><?=$ar_enum_list['VALUE'];?></a>
+				</li>
+				<?}?>
+				<?/*foreach( $arYears as $year ){?>
 					<li class="prop <?=( $item["ACTIVE"] == "Y" ? 'active' : '' );?>">
 						<?if( $arResult["VARIABLES"]["YEAR"] == $year ){?>
 							<span>
@@ -43,22 +61,33 @@
 							</a>
 						<?}?>
 					</li>
-				<?}?>
+				<?}*/?>
 			</ul>
 			<div class="cls"></div>
 		</div>
-	<?}?>
-	<?$GLOBALS['arrFilter'] = array(
-		">DATE_ACTIVE_FROM" => ConvertDateTime("01.01.".$arResult["VARIABLES"]["YEAR"], "DD.MM.YYYY"),
-		"<=DATE_ACTIVE_FROM" => ConvertDateTime("01.01.".(intval($arResult["VARIABLES"]["YEAR"])+1), "DD.MM.YYYY"),
+	<??>
+	<?
+	if(!$_REQUEST["filt"] || $_REQUEST["filt"]=="all"){
+	$GLOBALS['arrFilter'] = array(
+		"SECTION_CODE" => $arResult["VARIABLES"]["SECTION_CODE"],
 		array(
 			"LOGIC" => "OR", 
 			array( "PROPERTY_REGIONS" => $arRegion["ID"] ),
 			array( "PROPERTY_REGIONS" => false )
 		),
 	);
-	?>
-<?}?>
+	}else{
+	$GLOBALS['arrFilter'] = array(
+		"SECTION_CODE" => $arResult["VARIABLES"]["SECTION_CODE"],
+		"PROPERTY_STAT_TYPE" => $arr_filtunt[$_REQUEST['filt']],
+		array(
+			"LOGIC" => "OR", 
+			array( "PROPERTY_REGIONS" => $arRegion["ID"] ),
+			array( "PROPERTY_REGIONS" => false )
+		),
+	);	
+	}
+}	?>
 <?$APPLICATION->IncludeComponent(
 	"bitrix:news.list",
 	"main_template",
@@ -111,9 +140,13 @@
 	),
 	$component
 );
-
-	if($arResult["VARIABLES"]["YEAR"])  {
-		$APPLICATION->SetTitle("Статьи (".$arResult["VARIABLES"]["YEAR"].")");
+	if($arResult["VARIABLES"]["SECTION_CODE"])  {
+		$arFilter = array('IBLOCK_ID' => 9, '=CODE'=>$arResult["VARIABLES"]["SECTION_CODE"]);
+		$rsSect = CIBlockSection::GetList(array(),$arFilter);
+	   if ($arSect = $rsSect->GetNext())
+	   {
+		$APPLICATION->SetTitle("Статьи (".$arSect["NAME"].")");
+	   }
 	}?>
 
 <?if ($arParams["SHOW_FAQ_BLOCK"]=="Y"):?></div><?endif;?>

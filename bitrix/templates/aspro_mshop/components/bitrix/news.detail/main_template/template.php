@@ -1,6 +1,14 @@
 <?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();?>
 <? $this->setFrameMode( true ); ?>
 <div class="news_detail_wrapp big item">
+<?
+if($arResult["PROPERTIES"]["VIDEO_LINK"]["VALUE"]):
+$ex = explode("?v=",$arResult["PROPERTIES"]["VIDEO_LINK"]["VALUE"]);
+?>
+<div class="video_block">
+<iframe src="https://www.youtube.com/embed/<?=$ex[1]?>" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+</div>
+<?endif;?>
 	<?if( !empty($arResult["DETAIL_PICTURE"])):?>
 		<div class="detail_picture_block clearfix">
 			<?$img = CFile::ResizeImageGet($arResult["DETAIL_PICTURE"], array( "width" => 270, "height" => 185 ), BX_RESIZE_IMAGE_PROPORTIONAL, true, array() );?>

@@ -4,6 +4,7 @@ if($arResult["ITEMS"]){?>
 	<div class="bx_filter bx_filter_vertical">
 		<div class="bx_filter_bg"></div>
 		<div class="bx_filter_section">
+		<span><?//echo $APPLICATION->GetCurPage();//window.location.reload(true);?></span>
 			<form name="<?echo $arResult["FILTER_NAME"]."_form"?>" action="<?echo $arResult["FORM_ACTION"]?>" method="get" class="smartfilter" id="smartfilter">
 				<input type="hidden" name="del_url" id="del_url" value="<?echo $arResult["SEF_DEL_FILTER_URL"]?>" />
 				<?foreach($arResult["HIDDEN"] as $arItem):?>

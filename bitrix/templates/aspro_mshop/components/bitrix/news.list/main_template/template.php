@@ -14,8 +14,10 @@
 					if($arParams["IS_VERTICAL"]!="Y")
 						$arSize=array("WIDTH"=>190, "HEIGHT" => 130);
 				}
+				
 		?>
 			<section class="item clearfix item_block" id="<?=$this->GetEditAreaId($arItem['ID']);?>">
+			<?//print_r($arItem["PROPERTIES"]["STAT_TYPE"]);?>
 				<div class="wrapper_inner_block">
 					<?if($arItem["PREVIEW_PICTURE"]):?>
 						<?$img = CFile::ResizeImageGet($arItem["PREVIEW_PICTURE"], array( "width" => $arSize["WIDTH"], "height" => $arSize["HEIGHT"] ), BX_RESIZE_IMAGE_EXACT, true );?>

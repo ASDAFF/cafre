@@ -92,9 +92,10 @@ if(in_array($arResult['ITEMS'][$property_id]['VALUES'][$value[0]]["URL_ID"], $ar
 <?$this->SetViewTarget('filter_dop');?>
 
 <?
+
 global $brend_in_catalog, $est_brend;
 foreach($arResult["ITEMS"][250]['VALUES'] as $num=>$arItem) {	
-
+if ($arItem["ELEMENT_COUNT"] != 0):
 	if($arItem['CHECKED']) {
 		$brends=array();
 		$brend_in_catalog=str_replace('..', '', $arItem['VALUE']);
@@ -102,6 +103,7 @@ foreach($arResult["ITEMS"][250]['VALUES'] as $num=>$arItem) {
 		break;
 	}
 	$brends[]=$num;
+	endif;
 }
 if(!empty($brends) && count($brends)>0) {?>
 	<div class="top_brand_block" >
@@ -109,8 +111,15 @@ if(!empty($brends) && count($brends)>0) {?>
 	<div class="list_brands"> 
 	<?
 	$ar_result=CIBlockSection::GetList(Array("SORT"=>"ASC"), Array("IBLOCK_ID"=>"26", "ID"=>$brends, 'DEPTH_LEVEL'=>2, 'ACTIVE'=>'Y'),false, Array("UF_IMG_BRAND", "UF_URL_SVG", "NAME", 'CODE', 'ID'));
-	while($res2=$ar_result->GetNext()) {?>
-		<a href="<?=$APPLICATION->GetCurPage().$res2['CODE'].'/'?>" >
+	while($res2=$ar_result->GetNext()) {
+		if(strpos($APPLICATION->GetCurPage(), 'f-')){
+		$expld = explode('f-',$APPLICATION->GetCurPage());
+		$url_w = $expld[0].$res2['CODE'].'/f-'.$expld[1];
+		}else{
+			$url_w = $APPLICATION->GetCurPage().$res2['CODE'].'/';
+		}
+		?>
+		<a href="<?=$url_w;?>" >
 		<?if($res2["UF_URL_SVG"]){?>
 		<img width="100" src="<?=$res2["UF_URL_SVG"];?>"/>
 		<?}elseif($res2["UF_IMG_BRAND"]){?>

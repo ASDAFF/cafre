@@ -334,7 +334,10 @@ function sendOrder2WSDL($order_id, $arFields, $arOrder, $isnew){
 if ($arDeliv)
 {	
 $s['Comm'].=iconv("windows-1251", "utf-8", " Доставка: ".$arDeliv["NAME"]);
-}		
+}	
+if($arOrder['PROPS']['UTM']) {
+	$s['Comm'].=iconv("windows-1251", "utf-8", " UTM: ".$arOrder['PROPS']['UTM']);
+}	
 		$s['Name']=iconv("windows-1251", "utf-8", $arOrder['PROPS']['NAME']);
 		$s['Phone']=iconv("windows-1251", "utf-8", $arOrder['PROPS']['PHONE']);
 		$s['Address']=iconv("windows-1251", "utf-8", $arOrder['PROPS']['FULLADRES']);

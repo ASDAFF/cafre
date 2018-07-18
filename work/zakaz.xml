@@ -713,4 +713,200 @@ Array
         )
 
 )
+8Array
+(
+    [PrCode] => 
+    [SID] => 26
+    [UID] => 2838
+    [Date] => 2018-07-11T10:27:18
+    [Comm] => test Доставка: Самовывоз
+    [Name] => Dee Dee
+    [Phone] => 8(999) 999-9999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000008640
+                    [Qty] => 1
+                    [Cost] => 352
+                )
+
+        )
+
+)
+1double:2838
+--
+Array
+(
+    [PrCode] => 
+    [SID] => 26
+    [UID] => 2839
+    [Date] => 2018-07-11T10:27:58
+    [Comm] =>  Доставка: Самовывоз
+    [Name] => Dee Dee
+    [Phone] => 8(999) 999-9999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000008640
+                    [Qty] => 1
+                    [Cost] => 352
+                )
+
+        )
+
+)
+1double:2839
+--
+Array
+(
+    [PrCode] => 
+    [SID] => 26
+    [UID] => 2840
+    [Date] => 2018-07-11T10:28:24
+    [Comm] =>  Доставка: Самовывоз
+    [Name] => Dee Dee
+    [Phone] => 8(999) 999-9999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000008640
+                    [Qty] => 1
+                    [Cost] => 352
+                )
+
+        )
+
+)
+1double:2840
+--
+Array
+(
+    [PrCode] => 
+    [SID] => 26
+    [UID] => 2842
+    [Date] => 2018-07-11T13:55:16
+    [Comm] =>  Доставка: Самовывоз
+    [Name] => Dee Dee
+    [Phone] => 8(999) 999-9999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000008640
+                    [Qty] => 1
+                    [Cost] => 352
+                )
+
+        )
+
+)
+1double:2842
+--
+Array
+(
+    [PrCode] => 
+    [SID] => 26
+    [UID] => 2844
+    [Date] => 2018-07-11T14:03:11
+    [Comm] =>  Доставка: Самовывоз
+    [Name] => Dee Dee
+    [Phone] => 8(999) 999-9999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000008640
+                    [Qty] => 1
+                    [Cost] => 352
+                )
+
+        )
+
+)
+1double:2844
+--
+Array
+(
+    [PrCode] => 
+    [SID] => 26
+    [UID] => 2845
+    [Date] => 2018-07-11T14:04:40
+    [Comm] =>  Доставка: Самовывоз
+    [Name] => Dee Dee
+    [Phone] => 8(999) 999-9999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000015855
+                    [Qty] => 1
+                    [Cost] => 660
+                )
+
+        )
+
+)
+1double:2845
+--
+Array
+(
+    [PrCode] => 
+    [SID] => 26
+    [UID] => 2847
+    [Date] => 2018-07-11T14:34:59
+    [Comm] =>  Доставка: Курьер DPD UTM: utm_source=ya_market, amp;utm_medium=click, amp;utm_campaign=itemfeed-all-pag-st-products-conv, amp;utm_term=92174
+    [Name] => Dee
+    [Phone] => 79999999999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000002331
+                    [Qty] => 1
+                    [Cost] => 319
+                )
+
+        )
+
+)
+8Array
+(
+    [PrCode] => 
+    [SID] => 26
+    [UID] => 2853
+    [Date] => 2018-07-12T08:26:04
+    [Comm] =>  Доставка: Курьер DPD
+    [Name] => test_alex
+    [Phone] => 79999999999
+    [Address] => test
+    [eMail] => testa@test.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000013065
+                    [Qty] => 1
+                    [Cost] => 605
+                )
+
+        )
+
+)
 8

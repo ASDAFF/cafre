@@ -192,6 +192,10 @@ function InitOrderJS(){
 									BX.saleOrderAjax.cleanUp();
 								<?endif?>
 								BX.ajax.submit(orderForm, ajaxResult);
+								if(($('.order__cell').find('#name1').val() == '') && ($('.order__cell').find('#mail1').val() == '') && ($('.order__cell').find('#phone1').val() == '')){
+									$('#order_form_content').before('<p><font class="errortext">Имя обязательно для заполнения</font></p><p><font class="errortext">E-Mail обязательно для заполнения</font></p><p><font class="errortext">Телефон обязательно для заполнения</font></p>');
+									BX('confirmorder').value = 'N';
+								}
 							}
 						}
 					});
@@ -234,7 +238,7 @@ function InitOrderJS(){
 				catch (e)
 				{
 					// json parse failed, so it is a simple chunk of html
-
+					
 					BXFormPosting = false;
 					BX('order_form_content').innerHTML = res;
 

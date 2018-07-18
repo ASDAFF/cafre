@@ -29,7 +29,40 @@
 	),
 	false
 );?>
-<?if($arParams["USE_FILTER"]=="Y"){
+<?if($arParams["USE_FILTER"]=="Y"){?>
+<div class="filter_block border_block">
+			<ul>
+				<li class="prop <?=(($_REQUEST["filt"] == "all" || !$_REQUEST["filt"])? 'sec-filtactive' : '' );?>">
+					<a href="?filt=all"><?=GetMessage("ALL");?></a>
+				</li>
+				<?
+				$db_enum_list = CIBlockProperty::GetPropertyEnum("STAT_TYPE", Array(), Array("IBLOCK_ID"=>9));
+				$arr_filtunt = array();
+				while($ar_enum_list = $db_enum_list->GetNext())
+				{
+					$arParams_prop = array("replace_space"=>"_","replace_other"=>"_");
+					$trans_prop = Cutil::translit($ar_enum_list['VALUE'],"ru",$arParams_prop);	
+					$arr_filtunt[$trans_prop] = $ar_enum_list['ID'];
+				?>
+				<li class="prop <?=( $_REQUEST["filt"] == $trans_prop ? 'sec-filtactive' : '' );?>">
+					<a href="?filt=<?=$trans_prop;?>"><?=$ar_enum_list['VALUE'];?></a>
+				</li>
+				<?}?>
+			</ul>
+			<div class="cls"></div>
+</div>
+<?
+if($_REQUEST["filt"] && $_REQUEST["filt"]!="all"){
+	$GLOBALS['arrFilter'] = array(
+		"PROPERTY_STAT_TYPE" => $arr_filtunt[$_REQUEST['filt']],
+		array(
+			"LOGIC" => "OR", 
+			array( "PROPERTY_REGIONS" => $arRegion["ID"] ),
+			array( "PROPERTY_REGIONS" => false )
+		),
+	);	
+	}
+/*
 	$arYears=CMShop::GetYearsItems($arParams["IBLOCK_ID"]);
 	arsort($arYears);
 	if($arYears){?>
@@ -46,7 +79,7 @@
 			</ul>
 			<div class="cls"></div>
 		</div>
-	<?}
+	<?}*/
 }?>
 <?$APPLICATION->IncludeComponent(
 	"bitrix:news.list",

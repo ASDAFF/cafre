@@ -107,8 +107,11 @@ if (!function_exists("PrintPropsForm"))
 
 							<div class="bx_block r3x1">
 							<?//print_r($arProperties["VALUE"]);?>
-								<input type="<?=($arProperties["CODE"] == 'EMAIL' ? 'email' : 'text')?>" class="<?=($arProperties["REQUIED_FORMATED"]== "Y" ? 'required' : '')?>" code="<?=$arProperties["CODE"]?>" maxlength="250" size="<?=$arProperties["SIZE1"]?>" value="<?=$arProperties["VALUE"]?>" name="<?=$arProperties["FIELD_NAME"]?>" id="<?=$arProperties["FIELD_NAME"]?>" />
-
+							<?if($arProperties["CODE"] == 'UTM'):?>
+								<input type="<?=($arProperties["CODE"] == 'EMAIL' ? 'email' : 'text')?>" class="<?=($arProperties["REQUIED_FORMATED"]== "Y" ? 'required' : '')?>" code="<?=$arProperties["CODE"]?>" maxlength="250" size="<?=$arProperties["SIZE1"]?>" value="<?=$_SESSION["UTM"]?$_SESSION["UTM"]:'';?>" name="<?=$arProperties["FIELD_NAME"]?>" id="<?=$arProperties["FIELD_NAME"]?>" />
+							<?else:?>
+							<input type="<?=($arProperties["CODE"] == 'EMAIL' ? 'email' : 'text')?>" class="<?=($arProperties["REQUIED_FORMATED"]== "Y" ? 'required' : '')?>" code="<?=$arProperties["CODE"]?>" maxlength="250" size="<?=$arProperties["SIZE1"]?>" value="<?=$arProperties["VALUE"]?>" name="<?=$arProperties["FIELD_NAME"]?>" id="<?=$arProperties["FIELD_NAME"]?>" />
+							<?endif;?>
 								<?
 								if (strlen(trim($arProperties["DESCRIPTION"])) > 0):
 								?>

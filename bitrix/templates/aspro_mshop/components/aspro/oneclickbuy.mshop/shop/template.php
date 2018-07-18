@@ -144,6 +144,7 @@ jQuery(function($){
 </script>
 	</div>
 			</div> 
+				<input type="hidden" name="UTM_GET" value="<?=$_SESSION["UTM"]?>" />
 			<?if(strlen($arParams['OFFER_PROPERTIES'])):?>
 				<input type="hidden" name="OFFER_PROPERTIES" value="<?=$arParams['OFFER_PROPERTIES']?>" />
 			<?endif;?>

@@ -35,7 +35,7 @@ $APPLICATION->SetTitle("Статьи");
 		"SET_TITLE" => "Y",
 		"SET_STATUS_404" => "N",
 		"INCLUDE_IBLOCK_INTO_CHAIN" => "N",
-		"ADD_SECTIONS_CHAIN" => "N",
+		"ADD_SECTIONS_CHAIN" => "Y",
 		"USE_PERMISSIONS" => "N",
 		"PREVIEW_TRUNCATE_LEN" => "",
 		"LIST_ACTIVE_DATE_FORMAT" => "j F Y",
@@ -44,7 +44,7 @@ $APPLICATION->SetTitle("Статьи");
 			1 => "",
 		),
 		"LIST_PROPERTY_CODE" => array(
-			0 => "",
+			0 => "STAT_TYPE",
 			1 => "",
 		),
 		"HIDE_LINK_WHEN_NO_DETAIL" => "N",
@@ -110,10 +110,12 @@ $APPLICATION->SetTitle("Статьи");
 			1 => "",
 		),
 		"IS_VERTICAL" => "Y",
+		"STRICT_SECTION_CHECK" => "Y",
+		"SHOW_SERVICES_BLOCK" => "N",
 		"SEF_URL_TEMPLATES" => array(
 			"news" => "",
-			"section" => "#YEAR#/",
-			"detail" => "#YEAR#/#ELEMENT_CODE#/",
+			"section" => "#SECTION_CODE_PATH#/",
+			"detail" => "#SECTION_CODE_PATH#/#ELEMENT_CODE#/",
 		)
 	),
 	false
