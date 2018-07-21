@@ -1,13 +1,4 @@
-<?//$arResult = CMShop::getChilds($arResult);?>
 <?
-   /*foreach($arResult as $index => $arItem){
-        if("Бренды" == $arItem["TEXT"]){
-            foreach($arItem["CHILD"] as $key => $arChild){
-                unset($arResult[$index]["CHILD"][$key]["CHILD"]);
-            }
-        }
-    }*/
-
     $arResult["TZ_SEC_COUNT"] = $arResult["TZ_SUBSEC_COUNT"] = array();
     foreach($arResult as $key => $arItem){
         $arResult["TZ_SEC_COUNT"][$arItem["TEXT"]]++;

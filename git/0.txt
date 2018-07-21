@@ -18820,3 +18820,4 @@
 18.07.2018 02:34 /bitrix/templates/aspro_mshop/components/bitrix/catalog/main/sections.php (18.07.2018 11:23:04     many fix)
 21.07.2018 01:21 /bitrix/templates/aspro_mshop/components/bitrix/catalog.section.list/top_brand/template.php (21.07.2018 13:17:21     top menu brand)
 21.07.2018 01:21 /include/menu.top_brand.php (21.07.2018 13:17:21     top menu brand)
+21.07.2018 01:23 /bitrix/templates/aspro_mshop/components/bitrix/catalog.section.list/top_brand/template.php (21.07.2018 13:23:14     top menu brand)
