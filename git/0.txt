@@ -18821,3 +18821,5 @@
 21.07.2018 01:21 /bitrix/templates/aspro_mshop/components/bitrix/catalog.section.list/top_brand/template.php (21.07.2018 13:17:21     top menu brand)
 21.07.2018 01:21 /include/menu.top_brand.php (21.07.2018 13:17:21     top menu brand)
 21.07.2018 01:23 /bitrix/templates/aspro_mshop/components/bitrix/catalog.section.list/top_brand/template.php (21.07.2018 13:23:14     top menu brand)
+21.07.2018 01:38 /bitrix/templates/aspro_mshop/components/bitrix/menu/tz_top_general_multilevel/result_modifier.php (21.07.2018 13:37:34     top menu adaptive)
+21.07.2018 01:38 /bitrix/templates/aspro_mshop/components/bitrix/menu/tz_top_general_multilevel/template.php (21.07.2018 13:37:34     top menu adaptive)
