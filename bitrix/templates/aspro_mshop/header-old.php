@@ -25,7 +25,7 @@ $htmlClass = ($_REQUEST && isset($_REQUEST['print']) ? 'print' : false);
 <script charset="UTF-8" src="//cdn.sendpulse.com/js/push/38cfeac2ca38e29c6d3701441d6ff14a_1.js" async></script>
 
 <link rel="stylesheet" href="<?=SITE_TEMPLATE_PATH?>/js/photo3d-html-files/v3/css/style.css" type="text/css" media="all">
-
+иииукауеукну
  <script src="<?=SITE_TEMPLATE_PATH?>/js/photo3d-html-files/v3/js/canvasloader.js" type="text/javascript"></script>
  <script src="<?=SITE_TEMPLATE_PATH?>/js/photo3d-html-files/v3/js/jquery.fullscreen-0.3.5.js" type="text/javascript"></script>
  <script src="<?=SITE_TEMPLATE_PATH?>/js/photo3d-html-files/v3/js/jquery.mousewheel.js" type="text/javascript"></script>

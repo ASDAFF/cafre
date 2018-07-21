@@ -1,15 +1,29 @@
-<?$APPLICATION->IncludeComponent("bitrix:menu", "lr_top_brnad", array(//top_catalog_multilevel
-    "ROOT_MENU_TYPE" => "top_catalog",
-    "MENU_CACHE_TYPE" => "A",
-    "MENU_CACHE_TIME" => "360000",
-    "MENU_CACHE_USE_GROUPS" => "N",
-    "MENU_CACHE_GET_VARS" => array(),
-    "MAX_LEVEL" => "2",
-    "CHILD_MENU_TYPE" => "left",
-    "USE_EXT" => "Y",
-    "DELAY" => "N",
-    "ALLOW_MULTI_SELECT" => "N",
-    "IBLOCK_CATALOG_TYPE" => "new_cat",
-    "IBLOCK_CATALOG_ID" => "26",
-    ),false
+<?$APPLICATION->IncludeComponent("bitrix:catalog.section.list","top_brand",
+Array(
+
+				        "ACTIVE_SUBSECTION" => "N",
+                        "ADD_SECTIONS_CHAIN" => "N",
+                        "CACHE_GROUPS" => "Y",
+                        "CACHE_TIME" => "36000000",
+                        "CACHE_TYPE" => "A",
+                        "COUNT_ELEMENTS" => "Y",
+                        "IBLOCK_ID" => "26",
+                        "IBLOCK_TYPE" => "new_cat",
+                        "SECTION" => "#SECTION_CODE_PATH#/",
+                        "SECTION_CODE" => "",
+                        "SECTION_FIELDS" => array(
+                            0 => "DESCRIPTION",
+                            1 => "",
+                        ),
+                        "SECTION_ID" => "5338",
+                        "SECTION_URL" => "/catalog/#SECTION_CODE_PATH#/",
+                        "SECTION_USER_FIELDS" => array(
+                            0 => "",
+                            1 => "",
+                        ),
+                        "SEF_FOLDER" => "/catalog/",
+                        "SEF_MODE" => "N",
+                        "SELF_FOLDER" => "/catalog/",
+                        "TOP_DEPTH" => "1"
+    )		
 );?>
