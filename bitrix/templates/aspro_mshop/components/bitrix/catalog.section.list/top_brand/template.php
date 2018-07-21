@@ -22,9 +22,13 @@ else{
 }
 foreach($arResult['SECTIONS'] as $key => $arItem):
 	$alpha=substr($arItem["NAME"], 0, 1);	
-	if(in_array($arItem['ID'], $active) || $arItem['ELEMENT_CNT']>0) $arResult['alpha'][(!preg_replace('|[^a-z]*|i', '',$alpha))?'а':$alpha][]=$arItem;
+	if(in_array($arItem['ID'], $active) || $arItem['ELEMENT_CNT']>0) {
+		$arResult['alpha'][(!preg_replace('|[^a-z]*|i', '',$alpha))?'а':$alpha][]=$arItem;
+		$arResult['all_alpha'][$arItem['NAME']]=$arItem;
+	}
 endforeach;
 ksort($arResult['alpha']);
+ksort($arResult['all_alpha']);
 $arResult['alpha']
 ?>
 <span>Ѕренды:</span>
@@ -42,6 +46,16 @@ $arResult['alpha']
 				</div>
 			</li>
 		<?}?>
+		<li class="all-brand-menu-lr">
+			<a href="/catalog/vse_brendy/" class="bbrands__alph-all">Все бренды</a>
+			<div class="bbrands__drop">
+				<ul>	
+				<?foreach($arResult['all_alpha'] as $arSec) {?>
+							<li><a href="<?=$arSec['SECTION_PAGE_URL']?>"><?=$arSec['NAME']?></a></li>
+						<?}?>
+				</ul>
+			</div>
+		</li>	
 	</ul>	
 </div>
 <script>
