@@ -47,7 +47,7 @@ $arResult['alpha']
 			</li>
 		<?}?>
 		<li class="all-brand-menu-lr">
-			<a href="/catalog/vse_brendy/" class="bbrands__alph-all">Все бренды</a>
+			<a href="/catalog/vse_brendy/" class="bbrands__alph-all">все бренды</a>
 			<div class="bbrands__drop">
 				<ul>	
 				<?foreach($arResult['all_alpha'] as $arSec) {?>
