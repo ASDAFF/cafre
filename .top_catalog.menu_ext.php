@@ -24,8 +24,7 @@
 		if(!in_array($link[1],  $no_epmty))
 			unset($aMenuLinksExt[$k]);
 	}
-	$aMenuLinks = array_merge($aMenuLinks, $aMenuLinksExt);
-	
+	$aMenuLinks = array_merge($aMenuLinks, $aMenuLinksExt);	
 	$aMenuLinks[]=Array(
 		"Хиты", 
 		"/catalog/hits/", 

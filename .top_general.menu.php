@@ -1,12 +1,6 @@
 <?
+global $APPLICATION;
 $aMenuLinks = Array(
-	Array(
-		"Каталог", 
-		"/catalog/", 
-		Array(), 
-		Array(), 
-		"" 
-	),
 	Array(
 		"Хиты", 
 		"/catalog/hits/", 
@@ -50,4 +44,16 @@ $aMenuLinks = Array(
 		"" 
 	)
 );
+	$aMenuLinksExt = $APPLICATION->IncludeComponent(
+		"lets:menu.sections", "",
+		Array(		
+            "IBLOCK_TYPE" => "new_cat", 
+			"IBLOCK_ID" => "26", 
+			"DEPTH_LEVEL" => "3", 
+			"CACHE_TYPE" => "A", 
+			"CACHE_TIME" => "360000",
+		)
+	);
+	$aMenuLinks = array_merge($aMenuLinksExt, $aMenuLinks);	
+
 ?>

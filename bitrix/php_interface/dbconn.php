@@ -24,4 +24,7 @@ define("BX_FILE_PERMISSIONS", 0644);
 define("BX_DIR_PERMISSIONS", 0755);
 @umask(~BX_DIR_PERMISSIONS);
 define("BX_DISABLE_INDEX_PAGE", true);
+
+define("BX_CACHE_TYPE", "apc");
+define("BX_CACHE_SID", $_SERVER["DOCUMENT_ROOT"]."#02");
 ?>
