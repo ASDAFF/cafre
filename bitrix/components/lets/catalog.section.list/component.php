@@ -162,6 +162,55 @@ if($this->startResultCache(false, ($arParams["CACHE_GROUPS"]==="N"? false: $USER
 		"left_margin"=>"asc",
 	);
 	//EXECUTE
+		$cache = new CPHPCache();
+		if($arParams['SECTION_ID_EXCEP']>0) {
+			$cache_time = 3600000;
+			$cache_path = 'except_sec';
+			$cache_id = 'top';
+			$nobrand=array();
+			$nobrand[]=$arParams['SECTION_ID_EXCEP'];
+			if($cache->InitCache($cache_time, $cache_id, $cache_path)){
+				$res = $cache->GetVars();
+				$nobrand = $res["arResult"];
+			}
+			else{
+				$res=CIblockSection::GetList(array(), array('IBLOCK_ID'=>26, 'ACTIVE'=>'Y', 'SECTION_ID'=>$arParams['SECTION_ID_EXCEP'], 'INCLUDE_SUBSECTIONS'=>'Y'), false, array('ID'));
+				while($ob=$res->GetNext()) {			
+					$nobrand[]=$ob['ID'];
+				}	
+				$cache->StartDataCache( $cache_time, $cache_id, $cache_path );
+				$cache->EndDataCache( 
+					array(
+						"arResult" => $nobrand,
+					) 
+				);
+			}
+			$arFilter['!ID'] = $nobrand;
+		}
+		
+		$cache_path = 'sec_Active';
+		$cache_id = 'top3';
+		$noempty=array();
+		if($cache->InitCache($cache_time, $cache_id, $cache_path)){
+			$res = $cache->GetVars();
+			$noempty = $res["arResult"];
+		}
+		else{
+			$res=CIblockSection::GetList(array(), array('IBLOCK_ID'=>26, 'ACTIVE'=>'Y'), true, array('ID'));
+			while($ob=$res->GetNext()) {
+				if($ob['ELEMENT_CNT']>0) $noempty[]=$ob['ID'];
+			}	
+			$cache->StartDataCache( $cache_time, $cache_id, $cache_path );
+			$cache->EndDataCache( 
+				array(
+					"arResult" => $noempty,
+				) 
+			);
+		}
+		if(!empty($noempty)) {
+			$arFilter['ID'] = $noempty;
+		}
+		
 	$rsSections = CIBlockSection::GetList($arSort, $arFilter, $arParams["COUNT_ELEMENTS"], $arSelect);
 	$rsSections->SetUrlTemplates("", $arParams["SECTION_URL"]);
 	while($arSection = $rsSections->GetNext())

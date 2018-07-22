@@ -314,7 +314,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 				<div class="catalog_menu">
 					<div class="wrapper_inner">
 						<div class="wrapper_middle_menu">
-							<?//include($_SERVER['DOCUMENT_ROOT'].SITE_DIR.'include/menu.top_catalog_multilevel.php');?>
+							<?include($_SERVER['DOCUMENT_ROOT'].SITE_DIR.'include/menu.top_catalog_multilevel.php');?>
 						</div>
 					</div>
 				</div>
