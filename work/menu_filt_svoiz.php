@@ -1,4 +1,6 @@
+#!/usr/bin/php -q		
 <?
+$_SERVER["DOCUMENT_ROOT"] = "/var/www/www-root/data/www/cafre.ru";
 require($_SERVER["DOCUMENT_ROOT"].'/bitrix/modules/main/include/prolog_before.php');
 CModule::IncludeModule("iblock");
 CModule::IncludeModule("catalog");
@@ -22,7 +24,7 @@ while($ob = $res->GetNextElement())
  if(in_array($arFields["PROPERTY_CATALOG_BREND_VALUE"], array_keys($all_b))){
 	 $uf[]=$all_b[$arFields["PROPERTY_CATALOG_BREND_VALUE"]];
  }else{
-	  $arFilter2 = Array('IBLOCK_ID'=>26, "ID"=>$arFields["PROPERTY_CATALOG_BREND_VALUE"]);
+	  $arFilter2 = Array('IBLOCK_ID'=>26, "ACTIVE"=>"Y", "ID"=>$arFields["PROPERTY_CATALOG_BREND_VALUE"]);
   $db_list2 = CIBlockSection::GetList(Array(), $arFilter2, false, array("UF_IMG_BRAND"));
   if($ar_result2 = $db_list2->GetNext())
   {

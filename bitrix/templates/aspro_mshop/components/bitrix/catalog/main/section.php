@@ -132,10 +132,12 @@ else {
 							$rsSect_bs = CIBlockSection::GetList(array(),$arFilter_bs, false, array("UF_IMG_BRAND"));
 						}  ?>
 						<div class="top_brand_block" style="min-height: 70px;margin-top:0;">
-							<?if($arSect_bs = $rsSect_bs->GetNext()):
-								$file = CFile::ResizeImageGet($arSect_bs["UF_IMG_BRAND"], array('width'=>266, 'height'=>160), BX_RESIZE_IMAGE_PROPORTIONAL, true);	?>
-								<div class="img_brand_sec"><img src="<?=$file["src"];?>" alt=""/></div>
-							<?endif;?>
+							<?if($exbsec[1]){ 
+								if($arSect_bs = $rsSect_bs->GetNext()):
+									$file = CFile::ResizeImageGet($arSect_bs["UF_IMG_BRAND"], array('width'=>266, 'height'=>160), BX_RESIZE_IMAGE_PROPORTIONAL, true);	?>
+									<div class="img_brand_sec"><img src="<?=$file["src"];?>" alt=""/></div>
+								<?endif; 
+							}?>
 							<div class="text_brand_sec"><?echo $res2["PREVIEW_TEXT"];?></div>
 						</div>
 					<?}?>
