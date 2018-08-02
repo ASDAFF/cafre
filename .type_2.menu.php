@@ -8,14 +8,21 @@ $aMenuLinks = Array(
 		"" 
 	),
 	Array(
-		"Оплата, доставка и возврат товара", 
+		"Доставка", 
 		"/help/info_order/", 
 		Array(), 
 		Array(), 
 		"" 
 	),
 	Array(
-		"Магазины", 
+		"Оплата", 
+		"/pay/", 
+		Array(), 
+		Array(), 
+		"" 
+	),
+	Array(
+		"Магазин", 
 		"/contacts/stores/", 
 		Array(), 
 		Array(), 

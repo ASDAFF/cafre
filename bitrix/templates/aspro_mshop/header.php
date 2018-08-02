@@ -90,7 +90,7 @@
 
 	<link rel="stylesheet" href="<?=SITE_TEMPLATE_PATH?>/js/photo3d-html-files/v3/css/style.css" type="text/css" media="all">
 	<link rel="stylesheet" href="<?=SITE_TEMPLATE_PATH?>/css/lets_bas.css?v=2" type="text/css">
-	
+	<link rel="stylesheet" href="<?=SITE_TEMPLATE_PATH?>/css/new.css" type="text/css">
 
 	<script type="text/javascript" data-skip-moving="true">
 	window.dataLayer = window.dataLayer || [];
@@ -336,6 +336,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 						);?>
 						
 						<h1><?=(strpos($APPLICATION->GetCurPage(), '/catalog/')===false)?$APPLICATION->ShowTitle(true):$APPLICATION->ShowViewContent('h1');?></h1>
+						<?if(CSite::InDir(SITE_DIR.'company/') && !strpos($APPLICATION->GetCurPage(), 'return')):?><div class="text-page ab"><?endif;?>
 						<?if($isContactsPage):?>
 					</div>
 				</section>
@@ -343,7 +344,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 		
 		<?else:?>
 			<div id="content">
-				<?if(CSite::InDir(SITE_DIR.'company/') || CSite::InDir(SITE_DIR.'info/') && !strpos($APPLICATION->GetCurPage(), 'articles')):?>
+				<?if(CSite::InDir(SITE_DIR.'info/') && !strpos($APPLICATION->GetCurPage(), 'articles')):?>
 					<div class="left_block">
 						<?$APPLICATION->IncludeComponent("bitrix:menu", "left_menu", array(
 							"ROOT_MENU_TYPE" => "left",

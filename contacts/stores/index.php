@@ -1,9 +1,144 @@
 <?
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/header.php");
-$APPLICATION->SetTitle("Магазины");
+$APPLICATION->SetTitle("Магазин");
 ?>
+<style>
+
+@font-face {
+  font-family: 'Futura';
+  src: url('fonts/FuturaPT-Bold.eot');
+  src: url('fonts/FuturaPT-Bold.eot?#iefix') format('embedded-opentype'),
+    url('fonts/FuturaPT-Bold.woff') format('woff'),
+    url('fonts/FuturaPT-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Futura';
+  src: url('fonts/FuturaPT-Demi.eot');
+  src: url('fonts/FuturaPT-Demi.eot?#iefix') format('embedded-opentype'),
+    url('fonts/FuturaPT-Demi.woff') format('woff'),
+    url('fonts/FuturaPT-Demi.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Futura';
+  src: url('fonts/FuturaPT-Book.eot');
+  src: url('fonts/FuturaPT-Book.eot?#iefix') format('embedded-opentype'),
+    url('fonts/FuturaPT-Book.woff') format('woff'),
+    url('fonts/FuturaPT-Book.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+body {
+  font-family: 'Futura', sans-serif;
+}
+
+
+
+</style>
 <?global $TEMPLATE_OPTIONS;?>
 <div class="wrapper_inner">
+<section class="middle">
+        <div class="container">
+				  <div class="shop-page">
+
+            <h3>
+              <strong>Любите совершать покупки,</strong> рассматривая витрины и бродя по магазинам?<br>
+              <strong>Тогда вам к нам!</strong> В нашем магазине вы найдёте:
+            </h3>
+
+            <div class="shop-page__list">
+              <ul>
+                <li>самые популярные косметические бренды: Wella Professional, Londa Professional, Estel Professional, Schwarzkopf Professional, Dewal Professional, Teana laboratories, Planet Nails, Ga.Ma Professional, Aravia Professional, CND и многие, многие другие!</li>
+                <li>шикарные новинки профессиональной косметики по доступной цене! «Вкусные» цены, полностью аналогичные стоимости товаров на сайте. Никакой наценки!</li>
+                <li>соблазнительные акции интернет-магазина и всегда вежливый персонал!</li>
+              </ul>
+            </div>
+
+            <div class="alrt">
+              <h3>Совершайте покупки с удовольствием вместе с «CAFRE»</h3>
+            </div>
+
+            <div class="shop-page__pics">
+              <a href="/img/img1.png" class="fancy">
+                <img src="/img/img1.png" alt="">
+              </a>
+              <a href="/img/img2.png" class="fancy">
+                <img src="/img/img2.png" alt="">
+              </a>
+              <a href="/img/img3.png" class="fancy">
+                <img src="/img/img3.png" alt="">
+              </a>
+            </div>
+
+            <div class="shop-page__contact">
+              <div class="shop-page__toggle">
+                <div class="tgl">
+                  <span class="tgl__name">Адрес магазина</span>
+                  <div class="tgl__content">
+                    <p>г. Москва, ТЦ Афимолл, Пресненская набережная, 2</p>
+                  </div>
+                </div>
+                <div class="tgl">
+                  <span class="tgl__name">Часы работы</span>
+                  <div class="tgl__content">
+				  <p>
+				  Пн. - Вс.: с 9:00 до 21:00
+				  </p>
+				  </div>
+                </div>
+                <div class="tgl">
+                  <span class="tgl__name">Акции</span>
+                  <div class="tgl__content"></div>
+                </div>
+                <div class="tgl">
+                  <span class="tgl__name">Подарочные сертификаты</span>
+                  <div class="tgl__content"></div>
+                </div>
+                <div class="tgl">
+                  <span class="tgl__name">Клубная карта</span>
+                  <div class="tgl__content"></div>
+                </div>
+              </div>
+              <div class="shop-page__map">
+				<?$APPLICATION->IncludeComponent(
+					"bitrix:map.google.view",
+					"map",
+					array(
+						"API_KEY" => "AIzaSyDcRvC__j3tSJLDcKYiPbvg4z75quenpaA",
+						"INIT_MAP_TYPE" => "ROADMAP",
+						"MAP_DATA" => "a:4:{s:10:\"google_lat\";d:55.75567215872764;s:10:\"google_lon\";d:37.60761724722134;s:12:\"google_scale\";i:18;s:10:\"PLACEMARKS\";a:1:{i:0;a:3:{s:4:\"TEXT\";s:0:\"\";s:3:\"LON\";d:37.60764956474327;s:3:\"LAT\";d:55.75567424904235;}}}",
+						"MAP_WIDTH" => "100%",
+						"MAP_HEIGHT" => "240",
+						"CONTROLS" => array(
+						),
+						"OPTIONS" => array(
+							0 => "ENABLE_DBLCLICK_ZOOM",
+							1 => "ENABLE_DRAGGING",
+						),
+						"MAP_ID" => "AIzaSyDcRvC__j3tSJLDcKYiPbvg4z75quenpaA",
+						"ZOOM_BLOCK" => array(
+							"POSITION" => "right center",
+						),
+						"COMPONENT_TEMPLATE" => "map"
+					),
+					false
+				);?>
+              </div>
+            </div>
+
+          </div>
+				</div>
+      </section>
+      
+
+	  </div>
+<?/*
 <ul class="shops">
 	<li class="shops__item">
 		<div class="shops__photos">
@@ -41,8 +176,8 @@ $APPLICATION->SetTitle("Магазины");
 </div>
 <?/*if($TEMPLATE_OPTIONS["STORES_SOURCE"]["CURRENT_VALUE"] != 'IBLOCK'):?>
 	<?$APPLICATION->IncludeComponent(
-		"bitrix:catalog.store", 
-		"main", 
+		"bitrix:catalog.store",
+		"main",
 		array(
 			"SEF_MODE" => "Y",
 			"SEF_FOLDER" => "/contacts/stores/",
@@ -63,8 +198,8 @@ $APPLICATION->SetTitle("Магазины");
 	);?>
 <?else:?>
 	<?$APPLICATION->IncludeComponent(
-	"bitrix:news", 
-	"shops", 
+	"bitrix:news",
+	"shops",
 	array(
 		"IBLOCK_TYPE" => "aspro_mshop_content",
 		"IBLOCK_ID" => "4",

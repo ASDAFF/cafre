@@ -18870,3 +18870,7 @@
 22.07.2018 11:52 /bitrix/templates/aspro_mshop/components/lets/catalog.section.list/top_main/template.php (22.07.2018 23:51:03     top menu)
 22.07.2018 11:52 /include/menu.top_brand.php (22.07.2018 23:51:03     top menu)
 22.07.2018 11:52 /include/menu.top_catalog_multilevel.php (22.07.2018 23:51:03     top menu)
+24.07.2018 07:27 /bitrix/templates/aspro_mshop/components/bitrix/catalog/main/section.php (24.07.2018 07:26:29     fix)
+24.07.2018 07:27 /bitrix/templates/aspro_mshop/images/podarok.jpg (24.07.2018 07:26:29     fix)
+24.07.2018 07:27 /bitrix/templates/aspro_mshop/components/bitrix/catalog/main/section.php (24.07.2018 07:26:29     fix)
+24.07.2018 07:27 /bitrix/templates/aspro_mshop/images/podarok.jpg (24.07.2018 07:26:29     fix)

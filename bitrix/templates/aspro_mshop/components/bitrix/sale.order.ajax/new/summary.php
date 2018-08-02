@@ -77,6 +77,8 @@ $bShowNameWithPicture = ($bDefaultColumns) ? true : false; // flat to show name 
 						?>
 							</td>
 					<?endforeach;?>
+					<td class="custom">
+							</td>
 				</tr>
 			</thead>
 
@@ -184,6 +186,7 @@ $len = count($arResult["GRID"]["ROWS"]);
 					</td>
 					<td class="custom quantity "></td>
 					<td class="custom sum "></td>
+					<td class="custom"></td>
 					</tr>
 					<?}?>
 					<?
@@ -208,8 +211,10 @@ if($ar_props = $db_props->Fetch()){
 $res = CIBlockSection::GetByID($ar_props["VALUE"]);
 if($ar_res = $res->GetNext())
   $name_brand = $ar_res['NAME'];
-	}*/?>
-					<tr class="tov_order" data-idtov="<?=$arItem["PRODUCT_ID"]?>" data-nametov="<?=$arItem["NAME"];?>" data-price="<?=$arItem["PRICE"];?>" data-brand="<?=$name_brand;?>">
+	}*/
+	$arItemsq = CCatalogProduct::GetByID($arItem["PRODUCT_ID"]);
+	?>
+					<tr class="tov_order" data-prod="<?=$arItem["ID"]?>" data-idtov="<?=$arItem["PRODUCT_ID"]?>" data-nametov="<?=$arItem["NAME"];?>" data-price="<?=$arItem["PRICE"];?>" data-brand="<?=$name_brand;?>">
 <?
 					if ($bShowNameWithPicture):
 					?>
@@ -426,18 +431,19 @@ if($ar_res = $res->GetNext())
 							<td class="custom <?=strtolower($arColumn["id"]);?> <?=$class_td;?>">
 								<?if($arColumn["id"]=="SUM"){?>
 									<div class="cost prices"><div class="price"><?=$arItem[$arColumn["id"]]?></div></div>
-								<?}else{?>
+								<?}else{
+									?>
 									<!--<div class="block_q">
 									<a data-but="minus" class="minus">-</a>
 									<?//=$arItem[$arColumn["id"]]?>
 									<a data-but="plus" class="plus">+</a>
 									<input type="hidden" class="idtov" value="<?=$k?>"/>
 									</div>-->
-									<div class="counter_block basket">
+									<div class="counter_block basket" data-maxquant="<?=$arItemsq['QUANTITY'];?>">
 										<span onclick="setQuantity('<?=$arItem["ID"]?>', '<?=$arItem["MEASURE_RATIO"]?>', 'down')" data-but="minus" class="minus">-</span>				
 										<input
 											type="text"
-											class="text" 
+											class="text inpq" 
 											id="QUANTITY_INPUT_<?=$arItem["ID"]?>"
 											name="QUANTITY_INPUT_<?=$arItem["ID"]?>"
 											size="2"
@@ -488,8 +494,12 @@ if($ar_res = $res->GetNext())
 							<?
 							endif;
 						endif;
+						
 					endforeach;
+					
+					
 					?>
+				<td class="custom del"><span class="delet-elem" data-prodid="<?=$arItem['ID'];?>">X</span></td>
 				</tr>
 				<?
 				$i++;

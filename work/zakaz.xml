@@ -909,4 +909,57 @@ Array
         )
 
 )
+8Array
+(
+    [PrCode] => 
+    [SID] => 26
+    [UID] => 2901
+    [Date] => 2018-07-30T13:35:09
+    [Comm] =>  Доставка: Курьер DPD
+    [Name] => Dee
+    [Phone] => 79999999999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000024598
+                    [Qty] => 1
+                    [Cost] => 435
+                )
+
+            [1] => Array
+                (
+                    [ID] => 00000021895
+                    [Qty] => 1
+                    [Cost] => 394
+                )
+
+        )
+
+)
+8Array
+(
+    [PrCode] => 
+    [SID] => 26
+    [UID] => 2902
+    [Date] => 2018-07-30T13:45:49
+    [Comm] =>  Доставка: Курьер DPD
+    [Name] => Dee
+    [Phone] => 79999999999
+    [Address] => Московская область, Москва, 
+    [eMail] => dee@mail.ru
+    [Gds] => Array
+        (
+            [0] => Array
+                (
+                    [ID] => 00000010085
+                    [Qty] => 1
+                    [Cost] => 2145
+                )
+
+        )
+
+)
 8

@@ -1,6 +1,6 @@
 <?
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/header.php");
-$APPLICATION->SetTitle("Оплата, доставка и возврат товара");
+$APPLICATION->SetTitle("Доставка товара");
 ?>
 <style>
 

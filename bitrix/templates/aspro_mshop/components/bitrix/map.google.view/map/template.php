@@ -48,13 +48,13 @@ $arParams["CLICKABLE"] = ( $arParams["CLICKABLE"] ? $arParams["CLICKABLE"] : "Y"
 			}
 			var root = '<?=SITE_TEMPLATE_PATH;?>'+'/images/map_marker.png';
 			var image = new google.maps.MarkerImage(root,
-				new google.maps.Size(45, 57),
+				new google.maps.Size(99, 118),
 				new google.maps.Point(0, 0),
 				new google.maps.Point(23, 57)
 			);
 			var pt = new google.maps.LatLng(arPlacemark.LAT, arPlacemark.LON);
             bounds.extend(pt);
-			
+
 			var obPlacemark = new google.maps.Marker({
 				'position': pt,
 				'map': map,
@@ -65,7 +65,7 @@ $arParams["CLICKABLE"] = ( $arParams["CLICKABLE"] ? $arParams["CLICKABLE"] : "Y"
 				'html': arPlacemark.HTML
 			});
 			markers.push(obPlacemark);
-			
+
 			var boxText = document.createElement('div');
 			boxText.className  = 'inner';
 			boxText.innerHTML = (typeof(obPlacemark.html) !== 'undefined' ? (obPlacemark.html.length ? obPlacemark.html : '') : (typeof(obPlacemark.title) !== 'undefined' ? (obPlacemark.title.length ? obPlacemark.title : '') : ''));
@@ -87,7 +87,7 @@ $arParams["CLICKABLE"] = ( $arParams["CLICKABLE"] ? $arParams["CLICKABLE"] : "Y"
 				pane: 'floatPane',
 				enableEventPropagation: false,
 				position: obPlacemark.position
-				
+
 			};
 			if( clickable && boxText.innerHTML.length){
 				ib = new InfoBox();
@@ -99,7 +99,7 @@ $arParams["CLICKABLE"] = ( $arParams["CLICKABLE"] ? $arParams["CLICKABLE"] : "Y"
 					ib.open(this.map, this);
 					window['__bx_google_infowin_opened_' + map_id] = ib;
 				});
-				
+
 				/*custom close*/
 				var oldClose = ib.close;
 				ib.close = function(){
@@ -107,7 +107,7 @@ $arParams["CLICKABLE"] = ( $arParams["CLICKABLE"] ? $arParams["CLICKABLE"] : "Y"
 					var th = this;
 					oldClose.apply(th);
 				}
-				
+
 				/*custom draw*/
 				var oldDraw = ib.draw;
 				ib.draw = function(){
@@ -117,7 +117,7 @@ $arParams["CLICKABLE"] = ( $arParams["CLICKABLE"] ? $arParams["CLICKABLE"] : "Y"
 				}
 			}
 			google.maps.event.addListener(map, "click", function() {
-				ib.close(); 
+				ib.close();
 			});
 			var icon = '<?=SITE_TEMPLATE_PATH?>/images/map_marker.png';
 			var iconHover = '<?=SITE_TEMPLATE_PATH?>/images/map_marker.png';
@@ -131,7 +131,7 @@ $arParams["CLICKABLE"] = ( $arParams["CLICKABLE"] ? $arParams["CLICKABLE"] : "Y"
 				obPlacemark.infowin = new google.maps.InfoWindow({
 					content: "Loading..."
 				});
-				
+
 			}
 			return obPlacemark;
 		}
@@ -141,7 +141,7 @@ $arParams["CLICKABLE"] = ( $arParams["CLICKABLE"] ? $arParams["CLICKABLE"] : "Y"
 		function BXWaitForMap_view(map_id){
 			if (null == window.GLOBAL_arMapObjects)
 				return;
-		
+
 			if (window.GLOBAL_arMapObjects[map_id])
 				window['BX_SetPlacemarks_' + map_id]();
 			else
@@ -166,7 +166,7 @@ $arParams["CLICKABLE"] = ( $arParams["CLICKABLE"] ? $arParams["CLICKABLE"] : "Y"
 					clusterClass: 'test',
 					styles: [{
 						url: '<?=SITE_TEMPLATE_PATH?>'+'/images/map_cluster.png',
-						height: 53, 
+						height: 53,
 						width: 53,
 						textColor: '#383838',
 						textSize: 12,
@@ -182,7 +182,7 @@ $arParams["CLICKABLE"] = ( $arParams["CLICKABLE"] ? $arParams["CLICKABLE"] : "Y"
 				google.maps.event.addListener(markerCluster, "mouseover", function (c) {
 				  c.clusterIcon_.div_.firstChild.src = clusterIconsHover;
 				});
-			
+
 				center = bounds.getCenter();
 				<?if( $cnt > 1 ){?>
 					map.fitBounds(bounds);
@@ -191,7 +191,7 @@ $arParams["CLICKABLE"] = ( $arParams["CLICKABLE"] ? $arParams["CLICKABLE"] : "Y"
 					//map.SetZoom(<?=$map_data["google_scale"]?>);
 				<?}?>
 			<?}?>
-			
+
 			/*reinit map*/
 			//google.maps.event.trigger(map,'resize');
 		}

@@ -155,7 +155,7 @@ if(bigdata2){
 		items_tov.push(id_offer);
 		//set_cookie("addBasId", items_tov);
 		document.cookie = "addBasId=" + items_tov + "; path=/;";
-		/********СѓР±СЂР°Р» console********/
+		/********убрал console********/
 		//console.log(getCookie('addBasId'));
 		carrotquest.track('$cart_added', {
 
@@ -187,6 +187,42 @@ if(bigdata2){
 					}
 				});*/
     });
+	$(document).on('click','.delet-elem',function(){
+		var prodid  = $(this).data('prodid'), sum=0;
+		$.ajax({
+					url: "/ajax/del_basket.php", 
+					type: "post",
+					dataType: "json",
+					data: { 
+						"prodid": prodid
+					},
+				
+					success: function(data){
+						if(data.result == 'Y'){
+						$('.tov_order[data-prod='+prodid+']').css('display', 'none');
+						$('.tov_order[data-prod='+prodid+']').html('');
+						$('.sum').each(function(i,elem){
+							var d = $(elem).find('.price').text();
+							d = d.replace(/\s+/g, '');
+							if(d == '')d=0;
+							sum += parseInt(d);
+						});
+						if(sum > 0){
+							submitForm();
+						/*
+						if($('.sum_delivery_order').find('.custom_t2').text()!=''){
+							var c = $('.sum_delivery_order').find('.custom_t2').text();
+							c = c.replace(/\s+/g, '');
+						sum = sum+parseInt(c);
+						}
+						$('.sum_new_bas').find('.custom_t2').text(sum+' руб.');*/
+						}else{
+							location.reload();
+						}
+						}
+					}
+				});
+	});
 	//console.log(getCookie('addBasId'));
 	function getCookie(name) {
   var matches = document.cookie.match(new RegExp(
@@ -194,8 +230,8 @@ if(bigdata2){
   ));
   return matches ? decodeURIComponent(matches[1]) : undefined;
 }
-	/********Р”РѕР±Р°РІР»РµРЅРёРµ Рё СѓРґР°Р»РµРЅРёРµ РєРѕР»РёС‡РµСЃС‚РІР° С‚РѕРІР°СЂРѕРІ********/
-$('[data-but="minus"], [data-but="plus"]').on("click",function(e){
+	/********Добавление и удаление количества товаров********/
+$(document).on('click', '[data-but="minus"], [data-but="plus"]',function(e){
 		e.preventDefault();
 		
 		if($(this).text() == "-"){
@@ -205,7 +241,8 @@ $('[data-but="minus"], [data-but="plus"]').on("click",function(e){
 			var but = 1;
 		}
 		
-		var id_tov = $(this).siblings(".idtov").val();
+		var id_tov = $(this).parent().find(".idtov").val(), clik = $(this).data('but'), inp = $(this).parent().find('.inpq'), maxq = $(this).parent().data('maxquant');
+		if(((inp.val() < maxq) && (clik=='plus')) || ((clik=='minus') && (inp.val() != 1))){
 		$.ajax({
 					url: "/ajax/actbasquant.php", 
 					type: "post",
@@ -217,10 +254,25 @@ $('[data-but="minus"], [data-but="plus"]').on("click",function(e){
 					},
 					success: function(data){					
 						if(data.result){
-							location.reload();
+							//location.reload();
+							var q = parseInt(inp.val());
+							//console.log(q);
+							submitForm();
+							if((clik == 'minus') && (q!=0)){
+							inp.val(q-1);
+							}else if((clik == 'plus') && (q!=0) && inp.val() != maxq){
+							inp.val(q+1);
+							}
 						}
 					}
 				});
+		}else{
+			//console.log($(this).siblings('.inpq').val());
+			//$(this).siblings('.inpq').val(maxq);
+			if(clik == 'plus'){
+				inp.parent().append('<span class="q-texerr">Недостаточно товара.</span>');
+			}
+		}
 	});
     $('.menu_item_l1.catalog > a').on('click', function(e) {
         e.preventDefault();

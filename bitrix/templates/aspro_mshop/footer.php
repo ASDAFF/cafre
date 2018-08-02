@@ -305,6 +305,27 @@
 	$APPLICATION->AddHeadScript(SITE_TEMPLATE_PATH.'/js/photo3d-html-files/v3/js/device.min.js');
 	?>
 		<script type="text/javascript">
+     $('.ab-tabs .tab').on('click', function(e) {
+      e.preventDefault();
+
+      var idx = $(this).index(),
+          content = $(this).closest('.ab-tabs').find('.ab-tabs__content').get(idx);
+
+      $(this).siblings('.tab_active').removeClass('tab_active');
+      $(this).addClass('tab_active');
+      $(content).addClass('ab-tabs__content_show').siblings('.ab-tabs__content').removeClass('ab-tabs__content_show');
+
+    });
+
+    $('.ab-tabs .tab').first().trigger('click');
+
+    $('.tgl__name').on('click', function() {
+      $(this).closest('.shop-page__toggle').find('.active').removeClass('active');
+      $(this).addClass('active');
+    })
+
+    $('.tgl__name').first().trigger('click');
+	
 		jQuery(function($){
 	$(".phone").mask("8(999) 999-9999");
 	$("#phone1").mask("8(999) 999-9999");

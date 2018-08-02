@@ -8,7 +8,7 @@ $aMenuLinks = Array(
 		"" 
 	),
 	Array(
-		"Оплата, доставка и возврат товара", 
+		"Доставка", 
 		"/help/info_order/", 
 		Array(), 
 		Array(), 
